@@ -1,6 +1,6 @@
 #include "DataRemovedMessage.h"
 
-using namespace SIMPL;
+using namespace Complex;
 
 DataRemovedMessage::DataRemovedMessage(const DataStructure* ds, DataObject::IdType id, const std::string& name)
 : AbstractDataStructureMessage(ds)

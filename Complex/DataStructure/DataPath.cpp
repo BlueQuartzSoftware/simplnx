@@ -2,10 +2,7 @@
 
 #include <algorithm>
 
-using namespace SIMPL;
-
-// Constructors/Destructors
-//
+using namespace Complex;
 
 DataPath::DataPath(const std::vector<std::string>& path)
 : m_Path(path)
@@ -30,9 +27,6 @@ DataPath::DataPath(DataPath&& other) noexcept
 
 DataPath::~DataPath() = default;
 
-//
-// Methods
-//
 
 size_t DataPath::getLength() const
 {
@@ -43,17 +37,20 @@ std::vector<std::string> DataPath::getPathVector() const
 {
   return m_Path;
 }
-SIMPL::DataPath DataPath::getParent() const
+
+DataPath DataPath::getParent() const
 {
   std::vector<std::string> parentPath = m_Path;
   parentPath.pop_back();
   return DataPath(parentPath);
 }
-SIMPL::DataPath DataPath::createChildPath(const std::string& name) const
+
+DataPath DataPath::createChildPath(const std::string& name) const
 {
   return DataPath(m_Path, name);
 }
-SIMPL::DataPath DataPath::replace(const std::string& symbol, const std::string& targetName)
+
+DataPath DataPath::replace(const std::string& symbol, const std::string& targetName)
 {
   std::vector<std::string> newPath = m_Path;
   std::replace(newPath.begin(), newPath.end(), symbol, targetName);
@@ -76,6 +73,7 @@ bool DataPath::operator==(const DataPath& rhs) const
   }
   return true;
 }
+
 bool DataPath::operator!=(const DataPath& rhs) const
 {
   if(rhs.m_Path.size() != m_Path.size())

@@ -2,7 +2,7 @@
 
 #include <exception>
 
-using namespace SIMPL;
+using namespace Complex;
 
 BaseGroup::BaseGroup(DataStructure* ds, const std::string& name)
 : DataObject(ds, name)

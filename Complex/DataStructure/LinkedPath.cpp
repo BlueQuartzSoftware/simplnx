@@ -1,10 +1,9 @@
-#include "SIMPL/DataStructure/LinkedPath.h"
-
 #include <exception>
 
-#include "SIMPL/DataStructure/DataStructure.h"
+#include "Complex/DataStructure/LinkedPath.h"
+#include "Complex/DataStructure/DataStructure.h"
 
-using namespace SIMPL;
+using namespace Complex;
 
 LinkedPath::LinkedPath()
 {
@@ -55,7 +54,7 @@ const DataStructure* LinkedPath::getDataStructure() const
   return m_DataStructure;
 }
 
-SIMPL::DataPath LinkedPath::toDataPath() const
+DataPath LinkedPath::toDataPath() const
 {
   std::vector<std::string> names(m_IdPath.size());
   for(size_t i = 0; i < m_IdPath.size(); i++)

@@ -7,10 +7,10 @@
 #include <string>
 #include <vector>
 
-#include "SIMPL/Utilities/TooltipGenerator.h"
-#include "SIMPL/Utilities/Parsing/HDF5/H5.h"
+#include "Complex/Utilities/TooltipGenerator.h"
+#include "Complex/Utilities/Parsing/HDF5/H5.h"
 
-namespace SIMPL
+namespace Complex
 {
 class BaseGroup;
 class DataPath;

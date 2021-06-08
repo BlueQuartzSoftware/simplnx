@@ -13,6 +13,9 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
 
 cmake_policy(SET CMP0090 NEW)
 
+# turn on using solution folders
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 set(complex_INCLUDE_DIR ${complex_SOURCE_DIR}/Complex)
 
 set(complex_HDRS
@@ -36,6 +39,11 @@ set(complex_HDRS
     ${complex_INCLUDE_DIR}/DataStructure/LinkedPath.h
     ${complex_INCLUDE_DIR}/DataStructure/MetaData.h
     ${complex_INCLUDE_DIR}/DataStructure/ScalarData.hpp
+
+    ${complex_INCLUDE_DIR}/Utilities/Parsing/HDF5/H5.h
+    
+    ${complex_INCLUDE_DIR}/Utilities/TooltipGenerator.h
+    ${complex_INCLUDE_DIR}/Utilities/TooltipRowItem.h
 )
 
 set(complex_SRCS
@@ -55,6 +63,9 @@ set(complex_SRCS
     ${complex_INCLUDE_DIR}/DataStructure/DataStructure.cpp
     ${complex_INCLUDE_DIR}/DataStructure/LinkedPath.cpp
     ${complex_INCLUDE_DIR}/DataStructure/MetaData.cpp
+
+    ${complex_INCLUDE_DIR}/Utilities/TooltipGenerator.cpp
+    ${complex_INCLUDE_DIR}/Utilities/TooltipRowItem.cpp
 )
 
 source_group(TREE ${complex_INCLUDE_DIR} PREFIX "Complex" FILES ${complex_HDRS})

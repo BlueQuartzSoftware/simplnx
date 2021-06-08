@@ -4,7 +4,7 @@
 
 #include "AbstractDataStructureMessage.h"
 
-using namespace SIMPL;
+using namespace Complex;
 
 AbstractDataStructureMessage::AbstractDataStructureMessage(const DataStructure* ds)
 : m_DataStructure(ds)

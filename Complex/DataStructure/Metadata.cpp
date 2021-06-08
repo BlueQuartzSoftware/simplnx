@@ -2,10 +2,8 @@
 
 #include <exception>
 
-using namespace SIMPL;
+using namespace Complex;
 
-// Constructors/Destructors
-//
 
 Metadata::Metadata()
 {
@@ -23,9 +21,6 @@ Metadata::Metadata(Metadata&& other) noexcept
 
 Metadata::~Metadata() = default;
 
-//
-// Methods
-//
 Metadata::ValueType Metadata::getData(const KeyType& key) const
 {
   return m_Map.at(key);

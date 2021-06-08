@@ -2,11 +2,11 @@
 
 #include <vector>
 
-#include "SIMPL/DataStructure/DataObject.h"
-#include "SIMPL/DataStructure/DataPath.h"
-#include "SIMPL/DataStructure/Messaging/AbstractDataStructureMessage.h"
+#include "Complex/DataStructure/DataObject.h"
+#include "Complex/DataStructure/DataPath.h"
+#include "Complex/DataStructure/Messaging/AbstractDataStructureMessage.h"
 
-namespace SIMPL
+namespace Complex
 {
 
 /**

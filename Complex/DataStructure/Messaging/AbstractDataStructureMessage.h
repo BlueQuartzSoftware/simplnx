@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace SIMPL
+namespace Complex
 {
 class DataStructure;
 

@@ -3,14 +3,8 @@
 #include <string>
 #include <vector>
 
-namespace SIMPL
+namespace Complex
 {
-
-/**
- * class DataPath
- *
- */
-
 class DataPath
 {
 public:
@@ -51,24 +45,24 @@ public:
 
   /**
    * @brief
-   * @return SIMPL::DataPath
+   * @return DataPath
    */
-  SIMPL::DataPath getParent() const;
+  DataPath getParent() const;
 
   /**
    * @brief
    * @param name
-   * @return SIMPL::DataPath
+   * @return DataPath
    */
-  SIMPL::DataPath createChildPath(const std::string& name) const;
+  DataPath createChildPath(const std::string& name) const;
 
   /**
    * @brief
    * @param symbol
    * @param targetName
-   * @return SIMPL::DataPath;
+   * @return DataPath;
    */
-  SIMPL::DataPath replace(const std::string& symbol, const std::string& targetName);
+  DataPath replace(const std::string& symbol, const std::string& targetName);
 
   /**
    * @brief

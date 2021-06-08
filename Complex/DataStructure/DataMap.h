@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace SIMPL
+namespace Complex
 {
 class DataStructure;
 class DataObject;

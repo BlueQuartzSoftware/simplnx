@@ -4,10 +4,10 @@
 #include <string>
 #include <vector>
 
-#include "SIMPL/DataStructure/DataMap.h"
-#include "SIMPL/DataStructure/DataObject.h"
+#include "Complex/DataStructure/DataMap.h"
+#include "Complex/DataStructure/DataObject.h"
 
-namespace SIMPL
+namespace Complex
 {
 class BaseGroup : public DataObject
 {

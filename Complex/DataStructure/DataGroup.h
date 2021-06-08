@@ -1,8 +1,8 @@
 #pragma once
 
-#include "SIMPL/DataStructure/BaseGroup.h"
+#include "Complex/DataStructure/BaseGroup.h"
 
-namespace SIMPL
+namespace Complex
 {
 
 /**

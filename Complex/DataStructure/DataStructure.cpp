@@ -1,14 +1,14 @@
 #include "DataStructure.h"
 
-#include "SIMPL/DataStructure/BaseGroup.h"
-#include "SIMPL/DataStructure/DataGroup.h"
-#include "SIMPL/DataStructure/LinkedPath.h"
-#include "SIMPL/DataStructure/Messaging/DataAddedMessage.h"
-#include "SIMPL/DataStructure/Messaging/DataRemovedMessage.h"
-#include "SIMPL/DataStructure/Messaging/DataReparentedMessage.h"
-#include "SIMPL/DataStructure/Observers/AbstractDataStructureObserver.h"
+#include "Complex/DataStructure/BaseGroup.h"
+#include "Complex/DataStructure/DataGroup.h"
+#include "Complex/DataStructure/LinkedPath.h"
+#include "Complex/DataStructure/Messaging/DataAddedMessage.h"
+#include "Complex/DataStructure/Messaging/DataRemovedMessage.h"
+#include "Complex/DataStructure/Messaging/DataReparentedMessage.h"
+#include "Complex/DataStructure/Observers/AbstractDataStructureObserver.h"
 
-using namespace SIMPL;
+using namespace Complex;
 
 DataStructure::DataStructure()
 : m_IsValid(true)

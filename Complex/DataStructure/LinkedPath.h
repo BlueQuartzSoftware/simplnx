@@ -1,9 +1,9 @@
 #pragma once
 
-#include "SIMPL/DataStructure/DataObject.h"
-#include "SIMPL/DataStructure/DataPath.h"
+#include "Complex/DataStructure/DataObject.h"
+#include "Complex/DataStructure/DataPath.h"
 
-namespace SIMPL
+namespace Complex
 {
 
 /**
@@ -15,8 +15,6 @@ class LinkedPath
 {
 public:
   friend class DataStructure;
-  // Constructors/Destructors
-  //
 
   /**
    * @brief
@@ -54,9 +52,9 @@ public:
 
   /**
    * @brief
-   * @return SIMPL::DataPath
+   * @return DataPath
    */
-  SIMPL::DataPath toDataPath() const;
+  DataPath toDataPath() const;
 
   /**
    * @brief

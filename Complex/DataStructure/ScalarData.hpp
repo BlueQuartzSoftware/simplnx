@@ -1,8 +1,8 @@
 #pragma once
 
-#include "SIMPL/DataStructure/DataObject.h"
+#include "Complex/DataStructure/DataObject.h"
 
-namespace SIMPL
+namespace Complex
 {
 
 /**

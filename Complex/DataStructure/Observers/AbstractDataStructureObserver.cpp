@@ -1,6 +1,6 @@
-#include "SIMPL/DataStructure/Observers/AbstractDataStructureObserver.h"
+#include "Complex/DataStructure/Observers/AbstractDataStructureObserver.h"
 
-using namespace SIMPL;
+using namespace Complex;
 
 AbstractDataStructureObserver::AbstractDataStructureObserver()
 {

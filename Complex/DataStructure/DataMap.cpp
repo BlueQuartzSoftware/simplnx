@@ -1,10 +1,10 @@
-#include "SIMPL/DataStructure/DataMap.h"
+#include "Complex/DataStructure/DataMap.h"
 
-#include "SIMPL/DataStructure/BaseGroup.h"
-#include "SIMPL/DataStructure/DataObject.h"
-#include "SIMPL/DataStructure/DataStructure.h"
+#include "Complex/DataStructure/BaseGroup.h"
+#include "Complex/DataStructure/DataObject.h"
+#include "Complex/DataStructure/DataStructure.h"
 
-using namespace SIMPL;
+using namespace Complex;
 
 DataMap::DataMap()
 {

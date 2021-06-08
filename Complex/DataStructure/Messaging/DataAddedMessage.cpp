@@ -1,8 +1,8 @@
 #include "DataAddedMessage.h"
 
-#include "SIMPL/DataStructure/DataStructure.h"
+#include "Complex/DataStructure/DataStructure.h"
 
-using namespace SIMPL;
+using namespace Complex;
 
 DataAddedMessage::DataAddedMessage(const DataStructure* ds, DataObject::IdType addedId)
 : AbstractDataStructureMessage(ds)

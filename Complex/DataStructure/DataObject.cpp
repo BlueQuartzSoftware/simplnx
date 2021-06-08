@@ -3,11 +3,11 @@
 #include <algorithm>
 #include <exception>
 
-#include "SIMPL/DataStructure/DataStructure.h"
-#include "SIMPL/DataStructure/BaseGroup.h"
-#include "SIMPL/DataStructure/Metadata.h"
+#include "Complex/DataStructure/DataStructure.h"
+#include "Complex/DataStructure/BaseGroup.h"
+#include "Complex/DataStructure/Metadata.h"
 
-using namespace SIMPL;
+using namespace Complex;
 
 DataObject::IdType DataObject::generateId(const std::optional<IdType>& opId)
 {

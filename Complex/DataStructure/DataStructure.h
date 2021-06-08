@@ -8,13 +8,13 @@
 #include <string>
 #include <vector>
 
-#include "SIMPL/DataStructure/DataObject.h"
-#include "SIMPL/DataStructure/DataArray.hpp"
-#include "SIMPL/DataStructure/DataMap.h"
-#include "SIMPL/DataStructure/ScalarData.hpp"
-#include "SIMPL/DataStructure/LinkedPath.h"
+#include "Complex/DataStructure/DataObject.h"
+#include "Complex/DataStructure/DataArray.hpp"
+#include "Complex/DataStructure/DataMap.h"
+#include "Complex/DataStructure/ScalarData.hpp"
+#include "Complex/DataStructure/LinkedPath.h"
 
-namespace SIMPL
+namespace Complex
 {
 class AbstractDataStructureMessage;
 class AbstractDataStructureObserver;
@@ -142,9 +142,9 @@ public:
   /**
    * @brief Returns a LinkedPath based on the specified DataPath.
    * @param path
-   * @return SIMPL::LinkedPath
+   * @return LinkedPath
    */
-  SIMPL::LinkedPath getLinkedPath(const DataPath& path) const;
+  LinkedPath getLinkedPath(const DataPath& path) const;
 
   /**
    * @brief Creates a ScalarData object for the target parent container specified by the

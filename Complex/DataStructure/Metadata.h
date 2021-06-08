@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 
-namespace SIMPL
+namespace Complex
 {
 
 /**
@@ -19,9 +19,6 @@ public:
   using ValueType = std::any;
   using Iterator = std::map<KeyType, ValueType>::iterator;
   using ConstIterator = std::map<KeyType, ValueType>::const_iterator;
-
-  // Constructors/Destructors
-  //
 
   /**
    * @brief

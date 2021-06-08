@@ -2,7 +2,7 @@
 
 #include <memory>
 
-namespace SIMPL
+namespace Complex
 {
 class AbstractDataStructureMessage;
 class DataStructure;

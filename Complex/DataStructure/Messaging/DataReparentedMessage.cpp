@@ -1,8 +1,8 @@
 #include "DataReparentedMessage.h"
 
-#include "SIMPL/DataStructure/DataStructure.h"
+#include "Complex/DataStructure/DataStructure.h"
 
-using namespace SIMPL;
+using namespace Complex;
 
 DataReparentedMessage::DataReparentedMessage(const DataStructure* ds, DataObject::IdType targetData, DataObject::IdType targetParent, bool parentAdded)
 : AbstractDataStructureMessage(ds)

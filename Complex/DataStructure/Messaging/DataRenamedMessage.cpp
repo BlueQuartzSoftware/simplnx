@@ -1,8 +1,8 @@
 #include "DataRenamedMessage.h"
 
-#include "SIMPL/DataStructure/DataStructure.h"
+#include "Complex/DataStructure/DataStructure.h"
 
-using namespace SIMPL;
+using namespace Complex;
 
 DataRenamedMessage::DataRenamedMessage(const DataStructure* ds, DataObject::IdType id, const std::string& oldName, const std::string& newName)
 : AbstractDataStructureMessage(ds)

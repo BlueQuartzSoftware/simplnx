@@ -2,7 +2,7 @@
 
 #include "IDataStore.h"
 
-namespace SIMPL
+namespace Complex
 {
 template <typename T>
 class DataStore : public IDataStore

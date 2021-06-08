@@ -1,9 +1,9 @@
 #pragma once
 
-#include "SIMPL/DataStructure/DataObject.h"
-#include "SIMPL/DataStructure/DataStore.hpp"
+#include "Complex/DataStructure/DataObject.h"
+#include "Complex/DataStructure/DataStore.hpp"
 
-namespace SIMPL
+namespace Complex
 {
 
 /**
@@ -129,15 +129,15 @@ public:
 
   /**
    * @brief
-   * @return
+   * @return DataStore<T>*
    */
-  const SIMPL::DataStore<T>* getDataStore() const;
+  const DataStore<T>* getDataStore() const;
 
   /**
    * @brief
-   * @return
+   * @return DataStore<T>*
    */
-  SIMPL::DataStore<T>* getDataStore();
+  DataStore<T>* getDataStore();
 
   /**
    * @brief
