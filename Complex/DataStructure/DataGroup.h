@@ -14,43 +14,40 @@ class DataGroup : public BaseGroup
 {
 public:
   /**
-   * @brief
+   * @brief Creates the DataGroup for the target DataStructure and with the specified name.
    * @param ds
    * @param name
    */
   DataGroup(DataStructure* ds, const std::string& name);
 
   /**
-   * @brief
+   * @brief Copy constructor
    * @param other
    */
   DataGroup(const DataGroup& other);
 
   /**
-   * @brief
+   * @brief Move constructor
    * @param other
    */
   DataGroup(DataGroup&& other) noexcept;
 
-  /**
-   * @brief
-   */
   virtual ~DataGroup();
 
   /**
-   * @brief
+   * @brief Creates and returns a deep copy of the DataGroup.
    * @return DataObject*
    */
   DataObject* deepCopy() override;
 
   /**
-   * @brief
+   * @brief Creates and returns a shallow copy of the DataGroup.
    * @return DataObject*
    */
   DataObject* shallowCopy() override;
 
   /**
-   * @brief
+   * @brief Writes information for the XDMF file to the output stream.
    * @param out
    * @param hdfFileName
    * @return H5::ErrorType
@@ -58,7 +55,7 @@ public:
   H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const override;
 
   /**
-   * @brief
+   * @brief Reads information from the XDMF file through the input stream.
    * @param in
    * @param hdfFileName
    * @return H5::ErrorType
@@ -76,4 +73,4 @@ protected:
 
 private:
 };
-} // namespace SIMPL
+} // namespace Complex

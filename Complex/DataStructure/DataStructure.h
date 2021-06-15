@@ -38,18 +38,18 @@ public:
   friend class DataObject;
 
   /**
-   * @brief
+   * @brief Default constructor
    */
   DataStructure();
 
   /**
-   * @brief
+   * @brief Copy constructor
    * @param other
    */
   DataStructure(const DataStructure& other);
 
   /**
-   * @brief
+   * @brief Move constructor
    * @param other
    */
   DataStructure(DataStructure&& other) noexcept;
@@ -157,6 +157,7 @@ public:
   template <typename T>
   ScalarData<T> createScalar(const std::string& name, T defaultValue, std::optional<DataObject::IdType> parent = {})
   {
+    throw std::exception();
   }
 
   /**
@@ -170,43 +171,56 @@ public:
   template <typename T>
   DataArray<T> createDataArray(const std::string& name, size_t tupleSize, size_t numTuples, T defaultValue, std::optional<DataObject::IdType> parent = {})
   {
+    throw std::exception();
   }
 
   /**
-   * @brief
+   * @brief Creates and adds a DataGroup to the DataStructure. If the parent
+   * parameter is not provided, the group is added to the top of the DataStructure.
+   * The created DataGroup is returned by a raw pointer.
    * @param parent
    * @return DataGroup*
    */
   DataGroup* createGroup(const std::string& name, std::optional<DataObject::IdType> parent = {});
 
   /**
-   * @brief
+   * @brief Creates a specified montage type and adds it to the DataStructure.
+   * The created montage is returned as a raw pointer. If the parent parameter
+   * is not provided, the montage is added to the top of the DataStructure.
+   *
+   * If the specified type is not a montage, this method throws an exception.
    * @param parent
    * @return AbstractMontage*
    */
   template <class T>
   AbstractMontage* createMontage(const std::string& name, std::optional<DataObject::IdType> parent = {})
   {
+    throw std::exception();
   }
 
   /**
-   * @brief
+   * @brief Creates a specified geometry type and adds it to the DataStructure.
+   * The created geometry is returned as a raw pointer. If the parent parameter
+   * is not provided, the geometry is added to the top of the DataStructure.
+   *
+   * If the specified type is not a geometry, this method throws an exception.
    * @param parent
    * @return AbstractGeometry*
    */
   template <class T>
-  AbstractGeometry* createGeometry(const std::string& name, std::optional<DataObject::IdType> parent)
+  AbstractGeometry* createGeometry(const std::string& name, std::optional<DataObject::IdType> parent = {})
   {
+    throw std::exception();
   }
 
   /**
-   * @brief
+   * @brief Returns the top-level of the DataStructure.
    * @return std::vector<DataObject*>
    */
   std::vector<DataObject*> getTopLevelData() const;
 
   /**
-   * @brief
+   * @brief Adds an additional parent to the target DataObject.
    * @param targetId
    * @param newParent
    * @return bool
@@ -214,7 +228,7 @@ public:
   bool setAdditionalParent(DataObject::IdType targetId, DataObject::IdType newParent);
 
   /**
-   * @brief
+   * @brief Removes a parent from the target DataObject.
    * @param targetId
    * @param parent
    * @return bool
@@ -222,43 +236,43 @@ public:
   bool removeParent(DataObject::IdType targetId, DataObject::IdType parent);
 
   /**
-   * @brief
+   * @brief Returns a vector of the DataStructure observers.
    * @return std::vector<AbstractDataStructureObserver*>
    */
   std::vector<AbstractDataStructureObserver*> getObservers() const;
 
   /**
-   * @brief
+   * @brief Adds an observer for broadcasting messages.
    * @param obs
    */
   void addObserver(AbstractDataStructureObserver* obs);
 
   /**
-   * @brief
+   * @brief Removes an observer.
    * @param obs
    */
   void removeObserver(AbstractDataStructureObserver* obs);
 
   /**
-   * @brief
+   * @brief Returns an iterator for the the beginning of the top-level DataMap.
    * @return iterator
    */
   Iterator begin();
 
   /**
-   * @brief
+   * @brief Returns an iterator for the the end of the top-level DataMap.
    * @return iterator
    */
   Iterator end();
 
   /**
-   * @brief
+   * @brief Returns an iterator for the the beginning of the top-level DataMap.
    * @return
    */
   ConstIterator begin() const;
 
   /**
-   * @brief
+   * @brief Returns an iterator for the the end of the top-level DataMap.
    * @return
    */
   ConstIterator end() const;
@@ -271,15 +285,16 @@ public:
   H5::ErrorType writeXdmfFile(const std::filesystem::path& hdfFilePath) const;
 
   /**
-   * @brief
-   * @param hdfFilePath
+   * @brief Reads the DataStructure from the specified XDMF filepath.
+   * @param xdmfFilePath
    * @return H5::ErrorType
    */
-  H5::ErrorType readXdmfFile(const std::filesystem::path& hdfFilePath);
+  H5::ErrorType readXdmfFile(const std::filesystem::path& xdmfFilePath);
 
 protected:
   /**
-   * @brief
+   * @brief Returns the shared pointer for the specified DataObject.
+   * Returns nullptr if no DataObject is found.
    * @param id
    * @return std::shared_ptr<DataObject>
    */
@@ -287,35 +302,35 @@ protected:
 
 private:
   /**
-   * @brief
-   * @param container
+   * @brief Inserts the target DataObject to the top of the DataStructure.
+   * @param obj
    * @return
    */
-  bool insertTopLevel(const std::shared_ptr<BaseGroup>& container);
+  bool insertTopLevel(const std::shared_ptr<DataObject>& obj);
 
   /**
-   * @brief
+   * @brief Removes the specified DataObject from the top of the DataStructure.
    * @param data
    * @return
    */
   bool removeTopLevel(DataObject* data);
 
   /**
-   * @brief
+   * @brief Removes the specified DataObject from the entire DataStructure.
    * @param data
    * @return
    */
   bool removeData(DataObject* data);
 
   /**
-   * @brief
+   * @brief Called when a DataObject is deleted from the DataStructure. This notifies observers to the change.
    * @param id
-   * @param paths
+   * @param name
    */
   void dataDeleted(DataObject::IdType id, const std::string& name);
 
   /**
-   * @brief
+   * @brief Notifies observers to the provided message.
    * @param msg
    */
   void notify(const std::shared_ptr<AbstractDataStructureMessage>& msg);
@@ -327,4 +342,4 @@ private:
   std::set<AbstractDataStructureObserver*> m_Observers;
   bool m_IsValid = false;
 };
-} // namespace SIMPL
+} // namespace Complex

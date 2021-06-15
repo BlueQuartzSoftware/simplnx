@@ -15,12 +15,19 @@ public:
   using Iterator = DataMap::Iterator;
   using ConstIterator = DataMap::ConstIterator;
 
+  /**
+   * @brief Copy constructor
+   * @param other
+   */
   BaseGroup(const BaseGroup& other);
-  BaseGroup(BaseGroup&& other) noexcept;
 
   /**
-   * Empty Destructor
+   * @brief Move constructor
+   * @param other
+   * @return
    */
+  BaseGroup(BaseGroup&& other) noexcept;
+
   virtual ~BaseGroup();
 
   /**
@@ -131,7 +138,7 @@ public:
 
 protected:
   /**
-   * @brief
+   * @brief Creates a BaseGroup with the target DataStructure and name.
    * @param ds
    * @param name
    */
@@ -148,7 +155,8 @@ protected:
   virtual bool canInsert(const DataObject* obj) const;
 
   /**
-   * @brief
+   * @brief Sets a new DataStructure for the BaseGroup. Updates the DataMap and its
+   * contained DataObjects as well.
    * @param ds
    */
   void setDataStructure(DataStructure* ds) override;
@@ -156,4 +164,4 @@ protected:
 private:
   DataMap m_DataMap;
 };
-} // namespace SIMPL
+} // namespace Complex

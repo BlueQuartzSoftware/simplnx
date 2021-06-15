@@ -19,7 +19,7 @@ public:
   using ConstIterator = void;
 
   /**
-   * @brief
+   * @brief Constructs a DataArray with the specified tuple size, count, and constructs a DataStore with the provided default value.
    * @param ds
    * @param name
    * @param tupleSize
@@ -34,7 +34,7 @@ public:
   }
 
   /**
-   * @brief
+   * @brief Constructs a DataArray with the specified tuple size, count, and DataStore. The DataArray takes ownership of the DataStore.
    * @param ds
    * @param name
    * @param tupleSize
@@ -48,6 +48,10 @@ public:
   {
   }
 
+  /**
+   * @brief Copy constructor creates a copy of the specified tuple size, count, and smart pointer to the target DataStore.
+   * @param other
+   */
   DataArray(const DataArray<T>& other)
   : DataObject(other)
   , m_TupleCount(other.m_TupleCount)
@@ -56,36 +60,47 @@ public:
   {
   }
 
+  /**
+   * @brief Move constructor moves the data from the provided DataArray.
+   * @param other
+   * @return
+   */
   DataArray(DataArray<T>&& other) noexcept
-  : DataObject(other)
+  : DataObject(std::move(other))
   , m_TupleCount(std::move(other.m_TupleCount))
   , m_TupleSize(std::move(other.m_TupleSize))
   , m_DataStore(std::move(other.m_DataStore))
   {
   }
 
-  /**
-   * Empty Destructor
-   */
   virtual ~DataArray() = default;
 
   /**
    * @brief Returns the number of elements in the data array.
    * @return size_t
    */
-  size_t size() const;
+  size_t size() const
+  {
+    return getTupleCount() * getTupleSize();
+  }
 
   /**
    * @brief Returns the number of tuples in the DataArray.
    * @return size_t
    */
-  size_t getTupleCount() const;
+  size_t getTupleCount() const
+  {
+    return m_TupleCount;
+  }
 
   /**
    * @brief Returns the tuple size.
    * @return size_t
    */
-  size_t getTupleSize() const;
+  size_t getTupleSize() const
+  {
+    return m_TupleSize;
+  }
 
   /**
    * @brief Returns the value found at the specified index of the data array.
@@ -93,7 +108,15 @@ public:
    * used to edit the value found at the specified index.
    * @param  index
    */
-  T& operator[](size_t index);
+  T& operator[](size_t index)
+  {
+    if(nullptr == m_DataStore)
+    {
+      throw std::exception();
+    }
+
+    return (*m_DataStore.get())[index];
+  }
 
   /**
    * @brief Returns the value found at the specified index of the data array.
@@ -101,65 +124,113 @@ public:
    * used to edit the value found at the specified index.
    * @param  index
    */
-  T operator[](size_t index) const;
+  T operator[](size_t index) const
+  {
+    if(nullptr == m_DataStore)
+    {
+      throw std::exception();
+    }
+
+    return (*m_DataStore.get())[index];
+  }
 
   /**
    * @brief Returns an Iterator to the begining of the data array.
    * @return Iterator
    */
-  Iterator begin();
+  Iterator begin()
+  {
+    return m_DataStore->begin();
+  }
 
   /**
    * @brief Returns an Iterator to the end of the data array.
    * @return Iterator
    */
-  Iterator end();
+  Iterator end()
+  {
+    return m_DataStore->end();
+  }
 
   /**
    * @brief Returns an ConstIterator to the begining of the data array.
    * @return ConstIterator
    */
-  ConstIterator begin() const;
+  ConstIterator begin() const
+  {
+    return m_DataStore->begin();
+  }
 
   /**
    * @brief Returns an ConstIterator to the end of the data array.
    * @return ConstIterator
    */
-  ConstIterator end() const;
+  ConstIterator end() const
+  {
+    return m_DataStore->end();
+  }
 
   /**
-   * @brief
+   * @brief Returns a raw pointer to the DataStore for read-only access.
    * @return DataStore<T>*
    */
-  const DataStore<T>* getDataStore() const;
+  const DataStore<T>* getDataStore() const
+  {
+    return m_DataStore.get();
+  }
 
   /**
-   * @brief
+   * @brief Returns a raw pointer to the DataStore.
    * @return DataStore<T>*
    */
-  DataStore<T>* getDataStore();
+  DataStore<T>* getDataStore()
+  {
+    return m_DataStore.get();
+  }
 
   /**
-   * @brief
-   * @return
+   * @brief Returns a std::weak_ptr for the stored DataStore.
+   * @return std::weak_ptr<DataStore<T>>
    */
-  bool isAllocated() const;
+  std::weak_ptr<DataStore<T>> getDataStorePtr()
+  {
+    return m_DataStore;
+  }
 
   /**
-   * @brief Releases and returns the DataStore from memory.
-   * @return DataStore<T>*
-  */
-  DataStore<T>* releaseDataStore();
+   * @brief Returns true if the DataStore has already been allocated. Returns false otherwise.
+   * @return bool
+   */
+  bool isAllocated() const
+  {
+    return nullptr != m_DataStore;
+  }
 
   /**
-   * @brief Sets a new DataStore for the DataArray to handle. The existing DataStore is deleted.
-   * To save the existing DataStore before replacing it, call releaseDataStore() before setting the new DataStore.
+   * @brief Sets a new DataStore for the DataArray to handle. The existing DataStore
+   * is deleted if there are no other references. To save the existing DataStore
+   * before replacing it, call releaseDataStore() before setting the new DataStore.
    * @param store
    */
-  void setDataStore(DataStore<T>* store);
+  void setDataStore(DataStore<T>* store)
+  {
+    m_DataStore = std::shared_ptr<DataStore<T>>(store);
+  }
 
   /**
-   * @brief
+   * @brief Sets a new DataStore for the DataArray to handle. The existing DataStore
+   * is deleted if there are no other references. To save the existing DataStore
+   * before replacing it, call releaseDataStore() before setting the new DataStore.
+   * @param store
+   */
+  void setDataStore(const std::weak_ptr<DataStore<T>>& store)
+  {
+    m_DataStore = store.lock();
+  }
+
+  /**
+   * @brief Generates text for the XDMF file and appends it to the output stream.
+   * Returns an H5::ErrorType specifying any error that might have occurred.
    * @param out
    * @param hdfFileName
    * @return H5::ErrorType
@@ -167,7 +238,8 @@ public:
   H5::ErrorType generateXdmfText(std::istream& out, const std::string& hdfFileName) const override;
 
   /**
-   * @brief
+   * @brief Reads and overwrites data from the provided input stream. Returns an
+   * H5::ErrorType specifying any error that might have occurred.
    * @param in
    * @param hdfFileName
    * @return H5::ErrorType
@@ -185,4 +257,4 @@ using FloatArray = DataArray<float>;
 using DoubleArray = DataArray<double>;
 using VectorOfFloatArray = std::vector<std::shared_ptr<FloatArray>>;
 
-} // namespace SIMPL
+} // namespace Complex

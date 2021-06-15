@@ -9,12 +9,6 @@ DataPath::DataPath(const std::vector<std::string>& path)
 {
 }
 
-DataPath::DataPath(const std::vector<std::string>& path, const std::string& child)
-: m_Path(path)
-{
-  m_Path.push_back(child);
-}
-
 DataPath::DataPath(const DataPath& other)
 : m_Path(other.m_Path)
 {
@@ -47,7 +41,9 @@ DataPath DataPath::getParent() const
 
 DataPath DataPath::createChildPath(const std::string& name) const
 {
-  return DataPath(m_Path, name);
+  std::vector<std::string> path(m_Path);
+  path.push_back(name);
+  return DataPath(path);
 }
 
 DataPath DataPath::replace(const std::string& symbol, const std::string& targetName)

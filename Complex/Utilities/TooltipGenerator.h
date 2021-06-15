@@ -16,63 +16,61 @@ class TooltipGenerator
 {
 public:
   /**
-   * Empty Constructor
+   * @brief Creates an empty TooltipGenerator.
    */
   TooltipGenerator();
 
-  /**
-   * Empty Destructor
-   */
   virtual ~TooltipGenerator();
 
   /**
-   * @brief
+   * @brief Adds a title-type row with the specified name to the end of the TooltipGenerator.
    * @param title
    */
   void addTitle(const std::string& title);
 
   /**
-  * @brief
+   * @brief Adds a value-type row with the target name and value to the end of the TooltipGenerator.
    * @param name
    * @param value
    */
   void addValue(const std::string& name, const std::string& value);
 
   /**
-  * @brief
+   * @brief Adds an empty spacer-type row to the end of the TooltipGenerator.
    */
   void addSpacer();
 
   /**
-  * @brief
+   * @brief Appends the provided TooltipGenerator's rows to the end of the TooltipGenerator.
    * @param ToolTipGenerator
    */
   void append(const TooltipGenerator& ToolTipGenerator);
 
   /**
-  * @brief
+   * @brief Clears the TooltipGenerator.
    */
   void clear();
 
   /**
-  * @brief
+   * @brief Gets the current row color string.
    */
   std::string getRowColorStr() const;
 
   /**
-  * @brief
+   * @brief Sets the row color string.
    * @param colorStr
    */
   void setRowColorStr(const std::string& colorStr);
 
   /**
-  * @brief
+   * @brief Generates and returns the tooltip HTML.
    * @return std::string
    */
   std::string generateHTML() const;
 
 protected:
   /**
+   * @brief Converts the target TooltipRowItem to HTML.
    * @param row
    * @return std::string
    */
@@ -81,4 +79,4 @@ protected:
 private:
   std::vector<TooltipRowItem> m_Rows;
 };
-} // namespace SIMPL
+} // namespace Complex

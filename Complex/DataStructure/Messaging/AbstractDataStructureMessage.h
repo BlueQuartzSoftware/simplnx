@@ -10,19 +10,13 @@ class AbstractDataStructureMessage
 {
 public:
   /**
-   * @brief
-   * @param ds
-   */
-  AbstractDataStructureMessage(const DataStructure* ds);
-
-  /**
-   * @brief
+   * @brief Copy constructor
    * @param other
    */
   AbstractDataStructureMessage(const AbstractDataStructureMessage& other);
 
   /**
-   * @brief
+   * @brief Move constructor
    * @param other
    * @return
    */
@@ -40,12 +34,19 @@ public:
   const DataStructure* getDataStructure() const;
 
   /**
-   * @brief
+   * @brief Returns the AbsractDataStructureMessage type.
    * @return
    */
   virtual int32_t getMsgType() const = 0;
 
+protected:
+  /**
+   * @brief Creates an AbstractDataStructureMessage for the target DataStructure.
+   * @param ds
+   */
+  AbstractDataStructureMessage(const DataStructure* ds);
+
 private:
   const DataStructure* m_DataStructure = nullptr;
 };
-} // namespace SIMPL
+} // namespace Complex

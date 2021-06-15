@@ -18,7 +18,8 @@ public:
   static const int MsgType = 4;
 
   /**
-   * @brief
+   * @brief Constructs a DataReparentedMessage, specifying the target DataObject,
+   * parent ID, and whether or not the parent was added or removed.
    * @param ds
    * @param targetData
    * @param targetParent
@@ -27,60 +28,57 @@ public:
   DataReparentedMessage(const DataStructure* ds, DataObject::IdType targetData, DataObject::IdType targetParent, bool parentAdded = true);
 
   /**
-   * @brief
+   * @brief Copy constructor
    * @param other
    */
   DataReparentedMessage(const DataReparentedMessage& other);
 
   /**
-   * @brief
+   * @brief Move constructor
    * @param other
    */
   DataReparentedMessage(DataReparentedMessage&& other) noexcept;
 
-  /**
-   * @brief
-   */
   virtual ~DataReparentedMessage();
 
   /**
-   * @brief
+   * @brief Returns the AbsractDataStructureMessage type.
    * @return
    */
   int32_t getMsgType() const override;
 
   /**
-   * @brief
+   * @brief Returns the target DataObject ID.
    * @return IdType
    */
   DataObject::IdType getTargetId() const;
 
   /**
-   * @brief
+   * @brief Returns the parent DataObject ID.
    * @return IdType
    */
   DataObject::IdType getParentId() const;
 
   /**
-   * @brief
+   * @brief Returns a read-only pointer to the target DataObject.
    * @return DataObject*
    */
   const DataObject* getTargetData() const;
 
   /**
-   * @brief
+   * @brief Returns a read-only pointer to the target parent.
    * @return DataObject*
    */
   const DataObject* getParentData() const;
 
   /**
-   * @brief
+   * @brief Returns true if the target parent was added to the DataObject.
    * @return bool
    */
   bool wasParentAdded() const;
 
   /**
-   * @brief
+   * @brief Returns true if the target parent was removed from the DataObject.
    * @return bool
    */
   bool wasParentRemoved() const;
@@ -91,4 +89,4 @@ private:
   DataObject::IdType m_ParentId;
   bool m_ParentAdded = true;
 };
-} // namespace SIMPL
+} // namespace Complex

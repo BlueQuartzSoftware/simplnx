@@ -21,94 +21,93 @@ public:
   using ConstIterator = std::map<KeyType, ValueType>::const_iterator;
 
   /**
-   * @brief
+   * @brief Constructs an empty Metadata.
    */
   Metadata();
 
   /**
-   * @brief
+   * @brief Copy constructor
    * @param other
    */
   Metadata(const Metadata& other);
 
   /**
-   * @brief
+   * @brief Move constructor
    * @param other
    */
   Metadata(Metadata&& other) noexcept;
 
-  /**
-   * Empty Destructor
-   */
   virtual ~Metadata();
 
   /**
-   * @brief
+   * @brief Returns the ValueType for the target key. Returns an empty std::any
+   * if the key does not exist in the Metadata.
    * @param key
    * @return ValueType
    */
   ValueType getData(const KeyType& key) const;
 
   /**
-   * @brief
+   * @brief Adds or assigns the specified value for the target key.
    * @param key
    * @param value
    */
   void setData(const KeyType& key, const ValueType& value);
 
   /**
-   * @brief
+   * @brief Removes the data with the specified key.
    * @param key
    */
   void remove(const KeyType& key);
 
   /**
-   * @brief
+   * @brief Clears all metadata.
    */
   void clear();
 
   /**
-   * @brief
+   * @brief Returns a reference to the data with the target key.
+   * Returns and adds an empty std::any if no data exists with the key value.
    * @param key
-   * @return
+   * @return ValueType&
    */
   ValueType& operator[](const KeyType& key);
 
   /**
-   * @brief
-   * @return iterator
+   * @brief Returns an iterator to the beginning of the Metadata collection.
+   * @return Iterator
    */
   Iterator begin();
 
   /**
-   * @brief
-   * @return iterator
+   * @brief Returns an iterator to the end of the Metadata collection.
+   * @return Iterator
    */
   Iterator end();
 
   /**
-   * @brief
-   * @return iterator
+   * @brief Returns an iterator to the beginning of the Metadata collection.
+   * @return ConstIterator
    */
   ConstIterator begin() const;
 
   /**
-   * @brief
-   * @return iterator
+   * @brief Returns an iterator to the end of the Metadata collection.
+   * @return ConstIterator
    */
   ConstIterator end() const;
 
   /**
-   * @brief
+   * @brief Copy assignment operator.
    * @param rhs
-   * @return
+   * @return Metadata&
    */
   Metadata& operator=(const Metadata& rhs);
 
   /**
-   * @brief
+   * @brief Move assignment operator.
    * @param rhs
-   * @return
+   * @return Metadata&
    */
   Metadata& operator=(Metadata&& rhs) noexcept;
 
@@ -116,4 +115,4 @@ protected:
 private:
   std::map<KeyType, ValueType> m_Map;
 };
-} // namespace SIMPL
+} // namespace Complex

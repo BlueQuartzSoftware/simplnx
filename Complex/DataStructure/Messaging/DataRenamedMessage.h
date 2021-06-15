@@ -18,7 +18,7 @@ public:
   static const int MsgType = 3;
 
   /**
-   * @brief
+   * @brief Constructs a DataRenamedMessage specifying which DataObject was renamed, its old name, and new name.
    * @param ds
    * @param id
    * @param oldName
@@ -27,48 +27,45 @@ public:
   DataRenamedMessage(const DataStructure* ds, DataObject::IdType id, const std::string& oldName, const std::string& newName);
 
   /**
-   * @brief
+   * @brief Copy constructor
    * @param other
    */
   DataRenamedMessage(const DataRenamedMessage& other);
 
   /**
-   * @brief
+   * @brief Move constructor
    * @param other
    */
   DataRenamedMessage(DataRenamedMessage&& other) noexcept;
 
-  /**
-   * @brief
-   */
   virtual ~DataRenamedMessage();
 
   /**
-   * @brief
+   * @brief Returns the AbsractDataStructureMessage type.
    * @return
    */
   int32_t getMsgType() const override;
 
   /**
-   * @brief
+   * @brief Returns the renamed object's ID
    * @return IdType
    */
   DataObject::IdType getDataId() const;
 
   /**
-   * @brief
+   * @brief Returns a read-only pointer to the renamed DataObject.
    * @return DataObject*
    */
   const DataObject* getData() const;
 
   /**
-   * @brief
+   * @brief Returns the previous DataObject name.
    * @return std::string
    */
   std::string getOldName() const;
 
   /**
-   * @brief
+   * @brief Returns the new DataObject name.
    * @return std::string
    */
   std::string getNewName() const;
@@ -79,4 +76,4 @@ private:
   std::string m_OldName;
   std::string m_NewName;
 };
-} // namespace SIMPL
+} // namespace Complex

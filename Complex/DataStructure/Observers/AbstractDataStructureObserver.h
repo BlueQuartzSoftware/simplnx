@@ -11,29 +11,29 @@ class AbstractDataStructureObserver
 {
 public:
   /**
-   * @brief
+   * @brief Default constructor
    */
   AbstractDataStructureObserver();
 
   /**
-   * @brief
+   * @brief Copy constructor
    * @param other
    */
   AbstractDataStructureObserver(const AbstractDataStructureObserver& other);
 
   /**
-   * @brief
+   * @brief Move constructor
    * @param other
    */
   AbstractDataStructureObserver(AbstractDataStructureObserver&& other) noexcept;
 
-  ~AbstractDataStructureObserver();
+  virtual ~AbstractDataStructureObserver();
 
   /**
-   * @brief
+   * @brief Called when the target DataStructure emits a message.
    * @param target
    * @param msg
    */
   virtual void onNotify(DataStructure* target, const std::shared_ptr<AbstractDataStructureMessage>& msg) = 0;
 };
-} // namespace SIMPL
+} // namespace Complex

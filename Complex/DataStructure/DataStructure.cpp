@@ -235,14 +235,14 @@ std::vector<DataObject*> DataStructure::getTopLevelData() const
   return topLevel;
 }
 
-bool DataStructure::insertTopLevel(const std::shared_ptr<BaseGroup>& container)
+bool DataStructure::insertTopLevel(const std::shared_ptr<DataObject>& obj)
 {
-  if(nullptr == container)
+  if(nullptr == obj)
   {
     return false;
   }
 
-  return m_RootGroup.insert(container);
+  return m_RootGroup.insert(obj);
 }
 
 bool DataStructure::removeTopLevel(DataObject* data)

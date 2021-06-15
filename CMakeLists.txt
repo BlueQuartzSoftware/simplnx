@@ -19,6 +19,18 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(complex_INCLUDE_DIR ${complex_SOURCE_DIR}/Complex)
 
 set(complex_HDRS
+    ${complex_INCLUDE_DIR}/Common/BoundingBox.hpp
+    ${complex_INCLUDE_DIR}/Common/EulerAngle.h
+    ${complex_INCLUDE_DIR}/Common/Point2D.hpp
+    ${complex_INCLUDE_DIR}/Common/Point3D.hpp
+    ${complex_INCLUDE_DIR}/Common/Ray.hpp
+    ${complex_INCLUDE_DIR}/Common/RgbColor.h
+    ${complex_INCLUDE_DIR}/Common/Array.hpp
+
+    ${complex_INCLUDE_DIR}/Core/Application.h
+    ${complex_INCLUDE_DIR}/Core/FilterHandle.h
+    ${complex_INCLUDE_DIR}/Core/FilterList.h
+
     ${complex_INCLUDE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.h
     ${complex_INCLUDE_DIR}/DataStructure/Messaging/DataAddedMessage.h
     ${complex_INCLUDE_DIR}/DataStructure/Messaging/DataRemovedMessage.h
@@ -35,10 +47,19 @@ set(complex_HDRS
     ${complex_INCLUDE_DIR}/DataStructure/DataPath.h
     ${complex_INCLUDE_DIR}/DataStructure/DataStore.hpp
     ${complex_INCLUDE_DIR}/DataStructure/DataStructure.h
-    ${complex_INCLUDE_DIR}/DataStructure/IDataStore.h
     ${complex_INCLUDE_DIR}/DataStructure/LinkedPath.h
     ${complex_INCLUDE_DIR}/DataStructure/MetaData.h
     ${complex_INCLUDE_DIR}/DataStructure/ScalarData.hpp
+
+    ${complex_INCLUDE_DIR}/Plugin/AbstractPlugin.h
+    ${complex_INCLUDE_DIR}/Plugin/PluginLoader.h
+
+    # ${complex_INCLUDE_DIR}/Rest/PipelineController.h
+    # ${complex_INCLUDE_DIR}/Rest/PipelineHandler.h
+    # ${complex_INCLUDE_DIR}/Rest/RestManager.h
+    # ${complex_INCLUDE_DIR}/Rest/RestServer.h
+
+    ${complex_INCLUDE_DIR}/Utilities/Math/GeometryMath.hpp
 
     ${complex_INCLUDE_DIR}/Utilities/Parsing/HDF5/H5.h
     
@@ -47,6 +68,12 @@ set(complex_HDRS
 )
 
 set(complex_SRCS
+    ${complex_INCLUDE_DIR}/Common/RgbColor.cpp
+
+    ${complex_INCLUDE_DIR}/Core/Application.cpp
+    ${complex_INCLUDE_DIR}/Core/FilterHandle.cpp
+    ${complex_INCLUDE_DIR}/Core/FilterList.cpp
+
     ${complex_INCLUDE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.cpp
     ${complex_INCLUDE_DIR}/DataStructure/Messaging/DataAddedMessage.cpp
     ${complex_INCLUDE_DIR}/DataStructure/Messaging/DataRemovedMessage.cpp
@@ -64,9 +91,28 @@ set(complex_SRCS
     ${complex_INCLUDE_DIR}/DataStructure/LinkedPath.cpp
     ${complex_INCLUDE_DIR}/DataStructure/MetaData.cpp
 
+    ${complex_INCLUDE_DIR}/Plugin/AbstractPlugin.cpp
+
+    # ${complex_INCLUDE_DIR}/Rest/PipelineController.cpp
+    # ${complex_INCLUDE_DIR}/Rest/PipelineHandler.cpp
+    # ${complex_INCLUDE_DIR}/Rest/RestManager.cpp
+    # ${complex_INCLUDE_DIR}/Rest/RestServer.cpp
+
     ${complex_INCLUDE_DIR}/Utilities/TooltipGenerator.cpp
     ${complex_INCLUDE_DIR}/Utilities/TooltipRowItem.cpp
 )
+
+if(WIN32)
+    set(complex_SRCS
+        ${complex_SRCS}
+        ${complex_INCLUDE_DIR}/Plugin/PluginLoader_Win.cpp
+    )
+elseif(UNIX)
+    set(complex_SRCS
+        ${complex_SRCS}
+        ${complex_INCLUDE_DIR}/Plugin/PluginLoader_Linux.cpp
+    )
+endif()
 
 source_group(TREE ${complex_INCLUDE_DIR} PREFIX "Complex" FILES ${complex_HDRS})
 source_group(TREE ${complex_INCLUDE_DIR} PREFIX "Complex" FILES ${complex_SRCS})
