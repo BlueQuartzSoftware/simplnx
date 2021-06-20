@@ -1,7 +1,7 @@
-#include "Test2Plugin.h"
-#include "Test2Filter.h"
+#include "Test2Plugin.hpp"
+#include "Test2Filter.hpp"
 
-using namespace SIMPL;
+using namespace complex;
 
 const AbstractPlugin::IdType Test2Plugin::ID = "05cc618b-781f-4ac0-b9ac-43f26ce1854e";
 

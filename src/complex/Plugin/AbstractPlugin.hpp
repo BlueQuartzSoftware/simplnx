@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <set>
 #include <string>
 
@@ -12,7 +13,7 @@ namespace complex
 class AbstractFilter;
 class AbstractPlugin;
 
-using FilterCreationFunc = AbstractPlugin* (*)();
+using FilterCreationFunc = AbstractFilter* (*)();
 
 /**
  * class AbstractPlugin
@@ -45,6 +46,14 @@ public:
   IdType getId() const;
 
   /**
+   * @brief Checks if the plugin contains a filter with the given ID. Returns
+   * true if the plugin contains the filter. Returns false otherwise.
+   * @param id
+   * @return bool
+  */
+  bool containsFilterId(FilterHandle::FilterIdType id) const;
+
+  /**
    * @brief Create's an AbstractFilter with the specified ID. If the plugin
    * does not contain a filter with the specified ID, this function returns
    * nullptr.
@@ -75,7 +84,10 @@ protected:
   AbstractPlugin(IdType id, const std::string& name, const std::string& description);
 
   /**
-   * @brief
+   * @brief Records information for creating a filter using the provided
+   * FilterCreationFunc. The filter ID is provided by the filter created by the
+   * FilterCreationFunc. If the FilterCreationFunc fails to create a filter,
+   * this method does nothing.
    * @param filterFunc
    */
   void addFilter(FilterCreationFunc filterFunc);
@@ -92,6 +104,7 @@ private:
   std::string m_Description;
   std::string m_Vendor;
   std::set<FilterHandle> m_FilterHandles;
+  std::map<FilterHandle::FilterIdType, FilterCreationFunc> m_InitializerMap;
 
   /**
    * @brief Add an item to the list of FilterHandles.

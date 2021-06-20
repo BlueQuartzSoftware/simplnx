@@ -1,22 +1,24 @@
 #pragma once
 
-#include "Complex/Filtering/AbstractFilter.h"
+#include "complex/Filtering/AbstractFilter.hpp"
 
-#include <test2plugin_export.h>
+//#include "test/test2plugin_export.hpp"
 
-class TEST2PLUGIN_EXPORT Test2Filter : public complex::AbstractFilter
+class Test2Filter : public complex::AbstractFilter
 {
 public:
+  static const IdType ID;
+
   Test2Filter();
   virtual ~Test2Filter();
 
   /**
    * @brief
-   * @return
+   * @return Parameters
    */
-  Parameters parameters() const override;
+  complex::Parameters parameters() const override;
 
 protected:
-  void preflightImpl(complex::FilterDataOps& data, const complex::Arguments& args) override;
-  void executeImpl(complex::FilterDataOps& data, const complex::Arguments& args) override;
+  bool preflightImpl(const complex::DataStructure& data, const complex::Arguments& args) const override;
+  void executeImpl(complex::DataStructure& data, const complex::Arguments& args) const override;
 };

@@ -1,5 +1,5 @@
-#include "TestPlugin.h"
-#include "TestFilter.h"
+#include "TestPlugin.hpp"
+#include "TestFilter.hpp"
 
 using namespace complex;
 
@@ -16,7 +16,7 @@ AbstractPlugin* initPlugin()
 }
 
 TestPlugin::TestPlugin()
-: AbstractPlugin("Test Plugin", "Description", ID)
+: AbstractPlugin(ID, "Test Plugin", "Description")
 {
   addFilter(&createTestFilter);
 }

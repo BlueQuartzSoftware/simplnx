@@ -71,6 +71,8 @@ set(COMPLEX_HDRS
     ${COMPLEX_SOURCE_DIR}/DataStructure/MetaData.hpp
     ${COMPLEX_SOURCE_DIR}/DataStructure/ScalarData.hpp
 
+    ${COMPLEX_SOURCE_DIR}/Filtering/AbstractFilter.hpp
+
     ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
     ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
 
@@ -119,6 +121,8 @@ set(COMPLEX_SRCS
     ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.cpp
     ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
     ${COMPLEX_SOURCE_DIR}/DataStructure/MetaData.cpp
+
+    ${COMPLEX_SOURCE_DIR}/Filtering/AbstractFilter.cpp
 
     ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
 

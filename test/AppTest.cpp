@@ -2,10 +2,10 @@
 #include <iostream>
 #include <string>
 
-#include "Complex/Core/Application.h"
-#include "Complex/Filtering/AbstractFilter.h"
+#include "complex/Core/Application.hpp"
+#include "complex/Filtering/AbstractFilter.hpp"
 
-#include "PluginDir.h"
+#include "PluginDir.hpp"
 
 using namespace complex;
 
@@ -37,6 +37,21 @@ void testFilterList()
   std::cout << std::endl;
 }
 
+void testDeletingApp()
+{
+  std::cout << "testDeletingApp()" << std::endl;
+
+  std::cout << "  Deleting Application::Instance()" << std::endl;
+  delete Application::Instance();
+  if(Application::Instance() != nullptr)
+  {
+    throw std::exception();
+  }
+  std::cout << "  Application::Instance() deleted" << std::endl;
+
+  std::cout << std::endl;
+}
+
 int main(int argc, char** argv)
 {
   std::cout << "AppTest" << std::endl;
@@ -45,6 +60,7 @@ int main(int argc, char** argv)
   testFilterList();
   // testPipelineBuilder();
   // testRestServer();
+  testDeletingApp();
 
   return 0;
 }

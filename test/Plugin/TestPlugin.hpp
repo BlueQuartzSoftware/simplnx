@@ -2,9 +2,9 @@
 
 #include <vector>
 
-#include "Complex/Plugin/AbstractPlugin.h"
+#include "complex/Plugin/AbstractPlugin.hpp"
 
-#include <testplugin_export.h>
+#include "test/testplugin_export.hpp"
 
 class TESTPLUGIN_EXPORT TestPlugin : public complex::AbstractPlugin
 {

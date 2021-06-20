@@ -6,6 +6,11 @@ PROJECT(TestPlugin
     DESCRIPTION "Test Plugin"
 )
 
+set(PLUGIN_GENERATED_DIR ${PROJECT_BINARY_DIR}/generated)
+set(PLUGIN_GENERATED_HEADER_DIR ${PROJECT_BINARY_DIR}/generated/test)
+set(PLUGIN_EXPORT_HEADER ${PLUGIN_GENERATED_HEADER_DIR}/testplugin_export.hpp)
+set(PLUGIN2_EXPORT_HEADER ${PLUGIN_GENERATED_HEADER_DIR}/test2plugin_export.hpp)
+
 # Plugin 1
 set(Plugin_HDRS
     ${TestPlugin_SOURCE_DIR}/TestPlugin.hpp
@@ -16,15 +21,34 @@ set(Plugin_SRCS
     ${TestPlugin_SOURCE_DIR}/TestFilter.cpp
 )
 
-add_library(TestPlugin SHARED ${Plugin_HDRS} ${Plugin_SRCS})
+add_library(TestPlugin SHARED)
 set_target_properties(TestPlugin PROPERTIES
     FOLDER "Tests/Plugins"
 )
 target_link_libraries(TestPlugin PUBLIC complex)
-generate_export_header(TestPlugin)
+
+generate_export_header(TestPlugin
+  EXPORT_FILE_NAME ${PLUGIN_EXPORT_HEADER}
+)
+set(TESTPLUGIN_GENERATED_HEADERS
+  ${PLUGIN_EXPORT_HEADER}
+)
+set(TESTPLUGIN_ALL_HDRS
+  ${Plugin_HDRS}
+  ${TESTPLUGIN_GENERATED_HEADERS}
+)
+
+target_sources(TestPlugin
+  PUBLIC
+    ${TESTPLUGIN_ALL_HDRS}
+  PRIVATE
+    ${Plugin_SRCS}
+)
+
 target_include_directories(TestPlugin
     PUBLIC
     $<BUILD_INTERFACE:${TestPlugin_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${PLUGIN_GENERATED_DIR}>
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/tests/Plugin>
 )
 
@@ -49,15 +73,34 @@ set(Plugin2_SRCS
     ${TestPlugin_SOURCE_DIR}/Test2Filter.cpp
 )
 
-add_library(Test2Plugin SHARED ${Plugin2_HDRS} ${Plugin2_SRCS})
+add_library(Test2Plugin SHARED)
 set_target_properties(Test2Plugin PROPERTIES
     FOLDER "Tests/Plugins"
 )
 target_link_libraries(Test2Plugin PUBLIC complex)
-generate_export_header(Test2Plugin)
+
+generate_export_header(Test2Plugin
+  EXPORT_FILE_NAME ${PLUGIN2_EXPORT_HEADER}
+)
+set(TEST2PLUGIN_GENERATED_HEADERS
+  ${PLUGIN2_EXPORT_HEADER}
+)
+set(TEST2PLUGIN_ALL_HDRS
+  ${Plugin2_HDRS}
+  ${TEST2PLUGIN_GENERATED_HEADERS}
+)
+
+target_sources(Test2Plugin
+  PUBLIC
+    ${TEST2PLUGIN_ALL_HDRS}
+  PRIVATE
+    ${Plugin2_SRCS}
+)
+
 target_include_directories(Test2Plugin
     PUBLIC
     $<BUILD_INTERFACE:${TestPlugin_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${PLUGIN_GENERATED_DIR}>
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/tests/Plugin>
 )
 

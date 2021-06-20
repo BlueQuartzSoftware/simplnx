@@ -116,20 +116,53 @@ std::string LinkedPath::toString(const std::string& div) const
 
 bool LinkedPath::operator==(const LinkedPath& rhs) const
 {
-  throw std::exception();
+  if(getLength() != rhs.getLength())
+  {
+    return false;
+  }
+
+  return (m_DataStructure == rhs.m_DataStructure) && (m_IdPath == rhs.m_IdPath);
 }
 
 bool LinkedPath::operator==(const DataPath& rhs) const
 {
-  throw std::exception();
+  if(getLength() != rhs.getLength())
+  {
+    return false;
+  }
+
+  for(size_t i = 0; i < m_IdPath.size(); i++)
+  {
+    if(getNameAt(i) != rhs[i])
+    {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool LinkedPath::operator!=(const LinkedPath& rhs) const
 {
-  throw std::exception();
+  if(getLength() != rhs.getLength())
+  {
+    return true;
+  }
+  return (m_DataStructure != rhs.m_DataStructure) || (m_IdPath != rhs.m_IdPath);
 }
 
 bool LinkedPath::operator!=(const DataPath& rhs) const
 {
-  throw std::exception();
+  if(getLength() != rhs.getLength())
+  {
+    return true;
+  }
+
+  for(size_t i = 0; i < m_IdPath.size(); i++)
+  {
+    if(getNameAt(i) != rhs[i])
+    {
+      return true;
+    }
+  }
+  return false;
 }

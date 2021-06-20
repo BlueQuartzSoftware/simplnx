@@ -1,25 +1,33 @@
-#include "TestFilter.h"
+#include "TestFilter.hpp"
 
 #include <iostream>
 #include <string>
 
-#include "Complex/Filtering/AbstractFilter.h"
+#include "Complex/Filtering/AbstractFilter.hpp"
 
 using namespace complex;
 
+const AbstractFilter::IdType TestFilter::ID = 1;
+
 TestFilter::TestFilter()
-: AbstractFilter("Test Filter")
+: AbstractFilter("Test Filter", TestFilter::ID)
 {
 }
 
 TestFilter::~TestFilter() = default;
 
-void TestFilter::preflightImpl(FilterDataOps& data, const Arguments& args)
+complex::Parameters TestFilter::parameters() const
 {
-  std::cout << "Preflight TestFilter" << std::endl;
+  return {};
 }
 
-void TestFilter::executeImpl(FilterDataOps& data, const Arguments& args)
+bool TestFilter::preflightImpl(const DataStructure& data, const Arguments& args) const
+{
+  std::cout << "Preflight TestFilter" << std::endl;
+  return true;
+}
+
+void TestFilter::executeImpl(DataStructure& data, const Arguments& args) const
 {
   std::cout << "Executing TestFilter" << std::endl;
 }

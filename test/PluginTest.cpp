@@ -2,17 +2,21 @@
 #include <iostream>
 #include <string>
 
-#include <SIMPL/Core/Application.h>
-#include <SIMPL/Core/FilterHandle.h>
-#include <SIMPL/DataStructure/DataStructure.h>
-#include <SIMPL/Filtering/AbstractFilter.h>
-#include <SIMPL/Plugin/AbstractPlugin.h>
-#include "Plugin/TestFilter.h"
-#include "Plugin/Test2Filter.h"
+#include "complex/Core/Application.hpp"
+#include "complex/Core/FilterHandle.hpp"
+#include "complex/DataStructure/DataStructure.hpp"
+#include "complex/Filtering/AbstractFilter.hpp"
+#include "complex/Plugin/AbstractPlugin.hpp"
 
-#include "PluginDir.h"
+#include "PluginDir.hpp"
 
-using namespace SIMPL;
+using namespace complex;
+
+namespace
+{
+FilterHandle testHandle("Test Filter", 1, "05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+FilterHandle test2Handle("Test2 Filter", 1, "05cc618b-781f-4ac0-b9ac-43f26ce1854e");
+}
 
 void testLoadingPlugins()
 {
@@ -40,23 +44,23 @@ void testLoadingPlugins()
     throw std::exception();
   }
 
-  auto filter = filterList->createFilter(filterHandles[1]);
+  auto filter = filterList->createFilter(testHandle);
   if(nullptr == filter)
   {
     throw std::exception();
   }
-  if(nullptr == dynamic_cast<TestFilter*>(filter))
+  if(filter->getName() != "Test Filter")
   {
     throw std::exception();
   }
   filter->execute(DataStructure(), {});
 
-  auto filter2 = filterList->createFilter(filterHandles[0]);
+  auto filter2 = filterList->createFilter(test2Handle);
   if(nullptr == filter2)
   {
     throw std::exception();
   }
-  if(nullptr == dynamic_cast<Test2Filter*>(filter2))
+  if(filter2->getName() != "Test Filter 2")
   {
     throw std::exception();
   }
@@ -89,23 +93,23 @@ void testSingleton()
   }
 
   // Create and execute filters
-  auto filter = filterList->createFilter(filterHandles[1]);
+  auto filter = filterList->createFilter(testHandle);
   if(nullptr == filter)
   {
     throw std::exception();
   }
-  if(nullptr == dynamic_cast<TestFilter*>(filter))
+  if(filter->getName() != "Test Filter")
   {
     throw std::exception();
   }
   filter->execute(DataStructure(), {});
 
-  auto filter2 = filterList->createFilter(filterHandles[0]);
+  auto filter2 = filterList->createFilter(test2Handle);
   if(nullptr == filter2)
   {
     throw std::exception();
   }
-  if(nullptr == dynamic_cast<Test2Filter*>(filter2))
+  if(filter2->getName() != "Test Filter 2")
   {
     throw std::exception();
   }
