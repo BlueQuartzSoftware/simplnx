@@ -31,7 +31,7 @@ jobs:
       - name: '[Windows] Install Dependencies'
         if: ${{matrix.os == 'windows-2019'}}
         run: |
-          choco install ninja doxygen.portable
+          choco install ninja doxygen.install
       - name: '[macOS] Install Dependencies'
         if: ${{matrix.os == 'macos-10.15'}}
         run: |
