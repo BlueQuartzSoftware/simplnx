@@ -31,7 +31,7 @@
         },
         "COMPLEX_BUILD_PYTHON": {
           "type": "BOOL",
-          "value": "ON"
+          "value": "OFF"
         }
       }
     }
