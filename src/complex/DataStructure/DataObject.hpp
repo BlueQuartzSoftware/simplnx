@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "complex/DataStructure/Metadata.hpp"
 #include "complex/Utilities/TooltipGenerator.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/complex_export.hpp"
@@ -16,7 +17,6 @@ namespace complex
 class BaseGroup;
 class DataPath;
 class DataStructure;
-class Metadata;
 
 /**
  * class DataObject
