@@ -29,13 +29,13 @@ public:
    * @brief
    * @param other
    */
-  DataAddedMessage::DataAddedMessage(const DataAddedMessage& other);
+  DataAddedMessage(const DataAddedMessage& other);
 
   /**
    * @brief
    * @param other
    */
-  DataAddedMessage::DataAddedMessage(DataAddedMessage&& other) noexcept;
+  DataAddedMessage(DataAddedMessage&& other) noexcept;
 
   /**
    * @brief
