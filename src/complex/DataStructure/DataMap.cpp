@@ -146,7 +146,7 @@ DataObject* DataMap::operator[](IdType key)
   {
     return m_Map.at(key).get();
   }
-  return false;
+  return nullptr;
 }
 
 const DataObject* DataMap::operator[](IdType key) const
@@ -155,7 +155,7 @@ const DataObject* DataMap::operator[](IdType key) const
   {
     return m_Map.at(key).get();
   }
-  return false;
+  return nullptr;
 }
 
 DataObject* DataMap::operator[](const std::string& name)
