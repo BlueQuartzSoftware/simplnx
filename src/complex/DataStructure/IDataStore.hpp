@@ -2,7 +2,7 @@
 
 #include "complex/complex_export.hpp"
 
-namespace SIMPL
+namespace complex
 {
 class COMPLEX_EXPORT IDataStore
 {
@@ -24,4 +24,4 @@ class COMPLEX_EXPORT IDataStore
    */
   virtual size_t getTupleSize() const = 0;
 };
-} // namespace SIMPL
+} // namespace complex

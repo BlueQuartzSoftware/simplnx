@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "complex",
+  "version": "0.1.0",
+  "dependencies": [
+    {
+      "name": "fmt"
+    },
+    {
+      "name": "nlohmann-json"
+    },
+    {
+      "name": "hdf5"
+    }
+  ],
+  "features": {
+    "python": {
+      "description": "Python bindings",
+      "dependencies": [
+        {
+          "name": "pybind11",
+          "version>=": "2.6.2"
+        }
+      ]
+    },
+    "tests": {
+      "description": "Tests",
+      "dependencies": [
+        {
+          "name": "catch2"
+        }
+      ]
+    }
+  }
+}

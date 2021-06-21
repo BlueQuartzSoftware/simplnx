@@ -1,16 +1,30 @@
 cmake_minimum_required(VERSION 3.19)
 
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/Utility.cmake)
+
+option(COMPLEX_BUILD_PYTHON "Enable building Python building" OFF)
+enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_PYTHON FEATURE "python")
+
+option(COMPLEX_BUILD_TESTS "Enable building COMPLEX tests" ON)
+enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_TESTS FEATURE "tests")
+
 project(complex
   VERSION 0.1.0
   DESCRIPTION "SIMPL Redesign"
+  HOMEPAGE_URL "https://github.com/BlueQuartzSoftware/complex"
   LANGUAGES CXX
 )
+
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+find_package(fmt REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 add_library(complex SHARED)
 add_library(complex::complex ALIAS complex)
@@ -23,8 +37,19 @@ target_compile_features(complex
 set_target_properties(complex
   PROPERTIES
     DEBUG_POSTFIX "_d"
-    CMAKE_CXX_VISIBILITY_PRESET hidden
-    CMAKE_VISIBILITY_INLINES_HIDDEN ON
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
+)
+
+target_compile_options(complex
+  PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/MP>
+)
+
+target_link_libraries(complex
+  PUBLIC
+    fmt::fmt
+    nlohmann_json::nlohmann_json
 )
 
 set(COMPLEX_GENERATED_DIR ${PROJECT_BINARY_DIR}/generated)
@@ -39,6 +64,10 @@ generate_export_header(complex
 set(COMPLEX_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/complex)
 
 set(COMPLEX_HDRS
+  ${COMPLEX_SOURCE_DIR}/Common/expected.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Types.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Result.hpp
+
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.hpp
@@ -59,6 +88,12 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/MetaData.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/ScalarData.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Filter/Arguments.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/IFilter.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/IParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Output.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Parameters.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
   
@@ -92,6 +127,11 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/MetaData.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Filter/Arguments.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/IFilter.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/IParameter.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Parameters.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
@@ -165,22 +205,6 @@ if(COMPLEX_ENABLE_INSTALL)
     DESTINATION ${COMPLEX_INSTALL_CMAKE_PREFIX}
   )
 
-  function(install_with_directory)
-    set(optionsArgs)
-    set(oneValueArgs DESTINATION COMPONENT BASE_DIR)
-    set(multiValueArgs FILES)
-    cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    foreach(file ${ARGS_FILES})
-        file(RELATIVE_PATH relative_file ${ARGS_BASE_DIR} ${file})
-        get_filename_component(destination_dir ${relative_file} DIRECTORY)
-        install(FILES ${file}
-          DESTINATION ${ARGS_DESTINATION}/${destination_dir}
-          COMPONENT ${ARGS_COMPONENT}
-        )
-    endforeach()
-  endfunction()
-
   install_with_directory(FILES ${COMPLEX_HDRS}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/complex
     COMPONENT develop
@@ -204,10 +228,16 @@ if(COMPLEX_ENABLE_PACKAGING)
   include(CPack)
 endif()
 
-include(CTest)
-if(BUILD_TESTING)
-  option(COMPLEX_BUILD_TESTS "Enable building COMPLEX tests" ON)
-  if(COMPLEX_BUILD_TESTS)
-    add_subdirectory(test)
-  endif()
+if(COMPLEX_BUILD_TESTS)
+  include(CTest)
+  add_subdirectory(test)
+endif()
+
+if(COMPLEX_BUILD_PYTHON)
+  add_subdirectory(wrapping/python)
+endif()
+
+option(COMPLEX_BUILD_DOCS "Enables building COMPLEX documentation" OFF)
+if(COMPLEX_BUILD_DOCS)
+  add_subdirectory(docs)
 endif()
