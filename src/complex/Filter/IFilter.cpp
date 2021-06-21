@@ -1,5 +1,7 @@
 #include "IFilter.hpp"
 
+#include <vector>
+
 #include <fmt/format.h>
 
 namespace complex
