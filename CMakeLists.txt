@@ -86,7 +86,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/IDataStore.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/MetaData.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/ScalarData.hpp
 
   ${COMPLEX_SOURCE_DIR}/Filter/Arguments.hpp
@@ -126,7 +126,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataPath.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/MetaData.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.cpp
 
   ${COMPLEX_SOURCE_DIR}/Filter/Arguments.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/IFilter.cpp
