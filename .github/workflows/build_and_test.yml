@@ -38,7 +38,7 @@ jobs:
           brew install ninja doxygen
       - name: '[Windows] Setup Build Environment'
         if: ${{matrix.os == 'windows-2019'}}
-        uses: microsoft/setup-msbuild@v1.0.2
+        uses: ilammy/msvc-dev-cmd@v1
       - name: Configure
         run: |
           cmake --preset ci ${{github.workspace}}
