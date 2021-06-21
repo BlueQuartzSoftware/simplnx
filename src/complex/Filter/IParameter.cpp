@@ -44,8 +44,8 @@ ValueParameter::Type ValueParameter::type() const
   return Type::Value;
 }
 
-DataParameter::DataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const std::optional<std::any>& default, Category category)
-: AbstractParameter(name, humanName, helpText, default)
+DataParameter::DataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const std::optional<std::any>& defaultValue, Category category)
+: AbstractParameter(name, humanName, helpText, defaultValue)
 , m_Category(category)
 {
 }

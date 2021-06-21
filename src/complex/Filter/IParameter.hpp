@@ -185,7 +185,7 @@ public:
 
 protected:
   DataParameter() = delete;
-  DataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const std::optional<std::any>& default, Category category);
+  DataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const std::optional<std::any>& defaultValue, Category category);
 
 private:
   Category m_Category;
