@@ -162,7 +162,7 @@ public:
    * @param hdfFileName
    * @return H5::ErrorType
    */
-  H5::ErrorType generateXdmfText(std::istream& out, const std::string& hdfFileName) const override;
+  H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const override;
 
   /**
    * @brief
