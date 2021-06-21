@@ -27,15 +27,15 @@ jobs:
       - name: '[Linux] Install Dependencies'
         if: ${{matrix.os == 'ubuntu-18.04'}}
         run: |
-          sudo apt-get install ninja-build
+          sudo apt-get -y install ninja-build doxygen
       - name: '[Windows] Install Dependencies'
         if: ${{matrix.os == 'windows-2019'}}
         run: |
-          choco install ninja
+          choco install ninja doxygen
       - name: '[macOS] Install Dependencies'
         if: ${{matrix.os == 'macos-10.15'}}
         run: |
-          brew install ninja
+          brew install ninja doxygen
       - name: Configure
         run: |
           cmake --preset ci ${{github.workspace}}
