@@ -194,7 +194,7 @@ DataMap::ConstIterator DataMap::find(IdType id) const
 
 DataMap::Iterator DataMap::find(const std::string& name)
 {
-  for(auto& iter = begin(); iter != end(); iter++)
+  for(auto iter = begin(); iter != end(); iter++)
   {
     if((*iter).second->getName() == name)
     {
@@ -206,7 +206,7 @@ DataMap::Iterator DataMap::find(const std::string& name)
 
 DataMap::ConstIterator DataMap::find(const std::string& name) const
 {
-  for(auto& iter = begin(); iter != end(); iter++)
+  for(auto iter = begin(); iter != end(); iter++)
   {
     if((*iter).second->getName() == name)
     {
