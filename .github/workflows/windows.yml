@@ -27,7 +27,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Add C++ problem matcher
+      - name: Add C++ Problem Matcher
         uses: ammaraskar/msvc-problem-matcher@0.1
       - name: Setup Build Environment
         uses: ilammy/msvc-dev-cmd@v1
