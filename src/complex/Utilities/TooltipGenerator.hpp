@@ -10,10 +10,14 @@ namespace complex
 {
 
 /**
- * class TooltipGenerator
- *
+ * @class TooltipGenerator
+ * @brief The TooltipGenerator class creates a standardized HTML tooltip
+ * using a simplified interface. Instead of hard-coding tables, the
+ * TooltipGenerator creates tables using title, named value, and spacer rows.
+ * HTML tables can be generated for a consistent appearance that can be easily
+ * updated by changing how the HTML is generated in a single place without the
+ * need to update HTML tables for every class that uses them.
  */
-
 class COMPLEX_EXPORT TooltipGenerator
 {
 public:
@@ -37,13 +41,15 @@ public:
   virtual ~TooltipGenerator();
 
   /**
-   * @brief Adds a title-type row with the specified name to the end of the TooltipGenerator.
+   * @brief Adds a title-type row with the specified name to the end of the
+   * TooltipGenerator.
    * @param title
    */
   void addTitle(const std::string& title);
 
   /**
-   * @brief Adds a value-type row with the target name and value to the end of the TooltipGenerator.
+   * @brief Adds a value-type row with the target name and value to the end
+   * of the TooltipGenerator.
    * @param name
    * @param value
    */
@@ -55,7 +61,8 @@ public:
   void addSpacer();
 
   /**
-   * @brief Appends the provided TooltipGenerator's rows to the end of the TooltipGenerator.
+   * @brief Appends the provided TooltipGenerator's rows to the end of the
+   * TooltipGenerator.
    * @param other
    */
   void append(const TooltipGenerator& other);

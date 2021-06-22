@@ -15,10 +15,16 @@ class JsonPipelineBuilder;
 // class RestServer;
 
 /**
- * class Application
- *
+ * @class Application
+ * @brief The Application class serves as the core of the framework. The
+ * Application instance provides access to the FilterList, PipelineBuilder,
+ * and REST server. The Application handles loading available plugins into the
+ * FilterList so that they can be used by the rest of the codebase.
+ * When the Application is deleted, plugins are released and memory is cleaned
+ * up. Pipelines or DataStructures are not cleaned up unless they are owned by
+ * the REST server, but plugin-specific information or calculations will be
+ * made unavailable.
  */
-
 class COMPLEX_EXPORT Application
 {
 public:
@@ -70,12 +76,6 @@ public:
 
 protected:
 private:
-  /**
-   * @brief Initializes the application. This is called by the constructors for
-   * consistent behavior between them.
-   */
-  void initialize();
-
   /**
    * @brief Loads the plugin at the specified file path.
    * @param path

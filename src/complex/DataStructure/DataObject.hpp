@@ -20,14 +20,27 @@ class DataStructure;
 class Metadata;
 
 /**
- * class DataObject
- *
+ * @class DataObject
+ * @brief The DataObject class is the base class for all items stored in the
+ * DataStructure. DataObjects have a name and ID value for looking them up.
+ * Concrete implementations need to implement shallowCopy, deepCopy,
+ * generateXdmfText, and readFromXdmfText.
+ * DataObjects can have multiple parents and are deleted when they are removed
+ * from their last remaining parent.
  */
-
 class COMPLEX_EXPORT DataObject
 {
 public:
+  /**
+   * @brief The IdType alias serves as an ID type for DataObjects within their
+   * respective DataStructure.
+   */
   using IdType = size_t;
+
+  /**
+   * @brief The ParentCollectionType alias describes the format by which parent
+   * collections are returned via public API.
+   */
   using ParentCollectionType = std::list<BaseGroup*>;
 
   friend class BaseGroup;
@@ -73,7 +86,8 @@ public:
   DataStructure* getDataStructure();
 
   /**
-   * @brief Returns a read-only pointer to the DataStructure this DataObject belongs to.
+   * @brief Returns a read-only pointer to the DataStructure this DataObject
+   * belongs to.
    * @return const DataStructure*
    */
   const DataStructure* getDataStructure() const;
@@ -85,7 +99,8 @@ public:
   std::string getName() const;
 
   /**
-   * @brief Checks and returns if the DataObject can be renamed to the provided value.
+   * @brief Checks and returns if the DataObject can be renamed to the provided
+   * value.
    * @param name
    * @return bool
    */
@@ -146,7 +161,8 @@ public:
 
 protected:
   /**
-   * @brief DataObject constructor takes a pointer to the DataStructure and object name.
+   * @brief DataObject constructor takes a pointer to the DataStructure and
+   * object name.
    * @param ds
    * @param name
    */

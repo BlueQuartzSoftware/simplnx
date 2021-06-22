@@ -6,18 +6,19 @@ namespace complex
 {
 
 /**
- * class Point2D
- *
+ * @class Point2D
+ * @brief The Point2D class describes a point in 2D space and provides basic
+ * calculations for manipulating them. Point2D objects are used primarily for
+ * use in geometries and GeometryMath.
  */
-
 template <typename T>
 class Point2D
 {
 public:
-  using value_type = T;
-  using pointer = T*;
+  using ValueType = T;
+  using Pointer = T*;
   const size_t dimensions = 2;
-  using array_type = std::array<T, 2>;
+  using ArrayType = std::array<T, 2>;
 
   /**
    * @brief Default constructor. Creates a Point3D at (0, 0).
@@ -31,7 +32,7 @@ public:
    * @brief Constructs a Point2D from the provided std::array
    * @param pos
    */
-  Point2D(const array_type& pos)
+  Point2D(const ArrayType& pos)
   : m_Pos(pos)
   {
   }
@@ -40,7 +41,7 @@ public:
    * @brief Constructs a Point2D from the provided std::array
    * @param pos
    */
-  Point2D(array_type&& pos) noexcept
+  Point2D(ArrayType&& pos) noexcept
   : m_Pos(std::move(pos))
   {
   }
@@ -50,17 +51,17 @@ public:
    * @param x
    * @param y
    */
-  Point2D(value_type x, value_type y)
+  Point2D(ValueType x, ValueType y)
   : m_Pos({x, y})
   {
   }
 
   /**
-   * @brief Constructs a Point2D from a raw pointer array. This array is
+   * @brief Constructs a Point2D from a raw Pointer array. This array is
    * expected to have two values that are copied to create the Point2D.
    * @param pos
    */
-  Point2D(pointer pos)
+  Point2D(Pointer pos)
   : m_Pos({pos[0], pos[1]})
   {
   }
@@ -69,18 +70,18 @@ public:
 
   /**
    * @brief Returns the X value.
-   * @return value_type
+   * @return ValueType
    */
-  value_type getX() const
+  ValueType getX() const
   {
     return m_Pos[0];
   }
 
   /**
    * @brief Returns the Y value.
-   * @return value_type
+   * @return ValueType
    */
-  value_type getY() const
+  ValueType getY() const
   {
     return m_Pos[1];
   }
@@ -89,7 +90,7 @@ public:
    * @brief Sets the X value.
    * @param x
    */
-  void setX(value_type x)
+  void setX(ValueType x)
   {
     m_Pos[0] = x;
   }
@@ -98,7 +99,7 @@ public:
    * @brief Sets the Y value.
    * @param y
    */
-  void setY(value_type y)
+  void setY(ValueType y)
   {
     m_Pos[1] = y;
   }
@@ -107,7 +108,7 @@ public:
    * @brief Copies the std::array to set the new position.
    * @param pos
    */
-  void setPos(const array_type& pos)
+  void setPos(const ArrayType& pos)
   {
     m_Pos = pos;
   }
@@ -117,27 +118,27 @@ public:
    * @param  x
    * @param  y
    */
-  void setPos(value_type x, value_type y)
+  void setPos(ValueType x, ValueType y)
   {
     m_Pos[0] = x;
     m_Pos[1] = y;
   }
 
   /**
-   * @brief Sets the new position by copying X and Y values from the provided pointer.
+   * @brief Sets the new position by copying X and Y values from the provided Pointer.
    * @param pos
    */
-  void setPos(pointer pos)
+  void setPos(Pointer pos)
   {
     m_Pos[0] = pos[0];
     m_Pos[1] = pos[1];
   }
 
   /**
-   * @brief Returns the position as a array_type
-   * @return array_type
+   * @brief Returns the position as a ArrayType
+   * @return ArrayType
    */
-  array_type toArray() const
+  ArrayType toArray() const
   {
     return m_Pos;
   }
@@ -145,9 +146,9 @@ public:
   /**
    * @brief Returns a reference to the target position index.
    * @param index
-   * @return value_type&
+   * @return ValueType&
    */
-  value_type& operator[](size_t index)
+  ValueType& operator[](size_t index)
   {
     return m_Pos[index];
   }
@@ -199,7 +200,7 @@ public:
    */
   Point2D operator+(const Point2D& rhs) const
   {
-    array_type pos = {0, 0};
+    ArrayType pos = {0, 0};
     for(size_t i = 0; i < dimensions; i++)
     {
       pos[i] = m_Pos[i] + rhs.m_Pos[i];
@@ -214,7 +215,7 @@ public:
    */
   Point2D operator-(const Point2D& rhs) const
   {
-    array_type pos = {0, 0};
+    ArrayType pos = {0, 0};
     for(size_t i = 0; i < dimensions; i++)
     {
       pos[i] = m_Pos[i] - rhs.m_Pos[i];
@@ -252,6 +253,6 @@ public:
 
 protected:
 private:
-  array_type m_Pos;
+  ArrayType m_Pos;
 };
 } // namespace complex

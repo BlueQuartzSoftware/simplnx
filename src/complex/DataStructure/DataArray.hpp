@@ -7,10 +7,11 @@ namespace complex
 {
 
 /**
- * class DataArray
- *
+ * @class DataArray
+ * @brief The DataArray class is a type of DataObject that exists to store and
+ * retrieve array data within the DataStructure. The DataArray is designed to
+ * allow expandability into multiple sources of data, including out-of-core data.
  */
-
 template <class T>
 class DataArray : public DataObject
 {
@@ -19,7 +20,8 @@ public:
   using ConstIterator = void;
 
   /**
-   * @brief Constructs a DataArray with the specified tuple size, count, and constructs a DataStore with the provided default value.
+   * @brief Constructs a DataArray with the specified tuple size, count, and
+   * constructs a DataStore with the provided default value.
    * @param ds
    * @param name
    * @param tupleSize
@@ -34,7 +36,8 @@ public:
   }
 
   /**
-   * @brief Constructs a DataArray with the specified tuple size, count, and DataStore. The DataArray takes ownership of the DataStore.
+   * @brief Constructs a DataArray with the specified tuple size, count, and
+   * DataStore. The DataArray takes ownership of the DataStore.
    * @param ds
    * @param name
    * @param tupleSize
@@ -49,7 +52,8 @@ public:
   }
 
   /**
-   * @brief Copy constructor creates a copy of the specified tuple size, count, and smart pointer to the target DataStore.
+   * @brief Copy constructor creates a copy of the specified tuple size, count,
+   * and smart pointer to the target DataStore.
    * @param other
    */
   DataArray(const DataArray<T>& other)
@@ -63,7 +67,6 @@ public:
   /**
    * @brief Move constructor moves the data from the provided DataArray.
    * @param other
-   * @return
    */
   DataArray(DataArray<T>&& other) noexcept
   : DataObject(std::move(other))

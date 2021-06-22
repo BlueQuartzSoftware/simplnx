@@ -3,18 +3,18 @@
 using namespace complex;
 
 TooltipRowItem::TooltipRowItem()
-: m_Type(TooltipRowType::Spacer)
+: m_Type(Type::Spacer)
 {
 }
 
 TooltipRowItem::TooltipRowItem(const std::string& title)
-: m_Type(TooltipRowType::Title)
+: m_Type(Type::Title)
 , m_Title(title)
 {
 }
 
 TooltipRowItem::TooltipRowItem(const std::string& title, const std::string& value)
-: m_Type(TooltipRowType::Value)
+: m_Type(Type::Value)
 , m_Title(title)
 , m_Value(value)
 {
@@ -36,7 +36,7 @@ TooltipRowItem::TooltipRowItem(TooltipRowItem&& other) noexcept
 
 TooltipRowItem::~TooltipRowItem() = default;
 
-TooltipRowItem::TooltipRowType TooltipRowItem::getType() const
+TooltipRowItem::Type TooltipRowItem::getType() const
 {
   return m_Type;
 }

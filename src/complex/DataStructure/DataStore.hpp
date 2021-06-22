@@ -2,6 +2,12 @@
 
 namespace complex
 {
+/**
+ * @class DataStore
+ * @brief The DataStore class handles the storing and retrieval of data for
+ * use in DataArrays.
+ * @tparam T
+ */
 template <typename T>
 class DataStore
 {
@@ -10,7 +16,7 @@ public:
   using ConstIterator = void;
 
   /**
-   * @brief
+   * @brief Constructs a DataStore with the specified tupleSize and tupleCount.
    * @param tupleSize
    * @param tupleCount
    */

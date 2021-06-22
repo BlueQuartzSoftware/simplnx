@@ -12,6 +12,12 @@ namespace complex
 class DataStructure;
 class DataObject;
 
+/**
+ * @class DataMap
+ * @brief The DataMap class is used to handle lookup and storage of DataObjects
+ * using the objects' ID values or names. The DataMap class is primarily used
+ * within the BaseGroup and DataStructure classes as a consistent.
+ */
 class COMPLEX_EXPORT DataMap
 {
 public:
@@ -70,8 +76,8 @@ public:
   bool remove(IdType id);
 
   /**
-   * @brief Attempts to remove a DataObject from the map using the target iterator.
-   * Returns true if it succeeded. Returns false otherwise.
+   * @brief Attempts to remove a DataObject from the map using the target
+   * iterator. Returns true if it succeeded. Returns false otherwise.
    * @param iter
    * @return bool
    */
@@ -84,13 +90,15 @@ public:
   std::vector<IdType> getKeys() const;
 
   /**
-   * @brief Returns a vector of all the IdTypes contained in the map and its contained groups.
+   * @brief Returns a vector of all the IdTypes contained in the map and its
+   * contained groups.
    * @return std::vector<IdType>
    */
   std::vector<IdType> getAllKeys() const;
 
   /**
-   * @brief Returns a map of Id and DataObjects in the map and its contained groups.
+   * @brief Returns a map of Id and DataObjects in the map and its contained
+   * groups.
    * @return std::map<IdType, std::weak_ptr<DataObject>>
    */
   std::map<IdType, std::weak_ptr<DataObject>> getAllItems() const;

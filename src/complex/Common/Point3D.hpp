@@ -6,18 +6,19 @@ namespace complex
 {
 
 /**
- * class Point3D
- *
+ * @class Point3D
+ * @brief The Point3D class describes a point in 3D space and provides basic
+ * calculations for manipulating them. Point3D objects are used primarily for
+ * use in geometries and GeometryMath.
  */
-
 template <typename T>
 class Point3D
 {
 public:
-  using value_type = T;
-  using pointer = T*;
+  using ValueType = T;
+  using Pointer = T*;
   const size_t dimensions = 3;
-  using array_type = std::array<T, 3>;
+  using ArrayType = std::array<T, 3>;
 
   /**
    * @brief Default constructor. Creates a Point3D at (0, 0, 0).
@@ -31,7 +32,7 @@ public:
    * @brief Constructs a Point3D from the provided std::array.
    * @param pos
    */
-  Point3D(const array_type& pos)
+  Point3D(const ArrayType& pos)
   : m_Pos(pos)
   {
   }
@@ -40,7 +41,7 @@ public:
    * @brief Constructs a Point3D from the provided std::array.
    * @param pos
    */
-  Point3D(array_type&& pos) noexcept
+  Point3D(ArrayType&& pos) noexcept
   : m_Pos(std::move(pos))
   {
   }
@@ -51,17 +52,17 @@ public:
    * @param y
    * @param z
    */
-  Point3D(value_type x, value_type y, value_type z)
+  Point3D(ValueType x, ValueType y, ValueType z)
   : m_Pos({x, y, z})
   {
   }
 
   /**
-   * @brief Constructs a Point3D by copying values from the provided raw pointer.
-   * The provided pointer is assumed to contain at least 3 values.
+   * @brief Constructs a Point3D by copying values from the provided raw Pointer.
+   * The provided Pointer is assumed to contain at least 3 values.
    * @param pos
    */
-  Point3D(pointer pos)
+  Point3D(Pointer pos)
   : m_Pos({pos[0], pos[1], pos[2]})
   {
   }
@@ -70,27 +71,27 @@ public:
 
   /**
    * @brief Returns the point's X value.
-   * @return value_type
+   * @return ValueType
    */
-  value_type getX() const
+  ValueType getX() const
   {
     return m_Pos[0];
   }
 
   /**
    * @brief Returns the point's Y value.
-   * @return value_type
+   * @return ValueType
    */
-  value_type getY() const
+  ValueType getY() const
   {
     return m_Pos[1];
   }
 
   /**
    * @brief Returns the point's Z value.
-   * @return value_type
+   * @return ValueType
    */
-  value_type getZ() const
+  ValueType getZ() const
   {
     return m_Pos[2];
   }
@@ -99,7 +100,7 @@ public:
    * @brief Sets the point's X position.
    * @param pos
    */
-  void setX(value_type pos)
+  void setX(ValueType pos)
   {
     m_Pos[0] = pos;
   }
@@ -108,7 +109,7 @@ public:
    * @brief Sets the point's Y position.
    * @param pos
    */
-  void setY(value_type pos)
+  void setY(ValueType pos)
   {
     m_Pos[1] = pos;
   }
@@ -117,16 +118,16 @@ public:
    * @brief Sets the point's Z position.
    * @param pos
    */
-  void setZ(value_type pos)
+  void setZ(ValueType pos)
   {
     m_Pos[2] = pos;
   }
 
   /**
-   * @brief Sets the new position by copying a array_type.
+   * @brief Sets the new position by copying a ArrayType.
    * @param pos
    */
-  void setPos(const array_type& pos)
+  void setPos(const ArrayType& pos)
   {
     m_Pos = pos;
   }
@@ -137,7 +138,7 @@ public:
    * @param y
    * @param z
    */
-  void setPos(value_type x, value_type y, value_type z)
+  void setPos(ValueType x, ValueType y, ValueType z)
   {
     m_Pos[0] = x;
     m_Pos[1] = y;
@@ -146,10 +147,10 @@ public:
 
   /**
    * @brief Sets the new position by copying X, Y, and Z values from the provided
-   * raw pointer. The pointer is assumed to be an array with at least three values.
+   * raw Pointer. The Pointer is assumed to be an array with at least three values.
    * @param pos
    */
-  void setPos(pointer pos)
+  void setPos(Pointer pos)
   {
     for(size_t i = 0; i < dimensions; i++)
     {
@@ -158,10 +159,10 @@ public:
   }
 
   /**
-   * @brief Returns a array_type representation of the current position.
-   * @return array_type
+   * @brief Returns a ArrayType representation of the current position.
+   * @return ArrayType
    */
-  array_type toArray() const
+  ArrayType toArray() const
   {
     return m_Pos;
   }
@@ -173,7 +174,7 @@ public:
    */
   Point3D operator+(const Point3D& rhs) const
   {
-    array_type pos = {0, 0, 0};
+    ArrayType pos = {0, 0, 0};
     for(size_t i = 0; i < dimensions; i++)
     {
       pos[i] = m_Pos[i] + rhs.m_Pos[i];
@@ -188,7 +189,7 @@ public:
    */
   Point3D operator-(const Point3D& rhs) const
   {
-    array_type pos = {0, 0, 0};
+    ArrayType pos = {0, 0, 0};
     for(size_t i = 0; i < dimensions; i++)
     {
       pos[i] = m_Pos[i] - rhs.m_Pos[i];
@@ -268,6 +269,6 @@ public:
 
 protected:
 private:
-  array_type m_Pos;
+  ArrayType m_Pos;
 };
 } // namespace complex

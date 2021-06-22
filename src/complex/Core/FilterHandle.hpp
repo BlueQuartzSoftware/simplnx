@@ -7,12 +7,26 @@
 namespace complex
 {
 /**
- * @brief
+ * @class FilterHandle
+ * @brief The FilterHandle class serves as an ID for looking up information on
+ * a specific filter in the FilterList. FilterHandles store the name of the
+ * filter, the filter's ID, and the ID of the plugin to which the filter
+ * belongs. This class serves no other purpose other than to identify a
+ * specific filter in the FilterList.
  */
 class COMPLEX_EXPORT FilterHandle
 {
 public:
+  /**
+   * @brief The FilterIdType alias points to the AbstractFilter::ID type while
+   * avoiding circular references while compiling.
+   */
   using FilterIdType = size_t;
+
+  /**
+   * @brief The PluginIdType alias points to the AbstractPlugin::ID type while
+   * avoiding circular references while compiling.
+   */
   using PluginIdType = std::string;
 
   /**

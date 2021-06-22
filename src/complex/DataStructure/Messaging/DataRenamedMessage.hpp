@@ -10,14 +10,15 @@ namespace complex
 {
 
 /**
- * class DataRenamedMessage
- *
+ * @class DataRenamedMessage
+ * @brief The DataRenamedMessage class is a DataStructure message class used
+ * to signal that a DataObject's name was changed. The message includes the
+ * target DataObject's ID, the previous name, and the name it was changed to.
  */
-
 class COMPLEX_EXPORT DataRenamedMessage : public AbstractDataStructureMessage
 {
 public:
-  static const int MsgType = 3;
+  static const MessageType MsgType = 3;
 
   /**
    * @brief Constructs a DataRenamedMessage specifying which DataObject was renamed, its old name, and new name.
@@ -44,9 +45,9 @@ public:
 
   /**
    * @brief Returns the AbsractDataStructureMessage type.
-   * @return
+   * @return MessageType
    */
-  int32_t getMsgType() const override;
+  MessageType getMsgType() const override;
 
   /**
    * @brief Returns the renamed object's ID

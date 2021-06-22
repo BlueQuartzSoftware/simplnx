@@ -29,7 +29,7 @@ T CosThetaBetweenVectors(const complex::Point3D<T>& a, const complex::Point3D<T>
 }
 
 /**
- * @brief Returns the angle between two vectors are each defined by a ZXZEuler.
+ * @brief Returns the angle between two vectors that are defined by a ZXZEuler.
  * @param a
  * @param b
  * @return float
@@ -48,6 +48,18 @@ T AngleBetweenVectors(const complex::ZXZEuler<T>& a, const complex::ZXZEuler<T>&
  */
 template <typename T>
 T FindDistanceBetweenPoints(const complex::Point3D<T>& a, const complex::Point3D<T>& b)
+{
+  throw std::exception();
+}
+
+/**
+ * @brief Returns the distance between two points.
+ * @param a
+ * @param b
+ * @return T
+ */
+template <typename T>
+T FindDistanceBetweenPoints(const complex::Point2D<T>& a, const complex::Point2D<T>& b)
 {
   throw std::exception();
 }

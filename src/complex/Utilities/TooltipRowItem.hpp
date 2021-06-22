@@ -8,14 +8,23 @@ namespace complex
 {
 
 /**
- * class TooltipRowItem
- *
+ * @class TooltipRowItem
+ * @brief The TooltipRowItem class is a utility class for use in a
+ * TooltipGenerator. Each instance of TooltipRowItem stores information
+ * required to generate a single table row. There are three types of rows
+ * that can be generated: Title, Value, and Spacer.
+ * Title rows contain a single string serving as a centered title value and is
+ * formatted accordingly.
+ * Value rows contain two strings, a name and a value. Both strings are
+ * formatted according to their purpose and are left-aligned into their own
+ * columns.
+ * Spacer rows do not contain any values but serve as a blank row for
+ * formatting purposes.
  */
-
 class COMPLEX_EXPORT TooltipRowItem
 {
 public:
-  enum class TooltipRowType
+  enum class Type
   {
     Title,
     Value,
@@ -55,10 +64,10 @@ public:
   virtual ~TooltipRowItem();
 
   /**
-   * @brief Gets the row's TooltipRowType.
-   * @return complex::TooltipRowType
+   * @brief Gets the row's Type.
+   * @return complex::Type
    */
-  TooltipRowType getType() const;
+  Type getType() const;
 
   /**
    * @brief Returns the row's name. For Title rows, this returns the title name.
@@ -103,7 +112,7 @@ public:
 
 protected:
 private:
-  TooltipRowType m_Type = TooltipRowType::Spacer;
+  Type m_Type = Type::Spacer;
   std::string m_Title = "";
   std::string m_Value = "";
 };

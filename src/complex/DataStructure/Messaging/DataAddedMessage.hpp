@@ -12,14 +12,16 @@ namespace complex
 {
 
 /**
- * class DataAddedMessage
- *
+ * @class DataAddedMessage
+ * @brief The DataAddedMessage class is a DataStructure message class for
+ * notifying observers to the addition of a DataObject to the DataStructure.
+ * The message can be used to retrieve the DataObject in question and all
+ * DataPaths to the created object.
  */
-
 class COMPLEX_EXPORT DataAddedMessage : public AbstractDataStructureMessage
 {
 public:
-  static const int MsgType = 1;
+  static const MessageType MsgType = 1;
 
   /**
    * @brief Creates a DataAddedMessage for the target DataStructure and DataObject ID.
@@ -44,9 +46,9 @@ public:
 
   /**
    * @brief Returns the AbsractDataStructureMessage type.
-   * @return int32_t
+   * @return MessageType
    */
-  int32_t getMsgType() const override;
+  MessageType getMsgType() const override;
 
   /**
    * @brief Returns the added DataObject ID.

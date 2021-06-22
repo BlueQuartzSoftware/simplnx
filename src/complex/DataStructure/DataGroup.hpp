@@ -8,15 +8,17 @@ namespace complex
 {
 
 /**
- * class DataContainer
- *
+ * @class DataContainer
+ * @brief The DataGroup class is instantiable implementation of BaseGroup.
+ * The DataGroup class does not impose restrictions on which types of
+ * DataObject.
  */
-
 class COMPLEX_EXPORT DataGroup : public BaseGroup
 {
 public:
   /**
-   * @brief Creates the DataGroup for the target DataStructure and with the specified name.
+   * @brief Creates the DataGroup for the target DataStructure and with the
+   * specified name.
    * @param ds
    * @param name
    */
@@ -37,13 +39,15 @@ public:
   virtual ~DataGroup();
 
   /**
-   * @brief Creates and returns a deep copy of the DataGroup.
+   * @brief Creates and returns a deep copy of the DataGroup. The caller is
+   * responsible for deleting the returned pointer when it is no longer needed.
    * @return DataObject*
    */
   DataObject* deepCopy() override;
 
   /**
-   * @brief Creates and returns a shallow copy of the DataGroup.
+   * @brief Creates and returns a shallow copy of the DataGroup. The caller is
+   * responsible for deleting the returned pointer when it is no longer needed.
    * @return DataObject*
    */
   DataObject* shallowCopy() override;
@@ -66,8 +70,9 @@ public:
 
 protected:
   /**
-   * @brief Checks if the provided DataObject can be added to the container. Returns true if
-   * the DataObject can be added to the container. Otherwise, returns false.
+   * @brief Checks if the provided DataObject can be added to the container.
+   * Returns true if the DataObject can be added to the container. Otherwise,
+   * returns false.
    * @param obj
    * @return bool
    */

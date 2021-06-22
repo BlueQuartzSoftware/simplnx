@@ -17,10 +17,12 @@ class AbstractPlugin;
 class PluginLoader;
 
 /**
- * class FilterList
- *
+ * @class FilterList
+ * @brief The FilterList class serves as a lookup point for finding and
+ * creating filters. The FilterList stores and loads plugins, adds
+ * FilterHandles for each plugin's available filters, and handles the creation
+ * of those filters at a later time.
  */
-
 class COMPLEX_EXPORT FilterList
 {
 public:

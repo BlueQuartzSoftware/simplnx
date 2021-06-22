@@ -9,6 +9,12 @@
 
 namespace complex
 {
+/**
+ * @class PluginLoader
+ * @brief The PluginLoader class is the control wrapper around loading, 
+ * unloading, and accessing plugins. The implementation of PluginLoader is
+ * provided for each operating system, but the public API remains the same.
+ */
 class COMPLEX_EXPORT PluginLoader
 {
 public:
@@ -16,7 +22,7 @@ public:
    * @brief Constructs a PluginLoader targetting the specified path.
    * The plugin is loaded upon construction and unloaded when the object is
    * destroyed.
-   * @param path
+   * @param path = ""
    */
   PluginLoader(const std::string& path = "");
 

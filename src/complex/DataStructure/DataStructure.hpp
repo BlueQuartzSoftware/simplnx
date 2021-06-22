@@ -26,10 +26,12 @@ class DataGroup;
 class DataPath;
 
 /**
- * class DataStructure
- *
+ * @class DataStructure
+ * @brief The DataStructure class is both the control center and origin of the
+ * data structure. The DataStructure is where and how DataGroups, montages,
+ * geometries, and scalars are added to the structure. The DataStructure allows
+ * parents to be added to or removed from DataObjects.
  */
-
 class COMPLEX_EXPORT DataStructure
 {
 public:
@@ -78,63 +80,64 @@ public:
   std::optional<DataObject::IdType> getId(const DataPath& path) const;
 
   /**
-   * @brief Returns a pointer to the DataObject with the specified IdType. If no such object
-   * exists, this method returns nullptr.
+   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * If no such object exists, this method returns nullptr.
    * @param id
    * @return DataObject*
    */
   DataObject* getData(DataObject::IdType id);
 
   /**
-   * @brief Returns a pointer to the DataObject at the given DataPath. If no DataObject is
-   * found, this method returns nullptr.
+   * @brief Returns a pointer to the DataObject at the given DataPath. If no
+   * DataObject is found, this method returns nullptr.
    * @param path
    * @return DataObject*
    */
   DataObject* getData(const DataPath& path);
 
   /**
-   * @brief Returns a pointer to the DataObject found at the specified LinkedPath. If no
-   * such DataObject is found, this method returns nullptr.
+   * @brief Returns a pointer to the DataObject found at the specified
+   * LinkedPath. If no such DataObject is found, this method returns nullptr.
    * @param path
    * @return DataObject*
    */
   DataObject* getData(const LinkedPath& path);
 
   /**
-   * @brief Returns a pointer to the DataObject with the specified IdType. If no such object
-   * exists, this method returns nullptr.
+   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * If no such object exists, this method returns nullptr.
    * @param id
    * @return DataObject*
    */
   const DataObject* getData(DataObject::IdType id) const;
 
   /**
-   * @brief Returns a pointer to the DataObject at the given DataPath. If no DataObject is
-   * found, this method returns nullptr.
+   * @brief Returns a pointer to the DataObject at the given DataPath. If no
+   * DataObject is found, this method returns nullptr.
    * @param path
    * @return DataObject*
    */
   const DataObject* getData(const DataPath& path) const;
 
   /**
-   * @brief Returns a pointer to the DataObject found at the specified LinkedPath. If no
-   * such DataObject is found, this method returns nullptr.
+   * @brief Returns a pointer to the DataObject found at the specified
+   * LinkedPath. If no such DataObject is found, this method returns nullptr.
    * @param path
    * @return DataObject*
    */
   const DataObject* getData(const LinkedPath& path) const;
 
   /**
-   * @brief Removes the DataObject using the specified IdType. Returns true if an object was
-   * found. Otherwise, returns false.
+   * @brief Removes the DataObject using the specified IdType. Returns true
+   * if an object was found. Otherwise, returns false.
    * @param id
    * @return bool
    */
   bool removeData(DataObject::IdType id);
 
   /**
-   * @brief Removes the DataObject using the specified DataPath. Returns true if an object
+   * @brief Removes the DataObject using the specified DataPath. Returns true
+   * if an object
    * was found. Otherwise, returns false.
    * @param path
    * @return bool
@@ -149,15 +152,16 @@ public:
   LinkedPath getLinkedPath(const DataPath& path) const;
 
   /**
-   * @brief Creates a ScalarData object for the target parent container specified by the
-   * given IdType. A default value can be specified.
-   * Returns an EditableScalar object that serves as an editable wrapper for the created ScalarData.
+   * @brief Creates a ScalarData object for the target parent container
+   * specified by the given IdType. A default value can be specified.
+   * Returns an EditableScalar object that serves as an editable wrapper
+   * for the created ScalarData.
    * @param parent
    * @param defaultValue
-   * @return EditableScalar<T>
+   * @return ScalarData<T>*
    */
   template <typename T>
-  ScalarData<T> createScalar(const std::string& name, T defaultValue, std::optional<DataObject::IdType> parent = {})
+  ScalarData<T>* createScalar(const std::string& name, T defaultValue, std::optional<DataObject::IdType> parent = {})
   {
     auto scalar = std::make_shared<ScalarData<T>>(this, name);
     if(!finishAddingObject(scalar, parent))
@@ -168,17 +172,20 @@ public:
   }
 
   /**
-   * @brief Creates a DataArray
+   * @brief Creates and adds a DataArray with the specified name, tuple size,
+   * and number of tuples to the DataStructure. A pointer to the created
+   * DataArray is returned if it could be added to the specified parent. If
+   * the DataArray could not be added, returns nullptr.
    * @param parent
    * @param tupleSize
    * @param numTuples
    * @param defaultValue
-   * @return EditableArray<T>
+   * @return DataArray<T>*
    */
   template <typename T>
-  DataArray<T> createDataArray(const std::string& name, size_t tupleSize, size_t numTuples, T defaultValue, std::optional<DataObject::IdType> parent = {})
+  DataArray<T>* createDataArray(const std::string& name, size_t tupleSize, size_t numTuples, T defaultValue, std::optional<DataObject::IdType> parent = {})
   {
-    auto dataArr = std::make_shared<ScalarData<T>>(this, name);
+    auto dataArr = std::make_shared<DataArray<T>>(this, name);
     if(!finishAddingObject(dataArr, parent))
     {
       return nullptr;
@@ -258,10 +265,10 @@ public:
   bool removeParent(DataObject::IdType targetId, DataObject::IdType parent);
 
   /**
-   * @brief Returns a vector of the DataStructure observers.
-   * @return std::vector<AbstractDataStructureObserver*>
+   * @brief Returns a collection of the DataStructure observers.
+   * @return std::set<AbstractDataStructureObserver*>
    */
-  std::vector<AbstractDataStructureObserver*> getObservers() const;
+  std::set<AbstractDataStructureObserver*> getObservers() const;
 
   /**
    * @brief Adds an observer for broadcasting messages.

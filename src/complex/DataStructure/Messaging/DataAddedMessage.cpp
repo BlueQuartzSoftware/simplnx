@@ -24,7 +24,7 @@ DataAddedMessage::DataAddedMessage(DataAddedMessage&& other) noexcept
 
 DataAddedMessage::~DataAddedMessage() = default;
 
-int32_t DataAddedMessage::getMsgType() const
+AbstractDataStructureMessage::MessageType DataAddedMessage::getMsgType() const
 {
   return DataAddedMessage::MsgType;
 }

@@ -10,14 +10,16 @@ namespace complex
 {
 
 /**
- * class DataReparentedMessage
- *
+ * @class DataReparentedMessage
+ * @brief The DataReparentedMessage class is a type of DataStructure message
+ * emitted when a DataObject gains or loses a parent object. The message
+ * includes the target object's ID, the target parent's ID, and whether or not
+ * the parent was added or removed.
  */
-
 class COMPLEX_EXPORT DataReparentedMessage : public AbstractDataStructureMessage
 {
 public:
-  static const int MsgType = 4;
+  static const MessageType MsgType = 4;
 
   /**
    * @brief Constructs a DataReparentedMessage, specifying the target DataObject,
@@ -45,9 +47,9 @@ public:
 
   /**
    * @brief Returns the AbsractDataStructureMessage type.
-   * @return
+   * @return MessageType
    */
-  int32_t getMsgType() const override;
+  MessageType getMsgType() const override;
 
   /**
    * @brief Returns the target DataObject ID.

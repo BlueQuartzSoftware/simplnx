@@ -6,10 +6,11 @@ namespace complex
 {
 
 /**
- * class ScalarData
- *
+ * @class ScalarData
+ * @brief The ScalarData class is designed to store a single scalar value
+ * within the DataStructure. Like DataArrays, the stored value can be
+ * retrieved or edited after the object has been constructed.
  */
-
 template <typename T>
 class ScalarData : public DataObject
 {

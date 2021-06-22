@@ -328,7 +328,7 @@ bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject:
 
 bool DataStructure::removeParent(DataObject::IdType targetId, DataObject::IdType parentId)
 {
-  auto target = m_DataObjects[targetId];
+  const auto& target = m_DataObjects[targetId];
   auto parent = dynamic_cast<BaseGroup*>(getData(parentId));
   auto targetPtr = target.lock();
   if(targetPtr == nullptr)
@@ -344,6 +344,11 @@ void DataStructure::notify(const std::shared_ptr<AbstractDataStructureMessage>& 
   {
     observer->onNotify(this, msg);
   }
+}
+
+std::set<AbstractDataStructureObserver*> DataStructure::getObservers() const
+{
+  return m_Observers;
 }
 
 void DataStructure::addObserver(AbstractDataStructureObserver* obs)

@@ -9,10 +9,13 @@ namespace complex
 {
 
 /**
- * class LinkedPath
- *
+ * @class LinkedPath
+ * @brief The LinkedPath class is an alternate way to store a path through the
+ * DataStructure. Instead of storing DataObject names like DataPath does, the
+ * LinkedPath class stores DataObject IDs and the DataStructure it belongs to.
+ * LinkedPath objects can be used to directly create a corresponding DataPath
+ * or find the DataObject at any point along the path.
  */
-
 class COMPLEX_EXPORT LinkedPath
 {
 public:

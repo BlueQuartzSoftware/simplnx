@@ -7,10 +7,12 @@ namespace complex
 {
 
 /**
- * class Ray
- *
+ * @class Ray
+ * @brief The Ray class describes a ray or line segment in 3D space. Using
+ * the origin and angle values, points can be found at any specified length or
+ * the endpoint can be found at the current length. Rays are primarily used to
+ * simplify and better describe values used in GeometryMath.
  */
-
 template <typename T>
 class Ray
 {

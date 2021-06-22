@@ -10,14 +10,17 @@ namespace complex
 {
 
 /**
- * class DataRemovedMessage
- *
+ * @class DataRemovedMessage
+ * @brief The DataRemovedMessage class is a DataStructure message class that
+ * notifies observers that a DataObject has been removed. The message includes
+ * DataObject's ID and name at the moment of deletion. DataPaths are not
+ * available because parent information is not available when a DataObject is
+ * being deleted.
  */
-
 class COMPLEX_EXPORT DataRemovedMessage : public AbstractDataStructureMessage
 {
 public:
-  static const int MsgType = 2;
+  static const MessageType MsgType = 2;
 
   /**
    * @brief Constructs a DataRemovedMessage for the target DataStructure marking a
@@ -45,9 +48,9 @@ public:
 
   /**
    * @brief Returns the AbsractDataStructureMessage type.
-   * @return int32_t
+   * @return MessageType
    */
-  int32_t getMsgType() const override;
+  MessageType getMsgType() const override;
 
   /**
    * @brief Returns the removed DataObject's ID

@@ -7,10 +7,24 @@
 
 namespace complex
 {
+/**
+ * @brief The Rgba alias is used to specify the format for storing integer
+ * color information. Values are stored as sequential unsigned char components
+ * ranging from 0 to 255 describing red, green, blue, and alpha values.
+ */
 using Rgba = uint32_t;
 
+/**
+ * @brief The RgbColor namespace stores calculations on or for Rgba values.
+ * Calculations range from extracting color components to creating new Rgba
+ * values to printing values to an output stream.
+ */
 namespace RgbColor
 {
+/**
+ * @brief RgbColor::Components are integer color values for a single color
+ * component. Values range from 0 to 255.
+ */
 using Component = uint8_t;
 
 /**

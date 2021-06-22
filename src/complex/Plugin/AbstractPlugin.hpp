@@ -16,10 +16,12 @@ class AbstractPlugin;
 using FilterCreationFunc = AbstractFilter* (*)();
 
 /**
- * class AbstractPlugin
- *
+ * @class AbstractPlugin
+ * @brief The AbstractPlugin class is the base class for all C++ plugins for
+ * use in the application. The AbstractPlugin class provides an interface for
+ * retrieving information about the plugin and creating filters within the
+ * plugin.
  */
-
 class COMPLEX_EXPORT AbstractPlugin
 {
 public:

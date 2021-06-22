@@ -11,6 +11,13 @@
 
 namespace complex
 {
+/**
+ * @class BaseGroup
+ * @brief The BaseGroup class is the base class for all DataObject containers
+ * in the DataStructure. Child classes should override
+ * 'bool canInsert(const DataObject*) const' to determine which DataObjects
+ * can be added to the group and which cannot.
+ */
 class COMPLEX_EXPORT BaseGroup : public DataObject
 {
 public:

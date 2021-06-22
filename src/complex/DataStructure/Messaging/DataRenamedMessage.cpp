@@ -30,7 +30,7 @@ DataRenamedMessage::DataRenamedMessage(DataRenamedMessage&& other) noexcept
 
 DataRenamedMessage::~DataRenamedMessage() = default;
 
-int32_t DataRenamedMessage::getMsgType() const
+AbstractDataStructureMessage::MessageType DataRenamedMessage::getMsgType() const
 {
   return MsgType;
 }

@@ -17,6 +17,13 @@ class Parameter;
 using Arguments = std::vector<Argument>;
 using Parameters = std::vector<Parameter>;
 
+/**
+ * @class AbstractFilter
+ * @brief The AbstractFilter class is the base class for all filters designed
+ * to work with the complex framework. Derived classes need to implement the
+ * parameters, preflightImpl, and executeImpl methods to fulfill the
+ * pure-virtual requirements.
+ */
 class COMPLEX_EXPORT AbstractFilter
 {
 public:
