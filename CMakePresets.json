@@ -27,7 +27,7 @@
         },
         "COMPLEX_BUILD_DOCS": {
           "type": "BOOL",
-          "value": "ON"
+          "value": "OFF"
         },
         "COMPLEX_BUILD_PYTHON": {
           "type": "BOOL",
