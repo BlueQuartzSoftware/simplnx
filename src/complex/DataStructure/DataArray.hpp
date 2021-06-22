@@ -1,7 +1,7 @@
 #pragma once
 
 #include "complex/DataStructure/DataObject.hpp"
-#include "complex/DataStructure/IDataStore.hpp"
+#include "complex/DataStructure/EmptyDataStore.hpp"
 
 namespace complex
 {
@@ -24,15 +24,12 @@ public:
    * constructs a DataStore with the provided default value.
    * @param ds
    * @param name
-   * @param tupleSize
-   * @param tupleCount
-   * @param defaultValue
+   * @param store
    */
-  DataArray(DataStructure* ds, const std::string& name, size_t tupleSize, size_t tupleCount, T defaultValue)
+  DataArray(DataStructure* ds, const std::string& name, IDataStore<T>* store = nullptr)
   : DataObject(ds, name)
-  , m_TupleSize(tupleSize)
-  , m_TupleCount(tupleCount)
   {
+    setDataStore(store);
   }
 
   /**
@@ -40,16 +37,14 @@ public:
    * DataStore. The DataArray takes ownership of the DataStore.
    * @param ds
    * @param name
-   * @param tupleSize
-   * @param tupleCount
    * @param dataStore
    */
-  DataArray(DataStructure* ds, const std::string& name, size_t tupleSize, size_t tupleCount, IDataStore<T>* dataStore = nullptr)
+  DataArray(DataStructure* ds, const std::string& name, const std::weak_ptr<IDataStore<T>>& store)
   : DataObject(ds, name)
   , m_TupleSize(tupleSize)
   , m_TupleCount(tupleCount)
-  , m_DataStore(dataStore)
   {
+    setDataStore(store);
   }
 
   /**
@@ -94,7 +89,7 @@ public:
    */
   size_t getTupleCount() const
   {
-    return m_TupleCount;
+    return m_DataStore->getTupleCount();
   }
 
   /**
@@ -103,7 +98,7 @@ public:
    */
   size_t getTupleSize() const
   {
-    return m_TupleSize;
+    return m_DataStore->getTupleSize();
   }
 
   /**
@@ -219,10 +214,9 @@ public:
   void setDataStore(IDataStore<T>* store)
   {
     m_DataStore = std::shared_ptr<IDataStore<T>>(store);
-    if(m_DataStore)
+    if(nullptr == m_DataStore)
     {
-      setTupleSize(m_DataStore->getTupleSize());
-      setTupleCount(m_DataStore->getTupleCount());
+      m_DataStore = std::make_shared<EmptyDataStore>(0, 0);
     }
   }
 
@@ -235,10 +229,9 @@ public:
   void setDataStore(const std::weak_ptr<IDataStore<T>>& store)
   {
     m_DataStore = store.lock();
-    if(m_DataStore)
+    if(nullptr == m_DataStore)
     {
-      setTupleSize(m_DataStore->getTupleSize());
-      setTupleCount(m_DataStore->getTupleCount());
+      m_DataStore = std::make_shared<EmptyDataStore>(0, 0);
     }
   }
 
@@ -262,8 +255,6 @@ public:
 
 protected:
 private:
-  size_t m_TupleSize = 0;
-  size_t m_TupleCount = 0;
   std::shared_ptr<IDataStore<T>> m_DataStore = nullptr;
 };
 

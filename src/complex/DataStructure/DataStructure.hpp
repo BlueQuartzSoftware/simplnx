@@ -11,6 +11,7 @@
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataMap.hpp"
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/ScalarData.hpp"
 #include "complex/DataStructure/LinkedPath.hpp"
 
@@ -172,20 +173,18 @@ public:
   }
 
   /**
-   * @brief Creates and adds a DataArray with the specified name, tuple size,
-   * and number of tuples to the DataStructure. A pointer to the created
-   * DataArray is returned if it could be added to the specified parent. If
-   * the DataArray could not be added, returns nullptr.
+   * @brief Creates and adds a DataArray with the specified name and data
+   * store to the DataStructure. A pointer to the created DataArray is returned
+   * if it could be added to the specified parent. If the DataArray could not
+   * be added, returns nullptr.
    * @param parent
-   * @param tupleSize
-   * @param numTuples
-   * @param defaultValue
+   * @param dataStore
    * @return DataArray<T>*
    */
   template <typename T>
-  DataArray<T>* createDataArray(const std::string& name, size_t tupleSize, size_t numTuples, T defaultValue, std::optional<DataObject::IdType> parent = {})
+  DataArray<T>* createDataArray(const std::string& name, IDataStore<T>* dataStore, std::optional<DataObject::IdType> parent = {})
   {
-    auto dataArr = std::make_shared<DataArray<T>>(this, name);
+    auto dataArr = std::make_shared<DataArray<T>>(this, name, dataStore);
     if(!finishAddingObject(dataArr, parent))
     {
       return nullptr;

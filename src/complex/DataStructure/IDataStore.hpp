@@ -208,10 +208,6 @@ public:
   // End std::iterator support //
   ///////////////////////////////
 
-  IDataStore()
-  {
-  }
-
   virtual ~IDataStore() = default;
 
   /**
@@ -309,6 +305,14 @@ public:
   ConstIterator end() const
   {
     return ConstIterator(*this, size());
+  }
+
+protected:
+  /**
+   * @brief Default constructor
+  */
+  IDataStore()
+  {
   }
 };
 } // namespace complex

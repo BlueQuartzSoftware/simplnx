@@ -72,7 +72,7 @@ public:
    * @brief Returns the value found at the specified index of the DataStore.
    * This cannot be used to edit the value found at the specified index.
    * @param index
-   * @return T
+   * @return value_type
    */
   value_type getValue(size_t index) const override
   {
@@ -93,7 +93,7 @@ public:
    * @brief Returns the value found at the specified index of the DataStore.
    * This cannot be used to edit the value found at the specified index.
    * @param  index
-   * @return T
+   * @return const_reference
    */
   const_reference operator[](size_t index) const override
   {
@@ -104,7 +104,7 @@ public:
    * @brief Returns the value found at the specified index of the DataStore.
    * This can be used to edit the value found at the specified index.
    * @param  index
-   * @return T&
+   * @return reference
    */
   reference operator[](size_t index) override
   {
