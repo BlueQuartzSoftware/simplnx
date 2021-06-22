@@ -1,0 +1,22 @@
+name: clang-format push
+
+on:
+  push:
+    branches:
+      - develop
+      - master
+      - feature/infrastructure
+
+jobs:
+  clang_format_push:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Add Problem Matcher
+        uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
+      - name: Check Formatting
+        run: |
+          ./scripts/clang_format_diff.sh ${{github.event.before}} ${{github.sha}}

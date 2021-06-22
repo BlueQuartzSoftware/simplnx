@@ -1,0 +1,28 @@
+name: clang-format pr
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+      - feature/infrastructure
+jobs:
+  clang_format_pr:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - name: Add Problem Matcher
+        uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
+      - name: Check Formatting
+        run: |
+          ./scripts/clang_format_diff.sh ${{github.base_ref}} ${{github.head_ref}}
+      - name: Apply Formatting
+        run: |
+          ./scripts/clang_format_diff.sh ${{github.base_ref}} ${{github.head_ref}} modify
+      - name: Add Suggestions
+        uses: reviewdog/action-suggester@v1
+        with:
+          tool_name: clang-format
