@@ -13,6 +13,8 @@ on:
 
 jobs:
   build_test:
+    env:
+      VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
     strategy:
       fail-fast: false
       matrix:
@@ -20,6 +22,13 @@ jobs:
           - ubuntu-20.04
           - windows-2019
           - macos-10.15
+        include:
+          - os: ubuntu-20.04
+            mono: 'mono'
+          - os: windows-2019
+            mono: ''
+          - os: macos-10.15
+            mono: 'mono'
     runs-on: ${{matrix.os}}
     steps:
       - name: Checkout
@@ -39,6 +48,16 @@ jobs:
       - name: '[Windows] Setup Build Environment'
         if: ${{matrix.os == 'windows-2019'}}
         uses: ilammy/msvc-dev-cmd@v1
+      - name: Setup NuGet Credentials
+        shell: bash
+        run: >
+          ${{matrix.mono}} `vcpkg fetch nuget | tail -n 1`
+          sources add
+          -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
+          -storepasswordincleartext
+          -name "GitHub"
+          -username "BlueQuartzSoftware"
+          -password "${{secrets.GITHUB_TOKEN}}"
       - name: Configure
         run: |
           cmake --preset ci ${{github.workspace}}
