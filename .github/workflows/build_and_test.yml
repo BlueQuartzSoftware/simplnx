@@ -24,17 +24,24 @@ jobs:
           - macos-10.15
         include:
           - os: ubuntu-20.04
+            compiler: gcc
             mono: 'mono'
           - os: windows-2019
+            compiler: msvc
             mono: ''
           - os: macos-10.15
+            compiler: clang
             mono: 'mono'
     runs-on: ${{matrix.os}}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Add C++ problem matcher
+      - name: '[gcc/clang] Add C++ problem matcher'
+        if: ${{matrix.compiler != 'msvc'}}
         uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
+      - name: '[msvc] Add C++ problem matcher'
+        if: ${{matrix.compiler == 'msvc'}}
+        uses: ammaraskar/msvc-problem-matcher@0.1
       - name: '[Linux] Install Dependencies'
         if: ${{matrix.os == 'ubuntu-20.04'}}
         run: |
