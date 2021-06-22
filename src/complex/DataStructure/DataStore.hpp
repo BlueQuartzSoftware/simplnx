@@ -1,5 +1,7 @@
 #pragma once
 
+#include "complex/DataStructure/IDataStore.hpp"
+
 namespace complex
 {
 /**
@@ -9,30 +11,42 @@ namespace complex
  * @tparam T
  */
 template <typename T>
-class DataStore
+class DataStore : public IDataStore<T>
 {
 public:
-  using Iterator = void;
-  using ConstIterator = void;
-
   /**
    * @brief Constructs a DataStore with the specified tupleSize and tupleCount.
    * @param tupleSize
    * @param tupleCount
    */
-  DataStore(size_t tupleSize, size_t tupleCount);
+  DataStore(size_t tupleSize, size_t tupleCount)
+  : m_TupleSize(tupleSize)
+  , m_TupleCount(tupleCount)
+  , m_Data(tupleSize * tupleCount)
+  {
+  }
 
   /**
    * @brief Copy constructor
    * @param other
    */
-  DataStore(const DataStore& other);
+  DataStore(const DataStore& other)
+  : m_TupleCount(other.m_TupleCount)
+  , m_TupleSize(other.m_TupleSize)
+  , m_Data(other.m_Data)
+  {
+  }
 
   /**
    * @brief Move constructor
    * @param other
    */
-  DataStore(DataStore&& other) noexcept;
+  DataStore(DataStore&& other) noexcept
+  : m_TupleCount(std::move(other.m_TupleCount))
+  , m_TupleSize(std::move(other.m_TupleSize))
+  , m_Data(std::move(other.m_Data))
+  {
+  }
 
   virtual ~DataStore() = default;
 
@@ -40,21 +54,18 @@ public:
    * @brief Returns the number of tuples in the DataStore.
    * @return size_t
    */
-  virtual size_t getTupleCount() const = 0;
+  size_t getTupleCount() const override
+  {
+    return m_TupleCount;
+  }
 
   /**
    * @brief Returns the tuple size.
    * @return size_t
    */
-  virtual size_t getTupleSize() const = 0;
-
-  /**
-   * @brief Returns the number of values stored within the DataStore.
-   * @return size_t
-   */
-  size_t size() const
+  size_t getTupleSize() const override
   {
-    return getTupleCount() * getTupleSize();
+    return m_TupleSize;
   }
 
   /**
@@ -63,14 +74,20 @@ public:
    * @param index
    * @return T
    */
-  virtual T getValue(size_t index) const = 0;
+  value_type getValue(size_t index) const override
+  {
+    return m_Data[index];
+  }
 
   /**
    * @brief Sets the value stored at the specified index.
    * @param index
    * @param value
    */
-  virtual void setValue(size_t index, T value) = 0;
+  void setValue(size_t index, value_type value) override
+  {
+    m_Data[index] = value;
+  }
 
   /**
    * @brief Returns the value found at the specified index of the DataStore.
@@ -78,7 +95,10 @@ public:
    * @param  index
    * @return T
    */
-  virtual T operator[](size_t index) const = 0;
+  const_reference operator[](size_t index) const override
+  {
+    return m_Data[index];
+  }
 
   /**
    * @brief Returns the value found at the specified index of the DataStore.
@@ -86,30 +106,14 @@ public:
    * @param  index
    * @return T&
    */
-  virtual T& operator[](size_t index) = 0;
+  reference operator[](size_t index) override
+  {
+    return m_Data[index];
+  }
 
-  /**
-   * @brief Returns an Iterator to the begining of the DataStore.
-   * @return Iterator
-   */
-  virtual Iterator begin();
-
-  /**
-   * @brief Returns an Iterator to the end of the DataArray.
-   * @return Iterator
-   */
-  virtual Iterator end();
-
-  /**
-   * @brief Returns an ConstIterator to the begining of the DataStore.
-   * @return ConstIterator
-   */
-  virtual ConstIterator begin() const;
-
-  /**
-   * @brief Returns an ConstIterator to the end of the DataArray.
-   * @return ConstIterator
-   */
-  virtual ConstIterator end() const;
+private:
+  size_t m_TupleSize;
+  size_t m_TupleCount;
+  std::vector<value_type> m_Data;
 };
 } // namespace complex

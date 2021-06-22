@@ -5,8 +5,9 @@
 
 #include "DataStructObserver.hpp"
 
-#include "Complex/DataStructure/DataGroup.hpp"
-#include "Complex/DataStructure/DataStructure.hpp"
+#include "complex/DataStructure/DataGroup.hpp"
+#include "complex/DataStructure/DataStructure.hpp"
+#include "complex/DataStructure/DataStore.hpp"
 
 /**
  * @brief Test creation and removal of items in a tree-style structure. No node has more than one parent.
@@ -398,6 +399,77 @@ void dataStructureCopyTest()
   std::cout << "dataStructureCopyTest() test complete\n" << std::endl;
 }
 
+void dataStoreTest()
+{
+  std::cout << "dataStoreTest()..." << std::endl;
+  std::cout << "  Creating DataStore..." << std::endl;
+
+  DataStore<int32_t> store(3, 10);
+
+  std::cout << "  Testing store size..." << std::endl;
+
+  if(store.getTupleCount() != 10)
+  {
+    throw std::exception();
+  }
+  if(store.getTupleSize() != 3)
+  {
+    throw std::exception();
+  }
+  if(store.size() != 30)
+  {
+    throw std::exception();
+  }
+
+  std::cout << "  Testing reading / writing to memory..." << std::endl;
+  //  Test subscript operator
+  {
+    for(size_t i = 0; i < store.size(); i++)
+    {
+      store[i] = i + 1;
+    }
+    int32_t x = 1;
+    for(size_t i = 0; i < store.size(); i++)
+    {
+      if(store[i] != x++)
+      {
+        throw std::exception();
+      }
+    }
+  }
+
+  // Test get/set values
+  {
+    const size_t index = 5;
+    const size_t value = 25;
+    store.setValue(index, value);
+    if(store.getValue(index) != value)
+    {
+      throw std::exception();
+    }
+  }
+
+  // Test iterators
+  {
+    const int32_t initVal = -30;
+    int32_t x = initVal;
+    for(auto& value : store)
+    {
+      value = x++;
+    }
+    x = initVal;
+    for(const auto& value : store)
+    {
+      if(value != x++)
+      {
+        throw std::exception();
+      }
+    }
+  }
+
+  std::cout << "dataStoreTest() test complete\n" << std::endl;
+}
+
 /**
  * @brief
  * @param argc
@@ -412,4 +484,5 @@ int main(int argc, char** argv)
   linkedPathTest();
   dataStructureListenerTest();
   dataStructureCopyTest();
+  dataStoreTest();
 }

@@ -67,6 +67,7 @@ set(COMPLEX_HDRS
     ${COMPLEX_SOURCE_DIR}/DataStructure/DataPath.hpp
     ${COMPLEX_SOURCE_DIR}/DataStructure/DataStore.hpp
     ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.hpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/IDataStore.hpp
     ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
     ${COMPLEX_SOURCE_DIR}/DataStructure/MetaData.hpp
     ${COMPLEX_SOURCE_DIR}/DataStructure/ScalarData.hpp

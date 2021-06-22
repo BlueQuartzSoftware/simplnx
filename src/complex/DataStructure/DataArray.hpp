@@ -1,7 +1,7 @@
 #pragma once
 
 #include "complex/DataStructure/DataObject.hpp"
-#include "complex/DataStructure/DataStore.hpp"
+#include "complex/DataStructure/IDataStore.hpp"
 
 namespace complex
 {
@@ -16,8 +16,8 @@ template <class T>
 class DataArray : public DataObject
 {
 public:
-  using Iterator = void;
-  using ConstIterator = void;
+  using Iterator = IDataStore::Iterator;
+  using ConstIterator = IDataStore::ConstIterator;
 
   /**
    * @brief Constructs a DataArray with the specified tuple size, count, and
@@ -44,10 +44,11 @@ public:
    * @param tupleCount
    * @param dataStore
    */
-  DataArray(DataStructure* ds, const std::string& name, size_t tupleSize, size_t tupleCount, DataStore<T>* dataStore = nullptr)
+  DataArray(DataStructure* ds, const std::string& name, size_t tupleSize, size_t tupleCount, IDataStore<T>* dataStore = nullptr)
   : DataObject(ds, name)
   , m_TupleSize(tupleSize)
   , m_TupleCount(tupleCount)
+  , m_DataStore(dataStore)
   {
   }
 
@@ -127,7 +128,7 @@ public:
    * used to edit the value found at the specified index.
    * @param  index
    */
-  T operator[](size_t index) const
+  const T& operator[](size_t index) const
   {
     if(nullptr == m_DataStore)
     {
@@ -177,7 +178,7 @@ public:
    * @brief Returns a raw pointer to the DataStore for read-only access.
    * @return DataStore<T>*
    */
-  const DataStore<T>* getDataStore() const
+  const IDataStore<T>* getDataStore() const
   {
     return m_DataStore.get();
   }
@@ -186,7 +187,7 @@ public:
    * @brief Returns a raw pointer to the DataStore.
    * @return DataStore<T>*
    */
-  DataStore<T>* getDataStore()
+  IDataStore<T>* getDataStore()
   {
     return m_DataStore.get();
   }
@@ -195,7 +196,7 @@ public:
    * @brief Returns a std::weak_ptr for the stored DataStore.
    * @return std::weak_ptr<DataStore<T>>
    */
-  std::weak_ptr<DataStore<T>> getDataStorePtr()
+  std::weak_ptr<IDataStore<T>> getDataStorePtr()
   {
     return m_DataStore;
   }
@@ -215,9 +216,14 @@ public:
    * before replacing it, call releaseDataStore() before setting the new DataStore.
    * @param store
    */
-  void setDataStore(DataStore<T>* store)
+  void setDataStore(IDataStore<T>* store)
   {
-    m_DataStore = std::shared_ptr<DataStore<T>>(store);
+    m_DataStore = std::shared_ptr<IDataStore<T>>(store);
+    if(m_DataStore)
+    {
+      setTupleSize(m_DataStore->getTupleSize());
+      setTupleCount(m_DataStore->getTupleCount());
+    }
   }
 
   /**
@@ -226,9 +232,14 @@ public:
    * before replacing it, call releaseDataStore() before setting the new DataStore.
    * @param store
    */
-  void setDataStore(const std::weak_ptr<DataStore<T>>& store)
+  void setDataStore(const std::weak_ptr<IDataStore<T>>& store)
   {
     m_DataStore = store.lock();
+    if(m_DataStore)
+    {
+      setTupleSize(m_DataStore->getTupleSize());
+      setTupleCount(m_DataStore->getTupleCount());
+    }
   }
 
   /**
@@ -238,7 +249,7 @@ public:
    * @param hdfFileName
    * @return H5::ErrorType
    */
-  H5::ErrorType generateXdmfText(std::istream& out, const std::string& hdfFileName) const override;
+  H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const override;
 
   /**
    * @brief Reads and overwrites data from the provided input stream. Returns an
@@ -253,7 +264,7 @@ protected:
 private:
   size_t m_TupleSize = 0;
   size_t m_TupleCount = 0;
-  std::shared_ptr<DataStore<T>> m_DataStore = nullptr;
+  std::shared_ptr<IDataStore<T>> m_DataStore = nullptr;
 };
 
 using FloatArray = DataArray<float>;
