@@ -1,4 +1,4 @@
-name: build and test
+name: build
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ on:
       - feature/infrastructure
 
 jobs:
-  build_test:
+  build:
     env:
       VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
     strategy:
