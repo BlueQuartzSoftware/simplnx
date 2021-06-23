@@ -13,10 +13,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
       - name: Add Problem Matcher
         uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
       - name: Check Formatting
         run: |
-          ./scripts/clang_format_diff.sh ${{github.event.before}} ${{github.sha}}
+          python3 scripts/clang_format.py --format-version 10

@@ -18,10 +18,10 @@ jobs:
         uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
       - name: Check Formatting
         run: |
-          ./scripts/clang_format_diff.sh ${{github.base_ref}} ${{github.head_ref}}
+          python3 scripts/clang_format.py --format-version 10 --commits ${{github.base_ref}} ${{github.head_ref}}
       - name: Apply Formatting
         run: |
-          ./scripts/clang_format_diff.sh ${{github.base_ref}} ${{github.head_ref}} modify
+          python3 scripts/clang_format.py --format-version 10 --modify --commits ${{github.base_ref}} ${{github.head_ref}}
       - name: Add Suggestions
         uses: reviewdog/action-suggester@v1
         with:
