@@ -74,6 +74,9 @@ def main() -> int:
     if format_result != 0:
       result = 1
 
+  if result == 0:
+    print('All files were formatted correctly')
+
   return result
 
 if __name__ == '__main__':
