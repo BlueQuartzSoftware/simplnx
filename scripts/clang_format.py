@@ -68,14 +68,21 @@ def main() -> int:
   if not files:
     print('No files to format')
 
+  failed_files: List[str] = []
+
   result = 0
   for file in files:
     format_result = format(file, args.modify, args.format_version)
     if format_result != 0:
+      failed_files.append(file)
       result = 1
 
   if result == 0:
     print('All files were formatted correctly')
+  else:
+    print('Incorrectly formatted files:')
+    for file in failed_files:
+      print(f'\"{file}\"')
 
   return result
 
