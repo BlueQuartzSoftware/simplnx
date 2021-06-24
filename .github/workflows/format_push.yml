@@ -1,4 +1,4 @@
-name: clang-format push
+name: clang-format
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
       - feature/infrastructure
 
 jobs:
-  clang_format_push:
+  clang_format:
     runs-on: ubuntu-20.04
 
     steps:
