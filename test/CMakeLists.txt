@@ -1,4 +1,4 @@
-find_package(Catch2 REQUIRED)
+find_package(Catch2 CONFIG REQUIRED)
 
 include(Catch)
 

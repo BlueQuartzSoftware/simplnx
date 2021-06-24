@@ -23,8 +23,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-find_package(fmt REQUIRED)
-find_package(nlohmann_json REQUIRED)
+find_package(fmt CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
+find_package(expected-lite CONFIG REQUIRED)
 
 add_library(complex SHARED)
 add_library(complex::complex ALIAS complex)
@@ -50,6 +51,7 @@ target_link_libraries(complex
   PUBLIC
     fmt::fmt
     nlohmann_json::nlohmann_json
+    nonstd::expected-lite
 )
 
 set(COMPLEX_GENERATED_DIR ${PROJECT_BINARY_DIR}/generated)
@@ -64,7 +66,6 @@ generate_export_header(complex
 set(COMPLEX_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/complex)
 
 set(COMPLEX_HDRS
-  ${COMPLEX_SOURCE_DIR}/Common/expected.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Types.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Result.hpp
 

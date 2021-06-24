@@ -8,6 +8,9 @@
     },
     {
       "name": "nlohmann-json"
+    },
+    {
+      "name": "expected-lite"
     }
   ],
   "features": {
