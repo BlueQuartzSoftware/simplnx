@@ -5,7 +5,20 @@ import subprocess
 from typing import List, Optional, Tuple
 
 EXE = 'clang-format'
-FILE_TYPES = ('.h', '.H', '.hpp', '.hh', '.h++', '.hxx', '.c', '.C', '.cpp', '.cc', '.c++', '.cxx')
+FILE_TYPES = (
+  '.h',
+  '.H',
+  '.hpp',
+  '.hh',
+  '.h++',
+  '.hxx',
+  '.c',
+  '.C',
+  '.cpp',
+  '.cc',
+  '.c++',
+  '.cxx',
+)
 
 def filter_files(files: List[str]) -> List[str]:
   return [file for file in files if file.endswith(FILE_TYPES)]
@@ -52,6 +65,7 @@ def main() -> int:
 
   args = parser.parse_args()
 
+  # clang-format must be at least major version 10 since that's when --dry-run and --Werror were introduced
   if args.format_version:
     if args.format_version < 10:
       parser.error('format-version must be at least 10')
