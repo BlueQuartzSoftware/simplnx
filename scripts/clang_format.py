@@ -34,7 +34,9 @@ def get_git_files() -> List[str]:
 
 def get_git_diff_files(previous_commit: str, current_commit: str) -> List[str]:
   try:
-    result = subprocess.run(['git', 'diff', f'{previous_commit}...{current_commit}'], text=True, capture_output=True, check=True)
+    result = subprocess.run(
+      ['git', 'diff', '--name-only', f'{previous_commit}...{current_commit}'], text=True, capture_output=True, check=True
+    )
   except subprocess.CalledProcessError as error:
     print(error.stderr)
     raise
