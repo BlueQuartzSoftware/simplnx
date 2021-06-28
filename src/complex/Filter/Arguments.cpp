@@ -1,7 +1,5 @@
 #include "Arguments.hpp"
 
-namespace test     {      int foo(   int x) {    return x;    }}
-
 namespace complex
 {
 void Arguments::insert(const std::string& key, const std::any& value)

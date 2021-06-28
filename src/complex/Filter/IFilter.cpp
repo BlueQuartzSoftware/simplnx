@@ -4,8 +4,6 @@
 
 #include <fmt/format.h>
 
-namespace test     {      int foo(   int x) {    return x;    }}
-
 namespace complex
 {
 IFilter::DataCheckResult IFilter::dataCheck(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
