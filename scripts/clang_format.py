@@ -24,12 +24,20 @@ def filter_files(files: List[str]) -> List[str]:
   return [file for file in files if file.endswith(FILE_TYPES)]
 
 def get_git_files() -> List[str]:
-  result = subprocess.run(['git', 'ls-files'], text=True, capture_output=True, check=True)
+  try:
+    result = subprocess.run(['git', 'ls-files'], text=True, capture_output=True, check=True)
+  except subprocess.CalledProcessError as error:
+    print(error.stderr)
+    raise
   git_files = result.stdout.splitlines()
   return filter_files(git_files)
 
 def get_git_diff_files(previous_commit: str, current_commit: str) -> List[str]:
-  result = subprocess.run(['git', 'diff', f'{previous_commit}...{current_commit}'], text=True, capture_output=True, check=True)
+  try:
+    result = subprocess.run(['git', 'diff', f'{previous_commit}...{current_commit}'], text=True, capture_output=True, check=True)
+  except subprocess.CalledProcessError as error:
+    print(error.stderr)
+    raise
   git_files = result.stdout.splitlines()
   return filter_files(git_files)
 
@@ -49,7 +57,11 @@ def format(file: str, should_modify: bool, version: Optional[int] = None) -> int
   return result.returncode
 
 def get_clang_format_version() -> Tuple[int, int, int]:
-  version_result = subprocess.run([EXE, '--version'], text=True, capture_output=True, check=True)
+  try:
+    version_result = subprocess.run([EXE, '--version'], text=True, capture_output=True, check=True)
+  except subprocess.CalledProcessError as error:
+    print(error.stderr)
+    raise
   version_string = version_result.stdout
   match = re.match(r'clang-format version (\d+)\.(\d+)\.(\d+)', version_string)
   major = int(match.group(1))
