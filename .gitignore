@@ -1,2 +1,5 @@
 [Bb]uild/
 .vscode/
+vcpkg_installed/
+
+CMakeUserPresets.json

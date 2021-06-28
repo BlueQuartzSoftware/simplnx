@@ -1,111 +1,246 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.19)
+
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/Utility.cmake)
+
+option(COMPLEX_BUILD_PYTHON "Enable building Python building" OFF)
+enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_PYTHON FEATURE "python")
+
+option(COMPLEX_BUILD_TESTS "Enable building COMPLEX tests" ON)
+enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_TESTS FEATURE "tests")
 
 project(complex
-    VERSION 0.0.1
-    DESCRIPTION "SIMPL Redesign")
+  VERSION 0.1.0
+  DESCRIPTION "SIMPL Redesign"
+  HOMEPAGE_URL "https://github.com/BlueQuartzSoftware/complex"
+  LANGUAGES CXX
+)
 
-# Setup
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
 
-cmake_policy(SET CMP0090 NEW)
-
-# turn on using solution folders
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set(complex_INCLUDE_DIR ${complex_SOURCE_DIR}/Complex)
+find_package(fmt CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
+find_package(expected-lite CONFIG REQUIRED)
 
-set(complex_HDRS
-    ${complex_INCLUDE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.h
-    ${complex_INCLUDE_DIR}/DataStructure/Messaging/DataAddedMessage.h
-    ${complex_INCLUDE_DIR}/DataStructure/Messaging/DataRemovedMessage.h
-    ${complex_INCLUDE_DIR}/DataStructure/Messaging/DataRenamedMessage.h
-    ${complex_INCLUDE_DIR}/DataStructure/Messaging/DataReparentedMessage.h
+add_library(complex SHARED)
+add_library(complex::complex ALIAS complex)
 
-    ${complex_INCLUDE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.h
-
-    ${complex_INCLUDE_DIR}/DataStructure/BaseGroup.h
-    ${complex_INCLUDE_DIR}/DataStructure/DataArray.hpp
-    ${complex_INCLUDE_DIR}/DataStructure/DataGroup.h
-    ${complex_INCLUDE_DIR}/DataStructure/DataMap.h
-    ${complex_INCLUDE_DIR}/DataStructure/DataObject.h
-    ${complex_INCLUDE_DIR}/DataStructure/DataPath.h
-    ${complex_INCLUDE_DIR}/DataStructure/DataStore.hpp
-    ${complex_INCLUDE_DIR}/DataStructure/DataStructure.h
-    ${complex_INCLUDE_DIR}/DataStructure/IDataStore.h
-    ${complex_INCLUDE_DIR}/DataStructure/LinkedPath.h
-    ${complex_INCLUDE_DIR}/DataStructure/MetaData.h
-    ${complex_INCLUDE_DIR}/DataStructure/ScalarData.hpp
-
-    ${complex_INCLUDE_DIR}/Utilities/Parsing/HDF5/H5.h
-    
-    ${complex_INCLUDE_DIR}/Utilities/TooltipGenerator.h
-    ${complex_INCLUDE_DIR}/Utilities/TooltipRowItem.h
+target_compile_features(complex
+  PUBLIC
+    cxx_std_17
 )
 
-set(complex_SRCS
-    ${complex_INCLUDE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.cpp
-    ${complex_INCLUDE_DIR}/DataStructure/Messaging/DataAddedMessage.cpp
-    ${complex_INCLUDE_DIR}/DataStructure/Messaging/DataRemovedMessage.cpp
-    ${complex_INCLUDE_DIR}/DataStructure/Messaging/DataRenamedMessage.cpp
-    ${complex_INCLUDE_DIR}/DataStructure/Messaging/DataReparentedMessage.cpp
-
-    ${complex_INCLUDE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.cpp
-
-    ${complex_INCLUDE_DIR}/DataStructure/BaseGroup.cpp
-    ${complex_INCLUDE_DIR}/DataStructure/DataGroup.cpp
-    ${complex_INCLUDE_DIR}/DataStructure/DataMap.cpp
-    ${complex_INCLUDE_DIR}/DataStructure/DataObject.cpp
-    ${complex_INCLUDE_DIR}/DataStructure/DataPath.cpp
-    ${complex_INCLUDE_DIR}/DataStructure/DataStructure.cpp
-    ${complex_INCLUDE_DIR}/DataStructure/LinkedPath.cpp
-    ${complex_INCLUDE_DIR}/DataStructure/MetaData.cpp
-
-    ${complex_INCLUDE_DIR}/Utilities/TooltipGenerator.cpp
-    ${complex_INCLUDE_DIR}/Utilities/TooltipRowItem.cpp
+set_target_properties(complex
+  PROPERTIES
+    DEBUG_POSTFIX "_d"
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
 )
 
-source_group(TREE ${complex_INCLUDE_DIR} PREFIX "Complex" FILES ${complex_HDRS})
-source_group(TREE ${complex_INCLUDE_DIR} PREFIX "Complex" FILES ${complex_SRCS})
+target_compile_options(complex
+  PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/MP>
+)
 
-add_library(${PROJECT_NAME} STATIC ${complex_HDRS} ${complex_SRCS})
+target_link_libraries(complex
+  PUBLIC
+    fmt::fmt
+    nlohmann_json::nlohmann_json
+    nonstd::expected-lite
+)
+
+set(COMPLEX_GENERATED_DIR ${PROJECT_BINARY_DIR}/generated)
+set(COMPLEX_GENERATED_HEADER_DIR ${PROJECT_BINARY_DIR}/generated/complex)
+set(COMPLEX_EXPORT_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/complex_export.hpp)
 
 include(GenerateExportHeader)
-generate_export_header(${PROJECT_NAME})
-
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    LINKER_LANGUAGE CXX
-    PUBLIC_HEADER "${complex_HDRS}"
+generate_export_header(complex
+  EXPORT_FILE_NAME ${COMPLEX_EXPORT_HEADER}
 )
 
-# Set include directories
-target_include_directories(${PROJECT_NAME}
-    PUBLIC
-    ${complex_SOURCE_DIR}/include
-    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+set(COMPLEX_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/complex)
+
+set(COMPLEX_HDRS
+  ${COMPLEX_SOURCE_DIR}/Common/Types.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Result.hpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRenamedMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataReparentedMessage.hpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.hpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/BaseGroup.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataArray.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataGroup.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataMap.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataObject.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataPath.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataStore.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IDataStore.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/ScalarData.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Filter/Arguments.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/IFilter.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/IParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Output.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Parameters.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
+  
+  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
 )
 
-include(GNUInstallDirs)
-install(TARGETS ${PROJECT_NAME}
-    # PUBLIC_HEADER DESTINATION include/Complex
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-        COMPONENT   complex_Runtime
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        COMPONENT   complex_Runtime
-        NAMELINK_COMPONENT complex_Development
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        COMPONENT   complex_Development
+set(COMPLEX_GENERATED_HEADERS
+  ${COMPLEX_EXPORT_HEADER}
 )
 
-install(DIRECTORY ${complex_INCLUDE_DIR} DESTINATION include)
+set(COMPLEX_ALL_HDRS
+  ${COMPLEX_HDRS}
+  ${COMPLEX_GENERATED_HEADERS}
+)
 
-include(CTest)
+set(COMPLEX_SRCS
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRenamedMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataReparentedMessage.cpp
 
-if(BUILD_TESTING)
-    add_subdirectory(tests)
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.cpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/BaseGroup.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataGroup.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataMap.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataObject.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataPath.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Filter/Arguments.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/IFilter.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/IParameter.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Parameters.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
+)
+
+target_sources(complex
+  PRIVATE
+    ${COMPLEX_ALL_HDRS}
+    ${COMPLEX_SRCS}
+)
+
+source_group(TREE ${COMPLEX_SOURCE_DIR} PREFIX "complex" FILES ${COMPLEX_HDRS})
+source_group(TREE ${COMPLEX_GENERATED_HEADER_DIR} PREFIX "complex/generated" FILES ${COMPLEX_GENERATED_HEADERS})
+source_group(TREE ${COMPLEX_SOURCE_DIR} PREFIX "complex" FILES ${COMPLEX_SRCS})
+
+set(COMPLEX_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src)
+
+target_include_directories(complex
+  PUBLIC
+    $<BUILD_INTERFACE:${COMPLEX_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${COMPLEX_GENERATED_DIR}>
+    $<INSTALL_INTERFACE:include>
+)
+
+set(COMPLEX_PACKAGE_NAMESPACE "complex::")
+
+install(TARGETS complex
+  EXPORT complexTargets
+)
+
+export(EXPORT complexTargets NAMESPACE ${COMPLEX_PACKAGE_NAMESPACE})
+
+option(COMPLEX_ENABLE_INSTALL "Enables COMPLEX install rules" ON)
+if(COMPLEX_ENABLE_INSTALL)
+  include(CMakePackageConfigHelpers)
+
+  set(COMPLEX_INSTALL_CMAKE_PREFIX "lib/cmake")
+
+  set(COMPLEX_CONFIG_FILE ${PROJECT_BINARY_DIR}/complexConfig.cmake)
+  set(COMPLEX_VERSION_FILE ${PROJECT_BINARY_DIR}/complexConfigVersion.cmake)
+
+  configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/complexConfig.cmake.in ${COMPLEX_CONFIG_FILE}
+    INSTALL_DESTINATION ${COMPLEX_INSTALL_CMAKE_PREFIX}
+  )
+
+  write_basic_package_version_file(${COMPLEX_VERSION_FILE}
+    COMPATIBILITY SameMajorVersion
+  )
+
+  install(FILES ${COMPLEX_CONFIG_FILE} ${COMPLEX_VERSION_FILE}
+    DESTINATION ${COMPLEX_INSTALL_CMAKE_PREFIX}
+    COMPONENT develop
+  )
+
+  include(GNUInstallDirs)
+  install(TARGETS complex
+    RUNTIME
+      DESTINATION ${CMAKE_INSTALL_BINDIR}
+      COMPONENT runtime
+    LIBRARY 
+      DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      COMPONENT runtime
+      NAMELINK_COMPONENT develop
+    ARCHIVE
+      DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      COMPONENT develop
+  )
+
+  install(EXPORT complexTargets
+    NAMESPACE ${COMPLEX_PACKAGE_NAMESPACE}
+    DESTINATION ${COMPLEX_INSTALL_CMAKE_PREFIX}
+  )
+
+  install_with_directory(FILES ${COMPLEX_HDRS}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/complex
+    COMPONENT develop
+    BASE_DIR ${COMPLEX_SOURCE_DIR}
+  )
+
+  install_with_directory(FILES ${COMPLEX_GENERATED_HEADERS}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/complex
+    COMPONENT develop
+    BASE_DIR ${COMPLEX_GENERATED_HEADER_DIR}
+  )
+endif()
+
+option(COMPLEX_ENABLE_PACKAGING "Enables COMPLEX packaging" ON)
+if(COMPLEX_ENABLE_PACKAGING)
+  if(WIN32)
+    set(CPACK_GENERATOR ZIP)
+  else()
+    set(CPACK_GENERATOR TGZ)
+  endif()
+  include(CPack)
+endif()
+
+if(COMPLEX_BUILD_TESTS)
+  include(CTest)
+  add_subdirectory(test)
+endif()
+
+if(COMPLEX_BUILD_PYTHON)
+  add_subdirectory(wrapping/python)
+endif()
+
+option(COMPLEX_BUILD_DOCS "Enables building COMPLEX documentation" OFF)
+if(COMPLEX_BUILD_DOCS)
+  add_subdirectory(docs)
 endif()

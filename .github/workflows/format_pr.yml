@@ -1,0 +1,33 @@
+name: clang-format pr
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+
+jobs:
+  clang_format_pr:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - name: Add Problem Matcher
+        uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
+      - name: Check Formatting
+        id: check_format
+        continue-on-error: true
+        run: |
+          python3 scripts/clang_format.py --format-version 10 --commits HEAD^ HEAD
+      - name: Apply Formatting
+        if: steps.check_format.outcome != 'success'
+        run: |
+          python3 scripts/clang_format.py --format-version 10 --modify --commits HEAD^ HEAD
+      - name: Add Suggestions
+        if: steps.check_format.outcome != 'success'
+        uses: reviewdog/action-suggester@v1
+        with:
+          tool_name: clang-format
+          fail_on_error: true
