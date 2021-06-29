@@ -35,7 +35,7 @@ IFilter::DataCheckResult IFilter::dataCheck(const DataStructure& data, const Arg
     switch(parameter->type())
     {
     case IParameter::Type::Value: {
-      auto valueParameter = static_cast<ValueParameter*>(parameter.get());
+      const auto* valueParameter = static_cast<ValueParameter*>(parameter.get());
       if(!valueParameter->validate(arg))
       {
         errors.push_back(Error{-1, fmt::format("Invalid arg: {}", name)});
@@ -45,7 +45,7 @@ IFilter::DataCheckResult IFilter::dataCheck(const DataStructure& data, const Arg
     }
     case IParameter::Type::Data: {
       // resolve data structure args and replace values in copy
-      auto dataStructureParameter = static_cast<DataParameter*>(parameter.get());
+      const auto* dataStructureParameter = static_cast<DataParameter*>(parameter.get());
       if(!dataStructureParameter->validate(data, arg))
       {
         errors.push_back(Error{-2, fmt::format("DataObject does not exist")});
