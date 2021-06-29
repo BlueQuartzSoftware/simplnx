@@ -27,7 +27,16 @@ add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
   VERBATIM
 )
 
-add_custom_target(complex_doxygen ALL DEPENDS ${DOXYGEN_INDEX_FILE})
+option(COMPLEX_DOXYGEN_EXCLUDE_FROM_ALL "Exclude the Doxygen generation from the default target" OFF)
+mark_as_advanced(COMPLEX_DOXYGEN_EXCLUDE_FROM_ALL)
+
+if(COMPLEX_SPHINX_EXCLUDE_FROM_ALL)
+  set(doxygen_default)
+else()
+  set(doxygen_default ALL)
+endif()
+
+add_custom_target(complex_doxygen ${doxygen_default} DEPENDS ${DOXYGEN_INDEX_FILE})
 
 option(COMPLEX_INSTALL_DOXYGEN_DOCS "Enable install for COMPLEX Doxygen docs" OFF)
 
@@ -61,7 +70,16 @@ if(COMPLEX_BUILD_SPHINX_DOCS)
     VERBATIM
   )
 
-  add_custom_target(complex_sphinx ALL DEPENDS ${SPHINX_INDEX_FILE})
+  option(COMPLEX_SPHINX_EXCLUDE_FROM_ALL "Exclude the Sphinx generation from the default target" OFF)
+  mark_as_advanced(COMPLEX_SPHINX_EXCLUDE_FROM_ALL)
+
+  if(COMPLEX_SPHINX_EXCLUDE_FROM_ALL)
+    set(sphinx_default)
+  else()
+    set(sphinx_default ALL)
+  endif()
+
+  add_custom_target(complex_sphinx ${sphinx_default} DEPENDS ${SPHINX_INDEX_FILE})
 
   option(COMPLEX_INSTALL_SPHINX_DOCS "Enable install for COMPLEX Sphinx docs" OFF)
   if(COMPLEX_INSTALL_SPHINX_DOCS)
