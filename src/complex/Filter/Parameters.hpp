@@ -4,8 +4,8 @@
 #include <memory>
 #include <string>
 
-#include "complex/Filter/IParameter.hpp"
 #include "complex/Common/Types.hpp"
+#include "complex/Filter/IParameter.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex

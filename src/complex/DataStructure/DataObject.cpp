@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <exception>
 
-#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
+#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Metadata.hpp"
 
 using namespace complex;

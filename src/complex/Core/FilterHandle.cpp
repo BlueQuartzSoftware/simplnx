@@ -1,5 +1,5 @@
-#include "complex/Core/Application.hpp"
 #include "complex/Core/FilterHandle.hpp"
+#include "complex/Core/Application.hpp"
 
 using namespace complex;
 
