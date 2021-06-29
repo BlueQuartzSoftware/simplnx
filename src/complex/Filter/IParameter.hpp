@@ -6,7 +6,7 @@
 #include <string>
 #include <typeinfo>
 
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Common/Types.hpp"
