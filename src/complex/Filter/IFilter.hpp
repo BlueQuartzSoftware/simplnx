@@ -32,7 +32,20 @@ public:
     std::string message;
   };
 
-  using MessageHandler = std::function<void(const Message&)>;
+  struct MessageHandler
+  {
+    using Callback = std::function<void(const Message&)>;
+
+    void operator()(const Message& message) const
+    {
+      if(m_Callback)
+      {
+        m_Callback(message);
+      }
+    }
+
+    Callback m_Callback;
+  };
 
   struct DataCheckResult
   {
