@@ -186,6 +186,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Arguments.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/IFilter.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/IParameter.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Output.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.cpp
 
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
