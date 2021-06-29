@@ -6,8 +6,8 @@
 #include "DataStructObserver.hpp"
 
 #include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/DataStore.hpp"
+#include "complex/DataStructure/DataStructure.hpp"
 
 /**
  * @brief Test creation and removal of items in a tree-style structure. No node has more than one parent.

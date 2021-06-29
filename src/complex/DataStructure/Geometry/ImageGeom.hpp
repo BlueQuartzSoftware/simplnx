@@ -1,8 +1,8 @@
 #pragma once
 
-#include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
-#include "complex/Common/BoundingBox.hpp"
 #include "complex/Common/Array.hpp"
+#include "complex/Common/BoundingBox.hpp"
+#include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
 
 #include "complex/complex_export.hpp"
 
