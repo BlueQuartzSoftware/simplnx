@@ -1,0 +1,20 @@
+#include "DataParameter.hpp"
+
+namespace complex
+{
+DataParameter::DataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const std::optional<std::any>& defaultValue, Category category)
+: AbstractParameter(name, humanName, helpText, defaultValue)
+, m_Category(category)
+{
+}
+
+DataParameter::Type DataParameter::type() const
+{
+  return Type::Data;
+}
+
+DataParameter::Category DataParameter::category() const
+{
+  return m_Category;
+}
+} // namespace complex

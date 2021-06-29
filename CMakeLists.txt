@@ -135,11 +135,16 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/ScalarData.hpp
 
+  ${COMPLEX_SOURCE_DIR}/Filter/AbstractParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Arguments.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/ConstDataParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/DataParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/IFilter.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/IParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/MutableDataParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Output.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
 
@@ -198,11 +203,16 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.cpp
 
+  ${COMPLEX_SOURCE_DIR}/Filter/AbstractParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Arguments.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/ConstDataParameter.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/DataParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/IFilter.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/IParameter.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/MutableDataParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Output.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.cpp
 
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
 

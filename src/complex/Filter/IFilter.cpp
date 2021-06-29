@@ -6,6 +6,9 @@
 
 #include <nlohmann/json.hpp>
 
+#include "complex/Filter/DataParameter.hpp"
+#include "complex/Filter/ValueParameter.hpp"
+
 namespace complex
 {
 IFilter::DataCheckResult IFilter::dataCheck(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const

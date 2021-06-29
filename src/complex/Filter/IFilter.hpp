@@ -7,12 +7,11 @@
 #include <nonstd/expected.hpp>
 
 #include "complex/Common/Result.hpp"
+#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Filter/Output.hpp"
 #include "complex/Filter/Parameters.hpp"
 #include "complex/complex_export.hpp"
-
-#include "complex/DataStructure/DataStructure.hpp"
 
 namespace complex
 {
