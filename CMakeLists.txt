@@ -51,6 +51,19 @@ set(COMPLEX_HDRS
     ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.hpp
     ${COMPLEX_SOURCE_DIR}/Core/FilterList.hpp
 
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry.hpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry2D.hpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry3D.hpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometryGrid.hpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/EdgeGeom.hpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/HexahedralGeom.hpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/ImageGeom.hpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/QuadGeom.hpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/RectGridGeom.hpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.hpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.hpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.hpp
+
     ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.hpp
     ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.hpp
     ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.hpp
@@ -67,6 +80,7 @@ set(COMPLEX_HDRS
     ${COMPLEX_SOURCE_DIR}/DataStructure/DataPath.hpp
     ${COMPLEX_SOURCE_DIR}/DataStructure/DataStore.hpp
     ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.hpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
     ${COMPLEX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
     ${COMPLEX_SOURCE_DIR}/DataStructure/IDataStore.hpp
     ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
@@ -87,6 +101,7 @@ set(COMPLEX_HDRS
 
     ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
     
+    ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
     ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
     ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
 )
@@ -106,6 +121,19 @@ set(COMPLEX_SRCS
     ${COMPLEX_SOURCE_DIR}/Core/Application.cpp
     ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.cpp
     ${COMPLEX_SOURCE_DIR}/Core/FilterList.cpp
+
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry.cpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry2D.cpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry3D.cpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometryGrid.cpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/EdgeGeom.cpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/HexahedralGeom.cpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/ImageGeom.cpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/QuadGeom.cpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/RectGridGeom.cpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.cpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.cpp
+    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.cpp
 
     ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.cpp
     ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.cpp
@@ -132,6 +160,8 @@ set(COMPLEX_SRCS
     # ${COMPLEX_SOURCE_DIR}/Rest/PipelineHandler.cpp
     # ${COMPLEX_SOURCE_DIR}/Rest/RestManager.cpp
     # ${COMPLEX_SOURCE_DIR}/Rest/RestServer.cpp
+
+    ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
 
     ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
     ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
@@ -161,11 +191,15 @@ source_group(TREE ${COMPLEX_SOURCE_DIR} PREFIX "complex" FILES ${COMPLEX_SRCS})
 
 set(COMPLEX_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src)
 
+find_package(Eigen3 REQUIRED)
+target_link_libraries(complex PUBLIC Eigen3::Eigen)
+
 target_include_directories(complex
   PUBLIC
     $<BUILD_INTERFACE:${COMPLEX_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${COMPLEX_GENERATED_DIR}>
     $<INSTALL_INTERFACE:include>
+    # ${EIGEN3_INCLUDE_DIR}
 )
 
 set(COMPLEX_PACKAGE_NAMESPACE "complex::")

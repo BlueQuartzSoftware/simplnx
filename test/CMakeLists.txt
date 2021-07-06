@@ -9,6 +9,13 @@ set_target_properties(DataStructureTest PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
+add_executable(GeometryTest GeometryTest.cpp)
+target_link_libraries(GeometryTest PUBLIC complex)
+set_target_properties(GeometryTest PROPERTIES
+    FOLDER "Tests"
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+
 add_executable(PluginTest PluginTest.cpp)
 target_link_libraries(PluginTest PUBLIC complex)
 set_target_properties(PluginTest PROPERTIES
@@ -26,6 +33,7 @@ set_target_properties(AppTest PROPERTIES
 )
 
 add_test(NAME DataStructure COMMAND DataStructureTest)
+add_test(NAME Geometry COMMAND GeometryTest)
 add_test(NAME Plugins COMMAND PluginTest)
 add_test(NAME App COMMAND AppTest)
 

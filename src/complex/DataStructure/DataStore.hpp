@@ -69,6 +69,16 @@ public:
   }
 
   /**
+   * @brief Resizes the DataStore to handle the specified number of tuples.
+   * @param numTuples
+   */
+  void resizeTuples(size_t numTuples) override
+  {
+    m_TupleCount = numTuples;
+    m_Data.resize(getSize());
+  }
+
+  /**
    * @brief Returns the value found at the specified index of the DataStore.
    * This cannot be used to edit the value found at the specified index.
    * @param index
@@ -109,6 +119,35 @@ public:
   reference operator[](size_t index) override
   {
     return m_Data[index];
+  }
+
+  /**
+   * @brief Returns the value found at the specified index of the DataStore.
+   * This cannot be used to edit the value found at the specified index.
+   * @param index
+   * @return const_reference
+   */
+  const_reference at(size_t index) const override
+  {
+    if(index >= getSize())
+    {
+      throw std::exception();
+    }
+    return m_Data[index];
+  }
+
+  /**
+   * @brief Returns a deep copy of the data store and all its data.
+   * @return IDataStore*
+   */
+  IDataStore* deepCopy() const override
+  {
+    auto copy = new DataStore(*this);
+    for(size_t i = 0; i < getSize(); i++)
+    {
+      copy->setValue(i, getValue(i));
+    }
+    return copy;
   }
 
 private:

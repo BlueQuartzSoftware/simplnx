@@ -105,6 +105,7 @@ protected:
     }
   }
 
+public:
   /**
    * @brief access specified element
    * @param index

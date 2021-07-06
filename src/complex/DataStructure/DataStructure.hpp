@@ -12,6 +12,7 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataMap.hpp"
 #include "complex/DataStructure/DataStore.hpp"
+#include "complex/DataStructure/DynamicListArray.hpp"
 #include "complex/DataStructure/ScalarData.hpp"
 #include "complex/DataStructure/LinkedPath.hpp"
 
@@ -89,6 +90,14 @@ public:
   DataObject* getData(DataObject::IdType id);
 
   /**
+   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * If no such object exists, or no ID is provided, this method returns nullptr.
+   * @param id
+   * @return DataObject*
+   */
+  DataObject* getData(const std::optional<DataObject::IdType>& id);
+
+  /**
    * @brief Returns a pointer to the DataObject at the given DataPath. If no
    * DataObject is found, this method returns nullptr.
    * @param path
@@ -113,6 +122,14 @@ public:
   const DataObject* getData(DataObject::IdType id) const;
 
   /**
+   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * If no such object exists, or no ID is provided, this method returns nullptr.
+   * @param id
+   * @return DataObject*
+   */
+  const DataObject* getData(const std::optional<DataObject::IdType>& id) const;
+
+  /**
    * @brief Returns a pointer to the DataObject at the given DataPath. If no
    * DataObject is found, this method returns nullptr.
    * @param path
@@ -135,6 +152,15 @@ public:
    * @return bool
    */
   bool removeData(DataObject::IdType id);
+
+  /**
+   * @brief Removes the DataObject using the specified IdType. Returns true
+   * if an object was found. Otherwise, returns false. If no ID is provided,
+   * this returns false.
+   * @param id
+   * @return bool
+   */
+  bool removeData(const std::optional<DataObject::IdType>& id);
 
   /**
    * @brief Removes the DataObject using the specified DataPath. Returns true
@@ -164,7 +190,7 @@ public:
   template <typename T>
   ScalarData<T>* createScalar(const std::string& name, T defaultValue, std::optional<DataObject::IdType> parent = {})
   {
-    auto scalar = std::make_shared<ScalarData<T>>(this, name);
+    auto scalar = std::shared_ptr<ScalarData<T>>(new ScalarData<T>(this, name, defaultValue));
     if(!finishAddingObject(scalar, parent))
     {
       return nullptr;
@@ -184,12 +210,31 @@ public:
   template <typename T>
   DataArray<T>* createDataArray(const std::string& name, IDataStore<T>* dataStore, std::optional<DataObject::IdType> parent = {})
   {
-    auto dataArr = std::make_shared<DataArray<T>>(this, name, dataStore);
+    std::shared_ptr<DataArray<T>> dataArr(new DataArray<T>(this, name, dataStore));
     if(!finishAddingObject(dataArr, parent))
     {
       return nullptr;
     }
     return dataArr.get();
+  }
+
+  /**
+   * @brief
+   * @tparam T
+   * @tparam K
+   * @param name
+   * @param parent = {}
+   * @return DynamicListArray*
+   */
+  template <typename T, typename K>
+  DynamicListArray<T, K>* createDynamicList(const std::string& name, std::optional<DataObject::IdType> parent = {})
+  {
+    std::shared_ptr<DynamicListArray<T, K>> dyList(new DynamicListArray<T, K>(this, name));
+    if(!finishAddingObject(dyList, parent))
+    {
+      return nullptr;
+    }
+    return dyList.get();
   }
 
   /**
@@ -213,7 +258,7 @@ public:
   template <class T>
   AbstractMontage* createMontage(const std::string& name, std::optional<DataObject::IdType> parent = {})
   {
-    std::shared_ptr<AbstractMontage> montage = std::make_shared<T>(this, name);
+    std::shared_ptr<AbstractMontage> montage(new T(this, name));
     if(!finishAddingObject(montage, parent))
     {
       return nullptr;
@@ -233,7 +278,7 @@ public:
   template <class T>
   AbstractGeometry* createGeometry(const std::string& name, std::optional<DataObject::IdType> parent = {})
   {
-    std::shared_ptr<AbstractGeometry> geometry = std::make_shared<T>(this, name);
+    std::shared_ptr<AbstractGeometry> geometry(new T(this, name));
     if(!finishAddingObject(geometry, parent))
     {
       return nullptr;

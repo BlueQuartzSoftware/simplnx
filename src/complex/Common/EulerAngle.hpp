@@ -1,6 +1,7 @@
 #pragma once
 
-#include "complex/Common/Array.hpp"
+#include "Eigen/Dense"
+//#include "complex/Common/Array.hpp"
 
 namespace complex
 {
@@ -11,6 +12,8 @@ namespace complex
  * becomes harder to accidentally use the wrong Euler angle format in code.
  * @tparam T 
 */
-template <typename T>
-using ZXZEuler = complex::Vec3<T>;
+//template <typename T>
+//using ZXZEuler = complex::Vec3<T>;
+
+using ZXZEuler = Eigen::Vector3f;
 } // namespace complex

@@ -416,7 +416,7 @@ void dataStoreTest()
   {
     throw std::exception();
   }
-  if(store.size() != 30)
+  if(store.getSize() != 30)
   {
     throw std::exception();
   }
@@ -424,12 +424,12 @@ void dataStoreTest()
   std::cout << "  Testing reading / writing to memory..." << std::endl;
   //  Test subscript operator
   {
-    for(size_t i = 0; i < store.size(); i++)
+    for(size_t i = 0; i < store.getSize(); i++)
     {
       store[i] = i + 1;
     }
     int32_t x = 1;
-    for(size_t i = 0; i < store.size(); i++)
+    for(size_t i = 0; i < store.getSize(); i++)
     {
       if(store[i] != x++)
       {
@@ -470,6 +470,112 @@ void dataStoreTest()
   std::cout << "dataStoreTest() test complete\n" << std::endl;
 }
 
+void dataArrayTest()
+{
+  std::cout << "dataArrayTest()..." << std::endl;
+  std::cout << "  Creating DataArray..." << std::endl;
+
+  DataStructure dataStr;
+
+  auto store = new DataStore<int32_t>(2, 2);
+  auto dataArr = dataStr.createDataArray<int32_t>("array", store);
+
+  std::cout << "  Testing DataArray / DataStore sizes" << std::endl;
+
+  if(dataArr->getSize() != store->getSize())
+  {
+    throw std::exception();
+  }
+  if(dataArr->getTupleCount() != store->getTupleCount())
+  {
+    throw std::exception();
+  }
+  if(dataArr->getTupleSize() != store->getTupleSize())
+  {
+    throw std::exception();
+  }
+
+  std::cout << "  Testing reading / writing to memory..." << std::endl;
+  // Test subscript operator
+  {
+    for(size_t i = 0; i < dataArr->getSize(); i++)
+    {
+      (*dataArr)[i] = i + 1;
+    }
+    int32_t x = 1;
+    for(size_t i = 0; i < dataArr->getSize(); i++)
+    {
+      if((*dataArr)[i] != x++)
+      {
+        throw std::exception();
+      }
+    }
+  }
+
+  // Test iterators
+  {
+    const int32_t initVal = -30;
+    int32_t x = initVal;
+    for(auto& value : *dataArr)
+    {
+      value = x++;
+    }
+    x = initVal;
+    for(const auto& value : *dataArr)
+    {
+      if(value != x++)
+      {
+        throw std::exception();
+      }
+    }
+  }
+
+  std::cout << "dataArrayTest() test complete\n" << std::endl;
+}
+
+void scalarDataTest()
+{
+  std::cout << "scalarDataTest()..." << std::endl;
+  std::cout << "  Creating ScalarData..." << std::endl;
+
+  DataStructure dataStr;
+  const int32_t value = 6;
+  auto scalar = dataStr.createScalar<int32_t>("scalar", value);
+
+  std::cout << "  Check ScalarData value..." << std::endl;
+
+  if(value != scalar->getValue())
+  {
+    throw std::exception();
+  }
+  if((*scalar) != value)
+  {
+    throw std::exception();
+  }
+  if((*scalar) == (value + 1))
+  {
+    throw std::exception();
+  }
+
+  std::cout << "  Editing ScalarData value..." << std::endl;
+
+  const int32_t newValue = 11;
+  scalar->setValue(newValue);
+  if(newValue != scalar->getValue())
+  {
+    throw std::exception();
+  }
+
+  const int32_t newValue2 = 14;
+  (*scalar) = newValue2;
+  if(scalar->getValue() != newValue2)
+  {
+    throw std::exception();
+  }
+
+  std::cout << "scalarDataTest() test complete\n" << std::endl;
+}
+
 /**
  * @brief
  * @param argc
@@ -485,4 +591,6 @@ int main(int argc, char** argv)
   dataStructureListenerTest();
   dataStructureCopyTest();
   dataStoreTest();
+  dataArrayTest();
+  scalarDataTest();
 }

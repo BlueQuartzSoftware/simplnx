@@ -17,6 +17,7 @@ class Point3D
 public:
   using ValueType = T;
   using Pointer = T*;
+  using ConstPointer = const T*;
   const size_t dimensions = 3;
   using ArrayType = std::array<T, 3>;
 
@@ -64,6 +65,34 @@ public:
    */
   Point3D(Pointer pos)
   : m_Pos({pos[0], pos[1], pos[2]})
+  {
+  }
+
+  /**
+   * @brief Constructs a Point3D by copying values from the provided raw Pointer.
+   * The provided Pointer is assumed to contain at least 3 values.
+   * @param pos
+   */
+  Point3D(ConstPointer pos)
+  : m_Pos({pos[0], pos[1], pos[2]})
+  {
+  }
+
+  /**
+   * @brief Copy constructor
+   * @param other
+   */
+  Point3D(const Point3D& other)
+  : m_Pos(other.m_Pos)
+  {
+  }
+
+  /**
+   * @brief Move constructor
+   * @param other
+   */
+  Point3D(Point3D&& other) noexcept
+  : m_Pos(std::move(other.m_Pos))
   {
   }
 
@@ -265,6 +294,36 @@ public:
   bool operator!=(const Point3D& rhs) const
   {
     return rhs.m_Pos != m_Pos;
+  }
+
+  /**
+   * @brief Returns a reference to the value at the specified index. Throws an
+   * exception if the index is greater than the number of dimensions.
+   * @param index
+   * @return ValueType&
+   */
+  ValueType& operator[](size_t index)
+  {
+    if(index >= 3)
+    {
+      throw std::exception();
+    }
+    return m_Pos[index];
+  }
+
+  /**
+   * @brief Returns a const reference to the value at the specified index.
+   * Throws an exception if the index is greater than the number of dimensions.
+   * @param index
+   * @return const ValueType&
+   */
+  const ValueType& operator[](size_t index) const
+  {
+    if(index >= 3)
+    {
+      throw std::exception();
+    }
+    return m_Pos[index];
   }
 
 protected:

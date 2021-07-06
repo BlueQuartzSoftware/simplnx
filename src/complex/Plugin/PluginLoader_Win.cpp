@@ -1,7 +1,7 @@
 #include <Windows.h>
 
-#include "Complex/Core/FilterHandle.hpp"
-#include "Complex/Plugin/PluginLoader.hpp"
+#include "complex/Core/FilterHandle.hpp"
+#include "complex/Plugin/PluginLoader.hpp"
 
 using namespace complex;
 

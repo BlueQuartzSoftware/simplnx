@@ -90,6 +90,21 @@ DataObject* DataStructure::getData(DataObject::IdType id)
   return iter->second.lock().get();
 }
 
+DataObject* DataStructure::getData(const std::optional<DataObject::IdType>& id)
+{
+  if(!id)
+  {
+    return nullptr;
+  }
+
+  auto iter = m_DataObjects.find(id.value());
+  if(m_DataObjects.end() == iter)
+  {
+    return nullptr;
+  }
+  return iter->second.lock().get();
+}
+
 DataObject* traversePath(DataObject* obj, const DataPath& path, size_t index)
 {
   if(path.getLength() == index)
@@ -137,6 +152,21 @@ const DataObject* DataStructure::getData(DataObject::IdType id) const
   return iter->second.lock().get();
 }
 
+const DataObject* DataStructure::getData(const std::optional<DataObject::IdType>& id) const
+{
+  if(!id)
+  {
+    return nullptr;
+  }
+
+  auto iter = m_DataObjects.find(id.value());
+  if(m_DataObjects.end() == iter)
+  {
+    return nullptr;
+  }
+  return iter->second.lock().get();
+}
+
 const DataObject* DataStructure::getData(const DataPath& path) const
 {
   auto topLevel = getTopLevelData();
@@ -172,6 +202,18 @@ bool DataStructure::removeData(DataObject::IdType id)
 {
   DataObject* data = getData(id);
   return removeData(data);
+}
+
+bool DataStructure::removeData(const std::optional<DataObject::IdType>& id)
+{
+  if(!id)
+  {
+    return false;
+  }
+  else
+  {
+    return removeData(id.value());
+  }
 }
 
 bool DataStructure::removeData(const DataPath& path)

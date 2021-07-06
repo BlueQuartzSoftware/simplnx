@@ -8,6 +8,8 @@
 #include "complex/Common/Point3D.hpp"
 #include "complex/Common/Ray.hpp"
 
+#include "complex/complex_export.hpp"
+
 namespace complex
 {
 class TriangleGeom;
@@ -34,11 +36,7 @@ T CosThetaBetweenVectors(const complex::Point3D<T>& a, const complex::Point3D<T>
  * @param b
  * @return float
  */
-template <typename T>
-T AngleBetweenVectors(const complex::ZXZEuler<T>& a, const complex::ZXZEuler<T>& b)
-{
-  throw std::exception();
-}
+float COMPLEX_EXPORT AngleBetweenVectors(const complex::ZXZEuler& a, const complex::ZXZEuler& b);
 
 /**
  * @brief Returns the distance between two points.
@@ -98,10 +96,7 @@ T FindTetrahedronVolume(const complex::Point3D<T>& p0, const complex::Point3D<T>
  * @param numVerts
  * @return complex::ZXZEuler<float>
  */
-ZXZEuler<float> FindPolygonNormal(const float* vertices, uint64_t numVerts)
-{
-  throw std::exception();
-}
+ZXZEuler COMPLEX_EXPORT FindPolygonNormal(const float* vertices, uint64_t numVerts);
 
 /**
  * @brief Returns the normal vector for a plane defined by three points along
@@ -111,11 +106,7 @@ ZXZEuler<float> FindPolygonNormal(const float* vertices, uint64_t numVerts)
  * @param p2
  * @return complex::ZXZEuler<T>
  */
-template <typename T>
-complex::ZXZEuler<T> FindPlaneNormalVector(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2)
-{
-  throw std::exception();
-}
+complex::ZXZEuler COMPLEX_EXPORT FindPlaneNormalVector(const complex::Point3D<float>& p0, const complex::Point3D<float>& p1, const complex::Point3D<float>& p2);
 
 /**
  * @brief Finds the coefficients and normal for a plane defined by three points
@@ -127,7 +118,7 @@ complex::ZXZEuler<T> FindPlaneNormalVector(const complex::Point3D<T>& p0, const 
  * @param normal
  */
 template <typename T>
-void FindPlaneCoefficients(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const float& c, ZXZEuler<float>& normal)
+void FindPlaneCoefficients(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const float& c, ZXZEuler& normal)
 {
   throw std::exception();
 }
@@ -270,20 +261,14 @@ T GetLengthOfRayInBox(const complex::Ray<T>& ray, const complex::BoundingBox<T>&
  * @param length
  * @return complex::Ray<float>
  */
-complex::Ray<float> GenerateRandomRay(float length)
-{
-  throw std::exception();
-}
+complex::Ray<float> COMPLEX_EXPORT GenerateRandomRay(float length);
 
 /**
  * @brief Returns the BoundingBox around the specified vertices.
  * @param verts
  * @return complex::BoundingBox<float>
  */
-complex::BoundingBox<float> FindBoundingBoxOfVertices(complex::VertexGeom* verts)
-{
-  throw std::exception();
-}
+complex::BoundingBox<float> COMPLEX_EXPORT FindBoundingBoxOfVertices(complex::VertexGeom* verts);
 
 /**
  * @brief Returns the BoundingBox around the specified face.
@@ -291,10 +276,7 @@ complex::BoundingBox<float> FindBoundingBoxOfVertices(complex::VertexGeom* verts
  * @param faceId
  * @return complex::BoundingBox<float>
  */
-complex::BoundingBox<float> FindBoundingBoxOfFace(complex::TriangleGeom* faces, int32_t faceId)
-{
-  throw std::exception();
-}
+complex::BoundingBox<float> COMPLEX_EXPORT FindBoundingBoxOfFace(complex::TriangleGeom* faces, int32_t faceId);
 
 /**
  * @brief Returns the BoundingBox around the specified face manipulated by the
@@ -304,10 +286,7 @@ complex::BoundingBox<float> FindBoundingBoxOfFace(complex::TriangleGeom* faces, 
  * @param float[3][3]
  * @return complex::BoundingBox<float>
  */
-complex::BoundingBox<float> FindBoundingBoxOfRotatedFace(complex::TriangleGeom* faces, int32_t faceId, float g[3][3])
-{
-  throw std::exception();
-}
+complex::BoundingBox<float> COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex::TriangleGeom* faces, int32_t faceId, float g[3][3]);
 
 /**
  * @param TriangleGeom* faces

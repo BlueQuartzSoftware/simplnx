@@ -18,7 +18,7 @@ class Ray
 {
 public:
   using PointType = Point3D<T>;
-  using ZXZEulerType = ZXZEuler<T>;
+  using ZXZEulerType = ZXZEuler;
   using LengthType = T;
 
   /**

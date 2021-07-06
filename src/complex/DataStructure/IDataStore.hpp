@@ -32,8 +32,18 @@ public:
     , m_Index(other.m_Index)
     {
     }
-    ~Iterator() = default;
+    virtual ~Iterator() = default;
 
+    Iterator& operator+(size_t offset)
+    {
+      m_Index += offset;
+      return *this;
+    }
+    Iterator& operator-(size_t offset)
+    {
+      m_Index -= offset;
+      return *this;
+    }
     Iterator& operator+=(size_t offset)
     {
       m_Index += offset;
@@ -64,7 +74,7 @@ public:
       m_Index--;
       return *this;
     }
-    difference_type operator-(const Iterator& rhs)
+    difference_type operator-(const Iterator& rhs) const
     {
       return m_Index - rhs.m_Index;
     }
@@ -76,7 +86,6 @@ public:
 
     Iterator& operator=(const Iterator& rhs)
     {
-      m_DataStore = rhs.m_DataStore;
       m_Index = rhs.m_Index;
       return *this;
     }
@@ -126,8 +135,18 @@ public:
     , m_Index(other.m_Index)
     {
     }
-    ~ConstIterator() = default;
+    virtual ~ConstIterator() = default;
 
+    ConstIterator& operator+(size_t offset)
+    {
+      m_Index += offset;
+      return *this;
+    }
+    ConstIterator& operator-(size_t offset)
+    {
+      m_Index -= offset;
+      return *this;
+    }
     ConstIterator& operator+=(size_t offset)
     {
       m_Index += offset;
@@ -158,7 +177,7 @@ public:
       m_Index--;
       return *this;
     }
-    difference_type operator-(const Iterator& rhs)
+    difference_type operator-(const ConstIterator& rhs) const
     {
       return m_Index - rhs.m_Index;
     }
@@ -170,7 +189,6 @@ public:
 
     ConstIterator& operator=(const ConstIterator& rhs)
     {
-      m_DataStore = rhs.m_DataStore;
       m_Index = rhs.m_Index;
       return *this;
     }
@@ -226,10 +244,16 @@ public:
    * @brief Returns the number of values stored within the DataStore.
    * @return size_t
    */
-  size_t size() const
+  size_t getSize() const
   {
     return getTupleCount() * getTupleSize();
   }
+
+  /**
+   * @brief Resizes the DataStore to handle the specified number of tuples.
+   * @param numTuples
+   */
+  virtual void resizeTuples(size_t numTuples) = 0;
 
   /**
    * @brief Returns the value found at the specified index of the DataStore.
@@ -249,10 +273,18 @@ public:
   /**
    * @brief Returns the value found at the specified index of the DataStore.
    * This cannot be used to edit the value found at the specified index.
-   * @param  index
-   * @return T
+   * @param index
+   * @return const_reference
    */
   virtual const_reference operator[](size_t index) const = 0;
+
+  /**
+   * @brief Returns the value found at the specified index of the DataStore.
+   * This cannot be used to edit the value found at the specified index.
+   * @param index
+   * @return const_reference
+   */
+  virtual const_reference at(size_t index) const = 0;
 
   /**
    * @brief Returns the value found at the specified index of the DataStore.
@@ -272,6 +304,12 @@ public:
   }
 
   /**
+   * @brief Returns a deep copy of the data store and all its data.
+   * @return IDataStore*
+   */
+  virtual IDataStore* deepCopy() const = 0;
+
+  /**
    * @brief Returns an Iterator to the begining of the DataStore.
    * @return Iterator
    */
@@ -286,7 +324,7 @@ public:
    */
   Iterator end()
   {
-    return Iterator(*this, size());
+    return Iterator(*this, getSize());
   }
 
   /**
@@ -304,15 +342,22 @@ public:
    */
   ConstIterator end() const
   {
-    return ConstIterator(*this, size());
+    return ConstIterator(*this, getSize());
   }
 
 protected:
   /**
    * @brief Default constructor
-  */
+   */
   IDataStore()
   {
   }
 };
+
+template <typename Iter>
+typename Iter::difference_type distance(Iter first, Iter last)
+{
+  return last - first;
+}
+
 } // namespace complex

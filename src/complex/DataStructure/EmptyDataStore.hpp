@@ -78,6 +78,16 @@ public:
   /**
    * @brief Throws an exception because this should never be called. The
    * EmptyDataStore class contains no data other than its target size.
+   * @param tupleCount
+   */
+  void resizeTuples(size_t tupleCount) override
+  {
+    throw std::exception();
+  }
+
+  /**
+   * @brief Throws an exception because this should never be called. The
+   * EmptyDataStore class contains no data other than its target size.
    * @param index
    * @return value_type
    */
@@ -93,6 +103,17 @@ public:
    * @param value
    */
   void setValue(size_t index, value_type value) override
+  {
+    throw std::exception();
+  }
+
+  /**
+   * @brief Throws an exception because this should never be called. The
+   * EmptyDataStore class contains no data other than its target size.
+   * @param index
+   * @return const_reference
+   */
+  const_reference at(size_t index) const override
   {
     throw std::exception();
   }
@@ -117,6 +138,15 @@ public:
   reference operator[](size_t index) override
   {
     throw std::exception();
+  }
+
+  /**
+   * @brief Returns a deep copy of the data store and all its data.
+   * @return IDataStore*
+   */
+  IDataStore* deepCopy() const override
+  {
+    return new EmptyDataStore(*this);
   }
 
 private:

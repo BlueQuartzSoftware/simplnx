@@ -1,5 +1,7 @@
 #include "TooltipGenerator.hpp"
 
+#include <sstream>
+
 using namespace complex;
 
 TooltipGenerator::TooltipGenerator()
@@ -55,10 +57,44 @@ void TooltipGenerator::setRowColorStr(const std::string& colorStr)
 
 std::string TooltipGenerator::generateHTML() const
 {
-  throw std::exception();
+  TooltipRowItem spacer;
+
+  std::string html;
+  std::stringstream ss(html);
+
+  ss << "<html><head></head>\n";
+  ss << "<body>\n";
+  ss << "<table cellpadding=\"4\" cellspacing=\"0\" border=\"0\">\n";
+  ss << "<tbody>\n";
+
+  for(const auto& row : m_Rows)
+  {
+    ss << rowToHTML(row);
+  }
+
+  ss << rowToHTML(spacer);
+  ss << "</tbody></table>\n";
+  ss << "</body></html>";
+  return html;
 }
 
-std::string TooltipGenerator::rowToHTML(const TooltipRowItem& row)
+std::string TooltipGenerator::rowToHTML(const TooltipRowItem& row) const
 {
-  throw std::exception();
+  std::string html;
+  std::stringstream ss(html);
+
+  switch(row.getType())
+  {
+  case TooltipRowItem::Type::Title:
+    ss << R"(<tr bgcolor=")" << getRowColorStr() << R"("><th align="center" colspan=2>)" << row.getTitle() << "</th></tr>";
+    break;
+  case TooltipRowItem::Type::Value:
+    ss << R"(<tr bgcolor=")" << getRowColorStr() << R"("><th align="right">)" << row.getTitle() << ":</th><td>" << row.getValue() << "</td></tr>";
+    break;
+  case TooltipRowItem::Type::Spacer:
+    ss << R"(<tr bgcolor=")" << getRowColorStr() << R"("><td></td><td></td></tr>)";
+    break;
+  }
+
+  return html;
 }

@@ -21,8 +21,8 @@ namespace complex
 class COMPLEX_EXPORT BaseGroup : public DataObject
 {
 public:
-  using Iterator = DataMap::Iterator;
-  using ConstIterator = DataMap::ConstIterator;
+  using Iterator = typename DataMap::Iterator;
+  using ConstIterator = typename DataMap::ConstIterator;
 
   /**
    * @brief Copy constructor

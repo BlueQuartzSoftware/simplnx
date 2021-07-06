@@ -95,7 +95,7 @@ protected:
    * @param row
    * @return std::string
    */
-  static std::string rowToHTML(const TooltipRowItem& row);
+  std::string rowToHTML(const TooltipRowItem& row) const;
 
 private:
   std::vector<TooltipRowItem> m_Rows;

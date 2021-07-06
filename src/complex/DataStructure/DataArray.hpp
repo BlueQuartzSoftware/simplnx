@@ -5,7 +5,6 @@
 
 namespace complex
 {
-
 /**
  * @class DataArray
  * @brief The DataArray class is a type of DataObject that exists to store and
@@ -16,8 +15,11 @@ template <class T>
 class DataArray : public DataObject
 {
 public:
-  using Iterator = IDataStore::Iterator;
-  using ConstIterator = IDataStore::ConstIterator;
+  using value_type = T;
+  using reference = T&;
+  using const_reference = const T&;
+  using Iterator = typename IDataStore<T>::Iterator;
+  using ConstIterator = typename IDataStore<T>::ConstIterator;
 
   /**
    * @brief Constructs a DataArray with the specified tuple size, count, and
@@ -41,8 +43,6 @@ public:
    */
   DataArray(DataStructure* ds, const std::string& name, const std::weak_ptr<IDataStore<T>>& store)
   : DataObject(ds, name)
-  , m_TupleSize(tupleSize)
-  , m_TupleCount(tupleCount)
   {
     setDataStore(store);
   }
@@ -54,8 +54,6 @@ public:
    */
   DataArray(const DataArray<T>& other)
   : DataObject(other)
-  , m_TupleCount(other.m_TupleCount)
-  , m_TupleSize(other.m_TupleSize)
   , m_DataStore(other.m_DataStore)
   {
   }
@@ -66,8 +64,6 @@ public:
    */
   DataArray(DataArray<T>&& other) noexcept
   : DataObject(std::move(other))
-  , m_TupleCount(std::move(other.m_TupleCount))
-  , m_TupleSize(std::move(other.m_TupleSize))
   , m_DataStore(std::move(other.m_DataStore))
   {
   }
@@ -75,10 +71,30 @@ public:
   virtual ~DataArray() = default;
 
   /**
+   * @brief Returns a shallow copy of the DataArray without copying data
+   * store's contents.
+   * @return DataObject*
+   */
+  DataObject* shallowCopy() override
+  {
+    return new DataArray(*this);
+  }
+
+  /**
+   * @brief Returns a deep copy of the DataArray including a deep copy of the
+   * data store.
+   * @return DataObject*
+   */
+  DataObject* deepCopy() override
+  {
+    return new DataArray(getDataStructure(), getName(), getDataStore()->deepCopy());
+  }
+
+  /**
    * @brief Returns the number of elements in the data array.
    * @return size_t
    */
-  size_t size() const
+  size_t getSize() const
   {
     return getTupleCount() * getTupleSize();
   }
@@ -106,8 +122,9 @@ public:
    * Throws an exception if the DataStore has not been allocated. This can be
    * used to edit the value found at the specified index.
    * @param  index
+   * @return reference
    */
-  T& operator[](size_t index)
+  reference operator[](size_t index)
   {
     if(nullptr == m_DataStore)
     {
@@ -121,9 +138,10 @@ public:
    * @brief Returns the value found at the specified index of the data array.
    * Throws an exception if the DataStore has not been allocated. This cannot be
    * used to edit the value found at the specified index.
-   * @param  index
+   * @param index
+   * @return const_reference
    */
-  const T& operator[](size_t index) const
+  const_reference operator[](size_t index) const
   {
     if(nullptr == m_DataStore)
     {
@@ -134,39 +152,20 @@ public:
   }
 
   /**
-   * @brief Returns an Iterator to the begining of the data array.
-   * @return Iterator
+   * @brief Returns the value found at the specified index of the data array.
+   * Throws an exception if the DataStore has not been allocated. This cannot be
+   * used to edit the value found at the specified index.
+   * @param index
+   * @return const_reference
    */
-  Iterator begin()
+  const_reference at(size_t index) const
   {
-    return m_DataStore->begin();
-  }
+    if(nullptr == m_DataStore)
+    {
+      throw std::exception();
+    }
 
-  /**
-   * @brief Returns an Iterator to the end of the data array.
-   * @return Iterator
-   */
-  Iterator end()
-  {
-    return m_DataStore->end();
-  }
-
-  /**
-   * @brief Returns an ConstIterator to the begining of the data array.
-   * @return ConstIterator
-   */
-  ConstIterator begin() const
-  {
-    return m_DataStore->begin();
-  }
-
-  /**
-   * @brief Returns an ConstIterator to the end of the data array.
-   * @return ConstIterator
-   */
-  ConstIterator end() const
-  {
-    return m_DataStore->end();
+    return (*m_DataStore.get())[index];
   }
 
   /**
@@ -216,7 +215,7 @@ public:
     m_DataStore = std::shared_ptr<IDataStore<T>>(store);
     if(nullptr == m_DataStore)
     {
-      m_DataStore = std::make_shared<EmptyDataStore>(0, 0);
+      m_DataStore = std::shared_ptr<IDataStore<T>>(new EmptyDataStore<T>());
     }
   }
 
@@ -231,8 +230,62 @@ public:
     m_DataStore = store.lock();
     if(nullptr == m_DataStore)
     {
-      m_DataStore = std::make_shared<EmptyDataStore>(0, 0);
+      m_DataStore = std::shared_ptr<IDataStore<T>>(new EmptyDataStore<T>());
     }
+  }
+
+  /**
+   * @brief Returns the first item in the array.
+   * @return value_type
+   */
+  value_type front() const
+  {
+    return at(0);
+  }
+
+  /**
+   * @brief Returns the last item in the array.
+   * @return value_type
+   */
+  value_type back() const
+  {
+    return at(getSize() - 1);
+  }
+
+  /**
+   * @brief Returns an Iterator to the begining of the data array.
+   * @return Iterator
+   */
+  Iterator begin()
+  {
+    return getDataStore()->begin();
+  }
+
+  /**
+   * @brief Returns an Iterator to the end of the data array.
+   * @return Iterator
+   */
+  Iterator end()
+  {
+    return getDataStore()->end();
+  }
+
+  /**
+   * @brief Returns an ConstIterator to the begining of the data array.
+   * @return ConstIterator
+   */
+  ConstIterator begin() const
+  {
+    return getDataStore()->begin();
+  }
+
+  /**
+   * @brief Returns an ConstIterator to the end of the data array.
+   * @return ConstIterator
+   */
+  ConstIterator end() const
+  {
+    return getDataStore()->end();
   }
 
   /**
@@ -242,7 +295,10 @@ public:
    * @param hdfFileName
    * @return H5::ErrorType
    */
-  H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const override;
+  H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const override
+  {
+    throw std::exception();
+  }
 
   /**
    * @brief Reads and overwrites data from the provided input stream. Returns an
@@ -251,12 +307,67 @@ public:
    * @param hdfFileName
    * @return H5::ErrorType
    */
-  H5::ErrorType readFromXdmfText(std::istream& in, const std::string& hdfFileName) override;
+  H5::ErrorType readFromXdmfText(std::istream& in, const std::string& hdfFileName) override
+  {
+    throw std::exception();
+  }
+
+  /**
+   * @brief Copy assignment operator
+   * @param rhs
+   * @return DataArray&
+   */
+  DataArray& operator=(const DataArray& rhs)
+  {
+    m_DataStore = rhs.m_DataStore;
+    return *this;
+  }
+
+  /**
+   * @brief Move assignment operator
+   * @param rhs
+   * @return DataArray&
+   */
+  DataArray& operator=(DataArray&& rhs)
+  {
+    m_DataStore = std::move(rhs.m_DataStore);
+    return *this;
+  }
 
 protected:
 private:
   std::shared_ptr<IDataStore<T>> m_DataStore = nullptr;
 };
+
+// Declare extern templates
+extern template DataArray<uint8_t>;
+extern template DataArray<uint16_t>;
+extern template DataArray<uint32_t>;
+extern template DataArray<uint64_t>;
+
+extern template DataArray<int8_t>;
+extern template DataArray<int16_t>;
+extern template DataArray<int32_t>;
+extern template DataArray<int64_t>;
+extern template DataArray<size_t>;
+
+extern template DataArray<float>;
+extern template DataArray<double>;
+
+// Declare aliases
+using CharArray = DataArray<char>;
+using UCharArray = DataArray<unsigned char>;
+
+using UInt8Array = DataArray<uint8_t>;
+using UInt16Array = DataArray<uint16_t>;
+using UInt32Array = DataArray<uint32_t>;
+using UInt64Array = DataArray<uint64_t>;
+
+using Int8Array = DataArray<int8_t>;
+using Int16Array = DataArray<int16_t>;
+using Int32Array = DataArray<int32_t>;
+using Int64Array = DataArray<int64_t>;
+using SizeArray = DataArray<size_t>;
 
 using FloatArray = DataArray<float>;
 using DoubleArray = DataArray<double>;

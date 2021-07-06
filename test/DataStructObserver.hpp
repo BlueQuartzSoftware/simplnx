@@ -13,7 +13,7 @@ class DataAddedMessage;
 class DataRemovedMessage;
 class DataRenamedMessage;
 class DataReparentedMessage;
-} // namespace SIMPL
+} // namespace complex
 
 using namespace complex;
 

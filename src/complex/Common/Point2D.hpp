@@ -66,7 +66,7 @@ public:
   {
   }
 
-  viirtual ~Point2D() = default;
+  virtual ~Point2D() = default;
 
   /**
    * @brief Returns the X value.
