@@ -332,7 +332,7 @@ public:
    * @param edgeId
    * @param verts
    */
-  void setVertsAtEdge(size_t edgeId, size_t verts[2]) override;
+  void setVertsAtEdge(size_t edgeId, const size_t verts[2]) override;
 
   /**
    * @brief

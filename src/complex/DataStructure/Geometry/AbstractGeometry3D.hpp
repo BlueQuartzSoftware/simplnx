@@ -60,10 +60,6 @@ public:
    */
   virtual size_t getNumberOfVertices() const = 0;
 
-  // -----------------------------------------------------------------------------
-  // Inherited from SharedEdgeOps
-  // -----------------------------------------------------------------------------
-
   /**
    * @brief resizeEdgeList
    * @param newNumEdges
@@ -87,7 +83,7 @@ public:
    * @param edgeId
    * @param verts
    */
-  virtual void setVertsAtEdge(size_t edgeId, size_t verts[2]) = 0;
+  virtual void setVertsAtEdge(size_t edgeId, const size_t verts[2]) = 0;
 
   /**
    * @brief getVerts
@@ -110,10 +106,6 @@ public:
    */
   virtual size_t getNumberOfEdges() const = 0;
 
-  // -----------------------------------------------------------------------------
-  // Connectivity
-  // -----------------------------------------------------------------------------
-
   /**
    * @brief findElementEdges
    * @return
@@ -135,10 +127,6 @@ public:
    * @brief deleteFaces
    */
   virtual void deleteFaces() = 0;
-
-  // -----------------------------------------------------------------------------
-  // Topology
-  // -----------------------------------------------------------------------------
 
   /**
    * @brief findUnsharedEdges
@@ -172,6 +160,24 @@ public:
    */
   virtual void deleteUnsharedFaces() = 0;
 
+  /**
+   * @brief setEdges
+   * @param edges
+   */
+  virtual void setEdges(const SharedEdgeList* edges) = 0;
+
+  /**
+   * @brief setUnsharedEdges
+   * @param bEdgeList
+   */
+  virtual void setUnsharedEdges(const SharedEdgeList* bEdgeList) = 0;
+
+  /**
+   * @brief setUnsharedFaces
+   * @param bFaceList
+   */
+  virtual void setUnsharedFaces(const SharedFaceList* bFaceList) = 0;
+
 protected:
   /**
    * @brief
@@ -191,24 +197,6 @@ protected:
    * @param other
    */
   AbstractGeometry3D(AbstractGeometry3D&& other) noexcept;
-
-  /**
-   * @brief setEdges
-   * @param edges
-   */
-  virtual void setEdges(const SharedEdgeList* edges) = 0;
-
-  /**
-   * @brief setUnsharedEdges
-   * @param bEdgeList
-   */
-  virtual void setUnsharedEdges(const SharedEdgeList* bEdgeList) = 0;
-
-  /**
-   * @brief setUnsharedFaces
-   * @param bFaceList
-   */
-  virtual void setUnsharedFaces(const SharedFaceList* bFaceList) = 0;
 
   /**
    * @brief

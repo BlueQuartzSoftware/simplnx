@@ -397,7 +397,7 @@ void TriangleGeom::deleteEdges()
   m_EdgeListId.reset();
 }
 
-void TriangleGeom::setVertsAtEdge(size_t edgeId, size_t verts[2])
+void TriangleGeom::setVertsAtEdge(size_t edgeId, const size_t verts[2])
 {
   auto edges = getEdges();
   if(!edges)

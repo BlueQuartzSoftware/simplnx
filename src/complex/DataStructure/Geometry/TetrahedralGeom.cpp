@@ -456,7 +456,7 @@ const AbstractGeometry::SharedEdgeList* TetrahedralGeom::getEdges() const
   return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
 }
 
-void TetrahedralGeom::setVertsAtEdge(size_t edgeId, size_t verts[2])
+void TetrahedralGeom::setVertsAtEdge(size_t edgeId, const size_t verts[2])
 {
   auto edges = getEdges();
   if(!edges)

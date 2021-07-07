@@ -424,7 +424,7 @@ private:
   LengthUnit m_Units = LengthUnit::Meter;
   bool m_IsTimeSeriesEnabled = false;
   float m_TimeValue = 0.0f;
-  uint32_t m_UnitDimensionality;
-  uint32_t m_SpacialDimensionality;
+  uint32_t m_UnitDimensionality = 3;
+  uint32_t m_SpacialDimensionality = 3;
 };
 } // namespace complex

@@ -538,7 +538,7 @@ const AbstractGeometry::SharedEdgeList* HexahedralGeom::getEdges() const
   return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
 }
 
-void HexahedralGeom::setVertsAtEdge(size_t edgeId, size_t verts[2])
+void HexahedralGeom::setVertsAtEdge(size_t edgeId, const size_t verts[2])
 {
   auto edges = dynamic_cast<SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
   if(!edges)
@@ -581,8 +581,8 @@ void HexahedralGeom::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float>&
 
   for(size_t i = 0; i < 3; i++)
   {
-    vert1[i] = (*vertices)[verts[0] + i];
-    vert2[i] = (*vertices)[verts[1] + i];
+    vert1[i] = (*vertices)[verts[0] * 3 + i];
+    vert2[i] = (*vertices)[verts[1] * 3 + i];
   }
 }
 

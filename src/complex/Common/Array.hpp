@@ -213,6 +213,16 @@ public:
   }
 
   /**
+   * @brief operator != Tests for inequality of the underlying data
+   * @param rhs
+   * @return bool
+   */
+  bool operator!=(const Array& rhs) const
+  {
+    return m_Array != rhs.m_Array;
+  }
+
+  /**
    * @brief Converts to another container type. The output type that is being used needs to have the "push_back()" method implemented.
    *
    *   For STL containers this includes Vector, Deque. QVector will also work.

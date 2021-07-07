@@ -389,7 +389,7 @@ const AbstractGeometry::SharedEdgeList* QuadGeom::getEdges() const
   return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
 }
 
-void QuadGeom::setVertsAtEdge(size_t edgeId, size_t verts[2])
+void QuadGeom::setVertsAtEdge(size_t edgeId, const size_t verts[2])
 {
   auto edges = getEdges();
   if(!edges)

@@ -85,7 +85,7 @@ public:
    * @param edgeId
    * @param verts
    */
-  virtual void setVertsAtEdge(size_t edgeId, size_t verts[2]) = 0;
+  virtual void setVertsAtEdge(size_t edgeId, const size_t verts[2]) = 0;
 
   /**
    * @brief
@@ -136,6 +136,18 @@ public:
    */
   virtual void deleteUnsharedEdges() = 0;
 
+  /**
+   * @brief
+   * @param edges
+   */
+  virtual void setEdges(const SharedEdgeList* edges) = 0;
+
+  /**
+   * @brief
+   * @param bEdgeList
+   */
+  virtual void setUnsharedEdges(const SharedEdgeList* bEdgeList) = 0;
+
 protected:
   /**
    * @brief
@@ -155,18 +167,6 @@ protected:
    * @param other
    */
   AbstractGeometry2D(AbstractGeometry2D&& other) noexcept;
-
-  /**
-   * @brief
-   * @param edges
-   */
-  virtual void setEdges(const SharedEdgeList* edges) = 0;
-
-  /**
-   * @brief
-   * @param bEdgeList
-   */
-  virtual void setUnsharedEdges(const SharedEdgeList* bEdgeList) = 0;
 
 private:
 };
