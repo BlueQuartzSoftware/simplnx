@@ -10,10 +10,10 @@
 
 namespace complex
 {
-class AbstractFilter;
+class IFilter;
 class AbstractPlugin;
 
-using FilterCreationFunc = AbstractFilter* (*)();
+using FilterCreationFunc = IFilter* (*)();
 
 /**
  * @class AbstractPlugin
@@ -62,7 +62,7 @@ public:
    * @param id
    * @return complex::AbstractFilter*
    */
-  complex::AbstractFilter* createFilter(FilterHandle::FilterIdType id) const;
+  complex::IFilter* createFilter(FilterHandle::FilterIdType id) const;
 
   /**
    * @brief Returns a set of FilterHandles pointing to each of the filters contained in the plugin.

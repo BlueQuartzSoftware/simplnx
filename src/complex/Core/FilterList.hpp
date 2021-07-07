@@ -12,7 +12,7 @@
 
 namespace complex
 {
-class AbstractFilter;
+class IFilter;
 class AbstractPlugin;
 class PluginLoader;
 
@@ -48,16 +48,16 @@ public:
   std::vector<complex::FilterHandle> search(const std::string& text) const;
 
   /**
-   * @brief Attempts to create an AbstractFilter specified by the given
+   * @brief Attempts to create an IFilter specified by the given
    * FilterHandle. Returns a pointer to the created filter if one was created.
    * Returns nullptr otherwise.
    * 
    * It is the caller's responsibility to delete the pointer when they are
    * finished with it.
    * @param handle
-   * @return complex::AbstractFilter*
+   * @return complex::IFilter*
    */
-  complex::AbstractFilter* createFilter(const complex::FilterHandle& handle) const;
+  complex::IFilter* createFilter(const complex::FilterHandle& handle) const;
 
   /**
    * @brief Returns the AbstractPlugin pointer corresponding to the specified

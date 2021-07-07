@@ -1,42 +1,26 @@
-add_subdirectory(Plugin)
+find_package(Catch2 CONFIG REQUIRED)
 
-configure_file(cmake/PluginDir.hpp.in PluginDir.hpp @ONLY)
+include(Catch)
 
-add_executable(DataStructureTest DataStructTest.cpp DataStructObserver.hpp DataStructObserver.cpp)
-target_link_libraries(DataStructureTest PUBLIC complex)
-set_target_properties(DataStructureTest PROPERTIES
-    FOLDER "Tests"
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+add_executable(complex_test
+  complex_test_main.cpp
+  ArgumentsTest.cpp
 )
 
-add_executable(GeometryTest GeometryTest.cpp)
-target_link_libraries(GeometryTest PUBLIC complex)
-set_target_properties(GeometryTest PROPERTIES
-    FOLDER "Tests"
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+target_link_libraries(complex_test
+  PRIVATE
+    complex
+    Catch2::Catch2
 )
 
-add_executable(PluginTest PluginTest.cpp)
-target_link_libraries(PluginTest PUBLIC complex)
-set_target_properties(PluginTest PROPERTIES
-    FOLDER "Tests"
-    INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+set_target_properties(complex_test
+  PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
 )
 
-add_executable(AppTest AppTest.cpp)
-target_link_libraries(AppTest PUBLIC complex)
-set_target_properties(AppTest PROPERTIES
-    FOLDER "Tests"
-    INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+target_compile_options(complex_test
+  PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/MP>
 )
 
-add_test(NAME DataStructure COMMAND DataStructureTest)
-add_test(NAME Geometry COMMAND GeometryTest)
-add_test(NAME Plugins COMMAND PluginTest)
-add_test(NAME App COMMAND AppTest)
-
-set_target_properties(complex PROPERTIES
-    TEST DataStructure Plugins App
-)
+catch_discover_tests(complex_test)

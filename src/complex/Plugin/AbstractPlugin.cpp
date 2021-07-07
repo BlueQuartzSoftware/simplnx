@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "complex/Filtering/AbstractFilter.hpp"
+#include "complex/Filter/IFilter.hpp"
 
 using namespace complex;
 
@@ -55,7 +55,7 @@ std::set<FilterHandle> AbstractPlugin::getFilterHandles() const
   return m_FilterHandles;
 }
 
-complex::AbstractFilter* AbstractPlugin::createFilter(FilterHandle::FilterIdType id) const
+complex::IFilter* AbstractPlugin::createFilter(FilterHandle::FilterIdType id) const
 {
   if(!containsFilterId(id))
   {
@@ -67,12 +67,12 @@ complex::AbstractFilter* AbstractPlugin::createFilter(FilterHandle::FilterIdType
 
 void AbstractPlugin::addFilter(FilterCreationFunc filterFunc)
 {
-  std::shared_ptr<AbstractFilter> filter(filterFunc());
+  std::shared_ptr<IFilter> filter(filterFunc());
   if(!filter)
   {
     return;
   }
 
-  m_FilterHandles.insert(FilterHandle(filter->getName(), filter->getId(), getId()));
-  m_InitializerMap[filter->getId()] = filterFunc;
+  m_FilterHandles.insert(FilterHandle(filter->name(), filter->uuid(), getId()));
+  m_InitializerMap[filter->uuid()] = filterFunc;
 }

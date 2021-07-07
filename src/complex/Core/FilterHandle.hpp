@@ -21,7 +21,7 @@ public:
    * @brief The FilterIdType alias points to the AbstractFilter::ID type while
    * avoiding circular references while compiling.
    */
-  using FilterIdType = size_t;
+  using FilterIdType = std::string;
 
   /**
    * @brief The PluginIdType alias points to the AbstractPlugin::ID type while

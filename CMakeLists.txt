@@ -1,16 +1,34 @@
 cmake_minimum_required(VERSION 3.19)
 
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/Utility.cmake)
+
+option(COMPLEX_BUILD_PYTHON "Enable building Python building" OFF)
+enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_PYTHON FEATURE "python")
+
+option(COMPLEX_BUILD_TESTS "Enable building COMPLEX tests" ON)
+enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_TESTS FEATURE "tests")
+
 project(complex
   VERSION 0.1.0
   DESCRIPTION "SIMPL Redesign"
+  HOMEPAGE_URL "https://github.com/BlueQuartzSoftware/complex"
   LANGUAGES CXX
 )
+
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+find_package(fmt CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
+find_package(expected-lite CONFIG REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 add_library(complex SHARED)
 add_library(complex::complex ALIAS complex)
@@ -23,8 +41,21 @@ target_compile_features(complex
 set_target_properties(complex
   PROPERTIES
     DEBUG_POSTFIX "_d"
-    CMAKE_CXX_VISIBILITY_PRESET hidden
-    CMAKE_VISIBILITY_INLINES_HIDDEN ON
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
+)
+
+target_compile_options(complex
+  PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/MP>
+)
+
+target_link_libraries(complex
+  PUBLIC
+    fmt::fmt
+    nlohmann_json::nlohmann_json
+    nonstd::expected-lite
+    Eigen3::Eigen
 )
 
 set(COMPLEX_GENERATED_DIR ${PROJECT_BINARY_DIR}/generated)
@@ -39,71 +70,71 @@ generate_export_header(complex
 set(COMPLEX_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/complex)
 
 set(COMPLEX_HDRS
-    ${COMPLEX_SOURCE_DIR}/Common/BoundingBox.hpp
-    ${COMPLEX_SOURCE_DIR}/Common/EulerAngle.hpp
-    ${COMPLEX_SOURCE_DIR}/Common/Point2D.hpp
-    ${COMPLEX_SOURCE_DIR}/Common/Point3D.hpp
-    ${COMPLEX_SOURCE_DIR}/Common/Ray.hpp
-    ${COMPLEX_SOURCE_DIR}/Common/RgbColor.hpp
-    ${COMPLEX_SOURCE_DIR}/Common/Array.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Array.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/BoundingBox.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/EulerAngle.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Point2D.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Point3D.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Ray.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Result.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/RgbColor.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Types.hpp
 
-    ${COMPLEX_SOURCE_DIR}/Core/Application.hpp
-    ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.hpp
-    ${COMPLEX_SOURCE_DIR}/Core/FilterList.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/Application.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/FilterList.hpp
 
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry2D.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry3D.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometryGrid.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/EdgeGeom.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/HexahedralGeom.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/ImageGeom.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/QuadGeom.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/RectGridGeom.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRenamedMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataReparentedMessage.hpp
 
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRenamedMessage.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataReparentedMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.hpp
 
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry2D.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry3D.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometryGrid.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/EdgeGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/HexahedralGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/ImageGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/QuadGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/RectGridGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
+  ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
+  ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
 
-    ${COMPLEX_SOURCE_DIR}/DataStructure/BaseGroup.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/DataArray.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/DataGroup.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/DataMap.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/DataObject.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/DataPath.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/DataStore.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/IDataStore.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/MetaData.hpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/ScalarData.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/BaseGroup.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataArray.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataGroup.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataMap.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataObject.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataPath.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataStore.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IDataStore.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/ScalarData.hpp
 
-    ${COMPLEX_SOURCE_DIR}/Filtering/AbstractFilter.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Arguments.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/IFilter.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/IParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Output.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Parameters.hpp
 
-    ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
-    ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
-
-    # ${COMPLEX_SOURCE_DIR}/Rest/PipelineController.hpp
-    # ${COMPLEX_SOURCE_DIR}/Rest/PipelineHandler.hpp
-    # ${COMPLEX_SOURCE_DIR}/Rest/RestManager.hpp
-    # ${COMPLEX_SOURCE_DIR}/Rest/RestServer.hpp
-
-    ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
-
-    ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
-    
-    ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
-    ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
-    ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
+  
+  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
 )
 
 set(COMPLEX_GENERATED_HEADERS
@@ -116,55 +147,53 @@ set(COMPLEX_ALL_HDRS
 )
 
 set(COMPLEX_SRCS
-    ${COMPLEX_SOURCE_DIR}/Common/RgbColor.cpp
+  ${COMPLEX_SOURCE_DIR}/Common/RgbColor.cpp
 
-    ${COMPLEX_SOURCE_DIR}/Core/Application.cpp
-    ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.cpp
-    ${COMPLEX_SOURCE_DIR}/Core/FilterList.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/Application.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/FilterList.cpp
 
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry2D.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry3D.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometryGrid.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/EdgeGeom.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/HexahedralGeom.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/ImageGeom.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/QuadGeom.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/RectGridGeom.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRenamedMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataReparentedMessage.cpp
 
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRenamedMessage.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataReparentedMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.cpp
 
-    ${COMPLEX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry2D.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry3D.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometryGrid.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/EdgeGeom.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/HexahedralGeom.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/ImageGeom.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/QuadGeom.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/RectGridGeom.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.cpp
 
-    ${COMPLEX_SOURCE_DIR}/DataStructure/BaseGroup.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/DataGroup.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/DataMap.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/DataObject.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/DataPath.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
-    ${COMPLEX_SOURCE_DIR}/DataStructure/MetaData.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/BaseGroup.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataGroup.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataMap.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataObject.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataPath.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.cpp
 
-    ${COMPLEX_SOURCE_DIR}/Filtering/AbstractFilter.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Arguments.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/IFilter.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/IParameter.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Parameters.cpp
 
-    ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
+  ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
 
-    # ${COMPLEX_SOURCE_DIR}/Rest/PipelineController.cpp
-    # ${COMPLEX_SOURCE_DIR}/Rest/PipelineHandler.cpp
-    # ${COMPLEX_SOURCE_DIR}/Rest/RestManager.cpp
-    # ${COMPLEX_SOURCE_DIR}/Rest/RestServer.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
 
-    ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
-
-    ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
-    ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
 )
 
 if(WIN32)
@@ -191,15 +220,11 @@ source_group(TREE ${COMPLEX_SOURCE_DIR} PREFIX "complex" FILES ${COMPLEX_SRCS})
 
 set(COMPLEX_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src)
 
-find_package(Eigen3 REQUIRED)
-target_link_libraries(complex PUBLIC Eigen3::Eigen)
-
 target_include_directories(complex
   PUBLIC
     $<BUILD_INTERFACE:${COMPLEX_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${COMPLEX_GENERATED_DIR}>
     $<INSTALL_INTERFACE:include>
-    # ${EIGEN3_INCLUDE_DIR}
 )
 
 set(COMPLEX_PACKAGE_NAMESPACE "complex::")
@@ -251,22 +276,6 @@ if(COMPLEX_ENABLE_INSTALL)
     DESTINATION ${COMPLEX_INSTALL_CMAKE_PREFIX}
   )
 
-  function(install_with_directory)
-    set(optionsArgs)
-    set(oneValueArgs DESTINATION COMPONENT BASE_DIR)
-    set(multiValueArgs FILES)
-    cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    foreach(file ${ARGS_FILES})
-        file(RELATIVE_PATH relative_file ${ARGS_BASE_DIR} ${file})
-        get_filename_component(destination_dir ${relative_file} DIRECTORY)
-        install(FILES ${file}
-          DESTINATION ${ARGS_DESTINATION}/${destination_dir}
-          COMPONENT ${ARGS_COMPONENT}
-        )
-    endforeach()
-  endfunction()
-
   install_with_directory(FILES ${COMPLEX_HDRS}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/complex
     COMPONENT develop
@@ -290,10 +299,16 @@ if(COMPLEX_ENABLE_PACKAGING)
   include(CPack)
 endif()
 
-include(CTest)
-if(BUILD_TESTING)
-  option(COMPLEX_BUILD_TESTS "Enable building COMPLEX tests" ON)
-  if(COMPLEX_BUILD_TESTS)
-    add_subdirectory(test)
-  endif()
+if(COMPLEX_BUILD_TESTS)
+  include(CTest)
+  add_subdirectory(test)
+endif()
+
+if(COMPLEX_BUILD_PYTHON)
+  add_subdirectory(wrapping/python)
+endif()
+
+option(COMPLEX_BUILD_DOCS "Enables building COMPLEX documentation" OFF)
+if(COMPLEX_BUILD_DOCS)
+  add_subdirectory(docs)
 endif()

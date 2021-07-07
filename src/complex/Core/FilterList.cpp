@@ -42,7 +42,7 @@ AbstractPlugin* FilterList::getPluginById(const FilterHandle::PluginIdType& id) 
   return nullptr;
 }
 
-complex::AbstractFilter* FilterList::createFilter(const complex::FilterHandle& handle) const
+complex::IFilter* FilterList::createFilter(const complex::FilterHandle& handle) const
 {
   const auto& loader = m_PluginMap.at(handle.getPluginId());
   if(!loader->isLoaded())
