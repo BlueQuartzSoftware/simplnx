@@ -72,7 +72,7 @@ public:
   {
     DynamicListArray* copy = new DynamicListArray(*this);
     std::vector<T> linkCounts(m_Size, 0);
-    //if(forceNoAllocate)
+    // if(forceNoAllocate)
     //{
     //  copy->allocateLists(linkCounts);
     //  return copy;
