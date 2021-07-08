@@ -8,8 +8,7 @@
 //
 
 // Accessor methods
-//  
-
+//
 
 // Other methods
 //  
