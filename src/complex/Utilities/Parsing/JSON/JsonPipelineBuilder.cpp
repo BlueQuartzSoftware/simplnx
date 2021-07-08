@@ -18,4 +18,3 @@ JsonPipelineBuilder::JsonPipelineBuilder(JsonPipelineBuilder&& other) noexcept
 }
 
 JsonPipelineBuilder::~JsonPipelineBuilder() = default;
-

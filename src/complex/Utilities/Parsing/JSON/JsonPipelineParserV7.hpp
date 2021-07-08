@@ -14,15 +14,15 @@ class JsonPipelineParserV7 : virtual public IJsonPipelineParser
 {
 public:
   /**
-   * @brief 
-   * @param filterList 
-  */
+   * @brief
+   * @param filterList
+   */
   JsonPipelineParserV7(FilterList* filterList);
 
   /**
-   * @brief 
+   * @brief
    * @param other
-  */
+   */
   JsonPipelineParserV7(const JsonPipelineParserV7& other);
 
   /**

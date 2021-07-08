@@ -2,5 +2,5 @@
 
 namespace SIMPL
 {
-  using Json = void;
+using Json = void;
 }

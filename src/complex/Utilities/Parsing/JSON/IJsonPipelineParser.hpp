@@ -27,27 +27,27 @@ public:
 
 protected:
   /**
-   * @brief 
-   * @param filterList 
-  */
+   * @brief
+   * @param filterList
+   */
   IJsonPipelineParser(FilterList* filterList);
 
   /**
-   * @brief 
-   * @param other 
-  */
+   * @brief
+   * @param other
+   */
   IJsonPipelineParser(const IJsonPipelineParser& other);
 
   /**
-   * @brief 
-   * @param other 
-  */
+   * @brief
+   * @param other
+   */
   IJsonPipelineParser(IJsonPipelineParser&& other) noexcept;
 
   /**
-   * @brief 
+   * @brief
    * @return FilterList*
-  */
+   */
   FilterList* getFilterList() const;
 
 private:

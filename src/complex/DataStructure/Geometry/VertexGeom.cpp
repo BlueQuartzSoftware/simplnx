@@ -192,7 +192,7 @@ void VertexGeom::deleteElementCentroids()
 
 complex::Point3D<double> VertexGeom::getParametricCenter() const
 {
-  return { 0.0, 0.0, 0.0 };
+  return {0.0, 0.0, 0.0};
 }
 
 void VertexGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, double* shape) const
@@ -255,7 +255,9 @@ H5::ErrorType VertexGeom::generateXdmfText(std::ostream& out, const std::string&
       << "\n";
   out << R"(      <DataItem Format="HDF" NumberType="Int" Dimensions=")" << getNumberOfVertices() << "\">"
       << "\n";
-  out << "        " << hdfFileName << ":/DataContainers/" << getName() << "/" << "_COMPLEX_GEOMETRY_" << "/"
+  out << "        " << hdfFileName << ":/DataContainers/" << getName() << "/"
+      << "_COMPLEX_GEOMETRY_"
+      << "/"
       << "Verts"
       << "\n";
   out << "      </DataItem>"
@@ -267,7 +269,11 @@ H5::ErrorType VertexGeom::generateXdmfText(std::ostream& out, const std::string&
       << "\n";
   out << R"(      <DataItem Format="HDF"  Dimensions=")" << getNumberOfVertices() << R"( 3" NumberType="Float" Precision="4">)"
       << "\n";
-  out << "        " << hdfFileName << ":/DataContainers/" << getName() << "/" << "_COMPLEX_GEOMETRY_" << "/" << "SharedVertexList" << "\n";
+  out << "        " << hdfFileName << ":/DataContainers/" << getName() << "/"
+      << "_COMPLEX_GEOMETRY_"
+      << "/"
+      << "SharedVertexList"
+      << "\n";
   out << "      </DataItem>"
       << "\n";
   out << "    </Geometry>"

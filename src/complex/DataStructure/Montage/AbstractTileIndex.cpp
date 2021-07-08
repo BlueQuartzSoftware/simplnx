@@ -3,7 +3,7 @@
 using namespace SIMPL;
 
 // Constructors/Destructors
-//  
+//
 
 AbstractTileIndex::AbstractTileIndex()
 : m_Montage(nullptr)
