@@ -1,7 +1,7 @@
 #include "JsonFilterParserV7.h"
 
 // Constructors/Destructors
-//  
+//
 
 //  
 // Methods
@@ -14,5 +14,4 @@
 
 // Other methods
 //  
-
 
