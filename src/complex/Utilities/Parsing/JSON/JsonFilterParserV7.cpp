@@ -5,8 +5,7 @@
 
 //
 // Methods
-//  
-
+//
 
 // Accessor methods
 //  
