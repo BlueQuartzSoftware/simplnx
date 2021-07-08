@@ -35,7 +35,7 @@ public:
   /**
    * @brief Move constructor
    * @param other
-  */
+   */
   TooltipGenerator(TooltipGenerator&& other) noexcept;
 
   virtual ~TooltipGenerator();
