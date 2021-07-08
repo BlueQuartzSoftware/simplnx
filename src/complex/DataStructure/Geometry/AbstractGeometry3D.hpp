@@ -80,7 +80,7 @@ public:
 
   /**
    * @brief Resizes the SharedEdgeList array.
-   * 
+   *
    * This method does nothing if the geometry does not contain a valid shared
    * edge list.
    * @param newNumEdges
