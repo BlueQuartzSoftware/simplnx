@@ -29,7 +29,7 @@ public:
   /**
    * @brief Copy constructor
    * @param other
-  */
+   */
   TooltipGenerator(const TooltipGenerator& other);
 
   /**
