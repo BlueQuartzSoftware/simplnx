@@ -93,6 +93,7 @@ Point3D<float> VertexGeom::getCoords(size_t vertId) const
   {
     coords[i] = (*vertices)[offset + i];
   }
+  return coords;
 }
 
 void VertexGeom::setCoords(size_t vertId, const Point3D<float>& coords)

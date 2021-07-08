@@ -258,12 +258,13 @@ public:
   template <class T>
   AbstractMontage* createMontage(const std::string& name, std::optional<DataObject::IdType> parent = {})
   {
-    std::shared_ptr<AbstractMontage> montage(new T(this, name));
-    if(!finishAddingObject(montage, parent))
+    AbstractMontage* montage = new T(this, name);
+    std::shared_ptr<DataObject> montagePtr(montage);
+    if(!finishAddingObject(montagePtr, parent))
     {
       return nullptr;
     }
-    return montage.get();
+    return montagePtr.get();
   }
 
   /**

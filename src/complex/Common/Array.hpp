@@ -276,7 +276,7 @@ public:
    * @param other
    */
   Vec2(const Vec2& other)
-  : Array<T,2>(other)
+  : Array<T, 2>(other)
   {
   }
 
@@ -285,7 +285,7 @@ public:
    * @param other
    */
   Vec2(Vec2&& other) noexcept
-  : Array<T,2>(std::move(other))
+  : Array<T, 2>(std::move(other))
   {
   }
 
