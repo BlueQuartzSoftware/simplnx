@@ -51,7 +51,7 @@ void RectGridGeom::setBounds(const FloatArray* xBounds, const FloatArray* yBound
 {
   if(!xBounds)
   {
-  m_xBoundsId.reset();
+    m_xBoundsId.reset();
   }
   else
   {
