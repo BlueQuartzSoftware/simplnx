@@ -16,7 +16,7 @@ namespace
 {
 FilterHandle testHandle("Test Filter", 1, "05cc618b-781f-4ac0-b9ac-43f26ce1854f");
 FilterHandle test2Handle("Test2 Filter", 1, "05cc618b-781f-4ac0-b9ac-43f26ce1854e");
-}
+} // namespace
 
 void testLoadingPlugins()
 {
