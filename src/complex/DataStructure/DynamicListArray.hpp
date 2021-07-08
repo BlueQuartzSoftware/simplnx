@@ -264,10 +264,10 @@ public:
 
 protected:
   /**
-   * @brief 
-   * @param ds 
-   * @param name 
-  */
+   * @brief
+   * @param ds
+   * @param name
+   */
   DynamicListArray(DataStructure* ds, const std::string& name)
   : DataObject(ds, name)
   {
