@@ -3,21 +3,25 @@
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Messaging/AbstractDataStructureMessage.hpp"
+
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
+
 /**
- * class DataRenamedMessage
- *
+ * @class DataRenamedMessage
+ * @brief The DataRenamedMessage class is a DataStructure message class used
+ * to signal that a DataObject's name was changed. The message includes the
+ * target DataObject's ID, the previous name, and the name it was changed to.
  */
-class COMPLEX_EXPORT DataRenamedMessage : virtual public AbstractDataStructureMessage
+class COMPLEX_EXPORT DataRenamedMessage : public AbstractDataStructureMessage
 {
 public:
-  static const int MsgType = 3;
+  static const MessageType MsgType = 3;
 
   /**
-   * @brief
+   * @brief Constructs a DataRenamedMessage specifying which DataObject was renamed, its old name, and new name.
    * @param ds
    * @param id
    * @param oldName
@@ -26,48 +30,45 @@ public:
   DataRenamedMessage(const DataStructure* ds, DataObject::IdType id, const std::string& oldName, const std::string& newName);
 
   /**
-   * @brief
+   * @brief Copy constructor
    * @param other
    */
   DataRenamedMessage(const DataRenamedMessage& other);
 
   /**
-   * @brief
+   * @brief Move constructor
    * @param other
    */
   DataRenamedMessage(DataRenamedMessage&& other) noexcept;
 
-  /**
-   * @brief
-   */
   virtual ~DataRenamedMessage();
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the AbsractDataStructureMessage type.
+   * @return MessageType
    */
-  int32_t getMsgType() const override;
+  MessageType getMsgType() const override;
 
   /**
-   * @brief
+   * @brief Returns the renamed object's ID
    * @return IdType
    */
   DataObject::IdType getDataId() const;
 
   /**
-   * @brief
+   * @brief Returns a read-only pointer to the renamed DataObject.
    * @return DataObject*
    */
   const DataObject* getData() const;
 
   /**
-   * @brief
+   * @brief Returns the previous DataObject name.
    * @return std::string
    */
   std::string getOldName() const;
 
   /**
-   * @brief
+   * @brief Returns the new DataObject name.
    * @return std::string
    */
   std::string getNewName() const;

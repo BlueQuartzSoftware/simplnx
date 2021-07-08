@@ -1,6 +1,8 @@
-#include "AbstractDataStructureMessage.hpp"
+#pragma once
 
 #include <utility>
+
+#include "AbstractDataStructureMessage.hpp"
 
 using namespace complex;
 

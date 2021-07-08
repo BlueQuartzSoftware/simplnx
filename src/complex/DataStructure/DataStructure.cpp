@@ -90,6 +90,21 @@ DataObject* DataStructure::getData(DataObject::IdType id)
   return iter->second.lock().get();
 }
 
+DataObject* DataStructure::getData(const std::optional<DataObject::IdType>& id)
+{
+  if(!id)
+  {
+    return nullptr;
+  }
+
+  auto iter = m_DataObjects.find(id.value());
+  if(m_DataObjects.end() == iter)
+  {
+    return nullptr;
+  }
+  return iter->second.lock().get();
+}
+
 DataObject* traversePath(DataObject* obj, const DataPath& path, size_t index)
 {
   if(path.getLength() == index)
@@ -137,6 +152,21 @@ const DataObject* DataStructure::getData(DataObject::IdType id) const
   return iter->second.lock().get();
 }
 
+const DataObject* DataStructure::getData(const std::optional<DataObject::IdType>& id) const
+{
+  if(!id)
+  {
+    return nullptr;
+  }
+
+  auto iter = m_DataObjects.find(id.value());
+  if(m_DataObjects.end() == iter)
+  {
+    return nullptr;
+  }
+  return iter->second.lock().get();
+}
+
 const DataObject* DataStructure::getData(const DataPath& path) const
 {
   auto topLevel = getTopLevelData();
@@ -172,6 +202,18 @@ bool DataStructure::removeData(DataObject::IdType id)
 {
   DataObject* data = getData(id);
   return removeData(data);
+}
+
+bool DataStructure::removeData(const std::optional<DataObject::IdType>& id)
+{
+  if(!id)
+  {
+    return false;
+  }
+  else
+  {
+    return removeData(id.value());
+  }
 }
 
 bool DataStructure::removeData(const DataPath& path)
@@ -219,7 +261,7 @@ void DataStructure::dataDeleted(DataObject::IdType id, const std::string& name)
 std::vector<DataObject*> DataStructure::getTopLevelData() const
 {
   std::vector<DataObject*> topLevel;
-  for(auto iter : m_DataObjects)
+  for(auto& iter : m_DataObjects)
   {
     auto obj = iter.second.lock();
     if(nullptr == obj)
@@ -235,14 +277,14 @@ std::vector<DataObject*> DataStructure::getTopLevelData() const
   return topLevel;
 }
 
-bool DataStructure::insertTopLevel(const std::shared_ptr<BaseGroup>& container)
+bool DataStructure::insertTopLevel(const std::shared_ptr<DataObject>& obj)
 {
-  if(nullptr == container)
+  if(nullptr == obj)
   {
     return false;
   }
 
-  return m_RootGroup.insert(container);
+  return m_RootGroup.insert(obj);
 }
 
 bool DataStructure::removeTopLevel(DataObject* data)
@@ -261,23 +303,32 @@ bool DataStructure::removeTopLevel(DataObject* data)
 DataGroup* DataStructure::createGroup(const std::string& name, std::optional<DataObject::IdType> parent)
 {
   auto container = std::make_shared<DataGroup>(this, name);
-  auto weakPtr = std::weak_ptr<DataGroup>(container);
-  if(parent.has_value())
-  {
-    auto parentContainer = dynamic_cast<BaseGroup*>(getData(parent.value()));
-    if(!parentContainer->insert(weakPtr))
-    {
-      return nullptr;
-    }
-  }
-  else if(!insertTopLevel(container))
+  if(!finishAddingObject(container, parent))
   {
     return nullptr;
   }
-
-  m_DataObjects[container->getId()] = weakPtr;
-  notify(std::make_shared<DataAddedMessage>(this, container->getId()));
   return container.get();
+}
+
+bool DataStructure::finishAddingObject(const std::shared_ptr<DataObject>& obj, std::optional<DataObject::IdType> parent)
+{
+  if(parent.has_value())
+  {
+    auto parentContainer = dynamic_cast<BaseGroup*>(getData(parent.value()));
+    if(!parentContainer->insert(obj))
+    {
+      return false;
+    }
+  }
+  else if(!insertTopLevel(obj))
+  {
+    return false;
+  }
+
+  m_DataObjects[obj->getId()] = obj;
+  auto msg = std::make_shared<DataAddedMessage>(this, obj->getId());
+  notify(msg);
+  return true;
 }
 
 DataStructure::Iterator DataStructure::begin()
@@ -302,7 +353,7 @@ DataStructure::ConstIterator DataStructure::end() const
 
 bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject::IdType newParentId)
 {
-  auto target = m_DataObjects[targetId];
+  auto& target = m_DataObjects[targetId];
   auto newParent = dynamic_cast<BaseGroup*>(getData(newParentId));
   if(nullptr == newParent)
   {
@@ -320,7 +371,7 @@ bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject:
 
 bool DataStructure::removeParent(DataObject::IdType targetId, DataObject::IdType parentId)
 {
-  auto target = m_DataObjects[targetId];
+  const auto& target = m_DataObjects[targetId];
   auto parent = dynamic_cast<BaseGroup*>(getData(parentId));
   auto targetPtr = target.lock();
   if(targetPtr == nullptr)
@@ -336,6 +387,11 @@ void DataStructure::notify(const std::shared_ptr<AbstractDataStructureMessage>& 
   {
     observer->onNotify(this, msg);
   }
+}
+
+std::set<AbstractDataStructureObserver*> DataStructure::getObservers() const
+{
+  return m_Observers;
 }
 
 void DataStructure::addObserver(AbstractDataStructureObserver* obs)

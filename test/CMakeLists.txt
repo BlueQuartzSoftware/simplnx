@@ -5,6 +5,10 @@ include(Catch)
 add_executable(complex_test
   complex_test_main.cpp
   ArgumentsTest.cpp
+  DataStructTest.cpp
+  GeometryTest.cpp
+  DataStructObserver.hpp
+  DataStructObserver.cpp
 )
 
 target_link_libraries(complex_test

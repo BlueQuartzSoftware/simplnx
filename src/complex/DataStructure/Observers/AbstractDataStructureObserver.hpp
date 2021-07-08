@@ -9,30 +9,37 @@ namespace complex
 class AbstractDataStructureMessage;
 class DataStructure;
 
+/**
+ * @class AbstractDataStructureObserver
+ * @brief The AbstractDataStructureObserver class is a base class for objects
+ * that are interested in receiving message notifications from at least one
+ * DataStructure. Concrete instances of AbstractDataStructureObserver should
+ * provide an implementation of the onNotify method.
+ */
 class COMPLEX_EXPORT AbstractDataStructureObserver
 {
 public:
   /**
-   * @brief
+   * @brief Default constructor
    */
   AbstractDataStructureObserver();
 
   /**
-   * @brief
+   * @brief Copy constructor
    * @param other
    */
   AbstractDataStructureObserver(const AbstractDataStructureObserver& other);
 
   /**
-   * @brief
+   * @brief Move constructor
    * @param other
    */
   AbstractDataStructureObserver(AbstractDataStructureObserver&& other) noexcept;
 
-  ~AbstractDataStructureObserver();
+  virtual ~AbstractDataStructureObserver();
 
   /**
-   * @brief
+   * @brief Called when the target DataStructure emits a message.
    * @param target
    * @param msg
    */
