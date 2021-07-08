@@ -115,8 +115,7 @@ void QuadGeom::getVertsAtQuad(size_t quadId, size_t verts[4]) const
   }
 }
 
-void QuadGeom::getVertCoordsAtQuad(size_t quadId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2, complex::Point3D<float>& vert3,
-                                   complex::Point3D<float>& vert4) const
+void QuadGeom::getVertCoordsAtQuad(size_t quadId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2, complex::Point3D<float>& vert3, complex::Point3D<float>& vert4) const
 {
   if(!getQuads())
   {
