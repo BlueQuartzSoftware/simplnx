@@ -27,7 +27,7 @@ public:
    * @param json
    * @return AbstractFilter*
    */
-  SIMPL::AbstractFilter* fromJson( const std::string& json) const override;
+  SIMPL::AbstractFilter* fromJson(const std::string& json) const override;
 
   /**
    * @param AbstractFilter*
