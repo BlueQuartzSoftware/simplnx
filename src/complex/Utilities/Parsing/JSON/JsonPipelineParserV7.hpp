@@ -26,9 +26,9 @@ public:
   JsonPipelineParserV7(const JsonPipelineParserV7& other);
 
   /**
-   * @brief 
-   * @param other 
-  */
+   * @brief
+   * @param other
+   */
   JsonPipelineParserV7(JsonPipelineParserV7&& other) noexcept;
 
   virtual ~JsonPipelineParserV7();
