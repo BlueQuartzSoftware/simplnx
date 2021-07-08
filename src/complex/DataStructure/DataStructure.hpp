@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataMap.hpp"
@@ -22,7 +23,6 @@ namespace complex
 {
 class AbstractDataStructureMessage;
 class AbstractDataStructureObserver;
-class AbstractGeometry;
 class AbstractMontage;
 class DataGroup;
 class DataPath;

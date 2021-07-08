@@ -34,13 +34,13 @@ public:
    * @brief Copy constructor
    * @param other
    */
-  DataAddedMessage::DataAddedMessage(const DataAddedMessage& other);
+  DataAddedMessage(const DataAddedMessage& other);
 
   /**
    * @brief Move constructor
    * @param other
    */
-  DataAddedMessage::DataAddedMessage(DataAddedMessage&& other) noexcept;
+  DataAddedMessage(DataAddedMessage&& other) noexcept;
 
   virtual ~DataAddedMessage();
 

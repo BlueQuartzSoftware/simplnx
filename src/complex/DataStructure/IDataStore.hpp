@@ -130,7 +130,7 @@ public:
     , m_Index(index)
     {
     }
-    ConstIterator(const iterator& other)
+    ConstIterator(const ConstIterator& other)
     : m_DataStore(other.m_DataStore)
     , m_Index(other.m_Index)
     {
