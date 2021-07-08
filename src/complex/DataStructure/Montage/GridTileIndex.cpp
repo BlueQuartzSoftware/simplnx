@@ -5,7 +5,7 @@
 using namespace SIMPL;
 
 // Constructors/Destructors
-//  
+//
 
 GridTileIndex::GridTileIndex(GridMontage* montage, const SizeVec3& pos)
 : AbstractTileIndex(montage)

@@ -438,7 +438,7 @@ complex::Point3D<double> RectGridGeom::getCoords(size_t idx[3]) const
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
   auto zBnds = getZBounds();
-  
+
   complex::Point3D<double> coords;
   coords[0] = 0.5 * (static_cast<double>((*xBnds)[idx[0]]) + (*xBnds)[idx[0] + 1]);
   coords[1] = 0.5 * (static_cast<double>((*yBnds)[idx[1]]) + (*yBnds)[idx[1] + 1]);

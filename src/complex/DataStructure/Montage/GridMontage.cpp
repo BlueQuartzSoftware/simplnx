@@ -3,7 +3,7 @@
 using namespace SIMPL;
 
 // Constructors/Destructors
-//  
+//
 
 GridMontage::GridMontage(const GridMontage& other)
 : AbstractMontage(other)
