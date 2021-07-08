@@ -15,7 +15,6 @@ public:
   ~TestPlugin() override;
 };
 
-extern "C"
-{
+extern "C" {
 TESTPLUGIN_EXPORT complex::AbstractPlugin* initPlugin();
 }
