@@ -326,7 +326,8 @@ bool DataStructure::finishAddingObject(const std::shared_ptr<DataObject>& obj, s
   }
 
   m_DataObjects[obj->getId()] = obj;
-  notify(std::make_shared<DataAddedMessage>(this, obj->getId()));
+  auto msg = std::make_shared<DataAddedMessage>(this, obj->getId());
+  notify(msg);
   return true;
 }
 

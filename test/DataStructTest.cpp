@@ -1,7 +1,7 @@
-#include <exception>
-#include <iostream>
 #include <memory>
 #include <vector>
+
+#include <catch2/catch.hpp>
 
 #include "DataStructObserver.hpp"
 
@@ -12,11 +12,8 @@
 /**
  * @brief Test creation and removal of items in a tree-style structure. No node has more than one parent.
  */
-void createDataGroupTreeTest()
+TEST_CASE("DataGroupTree")
 {
-  std::cout << "createDataGroupTreeTest()..." << std::endl;
-  std::cout << "  Creating DataStructure..." << std::endl;
-
   // Create structuure
   DataStructure dataStr;
   auto group = dataStr.createGroup("Foo");
@@ -27,51 +24,31 @@ void createDataGroupTreeTest()
   auto childId = child->getId();
   auto grandchildId = grandchild->getId();
 
-  // Can all data be found by ID?
-  if(nullptr == dataStr.getData(groupId))
+  SECTION("find data")
   {
-    throw std::exception();
+    // Can all data be found by ID?
+    REQUIRE(nullptr != dataStr.getData(groupId));
+    REQUIRE(nullptr != dataStr.getData(childId));
+    REQUIRE(nullptr != dataStr.getData(grandchildId));
   }
-  if(nullptr == dataStr.getData(childId))
+  SECTION("remove mid-level group")
   {
-    throw std::exception();
+    group->remove(child->getName());
+    REQUIRE(nullptr == dataStr.getData(childId));
+    REQUIRE(nullptr == dataStr.getData(grandchildId));
   }
-  if(nullptr == dataStr.getData(grandchildId))
+  SECTION("remove top-level group")
   {
-    throw std::exception();
+    dataStr.removeData(group->getId());
+    REQUIRE(nullptr == dataStr.getData(groupId));
   }
-
-  std::cout << "  Removing mid-level DataGroup..." << std::endl;
-  // Test removing parent group. Does its child get deleted?
-  group->remove(child->getName());
-  if(nullptr != dataStr.getData(childId))
-  {
-    throw std::exception();
-  }
-  if(nullptr != dataStr.getData(grandchildId))
-  {
-    throw std::exception();
-  }
-
-  std::cout << "  Removing top-level DataGroup..." << std::endl;
-  // Test removing top-most group
-  dataStr.removeData(group->getId());
-  if(nullptr != dataStr.getData(groupId))
-  {
-    throw std::exception();
-  }
-
-  std::cout << "createDataStructure() test complete\n" << std::endl;
 }
 
 /**
  * @brief Test creation and removal of DataObjects in a graph-style DataStructure where multiple parents are allowed.
  */
-void createDataGroupGraphTest()
+TEST_CASE("DataGroupGraph")
 {
-  std::cout << "createDataGroupGraphTest()..." << std::endl;
-  std::cout << "  Creating DataStructure..." << std::endl;
-
   // Create DataStructure
   DataStructure dataStr;
   auto group = dataStr.createGroup("Foo");
@@ -85,65 +62,35 @@ void createDataGroupGraphTest()
   auto child2Id = child2->getId();
   auto grandchildId = grandchild->getId();
 
-  // Test Multi-parent connections
-  if(!dataStr.setAdditionalParent(grandchildId, child2Id))
-  {
-    throw std::exception();
-  }
+  // Multi-parent connections
+  dataStr.setAdditionalParent(grandchildId, child2Id);
 
-  // Check that all data be found by ID
-  if(nullptr == dataStr.getData(groupId))
+  SECTION("find data")
   {
-    throw std::exception();
+    REQUIRE(nullptr != dataStr.getData(groupId));
+    REQUIRE(nullptr != dataStr.getData(child1Id));
+    REQUIRE(nullptr != dataStr.getData(child2Id));
+    REQUIRE(nullptr != dataStr.getData(grandchildId));
   }
-  if(nullptr == dataStr.getData(child1Id))
+  SECTION("remove mid-level group")
   {
-    throw std::exception();
+    group->remove(child1->getName());
+    REQUIRE(nullptr == dataStr.getData(child1Id));
+    REQUIRE(nullptr != dataStr.getData(grandchildId));
   }
-  if(nullptr == dataStr.getData(child2Id))
+  SECTION("remove top-level group")
   {
-    throw std::exception();
+    dataStr.removeData(group->getId());
+    REQUIRE(nullptr == dataStr.getData(groupId));
+    REQUIRE(nullptr == dataStr.getData(grandchildId));
   }
-  if(nullptr == dataStr.getData(grandchildId))
-  {
-    throw std::exception();
-  }
-
-  std::cout << "  Removing mid-level DataGroup..." << std::endl;
-  // Test removing a single parent
-  group->remove(child1->getName());
-  if(nullptr != dataStr.getData(child1Id))
-  {
-    throw std::exception();
-  }
-  if(nullptr == dataStr.getData(grandchildId))
-  {
-    throw std::exception();
-  }
-
-  std::cout << "  Removing top-level DataGroup..." << std::endl;
-
-  dataStr.removeData(group->getId());
-  if(nullptr != dataStr.getData(groupId))
-  {
-    throw std::exception();
-  }
-  if(nullptr != dataStr.getData(grandchildId))
-  {
-    throw std::exception();
-  }
-
-  std::cout << "createDataStructure() test complete\n" << std::endl;
 }
 
 /**
  * @brief Test DataPath usage
  */
-void dataPathTest()
+TEST_CASE("DataPathTest")
 {
-  std::cout << "dataPathTest()..." << std::endl;
-  std::cout << "  Creating DataStructure..." << std::endl;
-
   // Create DataStructure
   DataStructure dataStr;
   auto group = dataStr.createGroup("Foo");
@@ -153,61 +100,30 @@ void dataPathTest()
 
   auto child2Id = child2->getId();
   auto grandchildId = grandchild->getId();
-  if(!dataStr.setAdditionalParent(grandchildId, child2Id))
+  SECTION("add additional parent")
   {
-    throw std::exception();
+    REQUIRE(dataStr.setAdditionalParent(grandchildId, child2Id));
   }
 
-  // Test DataPath lookup using DataPaths
-  DataPath gcPath1({"Foo", "Bar1", "Bazz"});
-  DataPath gcPath2({"Foo", "Bar2", "Bazz"});
-  if(nullptr == dataStr.getData(gcPath1))
-  {
-    throw std::exception();
-  }
-  if(nullptr == dataStr.getData(gcPath2))
-  {
-    throw std::exception();
-  }
+  const DataPath gcPath1({"Foo", "Bar1", "Bazz"});
+  const DataPath gcPath2({"Foo", "Bar2", "Bazz"});
 
-  std::cout << "  Removing mid-level DataGroup..." << std::endl;
-  // Test removing a parent group using a DataPath
-  DataPath c1Path({"Foo", "Bar1"});
-  if(!dataStr.removeData(c1Path))
-  {
-    throw std::exception();
-  }
-  if(nullptr != dataStr.getData(gcPath1))
-  {
-    throw std::exception();
-  }
-  if(nullptr == dataStr.getData(DataPath({"Foo", "Bar2"})))
-  {
-    throw std::exception();
-  }
+  REQUIRE(nullptr != dataStr.getData(gcPath1));
+  REQUIRE(nullptr != dataStr.getData(gcPath2));
+
+  const DataPath c1Path({"Foo", "Bar1"});
+  REQUIRE(dataStr.removeData(c1Path));
+  REQUIRE(nullptr == dataStr.getData(gcPath1));
+  REQUIRE(nullptr != dataStr.getData(DataPath({"Foo", "Bar2"})));
   auto gc2 = dataStr.getData(gcPath2);
-  if(nullptr == dataStr.getData(gcPath2))
-  {
-    throw std::exception();
-  }
+  REQUIRE(nullptr != dataStr.getData(gcPath2));
 
-  std::cout << "  Removing mid-level DataGroup..." << std::endl;
-  // Test removing the remaining parent group via DataPath
   dataStr.removeData(child2Id);
-  if(nullptr != dataStr.getData(gcPath2))
-  {
-    throw std::exception();
-  }
-
-  std::cout << "dataPathTest() test complete\n" << std::endl;
+  REQUIRE(nullptr == dataStr.getData(gcPath2));
 }
 
-void linkedPathTest()
+TEST_CASE("LinkedPathTest")
 {
-  std::cout << "linkedPathTest()..." << std::endl;
-  std::cout << "  Creating DataStructure..." << std::endl;
-
-  // Create DataStructure
   DataStructure dataStr;
   auto group = dataStr.createGroup("Foo");
   auto child1 = dataStr.createGroup("Bar1", group->getId());
@@ -216,76 +132,30 @@ void linkedPathTest()
 
   auto child2Id = child2->getId();
   auto grandchildId = grandchild->getId();
-  if(!dataStr.setAdditionalParent(grandchildId, child2Id))
-  {
-    throw std::exception();
-  }
+
+  REQUIRE(dataStr.setAdditionalParent(grandchildId, child2Id));
 
   // DataPath
-  DataPath grandPath({"Foo", "Bar1", "Bazz"});
-  std::cout << "  -Data Path: " << grandPath.toString() << std::endl;
+  const DataPath grandPath({"Foo", "Bar1", "Bazz"});
+  const LinkedPath linkedPath = dataStr.getLinkedPath(grandPath);
 
-  auto linkedPath = dataStr.getLinkedPath(grandPath);
-  std::cout << "  -Linked Path: " << linkedPath.toString() << std::endl;
-  if(!linkedPath.isValid())
-  {
-    throw std::exception();
-  }
+  REQUIRE(linkedPath.isValid());
+  REQUIRE(grandchild == linkedPath.getData());
 
-  // Check path result
-  if(grandchild != linkedPath.getData())
-  {
-    throw std::exception();
-  }
-  if(!linkedPath.isValid())
-  {
-    throw std::exception();
-  }
+  REQUIRE(child1->rename("Bar1.3"));
+  REQUIRE(nullptr == dataStr.getData(grandPath));
+  REQUIRE(nullptr != linkedPath.getData());
+  REQUIRE(linkedPath.isValid());
 
-  // Try rename
-  std::cout << "  Renamed group: Bar1 -> Bar1.3" << std::endl;
-  if(!child1->rename("Bar1.3"))
-  {
-    throw std::exception();
-  }
-  if(nullptr != dataStr.getData(grandPath))
-  {
-    throw std::exception();
-  }
-  if(nullptr == linkedPath.getData())
-  {
-    throw std::exception();
-  }
-  if(!linkedPath.isValid())
-  {
-    throw std::exception();
-  }
-  std::cout << "  -Linked Path: " << linkedPath.toString() << std::endl;
-
-  std::cout << "  Removed group: Bar1.3" << std::endl;
-  if(!dataStr.removeData(linkedPath.getIdAt(1)))
-  {
-    throw std::exception();
-  }
-  if(linkedPath.isValid())
-  {
-    throw std::exception();
-  }
-
-  std::cout << "  -Linked Path: " << linkedPath.toString() << "\n" << std::endl;
-
-  std::cout << "linkedPathTest() test complete\n" << std::endl;
+  REQUIRE(dataStr.removeData(linkedPath.getIdAt(1)));
+  REQUIRE(!linkedPath.isValid());
 }
 
 /**
  * @brief Tests IDataStructureListener usage
  */
-void dataStructureListenerTest()
+TEST_CASE("DataStructureListenerTest")
 {
-  std::cout << "dataStructureListenerTest()..." << std::endl;
-  std::cout << "  Creating DataStructure...\n" << std::endl;
-
-  // Create DataStructure
   DataStructure dataStr;
   DataStructObserver dsListener(dataStr);
 
@@ -298,25 +168,20 @@ void dataStructureListenerTest()
   auto groupId = group->getId();
   auto child2Id = child2->getId();
   auto grandchildId = grandchild->getId();
-  // Adds a second parent to grandchild group. This should trigger dsListener.
-  if(!dataStr.setAdditionalParent(grandchildId, child2Id))
-  {
-    throw std::exception();
-  }
 
-  // Removes a mid-level group. This should trigger dsListener.
+  REQUIRE(dsListener.getDataAddedCount() == 4);
+
+  REQUIRE(dataStr.setAdditionalParent(grandchildId, child2Id));
+  REQUIRE(dsListener.getDataReparentedCount() == 1);
+
   dataStr.removeData(child2Id);
+  REQUIRE(dsListener.getDataRemovedCount() == 1);
   dataStr.removeData(groupId);
-
-  std::cout << "dataStructureListenerTest() test complete\n" << std::endl;
+  REQUIRE(dsListener.getDataRemovedCount() == 4);
 }
 
-void dataStructureCopyTest()
+TEST_CASE("DataStructureCopyTest")
 {
-  std::cout << "dataStructureCopyTest()..." << std::endl;
-  std::cout << "  Creating DataStructure..." << std::endl;
-
-  // Create DataStructure
   DataStructure dataStr;
   auto group = dataStr.createGroup("Foo");
   auto child1 = dataStr.createGroup("Bar1", group->getId());
@@ -327,102 +192,47 @@ void dataStructureCopyTest()
   auto child1Id = child1->getId();
   auto child2Id = child2->getId();
   auto grandchildId = grandchild->getId();
-  if(!dataStr.setAdditionalParent(grandchildId, child2Id))
-  {
-    throw std::exception();
-  }
+
+  REQUIRE(dataStr.setAdditionalParent(grandchildId, child2Id));
 
   // Copy DataStructure
   DataStructure dataStrCopy(dataStr);
 
-  // Check ID exists
-  if(!dataStrCopy.getData(groupId))
-  {
-    throw std::exception();
-  }
-  if(!dataStrCopy.getData(child1Id))
-  {
-    throw std::exception();
-  }
-  if(!dataStrCopy.getData(child2Id))
-  {
-    throw std::exception();
-  }
-  if(!dataStrCopy.getData(grandchildId))
-  {
-    throw std::exception();
-  }
+  REQUIRE(dataStrCopy.getData(groupId));
+  REQUIRE(dataStrCopy.getData(child1Id));
+  REQUIRE(dataStrCopy.getData(child2Id));
+  REQUIRE(dataStrCopy.getData(grandchildId));
 
-  // Check Data Copied
   DataObject* data = dataStr.getData(groupId);
   DataObject* dataCopy = dataStrCopy.getData(groupId);
-  if(dataStrCopy.getData(groupId) == dataStr.getData(groupId))
-  {
-    throw std::exception();
-  }
-  if(dataStrCopy.getData(child1Id) == dataStr.getData(child1Id))
-  {
-    throw std::exception();
-  }
-  if(dataStrCopy.getData(child2Id) == dataStr.getData(child2Id))
-  {
-    throw std::exception();
-  }
-  if(dataStrCopy.getData(grandchildId) == dataStr.getData(grandchildId))
-  {
-    throw std::exception();
-  }
+  REQUIRE(dataStrCopy.getData(groupId) != dataStr.getData(groupId));
+  REQUIRE(dataStrCopy.getData(child1Id) != dataStr.getData(child1Id));
+  REQUIRE(dataStrCopy.getData(child2Id) != dataStr.getData(child2Id));
+  REQUIRE(dataStrCopy.getData(grandchildId) != dataStr.getData(grandchildId));
 
   // Create new group
   auto newGroup = dataStr.createGroup("New Group", child2Id);
   auto newId = newGroup->getId();
-  if(!dataStr.getData(newId))
-  {
-    throw std::exception();
-  }
-  if(dataStrCopy.getData(newId))
-  {
-    throw std::exception();
-  }
+  REQUIRE(dataStr.getData(newId));
+  REQUIRE(!dataStrCopy.getData(newId));
 
   auto newGroup2 = dataStrCopy.createGroup("New Group (2)", child2Id);
   auto newId2 = newGroup2->getId();
-  if(dataStr.getData(newId2))
-  {
-    throw std::exception();
-  }
-  if(!dataStrCopy.getData(newId2))
-  {
-    throw std::exception();
-  }
-
-  std::cout << "dataStructureCopyTest() test complete\n" << std::endl;
+  REQUIRE(!dataStr.getData(newId2));
+  REQUIRE(dataStrCopy.getData(newId2));
 }
 
-void dataStoreTest()
+TEST_CASE("DataStoreTest")
 {
-  std::cout << "dataStoreTest()..." << std::endl;
-  std::cout << "  Creating DataStore..." << std::endl;
+  const size_t tupleSize = 3;
+  const size_t tupleCount = 10;
+  DataStore<int32_t> store(tupleSize, tupleCount);
 
-  DataStore<int32_t> store(3, 10);
+  REQUIRE(store.getTupleCount() == tupleCount);
+  REQUIRE(store.getTupleSize() == tupleSize);
+  REQUIRE(store.getSize() == (tupleSize * tupleCount));
 
-  std::cout << "  Testing store size..." << std::endl;
-
-  if(store.getTupleCount() != 10)
-  {
-    throw std::exception();
-  }
-  if(store.getTupleSize() != 3)
-  {
-    throw std::exception();
-  }
-  if(store.getSize() != 30)
-  {
-    throw std::exception();
-  }
-
-  std::cout << "  Testing reading / writing to memory..." << std::endl;
-  //  Test subscript operator
+  // subscript operator
   {
     for(size_t i = 0; i < store.getSize(); i++)
     {
@@ -431,25 +241,17 @@ void dataStoreTest()
     int32_t x = 1;
     for(size_t i = 0; i < store.getSize(); i++)
     {
-      if(store[i] != x++)
-      {
-        throw std::exception();
-      }
+      REQUIRE(store[i] == x++);
     }
   }
-
-  // Test get/set values
+  // get / set values
   {
     const size_t index = 5;
     const size_t value = 25;
     store.setValue(index, value);
-    if(store.getValue(index) != value)
-    {
-      throw std::exception();
-    }
+    REQUIRE(store.getValue(index) == value);
   }
-
-  // Test iterators
+  // iterators
   {
     const int32_t initVal = -30;
     int32_t x = initVal;
@@ -460,137 +262,73 @@ void dataStoreTest()
     x = initVal;
     for(const auto& value : store)
     {
-      if(value != x++)
-      {
-        throw std::exception();
-      }
+      REQUIRE(value == x++);
     }
   }
-
-  std::cout << "dataStoreTest() test complete\n" << std::endl;
 }
 
-void dataArrayTest()
+TEST_CASE("DataArrayTest")
 {
-  std::cout << "dataArrayTest()..." << std::endl;
-  std::cout << "  Creating DataArray..." << std::endl;
-
   DataStructure dataStr;
 
   auto store = new DataStore<int32_t>(2, 2);
   auto dataArr = dataStr.createDataArray<int32_t>("array", store);
 
-  std::cout << "  Testing DataArray / DataStore sizes" << std::endl;
-
-  if(dataArr->getSize() != store->getSize())
+  SECTION("test size")
   {
-    throw std::exception();
-  }
-  if(dataArr->getTupleCount() != store->getTupleCount())
-  {
-    throw std::exception();
-  }
-  if(dataArr->getTupleSize() != store->getTupleSize())
-  {
-    throw std::exception();
+    REQUIRE(dataArr->getSize() == store->getSize());
+    REQUIRE(dataArr->getTupleCount() == store->getTupleCount());
+    REQUIRE(dataArr->getTupleSize() == store->getTupleSize());
   }
 
-  std::cout << "  Testing reading / writing to memory..." << std::endl;
-  // Test subscript operator
+  SECTION("test reading / writing to memory")
   {
-    for(size_t i = 0; i < dataArr->getSize(); i++)
+    SECTION("test subscript operators")
     {
-      (*dataArr)[i] = i + 1;
-    }
-    int32_t x = 1;
-    for(size_t i = 0; i < dataArr->getSize(); i++)
-    {
-      if((*dataArr)[i] != x++)
+      for(size_t i = 0; i < dataArr->getSize(); i++)
       {
-        throw std::exception();
+        (*dataArr)[i] = i + 1;
+      }
+      int32_t x = 1;
+      for(size_t i = 0; i < dataArr->getSize(); i++)
+      {
+        REQUIRE((*dataArr)[i] == x++);
+      }
+    }
+    SECTION("test iterators")
+    {
+      const int32_t initVal = -30;
+      int32_t x = initVal;
+      for(auto& value : *dataArr)
+      {
+        value = x++;
+      }
+      x = initVal;
+      for(const auto& value : *dataArr)
+      {
+        REQUIRE(value == x++);
       }
     }
   }
-
-  // Test iterators
-  {
-    const int32_t initVal = -30;
-    int32_t x = initVal;
-    for(auto& value : *dataArr)
-    {
-      value = x++;
-    }
-    x = initVal;
-    for(const auto& value : *dataArr)
-    {
-      if(value != x++)
-      {
-        throw std::exception();
-      }
-    }
-  }
-
-  std::cout << "dataArrayTest() test complete\n" << std::endl;
 }
 
-void scalarDataTest()
+TEST_CASE("ScalarDataTest")
 {
-  std::cout << "scalarDataTest()..." << std::endl;
-  std::cout << "  Creating ScalarData..." << std::endl;
-
   DataStructure dataStr;
   const int32_t value = 6;
   auto scalar = dataStr.createScalar<int32_t>("scalar", value);
 
-  std::cout << "  Check ScalarData value..." << std::endl;
+  // get value
+  REQUIRE(value == scalar->getValue());
+  REQUIRE((*scalar) == value);
+  REQUIRE((*scalar) != (value + 1));
 
-  if(value != scalar->getValue())
-  {
-    throw std::exception();
-  }
-  if((*scalar) != value)
-  {
-    throw std::exception();
-  }
-  if((*scalar) == (value + 1))
-  {
-    throw std::exception();
-  }
-
-  std::cout << "  Editing ScalarData value..." << std::endl;
-
+  // edit values
   const int32_t newValue = 11;
   scalar->setValue(newValue);
-  if(newValue != scalar->getValue())
-  {
-    throw std::exception();
-  }
+  REQUIRE(newValue == scalar->getValue());
 
   const int32_t newValue2 = 14;
   (*scalar) = newValue2;
-  if(scalar->getValue() != newValue2)
-  {
-    throw std::exception();
-  }
-
-  std::cout << "scalarDataTest() test complete\n" << std::endl;
-}
-
-/**
- * @brief
- * @param argc
- * @param argv
- * @return
- */
-int main(int argc, char** argv)
-{
-  createDataGroupTreeTest();
-  createDataGroupGraphTest();
-  dataPathTest();
-  linkedPathTest();
-  dataStructureListenerTest();
-  dataStructureCopyTest();
-  dataStoreTest();
-  dataArrayTest();
-  scalarDataTest();
+  REQUIRE(scalar->getValue() == newValue2);
 }

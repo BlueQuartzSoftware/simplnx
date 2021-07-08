@@ -1,5 +1,4 @@
-#include <exception>
-#include <iostream>
+#include <catch2/catch.hpp>
 
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/EdgeGeom.hpp"
@@ -17,12 +16,9 @@ template <typename T>
 T* createGeom(DataStructure& ds)
 {
   auto geom = ds.createGeometry<T>("Geom");
-
-  if(!dynamic_cast<T*>(geom))
-  {
-    throw std::exception();
-  }
-  return dynamic_cast<T*>(geom);
+  T* output = dynamic_cast<T*>(geom);
+  REQUIRE(nullptr != output);
+  return output;
 }
 
 const AbstractGeometry::SharedVertexList* createVertexList(AbstractGeometry* geom)
@@ -54,351 +50,255 @@ const AbstractGeometry::SharedFaceList* createFaceList(AbstractGeometry* geom)
 ////////////////////////////////////
 void testAbstractGeometry(AbstractGeometry* geom)
 {
-  std::cout << "  Testing units..." << std::endl;
-  auto units = AbstractGeometry::LengthUnit::Fathom;
-  geom->setUnits(units);
-  if(geom->getUnits() != units)
+  SECTION("abstract geometry")
   {
-    throw std::exception();
-  }
+    SECTION("units")
+    {
+      const auto units = AbstractGeometry::LengthUnit::Fathom;
+      geom->setUnits(units);
+      REQUIRE(geom->getUnits() == units);
+    }
+    SECTION("time series")
+    {
+      geom->setTimeSeriesEnabled(false);
+      REQUIRE(geom->getTimeSeriesEnabled() == false);
+      geom->setTimeSeriesEnabled(true);
+      REQUIRE(geom->getTimeSeriesEnabled() == true);
+    }
+    SECTION("time value")
+    {
+      const float timeValue = 6.4f;
+      geom->setTimeValue(timeValue);
+      REQUIRE(geom->getTimeValue() == timeValue);
+    }
+    SECTION("dimensionality")
+    {
+      const uint32_t uDims = 20;
+      geom->setUnitDimensionality(uDims);
+      REQUIRE(geom->getUnitDimensionality() == uDims);
 
-  std::cout << "  Testing time series..." << std::endl;
-  geom->setTimeSeriesEnabled(false);
-  if(geom->getTimeSeriesEnabled() != false)
-  {
-    throw std::exception();
-  }
-  geom->setTimeSeriesEnabled(true);
-  if(geom->getTimeSeriesEnabled() != true)
-  {
-    throw std::exception();
-  }
+      const uint32_t sDims = 14;
+      geom->setSpatialDimensionality(sDims);
+      REQUIRE(geom->getSpatialDimensionality() == sDims);
+    }
 
-  std::cout << "  Testing time values..." << std::endl;
-  const float timeValue = 6.4f;
-  geom->setTimeValue(timeValue);
-  if(geom->getTimeValue() != timeValue)
-  {
-    throw std::exception();
-  }
-
-  std::cout << "  Testing dimensionality..." << std::endl;
-  const uint32_t uDims = 20;
-  geom->setUnitDimensionality(uDims);
-  if(geom->getUnitDimensionality() != uDims)
-  {
-    throw std::exception();
-  }
-
-  const uint32_t sDims = 14;
-  geom->setSpatialDimensionality(sDims);
-  if(geom->getSpatialDimensionality() != sDims)
-  {
-    throw std::exception();
-  }
-
-  if(geom->getInfoString(InfoStringFormat::HtmlFormat) != geom->getTooltipGenerator().generateHTML())
-  {
-    throw std::exception();
+    SECTION("info string")
+    {
+      REQUIRE(geom->getInfoString(InfoStringFormat::HtmlFormat) == geom->getTooltipGenerator().generateHTML());
+    }
   }
 }
 
 void testGeom2D(AbstractGeometry2D* geom)
 {
-  std::cout << "  Testing vertices..." << std::endl;
-  auto vertices = createVertexList(geom);
-  geom->setVertices(vertices);
-  if(geom->getVertices() != vertices)
+  SECTION("abstract geometry 2D")
   {
-    throw std::exception();
-  }
-  const size_t numVertices = 10;
-  geom->resizeVertexList(numVertices);
-  if(geom->getNumberOfVertices() != numVertices)
-  {
-    throw std::exception();
-  }
+    const size_t vertId = 2;
+    const Point3D<float> coord = {0.5f, 0.0f, 2.0f};
 
-  const size_t vertId = 2;
-  const Point3D<float> coord = {0.5f, 0.0f, 2.0f};
-  geom->setCoords(vertId, coord);
-  if(geom->getCoords(vertId) != coord)
-  {
-    throw std::exception();
-  }
-
-  std::cout << "  Testing edges..." << std::endl;
-  auto edges = createEdgeList(geom);
-  geom->setEdges(edges);
-  if(geom->getEdges() != edges)
-  {
-    throw std::exception();
-  }
-  const size_t numEdges = 5;
-  geom->resizeEdgeList(numEdges);
-  if(geom->getNumberOfEdges() != numEdges)
-  {
-    throw std::exception();
-  }
-  const size_t edgeId = 3;
-  const size_t verts[2] = {vertId, vertId + 1};
-  geom->setVertsAtEdge(edgeId, verts);
-  Point3D<float> vert1, vert2;
-  size_t vertsOut[2];
-  geom->getVertsAtEdge(edgeId, vertsOut);
-  for(size_t i = 0; i < 2; i++)
-  {
-    if(verts[i] != vertsOut[i])
+    // Vertices
     {
-      throw std::exception();
+      auto vertices = createVertexList(geom);
+      geom->setVertices(vertices);
+      REQUIRE(geom->getVertices() == vertices);
+      const size_t numVertices = 10;
+      geom->resizeVertexList(numVertices);
+      REQUIRE(geom->getNumberOfVertices() == numVertices);
+
+      geom->setCoords(vertId, coord);
+      REQUIRE(geom->getCoords(vertId) == coord);
     }
-  }
-  geom->getVertCoordsAtEdge(edgeId, vert1, vert2);
-  if(vert1 != coord)
-  {
-    throw std::exception();
+
+    // edges
+    {
+      auto edges = createEdgeList(geom);
+      geom->setEdges(edges);
+      REQUIRE(geom->getEdges() == edges);
+      const size_t numEdges = 5;
+      geom->resizeEdgeList(numEdges);
+      REQUIRE(geom->getNumberOfEdges() == numEdges);
+      const size_t edgeId = 3;
+      const size_t verts[2] = {vertId, vertId + 1};
+      geom->setVertsAtEdge(edgeId, verts);
+      Point3D<float> vert1, vert2;
+      size_t vertsOut[2];
+      geom->getVertsAtEdge(edgeId, vertsOut);
+      for(size_t i = 0; i < 2; i++)
+      {
+        REQUIRE(verts[i] == vertsOut[i]);
+      }
+      geom->getVertCoordsAtEdge(edgeId, vert1, vert2);
+      REQUIRE(vert1 == coord);
+    }
   }
 }
 
 void testGeom3D(AbstractGeometry3D* geom)
 {
-  std::cout << "  Testing vertices..." << std::endl;
-  auto vertices = createVertexList(geom);
-  geom->setVertices(vertices);
-  if(geom->getVertices() != vertices)
+  SECTION("abstract geometry 3D")
   {
-    throw std::exception();
-  }
-  const size_t numVertices = 10;
-  geom->resizeVertexList(numVertices);
-  if(geom->getNumberOfVertices() != numVertices)
-  {
-    throw std::exception();
-  }
+    const size_t vertId = 2;
+    const Point3D<float> coord = {0.5f, 0.0f, 2.0f};
 
-  const size_t vertId = 2;
-  const Point3D<float> coord = {0.5f, 0.0f, 2.0f};
-  geom->setCoords(vertId, coord);
-  if(geom->getCoords(vertId) != coord)
-  {
-    throw std::exception();
-  }
-
-  std::cout << "  Testing edges..." << std::endl;
-  auto edges = createEdgeList(geom);
-  geom->setEdges(edges);
-  if(geom->getEdges() != edges)
-  {
-    throw std::exception();
-  }
-  const size_t numEdges = 5;
-  geom->resizeEdgeList(numEdges);
-  if(geom->getNumberOfEdges() != numEdges)
-  {
-    throw std::exception();
-  }
-  const size_t edgeId = 3;
-  const size_t verts[2] = {vertId, vertId + 1};
-  geom->setVertsAtEdge(edgeId, verts);
-  Point3D<float> vert1, vert2;
-  size_t vertsOut[2];
-  geom->getVertsAtEdge(edgeId, vertsOut);
-  for(size_t i = 0; i < 2; i++)
-  {
-    if(verts[i] != vertsOut[i])
+    // vertices
     {
-      throw std::exception();
+      auto vertices = createVertexList(geom);
+      geom->setVertices(vertices);
+      REQUIRE(geom->getVertices() == vertices);
+      const size_t numVertices = 10;
+      geom->resizeVertexList(numVertices);
+      REQUIRE(geom->getNumberOfVertices() == numVertices);
+
+      geom->setCoords(vertId, coord);
+      REQUIRE(geom->getCoords(vertId) == coord);
+    }
+    // edges
+    {
+      auto edges = createEdgeList(geom);
+      geom->setEdges(edges);
+      REQUIRE(geom->getEdges() == edges);
+      const size_t numEdges = 5;
+      geom->resizeEdgeList(numEdges);
+      REQUIRE(geom->getNumberOfEdges() == numEdges);
+      const size_t edgeId = 3;
+      const size_t verts[2] = {vertId, vertId + 1};
+      geom->setVertsAtEdge(edgeId, verts);
+      Point3D<float> vert1, vert2;
+      size_t vertsOut[2];
+      geom->getVertsAtEdge(edgeId, vertsOut);
+      for(size_t i = 0; i < 2; i++)
+      {
+        REQUIRE(verts[i] == vertsOut[i]);
+      }
+      geom->getVertCoordsAtEdge(edgeId, vert1, vert2);
+      REQUIRE(vert1 == coord);
+    }
+    // faces
+    {
     }
   }
-  geom->getVertCoordsAtEdge(edgeId, vert1, vert2);
-  if(vert1 != coord)
-  {
-    throw std::exception();
-  }
-
-  // Faces
 }
 
 void testGeomGrid(AbstractGeometryGrid* geom)
 {
-  std::cout << "  Testing dimensions..." << std::endl;
-  const size_t xDim = 10;
-  const size_t yDim = 150;
-  const size_t zDim = 50;
-  const SizeVec3 dims = {xDim, yDim, zDim};
-  geom->setDimensions(dims);
-  if(geom->getDimensions() != dims)
+  SECTION("abstract geometry grid")
   {
-    throw std::exception();
-  }
+    const size_t xDim = 10;
+    const size_t yDim = 150;
+    const size_t zDim = 50;
+    const SizeVec3 dims = {xDim, yDim, zDim};
+    geom->setDimensions(dims);
+    REQUIRE(geom->getDimensions() == dims);
 
-  if(geom->getNumXPoints() != xDim)
-  {
-    throw std::exception();
-  }
-  if(geom->getNumYPoints() != yDim)
-  {
-    throw std::exception();
-  }
-  if(geom->getNumZPoints() != zDim)
-  {
-    throw std::exception();
+    REQUIRE(geom->getNumXPoints() == xDim);
+    REQUIRE(geom->getNumYPoints() == yDim);
+    REQUIRE(geom->getNumZPoints() == zDim);
   }
 }
 
 /////////////////////////////////////
 // Begin geometry-specific testing //
 /////////////////////////////////////
-void edgeGeomTests()
+TEST_CASE("EdgeGeomTest")
 {
-  std::cout << "edgeGeomTests()..." << std::endl;
-  std::cout << "  Creating EdgeGeom..." << std::endl;
-
   DataStructure ds;
   auto geom = createGeom<EdgeGeom>(ds);
 
   testAbstractGeometry(geom);
 
-  std::cout << "  Checking Type as String..." << std::endl;
-
-  if(geom->getGeometryTypeAsString() != "EdgeGeom")
+  SECTION("type as string")
   {
-    throw std::exception();
+    REQUIRE(geom->getGeometryTypeAsString() == "EdgeGeom");
   }
 }
 
-void hexahedralGeomTests()
+TEST_CASE("HexahedralGeomTest")
 {
-  std::cout << "hexahedralGeomTests()..." << std::endl;
-  std::cout << "  Creating HexahedralGeom..." << std::endl;
-
   DataStructure ds;
   auto geom = createGeom<HexahedralGeom>(ds);
 
-  std::cout << "  Checking Type as String..." << std::endl;
-
-  if(geom->getGeometryTypeAsString() != "HexahedralGeom")
-  {
-    throw std::exception();
-  }
-
   testGeom3D(geom);
+
+  SECTION("type as string")
+  {
+    REQUIRE(geom->getGeometryTypeAsString() == "HexahedralGeom");
+  }
 }
 
-void imageGeomTests()
+TEST_CASE("ImageGeomTest")
 {
-  std::cout << "imageGeomTests()..." << std::endl;
-  std::cout << "  Creating ImageGeom..." << std::endl;
-
   DataStructure ds;
   auto geom = createGeom<ImageGeom>(ds);
 
-  std::cout << "  Checking Type as String..." << std::endl;
-
-  if(geom->getGeometryTypeAsString() != "ImageGeom")
-  {
-    throw std::exception();
-  }
-
   testGeomGrid(geom);
+
+  SECTION("type as string")
+  {
+    REQUIRE(geom->getGeometryTypeAsString() == "ImageGeom");
+  }
 }
 
-void quadGeomTests()
+TEST_CASE("QuadGeomTest")
 {
-  std::cout << "quadGeomTests()..." << std::endl;
-  std::cout << "  Creating QuadGeom..." << std::endl;
-
   DataStructure ds;
   auto geom = createGeom<QuadGeom>(ds);
 
-  std::cout << "  Checking Type as String..." << std::endl;
-
-  if(geom->getGeometryTypeAsString() != "QuadGeom")
-  {
-    throw std::exception();
-  }
-
   testGeom2D(geom);
+
+  SECTION("type as string")
+  {
+    REQUIRE(geom->getGeometryTypeAsString() == "QuadGeom");
+  }
 }
 
-void rectGridGeomTests()
+TEST_CASE("RectGridGeomTest")
 {
-  std::cout << "rectGridGeomTests()..." << std::endl;
-  std::cout << "  Creating RectGridGeom..." << std::endl;
-
   DataStructure ds;
   auto geom = createGeom<RectGridGeom>(ds);
 
-  std::cout << "  Checking Type as String..." << std::endl;
-
-  if(geom->getGeometryTypeAsString() != "RectGridGeom")
-  {
-    throw std::exception();
-  }
-
   testGeomGrid(geom);
+
+  SECTION("type as string")
+  {
+    REQUIRE(geom->getGeometryTypeAsString() == "RectGridGeom");
+  }
 }
 
-void tetrahedralGeomTest()
+TEST_CASE("TetrahedralGeomTest")
 {
-  std::cout << "tetrahedralGeomTest()..." << std::endl;
-  std::cout << "  Creating TetrahedralGeom..." << std::endl;
-
   DataStructure ds;
   auto geom = createGeom<TetrahedralGeom>(ds);
 
-  std::cout << "  Checking Type as String..." << std::endl;
-
-  if(geom->getGeometryTypeAsString() != "TetrahedralGeom")
-  {
-    throw std::exception();
-  }
-
   testGeom3D(geom);
+
+  SECTION("type as string")
+  {
+    REQUIRE(geom->getGeometryTypeAsString() == "TetrahedralGeom");
+  }
 }
 
-void triangleGeomTests()
+TEST_CASE("TriangleGeomTest")
 {
-  std::cout << "triangleGeomTests()..." << std::endl;
-  std::cout << "  Creating TriangleGeom..." << std::endl;
-
   DataStructure ds;
   auto geom = createGeom<TriangleGeom>(ds);
 
-  std::cout << "  Checking Type as String..." << std::endl;
-
-  if(geom->getGeometryTypeAsString() != "TriangleGeom")
-  {
-    throw std::exception();
-  }
-
   testGeom2D(geom);
+
+  SECTION("type as string")
+  {
+    REQUIRE(geom->getGeometryTypeAsString() == "TriangleGeom");
+  }
 }
 
-void vertexGeomTests()
+TEST_CASE("VertexGeomTest")
 {
-  std::cout << "vertexGeomTests()..." << std::endl;
-  std::cout << "  Creating VertexGeom..." << std::endl;
-
   DataStructure ds;
   auto geom = createGeom<VertexGeom>(ds);
 
-  std::cout << "  Checking Type as String..." << std::endl;
+  testAbstractGeometry(geom);
 
-  if(geom->getGeometryTypeAsString() != "VertexGeom")
+  SECTION("type as string")
   {
-    throw std::exception();
+    REQUIRE(geom->getGeometryTypeAsString() == "VertexGeom");
   }
-}
-
-int main(int argc, char** argv)
-{
-  edgeGeomTests();
-  hexahedralGeomTests();
-  imageGeomTests();
-  quadGeomTests();
-  rectGridGeomTests();
-  tetrahedralGeomTest();
-  triangleGeomTests();
-  vertexGeomTests();
 }

@@ -51,7 +51,7 @@ public:
    * @brief Attempts to create an IFilter specified by the given
    * FilterHandle. Returns a pointer to the created filter if one was created.
    * Returns nullptr otherwise.
-   * 
+   *
    * It is the caller's responsibility to delete the pointer when they are
    * finished with it.
    * @param handle

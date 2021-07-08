@@ -39,38 +39,15 @@ public:
    */
   const complex::DataStructure& getDataStructure() const;
 
-  /**
-   * @brief
-   */
-  void printDataStructure() const;
-
-protected:
-  void handleDataMsg(DataStructure* ds, DataAddedMessage* msg);
-  void handleDataMsg(DataStructure* ds, DataRemovedMessage* msg);
-  void handleDataMsg(DataStructure* ds, DataRenamedMessage* msg);
-  void handleDataMsg(DataStructure* ds, DataReparentedMessage* msg);
-
-  /**
-   * @brief
-   * @param data
-   * @param prefix
-   */
-  void printData(DataObject* data, const std::string& prefix = " ") const;
-
-  /**
-   * @brief
-   * @param data
-   * @param prefix
-   */
-  void printDataObject(DataObject* data, const std::string& prefix = " ") const;
-
-  /**
-   * @brief
-   * @param target
-   * @param prefix
-   */
-  void printDataContainer(BaseGroup* target, const std::string& prefix = " ") const;
+  size_t getDataAddedCount() const;
+  size_t getDataRemovedCount() const;
+  size_t getDataRenamedCount() const;
+  size_t getDataReparentedCount() const;
 
 private:
   complex::DataStructure& m_DataStructure;
+  size_t m_AddedCount = 0;
+  size_t m_RemovedCount = 0;
+  size_t m_RenamedCount = 0;
+  size_t m_ReparentedCount = 0;
 };
