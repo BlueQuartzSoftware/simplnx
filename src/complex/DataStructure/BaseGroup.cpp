@@ -106,7 +106,7 @@ bool BaseGroup::remove(DataObject* obj)
 }
 bool BaseGroup::remove(const std::string& name)
 {
-  for(auto iter = m_DataMap.begin(); iter != m_DataMap.end(); iter++)
+  for(auto& iter = m_DataMap.begin(); iter != m_DataMap.end(); iter++)
   {
     if((*iter).second->getName() == name)
     {

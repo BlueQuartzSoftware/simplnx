@@ -19,8 +19,6 @@ DataObject::IdType DataObject::generateId(const std::optional<IdType>& opId)
   return id++;
 }
 
-// Constructors/Destructors
-//
 DataObject::DataObject(DataStructure* ds, const std::string& name)
 : m_Name(name)
 , m_DataStructure(ds)
@@ -133,7 +131,7 @@ std::vector<DataPath> DataObject::getDataPaths() const
   for(auto parent : m_ParentList)
   {
     auto parentPaths = parent->getDataPaths();
-    for(auto dataPath : parentPaths)
+    for(auto& dataPath : parentPaths)
     {
       paths.push_back(dataPath.createChildPath(m_Name));
     }

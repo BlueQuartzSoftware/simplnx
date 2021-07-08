@@ -15,6 +15,7 @@ DataAddedMessage::DataAddedMessage(const DataAddedMessage& other)
 , m_Id(other.m_Id)
 {
 }
+
 DataAddedMessage::DataAddedMessage(DataAddedMessage&& other) noexcept
 : AbstractDataStructureMessage(other)
 , m_Id(std::move(other.m_Id))
@@ -23,7 +24,7 @@ DataAddedMessage::DataAddedMessage(DataAddedMessage&& other) noexcept
 
 DataAddedMessage::~DataAddedMessage() = default;
 
-int32_t DataAddedMessage::getMsgType() const
+AbstractDataStructureMessage::MessageType DataAddedMessage::getMsgType() const
 {
   return DataAddedMessage::MsgType;
 }

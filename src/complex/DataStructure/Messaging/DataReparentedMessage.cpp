@@ -30,7 +30,7 @@ DataReparentedMessage::DataReparentedMessage(DataReparentedMessage&& other) noex
 
 DataReparentedMessage::~DataReparentedMessage() = default;
 
-int32_t DataReparentedMessage::getMsgType() const
+AbstractDataStructureMessage::MessageType DataReparentedMessage::getMsgType() const
 {
   return MsgType;
 }

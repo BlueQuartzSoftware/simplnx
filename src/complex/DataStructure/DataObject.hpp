@@ -10,6 +10,7 @@
 #include "complex/DataStructure/Metadata.hpp"
 #include "complex/Utilities/TooltipGenerator.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
+
 #include "complex/complex_export.hpp"
 
 namespace complex
@@ -19,13 +20,27 @@ class DataPath;
 class DataStructure;
 
 /**
- * class DataObject
- *
+ * @class DataObject
+ * @brief The DataObject class is the base class for all items stored in the
+ * DataStructure. DataObjects have a name and ID value for looking them up.
+ * Concrete implementations need to implement shallowCopy, deepCopy,
+ * generateXdmfText, and readFromXdmfText.
+ * DataObjects can have multiple parents and are deleted when they are removed
+ * from their last remaining parent.
  */
 class COMPLEX_EXPORT DataObject
 {
 public:
+  /**
+   * @brief The IdType alias serves as an ID type for DataObjects within their
+   * respective DataStructure.
+   */
   using IdType = size_t;
+
+  /**
+   * @brief The ParentCollectionType alias describes the format by which parent
+   * collections are returned via public API.
+   */
   using ParentCollectionType = std::list<BaseGroup*>;
 
   friend class BaseGroup;
@@ -33,92 +48,91 @@ public:
   friend class DataStructure;
 
   /**
-   * @brief
+   * @brief Copy constructor
    * @param other
    */
   DataObject(const DataObject& other);
 
   /**
-   * @brief
+   * @brief Move constructor
    * @param other
    */
   DataObject(DataObject&& other) noexcept;
 
-  /**
-   * @brief
-   */
   virtual ~DataObject();
 
   /**
-   * @brief
+   * @brief Returns a deep copy of the DataObject.
    * @return DataObject*
    */
   virtual DataObject* deepCopy() = 0;
 
   /**
-   * @brief
+   * @brief Returns a shallow copy of the DataObject.
    * @return DataObject*
    */
   virtual DataObject* shallowCopy() = 0;
 
   /**
-   * @brief
+   * @brief Returns the DataObject's ID value.
    * @return IdType
    */
   IdType getId() const;
 
   /**
-   * @brief
+   * @brief Returns a pointer to the DataStructure this DataObject belongs to.
    * @return DataStructure*
    */
   DataStructure* getDataStructure();
 
   /**
-   * @brief
-   * @return DataStructure*
+   * @brief Returns a read-only pointer to the DataStructure this DataObject
+   * belongs to.
+   * @return const DataStructure*
    */
   const DataStructure* getDataStructure() const;
 
   /**
-   * @brief
+   * @brief Returns the DataObject's name.
    * @return std::string
    */
   std::string getName() const;
 
   /**
-   * @brief
+   * @brief Checks and returns if the DataObject can be renamed to the provided
+   * value.
    * @param name
    * @return bool
    */
   bool canRename(const std::string& name) const;
 
   /**
-   * @brief
+   * @brief Attempts to rename the DataObject to the provided value.
    * @param name
    * @return bool
    */
   bool rename(const std::string& name);
 
   /**
-   * @brief
+   * @brief Returns a collection of the parent containers that store the DataObject.
    * @return ParentCollectionType
    */
   ParentCollectionType getParents() const;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns a vector of DataPaths.
+   * @return std::vector<DataPath>
    */
   std::vector<DataPath> getDataPaths() const;
 
   /**
-   * @brief
+   * @brief Returns a pointer to the object's Metadata.
    * @return Metadata*
    */
   Metadata* getMetadata() const;
 
   /**
-   * @brief Writes the DataObject to the specified HDF5 file
+   * @brief Writes the DataObject to the specified XDMF file.
    * @param out
    * @param hdfFileName
    * @return H5::ErrorType
@@ -126,7 +140,7 @@ public:
   virtual H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const = 0;
 
   /**
-   * @brief
+   * @brief Reads and replaces values from the provided input stream.
    * @param in
    * @param hdfFileName
    * @return H5::ErrorType
@@ -135,53 +149,55 @@ public:
 
   /**
    * @brief Checks if the DataObject has an HDF5 ID assigned to it.
-   * @return
+   * @return bool
    */
   bool hasH5Id() const;
 
   /**
    * @brief Returns the HDF5 ID used by the DataObject.
-   * @return
+   * @return H5::IdType
    */
   H5::IdType getH5Id() const;
 
 protected:
   /**
-   * @brief
+   * @brief DataObject constructor takes a pointer to the DataStructure and
+   * object name.
+   * @param ds
    * @param name
    */
   DataObject(DataStructure* ds, const std::string& name);
 
   /**
-   * @brief
+   * @brief Marks the specified BaseGroup as a parent.
    * @param parent
    */
   void addParent(BaseGroup* parent);
 
   /**
-   * @brief
+   * @brief Removes the specified parent.
    * @param parent
    */
   void removeParent(BaseGroup* parent);
 
   /**
-   * @brief
+   * @brief Replaces the specified parent with another BaseGroup.
    * @param oldParent
    * @param newParent
    */
   void replaceParent(BaseGroup* oldParent, BaseGroup* newParent);
 
   /**
-   * @brief
+   * @brief Sets a new DataStructure for the DataObject.
    * @param ds
    */
   virtual void setDataStructure(DataStructure* ds);
 
 private:
   /**
-   * @brief
+   * @brief Generates an IdType for the DataObject constructor.
    * @param opId
-   * @return
+   * @return IdType
    */
   static IdType generateId(const std::optional<IdType>& opId = {});
 

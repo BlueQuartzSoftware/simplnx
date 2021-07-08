@@ -3,21 +3,29 @@
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Messaging/AbstractDataStructureMessage.hpp"
+
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
+
 /**
- * class DataRemovedMessage
- *
+ * @class DataRemovedMessage
+ * @brief The DataRemovedMessage class is a DataStructure message class that
+ * notifies observers that a DataObject has been removed. The message includes
+ * DataObject's ID and name at the moment of deletion. DataPaths are not
+ * available because parent information is not available when a DataObject is
+ * being deleted.
  */
-class COMPLEX_EXPORT DataRemovedMessage : virtual public AbstractDataStructureMessage
+class COMPLEX_EXPORT DataRemovedMessage : public AbstractDataStructureMessage
 {
 public:
-  static const int MsgType = 2;
+  static const MessageType MsgType = 2;
 
   /**
-   * @brief
+   * @brief Constructs a DataRemovedMessage for the target DataStructure marking a
+   * DataObject ID as being removed. The DataObject's name is also provided to
+   * describe the object in a human-readable format.
    * @param ds
    * @param id
    * @param name
@@ -25,36 +33,33 @@ public:
   DataRemovedMessage(const DataStructure* ds, DataObject::IdType id, const std::string& name);
 
   /**
-   * @brief
+   * @brief Copy constructor
    * @param other
    */
   DataRemovedMessage(const DataRemovedMessage& other);
 
   /**
-   * @brief
+   * @brief Move constructor
    * @param other
    */
   DataRemovedMessage(DataRemovedMessage&& other) noexcept;
 
-  /**
-   * @brief
-   */
   virtual ~DataRemovedMessage();
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the AbsractDataStructureMessage type.
+   * @return MessageType
    */
-  int32_t getMsgType() const override;
+  MessageType getMsgType() const override;
 
   /**
-   * @brief
+   * @brief Returns the removed DataObject's ID
    * @return IdType
    */
   DataObject::IdType getId() const;
 
   /**
-   * @brief
+   * @brief Returns the name of the removed DataObject.
    * @return std::string
    */
   std::string getName() const;

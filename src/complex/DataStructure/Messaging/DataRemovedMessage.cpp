@@ -25,7 +25,7 @@ DataRemovedMessage::DataRemovedMessage(DataRemovedMessage&& other) noexcept
 
 DataRemovedMessage::~DataRemovedMessage() = default;
 
-int32_t DataRemovedMessage::getMsgType() const
+AbstractDataStructureMessage::MessageType DataRemovedMessage::getMsgType() const
 {
   return MsgType;
 }

@@ -28,6 +28,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 find_package(fmt CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(expected-lite CONFIG REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 add_library(complex SHARED)
 add_library(complex::complex ALIAS complex)
@@ -54,6 +55,7 @@ target_link_libraries(complex
     fmt::fmt
     nlohmann_json::nlohmann_json
     nonstd::expected-lite
+    Eigen3::Eigen
 )
 
 set(COMPLEX_GENERATED_DIR ${PROJECT_BINARY_DIR}/generated)
@@ -68,8 +70,19 @@ generate_export_header(complex
 set(COMPLEX_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/complex)
 
 set(COMPLEX_HDRS
-  ${COMPLEX_SOURCE_DIR}/Common/Types.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Array.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/BoundingBox.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/EulerAngle.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Point2D.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Point3D.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Ray.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Result.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/RgbColor.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Types.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Core/Application.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/FilterList.hpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.hpp
@@ -78,6 +91,26 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataReparentedMessage.hpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.hpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry2D.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry3D.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometryGrid.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/EdgeGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/HexahedralGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/ImageGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/QuadGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/RectGridGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
+  ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
+  ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/BaseGroup.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataArray.hpp
@@ -114,6 +147,12 @@ set(COMPLEX_ALL_HDRS
 )
 
 set(COMPLEX_SRCS
+  ${COMPLEX_SOURCE_DIR}/Common/RgbColor.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Core/Application.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/FilterList.cpp
+
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.cpp
@@ -121,6 +160,19 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataReparentedMessage.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.cpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry2D.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry3D.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometryGrid.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/EdgeGeom.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/HexahedralGeom.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/ImageGeom.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/QuadGeom.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/RectGridGeom.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/BaseGroup.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataGroup.cpp
@@ -136,9 +188,25 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/IParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.cpp
 
+  ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
+
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
 )
+
+if(WIN32)
+    set(COMPLEX_SRCS
+        ${COMPLEX_SRCS}
+        ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader_Win.cpp
+    )
+elseif(UNIX)
+    set(COMPLEX_SRCS
+        ${COMPLEX_SRCS}
+        ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader_Linux.cpp
+    )
+endif()
 
 target_sources(complex
   PRIVATE

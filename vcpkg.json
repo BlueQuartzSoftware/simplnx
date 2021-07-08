@@ -11,6 +11,9 @@
     },
     {
       "name": "expected-lite"
+    },
+    {
+      "name": "eigen3"
     }
   ],
   "features": {

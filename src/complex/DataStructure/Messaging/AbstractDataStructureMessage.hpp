@@ -8,44 +8,48 @@ namespace complex
 {
 class DataStructure;
 
+/**
+ * @class AbstractDataStructureMessage
+ * @brief The AbstractDataStructureMessage class is the base class for all
+ * DataStructure messages emitted to observers.
+ */
 class COMPLEX_EXPORT AbstractDataStructureMessage
 {
 public:
-  /**
-   * @brief
-   * @param ds
-   */
-  AbstractDataStructureMessage(const DataStructure* ds);
+  using MessageType = int32_t;
 
   /**
-   * @brief
+   * @brief Copy constructor
    * @param other
    */
   AbstractDataStructureMessage(const AbstractDataStructureMessage& other);
 
   /**
-   * @brief
+   * @brief Move constructor
    * @param other
-   * @return
    */
   AbstractDataStructureMessage(AbstractDataStructureMessage&& other) noexcept;
 
-  /**
-   * @brief
-   */
   virtual ~AbstractDataStructureMessage();
 
   /**
-   * @brief
-   * @return
+   * @brief Returns a pointer to the DataStructure the message originated from.
+   * @return const DataStructure*
    */
   const DataStructure* getDataStructure() const;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the AbsractDataStructureMessage type.
+   * @return MessageType
    */
-  virtual int32_t getMsgType() const = 0;
+  virtual MessageType getMsgType() const = 0;
+
+protected:
+  /**
+   * @brief Creates an AbstractDataStructureMessage for the target DataStructure.
+   * @param ds
+   */
+  AbstractDataStructureMessage(const DataStructure* ds);
 
 private:
   const DataStructure* m_DataStructure = nullptr;

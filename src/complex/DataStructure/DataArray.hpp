@@ -1,185 +1,376 @@
 #pragma once
 
 #include "complex/DataStructure/DataObject.hpp"
-#include "complex/DataStructure/DataStore.hpp"
+#include "complex/DataStructure/EmptyDataStore.hpp"
 
 namespace complex
 {
 /**
- * class DataArray
- *
+ * @class DataArray
+ * @brief The DataArray class is a type of DataObject that exists to store and
+ * retrieve array data within the DataStructure. The DataArray is designed to
+ * allow expandability into multiple sources of data, including out-of-core data.
  */
 template <class T>
 class DataArray : public DataObject
 {
 public:
-  using Iterator = void;
-  using ConstIterator = void;
+  using value_type = T;
+  using reference = T&;
+  using const_reference = const T&;
+  using Iterator = typename IDataStore<T>::Iterator;
+  using ConstIterator = typename IDataStore<T>::ConstIterator;
 
   /**
-   * @brief
+   * @brief Constructs a DataArray with the specified tuple size, count, and
+   * constructs a DataStore with the provided default value.
    * @param ds
    * @param name
-   * @param tupleSize
-   * @param tupleCount
-   * @param defaultValue
+   * @param store
    */
-  DataArray(DataStructure* ds, const std::string& name, size_t tupleSize, size_t tupleCount, T defaultValue)
+  DataArray(DataStructure* ds, const std::string& name, IDataStore<T>* store = nullptr)
   : DataObject(ds, name)
-  , m_TupleSize(tupleSize)
-  , m_TupleCount(tupleCount)
   {
+    setDataStore(store);
   }
 
   /**
-   * @brief
+   * @brief Constructs a DataArray with the specified tuple size, count, and
+   * DataStore. The DataArray takes ownership of the DataStore.
    * @param ds
    * @param name
-   * @param tupleSize
-   * @param tupleCount
    * @param dataStore
    */
-  DataArray(DataStructure* ds, const std::string& name, size_t tupleSize, size_t tupleCount, DataStore<T>* dataStore = nullptr)
+  DataArray(DataStructure* ds, const std::string& name, const std::weak_ptr<IDataStore<T>>& store)
   : DataObject(ds, name)
-  , m_TupleSize(tupleSize)
-  , m_TupleCount(tupleCount)
   {
+    setDataStore(store);
   }
 
+  /**
+   * @brief Copy constructor creates a copy of the specified tuple size, count,
+   * and smart pointer to the target DataStore.
+   * @param other
+   */
   DataArray(const DataArray<T>& other)
   : DataObject(other)
-  , m_TupleCount(other.m_TupleCount)
-  , m_TupleSize(other.m_TupleSize)
   , m_DataStore(other.m_DataStore)
   {
   }
 
+  /**
+   * @brief Move constructor moves the data from the provided DataArray.
+   * @param other
+   */
   DataArray(DataArray<T>&& other) noexcept
-  : DataObject(other)
-  , m_TupleCount(std::move(other.m_TupleCount))
-  , m_TupleSize(std::move(other.m_TupleSize))
+  : DataObject(std::move(other))
   , m_DataStore(std::move(other.m_DataStore))
   {
   }
 
-  /**
-   * Empty Destructor
-   */
   virtual ~DataArray() = default;
+
+  /**
+   * @brief Returns a shallow copy of the DataArray without copying data
+   * store's contents.
+   * @return DataObject*
+   */
+  DataObject* shallowCopy() override
+  {
+    return new DataArray(*this);
+  }
+
+  /**
+   * @brief Returns a deep copy of the DataArray including a deep copy of the
+   * data store.
+   * @return DataObject*
+   */
+  DataObject* deepCopy() override
+  {
+    return new DataArray(getDataStructure(), getName(), getDataStore()->deepCopy());
+  }
 
   /**
    * @brief Returns the number of elements in the data array.
    * @return size_t
    */
-  size_t size() const;
+  size_t getSize() const
+  {
+    return getTupleCount() * getTupleSize();
+  }
 
   /**
    * @brief Returns the number of tuples in the DataArray.
    * @return size_t
    */
-  size_t getTupleCount() const;
+  size_t getTupleCount() const
+  {
+    return m_DataStore->getTupleCount();
+  }
 
   /**
    * @brief Returns the tuple size.
    * @return size_t
    */
-  size_t getTupleSize() const;
+  size_t getTupleSize() const
+  {
+    return m_DataStore->getTupleSize();
+  }
 
   /**
    * @brief Returns the value found at the specified index of the data array.
    * Throws an exception if the DataStore has not been allocated. This can be
    * used to edit the value found at the specified index.
    * @param  index
+   * @return reference
    */
-  T& operator[](size_t index);
+  reference operator[](size_t index)
+  {
+    if(nullptr == m_DataStore)
+    {
+      throw std::exception();
+    }
+
+    return (*m_DataStore.get())[index];
+  }
 
   /**
    * @brief Returns the value found at the specified index of the data array.
    * Throws an exception if the DataStore has not been allocated. This cannot be
    * used to edit the value found at the specified index.
-   * @param  index
+   * @param index
+   * @return const_reference
    */
-  T operator[](size_t index) const;
+  const_reference operator[](size_t index) const
+  {
+    if(nullptr == m_DataStore)
+    {
+      throw std::exception();
+    }
+
+    return (*m_DataStore.get())[index];
+  }
+
+  /**
+   * @brief Returns the value found at the specified index of the data array.
+   * Throws an exception if the DataStore has not been allocated. This cannot be
+   * used to edit the value found at the specified index.
+   * @param index
+   * @return const_reference
+   */
+  const_reference at(size_t index) const
+  {
+    if(nullptr == m_DataStore)
+    {
+      throw std::exception();
+    }
+
+    return (*m_DataStore.get())[index];
+  }
+
+  /**
+   * @brief Returns a raw pointer to the DataStore for read-only access.
+   * @return DataStore<T>*
+   */
+  const IDataStore<T>* getDataStore() const
+  {
+    return m_DataStore.get();
+  }
+
+  /**
+   * @brief Returns a raw pointer to the DataStore.
+   * @return DataStore<T>*
+   */
+  IDataStore<T>* getDataStore()
+  {
+    return m_DataStore.get();
+  }
+
+  /**
+   * @brief Returns a std::weak_ptr for the stored DataStore.
+   * @return std::weak_ptr<DataStore<T>>
+   */
+  std::weak_ptr<IDataStore<T>> getDataStorePtr()
+  {
+    return m_DataStore;
+  }
+
+  /**
+   * @brief Returns true if the DataStore has already been allocated. Returns false otherwise.
+   * @return bool
+   */
+  bool isAllocated() const
+  {
+    return nullptr != m_DataStore;
+  }
+
+  /**
+   * @brief Sets a new DataStore for the DataArray to handle. The existing DataStore
+   * is deleted if there are no other references. To save the existing DataStore
+   * before replacing it, call releaseDataStore() before setting the new DataStore.
+   * @param store
+   */
+  void setDataStore(IDataStore<T>* store)
+  {
+    m_DataStore = std::shared_ptr<IDataStore<T>>(store);
+    if(nullptr == m_DataStore)
+    {
+      m_DataStore = std::shared_ptr<IDataStore<T>>(new EmptyDataStore<T>());
+    }
+  }
+
+  /**
+   * @brief Sets a new DataStore for the DataArray to handle. The existing DataStore
+   * is deleted if there are no other references. To save the existing DataStore
+   * before replacing it, call releaseDataStore() before setting the new DataStore.
+   * @param store
+   */
+  void setDataStore(const std::weak_ptr<IDataStore<T>>& store)
+  {
+    m_DataStore = store.lock();
+    if(nullptr == m_DataStore)
+    {
+      m_DataStore = std::shared_ptr<IDataStore<T>>(new EmptyDataStore<T>());
+    }
+  }
+
+  /**
+   * @brief Returns the first item in the array.
+   * @return value_type
+   */
+  value_type front() const
+  {
+    return at(0);
+  }
+
+  /**
+   * @brief Returns the last item in the array.
+   * @return value_type
+   */
+  value_type back() const
+  {
+    return at(getSize() - 1);
+  }
 
   /**
    * @brief Returns an Iterator to the begining of the data array.
    * @return Iterator
    */
-  Iterator begin();
+  Iterator begin()
+  {
+    return getDataStore()->begin();
+  }
 
   /**
    * @brief Returns an Iterator to the end of the data array.
    * @return Iterator
    */
-  Iterator end();
+  Iterator end()
+  {
+    return getDataStore()->end();
+  }
 
   /**
    * @brief Returns an ConstIterator to the begining of the data array.
    * @return ConstIterator
    */
-  ConstIterator begin() const;
+  ConstIterator begin() const
+  {
+    return getDataStore()->begin();
+  }
 
   /**
    * @brief Returns an ConstIterator to the end of the data array.
    * @return ConstIterator
    */
-  ConstIterator end() const;
+  ConstIterator end() const
+  {
+    return getDataStore()->end();
+  }
 
   /**
-   * @brief
-   * @return DataStore<T>*
-   */
-  const DataStore<T>* getDataStore() const;
-
-  /**
-   * @brief
-   * @return DataStore<T>*
-   */
-  DataStore<T>* getDataStore();
-
-  /**
-   * @brief
-   * @return
-   */
-  bool isAllocated() const;
-
-  /**
-   * @brief Releases and returns the DataStore from memory.
-   * @return DataStore<T>*
-   */
-  DataStore<T>* releaseDataStore();
-
-  /**
-   * @brief Sets a new DataStore for the DataArray to handle. The existing DataStore is deleted.
-   * To save the existing DataStore before replacing it, call releaseDataStore() before setting the new DataStore.
-   * @param store
-   */
-  void setDataStore(DataStore<T>* store);
-
-  /**
-   * @brief
+   * @brief Generates text for the XDMF file and appends it to the output stream.
+   * Returns an H5::ErrorType specifying any error that might have occurred.
    * @param out
    * @param hdfFileName
    * @return H5::ErrorType
    */
-  H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const override;
+  H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const override
+  {
+    throw std::exception();
+  }
 
   /**
-   * @brief
+   * @brief Reads and overwrites data from the provided input stream. Returns an
+   * H5::ErrorType specifying any error that might have occurred.
    * @param in
    * @param hdfFileName
    * @return H5::ErrorType
    */
-  H5::ErrorType readFromXdmfText(std::istream& in, const std::string& hdfFileName) override;
+  H5::ErrorType readFromXdmfText(std::istream& in, const std::string& hdfFileName) override
+  {
+    throw std::exception();
+  }
+
+  /**
+   * @brief Copy assignment operator
+   * @param rhs
+   * @return DataArray&
+   */
+  DataArray& operator=(const DataArray& rhs)
+  {
+    m_DataStore = rhs.m_DataStore;
+    return *this;
+  }
+
+  /**
+   * @brief Move assignment operator
+   * @param rhs
+   * @return DataArray&
+   */
+  DataArray& operator=(DataArray&& rhs)
+  {
+    m_DataStore = std::move(rhs.m_DataStore);
+    return *this;
+  }
 
 protected:
 private:
-  size_t m_TupleSize = 0;
-  size_t m_TupleCount = 0;
-  std::shared_ptr<DataStore<T>> m_DataStore = nullptr;
+  std::shared_ptr<IDataStore<T>> m_DataStore = nullptr;
 };
+
+// Declare extern templates
+extern template DataArray<uint8_t>;
+extern template DataArray<uint16_t>;
+extern template DataArray<uint32_t>;
+extern template DataArray<uint64_t>;
+
+extern template DataArray<int8_t>;
+extern template DataArray<int16_t>;
+extern template DataArray<int32_t>;
+extern template DataArray<int64_t>;
+extern template DataArray<size_t>;
+
+extern template DataArray<float>;
+extern template DataArray<double>;
+
+// Declare aliases
+using CharArray = DataArray<char>;
+using UCharArray = DataArray<unsigned char>;
+
+using UInt8Array = DataArray<uint8_t>;
+using UInt16Array = DataArray<uint16_t>;
+using UInt32Array = DataArray<uint32_t>;
+using UInt64Array = DataArray<uint64_t>;
+
+using Int8Array = DataArray<int8_t>;
+using Int16Array = DataArray<int16_t>;
+using Int32Array = DataArray<int32_t>;
+using Int64Array = DataArray<int64_t>;
+using SizeArray = DataArray<size_t>;
 
 using FloatArray = DataArray<float>;
 using DoubleArray = DataArray<double>;
 using VectorOfFloatArray = std::vector<std::shared_ptr<FloatArray>>;
+
 } // namespace complex

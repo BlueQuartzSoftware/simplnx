@@ -6,22 +6,37 @@
 
 #include "complex/DataStructure/DataMap.hpp"
 #include "complex/DataStructure/DataObject.hpp"
+
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
+/**
+ * @class BaseGroup
+ * @brief The BaseGroup class is the base class for all DataObject containers
+ * in the DataStructure. Child classes should override
+ * 'bool canInsert(const DataObject*) const' to determine which DataObjects
+ * can be added to the group and which cannot.
+ */
 class COMPLEX_EXPORT BaseGroup : public DataObject
 {
 public:
-  using Iterator = DataMap::Iterator;
-  using ConstIterator = DataMap::ConstIterator;
-
-  BaseGroup(const BaseGroup& other);
-  BaseGroup(BaseGroup&& other) noexcept;
+  using Iterator = typename DataMap::Iterator;
+  using ConstIterator = typename DataMap::ConstIterator;
 
   /**
-   * Empty Destructor
+   * @brief Copy constructor
+   * @param other
    */
+  BaseGroup(const BaseGroup& other);
+
+  /**
+   * @brief Move constructor
+   * @param other
+   * @return
+   */
+  BaseGroup(BaseGroup&& other) noexcept;
+
   virtual ~BaseGroup();
 
   /**
@@ -31,9 +46,9 @@ public:
   DataMap getDataMap() const;
 
   /**
-   * @brief Returns true if a child with the specified name exists in the container. Returns
-   * false otherwise. This operation does not expand any BaseGroups found among
-   * its children.
+   * @brief Returns true if a child with the specified name exists in the
+   * container. Returns false otherwise. This operation does not expand any
+   * BaseGroups found among its children.
    * @param name
    * @return bool
    */
@@ -132,7 +147,7 @@ public:
 
 protected:
   /**
-   * @brief
+   * @brief Creates a BaseGroup with the target DataStructure and name.
    * @param ds
    * @param name
    */
@@ -149,7 +164,8 @@ protected:
   virtual bool canInsert(const DataObject* obj) const;
 
   /**
-   * @brief
+   * @brief Sets a new DataStructure for the BaseGroup. Updates the DataMap and its
+   * contained DataObjects as well.
    * @param ds
    */
   void setDataStructure(DataStructure* ds) override;
