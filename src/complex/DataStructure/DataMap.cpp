@@ -1,4 +1,4 @@
-#include "Complex/DataStructure/DataMap.hpp"
+#include "complex/DataStructure/DataMap.hpp"
 
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataObject.hpp"

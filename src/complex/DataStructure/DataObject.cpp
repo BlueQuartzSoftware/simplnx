@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <exception>
 
-#include "Complex/DataStructure/DataStructure.hpp"
-#include "Complex/DataStructure/BaseGroup.hpp"
-#include "Complex/DataStructure/Metadata.hpp"
+#include "complex/DataStructure/DataStructure.hpp"
+#include "complex/DataStructure/BaseGroup.hpp"
+#include "complex/DataStructure/Metadata.hpp"
 
 using namespace complex;
 
@@ -131,7 +131,7 @@ std::vector<DataPath> DataObject::getDataPaths() const
   for(auto parent : m_ParentList)
   {
     auto parentPaths = parent->getDataPaths();
-    for(auto dataPath : parentPaths)
+    for(auto& dataPath : parentPaths)
     {
       paths.push_back(dataPath.createChildPath(m_Name));
     }

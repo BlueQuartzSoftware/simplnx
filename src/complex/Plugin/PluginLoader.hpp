@@ -11,7 +11,7 @@ namespace complex
 {
 /**
  * @class PluginLoader
- * @brief The PluginLoader class is the control wrapper around loading, 
+ * @brief The PluginLoader class is the control wrapper around loading,
  * unloading, and accessing plugins. The implementation of PluginLoader is
  * provided for each operating system, but the public API remains the same.
  */

@@ -1,5 +1,5 @@
-#include "Complex/DataStructure/DataStructure.hpp"
-#include "Complex/DataStructure/LinkedPath.hpp"
+#include "complex/DataStructure/DataStructure.hpp"
+#include "complex/DataStructure/LinkedPath.hpp"
 
 #include <exception>
 

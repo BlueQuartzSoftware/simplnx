@@ -52,7 +52,7 @@ public:
    * true if the plugin contains the filter. Returns false otherwise.
    * @param id
    * @return bool
-  */
+   */
   bool containsFilterId(FilterHandle::FilterIdType id) const;
 
   /**

@@ -353,7 +353,7 @@ DataStructure::ConstIterator DataStructure::end() const
 
 bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject::IdType newParentId)
 {
-  auto target = m_DataObjects[targetId];
+  auto& target = m_DataObjects[targetId];
   auto newParent = dynamic_cast<BaseGroup*>(getData(newParentId));
   if(nullptr == newParent)
   {

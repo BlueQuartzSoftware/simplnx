@@ -497,9 +497,9 @@ size_t RectGridGeom::getIndex(float xCoord, float yCoord, float zCoord) const
     return {};
   }
 
-  size_t x = std::distance(xBnds.begin(), std::adjacent_find(xBnds.begin(), xBnds.end(), [xCoord](const float a, const float b) { return (xCoord >= a && xCoord < b); }));
-  size_t y = std::distance(yBnds.begin(), std::adjacent_find(yBnds.begin(), yBnds.end(), [yCoord](const float a, const float b) { return (yCoord >= a && yCoord < b); }));
-  size_t z = std::distance(zBnds.begin(), std::adjacent_find(zBnds.begin(), zBnds.end(), [zCoord](const float a, const float b) { return (zCoord >= a && zCoord < b); }));
+  int64_t x = std::distance(xBnds.begin(), std::adjacent_find(xBnds.begin(), xBnds.end(), [xCoord](const float a, const float b) { return (xCoord >= a && xCoord < b); }));
+  int64_t y = std::distance(yBnds.begin(), std::adjacent_find(yBnds.begin(), yBnds.end(), [yCoord](const float a, const float b) { return (yCoord >= a && yCoord < b); }));
+  int64_t z = std::distance(zBnds.begin(), std::adjacent_find(zBnds.begin(), zBnds.end(), [zCoord](const float a, const float b) { return (zCoord >= a && zCoord < b); }));
 
   size_t xSize = xBnds.getSize() - 1;
   size_t ySize = yBnds.getSize() - 1;

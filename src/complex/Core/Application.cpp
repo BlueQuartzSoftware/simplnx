@@ -2,10 +2,9 @@
 
 #include <filesystem>
 
-#include "Complex/Core/Application.hpp"
-#include "Complex/Core/FilterList.hpp"
-#include "Complex/Plugin/AbstractPlugin.hpp"
-//#include "complex/REST/RestServer.hpp"
+#include "complex/Core/Application.hpp"
+#include "complex/Core/FilterList.hpp"
+#include "complex/Plugin/AbstractPlugin.hpp"
 
 using namespace complex;
 
