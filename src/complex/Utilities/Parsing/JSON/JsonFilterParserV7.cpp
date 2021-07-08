@@ -3,7 +3,7 @@
 // Constructors/Destructors
 //
 
-//  
+//
 // Methods
 //  
 
@@ -14,4 +14,3 @@
 
 // Other methods
 //  
-
