@@ -3,3 +3,5 @@
 vcpkg_installed/
 
 CMakeUserPresets.json
+
+.DS_Store

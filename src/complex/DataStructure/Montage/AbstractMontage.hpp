@@ -1,8 +1,10 @@
 #pragma once
 
+#include "complex/Common/BoundingBox.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/LinkedPath.hpp"
 #include "complex/Utilities/TooltipGenerator.hpp"
+
 #include "complex/complex_export.hpp"
 
 namespace complex
@@ -11,16 +13,15 @@ class AbstractTileIndex;
 class AbstractGeometry;
 
 /**
- * class AbstractMontage
- *
+ * @class AbstractMontage
+ * @brief
  */
-
 class COMPLEX_EXPORT AbstractMontage : public BaseGroup
 {
 public:
-  using Iterator = void;
-  using ConstIterator = void;
   using CollectionType = std::vector<AbstractGeometry*>;
+  using Iterator = CollectionType::iterator;
+  using ConstIterator = CollectionType::const_iterator;
   using BoundsType = void;
 
   /**
@@ -43,40 +44,31 @@ public:
    */
   AbstractMontage(AbstractMontage&& other) noexcept;
 
-  /**
-   * @brief
-   */
   virtual ~AbstractMontage();
-
-  /**
-   * @brief
-   * @return bool
-   */
-  virtual bool isValid() const = 0;
 
   /**
    * @brief Returns the number of tiles in the montage.
    * @return size_t
    */
-  virtual size_t getTileCount() const = 0;
+  size_t getTileCount() const;
 
   /**
    * @brief Returns a collection of geometries in the Montage.
    * @return CollectionType
    */
-  virtual CollectionType getGeometries() const = 0;
+  CollectionType getGeometries() const;
 
   /**
    * @brief Returns a collection of the geometry names in the montage.
    * @return std::vector<std::string>
    */
-  virtual std::vector<std::string> getGeometryNames() const = 0;
+  std::vector<std::string> getGeometryNames() const;
 
   /**
    * @brief Returns a collection of LinkedPaths to geometries in the montage.
    * @return std::vector<LinkedPath>
    */
-  virtual std::vector<LinkedPath> getLinkedPaths() const = 0;
+  std::vector<LinkedPath> getLinkedPaths() const;
 
   /**
    * @brief Returns a TooltipGenerator for the montage.
@@ -91,7 +83,7 @@ public:
    * @return AbstractGeometry*
    * @param  index
    */
-  virtual AbstractGeometry* getGeometry(AbstractTileIndex* index) const = 0;
+  virtual AbstractGeometry* getGeometry(const AbstractTileIndex* index) const = 0;
 
   /**
    * @brief Returns the tile index for the specified geometry. This is a pure virtual method
@@ -107,25 +99,31 @@ public:
    * @param index
    * @param geom
    */
-  virtual void setGeometry(AbstractTileIndex* index, AbstractGeometry* geom) = 0;
-
-  /**
-   * @brief Creates and returns a deep copy of the montage.
-   * @return AbstractMontage*
-   */
-  virtual AbstractMontage* deepCopy() const = 0;
+  virtual void setGeometry(const AbstractTileIndex* index, AbstractGeometry* geom) = 0;
 
   /**
    * @brief Returns an iterator to the begining of the montage.
    * @return iterator
    */
-  virtual Iterator begin() = 0;
+  virtual Iterator begin();
 
   /**
    * @brief Returns an iterator to the end of the montage.
    * @return iterator
    */
-  virtual Iterator end() = 0;
+  virtual Iterator end();
+
+  /**
+   * @brief Returns an iterator to the begining of the montage.
+   * @return iterator
+   */
+  virtual ConstIterator begin() const;
+
+  /**
+   * @brief Returns an iterator to the end of the montage.
+   * @return iterator
+   */
+  virtual ConstIterator end() const;
 
 protected:
   /**
@@ -140,6 +138,19 @@ protected:
    */
   bool canInsert(const DataObject* obj) const override;
 
+  /**
+   * @brief Returns a reference of the collection for use in derived classes.
+   * @return CollectionType&
+   */
+  CollectionType& getCollection();
+
+  /**
+   * @brief Returns a reference of the collection for use in derived classes.
+   * @return const CollectionType&
+   */
+  const CollectionType& getCollection() const;
+
 private:
+  CollectionType m_Collection;
 };
 } // namespace complex

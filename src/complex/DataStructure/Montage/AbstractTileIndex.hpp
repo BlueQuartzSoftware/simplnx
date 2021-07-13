@@ -9,16 +9,12 @@ class AbstractGeometry;
 class AbstractMontage;
 
 /**
- * class AbstractTileIndex
- *
+ * @class AbstractTileIndex
+ * @brief
  */
-
 class COMPLEX_EXPORT AbstractTileIndex
 {
 public:
-  // Constructors/Destructors
-  //
-
   /**
    * @brief
    */
@@ -42,21 +38,27 @@ public:
   virtual ~AbstractTileIndex();
 
   /**
+   * @brief Returns the montage linked to this tile index.
    * @return AbstractMontage*
    */
   AbstractMontage* getMontage() const;
 
   /**
+   * @brief Returns the geometry specified by the tile index.
    * @return AbstractGeometry*
    */
   virtual AbstractGeometry* getGeometry() const = 0;
 
   /**
+   * @brief Checks if the index contains matches the conditions to be
+   * a valid tile index.
    * @return bool
    */
   virtual bool isValid() const = 0;
 
   /**
+   * @brief Returns a TooltipGenerator containing information about the
+   * tile index and it specified montage.
    * @return TooltipGenerator
    */
   virtual TooltipGenerator getToolTipGenerator() const = 0;
