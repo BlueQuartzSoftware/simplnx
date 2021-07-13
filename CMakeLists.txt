@@ -132,7 +132,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
-  
+
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
 )
@@ -197,15 +197,13 @@ set(COMPLEX_SRCS
 )
 
 if(WIN32)
-    set(COMPLEX_SRCS
-        ${COMPLEX_SRCS}
-        ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader_Win.cpp
-    )
+  list(APPEND COMPLEX_SRCS
+    ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader_Win.cpp
+  )
 elseif(UNIX)
-    set(COMPLEX_SRCS
-        ${COMPLEX_SRCS}
-        ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader_Linux.cpp
-    )
+  list(APPEND COMPLEX_SRCS
+    ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader_Linux.cpp
+  )
 endif()
 
 target_sources(complex
@@ -262,7 +260,7 @@ if(COMPLEX_ENABLE_INSTALL)
     RUNTIME
       DESTINATION ${CMAKE_INSTALL_BINDIR}
       COMPONENT runtime
-    LIBRARY 
+    LIBRARY
       DESTINATION ${CMAKE_INSTALL_LIBDIR}
       COMPONENT runtime
       NAMELINK_COMPONENT develop
