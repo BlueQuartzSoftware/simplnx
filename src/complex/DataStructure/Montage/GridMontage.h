@@ -1,8 +1,8 @@
 #pragma once
 
+#include "SIMPL/Common/SIMPLArray.hpp"
 #include "SIMPL/DataStructure/Montage/AbstractMontage.h"
 #include "SIMPL/DataStructure/Montage/GridTileIndex.h"
-#include "SIMPL/Common/SIMPLArray.hpp"
 
 namespace SIMPL
 {
