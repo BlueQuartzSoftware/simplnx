@@ -1,4 +1,5 @@
 #include "Test2Plugin.h"
+
 #include "Test2Filter.h"
 
 AbstractFilter* createTestFilter()
