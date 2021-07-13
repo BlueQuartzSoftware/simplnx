@@ -49,7 +49,7 @@ bool DataMap::insert(const std::shared_ptr<DataObject>& obj)
 
 bool DataMap::remove(DataObject* obj)
 {
-  if(nullptr == obj)
+  if(obj == nullptr)
   {
     return false;
   }
@@ -128,7 +128,7 @@ bool DataMap::contains(const std::string& name) const
 
 bool DataMap::contains(const DataObject* obj) const
 {
-  if(nullptr == obj)
+  if(obj == nullptr)
   {
     return false;
   }

@@ -137,7 +137,7 @@ public:
     {
       return false;
     }
-    if(nullptr != m_Array[ptId].cells && m_Array[ptId].ncells > 0)
+    if(m_Array[ptId].cells != nullptr  && m_Array[ptId].ncells > 0)
     {
       delete[] this->m_Array[ptId].cells;
       m_Array[ptId].cells = nullptr;
@@ -164,7 +164,7 @@ public:
     {
       return false;
     }
-    if(nullptr != m_Array[ptId].cells && m_Array[ptId].ncells > 0)
+    if(m_Array[ptId].cells != nullptr && m_Array[ptId].ncells > 0)
     {
       delete[] this->m_Array[ptId].cells;
       m_Array[ptId].cells = nullptr;

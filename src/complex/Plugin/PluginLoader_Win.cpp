@@ -48,7 +48,7 @@ void PluginLoader::unloadPlugin()
 
 bool PluginLoader::isLoaded() const
 {
-  return nullptr != getPlugin();
+  return getPlugin() != nullptr;
 }
 
 AbstractPlugin* PluginLoader::getPlugin() const

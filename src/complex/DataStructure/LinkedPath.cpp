@@ -41,7 +41,7 @@ bool LinkedPath::isValid() const
   }
   for(size_t i = 0; i < getLength(); i++)
   {
-    if(nullptr == getDataAt(i))
+    if(getDataAt(i) == nullptr)
     {
       return false;
     }
@@ -102,7 +102,7 @@ std::string LinkedPath::getName() const
 std::string LinkedPath::getNameAt(size_t index) const
 {
   const DataObject* data = getDataAt(index);
-  if(nullptr == data)
+  if(data == nullptr)
   {
     return "[ missing ]";
   }

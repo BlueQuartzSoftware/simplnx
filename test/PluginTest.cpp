@@ -45,7 +45,7 @@ void testLoadingPlugins()
   }
 
   auto filter = filterList->createFilter(testHandle);
-  if(nullptr == filter)
+  if(filter == nullptr)
   {
     throw std::exception();
   }
@@ -56,7 +56,7 @@ void testLoadingPlugins()
   filter->execute(DataStructure(), {});
 
   auto filter2 = filterList->createFilter(test2Handle);
-  if(nullptr == filter2)
+  if(filter2 == nullptr)
   {
     throw std::exception();
   }
@@ -94,7 +94,7 @@ void testSingleton()
 
   // Create and execute filters
   auto filter = filterList->createFilter(testHandle);
-  if(nullptr == filter)
+  if(filter == nullptr)
   {
     throw std::exception();
   }
@@ -105,7 +105,7 @@ void testSingleton()
   filter->execute(DataStructure(), {});
 
   auto filter2 = filterList->createFilter(test2Handle);
-  if(nullptr == filter2)
+  if(filter2 == nullptr)
   {
     throw std::exception();
   }
