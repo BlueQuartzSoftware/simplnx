@@ -55,7 +55,7 @@ const DataObject* BaseGroup::operator[](const std::string& name) const
 
 bool BaseGroup::canInsert(const DataObject* obj) const
 {
-  if(nullptr == obj)
+  if(obj == nullptr)
   {
     return false;
   }
@@ -98,7 +98,7 @@ bool BaseGroup::insert(const std::weak_ptr<DataObject>& obj)
 }
 bool BaseGroup::remove(DataObject* obj)
 {
-  if(nullptr == obj)
+  if(obj == nullptr)
   {
     return false;
   }

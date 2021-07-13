@@ -126,7 +126,7 @@ public:
    */
   reference operator[](size_t index)
   {
-    if(nullptr == m_DataStore)
+    if(m_DataStore == nullptr)
     {
       throw std::exception();
     }
@@ -143,7 +143,7 @@ public:
    */
   const_reference operator[](size_t index) const
   {
-    if(nullptr == m_DataStore)
+    if(m_DataStore == nullptr)
     {
       throw std::exception();
     }
@@ -160,7 +160,7 @@ public:
    */
   const_reference at(size_t index) const
   {
-    if(nullptr == m_DataStore)
+    if(m_DataStore == nullptr)
     {
       throw std::exception();
     }
@@ -201,7 +201,7 @@ public:
    */
   bool isAllocated() const
   {
-    return nullptr != m_DataStore;
+    return m_DataStore != nullptr;
   }
 
   /**
@@ -213,7 +213,7 @@ public:
   void setDataStore(IDataStore<T>* store)
   {
     m_DataStore = std::shared_ptr<IDataStore<T>>(store);
-    if(nullptr == m_DataStore)
+    if(m_DataStore == nullptr)
     {
       m_DataStore = std::shared_ptr<IDataStore<T>>(new EmptyDataStore<T>());
     }
@@ -228,7 +228,7 @@ public:
   void setDataStore(const std::weak_ptr<IDataStore<T>>& store)
   {
     m_DataStore = store.lock();
-    if(nullptr == m_DataStore)
+    if(m_DataStore == nullptr)
     {
       m_DataStore = std::shared_ptr<IDataStore<T>>(new EmptyDataStore<T>());
     }

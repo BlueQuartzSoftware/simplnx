@@ -28,7 +28,7 @@ void testFilterList()
   for(auto& filterHandle : filterHandles)
   {
     auto filter = filterList->createFilter(filterHandle);
-    if(nullptr == filter)
+    if(filter == nullptr)
     {
       throw std::exception();
     }

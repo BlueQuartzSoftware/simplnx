@@ -17,7 +17,7 @@ T* createGeom(DataStructure& ds)
 {
   auto geom = ds.createGeometry<T>("Geom");
   T* output = dynamic_cast<T*>(geom);
-  REQUIRE(nullptr != output);
+  REQUIRE(output != nullptr);
   return output;
 }
 

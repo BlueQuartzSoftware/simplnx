@@ -112,7 +112,7 @@ DataObject* traversePath(DataObject* obj, const DataPath& path, size_t index)
     return obj;
   }
   auto col = dynamic_cast<BaseGroup*>(obj);
-  if(nullptr == col)
+  if(col == nullptr)
   {
     return nullptr;
   }
@@ -125,7 +125,7 @@ DataObject* DataStructure::getData(const DataPath& path)
   auto topLevel = getTopLevelData();
   for(DataObject* obj : topLevel)
   {
-    if(nullptr == obj)
+    if(obj == nullptr)
     {
       continue;
     }
@@ -172,7 +172,7 @@ const DataObject* DataStructure::getData(const DataPath& path) const
   auto topLevel = getTopLevelData();
   for(DataObject* obj : topLevel)
   {
-    if(nullptr == obj)
+    if(obj == nullptr)
     {
       continue;
     }
@@ -224,7 +224,7 @@ bool DataStructure::removeData(const DataPath& path)
 
 bool DataStructure::removeData(DataObject* data)
 {
-  if(nullptr == data)
+  if(data == nullptr)
   {
     return false;
   }
@@ -264,7 +264,7 @@ std::vector<DataObject*> DataStructure::getTopLevelData() const
   for(auto& iter : m_DataObjects)
   {
     auto obj = iter.second.lock();
-    if(nullptr == obj)
+    if(obj == nullptr)
     {
       continue;
     }
@@ -279,7 +279,7 @@ std::vector<DataObject*> DataStructure::getTopLevelData() const
 
 bool DataStructure::insertTopLevel(const std::shared_ptr<DataObject>& obj)
 {
-  if(nullptr == obj)
+  if(obj == nullptr)
   {
     return false;
   }
@@ -355,7 +355,7 @@ bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject:
 {
   auto& target = m_DataObjects[targetId];
   auto newParent = dynamic_cast<BaseGroup*>(getData(newParentId));
-  if(nullptr == newParent)
+  if(newParent == nullptr)
   {
     return false;
   }

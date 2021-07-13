@@ -27,20 +27,20 @@ TEST_CASE("DataGroupTree")
   SECTION("find data")
   {
     // Can all data be found by ID?
-    REQUIRE(nullptr != dataStr.getData(groupId));
-    REQUIRE(nullptr != dataStr.getData(childId));
-    REQUIRE(nullptr != dataStr.getData(grandchildId));
+    REQUIRE(dataStr.getData(groupId) != nullptr);
+    REQUIRE(dataStr.getData(childId) != nullptr);
+    REQUIRE(dataStr.getData(grandchildId) != nullptr);
   }
   SECTION("remove mid-level group")
   {
     group->remove(child->getName());
-    REQUIRE(nullptr == dataStr.getData(childId));
-    REQUIRE(nullptr == dataStr.getData(grandchildId));
+    REQUIRE(dataStr.getData(childId) == nullptr);
+    REQUIRE(dataStr.getData(grandchildId) == nullptr);
   }
   SECTION("remove top-level group")
   {
     dataStr.removeData(group->getId());
-    REQUIRE(nullptr == dataStr.getData(groupId));
+    REQUIRE(dataStr.getData(groupId) == nullptr);
   }
 }
 
@@ -67,22 +67,22 @@ TEST_CASE("DataGroupGraph")
 
   SECTION("find data")
   {
-    REQUIRE(nullptr != dataStr.getData(groupId));
-    REQUIRE(nullptr != dataStr.getData(child1Id));
-    REQUIRE(nullptr != dataStr.getData(child2Id));
-    REQUIRE(nullptr != dataStr.getData(grandchildId));
+    REQUIRE(dataStr.getData(groupId) != nullptr);
+    REQUIRE(dataStr.getData(child1Id) != nullptr);
+    REQUIRE(dataStr.getData(child2Id) != nullptr);
+    REQUIRE(dataStr.getData(grandchildId) != nullptr);
   }
   SECTION("remove mid-level group")
   {
     group->remove(child1->getName());
-    REQUIRE(nullptr == dataStr.getData(child1Id));
-    REQUIRE(nullptr != dataStr.getData(grandchildId));
+    REQUIRE(dataStr.getData(child1Id) == nullptr);
+    REQUIRE(dataStr.getData(grandchildId) != nullptr);
   }
   SECTION("remove top-level group")
   {
     dataStr.removeData(group->getId());
-    REQUIRE(nullptr == dataStr.getData(groupId));
-    REQUIRE(nullptr == dataStr.getData(grandchildId));
+    REQUIRE(dataStr.getData(groupId) == nullptr);
+    REQUIRE(dataStr.getData(grandchildId) == nullptr);
   }
 }
 
@@ -108,18 +108,18 @@ TEST_CASE("DataPathTest")
   const DataPath gcPath1({"Foo", "Bar1", "Bazz"});
   const DataPath gcPath2({"Foo", "Bar2", "Bazz"});
 
-  REQUIRE(nullptr != dataStr.getData(gcPath1));
-  REQUIRE(nullptr != dataStr.getData(gcPath2));
+  REQUIRE(dataStr.getData(gcPath1) != nullptr);
+  REQUIRE(dataStr.getData(gcPath2) != nullptr);
 
   const DataPath c1Path({"Foo", "Bar1"});
   REQUIRE(dataStr.removeData(c1Path));
-  REQUIRE(nullptr == dataStr.getData(gcPath1));
-  REQUIRE(nullptr != dataStr.getData(DataPath({"Foo", "Bar2"})));
+  REQUIRE(dataStr.getData(gcPath1) == nullptr);
+  REQUIRE(dataStr.getData(DataPath({"Foo", "Bar2"})) != nullptr);
   auto gc2 = dataStr.getData(gcPath2);
-  REQUIRE(nullptr != dataStr.getData(gcPath2));
+  REQUIRE(dataStr.getData(gcPath2) != nullptr);
 
   dataStr.removeData(child2Id);
-  REQUIRE(nullptr == dataStr.getData(gcPath2));
+  REQUIRE(dataStr.getData(gcPath2) == nullptr);
 }
 
 TEST_CASE("LinkedPathTest")
@@ -143,8 +143,8 @@ TEST_CASE("LinkedPathTest")
   REQUIRE(grandchild == linkedPath.getData());
 
   REQUIRE(child1->rename("Bar1.3"));
-  REQUIRE(nullptr == dataStr.getData(grandPath));
-  REQUIRE(nullptr != linkedPath.getData());
+  REQUIRE(dataStr.getData(grandPath) == nullptr);
+  REQUIRE(linkedPath.getData() != nullptr);
   REQUIRE(linkedPath.isValid());
 
   REQUIRE(dataStr.removeData(linkedPath.getIdAt(1)));
