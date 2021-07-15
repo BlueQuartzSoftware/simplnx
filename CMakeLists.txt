@@ -41,8 +41,6 @@ target_compile_features(complex
 set_target_properties(complex
   PROPERTIES
     DEBUG_POSTFIX "_d"
-    CXX_VISIBILITY_PRESET hidden
-    VISIBILITY_INLINES_HIDDEN ON
 )
 
 target_compile_options(complex
