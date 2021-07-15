@@ -111,7 +111,7 @@ public:
     Unknown = 101U
   };
 
-  using MeshIndexType = size_t;
+  using MeshIndexType = uint64_t;
   using MeshIndexArrayType = DataArray<MeshIndexType>;
   using SharedVertexList = FloatArray;
   using SharedEdgeList = MeshIndexArrayType;

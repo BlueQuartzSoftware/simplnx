@@ -1,8 +1,8 @@
 #include "JsonPipelineBuilder.h"
 
-using namespace SIMPL;
+using namespace complex;
 
-JsonPipelineBuilder::JsonPipelineBuilder(SIMPL::FilterList* filterList)
+JsonPipelineBuilder::JsonPipelineBuilder(FilterList* filterList)
 : m_FilterList(filterList)
 {
 }

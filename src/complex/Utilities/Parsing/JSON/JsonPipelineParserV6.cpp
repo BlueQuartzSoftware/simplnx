@@ -1,6 +1,6 @@
 #include "JsonPipelineParserV6.h"
 
-using namespace SIMPL;
+using namespace complex;
 
 JsonPipelineParserV6::JsonPipelineParserV6(FilterList* filterList)
 : IJsonPipelineParser(filterList)

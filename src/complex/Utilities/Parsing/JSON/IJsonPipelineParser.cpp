@@ -1,6 +1,6 @@
 #include "IJsonPipelineParser.h"
 
-using namespace SIMPL;
+using namespace complex;
 
 IJsonPipelineParser::IJsonPipelineParser(FilterList* filterList)
 : m_FilterList(filterList)

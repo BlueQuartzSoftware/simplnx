@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include <vector>
 
 #include "complex/Common/BoundingBox.hpp"
@@ -27,7 +28,7 @@ namespace GeometryMath
 template <typename T>
 T CosThetaBetweenVectors(const complex::Point3D<T>& a, const complex::Point3D<T>& b)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 /**
@@ -47,7 +48,7 @@ float COMPLEX_EXPORT AngleBetweenVectors(const complex::ZXZEuler& a, const compl
 template <typename T>
 T FindDistanceBetweenPoints(const complex::Point3D<T>& a, const complex::Point3D<T>& b)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 /**
@@ -59,7 +60,7 @@ T FindDistanceBetweenPoints(const complex::Point3D<T>& a, const complex::Point3D
 template <typename T>
 T FindDistanceBetweenPoints(const complex::Point2D<T>& a, const complex::Point2D<T>& b)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 /**
@@ -72,7 +73,7 @@ T FindDistanceBetweenPoints(const complex::Point2D<T>& a, const complex::Point2D
 template <typename T>
 T FindTriangleArea(const complex::Point3D<T>& a, const complex::Point3D<T>& b, const complex::Point3D<T>& c)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 /**
@@ -86,7 +87,7 @@ T FindTriangleArea(const complex::Point3D<T>& a, const complex::Point3D<T>& b, c
 template <typename T>
 T FindTetrahedronVolume(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& p3)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 /**
@@ -120,7 +121,7 @@ complex::ZXZEuler COMPLEX_EXPORT FindPlaneNormalVector(const complex::Point3D<fl
 template <typename T>
 void FindPlaneCoefficients(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const float& c, ZXZEuler& normal)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 /**
@@ -135,7 +136,7 @@ void FindPlaneCoefficients(const complex::Point3D<T>& p0, const complex::Point3D
 template <typename T>
 float FindDistanceToTriangleCentroid(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& point)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 /**
@@ -150,7 +151,7 @@ float FindDistanceToTriangleCentroid(const complex::Point3D<T>& p0, const comple
 template <typename T>
 float FindDistanceFromPlane(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& pos)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 /**
@@ -162,7 +163,7 @@ float FindDistanceFromPlane(const complex::Point3D<T>& p0, const complex::Point3
 template <typename T>
 bool IsPointInBox(const complex::Point3D<T>& point, const complex::BoundingBox<T>& box)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 /**
@@ -179,7 +180,7 @@ bool IsPointInBox(const complex::Point3D<T>& point, const complex::BoundingBox<T
 // bool IsPointInPolyhedron(complex::TriangleGeom* faces, complex::Int32Int32DynamicListArray::ElementList* faceIds, complex::VertexGeom* vertices, const Point3D<T>& point,
 //                         const complex::BoundingBox<float>& bounds, float radius, float& distToBoundary)
 //{
-// throw std::exception();
+// throw std::runtime_error("");
 //}
 
 /**
@@ -195,7 +196,7 @@ bool IsPointInBox(const complex::Point3D<T>& point, const complex::BoundingBox<T
 template <typename T>
 bool IsPointInTriangle3D(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& point)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 /**
@@ -211,7 +212,7 @@ bool IsPointInTriangle3D(const complex::Point3D<T>& p0, const complex::Point3D<T
 template <typename T>
 bool IsPointInTriangle2D(const complex::Point2D<T>& p0, const complex::Point2D<T>& p1, const complex::Point2D<T>& p2, const complex::Point2D<T>& point)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 /**
@@ -224,7 +225,7 @@ bool IsPointInTriangle2D(const complex::Point2D<T>& p0, const complex::Point2D<T
 template <typename T>
 bool DoesRayIntersectBox(complex::Ray<T> ray, const complex::BoundingBox<T>& bounds)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 /**
@@ -241,7 +242,7 @@ bool DoesRayIntersectBox(complex::Ray<T> ray, const complex::BoundingBox<T>& bou
 template <typename T>
 uint8_t FindRayIntersectionsWithSphere(const complex::Ray<T>& ray, const complex::Point3D<T>& origin, T radius, std::vector<Point3D<T>>& intersections)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 /**
@@ -253,7 +254,7 @@ uint8_t FindRayIntersectionsWithSphere(const complex::Ray<T>& ray, const complex
 template <typename T>
 T GetLengthOfRayInBox(const complex::Ray<T>& ray, const complex::BoundingBox<T>& box)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 /**
@@ -295,7 +296,7 @@ complex::BoundingBox<float> COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex:
  */
 // complex::BoundingBox<float> FindBoundingBoxOfFaces(complex::TriangleGeom* faces, const Int32Int32DynamicListArray.ElementList& faceIds)
 //{
-//  throw std::exception();
+//  throw std::runtime_error("");
 //}
 
 /**
@@ -308,7 +309,7 @@ complex::BoundingBox<float> COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex:
  */
 // complex::BoundingBox<float> FindBoundingBoxOfRotatedFaces(TriangleGeom* faces, const Int32Int32DynamicListArray.ElementList& faceIds, float g[3][3])
 //{
-//  throw std::exception();
+//  throw std::runtime_error("");
 //}
 
 /**
@@ -326,7 +327,7 @@ complex::BoundingBox<float> COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex:
 template <typename T>
 uint8_t RayIntersectsTriangle(const Ray<T>& ray, const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, std::vector<Point3D<T>>& inter)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 /**
@@ -344,7 +345,7 @@ uint8_t RayIntersectsTriangle(const Ray<T>& ray, const complex::Point3D<T>& p0, 
 template <typename T>
 bool RayCrossesTriangle(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 /**
@@ -359,7 +360,7 @@ bool RayCrossesTriangle(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T
 template <typename T>
 bool RayIntersectsPlane(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 } // namespace GeometryMath
 } // namespace complex

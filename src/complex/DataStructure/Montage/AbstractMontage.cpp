@@ -1,6 +1,6 @@
-#include "AbstractMontage.h"
+#include "AbstractMontage.hpp"
 
-using namespace SIMPL;
+using namespace complex;
 
 AbstractMontage::AbstractMontage(DataStructure* ds, const std::string& name)
 : BaseGroup(ds, name)

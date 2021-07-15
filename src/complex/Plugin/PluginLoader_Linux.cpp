@@ -1,8 +1,10 @@
-#include "dlfcn.h"
+#include "PluginLoader.hpp"
+
 #include <iostream>
 
-#include "Redesign/Plugin/AbstractPlugin.h"
-#include "src/Plugin/PluginLoader.h"
+#include <dlfcn.h>
+
+using namespace complex;
 
 PluginLoader::PluginLoader(const std::string& path)
 : m_Path(path)

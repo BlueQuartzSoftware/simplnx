@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 #include "complex/DataStructure/DataObject.hpp"
 
 namespace complex
@@ -149,7 +151,7 @@ public:
    */
   H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const override
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
   /**
@@ -161,7 +163,7 @@ public:
    */
   H5::ErrorType readFromXdmfText(std::istream& in, const std::string& hdfFileName) override
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
 protected:

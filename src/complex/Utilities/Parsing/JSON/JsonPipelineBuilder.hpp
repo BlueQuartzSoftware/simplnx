@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace SIMPL
+namespace complex
 {
 class FilterList;
 class JsonObject;
@@ -22,7 +22,7 @@ public:
    * @brief
    * @param filterList
    */
-  JsonPipelineBuilder(SIMPL::FilterList* filterList);
+  JsonPipelineBuilder(FilterList* filterList);
 
   /**
    * @brief
@@ -49,7 +49,7 @@ public:
    * @param pipeline
    * @param version
    */
-  void savePipelineToFile(const std::string& path, SIMPL::Pipeline* pipeline, ParserVersion version = ParserVersion::V7) const;
+  void savePipelineToFile(const std::string& path, Pipeline* pipeline, ParserVersion version = ParserVersion::V7) const;
 
   /**
    * @param json
@@ -66,6 +66,6 @@ public:
 
 protected:
 private:
-  SIMPL::FilterList* m_FilterList;
+  FilterList* m_FilterList;
 };
-} // namespace SIMPL
+} // namespace complex

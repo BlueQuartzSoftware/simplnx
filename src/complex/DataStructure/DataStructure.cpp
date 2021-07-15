@@ -1,5 +1,7 @@
 #include "DataStructure.hpp"
 
+#include <stdexcept>
+
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/LinkedPath.hpp"
@@ -406,10 +408,10 @@ void DataStructure::removeObserver(AbstractDataStructureObserver* obs)
 
 H5::ErrorType DataStructure::writeXdmfFile(const std::filesystem::path& hdfFilePath) const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType DataStructure::readXdmfFile(const std::filesystem::path& hdfFilePath)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }

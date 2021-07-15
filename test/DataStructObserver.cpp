@@ -3,12 +3,12 @@
 #include <iostream>
 #include <string>
 
-#include "Complex/DataStructure/BaseGroup.hpp"
-#include "Complex/DataStructure/DataStructure.hpp"
-#include "Complex/DataStructure/Messaging/DataAddedMessage.hpp"
-#include "Complex/DataStructure/Messaging/DataRemovedMessage.hpp"
-#include "Complex/DataStructure/Messaging/DataRenamedMessage.hpp"
-#include "Complex/DataStructure/Messaging/DataReparentedMessage.hpp"
+#include "complex/DataStructure/BaseGroup.hpp"
+#include "complex/DataStructure/DataStructure.hpp"
+#include "complex/DataStructure/Messaging/DataAddedMessage.hpp"
+#include "complex/DataStructure/Messaging/DataRemovedMessage.hpp"
+#include "complex/DataStructure/Messaging/DataRenamedMessage.hpp"
+#include "complex/DataStructure/Messaging/DataReparentedMessage.hpp"
 
 DataStructObserver::DataStructObserver(DataStructure& dataStruct)
 : AbstractDataStructureObserver()

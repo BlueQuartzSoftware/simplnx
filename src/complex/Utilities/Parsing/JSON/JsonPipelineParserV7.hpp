@@ -1,8 +1,8 @@
 #pragma once
 
-#include "SIMPL/Utilities/Parsing/JSON/IJsonPipelineParser.h"
+#include "complex/Utilities/Parsing/JSON/IJsonPipelineParser.h"
 
-namespace SIMPL
+namespace complex
 {
 
 /**
@@ -37,15 +37,15 @@ public:
    * @param json
    * @return Pipeline*
    */
-  SIMPL::Pipeline* fromJson(const std::string& json) const override;
+  Pipeline* fromJson(const std::string& json) const override;
 
   /**
    * @param pipeline*
    * @return std::string
    */
-  std::string toJson(SIMPL::Pipeline* pipeline) const override;
+  std::string toJson(Pipeline* pipeline) const override;
 
 protected:
 private:
 };
-} // namespace SIMPL
+} // namespace complex

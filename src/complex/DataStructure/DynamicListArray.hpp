@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cstring>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 
 #include "complex/DataStructure/DataObject.hpp"
@@ -100,7 +102,7 @@ public:
    */
   DataObject* shallowCopy() override
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
   /**
@@ -146,7 +148,7 @@ public:
     m_Array[ptId].ncells = nCells;
     // If nCells is huge then there could be problems with this
     this->m_Array[ptId].cells = new K[nCells];
-    ::memcpy(m_Array[ptId].cells, data, sizeof(K) * nCells);
+    std::memcpy(m_Array[ptId].cells, data, sizeof(K) * nCells);
     return true;
   }
 
@@ -173,7 +175,7 @@ public:
     m_Array[ptId].ncells = nCells;
     // If nCells is huge then there could be problems with this
     this->m_Array[ptId].cells = new K[nCells];
-    ::memcpy(m_Array[ptId].cells, data, sizeof(K) * nCells);
+    std::memcpy(m_Array[ptId].cells, data, sizeof(K) * nCells);
     return true;
   }
 
@@ -216,9 +218,9 @@ public:
       ncells = reinterpret_cast<T*>(bufPtr + offset);
       this->m_Array[i].ncells = *ncells; // Set the number of cells in this link
       offset += 2;
-      this->m_Array[i].cells = new K[(*ncells)];                                // Allocate a new chunk of memory to store the list
-      ::memcpy(this->m_Array[i].cells, bufPtr + offset, (*ncells) * sizeof(K)); // Copy from the buffer into the new list memory
-      offset += (*ncells) * sizeof(K);                                          // Increment the offset
+      this->m_Array[i].cells = new K[(*ncells)];                                   // Allocate a new chunk of memory to store the list
+      std::memcpy(this->m_Array[i].cells, bufPtr + offset, (*ncells) * sizeof(K)); // Copy from the buffer into the new list memory
+      offset += (*ncells) * sizeof(K);                                             // Increment the offset
     }
   }
 
@@ -248,7 +250,7 @@ public:
    */
   H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const override
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
   /**
@@ -259,7 +261,7 @@ public:
    */
   H5::ErrorType readFromXdmfText(std::istream& in, const std::string& hdfFileName) override
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
 protected:

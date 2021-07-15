@@ -1,6 +1,6 @@
 #pragma once
 
-namespace SIMPL
+namespace complex
 {
 using Json = void;
 }

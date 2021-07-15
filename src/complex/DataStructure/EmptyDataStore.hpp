@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 #include "complex/DataStructure/IDataStore.hpp"
 
 namespace complex
@@ -15,6 +17,10 @@ template <typename T>
 class EmptyDataStore : public IDataStore<T>
 {
 public:
+  using value_type = typename IDataStore<T>::value_type;
+  using reference = typename IDataStore<T>::reference;
+  using const_reference = typename IDataStore<T>::const_reference;
+
   /**
    * @brief Constructs an empty data store with a tuple size and count of 0.
    */
@@ -82,7 +88,7 @@ public:
    */
   void resizeTuples(size_t tupleCount) override
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
   /**
@@ -93,7 +99,7 @@ public:
    */
   value_type getValue(size_t index) const override
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
   /**
@@ -104,7 +110,7 @@ public:
    */
   void setValue(size_t index, value_type value) override
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
   /**
@@ -115,7 +121,7 @@ public:
    */
   const_reference at(size_t index) const override
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
   /**
@@ -126,7 +132,7 @@ public:
    */
   const_reference operator[](size_t index) const override
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
   /**
@@ -137,14 +143,14 @@ public:
    */
   reference operator[](size_t index) override
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
   /**
    * @brief Returns a deep copy of the data store and all its data.
    * @return IDataStore*
    */
-  IDataStore* deepCopy() const override
+  IDataStore<T>* deepCopy() const override
   {
     return new EmptyDataStore(*this);
   }

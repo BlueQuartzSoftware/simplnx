@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace SIMPL
+namespace complex
 {
 class AbstractFilter;
 class FilterList;
@@ -20,14 +20,14 @@ public:
 
   /**
    * @param json
-   * @return SIMPL::AbstractFilter*
+   * @return AbstractFilter*
    */
-  virtual SIMPL::AbstractFilter* fromJson(const std::string& json) const = 0;
+  virtual AbstractFilter* fromJson(const std::string& json) const = 0;
 
   /**
    * @param  filter
    * @return std::string
    */
-  virtual std::string toJson(SIMPL::AbstractFilter* filter) const = 0;
+  virtual std::string toJson(AbstractFilter* filter) const = 0;
 };
-} // namespace SIMPL
+} // namespace complex

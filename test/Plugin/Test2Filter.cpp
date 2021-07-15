@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-#include "Complex/Filtering/AbstractFilter.hpp"
+#include "complex/Filtering/AbstractFilter.hpp"
 
 using namespace complex;
 
