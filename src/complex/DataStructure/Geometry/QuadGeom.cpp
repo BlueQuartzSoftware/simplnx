@@ -1,5 +1,7 @@
 #include "QuadGeom.hpp"
 
+#include <stdexcept>
+
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
 
@@ -55,7 +57,7 @@ DataObject* QuadGeom::shallowCopy()
 
 DataObject* QuadGeom::deepCopy()
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 std::string QuadGeom::getGeometryTypeAsString() const
@@ -170,7 +172,7 @@ AbstractGeometry::StatusCode QuadGeom::findElementSizes()
 {
   auto dataStore = new DataStore<float>(1, getNumberOfQuads());
   auto quadSizes = getDataStructure()->createDataArray<float>("Quad Areas", dataStore, getId());
-  GeometryHelpers::Topology::Find2DElementAreas<size_t>(getQuads(), getVertices(), quadSizes);
+  GeometryHelpers::Topology::Find2DElementAreas(getQuads(), getVertices(), quadSizes);
   if(quadSizes == nullptr)
   {
     m_QuadSizesId.reset();
@@ -252,7 +254,7 @@ AbstractGeometry::StatusCode QuadGeom::findElementCentroids()
 {
   auto dataStore = new DataStore<float>(3, getNumberOfQuads());
   auto quadCentroids = getDataStructure()->createDataArray<float>("Quad Centroids", dataStore, getId());
-  GeometryHelpers::Topology::FindElementCentroids<size_t>(getQuads(), getVertices(), quadCentroids);
+  GeometryHelpers::Topology::FindElementCentroids(getQuads(), getVertices(), quadCentroids);
   if(quadCentroids == nullptr)
   {
     m_QuadCentroidsId.reset();
@@ -298,7 +300,7 @@ void QuadGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, double
 
 void QuadGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 complex::TooltipGenerator QuadGeom::getTooltipGenerator() const
@@ -445,7 +447,7 @@ size_t QuadGeom::getNumberOfEdges() const
 AbstractGeometry::StatusCode QuadGeom::findEdges()
 {
   auto edgeList = createSharedEdgeList(0);
-  GeometryHelpers::Connectivity::Find2DElementEdges<size_t>(getQuads(), edgeList);
+  GeometryHelpers::Connectivity::Find2DElementEdges(getQuads(), edgeList);
   if(edgeList == nullptr)
   {
     m_EdgeListId.reset();
@@ -465,7 +467,7 @@ AbstractGeometry::StatusCode QuadGeom::findUnsharedEdges()
 {
   auto dataStore = new DataStore<MeshIndexType>(2, 0);
   auto unsharedEdgeList = getDataStructure()->createDataArray<MeshIndexType>("Unshared Edge List", dataStore, getId());
-  GeometryHelpers::Connectivity::Find2DUnsharedEdges<size_t>(getQuads(), unsharedEdgeList);
+  GeometryHelpers::Connectivity::Find2DUnsharedEdges(getQuads(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
     m_UnsharedEdgeListId.reset();
@@ -508,17 +510,17 @@ void QuadGeom::setUnsharedEdges(const SharedEdgeList* bEdgeList)
 
 uint32_t QuadGeom::getXdmfGridType() const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType QuadGeom::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType QuadGeom::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 void QuadGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)

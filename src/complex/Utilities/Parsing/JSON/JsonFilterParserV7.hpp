@@ -1,8 +1,8 @@
 #pragma once
 
-#include "SIMPL/Utilities/Parsing/JSON/IJsonFilterParser.h"
+#include "complex/Utilities/Parsing/JSON/IJsonFilterParser.h"
 
-namespace SIMPL
+namespace complex
 {
 
 /**
@@ -27,7 +27,7 @@ public:
    * @param json
    * @return AbstractFilter*
    */
-  SIMPL::AbstractFilter* fromJson(const std::string& json) const override;
+  AbstractFilter* fromJson(const std::string& json) const override;
 
   /**
    * @param AbstractFilter*
@@ -38,4 +38,4 @@ public:
 protected:
 private:
 };
-} // namespace SIMPL
+} // namespace complex

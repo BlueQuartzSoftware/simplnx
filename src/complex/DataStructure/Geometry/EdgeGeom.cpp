@@ -1,5 +1,7 @@
 #include "EdgeGeom.hpp"
 
+#include <stdexcept>
+
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
@@ -49,7 +51,7 @@ DataObject* EdgeGeom::shallowCopy()
 
 DataObject* EdgeGeom::deepCopy()
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 std::string EdgeGeom::getGeometryTypeAsString() const
@@ -361,7 +363,7 @@ AbstractGeometry::StatusCode EdgeGeom::findElementCentroids()
 {
   auto dataStore = new DataStore<float>(3, getNumberOfElements());
   auto edgeCentroids = getDataStructure()->createDataArray<float>("Edge Centroids", dataStore, getId());
-  GeometryHelpers::Topology::FindElementCentroids<size_t>(getEdges(), getVertices(), edgeCentroids);
+  GeometryHelpers::Topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroids);
   if(getElementCentroids() == nullptr)
   {
     return -1;
@@ -403,7 +405,7 @@ void EdgeGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, double
 
 void EdgeGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 complex::TooltipGenerator EdgeGeom::getTooltipGenerator() const
@@ -419,17 +421,17 @@ complex::TooltipGenerator EdgeGeom::getTooltipGenerator() const
 
 uint32_t EdgeGeom::getXdmfGridType() const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType EdgeGeom::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType EdgeGeom::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 void EdgeGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)

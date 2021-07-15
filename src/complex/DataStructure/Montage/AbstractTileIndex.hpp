@@ -1,8 +1,9 @@
 #pragma once
 
-#include "SIMPL/Utilities/TooltipGenerator.h"
+#include "complex/Utilities/TooltipGenerator.hpp"
+#include "complex/complex_export.hpp"
 
-namespace SIMPL
+namespace complex
 {
 class AbstractGeometry;
 class AbstractMontage;
@@ -12,7 +13,7 @@ class AbstractMontage;
  *
  */
 
-class AbstractTileIndex
+class COMPLEX_EXPORT AbstractTileIndex
 {
 public:
   // Constructors/Destructors
@@ -56,9 +57,9 @@ public:
   virtual bool isValid() const = 0;
 
   /**
-   * @return SIMPL::TooltipGenerator
+   * @return TooltipGenerator
    */
-  virtual SIMPL::TooltipGenerator getToolTipGenerator() const = 0;
+  virtual TooltipGenerator getToolTipGenerator() const = 0;
 
 protected:
   /**
@@ -69,4 +70,4 @@ protected:
 private:
   AbstractMontage* m_Montage = nullptr;
 };
-} // namespace SIMPL
+} // namespace complex

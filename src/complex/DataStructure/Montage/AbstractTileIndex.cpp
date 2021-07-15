@@ -1,6 +1,6 @@
-#include "AbstractTileIndex.h"
+#include "AbstractTileIndex.hpp"
 
-using namespace SIMPL;
+using namespace complex;
 
 // Constructors/Destructors
 //

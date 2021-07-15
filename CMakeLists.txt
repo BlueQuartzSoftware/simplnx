@@ -58,6 +58,13 @@ target_link_libraries(complex
     Eigen3::Eigen
 )
 
+if(UNIX)
+  target_link_libraries(complex
+    PRIVATE
+      ${CMAKE_DL_LIBS}
+  )
+endif()
+
 set(COMPLEX_GENERATED_DIR ${PROJECT_BINARY_DIR}/generated)
 set(COMPLEX_GENERATED_HEADER_DIR ${PROJECT_BINARY_DIR}/generated/complex)
 set(COMPLEX_EXPORT_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/complex_export.hpp)

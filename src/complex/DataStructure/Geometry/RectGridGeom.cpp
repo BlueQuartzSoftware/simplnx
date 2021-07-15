@@ -1,5 +1,7 @@
 #include "RectGridGeom.hpp"
 
+#include <stdexcept>
+
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
 
@@ -39,7 +41,7 @@ DataObject* RectGridGeom::shallowCopy()
 
 DataObject* RectGridGeom::deepCopy()
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 std::string RectGridGeom::getGeometryTypeAsString() const
@@ -251,7 +253,7 @@ void RectGridGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, do
 
 void RectGridGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 std::string RectGridGeom::getInfoString(complex::InfoStringFormat format) const
@@ -539,17 +541,17 @@ size_t RectGridGeom::getIndex(double xCoord, double yCoord, double zCoord) const
 
 uint32_t RectGridGeom::getXdmfGridType() const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType RectGridGeom::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType RectGridGeom::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 void RectGridGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)

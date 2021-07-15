@@ -1,9 +1,10 @@
 #pragma once
 
-#include "SIMPL/Common/SIMPLArray.hpp"
-#include "SIMPL/DataStructure/Montage/AbstractTileIndex.h"
+#include "complex/Common/Array.hpp"
+#include "complex/DataStructure/Montage/AbstractTileIndex.hpp"
+#include "complex/complex_export.hpp"
 
-namespace SIMPL
+namespace complex
 {
 class GridMontage;
 
@@ -12,7 +13,7 @@ class GridMontage;
  *
  */
 
-class GridTileIndex : virtual public AbstractTileIndex
+class COMPLEX_EXPORT GridTileIndex : virtual public AbstractTileIndex
 {
 public:
   // Constructors/Destructors
@@ -62,9 +63,9 @@ public:
   AbstractGeometry* getGeometry() const override;
 
   /**
-   * @return SIMPL::TooltipGenerator
+   * @return TooltipGenerator
    */
-  SIMPL::TooltipGenerator getToolTipGenerator() const override;
+  TooltipGenerator getToolTipGenerator() const override;
 
   /**
    * @return bool
@@ -88,4 +89,4 @@ protected:
 private:
   SizeVec3 m_Pos;
 };
-} // namespace SIMPL
+} // namespace complex

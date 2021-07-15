@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 #include "complex/Common/EulerAngle.hpp"
 #include "complex/Common/Point3D.hpp"
 
@@ -129,7 +131,7 @@ public:
    */
   PointType getEndPoint() const
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
   /**
@@ -139,7 +141,7 @@ public:
    */
   PointType getPointAtDist(LengthType length) const
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
   /**

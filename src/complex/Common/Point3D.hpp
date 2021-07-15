@@ -1,6 +1,8 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
+#include <stdexcept>
 
 namespace complex
 {
@@ -306,7 +308,7 @@ public:
   {
     if(index >= 3)
     {
-      throw std::exception();
+      throw std::runtime_error("");
     }
     return m_Pos[index];
   }
@@ -321,7 +323,7 @@ public:
   {
     if(index >= 3)
     {
-      throw std::exception();
+      throw std::runtime_error("");
     }
     return m_Pos[index];
   }

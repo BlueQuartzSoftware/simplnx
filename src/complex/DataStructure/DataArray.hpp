@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
 
@@ -128,7 +130,7 @@ public:
   {
     if(m_DataStore == nullptr)
     {
-      throw std::exception();
+      throw std::runtime_error("");
     }
 
     return (*m_DataStore.get())[index];
@@ -145,7 +147,7 @@ public:
   {
     if(m_DataStore == nullptr)
     {
-      throw std::exception();
+      throw std::runtime_error("");
     }
 
     return (*m_DataStore.get())[index];
@@ -162,7 +164,7 @@ public:
   {
     if(m_DataStore == nullptr)
     {
-      throw std::exception();
+      throw std::runtime_error("");
     }
 
     return (*m_DataStore.get())[index];
@@ -297,7 +299,7 @@ public:
    */
   H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const override
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
   /**
@@ -309,7 +311,7 @@ public:
    */
   H5::ErrorType readFromXdmfText(std::istream& in, const std::string& hdfFileName) override
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
   /**
@@ -340,19 +342,19 @@ private:
 };
 
 // Declare extern templates
-extern template DataArray<uint8_t>;
-extern template DataArray<uint16_t>;
-extern template DataArray<uint32_t>;
-extern template DataArray<uint64_t>;
+// extern template DataArray<uint8_t>;
+// extern template DataArray<uint16_t>;
+// extern template DataArray<uint32_t>;
+// extern template DataArray<uint64_t>;
 
-extern template DataArray<int8_t>;
-extern template DataArray<int16_t>;
-extern template DataArray<int32_t>;
-extern template DataArray<int64_t>;
-extern template DataArray<size_t>;
+// extern template DataArray<int8_t>;
+// extern template DataArray<int16_t>;
+// extern template DataArray<int32_t>;
+// extern template DataArray<int64_t>;
+// extern template DataArray<size_t>;
 
-extern template DataArray<float>;
-extern template DataArray<double>;
+// extern template DataArray<float>;
+// extern template DataArray<double>;
 
 // Declare aliases
 using CharArray = DataArray<char>;

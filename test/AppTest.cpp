@@ -1,5 +1,6 @@
 #include <exception>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 
 #include "complex/Core/Application.hpp"
@@ -30,7 +31,7 @@ void testFilterList()
     auto filter = filterList->createFilter(filterHandle);
     if(filter == nullptr)
     {
-      throw std::exception();
+      throw std::runtime_error("");
     }
     std::cout << "  " << filter->getName() << "\n";
   }
@@ -45,7 +46,7 @@ void testDeletingApp()
   delete Application::Instance();
   if(Application::Instance() != nullptr)
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
   std::cout << "  Application::Instance() deleted" << std::endl;
 

@@ -1,10 +1,11 @@
 #pragma once
 
-#include "SIMPL/Common/SIMPLArray.hpp"
-#include "SIMPL/DataStructure/Montage/AbstractMontage.h"
-#include "SIMPL/DataStructure/Montage/GridTileIndex.h"
+#include "complex/Common/Array.hpp"
+#include "complex/DataStructure/Montage/AbstractMontage.hpp"
+#include "complex/DataStructure/Montage/GridTileIndex.hpp"
+#include "complex/complex_export.hpp"
 
-namespace SIMPL
+namespace complex
 {
 class GridTileIndex;
 
@@ -13,7 +14,7 @@ class GridTileIndex;
  *
  */
 
-class GridMontage : virtual public AbstractMontage
+class COMPLEX_EXPORT GridMontage : virtual public AbstractMontage
 {
 public:
   using Iterator = void;
@@ -87,9 +88,9 @@ public:
    * @param row
    * @param col
    * @param depth
-   * @return SIMPL::GridTileIndex
+   * @return GridTileIndex
    */
-  SIMPL::GridTileIndex getTileIndex(size_t row, size_t col, size_t depth) const;
+  GridTileIndex getTileIndex(size_t row, size_t col, size_t depth) const;
 
   /**
    * @brief Returns the tile index for the target geometry. Returns nullptr if the geometry
@@ -122,9 +123,9 @@ public:
 
   /**
    * @brief
-   * @return SIMPL::TooltipGenerator
+   * @return TooltipGenerator
    */
-  SIMPL::TooltipGenerator getTooltipGenerator() const override;
+  TooltipGenerator getTooltipGenerator() const override;
 
   /**
    * @brief
@@ -200,4 +201,4 @@ protected:
 
 private:
 };
-} // namespace SIMPL
+} // namespace complex

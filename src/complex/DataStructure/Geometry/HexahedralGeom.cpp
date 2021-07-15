@@ -1,5 +1,7 @@
 #include "HexahedralGeom.hpp"
 
+#include <stdexcept>
+
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
 
@@ -283,7 +285,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findElementSizes()
   auto dataStore = new DataStore<float>(1, getNumberOfHexas());
   auto hexSizes = getDataStructure()->createDataArray<float>("Hex Volumes", dataStore, getId());
   m_HexSizesId = hexSizes->getId();
-  GeometryHelpers::Topology::FindHexVolumes<size_t>(getHexahedra(), getVertices(), hexSizes);
+  GeometryHelpers::Topology::FindHexVolumes(getHexahedra(), getVertices(), hexSizes);
   if(getElementSizes() == nullptr)
   {
     m_HexSizesId.reset();
@@ -365,7 +367,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findElementCentroids()
   auto dataStore = new DataStore<float>(3, getNumberOfHexas());
   auto hexCentroids = getDataStructure()->createDataArray<float>("Hex Centroids", dataStore, getId());
   m_HexCentroidsId = hexCentroids->getId();
-  GeometryHelpers::Topology::FindElementCentroids<size_t>(getHexahedra(), getVertices(), hexCentroids);
+  GeometryHelpers::Topology::FindElementCentroids(getHexahedra(), getVertices(), hexCentroids);
   if(getElementCentroids() == nullptr)
   {
     m_HexCentroidsId.reset();
@@ -433,7 +435,7 @@ void HexahedralGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, 
 
 void HexahedralGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 complex::TooltipGenerator HexahedralGeom::getTooltipGenerator() const
@@ -601,7 +603,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findEdges()
 {
   auto edgeList = createSharedEdgeList(0);
   m_EdgeListId = edgeList->getId();
-  GeometryHelpers::Connectivity::FindHexEdges<size_t>(getHexahedra(), getEdges());
+  GeometryHelpers::Connectivity::FindHexEdges(getHexahedra(), getEdges());
   if(getEdges() == nullptr)
   {
     m_EdgeListId.reset();
@@ -620,7 +622,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findFaces()
 {
   auto quadList = createSharedQuadList(0);
   m_QuadListId = quadList->getId();
-  GeometryHelpers::Connectivity::FindHexFaces<size_t>(getHexahedra(), quadList);
+  GeometryHelpers::Connectivity::FindHexFaces(getHexahedra(), quadList);
   if(quadList == nullptr)
   {
     m_QuadListId.reset();
@@ -640,7 +642,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findUnsharedEdges()
   auto dataStore = new DataStore<MeshIndexType>(2, 0);
   auto unsharedEdgeList = getDataStructure()->createDataArray("Unshared Edge List", dataStore, getId());
   m_UnsharedEdgeListId = unsharedEdgeList->getId();
-  GeometryHelpers::Connectivity::FindUnsharedHexEdges<size_t>(getHexahedra(), unsharedEdgeList);
+  GeometryHelpers::Connectivity::FindUnsharedHexEdges(getHexahedra(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
     m_UnsharedEdgeListId.reset();
@@ -664,7 +666,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findUnsharedFaces()
   auto dataStore = new DataStore<MeshIndexType>(4, 0);
   auto unsharedQuadList = getDataStructure()->createDataArray<MeshIndexType>("Unshared Edge List", dataStore, getId());
   m_UnsharedQuadListId = unsharedQuadList->getId();
-  GeometryHelpers::Connectivity::FindUnsharedHexFaces<size_t>(getHexahedra(), unsharedQuadList);
+  GeometryHelpers::Connectivity::FindUnsharedHexFaces(getHexahedra(), unsharedQuadList);
   if(unsharedQuadList == nullptr)
   {
     m_UnsharedQuadListId.reset();
@@ -686,17 +688,17 @@ void HexahedralGeom::deleteUnsharedFaces()
 
 uint32_t HexahedralGeom::getXdmfGridType() const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType HexahedralGeom::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType HexahedralGeom::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 void HexahedralGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)

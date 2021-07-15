@@ -1,6 +1,6 @@
-#include "GridMontage.h"
+#include "GridMontage.hpp"
 
-using namespace SIMPL;
+using namespace complex;
 
 // Constructors/Destructors
 //

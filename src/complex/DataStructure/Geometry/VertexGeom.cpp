@@ -1,5 +1,7 @@
 #include "VertexGeom.hpp"
 
+#include <stdexcept>
+
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
 
@@ -43,7 +45,7 @@ DataObject* VertexGeom::shallowCopy()
 
 DataObject* VertexGeom::deepCopy()
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 std::string VertexGeom::getGeometryTypeAsString() const
@@ -234,7 +236,7 @@ complex::TooltipGenerator VertexGeom::getTooltipGenerator() const
 
 uint32_t VertexGeom::getXdmfGridType() const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType VertexGeom::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
@@ -286,7 +288,7 @@ H5::ErrorType VertexGeom::generateXdmfText(std::ostream& out, const std::string&
 
 H5::ErrorType VertexGeom::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 void VertexGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)

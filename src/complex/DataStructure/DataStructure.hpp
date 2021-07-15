@@ -15,6 +15,7 @@
 #include "complex/DataStructure/DynamicListArray.hpp"
 #include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "complex/DataStructure/LinkedPath.hpp"
+#include "complex/DataStructure/Montage/AbstractMontage.hpp"
 #include "complex/DataStructure/ScalarData.hpp"
 
 #include "complex/complex_export.hpp"
@@ -23,7 +24,6 @@ namespace complex
 {
 class AbstractDataStructureMessage;
 class AbstractDataStructureObserver;
-class AbstractMontage;
 class DataGroup;
 class DataPath;
 
@@ -264,7 +264,7 @@ public:
     {
       return nullptr;
     }
-    return montagePtr.get();
+    return montage;
   }
 
   /**

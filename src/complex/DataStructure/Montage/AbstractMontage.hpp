@@ -1,10 +1,11 @@
 #pragma once
 
-#include "SIMPL/DataStructure/BaseGroup.h"
-#include "SIMPL/DataStructure/LinkedPath.h"
-#include "SIMPL/Utilities/TooltipGenerator.h"
+#include "complex/DataStructure/BaseGroup.hpp"
+#include "complex/DataStructure/LinkedPath.hpp"
+#include "complex/Utilities/TooltipGenerator.hpp"
+#include "complex/complex_export.hpp"
 
-namespace SIMPL
+namespace complex
 {
 class AbstractTileIndex;
 class AbstractGeometry;
@@ -14,7 +15,7 @@ class AbstractGeometry;
  *
  */
 
-class AbstractMontage : public BaseGroup
+class COMPLEX_EXPORT AbstractMontage : public BaseGroup
 {
 public:
   using Iterator = void;
@@ -79,9 +80,9 @@ public:
 
   /**
    * @brief Returns a TooltipGenerator for the montage.
-   * @return SIMPL::TooltipGenerator
+   * @return TooltipGenerator
    */
-  virtual SIMPL::TooltipGenerator getTooltipGenerator() const = 0;
+  virtual TooltipGenerator getTooltipGenerator() const = 0;
 
   /**
    * @brief Returns a pointer to the geometry at the specified tile index. Returns nullptr
@@ -141,4 +142,4 @@ protected:
 
 private:
 };
-} // namespace SIMPL
+} // namespace complex

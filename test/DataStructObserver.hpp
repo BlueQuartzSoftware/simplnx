@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "Complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
+#include "complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
 
 namespace complex
 {

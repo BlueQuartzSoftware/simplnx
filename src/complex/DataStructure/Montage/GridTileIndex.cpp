@@ -1,8 +1,8 @@
-#include "GridTileIndex.h"
+#include "GridTileIndex.hpp"
 
-#include "SIMPL/DataStructure/Montage/GridMontage.h"
+#include "complex/DataStructure/Montage/GridMontage.hpp"
 
-using namespace SIMPL;
+using namespace complex;
 
 // Constructors/Destructors
 //

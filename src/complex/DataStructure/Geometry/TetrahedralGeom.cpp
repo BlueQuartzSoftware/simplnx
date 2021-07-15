@@ -1,5 +1,7 @@
 #include "TetrahedralGeom.hpp"
 
+#include <stdexcept>
+
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
 
@@ -59,7 +61,7 @@ DataObject* TetrahedralGeom::shallowCopy()
 
 DataObject* TetrahedralGeom::deepCopy()
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 std::string TetrahedralGeom::getGeometryTypeAsString() const
@@ -228,7 +230,7 @@ AbstractGeometry::StatusCode TetrahedralGeom::findElementSizes()
 {
   auto dataStore = new DataStore<float>(1, getNumberOfTets());
   auto tetSizes = getDataStructure()->createDataArray<float>("Tet Volumes", dataStore, getId());
-  GeometryHelpers::Topology::FindTetVolumes<size_t>(getTetrahedra(), getVertices(), tetSizes);
+  GeometryHelpers::Topology::FindTetVolumes(getTetrahedra(), getVertices(), tetSizes);
   if(tetSizes == nullptr)
   {
     m_TetSizesId.reset();
@@ -310,7 +312,7 @@ AbstractGeometry::StatusCode TetrahedralGeom::findElementCentroids()
 {
   auto dataStore = new DataStore<float>(3, getNumberOfTets());
   auto tetCentroids = getDataStructure()->createDataArray<float>("Tet Centroids", dataStore, getId());
-  GeometryHelpers::Topology::FindElementCentroids<size_t>(getTetrahedra(), getVertices(), tetCentroids);
+  GeometryHelpers::Topology::FindElementCentroids(getTetrahedra(), getVertices(), tetCentroids);
   if(tetCentroids == nullptr)
   {
     m_TetCentroidsId.reset();
@@ -361,7 +363,7 @@ void TetrahedralGeom::getShapeFunctions(const complex::Point3D<double>& pCoords,
 
 void TetrahedralGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 complex::TooltipGenerator TetrahedralGeom::getTooltipGenerator() const
@@ -503,7 +505,7 @@ size_t TetrahedralGeom::getNumberOfEdges() const
 AbstractGeometry::StatusCode TetrahedralGeom::findEdges()
 {
   auto edgeList = createSharedEdgeList(0);
-  GeometryHelpers::Connectivity::FindTetEdges<size_t>(getTetrahedra(), edgeList);
+  GeometryHelpers::Connectivity::FindTetEdges(getTetrahedra(), edgeList);
   if(edgeList == nullptr)
   {
     m_EdgeListId.reset();
@@ -522,7 +524,7 @@ void TetrahedralGeom::deleteEdges()
 AbstractGeometry::StatusCode TetrahedralGeom::findFaces()
 {
   auto triList = createSharedTriList(0);
-  GeometryHelpers::Connectivity::FindTetFaces<size_t>(getTetrahedra(), triList);
+  GeometryHelpers::Connectivity::FindTetFaces(getTetrahedra(), triList);
   if(triList == nullptr)
   {
     m_TriListId.reset();
@@ -542,7 +544,7 @@ AbstractGeometry::StatusCode TetrahedralGeom::findUnsharedEdges()
 {
   auto dataStore = new DataStore<MeshIndexType>(2, 0);
   auto unsharedEdgeList = getDataStructure()->createDataArray<MeshIndexType>("Unshared Edge List", dataStore, getId());
-  GeometryHelpers::Connectivity::FindUnsharedTetEdges<size_t>(getTetrahedra(), unsharedEdgeList);
+  GeometryHelpers::Connectivity::FindUnsharedTetEdges(getTetrahedra(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
     m_UnsharedEdgeListId.reset();
@@ -567,7 +569,7 @@ AbstractGeometry::StatusCode TetrahedralGeom::findUnsharedFaces()
 {
   auto dataStore = new DataStore<MeshIndexType>(3, 0);
   auto unsharedTriList = getDataStructure()->createDataArray<MeshIndexType>("Unshared Face List", dataStore, getId());
-  GeometryHelpers::Connectivity::FindUnsharedTetFaces<size_t>(getTetrahedra(), unsharedTriList);
+  GeometryHelpers::Connectivity::FindUnsharedTetFaces(getTetrahedra(), unsharedTriList);
   if(unsharedTriList == nullptr)
   {
     m_UnsharedTriListId.reset();
@@ -600,17 +602,17 @@ void TetrahedralGeom::setElementSizes(const FloatArray* elementSizes)
 
 uint32_t TetrahedralGeom::getXdmfGridType() const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType TetrahedralGeom::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType TetrahedralGeom::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 void TetrahedralGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)

@@ -1,6 +1,7 @@
 #include "DataPath.hpp"
 
 #include <algorithm>
+#include <stdexcept>
 
 using namespace complex;
 
@@ -90,7 +91,7 @@ const std::string& DataPath::operator[](size_t index) const
 {
   if(index > m_Path.size())
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
   return m_Path[index];
 }

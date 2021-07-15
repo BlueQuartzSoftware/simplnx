@@ -180,7 +180,7 @@ public:
    */
   bool operator==(const Point2D& other) const
   {
-    return ther.m_Pos == m_Pos;
+    return other.m_Pos == m_Pos;
   }
 
   /**
@@ -190,7 +190,7 @@ public:
    */
   bool operator!=(const Point2D& other) const
   {
-    return ther.m_Pos != m_Pos;
+    return other.m_Pos != m_Pos;
   }
 
   /**

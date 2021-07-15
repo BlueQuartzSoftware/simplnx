@@ -1,5 +1,7 @@
 #include "ImageGeom.hpp"
 
+#include <stdexcept>
+
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
 
@@ -37,7 +39,7 @@ DataObject* ImageGeom::shallowCopy()
 
 DataObject* ImageGeom::deepCopy()
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 std::string ImageGeom::getGeometryTypeAsString() const
@@ -220,7 +222,7 @@ void ImageGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, doubl
 
 void ImageGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 complex::TooltipGenerator ImageGeom::getTooltipGenerator() const
@@ -447,17 +449,17 @@ ImageGeom::ErrorType ImageGeom::computeCellIndex(const complex::Point3D<float>& 
 
 uint32_t ImageGeom::getXdmfGridType() const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType ImageGeom::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType ImageGeom::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 void ImageGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)

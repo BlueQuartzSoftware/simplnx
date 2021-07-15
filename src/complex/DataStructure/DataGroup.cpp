@@ -1,6 +1,7 @@
 #include "DataGroup.hpp"
 
 #include <exception>
+#include <stdexcept>
 
 using namespace complex;
 
@@ -43,10 +44,10 @@ bool DataGroup::canInsert(const DataObject* obj) const
 
 H5::ErrorType DataGroup::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType DataGroup::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }

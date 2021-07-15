@@ -1,5 +1,6 @@
 #include <exception>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 
 #include "complex/Core/Application.hpp"
@@ -41,28 +42,28 @@ void testLoadingPlugins()
 
   if(filterHandles.size() != 2)
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
   auto filter = filterList->createFilter(testHandle);
   if(filter == nullptr)
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
   if(filter->getName() != "Test Filter")
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
   filter->execute(DataStructure(), {});
 
   auto filter2 = filterList->createFilter(test2Handle);
   if(filter2 == nullptr)
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
   if(filter2->getName() != "Test Filter 2")
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
   filter2->execute(DataStructure(), {});
   std::cout << "\n" << std::endl;
@@ -89,29 +90,29 @@ void testSingleton()
   // Check filters loaded
   if(filterHandles.size() != 2)
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
 
   // Create and execute filters
   auto filter = filterList->createFilter(testHandle);
   if(filter == nullptr)
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
   if(filter->getName() != "Test Filter")
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
   filter->execute(DataStructure(), {});
 
   auto filter2 = filterList->createFilter(test2Handle);
   if(filter2 == nullptr)
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
   if(filter2->getName() != "Test Filter 2")
   {
-    throw std::exception();
+    throw std::runtime_error("");
   }
   filter2->execute(DataStructure(), {});
 

@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace SIMPL
+namespace complex
 {
 class FilterList;
 class Pipeline;
@@ -15,15 +15,15 @@ public:
 
   /**
    * @param json
-   * @return SIMPL::Pipeline*
+   * @return Pipeline*
    */
-  virtual SIMPL::Pipeline* fromJson(const std::string& json) const = 0;
+  virtual Pipeline* fromJson(const std::string& json) const = 0;
 
   /**
    * @param pipeline
    * @return std::string
    */
-  virtual std::string toJson(SIMPL::Pipeline* pipeline) const = 0;
+  virtual std::string toJson(Pipeline* pipeline) const = 0;
 
 protected:
   /**
@@ -53,4 +53,4 @@ protected:
 private:
   FilterList* m_FilterList;
 };
-} // namespace SIMPL
+} // namespace complex

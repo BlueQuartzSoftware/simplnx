@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 #include "complex/DataStructure/IDataStore.hpp"
 
 namespace complex
@@ -14,6 +16,10 @@ template <typename T>
 class DataStore : public IDataStore<T>
 {
 public:
+  using value_type = typename IDataStore<T>::value_type;
+  using reference = typename IDataStore<T>::reference;
+  using const_reference = typename IDataStore<T>::const_reference;
+
   /**
    * @brief Constructs a DataStore with the specified tupleSize and tupleCount.
    * @param tupleSize
@@ -75,7 +81,7 @@ public:
   void resizeTuples(size_t numTuples) override
   {
     m_TupleCount = numTuples;
-    m_Data.resize(getSize());
+    m_Data.resize(this->getSize());
   }
 
   /**
@@ -129,9 +135,9 @@ public:
    */
   const_reference at(size_t index) const override
   {
-    if(index >= getSize())
+    if(index >= this->getSize())
     {
-      throw std::exception();
+      throw std::runtime_error("");
     }
     return m_Data[index];
   }
@@ -140,10 +146,10 @@ public:
    * @brief Returns a deep copy of the data store and all its data.
    * @return IDataStore*
    */
-  IDataStore* deepCopy() const override
+  IDataStore<T>* deepCopy() const override
   {
     auto copy = new DataStore(*this);
-    for(size_t i = 0; i < getSize(); i++)
+    for(size_t i = 0; i < this->getSize(); i++)
     {
       copy->setValue(i, getValue(i));
     }
