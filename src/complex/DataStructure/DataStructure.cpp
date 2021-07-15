@@ -61,7 +61,7 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
 {
   try
   {
-    std::vector<size_t> pathIds;
+    std::vector<DataObject::IdType> pathIds;
     const DataObject* data = m_RootGroup[path[0]];
     const BaseGroup* parent = dynamic_cast<const BaseGroup*>(data);
     pathIds.push_back(data->getId());

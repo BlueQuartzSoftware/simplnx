@@ -119,7 +119,7 @@ public:
    * @param index
    * @return const_reference
    */
-  const_reference at(size_t index) const override
+  typename IDataStore<T>::const_reference at(size_t index) const override
   {
     throw std::runtime_error("");
   }
@@ -130,7 +130,7 @@ public:
    * @param  index
    * @return const_reference
    */
-  const_reference operator[](size_t index) const override
+  typename IDataStore<T>::const_reference operator[](size_t index) const override
   {
     throw std::runtime_error("");
   }
@@ -141,7 +141,7 @@ public:
    * @param  index
    * @return reference
    */
-  reference operator[](size_t index) override
+  typename IDataStore<T>::reference operator[](size_t index) override
   {
     throw std::runtime_error("");
   }

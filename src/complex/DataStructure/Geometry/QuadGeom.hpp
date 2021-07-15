@@ -211,30 +211,6 @@ public:
 
   /**
    * @brief
-   * @param numVertices
-   */
-  void resizeVertexList(size_t numVertices) override;
-
-  /**
-   * @brief
-   * @param vertices
-   */
-  void setVertices(const SharedVertexList* vertices) override;
-
-  /**
-   * @brief
-   * @return SharedVertexList*
-   */
-  SharedVertexList* getVertices() override;
-
-  /**
-   * @brief
-   * @return const SharedVertexList*
-   */
-  const SharedVertexList* getVertices() const override;
-
-  /**
-   * @brief
    * @param vertId
    * @param Point3D<float>
    */
@@ -261,43 +237,11 @@ public:
 
   /**
    * @brief
-   * @return SharedEdgeList*
-   */
-  SharedEdgeList* getEdges() override;
-
-  /**
-   * @brief
-   * @return const SharedEdgeList*
-   */
-  const SharedEdgeList* getEdges() const override;
-
-  /**
-   * @brief
-   * @param edgeId
-   * @param verts
-   */
-  void setVertsAtEdge(size_t edgeId, const size_t verts[2]) override;
-
-  /**
-   * @brief
-   * @param edgeId
-   * @param verts
-   */
-  void getVertsAtEdge(size_t edgeId, size_t verts[2]) const override;
-
-  /**
-   * @brief
    * @param edgeId
    * @param vert1
    * @param vert2
    */
   void getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2) const override;
-
-  /**
-   * @brief
-   * @return size_t
-   */
-  size_t getNumberOfEdges() const override;
 
   /**
    * @brief
@@ -307,37 +251,9 @@ public:
 
   /**
    * @brief
-   */
-  void deleteEdges() override;
-
-  /**
-   * @brief
    * @return StatusCode
    */
   StatusCode findUnsharedEdges() override;
-
-  /**
-   * @brief
-   * @return std::shared_ptr<SharedEdgeList>
-   */
-  const SharedEdgeList* getUnsharedEdges() const override;
-
-  /**
-   * @brief
-   */
-  void deleteUnsharedEdges() override;
-
-  /**
-   * @brief
-   * @param edges
-   */
-  void setEdges(const SharedEdgeList* edges) override;
-
-  /**
-   * @brief
-   * @param bEdgeList
-   */
-  void setUnsharedEdges(const SharedEdgeList* bEdgeList) override;
 
   /**
    * @brief
@@ -413,9 +329,6 @@ protected:
   void setElementSizes(const FloatArray* elementSizes) override;
 
 private:
-  std::optional<DataObject::IdType> m_VertexListId;
-  std::optional<DataObject::IdType> m_EdgeListId;
-  std::optional<DataObject::IdType> m_UnsharedEdgeListId;
   std::optional<DataObject::IdType> m_QuadListId;
   std::optional<DataObject::IdType> m_QuadsContainingVertId;
   std::optional<DataObject::IdType> m_QuadNeighborsId;

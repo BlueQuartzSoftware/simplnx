@@ -23,8 +23,8 @@ class COMPLEX_EXPORT DataMap
 public:
   using IdType = size_t;
   using MapType = std::map<IdType, std::shared_ptr<DataObject>>;
-  using Iterator = MapType::iterator;
-  using ConstIterator = MapType::const_iterator;
+  using Iterator = typename MapType::iterator;
+  using ConstIterator = typename MapType::const_iterator;
 
   /**
    * @brief Default constructor

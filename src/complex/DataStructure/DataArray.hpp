@@ -13,13 +13,15 @@ namespace complex
  * retrieve array data within the DataStructure. The DataArray is designed to
  * allow expandability into multiple sources of data, including out-of-core data.
  */
-template <class T>
+template <typename T>
 class DataArray : public DataObject
 {
 public:
   using value_type = T;
   using reference = T&;
   using const_reference = const T&;
+  using store_type = IDataStore<T>;
+  using weak_store = typename std::weak_ptr<IDataStore<T>>;
   using Iterator = typename IDataStore<T>::Iterator;
   using ConstIterator = typename IDataStore<T>::ConstIterator;
 
@@ -30,7 +32,7 @@ public:
    * @param name
    * @param store
    */
-  DataArray(DataStructure* ds, const std::string& name, IDataStore<T>* store = nullptr)
+  DataArray(DataStructure* ds, const std::string& name, store_type* store = nullptr)
   : DataObject(ds, name)
   {
     setDataStore(store);
@@ -43,7 +45,7 @@ public:
    * @param name
    * @param dataStore
    */
-  DataArray(DataStructure* ds, const std::string& name, const std::weak_ptr<IDataStore<T>>& store)
+  DataArray(DataStructure* ds, const std::string& name, const weak_store& store)
   : DataObject(ds, name)
   {
     setDataStore(store);
@@ -174,7 +176,7 @@ public:
    * @brief Returns a raw pointer to the DataStore for read-only access.
    * @return DataStore<T>*
    */
-  const IDataStore<T>* getDataStore() const
+  const store_type* getDataStore() const
   {
     return m_DataStore.get();
   }
@@ -183,7 +185,7 @@ public:
    * @brief Returns a raw pointer to the DataStore.
    * @return DataStore<T>*
    */
-  IDataStore<T>* getDataStore()
+  store_type* getDataStore()
   {
     return m_DataStore.get();
   }
@@ -192,7 +194,7 @@ public:
    * @brief Returns a std::weak_ptr for the stored DataStore.
    * @return std::weak_ptr<DataStore<T>>
    */
-  std::weak_ptr<IDataStore<T>> getDataStorePtr()
+  weak_store getDataStorePtr()
   {
     return m_DataStore;
   }
@@ -212,12 +214,12 @@ public:
    * before replacing it, call releaseDataStore() before setting the new DataStore.
    * @param store
    */
-  void setDataStore(IDataStore<T>* store)
+  void setDataStore(store_type* store)
   {
-    m_DataStore = std::shared_ptr<IDataStore<T>>(store);
-    if(m_DataStore == nullptr)
+    m_DataStore = std::shared_ptr<store_type>(store);
+    if(nullptr == m_DataStore)
     {
-      m_DataStore = std::shared_ptr<IDataStore<T>>(new EmptyDataStore<T>());
+      m_DataStore = std::shared_ptr<store_type>(new EmptyDataStore<T>());
     }
   }
 
@@ -227,12 +229,12 @@ public:
    * before replacing it, call releaseDataStore() before setting the new DataStore.
    * @param store
    */
-  void setDataStore(const std::weak_ptr<IDataStore<T>>& store)
+  void setDataStore(const weak_store& store)
   {
     m_DataStore = store.lock();
     if(m_DataStore == nullptr)
     {
-      m_DataStore = std::shared_ptr<IDataStore<T>>(new EmptyDataStore<T>());
+      m_DataStore = std::shared_ptr<store_type>(new EmptyDataStore<T>());
     }
   }
 
@@ -342,19 +344,19 @@ private:
 };
 
 // Declare extern templates
-// extern template DataArray<uint8_t>;
-// extern template DataArray<uint16_t>;
-// extern template DataArray<uint32_t>;
-// extern template DataArray<uint64_t>;
+// extern template class DataArray<uint8_t>;
+// extern template class DataArray<uint16_t>;
+// extern template class DataArray<uint32_t>;
+// extern template class DataArray<uint64_t>;
 
-// extern template DataArray<int8_t>;
-// extern template DataArray<int16_t>;
-// extern template DataArray<int32_t>;
-// extern template DataArray<int64_t>;
-// extern template DataArray<size_t>;
+// extern template class DataArray<int8_t>;
+// extern template class DataArray<int16_t>;
+// extern template class DataArray<int32_t>;
+// extern template class DataArray<int64_t>;
+// extern template class DataArray<size_t>;
 
-// extern template DataArray<float>;
-// extern template DataArray<double>;
+// extern template class DataArray<float>;
+// extern template class DataArray<double>;
 
 // Declare aliases
 using CharArray = DataArray<char>;

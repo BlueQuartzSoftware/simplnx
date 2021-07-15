@@ -8,6 +8,9 @@
 #include <string>
 #include <vector>
 
+#include "complex/DataStructure/Montage/AbstractMontage.hpp"
+#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataMap.hpp"
 #include "complex/DataStructure/DataObject.hpp"
@@ -210,12 +213,13 @@ public:
   template <typename T>
   DataArray<T>* createDataArray(const std::string& name, IDataStore<T>* dataStore, const std::optional<DataObject::IdType>& parent = {})
   {
-    std::shared_ptr<DataArray<T>> dataArr(new DataArray<T>(this, name, dataStore));
-    if(!finishAddingObject(dataArr, parent))
+    DataArray<T>* dataArr = new DataArray<T>(this, name, dataStore);
+    std::shared_ptr<DataObject> dataArrPtr(dataArr);
+    if(!finishAddingObject(dataArrPtr, parent))
     {
       return nullptr;
     }
-    return dataArr.get();
+    return dataArr;
   }
 
   /**

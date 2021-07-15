@@ -90,7 +90,7 @@ public:
    * @param index
    * @return value_type
    */
-  value_type getValue(size_t index) const override
+  typename IDataStore<T>::value_type getValue(size_t index) const override
   {
     return m_Data[index];
   }
@@ -111,7 +111,7 @@ public:
    * @param  index
    * @return const_reference
    */
-  const_reference operator[](size_t index) const override
+  typename IDataStore<T>::const_reference operator[](size_t index) const override
   {
     return m_Data[index];
   }
@@ -122,7 +122,7 @@ public:
    * @param  index
    * @return reference
    */
-  reference operator[](size_t index) override
+  typename IDataStore<T>::reference operator[](size_t index) override
   {
     return m_Data[index];
   }
@@ -133,8 +133,9 @@ public:
    * @param index
    * @return const_reference
    */
-  const_reference at(size_t index) const override
+  typename IDataStore<T>::const_reference at(size_t index) const override
   {
+    if(index >= IDataStore<T>::getSize())
     if(index >= this->getSize())
     {
       throw std::runtime_error("");
@@ -149,6 +150,7 @@ public:
   IDataStore<T>* deepCopy() const override
   {
     auto copy = new DataStore(*this);
+    for(size_t i = 0; i < IDataStore<T>::getSize(); i++)
     for(size_t i = 0; i < this->getSize(); i++)
     {
       copy->setValue(i, getValue(i));

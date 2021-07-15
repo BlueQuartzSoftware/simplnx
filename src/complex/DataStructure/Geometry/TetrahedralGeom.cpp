@@ -386,7 +386,7 @@ void TetrahedralGeom::resizeVertexList(size_t numVertices)
 
 void TetrahedralGeom::setVertices(const SharedVertexList* vertices)
 {
-  if(!vertices)
+  if(nullptr == vertices)
   {
     m_VertexListId.reset();
     return;

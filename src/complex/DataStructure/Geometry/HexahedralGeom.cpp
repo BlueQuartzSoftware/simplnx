@@ -461,7 +461,7 @@ void HexahedralGeom::resizeVertexList(size_t numVertices)
 
 void HexahedralGeom::setVertices(const SharedVertexList* vertices)
 {
-  if(!vertices)
+  if(nullptr == vertices)
   {
     m_VertexListId.reset();
     return;

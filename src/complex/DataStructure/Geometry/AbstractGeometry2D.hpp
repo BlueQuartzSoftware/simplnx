@@ -22,25 +22,25 @@ public:
    * @brief
    * @param newNumVertices
    */
-  virtual void resizeVertexList(size_t newNumVertices) = 0;
+  void resizeVertexList(size_t newNumVertices);
 
   /**
    * @brief
    * @param vertices
    */
-  virtual void setVertices(const SharedVertexList* vertices) = 0;
+  void setVertices(const SharedVertexList* vertices);
 
   /**
    * @brief
    * @return SharedVertexList*
    */
-  virtual SharedVertexList* getVertices() = 0;
+  SharedVertexList* getVertices();
 
   /**
    * @brief
    * @return const SharedVertexList*
    */
-  virtual const SharedVertexList* getVertices() const = 0;
+  const SharedVertexList* getVertices() const;
 
   /**
    * @brief
@@ -72,27 +72,27 @@ public:
    * @brief
    * @return SharedEdgeList*
    */
-  virtual SharedEdgeList* getEdges() = 0;
+  SharedEdgeList* getEdges();
 
   /**
    * @brief
    * @return const SharedEdgeList*
    */
-  virtual const SharedEdgeList* getEdges() const = 0;
+  const SharedEdgeList* getEdges() const;
 
   /**
    * @brief
    * @param edgeId
    * @param verts
    */
-  virtual void setVertsAtEdge(size_t edgeId, const size_t verts[2]) = 0;
+  void setVertsAtEdge(size_t edgeId, const size_t verts[2]);
 
   /**
    * @brief
    * @param edgeId
    * @param verts
    */
-  virtual void getVertsAtEdge(size_t edgeId, size_t verts[2]) const = 0;
+  void getVertsAtEdge(size_t edgeId, size_t verts[2]) const;
 
   /**
    * @brief
@@ -106,7 +106,7 @@ public:
    * @brief
    * @return size_t
    */
-  virtual size_t getNumberOfEdges() const = 0;
+  size_t getNumberOfEdges() const;
 
   /**
    * @brief
@@ -117,7 +117,7 @@ public:
   /**
    * @brief
    */
-  virtual void deleteEdges() = 0;
+  void deleteEdges();
 
   /**
    * @brief
@@ -129,24 +129,24 @@ public:
    * @brief
    * @return const SharedEdgeList*
    */
-  virtual const SharedEdgeList* getUnsharedEdges() const = 0;
+  const SharedEdgeList* getUnsharedEdges() const;
 
   /**
    * @brief
    */
-  virtual void deleteUnsharedEdges() = 0;
+  void deleteUnsharedEdges();
 
   /**
    * @brief
    * @param edges
    */
-  virtual void setEdges(const SharedEdgeList* edges) = 0;
+  void setEdges(const SharedEdgeList* edges);
 
   /**
    * @brief
    * @param bEdgeList
    */
-  virtual void setUnsharedEdges(const SharedEdgeList* bEdgeList) = 0;
+  void setUnsharedEdges(const SharedEdgeList* bEdgeList);
 
 protected:
   /**
@@ -169,5 +169,9 @@ protected:
   AbstractGeometry2D(AbstractGeometry2D&& other) noexcept;
 
 private:
+  std::optional<DataObject::IdType> m_VertexListId;
+  std::optional<DataObject::IdType> m_EdgeListId;
+  std::optional<DataObject::IdType> m_UnsharedEdgeListId;
+  
 };
 } // namespace complex
