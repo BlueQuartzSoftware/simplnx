@@ -115,6 +115,7 @@ public:
   using MeshIndexArrayType = DataArray<MeshIndexType>;
   using SharedVertexList = FloatArray;
   using SharedEdgeList = MeshIndexArrayType;
+  using SharedFaceList = MeshIndexArrayType;
   using SharedTriList = MeshIndexArrayType;
   using SharedQuadList = MeshIndexArrayType;
   using SharedTetList = MeshIndexArrayType;

@@ -172,6 +172,5 @@ private:
   std::optional<DataObject::IdType> m_VertexListId;
   std::optional<DataObject::IdType> m_EdgeListId;
   std::optional<DataObject::IdType> m_UnsharedEdgeListId;
-  
 };
 } // namespace complex

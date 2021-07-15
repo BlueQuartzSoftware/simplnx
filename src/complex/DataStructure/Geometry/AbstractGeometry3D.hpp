@@ -32,27 +32,27 @@ public:
    * @brief Resizes the vertex array to the match the target number of vertices.
    * @param newNumVertices
    */
-  virtual void resizeVertexList(size_t newNumVertices) = 0;
+  void resizeVertexList(size_t newNumVertices);
 
   /**
    * @brief setVertices
    * @param vertices
    */
-  virtual void setVertices(const SharedVertexList* vertices) = 0;
+  void setVertices(const SharedVertexList* vertices);
 
   /**
    * @brief Returns the SharedVertexList array pointer. If the geometry does
    * not include a SharedVertexList, this returns nullptr.
    * @return SharedVertexList*
    */
-  virtual SharedVertexList* getVertices() = 0;
+  SharedVertexList* getVertices();
 
   /**
    * @brief Returns the SharedVertexList array pointer. If the geometry does
    * not include a SharedVertexList, this returns nullptr.
    * @return const SharedVertexList*
    */
-  virtual const SharedVertexList* getVertices() const = 0;
+  const SharedVertexList* getVertices() const;
 
   /**
    * @brief Assigns a new coordinate to the target vertex.
@@ -63,20 +63,20 @@ public:
    * @param vertId
    * @param coords
    */
-  virtual void setCoords(size_t vertId, const complex::Point3D<float>& coords) = 0;
+  void setCoords(size_t vertId, const complex::Point3D<float>& coords);
 
   /**
    * @brief Returns the 3D coordinates of the specified vertex as a Point3D<float>.
    * @param vertId
    * @return complex::Point3D<float>
    */
-  virtual complex::Point3D<float> getCoords(size_t vertId) const = 0;
+  complex::Point3D<float> getCoords(size_t vertId) const;
 
   /**
    * @brief Returns the number of vertices in the SharedVertexList.
    * @return size_t
    */
-  virtual size_t getNumberOfVertices() const = 0;
+  size_t getNumberOfVertices() const;
 
   /**
    * @brief Resizes the SharedEdgeList array.
@@ -85,35 +85,35 @@ public:
    * edge list.
    * @param newNumEdges
    */
-  virtual void resizeEdgeList(size_t newNumEdges) = 0;
+  void resizeEdgeList(size_t newNumEdges);
 
   /**
    * @brief Returns the geometry's edge list array. Returns nullptr if the
    * array has not been set.
    * @return SharedEdgeList*
    */
-  virtual SharedEdgeList* getEdges() = 0;
+  SharedEdgeList* getEdges();
 
   /**
    * @brief Returns the geometry's edge list array. Returns nullptr if the
    * array has not been set.
    * @return const SharedEdgeList*
    */
-  virtual const SharedEdgeList* getEdges() const = 0;
+  const SharedEdgeList* getEdges() const;
 
   /**
    * @brief Sets the vertex IDs for the specified edge.
    * @param edgeId
    * @param verts
    */
-  virtual void setVertsAtEdge(size_t edgeId, const size_t verts[2]) = 0;
+  void setVertsAtEdge(size_t edgeId, const size_t verts[2]);
 
   /**
    * @brief Gets the vertex IDs for the specified edge.
    * @param edgeId
    * @param verts
    */
-  virtual void getVertsAtEdge(size_t edgeId, size_t verts[2]) const = 0;
+  void getVertsAtEdge(size_t edgeId, size_t verts[2]) const;
 
   /**
    * @brief Gets the vertex coordinates for the specified edge.
@@ -121,13 +121,13 @@ public:
    * @param vert1
    * @param vert2
    */
-  virtual void getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2) const = 0;
+  void getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2) const;
 
   /**
    * @brief Returns the number of edges that make up the edge list.
    * @return size_t
    */
-  virtual size_t getNumberOfEdges() const = 0;
+  size_t getNumberOfEdges() const;
 
   /**
    * @brief Creates and assigns the edge list array for the current values.
@@ -138,7 +138,7 @@ public:
   /**
    * @brief Deletes the current edge list array.
    */
-  virtual void deleteEdges() = 0;
+  void deleteEdges();
 
   /**
    * @brief Creates and assigns the face list array for the current values.
@@ -149,7 +149,7 @@ public:
   /**
    * @brief Deletes the current face list array.
    */
-  virtual void deleteFaces() = 0;
+  void deleteFaces();
 
   /**
    * @brief Creates and assigns the unshared edge list array for the current values.
@@ -158,14 +158,14 @@ public:
 
   /**
    * @brief Returns the current unshared edge list array.
-   * @return SharedEdgeList*
+   * @return const SharedEdgeList*
    */
-  virtual const SharedEdgeList* getUnsharedEdges() const = 0;
+  const SharedEdgeList* getUnsharedEdges() const;
 
   /**
    * @brief Deletes the current unshared edge list array.
    */
-  virtual void deleteUnsharedEdges() = 0;
+  void deleteUnsharedEdges();
 
   /**
    * @brief Creates and assigns the unshared face list array for the current values.
@@ -174,32 +174,56 @@ public:
 
   /**
    * @brief Returns a pointer to the unshared face list array.
-   * @return
+   * @return const SharedEdgeList*
    */
-  virtual const SharedEdgeList* getUnsharedFaces() const = 0;
+  const SharedEdgeList* getUnsharedFaces() const;
 
   /**
    * @brief Deletes the current unshared face list array.
    */
-  virtual void deleteUnsharedFaces() = 0;
+  void deleteUnsharedFaces();
+
+  /**
+   * @brief
+   * @return size_t
+   */
+  size_t getNumberOfFaces() const;
+
+  /**
+   * @brief
+   * @return SharedFaceList*
+   */
+  SharedFaceList* getFaces();
+
+  /**
+   * @brief
+   * @return const SharedFaceList*
+   */
+  const SharedFaceList* getFaces() const;
+
+  /**
+   * @brief
+   * @param faces
+   */
+  void setFaces(const SharedFaceList* faces);
 
   /**
    * @brief Sets the geometry's shared edge list array. This does not change the parentage of the provided array.
    * @param edges
    */
-  virtual void setEdges(const SharedEdgeList* edges) = 0;
+  void setEdges(const SharedEdgeList* edges);
 
   /**
    * @brief Sets the geometry's unshared edge list array.
    * @param bEdgeList
    */
-  virtual void setUnsharedEdges(const SharedEdgeList* bEdgeList) = 0;
+  void setUnsharedEdges(const SharedEdgeList* bEdgeList);
 
   /**
    * @brief Sets the geometry's unshared face list array.
    * @param bFaceList
    */
-  virtual void setUnsharedFaces(const SharedFaceList* bFaceList) = 0;
+  void setUnsharedFaces(const SharedFaceList* bFaceList);
 
 protected:
   /**
@@ -224,5 +248,10 @@ protected:
   SharedTriList* createSharedTriList(size_t numTris);
 
 private:
+  std::optional<DataObject::IdType> m_VertexListId;
+  std::optional<DataObject::IdType> m_EdgeListId;
+  std::optional<DataObject::IdType> m_UnsharedEdgeListId;
+  std::optional<DataObject::IdType> m_FaceListId;
+  std::optional<DataObject::IdType> m_UnsharedFaceListId;
 };
 } // namespace complex

@@ -24,9 +24,6 @@ TetrahedralGeom::TetrahedralGeom(DataStructure* ds, const std::string& name, con
 
 TetrahedralGeom::TetrahedralGeom(const TetrahedralGeom& other)
 : AbstractGeometry3D(other)
-, m_VertexListId(other.m_VertexListId)
-, m_EdgeListId(other.m_EdgeListId)
-, m_UnsharedEdgeListId(other.m_UnsharedEdgeListId)
 , m_TriListId(other.m_TriListId)
 , m_UnsharedTriListId(other.m_UnsharedTriListId)
 , m_TetListId(other.m_TetListId)
@@ -39,9 +36,6 @@ TetrahedralGeom::TetrahedralGeom(const TetrahedralGeom& other)
 
 TetrahedralGeom::TetrahedralGeom(TetrahedralGeom&& other) noexcept
 : AbstractGeometry3D(std::move(other))
-, m_VertexListId(std::move(other.m_VertexListId))
-, m_EdgeListId(std::move(other.m_EdgeListId))
-, m_UnsharedEdgeListId(std::move(other.m_UnsharedEdgeListId))
 , m_TriListId(std::move(other.m_TriListId))
 , m_UnsharedTriListId(std::move(other.m_UnsharedTriListId))
 , m_TetListId(std::move(other.m_TetListId))
@@ -379,146 +373,17 @@ complex::TooltipGenerator TetrahedralGeom::getTooltipGenerator() const
   return toolTipGen;
 }
 
-void TetrahedralGeom::resizeVertexList(size_t numVertices)
-{
-  getVertices()->getDataStore()->resizeTuples(numVertices);
-}
-
-void TetrahedralGeom::setVertices(const SharedVertexList* vertices)
-{
-  if(nullptr == vertices)
-  {
-    m_VertexListId.reset();
-    return;
-  }
-  m_VertexListId = vertices->getId();
-}
-
-AbstractGeometry::SharedVertexList* TetrahedralGeom::getVertices()
-{
-  return dynamic_cast<SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
-}
-
-const AbstractGeometry::SharedVertexList* TetrahedralGeom::getVertices() const
-{
-  return dynamic_cast<const SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
-}
-
-void TetrahedralGeom::setCoords(size_t vertId, const complex::Point3D<float>& coords)
-{
-  auto vertices = getVertices();
-  if(!vertices)
-  {
-    return;
-  }
-  const size_t offset = vertId * 3;
-  for(size_t i = 0; i < 3; i++)
-  {
-    (*vertices)[offset + i] = coords[i];
-  }
-}
-
-complex::Point3D<float> TetrahedralGeom::getCoords(size_t vertId) const
-{
-  auto vertices = getVertices();
-  if(!vertices)
-  {
-    return {};
-  }
-  Point3D<float> coords;
-  for(size_t i = 0; i < 3; i++)
-  {
-    coords[i] = vertices->at(vertId * 3 + i);
-  }
-  return coords;
-}
-
-size_t TetrahedralGeom::getNumberOfVertices() const
-{
-  auto vertices = getVertices();
-  if(!vertices)
-  {
-    return 0;
-  }
-  return vertices->getTupleCount();
-}
-
-void TetrahedralGeom::resizeEdgeList(size_t numEdges)
-{
-  getEdges()->getDataStore()->resizeTuples(numEdges);
-}
-
-AbstractGeometry::SharedEdgeList* TetrahedralGeom::getEdges()
-{
-  return dynamic_cast<SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
-}
-
-const AbstractGeometry::SharedEdgeList* TetrahedralGeom::getEdges() const
-{
-  return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
-}
-
-void TetrahedralGeom::setVertsAtEdge(size_t edgeId, const size_t verts[2])
-{
-  auto edges = getEdges();
-  if(!edges)
-  {
-    return;
-  }
-  (*edges)[edgeId * 2] = verts[0];
-  (*edges)[edgeId * 2 + 1] = verts[1];
-}
-
-void TetrahedralGeom::getVertsAtEdge(size_t edgeId, size_t verts[2]) const
-{
-  auto edges = getEdges();
-  if(!edges)
-  {
-    return;
-  }
-  verts[0] = edges->at(edgeId * 2);
-  verts[1] = edges->at(edgeId * 2 + 1);
-}
-
-void TetrahedralGeom::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2) const
-{
-  if(!getEdges())
-  {
-    return;
-  }
-  size_t verts[2];
-  getVertsAtEdge(edgeId, verts);
-  vert1 = getCoords(verts[0]);
-  vert2 = getCoords(verts[1]);
-}
-
-size_t TetrahedralGeom::getNumberOfEdges() const
-{
-  auto edges = getEdges();
-  if(!edges)
-  {
-    return 0;
-  }
-  return edges->getTupleCount();
-}
-
 AbstractGeometry::StatusCode TetrahedralGeom::findEdges()
 {
   auto edgeList = createSharedEdgeList(0);
   GeometryHelpers::Connectivity::FindTetEdges(getTetrahedra(), edgeList);
   if(edgeList == nullptr)
   {
-    m_EdgeListId.reset();
+    setEdges(nullptr);
     return -1;
   }
-  m_EdgeListId = edgeList->getId();
+  setEdges(edgeList);
   return 1;
-}
-
-void TetrahedralGeom::deleteEdges()
-{
-  getDataStructure()->removeData(m_EdgeListId);
-  m_EdgeListId.reset();
 }
 
 AbstractGeometry::StatusCode TetrahedralGeom::findFaces()
@@ -534,12 +399,6 @@ AbstractGeometry::StatusCode TetrahedralGeom::findFaces()
   return 1;
 }
 
-void TetrahedralGeom::deleteFaces()
-{
-  getDataStructure()->removeData(m_TriListId);
-  m_TriListId.reset();
-}
-
 AbstractGeometry::StatusCode TetrahedralGeom::findUnsharedEdges()
 {
   auto dataStore = new DataStore<MeshIndexType>(2, 0);
@@ -547,22 +406,11 @@ AbstractGeometry::StatusCode TetrahedralGeom::findUnsharedEdges()
   GeometryHelpers::Connectivity::FindUnsharedTetEdges(getTetrahedra(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
-    m_UnsharedEdgeListId.reset();
+    setUnsharedEdges(nullptr);
     return -1;
   }
-  m_UnsharedEdgeListId = unsharedEdgeList->getId();
+  setUnsharedEdges(unsharedEdgeList);
   return 1;
-}
-
-const AbstractGeometry::SharedEdgeList* TetrahedralGeom::getUnsharedEdges() const
-{
-  return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_UnsharedEdgeListId));
-}
-
-void TetrahedralGeom::deleteUnsharedEdges()
-{
-  getDataStructure()->removeData(m_UnsharedEdgeListId);
-  m_UnsharedEdgeListId.reset();
 }
 
 AbstractGeometry::StatusCode TetrahedralGeom::findUnsharedFaces()
@@ -577,17 +425,6 @@ AbstractGeometry::StatusCode TetrahedralGeom::findUnsharedFaces()
   }
   m_UnsharedTriListId = unsharedTriList->getId();
   return 1;
-}
-
-const AbstractGeometry::SharedEdgeList* TetrahedralGeom::getUnsharedFaces() const
-{
-  return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_UnsharedTriListId));
-}
-
-void TetrahedralGeom::deleteUnsharedFaces()
-{
-  getDataStructure()->removeData(m_UnsharedTriListId);
-  m_UnsharedTriListId.reset();
 }
 
 void TetrahedralGeom::setElementSizes(const FloatArray* elementSizes)
@@ -643,34 +480,4 @@ void TetrahedralGeom::setElementCentroids(const FloatArray* elementCentroids)
     return;
   }
   m_TetCentroidsId = elementCentroids->getId();
-}
-
-void TetrahedralGeom::setEdges(const SharedEdgeList* edges)
-{
-  if(!edges)
-  {
-    m_EdgeListId.reset();
-    return;
-  }
-  m_EdgeListId = edges->getId();
-}
-
-void TetrahedralGeom::setUnsharedEdges(const SharedEdgeList* bEdgeList)
-{
-  if(!bEdgeList)
-  {
-    m_UnsharedEdgeListId.reset();
-    return;
-  }
-  m_UnsharedEdgeListId = bEdgeList->getId();
-}
-
-void TetrahedralGeom::setUnsharedFaces(const SharedFaceList* bFaceList)
-{
-  if(!bFaceList)
-  {
-    m_UnsharedTriListId.reset();
-    return;
-  }
-  m_UnsharedTriListId = bFaceList->getId();
 }

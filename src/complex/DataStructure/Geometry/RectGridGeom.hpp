@@ -11,7 +11,7 @@ namespace complex
  * @class RectGridGeom
  * @brief
  */
-class COMPLEX_EXPORT RectGridGeom : virtual public AbstractGeometryGrid
+class COMPLEX_EXPORT RectGridGeom : public AbstractGeometryGrid
 {
 public:
   friend class DataStructure;
