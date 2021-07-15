@@ -1,5 +1,4 @@
-#include "PluginLoader.hpp"
-
+#include <dlfcn.h>
 #include <iostream>
 
 #include "complex/Plugin/AbstractPlugin.hpp"

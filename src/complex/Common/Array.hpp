@@ -136,7 +136,7 @@ public:
    */
   inline reference at(size_type index)
   {
-    assert(index < Dimensions);
+    assert((index < Dimensions));
     return m_Array.at(index);
   }
 
@@ -147,7 +147,7 @@ public:
    */
   inline const_reference at(size_type index) const
   {
-    assert(index < Dimensions);
+    assert((index < Dimensions));
     return m_Array.at(index);
   }
 

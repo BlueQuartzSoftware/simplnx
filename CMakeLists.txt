@@ -220,6 +220,14 @@ elseif(UNIX)
   list(APPEND COMPLEX_SRCS
     ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader_Linux.cpp
   )
+  target_link_libraries(complex
+    PUBLIC
+      fmt::fmt
+      nlohmann_json::nlohmann_json
+      nonstd::expected-lite
+      Eigen3::Eigen
+      ${CMAKE_DL_LIBS}
+  )
 endif()
 
 target_sources(complex
