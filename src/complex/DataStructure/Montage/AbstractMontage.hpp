@@ -40,7 +40,6 @@ public:
   /**
    * @brief
    * @param other
-   * @return
    */
   AbstractMontage(AbstractMontage&& other) noexcept;
 
@@ -81,9 +80,16 @@ public:
    * if no geometry was found.
    * @param index
    * @return AbstractGeometry*
-   * @param  index
    */
-  virtual AbstractGeometry* getGeometry(const AbstractTileIndex* index) const = 0;
+  virtual AbstractGeometry* getGeometry(const AbstractTileIndex* index) = 0;
+
+  /**
+   * @brief Returns a pointer to the geometry at the specified tile index. Returns nullptr
+   * if no geometry was found.
+   * @param index
+   * @return const AbstractGeometry*
+   */
+  virtual const AbstractGeometry* getGeometry(const AbstractTileIndex* index) const = 0;
 
   /**
    * @brief Returns the tile index for the specified geometry. This is a pure virtual method

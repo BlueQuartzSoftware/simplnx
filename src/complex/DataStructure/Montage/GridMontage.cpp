@@ -105,7 +105,17 @@ std::shared_ptr<AbstractTileIndex> GridMontage::getTileIndex(AbstractGeometry* g
   return std::shared_ptr<AbstractTileIndex>(new GridTileIndex(this, tilePos.value()));
 }
 
-AbstractGeometry* GridMontage::getGeometry(const AbstractTileIndex* index) const
+AbstractGeometry* GridMontage::getGeometry(const AbstractTileIndex* index)
+{
+  auto pos = dynamic_cast<const GridTileIndex*>(index);
+  if(!pos)
+  {
+    return nullptr;
+  }
+  return getGeometry(pos->getTilePos());
+}
+
+const AbstractGeometry* GridMontage::getGeometry(const AbstractTileIndex* index) const
 {
   auto pos = dynamic_cast<const GridTileIndex*>(index);
   if(!pos)
@@ -121,7 +131,7 @@ AbstractGeometry* GridMontage::getGeometry(const SizeVec3& position)
   return getCollection()[index];
 }
 
-AbstractGeometry* GridMontage::getGeometry(const SizeVec3& position) const
+const AbstractGeometry* GridMontage::getGeometry(const SizeVec3& position) const
 {
   size_t index = getOffsetFromTilePos(position);
   return getCollection()[index];

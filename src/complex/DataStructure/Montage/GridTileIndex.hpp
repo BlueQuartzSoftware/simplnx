@@ -13,29 +13,27 @@ class GridMontage;
  *
  */
 
-class COMPLEX_EXPORT GridTileIndex : virtual public AbstractTileIndex
+class COMPLEX_EXPORT GridTileIndex : public AbstractTileIndex
 {
 public:
-  // Constructors/Destructors
-  //
-
+  friend class GridMontage;
+  
   /**
-   * Empty Constructor
+   * @brief Empty Constructor
    */
   GridTileIndex();
-  GridTileIndex(const GridTileIndex& other);
-  GridTileIndex(GridTileIndex&& other) noexcept;
 
   /**
-   * Empty Destructor
+   * @brief Copy constructor
    */
+  GridTileIndex(const GridTileIndex& other);
+
+  /**
+   * @brief Move constructor
+   */
+  GridTileIndex(GridTileIndex&& other) noexcept;
+
   virtual ~GridTileIndex();
-
-  // Static Public attributes
-  //
-
-  // Public attributes
-  //
 
   /**
    * @return size_t
@@ -60,7 +58,7 @@ public:
   /**
    * @return AbstractGeometry*
    */
-  AbstractGeometry* getGeometry() const override;
+  const AbstractGeometry* getGeometry() const override;
 
   /**
    * @return TooltipGenerator
@@ -73,18 +71,12 @@ public:
   bool isValid() const override;
 
 protected:
-  // Static Protected attributes
-  //
-
-  // Protected attributes
-  //
-
   /**
    * @brief
    * @param montage
    * @param pos
    */
-  GridTileIndex(GridMontage* montage, const SizeVec3& pos);
+  GridTileIndex(const GridMontage* montage, const SizeVec3& pos);
 
 private:
   SizeVec3 m_Pos;

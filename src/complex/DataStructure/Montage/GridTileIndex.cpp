@@ -49,16 +49,6 @@ SizeVec3 GridTileIndex::getTilePos() const
   return m_Pos;
 }
 
-AbstractGeometry* GridTileIndex::getGeometry()
-{
-  auto montage = dynamic_cast<const GridMontage*>(getMontage());
-  if(!montage)
-  {
-    return nullptr;
-  }
-  return montage->getGeometry(this);
-}
-
 const AbstractGeometry* GridTileIndex::getGeometry() const
 {
   auto montage = dynamic_cast<const GridMontage*>(getMontage());

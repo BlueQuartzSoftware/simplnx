@@ -41,13 +41,13 @@ public:
    * @brief Returns the montage linked to this tile index.
    * @return AbstractMontage*
    */
-  AbstractMontage* getMontage() const;
+  const AbstractMontage* getMontage() const;
 
   /**
    * @brief Returns the geometry specified by the tile index.
    * @return AbstractGeometry*
    */
-  virtual AbstractGeometry* getGeometry() const = 0;
+  virtual const AbstractGeometry* getGeometry() const = 0;
 
   /**
    * @brief Checks if the index contains matches the conditions to be
@@ -65,11 +65,12 @@ public:
 
 protected:
   /**
+   * @brief Constructor taking 
    * @param montage
    */
-  AbstractTileIndex(AbstractMontage* montage);
+  AbstractTileIndex(const AbstractMontage* montage);
 
 private:
-  AbstractMontage* m_Montage = nullptr;
+  const AbstractMontage* m_Montage = nullptr;
 };
 } // namespace complex
