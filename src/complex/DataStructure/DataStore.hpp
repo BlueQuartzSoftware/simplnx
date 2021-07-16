@@ -136,10 +136,10 @@ public:
   typename IDataStore<T>::const_reference at(size_t index) const override
   {
     if(index >= IDataStore<T>::getSize())
-    if(index >= this->getSize())
-    {
-      throw std::runtime_error("");
-    }
+      if(index >= this->getSize())
+      {
+        throw std::runtime_error("");
+      }
     return m_Data[index];
   }
 
@@ -151,10 +151,10 @@ public:
   {
     auto copy = new DataStore(*this);
     for(size_t i = 0; i < IDataStore<T>::getSize(); i++)
-    for(size_t i = 0; i < this->getSize(); i++)
-    {
-      copy->setValue(i, getValue(i));
-    }
+      for(size_t i = 0; i < this->getSize(); i++)
+      {
+        copy->setValue(i, getValue(i));
+      }
     return copy;
   }
 

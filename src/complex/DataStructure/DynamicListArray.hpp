@@ -218,9 +218,9 @@ public:
       ncells = reinterpret_cast<T*>(bufPtr + offset);
       this->m_Array[i].ncells = *ncells; // Set the number of cells in this link
       offset += 2;
-      this->m_Array[i].cells = new K[(*ncells)];                                // Allocate a new chunk of memory to store the list
+      this->m_Array[i].cells = new K[(*ncells)];                                   // Allocate a new chunk of memory to store the list
       std::memcpy(this->m_Array[i].cells, bufPtr + offset, (*ncells) * sizeof(K)); // Copy from the buffer into the new list memory
-      offset += (*ncells) * sizeof(K);                                          // Increment the offset
+      offset += (*ncells) * sizeof(K);                                             // Increment the offset
     }
   }
 

@@ -320,7 +320,7 @@ public:
    * @brief Vec2 Default constructor initializes all values to ZERO.
    */
   Vec2()
-  : Array<T,2>()
+  : Array<T, 2>()
   {
   }
 
@@ -340,7 +340,7 @@ public:
    * @param data
    */
   Vec2(const std::array<T, 2>& data)
-  : Array<T,2>(data)
+  : Array<T, 2>(data)
   {
   }
 
@@ -360,7 +360,7 @@ public:
    * @param data
    */
   Vec2(const T* data)
-  : Array<T,2>(data)
+  : Array<T, 2>(data)
   {
   }
 
@@ -370,7 +370,7 @@ public:
    * @param data
    */
   Vec2(const std::vector<T>& data)
-  : Array<T,2>(data)
+  : Array<T, 2>(data)
   {
   }
 
@@ -460,7 +460,7 @@ public:
    * @param other
    */
   Vec3(const Vec3& other)
-  : Array<T,3>(other)
+  : Array<T, 3>(other)
   {
   }
 
@@ -469,7 +469,7 @@ public:
    * @param other
    */
   Vec3(Vec3&& other) noexcept
-  : Array<T,3>(std::move(other))
+  : Array<T, 3>(std::move(other))
   {
   }
 
@@ -501,7 +501,7 @@ public:
    * @brief Vec3 Default constructor initializes all values to ZERO.
    */
   Vec3()
-  : Array<T,3>()
+  : Array<T, 3>()
   {
   }
 
@@ -523,7 +523,7 @@ public:
    * @param data
    */
   Vec3(const std::array<T, 3>& data)
-  : Array<T,3>(data)
+  : Array<T, 3>(data)
   {
   }
 
@@ -544,7 +544,7 @@ public:
    * @param data
    */
   Vec3(const T* data)
-  : Array<T,3>(data)
+  : Array<T, 3>(data)
   {
   }
 
@@ -554,7 +554,7 @@ public:
    * @param data
    */
   Vec3(const std::vector<T>& data)
-  : Array<T,3>(data)
+  : Array<T, 3>(data)
   {
   }
 
@@ -661,7 +661,7 @@ public:
    * @param other
    */
   Vec4(const Vec4& other)
-  : Array<T,4>(other)
+  : Array<T, 4>(other)
   {
   }
 
@@ -670,7 +670,7 @@ public:
    * @param other
    */
   Vec4(Vec4&& other) noexcept
-  : Array<T,4>(std::move(other))
+  : Array<T, 4>(std::move(other))
   {
   }
 
@@ -702,7 +702,7 @@ public:
    * @brief Vec4 Default constructor initializes all values to ZERO.
    */
   Vec4()
-  : Array<T,4>()
+  : Array<T, 4>()
   {
   }
 
@@ -726,7 +726,7 @@ public:
    * @param data
    */
   Vec4(const std::array<T, 4>& data)
-  : Array<T,4>(data)
+  : Array<T, 4>(data)
   {
   }
 
@@ -748,7 +748,7 @@ public:
    * @param data
    */
   Vec4(const T* data)
-  : Array<T,4>(data)
+  : Array<T, 4>(data)
   {
   }
 
@@ -758,7 +758,7 @@ public:
    * @param data
    */
   Vec4(const std::vector<T>& data)
-  : Array<T,4>(data)
+  : Array<T, 4>(data)
   {
   }
 
@@ -884,7 +884,7 @@ public:
    * @param other
    */
   Vec6(const Vec6& other)
-  : Array<T,4>(other)
+  : Array<T, 4>(other)
   {
   }
 
@@ -893,7 +893,7 @@ public:
    * @param other
    */
   Vec6(Vec6&& other) noexcept
-  : Array<T,4>(std::move(other))
+  : Array<T, 4>(std::move(other))
   {
   }
 
@@ -925,7 +925,7 @@ public:
    * @brief Vec6 Default constructor initializes all values to ZERO.
    */
   Vec6()
-  : Array<T,4>()
+  : Array<T, 4>()
   {
   }
 
@@ -953,7 +953,7 @@ public:
    * @param data
    */
   Vec6(const std::array<T, 6>& data)
-  : Array<T,6>(data)
+  : Array<T, 6>(data)
   {
   }
 
@@ -977,7 +977,7 @@ public:
    * @param data
    */
   Vec6(const T* data)
-  : Array<T,6>(data)
+  : Array<T, 6>(data)
   {
   }
 
@@ -987,7 +987,7 @@ public:
    * @param data
    */
   Vec6(const std::vector<T>& data)
-  : Array<T,6>(data)
+  : Array<T, 6>(data)
   {
   }
 
@@ -1046,7 +1046,7 @@ public:
    * @param other
    */
   Vec7(const Vec7& other)
-  : Array<T,7>(other)
+  : Array<T, 7>(other)
   {
   }
 
@@ -1055,7 +1055,7 @@ public:
    * @param other
    */
   Vec7(Vec7&& other) noexcept
-  : Array<T,7>(std::move(other))
+  : Array<T, 7>(std::move(other))
   {
   }
 
@@ -1087,7 +1087,7 @@ public:
    * @brief Vec7 Default constructor initializes all values to ZERO.
    */
   Vec7()
-  : Array<T,7>()
+  : Array<T, 7>()
   {
   }
 
@@ -1117,7 +1117,7 @@ public:
    * @param data
    */
   Vec7(const std::array<T, 7>& data)
-  : Array<T,7>(data)
+  : Array<T, 7>(data)
   {
   }
 
@@ -1142,7 +1142,7 @@ public:
    * @param data
    */
   Vec7(const T* data)
-  : Array<T,7>(data)
+  : Array<T, 7>(data)
   {
   }
 
@@ -1152,7 +1152,7 @@ public:
    * @param data
    */
   Vec7(const std::vector<T>& data)
-  : Array<T,7>()
+  : Array<T, 7>()
   {
   }
 
