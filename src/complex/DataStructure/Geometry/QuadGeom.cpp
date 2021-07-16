@@ -24,9 +24,6 @@ QuadGeom::QuadGeom(DataStructure* ds, const std::string& name, const std::shared
 
 QuadGeom::QuadGeom(const QuadGeom& other)
 : AbstractGeometry2D(other)
-, m_VertexListId(other.m_VertexListId)
-, m_EdgeListId(other.m_EdgeListId)
-, m_UnsharedEdgeListId(other.m_UnsharedEdgeListId)
 , m_QuadListId(other.m_QuadListId)
 , m_QuadsContainingVertId(other.m_QuadsContainingVertId)
 , m_QuadNeighborsId(other.m_QuadNeighborsId)
@@ -37,9 +34,6 @@ QuadGeom::QuadGeom(const QuadGeom& other)
 
 QuadGeom::QuadGeom(QuadGeom&& other) noexcept
 : AbstractGeometry2D(std::move(other))
-, m_VertexListId(std::move(other.m_VertexListId))
-, m_EdgeListId(std::move(other.m_EdgeListId))
-, m_UnsharedEdgeListId(std::move(other.m_UnsharedEdgeListId))
 , m_QuadListId(std::move(other.m_QuadListId))
 , m_QuadsContainingVertId(std::move(other.m_QuadsContainingVertId))
 , m_QuadNeighborsId(std::move(other.m_QuadNeighborsId))
@@ -315,31 +309,6 @@ complex::TooltipGenerator QuadGeom::getTooltipGenerator() const
   return toolTipGen;
 }
 
-void QuadGeom::resizeVertexList(size_t numVertices)
-{
-  getVertices()->getDataStore()->resizeTuples(numVertices);
-}
-
-void QuadGeom::setVertices(const SharedVertexList* vertices)
-{
-  if(!vertices)
-  {
-    m_VertexListId.reset();
-    return;
-  }
-  m_VertexListId = vertices->getId();
-}
-
-AbstractGeometry::SharedVertexList* QuadGeom::getVertices()
-{
-  return dynamic_cast<SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
-}
-
-const AbstractGeometry::SharedVertexList* QuadGeom::getVertices() const
-{
-  return dynamic_cast<const SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
-}
-
 void QuadGeom::setCoords(size_t vertId, const Point3D<float>& coord)
 {
   auto verts = getVertices();
@@ -380,38 +349,6 @@ void QuadGeom::resizeEdgeList(size_t numEdges)
   getEdges()->getDataStore()->resizeTuples(numEdges);
 }
 
-AbstractGeometry::SharedEdgeList* QuadGeom::getEdges()
-{
-  return dynamic_cast<SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
-}
-
-const AbstractGeometry::SharedEdgeList* QuadGeom::getEdges() const
-{
-  return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
-}
-
-void QuadGeom::setVertsAtEdge(size_t edgeId, const size_t verts[2])
-{
-  auto edges = getEdges();
-  if(!edges)
-  {
-    return;
-  }
-  (*edges)[edgeId * 2] = verts[0];
-  (*edges)[edgeId * 2 + 1] = verts[1];
-}
-
-void QuadGeom::getVertsAtEdge(size_t edgeId, size_t verts[2]) const
-{
-  auto edges = getEdges();
-  if(!edges)
-  {
-    return;
-  }
-  verts[0] = edges->at(edgeId * 2);
-  verts[1] = edges->at(edgeId * 2 + 1);
-}
-
 void QuadGeom::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2) const
 {
   if(!getEdges())
@@ -434,33 +371,17 @@ void QuadGeom::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float>& vert1
   }
 }
 
-size_t QuadGeom::getNumberOfEdges() const
-{
-  auto edges = getEdges();
-  if(!edges)
-  {
-    return 0;
-  }
-  return edges->getTupleCount();
-}
-
 AbstractGeometry::StatusCode QuadGeom::findEdges()
 {
   auto edgeList = createSharedEdgeList(0);
   GeometryHelpers::Connectivity::Find2DElementEdges(getQuads(), edgeList);
   if(edgeList == nullptr)
   {
-    m_EdgeListId.reset();
+    setEdges(nullptr);
     return -1;
   }
-  m_EdgeListId = edgeList->getId();
+  setEdges(edgeList);
   return 1;
-}
-
-void QuadGeom::deleteEdges()
-{
-  getDataStructure()->removeData(m_EdgeListId);
-  m_EdgeListId.reset();
 }
 
 AbstractGeometry::StatusCode QuadGeom::findUnsharedEdges()
@@ -470,42 +391,11 @@ AbstractGeometry::StatusCode QuadGeom::findUnsharedEdges()
   GeometryHelpers::Connectivity::Find2DUnsharedEdges(getQuads(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
-    m_UnsharedEdgeListId.reset();
+    setUnsharedEdges(nullptr);
     return -1;
   }
-  m_UnsharedEdgeListId = unsharedEdgeList->getId();
+  setUnsharedEdges(unsharedEdgeList);
   return 1;
-}
-
-const AbstractGeometry::SharedEdgeList* QuadGeom::getUnsharedEdges() const
-{
-  return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_UnsharedEdgeListId));
-}
-
-void QuadGeom::deleteUnsharedEdges()
-{
-  getDataStructure()->removeData(m_UnsharedEdgeListId);
-  m_UnsharedEdgeListId.reset();
-}
-
-void QuadGeom::setEdges(const SharedEdgeList* edges)
-{
-  if(!edges)
-  {
-    m_EdgeListId.reset();
-    return;
-  }
-  m_EdgeListId = edges->getId();
-}
-
-void QuadGeom::setUnsharedEdges(const SharedEdgeList* bEdgeList)
-{
-  if(!bEdgeList)
-  {
-    m_UnsharedEdgeListId.reset();
-    return;
-  }
-  m_UnsharedEdgeListId = bEdgeList->getId();
 }
 
 uint32_t QuadGeom::getXdmfGridType() const

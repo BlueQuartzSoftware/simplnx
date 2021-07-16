@@ -188,7 +188,7 @@ public:
    * @return ScalarData<T>*
    */
   template <typename T>
-  ScalarData<T>* createScalar(const std::string& name, T defaultValue, std::optional<DataObject::IdType> parent = {})
+  ScalarData<T>* createScalar(const std::string& name, T defaultValue, const std::optional<DataObject::IdType>& parent = {})
   {
     auto scalar = std::shared_ptr<ScalarData<T>>(new ScalarData<T>(this, name, defaultValue));
     if(!finishAddingObject(scalar, parent))
@@ -208,14 +208,15 @@ public:
    * @return DataArray<T>*
    */
   template <typename T>
-  DataArray<T>* createDataArray(const std::string& name, IDataStore<T>* dataStore, std::optional<DataObject::IdType> parent = {})
+  DataArray<T>* createDataArray(const std::string& name, IDataStore<T>* dataStore, const std::optional<DataObject::IdType>& parent = {})
   {
-    std::shared_ptr<DataArray<T>> dataArr(new DataArray<T>(this, name, dataStore));
-    if(!finishAddingObject(dataArr, parent))
+    DataArray<T>* dataArr = new DataArray<T>(this, name, dataStore);
+    std::shared_ptr<DataObject> dataArrPtr(dataArr);
+    if(!finishAddingObject(dataArrPtr, parent))
     {
       return nullptr;
     }
-    return dataArr.get();
+    return dataArr;
   }
 
   /**
@@ -227,7 +228,7 @@ public:
    * @return DynamicListArray*
    */
   template <typename T, typename K>
-  DynamicListArray<T, K>* createDynamicList(const std::string& name, std::optional<DataObject::IdType> parent = {})
+  DynamicListArray<T, K>* createDynamicList(const std::string& name, const std::optional<DataObject::IdType>& parent = {})
   {
     std::shared_ptr<DynamicListArray<T, K>> dyList(new DynamicListArray<T, K>(this, name));
     if(!finishAddingObject(dyList, parent))
@@ -244,7 +245,7 @@ public:
    * @param parent
    * @return DataGroup*
    */
-  DataGroup* createGroup(const std::string& name, std::optional<DataObject::IdType> parent = {});
+  DataGroup* createGroup(const std::string& name, const std::optional<DataObject::IdType>& parent = {});
 
   /**
    * @brief Creates a specified montage type and adds it to the DataStructure.
@@ -256,7 +257,7 @@ public:
    * @return AbstractMontage*
    */
   template <class T>
-  AbstractMontage* createMontage(const std::string& name, std::optional<DataObject::IdType> parent = {})
+  AbstractMontage* createMontage(const std::string& name, const std::optional<DataObject::IdType>& parent = {})
   {
     AbstractMontage* montage = new T(this, name);
     std::shared_ptr<DataObject> montagePtr(montage);
@@ -277,7 +278,7 @@ public:
    * @return AbstractGeometry*
    */
   template <class T>
-  AbstractGeometry* createGeometry(const std::string& name, std::optional<DataObject::IdType> parent = {})
+  AbstractGeometry* createGeometry(const std::string& name, const std::optional<DataObject::IdType>& parent = {})
   {
     std::shared_ptr<AbstractGeometry> geometry(new T(this, name));
     if(!finishAddingObject(geometry, parent))
@@ -382,7 +383,7 @@ protected:
    * @param parent = {}
    * @return bool
    */
-  bool finishAddingObject(const std::shared_ptr<DataObject>& obj, std::optional<DataObject::IdType> parent = {});
+  bool finishAddingObject(const std::shared_ptr<DataObject>& obj, const std::optional<DataObject::IdType>& parent = {});
 
 private:
   /**

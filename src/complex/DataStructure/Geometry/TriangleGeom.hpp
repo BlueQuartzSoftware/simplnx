@@ -210,30 +210,6 @@ public:
 
   /**
    * @brief
-   * @param newNumVertices
-   */
-  void resizeVertexList(size_t newNumVertices) override;
-
-  /**
-   * @brief
-   * @param vertices
-   */
-  void setVertices(const SharedVertexList* vertices) override;
-
-  /**
-   * @brief
-   * @return SharedVertexList*
-   */
-  SharedVertexList* getVertices() override;
-
-  /**
-   * @brief
-   * @return const SharedVertexList*
-   */
-  const SharedVertexList* getVertices() const override;
-
-  /**
-   * @brief
    * @param vertId
    * @param coords
    */
@@ -265,37 +241,6 @@ public:
 
   /**
    * @brief
-   * @return SharedEdgeList*
-   */
-  SharedEdgeList* getEdges() override;
-
-  /**
-   * @brief
-   * @return const SharedEdgeList*
-   */
-  const SharedEdgeList* getEdges() const override;
-
-  /**
-   * @brief
-   */
-  void deleteEdges() override;
-
-  /**
-   * @brief
-   * @param edgeId
-   * @param verts
-   */
-  void setVertsAtEdge(size_t edgeId, const size_t verts[2]) override;
-
-  /**
-   * @brief
-   * @param edgeId
-   * @param verts
-   */
-  void getVertsAtEdge(size_t edgeId, size_t verts[2]) const override;
-
-  /**
-   * @brief
    * @param edgeId
    * @param vert1
    * @param vert2
@@ -304,26 +249,9 @@ public:
 
   /**
    * @brief
-   * @return size_t
-   */
-  size_t getNumberOfEdges() const override;
-
-  /**
-   * @brief
    * @return StatusCode
    */
   StatusCode findUnsharedEdges() override;
-
-  /**
-   * @brief
-   * @return std::const SharedEdgeList*
-   */
-  const SharedEdgeList* getUnsharedEdges() const override;
-
-  /**
-   * @brief
-   */
-  void deleteUnsharedEdges() override;
 
   /**
    * @brief
@@ -398,22 +326,7 @@ protected:
    */
   void setElementSizes(const FloatArray* elementSizes) override;
 
-  /**
-   * @brief
-   * @param edges
-   */
-  void setEdges(const SharedEdgeList* edges) override;
-
-  /**
-   * @brief
-   * @param bEdgeList
-   */
-  void setUnsharedEdges(const SharedEdgeList* bEdgeList) override;
-
 private:
-  std::optional<DataObject::IdType> m_VertexListId;
-  std::optional<DataObject::IdType> m_EdgeListId;
-  std::optional<DataObject::IdType> m_UnsharedEdgeListId;
   std::optional<DataObject::IdType> m_TriListId;
   std::optional<DataObject::IdType> m_TrianglesContainingVertId;
   std::optional<DataObject::IdType> m_TriangleNeighborsId;

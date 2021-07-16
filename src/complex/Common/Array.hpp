@@ -136,7 +136,7 @@ public:
    */
   inline reference at(size_type index)
   {
-    assert(index < Dimensions);
+    assert((index < Dimensions));
     return m_Array.at(index);
   }
 
@@ -147,7 +147,7 @@ public:
    */
   inline const_reference at(size_type index) const
   {
-    assert(index < Dimensions);
+    assert((index < Dimensions));
     return m_Array.at(index);
   }
 
@@ -319,7 +319,10 @@ public:
   /**
    * @brief Vec2 Default constructor initializes all values to ZERO.
    */
-  Vec2() = default;
+  Vec2()
+  : Array<T, 2>()
+  {
+  }
 
   /**
    * @brief Vec2 constructor taking both X and Y values
@@ -497,7 +500,10 @@ public:
   /**
    * @brief Vec3 Default constructor initializes all values to ZERO.
    */
-  Vec3() = default;
+  Vec3()
+  : Array<T, 3>()
+  {
+  }
 
   /**
    * @brief Constructs a Vec3 using individual X, Y, and Z values.
@@ -695,7 +701,10 @@ public:
   /**
    * @brief Vec4 Default constructor initializes all values to ZERO.
    */
-  Vec4() = default;
+  Vec4()
+  : Array<T, 4>()
+  {
+  }
 
   /**
    * @brief Constructs a Vec4 using X, Y, Z, and W values.
@@ -875,7 +884,7 @@ public:
    * @param other
    */
   Vec6(const Vec6& other)
-  : Array<T, 6>(other)
+  : Array<T, 4>(other)
   {
   }
 
@@ -884,7 +893,7 @@ public:
    * @param other
    */
   Vec6(Vec6&& other) noexcept
-  : Array<T, 6>(std::move(other))
+  : Array<T, 4>(std::move(other))
   {
   }
 
@@ -915,7 +924,10 @@ public:
   /**
    * @brief Vec6 Default constructor initializes all values to ZERO.
    */
-  Vec6() = default;
+  Vec6()
+  : Array<T, 4>()
+  {
+  }
 
   /**
    * @brief Constructs a Vec6 using specified values.
@@ -1074,7 +1086,10 @@ public:
   /**
    * @brief Vec7 Default constructor initializes all values to ZERO.
    */
-  Vec7() = default;
+  Vec7()
+  : Array<T, 7>()
+  {
+  }
 
   /**
    * @brief Constructs a Vec7 with the specified values.
@@ -1137,7 +1152,7 @@ public:
    * @param data
    */
   Vec7(const std::vector<T>& data)
-  : Array<T, 7>(data)
+  : Array<T, 7>()
   {
   }
 
@@ -1152,7 +1167,7 @@ public:
    * @param k
    * @param l
    */
-  inline void setValues(const T& x, const T& y, const T& z, const T& i, const T& j, const T& k, const T& l)
+  void setValues(const T& x, const T& y, const T& z, const T& i, const T& j, const T& k, const T& l)
   {
     (*this)[0] = x;
     (*this)[1] = y;

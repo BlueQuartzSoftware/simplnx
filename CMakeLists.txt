@@ -117,6 +117,11 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
 
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/AbstractMontage.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/AbstractTileIndex.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/GridMontage.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/GridTileIndex.hpp
+
   ${COMPLEX_SOURCE_DIR}/DataStructure/BaseGroup.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataGroup.hpp
@@ -179,6 +184,11 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.cpp
 
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/AbstractMontage.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/AbstractTileIndex.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/GridMontage.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/GridTileIndex.cpp
+
   ${COMPLEX_SOURCE_DIR}/DataStructure/BaseGroup.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataGroup.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataMap.cpp
@@ -209,6 +219,14 @@ if(WIN32)
 elseif(UNIX)
   list(APPEND COMPLEX_SRCS
     ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader_Linux.cpp
+  )
+  target_link_libraries(complex
+    PUBLIC
+      fmt::fmt
+      nlohmann_json::nlohmann_json
+      nonstd::expected-lite
+      Eigen3::Eigen
+      ${CMAKE_DL_LIBS}
   )
 endif()
 

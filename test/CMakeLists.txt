@@ -9,6 +9,7 @@ add_executable(complex_test
   GeometryTest.cpp
   DataStructObserver.hpp
   DataStructObserver.cpp
+  MontageTest.cpp
 )
 
 target_link_libraries(complex_test

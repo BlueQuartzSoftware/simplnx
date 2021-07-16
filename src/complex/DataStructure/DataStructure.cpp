@@ -61,7 +61,7 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
 {
   try
   {
-    std::vector<size_t> pathIds;
+    std::vector<DataObject::IdType> pathIds;
     const DataObject* data = m_RootGroup[path[0]];
     const BaseGroup* parent = dynamic_cast<const BaseGroup*>(data);
     pathIds.push_back(data->getId());
@@ -302,7 +302,7 @@ bool DataStructure::removeTopLevel(DataObject* data)
   return true;
 }
 
-DataGroup* DataStructure::createGroup(const std::string& name, std::optional<DataObject::IdType> parent)
+DataGroup* DataStructure::createGroup(const std::string& name, const std::optional<DataObject::IdType>& parent)
 {
   auto container = std::make_shared<DataGroup>(this, name);
   if(!finishAddingObject(container, parent))
@@ -312,7 +312,7 @@ DataGroup* DataStructure::createGroup(const std::string& name, std::optional<Dat
   return container.get();
 }
 
-bool DataStructure::finishAddingObject(const std::shared_ptr<DataObject>& obj, std::optional<DataObject::IdType> parent)
+bool DataStructure::finishAddingObject(const std::shared_ptr<DataObject>& obj, const std::optional<DataObject::IdType>& parent)
 {
   if(parent.has_value())
   {

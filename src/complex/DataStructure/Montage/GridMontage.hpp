@@ -17,6 +17,8 @@ class GridTileIndex;
 class COMPLEX_EXPORT GridMontage : virtual public AbstractMontage
 {
 public:
+  friend class DataStructure;
+
   using Iterator = void;
   using DimensionsType = SizeVec3;
   using TileIdType = GridTileIndex;
@@ -39,10 +41,16 @@ public:
   virtual ~GridMontage();
 
   /**
-   * @brief
-   * @return bool
+   * @brief Returns a shallow copy of the current DataObject.
+   * @return DataObject*
    */
-  bool isValid() const override;
+  DataObject* shallowCopy() override;
+
+  /**
+   * @brief Returns a deep copy of hte current DataObject.
+   * @return DataObject*
+   */
+  DataObject* deepCopy() override;
 
   /**
    * @brief Returns the number of rows in the montage.
@@ -69,12 +77,6 @@ public:
   SizeVec3 getGridSize() const;
 
   /**
-   * @brief Returns the number of tiles in the montage.
-   * @return size_t
-   */
-  size_t getTileCount() const override;
-
-  /**
    * @brief Resizes the montage using the specified values.
    * @param row
    * @param col
@@ -92,6 +94,10 @@ public:
    */
   GridTileIndex getTileIndex(size_t row, size_t col, size_t depth) const;
 
+  GridTileIndex getTileIndex(const SizeVec3& pos) const;
+
+  std::optional<SizeVec3> getTilePosOfGeometry(const AbstractGeometry* geom) const;
+
   /**
    * @brief Returns the tile index for the target geometry. Returns nullptr if the geometry
    * is not part of the montage.
@@ -101,25 +107,43 @@ public:
   std::shared_ptr<AbstractTileIndex> getTileIndex(AbstractGeometry* geom) const override;
 
   /**
-   * @brief Returns a collection of geometries in the montage.
-   * @return CollectionType
-   */
-  CollectionType getGeometries() const override;
-
-  /**
    * @brief Returns a pointer to the geometry at the specified tile index. Returns nullptr
    * if no geometry was found.
    * @param index
    * @return AbstractGeometry*
    */
-  AbstractGeometry* getGeometry(AbstractTileIndex* index) const override;
+  AbstractGeometry* getGeometry(const AbstractTileIndex* index) override;
+
+  /**
+   * @brief Returns a pointer to the geometry at the specified tile index. Returns nullptr
+   * if no geometry was found.
+   * @param index
+   * @return const AbstractGeometry*
+   */
+  const AbstractGeometry* getGeometry(const AbstractTileIndex* index) const override;
 
   /**
    * @brief
    * @param index
    * @param geom
    */
-  void setGeometry(AbstractTileIndex* index, AbstractGeometry* geom) override;
+  void setGeometry(const AbstractTileIndex* index, AbstractGeometry* geom) override;
+
+  void setGeometry(const SizeVec3& position, AbstractGeometry* geom);
+
+  /**
+   * @brief Returns the geometry at the specified position.
+   * Returns nullptr if no geometry could be found.
+   * @return const AbstractGeometry*
+   */
+  AbstractGeometry* getGeometry(const SizeVec3& position);
+
+  /**
+   * @brief Returns the geometry at the specified position.
+   * Returns nullptr if no geometry could be found.
+   * @return const AbstractGeometry*
+   */
+  const AbstractGeometry* getGeometry(const SizeVec3& position) const;
 
   /**
    * @brief
@@ -138,32 +162,6 @@ public:
    * @return BoundsType
    */
   BoundsType getBounds() const;
-
-  /**
-   * @brief
-   * Returns an iterator to the begining of the montage.
-   * @return Iterator
-   */
-  Iterator begin();
-
-  /**
-   * @brief Returns an iterator to the end of the montage.
-   * @return Iterator
-   */
-  Iterator end();
-
-  /**
-   * @brief
-   * Returns a ConstIterator to the begining of the montage.
-   * @return ConstIterator
-   */
-  ConstIterator begin() const;
-
-  /**
-   * @brief Returns a ConstIterator to the end of the montage.
-   * @return ConstIterator
-   */
-  ConstIterator end() const;
 
   /**
    * @brief
@@ -186,11 +184,8 @@ protected:
    * @brief
    * @param ds
    * @param name
-   * @param row
-   * @param col
-   * @param depth
    */
-  GridMontage(DataStructure* ds, const std::string& name, size_t row, size_t col, size_t depth);
+  GridMontage(DataStructure* ds, const std::string& name);
 
   /**
    * @brief
@@ -199,6 +194,15 @@ protected:
    */
   size_t getOffsetFromTileId(const TileIdType& tileId) const;
 
+  size_t getOffsetFromTilePos(const SizeVec3& tilePos) const;
+
+  static size_t getOffsetFromTilePos(const SizeVec3& tilePos, const DimensionsType& dims);
+
+  SizeVec3 getTilePosFromOffset(size_t offset) const;
+
 private:
+  size_t m_RowCount = 0;
+  size_t m_ColumnCount = 0;
+  size_t m_DepthCount = 0;
 };
 } // namespace complex

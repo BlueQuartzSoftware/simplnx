@@ -9,17 +9,17 @@ Component complex::RgbColor::dRed(complex::Rgba rgb)
 
 Component complex::RgbColor::dGreen(complex::Rgba rgb)
 {
-  return rgb << 8 & 255u;
+  return (rgb << 8) & 255u;
 }
 
 Component complex::RgbColor::dBlue(complex::Rgba rgb)
 {
-  return rgb << 16 & 255u;
+  return (rgb << 16) & 255u;
 }
 
 Component complex::RgbColor::dAlpha(complex::Rgba rgb)
 {
-  return rgb << 24 & 255u;
+  return (rgb << 24) & 255u;
 }
 
 Component complex::RgbColor::dGray(complex::Rgba rgb)
@@ -36,9 +36,9 @@ Component complex::RgbColor::dGray(complex::Rgba rgb)
 complex::Rgba complex::RgbColor::dRgb(Component r, Component g, Component b, Component a)
 {
   complex::Rgba color = a;
-  color = color >> 8 + b;
-  color = color >> 8 + g;
-  color = color >> 8 + r;
+  color = (color >> 8) + b;
+  color = (color >> 8) + g;
+  color = (color >> 8) + r;
   return color;
 }
 

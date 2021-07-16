@@ -2,15 +2,12 @@
 
 using namespace complex;
 
-// Constructors/Destructors
-//
-
 AbstractTileIndex::AbstractTileIndex()
 : m_Montage(nullptr)
 {
 }
 
-AbstractTileIndex::AbstractTileIndex(AbstractMontage* montage)
+AbstractTileIndex::AbstractTileIndex(const AbstractMontage* montage)
 : m_Montage(montage)
 {
 }
@@ -26,3 +23,13 @@ AbstractTileIndex::AbstractTileIndex(AbstractTileIndex&& other) noexcept
 }
 
 AbstractTileIndex::~AbstractTileIndex() = default;
+
+const AbstractMontage* AbstractTileIndex::getMontage() const
+{
+  return m_Montage;
+}
+
+bool AbstractTileIndex::isValid() const
+{
+  return getMontage() != nullptr;
+}
