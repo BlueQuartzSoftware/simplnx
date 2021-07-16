@@ -1,5 +1,7 @@
 #include "GridMontage.hpp"
 
+#include <stdexcept>
+
 #include "complex/DataStructure/DataStructure.hpp"
 
 using namespace complex;
@@ -28,7 +30,7 @@ DataObject* GridMontage::shallowCopy()
 
 DataObject* GridMontage::deepCopy()
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 size_t GridMontage::getRowCount() const
@@ -162,7 +164,7 @@ void GridMontage::setGeometry(const SizeVec3& position, AbstractGeometry* geom)
 
 TooltipGenerator GridMontage::getTooltipGenerator() const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 GridMontage::DimensionsType GridMontage::getDimensions() const
@@ -172,17 +174,17 @@ GridMontage::DimensionsType GridMontage::getDimensions() const
 
 GridMontage::BoundsType GridMontage::getBounds() const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType GridMontage::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 H5::ErrorType GridMontage::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 SizeVec3 GridMontage::getTilePosFromOffset(size_t offset) const
