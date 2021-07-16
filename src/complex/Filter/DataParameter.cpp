@@ -2,8 +2,8 @@
 
 namespace complex
 {
-DataParameter::DataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const std::optional<std::any>& defaultValue, Category category)
-: AbstractParameter(name, humanName, helpText, defaultValue)
+DataParameter::DataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, Category category)
+: AbstractParameter(name, humanName, helpText)
 , m_Category(category)
 {
 }

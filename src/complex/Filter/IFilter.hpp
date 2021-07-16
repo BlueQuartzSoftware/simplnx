@@ -143,7 +143,7 @@ public:
    * @param json
    * @return
    */
-  [[nodiscard]] nonstd::expected<Arguments, Result> fromJson(const nlohmann::json& json) const;
+  [[nodiscard]] Result<Arguments> fromJson(const nlohmann::json& json) const;
 
 protected:
   IFilter() = default;

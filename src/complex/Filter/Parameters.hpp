@@ -22,6 +22,11 @@ public:
   Parameters& operator=(const Parameters&) = delete;
   Parameters& operator=(Parameters&&) noexcept = default;
 
+  bool contains(const std::string& name) const
+  {
+    return m_Params.count(name) > 0;
+  }
+
   usize size() const
   {
     return m_Params.size();

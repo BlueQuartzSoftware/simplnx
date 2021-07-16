@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Common/Result.hpp"
 #include "complex/Filter/AbstractParameter.hpp"
 
 namespace complex
@@ -17,7 +18,7 @@ public:
 
   [[nodiscard]] Type type() const final;
 
-  [[nodiscard]] virtual bool validate(const std::any& value) const = 0;
+  [[nodiscard]] virtual Result<> validate(const std::any& value) const = 0;
 
 protected:
   ValueParameter() = delete;

@@ -21,17 +21,14 @@ public:
 
   [[nodiscard]] std::string helpText() const final;
 
-  [[nodiscard]] std::optional<std::any> defaultValue() const final;
-
 protected:
   AbstractParameter() = delete;
 
-  AbstractParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const std::optional<std::any>& defaultValue = {});
+  AbstractParameter(const std::string& name, const std::string& humanName, const std::string& helpText);
 
 private:
   std::string m_Name;
   std::string m_HumanName;
   std::string m_HelpText;
-  std::optional<std::any> m_DefaultValue;
 };
 } // namespace complex

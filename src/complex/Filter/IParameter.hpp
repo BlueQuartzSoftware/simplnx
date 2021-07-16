@@ -4,10 +4,13 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <typeindex>
 #include <typeinfo>
+#include <vector>
 
 #include <nlohmann/json_fwd.hpp>
 
+#include "complex/Common/Result.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/Filter/Arguments.hpp"
 #include "complex/complex_export.hpp"
@@ -20,6 +23,9 @@ namespace complex
 class COMPLEX_EXPORT IParameter
 {
 public:
+  using AcceptedTypes = std::vector<std::type_index>;
+  using UniquePointer = std::unique_ptr<IParameter>;
+
   enum class Type : u8
   {
     Value = 0,
@@ -33,6 +39,12 @@ public:
 
   IParameter& operator=(const IParameter&) = delete;
   IParameter& operator=(IParameter&&) noexcept = delete;
+
+  /**
+   * @brief
+   * @return
+   */
+  [[nodiscard]] virtual std::string uuid() const = 0;
 
   /**
    * @brief
@@ -56,7 +68,7 @@ public:
    * @brief
    * @return
    */
-  [[nodiscard]] virtual std::optional<std::any> defaultValue() const = 0;
+  [[nodiscard]] virtual std::any defaultValue() const = 0;
 
   /**
    * @brief
@@ -68,7 +80,7 @@ public:
    * @brief
    * @return
    */
-  [[nodiscard]] virtual const std::type_info& valueType() const = 0;
+  [[nodiscard]] virtual AcceptedTypes acceptedTypes() const = 0;
 
   /**
    * @brief
@@ -80,13 +92,13 @@ public:
    * @brief
    * @return
    */
-  [[nodiscard]] virtual std::any fromJson(const nlohmann::json& json) const = 0;
+  [[nodiscard]] virtual Result<std::any> fromJson(const nlohmann::json& json) const = 0;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] virtual std::unique_ptr<IParameter> clone() const = 0;
+  [[nodiscard]] virtual UniquePointer clone() const = 0;
 
   /**
    * @brief

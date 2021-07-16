@@ -9,25 +9,58 @@
 #include "complex/Filter/DataParameter.hpp"
 #include "complex/Filter/ValueParameter.hpp"
 
+namespace
+{
+template <class T>
+void moveResult(complex::Result<T>& result, std::vector<complex::Error>& errors, std::vector<complex::Warning>& warnings)
+{
+  for(auto& warning : result.warnings())
+  {
+    warnings.push_back(std::move(warning));
+  }
+  if(!result.valid())
+  {
+    for(auto& error : result.errors())
+    {
+      errors.push_back(std::move(error));
+    }
+  }
+}
+} // namespace
+
 namespace complex
 {
 IFilter::DataCheckResult IFilter::dataCheck(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   Parameters params = parameters();
 
-  if(args.size() != params.size())
-  {
-    throw std::invalid_argument("Invalid number of arguments");
-  }
-
   std::vector<Error> errors;
   std::vector<Warning> warnings;
 
+  Arguments resolvedArgs;
+
+  for(auto&& [name, arg] : args)
+  {
+    if(!params.contains(name))
+    {
+      warnings.push_back(Warning{-1, fmt::format("Input contained \"{}\" which is not an accepted argument name", name)});
+      continue;
+    }
+    resolvedArgs.insert(name, arg);
+  }
+
   for(auto&& [name, parameter] : params)
   {
-    const std::any& arg = args.at(name);
+    if(!resolvedArgs.contains(name))
+    {
+      resolvedArgs.insert(name, parameter->defaultValue());
+    }
 
-    if(parameter->valueType().hash_code() != arg.type().hash_code())
+    std::any constructedArg = parameter->construct(resolvedArgs);
+
+    std::vector<std::type_index> acceptedTypes = parameter->acceptedTypes();
+
+    if(std::find(acceptedTypes.cbegin(), acceptedTypes.cend(), constructedArg.type()) == acceptedTypes.cend())
     {
       throw std::invalid_argument("Invalid argument type");
     }
@@ -36,24 +69,29 @@ IFilter::DataCheckResult IFilter::dataCheck(const DataStructure& data, const Arg
     {
     case IParameter::Type::Value: {
       const auto* valueParameter = static_cast<ValueParameter*>(parameter.get());
-      if(!valueParameter->validate(arg))
+      Result result = valueParameter->validate(constructedArg);
+      moveResult(result, errors, warnings);
+      if(!result.valid())
       {
-        errors.push_back(Error{-1, fmt::format("Invalid arg: {}", name)});
         continue;
       }
       break;
     }
     case IParameter::Type::Data: {
-      // resolve data structure args and replace values in copy
       const auto* dataStructureParameter = static_cast<DataParameter*>(parameter.get());
-      if(!dataStructureParameter->validate(data, arg))
+      Result result = dataStructureParameter->validate(data, constructedArg);
+      moveResult(result, errors, warnings);
+      if(!result.valid())
       {
-        errors.push_back(Error{-2, fmt::format("DataObject does not exist")});
         continue;
       }
       break;
     }
+    default:
+      throw std::runtime_error("Invalid parameter type");
     }
+
+    resolvedArgs.insert(name, constructedArg);
   }
 
   if(!errors.empty())
@@ -102,15 +140,29 @@ nlohmann::json IFilter::toJson(const Arguments& args) const
   return json;
 }
 
-nonstd::expected<Arguments, Result> IFilter::fromJson(const nlohmann::json& json) const
+Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
 {
   Parameters params = parameters();
   Arguments args;
+  std::vector<Error> errors;
+  std::vector<Warning> warnings;
   for(auto&& [name, param] : params)
   {
-    std::any value = param->fromJson(json);
-    args.insert(name, std::move(value));
+    auto jsonResult = param->fromJson(json);
+    moveResult(jsonResult, errors, warnings);
+    if(!jsonResult.valid())
+    {
+      continue;
+    }
+    args.insert(name, std::move(jsonResult.value()));
   }
-  return args;
+  if(errors.empty())
+  {
+    return {std::move(args), std::move(warnings)};
+  }
+  else
+  {
+    return {nonstd::make_unexpected(std::move(errors))};
+  }
 }
 } // namespace complex

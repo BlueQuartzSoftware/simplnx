@@ -2,11 +2,10 @@
 
 namespace complex
 {
-AbstractParameter::AbstractParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const std::optional<std::any>& defaultValue)
+AbstractParameter::AbstractParameter(const std::string& name, const std::string& humanName, const std::string& helpText)
 : m_Name(name)
 , m_HumanName(humanName)
 , m_HelpText(helpText)
-, m_DefaultValue(defaultValue)
 {
   if(m_Name.empty())
   {
@@ -27,10 +26,5 @@ std::string AbstractParameter::humanName() const
 std::string AbstractParameter::helpText() const
 {
   return m_HelpText;
-}
-
-std::optional<std::any> AbstractParameter::defaultValue() const
-{
-  return m_DefaultValue;
 }
 } // namespace complex

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "complex/Filter/AbstractParameter.hpp"
+#include "complex/Common/Result.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/Filter/AbstractParameter.hpp"
 
 namespace complex
 {
@@ -32,13 +33,13 @@ public:
 
   [[nodiscard]] Category category() const;
 
-  [[nodiscard]] virtual bool validate(const DataStructure& dataStructure, const std::any& value) const = 0;
+  [[nodiscard]] virtual Result<> validate(const DataStructure& dataStructure, const std::any& value) const = 0;
 
   [[nodiscard]] virtual Mutability mutability() const = 0;
 
 protected:
   DataParameter() = delete;
-  DataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const std::optional<std::any>& defaultValue, Category category);
+  DataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, Category category);
 
 private:
   Category m_Category;
