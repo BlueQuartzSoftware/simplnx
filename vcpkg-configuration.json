@@ -1,0 +1,17 @@
+{
+  "registries": [
+    {
+      "kind": "git",
+      "repository": "https://github.com/BlueQuartzSoftware/complex-registry",
+      "packages": [
+        "catch2",
+        "eigen3",
+        "expected-lite",
+        "fmt",
+        "nlohmann-json",
+        "pybind11"
+      ],
+      "baseline": "324d79cfb52980f1cc5e78866af8c16fbe736905"
+    }
+  ]
+}
