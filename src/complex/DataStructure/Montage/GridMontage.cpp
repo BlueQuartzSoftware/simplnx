@@ -52,7 +52,7 @@ void GridMontage::resizeTileDims(size_t row, size_t col, size_t depth)
   DimensionsType newDims = {row, col, depth};
 
   // Update collection
-  CollectionType newCollection(row*col*depth);
+  CollectionType newCollection(row * col * depth);
   for(size_t x = 0; x < m_ColumnCount && col; x++)
   {
     for(size_t y = 0; y < m_RowCount && row; y++)
@@ -62,6 +62,11 @@ void GridMontage::resizeTileDims(size_t row, size_t col, size_t depth)
         const SizeVec3 pos = {x, y, z};
         auto oldOffset = getOffsetFromTilePos(pos);
         auto newOffset = getOffsetFromTilePos(pos, newDims);
+
+        if(oldOffset >= oldCollection.size())
+        {
+          continue;
+        }
         newCollection[newOffset] = oldCollection[oldOffset];
       }
     }
@@ -191,6 +196,11 @@ SizeVec3 GridMontage::getTilePosFromOffset(size_t offset) const
   const size_t row = xyOffset / numCols;
   const size_t col = xyOffset % numRows;
   return {col, row, depth};
+}
+
+size_t GridMontage::getOffsetFromTileId(const TileIdType& tileId) const
+{
+  return getOffsetFromTilePos(tileId.getTilePos());
 }
 
 size_t GridMontage::getOffsetFromTilePos(const SizeVec3& tilePos) const

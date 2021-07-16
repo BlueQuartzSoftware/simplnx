@@ -340,7 +340,6 @@ complex::TooltipGenerator HexahedralGeom::getTooltipGenerator() const
   return toolTipGen;
 }
 
-
 AbstractGeometry::StatusCode HexahedralGeom::findEdges()
 {
   auto edgeList = createSharedEdgeList(0);

@@ -65,7 +65,7 @@ public:
 
 protected:
   /**
-   * @brief Constructor taking 
+   * @brief Constructor taking
    * @param montage
    */
   AbstractTileIndex(const AbstractMontage* montage);

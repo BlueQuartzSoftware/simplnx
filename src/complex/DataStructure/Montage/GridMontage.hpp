@@ -201,8 +201,8 @@ protected:
   SizeVec3 getTilePosFromOffset(size_t offset) const;
 
 private:
-  size_t m_RowCount;
-  size_t m_ColumnCount;
-  size_t m_DepthCount;
+  size_t m_RowCount = 0;
+  size_t m_ColumnCount = 0;
+  size_t m_DepthCount = 0;
 };
 } // namespace complex

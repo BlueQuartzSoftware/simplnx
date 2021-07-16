@@ -9,15 +9,14 @@ namespace complex
 class GridMontage;
 
 /**
- * class GridTileIndex
- *
+ * @class GridTileIndex
+ * @brief
  */
-
 class COMPLEX_EXPORT GridTileIndex : public AbstractTileIndex
 {
 public:
   friend class GridMontage;
-  
+
   /**
    * @brief Empty Constructor
    */
