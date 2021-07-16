@@ -1,8 +1,8 @@
 #include <catch2/catch.hpp>
 
+#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Montage/GridMontage.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
 
 using namespace complex;
 
@@ -31,9 +31,9 @@ TEST_CASE("GridMontage")
   auto index10 = montage->getTileIndex(1, 0, 0);
   montage->setGeometry(&index00, tile1);
   montage->setGeometry(&index10, tile2);
-  montage->setGeometry({0,1,0}, tile3);
-  montage->setGeometry({1,1,0}, tile4);
-  montage->setGeometry({0,2,0}, tile5);
+  montage->setGeometry({0, 1, 0}, tile3);
+  montage->setGeometry({1, 1, 0}, tile4);
+  montage->setGeometry({0, 2, 0}, tile5);
 
   REQUIRE(montage->getGeometries().size() == 5);
   REQUIRE(montage->getGeometryNames().size() == 5);
