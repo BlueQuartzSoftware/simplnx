@@ -24,11 +24,6 @@ HexahedralGeom::HexahedralGeom(DataStructure* ds, const std::string& name, const
 
 HexahedralGeom::HexahedralGeom(const HexahedralGeom& other)
 : AbstractGeometry3D(other)
-, m_VertexListId(other.m_VertexListId)
-, m_EdgeListId(other.m_EdgeListId)
-, m_UnsharedEdgeListId(other.m_UnsharedEdgeListId)
-, m_QuadListId(other.m_QuadListId)
-, m_UnsharedQuadListId(other.m_UnsharedQuadListId)
 , m_HexListId(other.m_HexListId)
 , m_HexasContainingVertId(other.m_HexasContainingVertId)
 , m_HexNeighborsId(other.m_HexNeighborsId)
@@ -39,11 +34,6 @@ HexahedralGeom::HexahedralGeom(const HexahedralGeom& other)
 
 HexahedralGeom::HexahedralGeom(HexahedralGeom&& other) noexcept
 : AbstractGeometry3D(std::move(other))
-, m_VertexListId(std::move(other.m_VertexListId))
-, m_EdgeListId(std::move(other.m_EdgeListId))
-, m_UnsharedEdgeListId(std::move(other.m_UnsharedEdgeListId))
-, m_QuadListId(std::move(other.m_QuadListId))
-, m_UnsharedQuadListId(std::move(other.m_UnsharedQuadListId))
 , m_HexListId(std::move(other.m_HexListId))
 , m_HexasContainingVertId(std::move(other.m_HexasContainingVertId))
 , m_HexNeighborsId(std::move(other.m_HexNeighborsId))
@@ -69,108 +59,9 @@ std::string HexahedralGeom::getGeometryTypeAsString() const
   return "HexahedralGeom";
 }
 
-void HexahedralGeom::resizeQuadList(size_t numQuads)
-{
-  getQuads()->getDataStore()->resizeTuples(numQuads);
-}
-
-void HexahedralGeom::setQuads(const SharedQuadList* quads)
-{
-  if(!quads)
-  {
-    return;
-  }
-  m_QuadListId = quads->getId();
-}
-
-AbstractGeometry::SharedQuadList* HexahedralGeom::getQuads()
-{
-  if(!m_QuadListId)
-  {
-    return nullptr;
-  }
-  return dynamic_cast<SharedQuadList*>(getDataStructure()->getData(m_QuadListId.value()));
-}
-
-const AbstractGeometry::SharedQuadList* HexahedralGeom::getQuads() const
-{
-  if(!m_QuadListId)
-  {
-    return nullptr;
-  }
-  return dynamic_cast<const SharedQuadList*>(getDataStructure()->getData(m_QuadListId.value()));
-}
-
-void HexahedralGeom::setVertsAtQuad(size_t quadId, size_t verts[4])
-{
-  auto quads = getQuads();
-  if(!quads)
-  {
-    return;
-  }
-
-  auto numQuads = quads->getTupleCount();
-  if(quadId >= numQuads)
-  {
-    return;
-  }
-
-  for(size_t i = 0; i < 4; i++)
-  {
-    verts[i] = (*quads)[quadId + i];
-  }
-}
-
-void HexahedralGeom::getVertsAtQuad(size_t quadId, size_t verts[4]) const
-{
-  auto quads = getQuads();
-  if(!quads)
-  {
-    return;
-  }
-  size_t index = quadId * 4;
-  for(size_t i = 0; i < 4; i++)
-  {
-    verts[i] = quads->at(index + i);
-  }
-}
-
-void HexahedralGeom::getVertCoordsAtQuad(size_t quadId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2, complex::Point3D<float>& vert3, complex::Point3D<float>& vert4) const
-{
-  if(!getQuads())
-  {
-    return;
-  }
-  auto vertices = getVertices();
-  if(!vertices)
-  {
-    return;
-  }
-
-  size_t verts[4];
-  getVertsAtQuad(quadId, verts);
-  for(size_t i = 0; i < 3; i++)
-  {
-    vert1[i] = vertices->at(verts[0] * 3 + i);
-    vert2[i] = vertices->at(verts[1] * 3 + i);
-    vert3[i] = vertices->at(verts[2] * 3 + i);
-    vert4[i] = vertices->at(verts[3] * 3 + i);
-  }
-}
-
-size_t HexahedralGeom::getNumberOfQuads() const
-{
-  auto hex = getHexahedra();
-  if(!hex)
-  {
-    return 0;
-  }
-  return hex->getTupleCount();
-}
-
 void HexahedralGeom::resizeHexList(size_t numHexas)
 {
-  getHexahedra()->getDataStore()->resizeTuples(numHexas);
+  getHexahedrals()->getDataStore()->resizeTuples(numHexas);
 }
 
 void HexahedralGeom::setHexahedra(const SharedHexList* hexas)
@@ -183,12 +74,12 @@ void HexahedralGeom::setHexahedra(const SharedHexList* hexas)
   m_HexListId = hexas->getId();
 }
 
-AbstractGeometry::SharedHexList* HexahedralGeom::getHexahedra()
+AbstractGeometry::SharedHexList* HexahedralGeom::getHexahedrals()
 {
   return dynamic_cast<SharedHexList*>(getDataStructure()->getData(m_HexListId));
 }
 
-const AbstractGeometry::SharedHexList* HexahedralGeom::getHexahedra() const
+const AbstractGeometry::SharedHexList* HexahedralGeom::getHexahedrals() const
 {
   return dynamic_cast<const SharedHexList*>(getDataStructure()->getData(m_HexListId));
 }
@@ -209,7 +100,7 @@ void HexahedralGeom::setVertsAtHex(size_t hexId, size_t verts[8])
 
 void HexahedralGeom::getVertsAtHex(size_t hexId, size_t verts[8]) const
 {
-  auto hex = getHexahedra();
+  auto hex = getHexahedrals();
   if(!hex)
   {
     return;
@@ -224,11 +115,11 @@ void HexahedralGeom::getVertsAtHex(size_t hexId, size_t verts[8]) const
 void HexahedralGeom::getVertCoordsAtHex(size_t hexId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2, complex::Point3D<float>& vert3, complex::Point3D<float>& vert4,
                                         complex::Point3D<float>& vert5, complex::Point3D<float>& vert6, complex::Point3D<float>& vert7, complex::Point3D<float>& vert8) const
 {
-  if(!getHexahedra())
+  if(!getHexahedrals())
   {
     return;
   }
-  auto vertices = dynamic_cast<const SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
+  auto vertices = getVertices();
   if(!vertices)
   {
     return;
@@ -263,7 +154,7 @@ void HexahedralGeom::initializeWithZeros()
   {
     vertices->getDataStore()->fill(0.0);
   }
-  auto hexas = getHexahedra();
+  auto hexas = getHexahedrals();
   if(hexas)
   {
     hexas->getDataStore()->fill(0.0);
@@ -285,7 +176,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findElementSizes()
   auto dataStore = new DataStore<float>(1, getNumberOfHexas());
   auto hexSizes = getDataStructure()->createDataArray<float>("Hex Volumes", dataStore, getId());
   m_HexSizesId = hexSizes->getId();
-  GeometryHelpers::Topology::FindHexVolumes(getHexahedra(), getVertices(), hexSizes);
+  GeometryHelpers::Topology::FindHexVolumes<uint64_t>(getHexahedrals(), getVertices(), hexSizes);
   if(getElementSizes() == nullptr)
   {
     m_HexSizesId.reset();
@@ -309,7 +200,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findElementsContainingVert()
 {
   auto hexasControllingVert = getDataStructure()->createDynamicList<uint16_t, MeshIndexType>("Hex Containing Vertices", getId());
   m_HexasContainingVertId = hexasControllingVert->getId();
-  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16_t, MeshIndexType>(getHexahedra(), hexasControllingVert, getNumberOfVertices());
+  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16_t, MeshIndexType>(getHexahedrals(), hexasControllingVert, getNumberOfVertices());
   if(getElementsContainingVert() == nullptr)
   {
     m_HexasContainingVertId.reset();
@@ -342,7 +233,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findElementNeighbors()
   }
   auto hexNeighbors = getDataStructure()->createDynamicList<uint16_t, MeshIndexType>("Hex Neighbors", getId());
   m_HexNeighborsId = hexNeighbors->getId();
-  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16_t, MeshIndexType>(getHexahedra(), getElementsContainingVert(), hexNeighbors, AbstractGeometry::Type::Hexahedral);
+  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16_t, MeshIndexType>(getHexahedrals(), getElementsContainingVert(), hexNeighbors, AbstractGeometry::Type::Hexahedral);
   if(getElementNeighbors() == nullptr)
   {
     m_HexNeighborsId.reset();
@@ -367,7 +258,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findElementCentroids()
   auto dataStore = new DataStore<float>(3, getNumberOfHexas());
   auto hexCentroids = getDataStructure()->createDataArray<float>("Hex Centroids", dataStore, getId());
   m_HexCentroidsId = hexCentroids->getId();
-  GeometryHelpers::Topology::FindElementCentroids(getHexahedra(), getVertices(), hexCentroids);
+  GeometryHelpers::Topology::FindElementCentroids<uint64_t>(getHexahedrals(), getVertices(), hexCentroids);
   if(getElementCentroids() == nullptr)
   {
     m_HexCentroidsId.reset();
@@ -449,241 +340,140 @@ complex::TooltipGenerator HexahedralGeom::getTooltipGenerator() const
   return toolTipGen;
 }
 
-void HexahedralGeom::resizeVertexList(size_t numVertices)
-{
-  auto vertices = dynamic_cast<SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
-  if(!vertices)
-  {
-    return;
-  }
-  vertices->getDataStore()->resizeTuples(numVertices);
-}
-
-void HexahedralGeom::setVertices(const SharedVertexList* vertices)
-{
-  if(!vertices)
-  {
-    m_VertexListId.reset();
-    return;
-  }
-
-  m_VertexListId = vertices->getId();
-}
-
-AbstractGeometry::SharedVertexList* HexahedralGeom::getVertices()
-{
-  return dynamic_cast<SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
-}
-
-const AbstractGeometry::SharedVertexList* HexahedralGeom::getVertices() const
-{
-  return dynamic_cast<const SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
-}
-
-void HexahedralGeom::setCoords(size_t vertId, const complex::Point3D<float>& coords)
-{
-  auto vertices = dynamic_cast<FloatArray*>(getDataStructure()->getData(m_VertexListId));
-  if(!vertices)
-  {
-    return;
-  }
-
-  size_t index = vertId * 3;
-  for(size_t i = 0; i < 3; i++)
-  {
-    (*vertices)[index + i] = coords[i];
-  }
-}
-
-complex::Point3D<float> HexahedralGeom::getCoords(size_t vertId) const
-{
-  auto vertices = dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_VertexListId));
-  if(!vertices)
-  {
-    return Point3D<float>();
-  }
-
-  size_t index = vertId * 3;
-  auto x = (*vertices)[index];
-  auto y = (*vertices)[index + 1];
-  auto z = (*vertices)[index + 2];
-  return Point3D<float>(x, y, z);
-}
-
-size_t HexahedralGeom::getNumberOfVertices() const
-{
-  auto vertices = dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_VertexListId));
-  if(!vertices)
-  {
-    return 0;
-  }
-  return vertices->getTupleCount();
-}
-
-void HexahedralGeom::resizeEdgeList(size_t numEdges)
-{
-  auto edges = getEdges();
-  if(!edges)
-  {
-    return;
-  }
-  edges->getDataStore()->resizeTuples(numEdges);
-}
-
-AbstractGeometry::SharedEdgeList* HexahedralGeom::getEdges()
-{
-  return dynamic_cast<SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
-}
-
-const AbstractGeometry::SharedEdgeList* HexahedralGeom::getEdges() const
-{
-  return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
-}
-
-void HexahedralGeom::setVertsAtEdge(size_t edgeId, const size_t verts[2])
-{
-  auto edges = dynamic_cast<SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
-  if(!edges)
-  {
-    return;
-  }
-  size_t index = edgeId * 2;
-  (*edges)[index] = verts[0];
-  (*edges)[index + 1] = verts[1];
-}
-
-void HexahedralGeom::getVertsAtEdge(size_t edgeId, size_t verts[2]) const
-{
-  auto edges = getEdges();
-  if(!edges)
-  {
-    return;
-  }
-  size_t index = edgeId * 2;
-  verts[0] = (*edges)[index];
-  verts[1] = (*edges)[index + 1];
-}
-
-void HexahedralGeom::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2) const
-{
-  auto edges = getEdges();
-  if(!edges)
-  {
-    return;
-  }
-
-  auto vertices = getVertices();
-  if(!vertices)
-  {
-    return;
-  }
-
-  size_t verts[2];
-  getVertsAtEdge(edgeId, verts);
-
-  for(size_t i = 0; i < 3; i++)
-  {
-    vert1[i] = (*vertices)[verts[0] * 3 + i];
-    vert2[i] = (*vertices)[verts[1] * 3 + i];
-  }
-}
-
-size_t HexahedralGeom::getNumberOfEdges() const
-{
-  auto edges = getEdges();
-  if(!edges)
-  {
-    return 0;
-  }
-
-  return edges->getTupleCount();
-}
-
 AbstractGeometry::StatusCode HexahedralGeom::findEdges()
 {
   auto edgeList = createSharedEdgeList(0);
-  m_EdgeListId = edgeList->getId();
-  GeometryHelpers::Connectivity::FindHexEdges(getHexahedra(), getEdges());
+  GeometryHelpers::Connectivity::FindHexEdges<uint64_t>(getHexahedrals(), edgeList);
   if(getEdges() == nullptr)
   {
-    m_EdgeListId.reset();
+    setEdges(nullptr);
     return -1;
   }
+  setEdges(edgeList);
   return 1;
-}
-
-void HexahedralGeom::deleteEdges()
-{
-  getDataStructure()->removeData(m_EdgeListId);
-  m_EdgeListId.reset();
 }
 
 AbstractGeometry::StatusCode HexahedralGeom::findFaces()
 {
   auto quadList = createSharedQuadList(0);
-  m_QuadListId = quadList->getId();
-  GeometryHelpers::Connectivity::FindHexFaces(getHexahedra(), quadList);
+  GeometryHelpers::Connectivity::FindHexFaces<uint64_t>(getHexahedrals(), quadList);
   if(quadList == nullptr)
   {
-    m_QuadListId.reset();
+    setQuads(nullptr);
     return -1;
   }
+  setQuads(quadList);
   return 1;
-}
-
-void HexahedralGeom::deleteFaces()
-{
-  getDataStructure()->removeData(m_QuadListId);
-  m_QuadListId.reset();
 }
 
 AbstractGeometry::StatusCode HexahedralGeom::findUnsharedEdges()
 {
   auto dataStore = new DataStore<MeshIndexType>(2, 0);
   auto unsharedEdgeList = getDataStructure()->createDataArray("Unshared Edge List", dataStore, getId());
-  m_UnsharedEdgeListId = unsharedEdgeList->getId();
-  GeometryHelpers::Connectivity::FindUnsharedHexEdges(getHexahedra(), unsharedEdgeList);
+  GeometryHelpers::Connectivity::FindUnsharedHexEdges<uint64_t>(getHexahedrals(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
-    m_UnsharedEdgeListId.reset();
+    setUnsharedEdges(nullptr);
     return -1;
   }
+  setUnsharedEdges(unsharedEdgeList);
   return 1;
-}
-
-const AbstractGeometry::SharedEdgeList* HexahedralGeom::getUnsharedEdges() const
-{
-  return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_UnsharedEdgeListId));
-}
-
-void HexahedralGeom::deleteUnsharedEdges()
-{
-  getDataStructure()->removeData(m_UnsharedEdgeListId);
 }
 
 AbstractGeometry::StatusCode HexahedralGeom::findUnsharedFaces()
 {
   auto dataStore = new DataStore<MeshIndexType>(4, 0);
   auto unsharedQuadList = getDataStructure()->createDataArray<MeshIndexType>("Unshared Edge List", dataStore, getId());
-  m_UnsharedQuadListId = unsharedQuadList->getId();
-  GeometryHelpers::Connectivity::FindUnsharedHexFaces(getHexahedra(), unsharedQuadList);
+  GeometryHelpers::Connectivity::FindUnsharedHexFaces<uint64_t>(getHexahedrals(), unsharedQuadList);
   if(unsharedQuadList == nullptr)
   {
-    m_UnsharedQuadListId.reset();
+    setUnsharedFaces(nullptr);
     return -1;
   }
+  setUnsharedFaces(unsharedQuadList);
   return 1;
 }
 
-const AbstractGeometry::SharedEdgeList* HexahedralGeom::getUnsharedFaces() const
+void HexahedralGeom::resizeQuadList(size_t numQuads)
 {
-  return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_UnsharedQuadListId));
+  getQuads()->getDataStore()->resizeTuples(numQuads);
 }
 
-void HexahedralGeom::deleteUnsharedFaces()
+void HexahedralGeom::setQuads(const SharedQuadList* quads)
 {
-  getDataStructure()->removeData(m_UnsharedQuadListId);
-  m_UnsharedQuadListId.reset();
+  setFaces(quads);
+}
+
+AbstractGeometry::SharedQuadList* HexahedralGeom::getQuads()
+{
+  return getFaces();
+}
+
+const AbstractGeometry::SharedQuadList* HexahedralGeom::getQuads() const
+{
+  return getFaces();
+}
+
+void HexahedralGeom::setVertsAtQuad(size_t quadId, size_t verts[4])
+{
+  auto quads = getQuads();
+  if(!quads)
+  {
+    return;
+  }
+
+  auto numQuads = quads->getTupleCount();
+  if(quadId >= numQuads)
+  {
+    return;
+  }
+
+  for(size_t i = 0; i < 4; i++)
+  {
+    verts[i] = (*quads)[quadId + i];
+  }
+}
+
+void HexahedralGeom::getVertsAtQuad(size_t quadId, size_t verts[4]) const
+{
+  auto quads = getQuads();
+  if(!quads)
+  {
+    return;
+  }
+  size_t index = quadId * 4;
+  for(size_t i = 0; i < 4; i++)
+  {
+    verts[i] = quads->at(index + i);
+  }
+}
+
+void HexahedralGeom::getVertCoordsAtQuad(size_t quadId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2, complex::Point3D<float>& vert3, complex::Point3D<float>& vert4) const
+{
+  if(!getQuads())
+  {
+    return;
+  }
+  auto vertices = getVertices();
+  if(!vertices)
+  {
+    return;
+  }
+
+  size_t verts[4];
+  getVertsAtQuad(quadId, verts);
+  for(size_t i = 0; i < 3; i++)
+  {
+    vert1[i] = vertices->at(verts[0] * 3 + i);
+    vert2[i] = vertices->at(verts[1] * 3 + i);
+    vert3[i] = vertices->at(verts[2] * 3 + i);
+    vert4[i] = vertices->at(verts[3] * 3 + i);
+  }
+}
+
+size_t HexahedralGeom::getNumberOfQuads() const
+{
+  return getNumberOfFaces();
 }
 
 uint32_t HexahedralGeom::getXdmfGridType() const
@@ -739,31 +529,4 @@ void HexahedralGeom::setElementSizes(const FloatArray* elementSizes)
     return;
   }
   m_HexSizesId = elementSizes->getId();
-}
-
-void HexahedralGeom::setEdges(const SharedEdgeList* edges)
-{
-  if(!edges)
-  {
-    m_EdgeListId.reset();
-  }
-  m_EdgeListId = edges->getId();
-}
-
-void HexahedralGeom::setUnsharedEdges(const SharedEdgeList* bEdgeList)
-{
-  if(!bEdgeList)
-  {
-    m_UnsharedEdgeListId.reset();
-  }
-  m_UnsharedEdgeListId = bEdgeList->getId();
-}
-
-void HexahedralGeom::setUnsharedFaces(const SharedFaceList* bFaceList)
-{
-  if(!bFaceList)
-  {
-    m_UnsharedQuadListId.reset();
-  }
-  m_UnsharedQuadListId = bFaceList->getId();
 }

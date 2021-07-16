@@ -11,7 +11,7 @@ namespace complex
  * @class RectGridGeom
  * @brief
  */
-class COMPLEX_EXPORT RectGridGeom : virtual public AbstractGeometryGrid
+class COMPLEX_EXPORT RectGridGeom : public AbstractGeometryGrid
 {
 public:
   friend class DataStructure;
@@ -203,19 +203,19 @@ public:
    * @brief
    * @return size_t
    */
-  size_t getNumXPoints() const;
+  size_t getNumXPoints() const override;
 
   /**
    * @brief
    * @return size_t
    */
-  size_t getNumYPoints() const;
+  size_t getNumYPoints() const override;
 
   /**
    * @brief
    * @return size_t
    */
-  size_t getNumZPoints() const;
+  size_t getNumZPoints() const override;
 
   /**
    * @brief
@@ -315,7 +315,7 @@ public:
    * @param yCoord
    * @param zCoord
    */
-  size_t getIndex(float xCoord, float yCoord, float zCoord) const;
+  size_t getIndex(float xCoord, float yCoord, float zCoord) const override;
 
   /**
    * @brief
@@ -323,7 +323,7 @@ public:
    * @param yCoord
    * @param zCoord
    */
-  size_t getIndex(double xCoord, double yCoord, double zCoord) const;
+  size_t getIndex(double xCoord, double yCoord, double zCoord) const override;
 
   /**
    * @brief

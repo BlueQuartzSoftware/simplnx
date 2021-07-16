@@ -26,10 +26,9 @@ TEST_CASE("DataGroupTree")
 
   SECTION("find data")
   {
-    // Can all data be found by ID?
-    REQUIRE(dataStr.getData(groupId) != nullptr);
-    REQUIRE(dataStr.getData(childId) != nullptr);
-    REQUIRE(dataStr.getData(grandchildId) != nullptr);
+    REQUIRE(nullptr != dataStr.getData(groupId));
+    REQUIRE(nullptr != dataStr.getData(childId));
+    REQUIRE(nullptr != dataStr.getData(grandchildId));
   }
   SECTION("remove mid-level group")
   {

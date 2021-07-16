@@ -25,9 +25,6 @@ TriangleGeom::TriangleGeom(DataStructure* ds, const std::string& name, const Sha
 
 TriangleGeom::TriangleGeom(const TriangleGeom& other)
 : AbstractGeometry2D(other)
-, m_VertexListId(other.m_VertexListId)
-, m_EdgeListId(other.m_EdgeListId)
-, m_UnsharedEdgeListId(other.m_UnsharedEdgeListId)
 , m_TriListId(other.m_TriListId)
 , m_TrianglesContainingVertId(other.m_TrianglesContainingVertId)
 , m_TriangleNeighborsId(other.m_TriangleNeighborsId)
@@ -38,9 +35,6 @@ TriangleGeom::TriangleGeom(const TriangleGeom& other)
 
 TriangleGeom::TriangleGeom(TriangleGeom&& other) noexcept
 : AbstractGeometry2D(std::move(other))
-, m_VertexListId(std::move(other.m_VertexListId))
-, m_EdgeListId(std::move(other.m_EdgeListId))
-, m_UnsharedEdgeListId(std::move(other.m_UnsharedEdgeListId))
 , m_TriListId(std::move(other.m_TriListId))
 , m_TrianglesContainingVertId(std::move(other.m_TrianglesContainingVertId))
 , m_TriangleNeighborsId(std::move(other.m_TriangleNeighborsId))
@@ -299,31 +293,6 @@ complex::TooltipGenerator TriangleGeom::getTooltipGenerator() const
   return toolTipGen;
 }
 
-void TriangleGeom::resizeVertexList(size_t newNumVertices)
-{
-  getVertices()->getDataStore()->resizeTuples(newNumVertices);
-}
-
-void TriangleGeom::setVertices(const SharedVertexList* vertices)
-{
-  if(!vertices)
-  {
-    m_VertexListId.reset();
-    return;
-  }
-  m_VertexListId = vertices->getId();
-}
-
-AbstractGeometry::SharedVertexList* TriangleGeom::getVertices()
-{
-  return dynamic_cast<SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
-}
-
-const AbstractGeometry::SharedVertexList* TriangleGeom::getVertices() const
-{
-  return dynamic_cast<const SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
-}
-
 void TriangleGeom::setCoords(size_t vertId, const Point3D<float>& coords)
 {
   auto vertices = getVertices();
@@ -371,58 +340,16 @@ AbstractGeometry::StatusCode TriangleGeom::findEdges()
   GeometryHelpers::Connectivity::Find2DElementEdges(getTriangles(), edgeList);
   if(edgeList == nullptr)
   {
-    m_EdgeListId.reset();
+    setEdges(nullptr);
     return -1;
   }
-  m_EdgeListId = edgeList->getId();
+  setEdges(edgeList);
   return 1;
 }
 
 void TriangleGeom::resizeEdgeList(size_t newNumEdges)
 {
   getEdges()->getDataStore()->resizeTuples(newNumEdges);
-}
-
-AbstractGeometry::SharedEdgeList* TriangleGeom::getEdges()
-{
-  return dynamic_cast<SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
-}
-
-const AbstractGeometry::SharedEdgeList* TriangleGeom::getEdges() const
-{
-  return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
-}
-
-void TriangleGeom::deleteEdges()
-{
-  getDataStructure()->removeData(m_EdgeListId);
-  m_EdgeListId.reset();
-}
-
-void TriangleGeom::setVertsAtEdge(size_t edgeId, const size_t verts[2])
-{
-  auto edges = getEdges();
-  if(!edges)
-  {
-    return;
-  }
-  for(size_t i = 0; i < 2; i++)
-  {
-    (*edges)[edgeId * 2 + i] = verts[i];
-  }
-}
-
-void TriangleGeom::getVertsAtEdge(size_t edgeId, size_t verts[2]) const
-{
-  auto edges = getEdges();
-  if(!edges)
-  {
-    return;
-  }
-  for(size_t i = 0; i < 2; i++)
-  {
-    verts[i] = edges->at(edgeId * 2 + i);
-  }
 }
 
 void TriangleGeom::getVertCoordsAtEdge(size_t edgeId, Point3D<float>& vert1, Point3D<float>& vert2) const
@@ -441,16 +368,6 @@ void TriangleGeom::getVertCoordsAtEdge(size_t edgeId, Point3D<float>& vert1, Poi
   vert2 = getCoords(verts[1]);
 }
 
-size_t TriangleGeom::getNumberOfEdges() const
-{
-  auto edges = getEdges();
-  if(!edges)
-  {
-    return 0;
-  }
-  return edges->getTupleCount();
-}
-
 AbstractGeometry::StatusCode TriangleGeom::findUnsharedEdges()
 {
   auto dataStore = new DataStore<MeshIndexType>(2, 0);
@@ -458,22 +375,11 @@ AbstractGeometry::StatusCode TriangleGeom::findUnsharedEdges()
   GeometryHelpers::Connectivity::Find2DUnsharedEdges(getTriangles(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
-    m_UnsharedEdgeListId.reset();
+    setUnsharedEdges(nullptr);
     return -1;
   }
-  m_UnsharedEdgeListId = unsharedEdgeList->getId();
+  setUnsharedEdges(unsharedEdgeList);
   return 1;
-}
-
-const AbstractGeometry::SharedEdgeList* TriangleGeom::getUnsharedEdges() const
-{
-  return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_UnsharedEdgeListId));
-}
-
-void TriangleGeom::deleteUnsharedEdges()
-{
-  getDataStructure()->removeData(m_UnsharedEdgeListId);
-  m_UnsharedEdgeListId.reset();
 }
 
 uint32_t TriangleGeom::getXdmfGridType() const
@@ -529,24 +435,4 @@ void TriangleGeom::setElementSizes(const FloatArray* elementSizes)
     return;
   }
   m_TriangleSizesId = elementSizes->getId();
-}
-
-void TriangleGeom::setEdges(const SharedEdgeList* edges)
-{
-  if(!edges)
-  {
-    m_EdgeListId.reset();
-    return;
-  }
-  m_EdgeListId = edges->getId();
-}
-
-void TriangleGeom::setUnsharedEdges(const SharedEdgeList* bEdgeList)
-{
-  if(!bEdgeList)
-  {
-    m_UnsharedEdgeListId.reset();
-    return;
-  }
-  m_UnsharedEdgeListId = bEdgeList->getId();
 }

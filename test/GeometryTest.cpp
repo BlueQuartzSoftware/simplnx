@@ -26,6 +26,7 @@ const AbstractGeometry::SharedVertexList* createVertexList(AbstractGeometry* geo
   auto ds = geom->getDataStructure();
   auto dataStore = new DataStore<float>(3, 0);
   auto dataArr = ds->createDataArray("Vertices", dataStore, geom->getId());
+  REQUIRE(dataArr != nullptr);
   return dynamic_cast<const AbstractGeometry::SharedVertexList*>(dataArr);
 }
 
@@ -34,6 +35,7 @@ const AbstractGeometry::SharedEdgeList* createEdgeList(AbstractGeometry* geom)
   auto ds = geom->getDataStructure();
   auto dataStore = new DataStore<uint64_t>(2, 0);
   auto dataArr = ds->createDataArray("Edges", dataStore, geom->getId());
+  REQUIRE(dataArr != nullptr);
   return dynamic_cast<const AbstractGeometry::SharedEdgeList*>(dataArr);
 }
 
@@ -42,6 +44,7 @@ const AbstractGeometry::SharedFaceList* createFaceList(AbstractGeometry* geom)
   auto ds = geom->getDataStructure();
   auto dataStore = new DataStore<uint64_t>(4, 0);
   auto dataArr = ds->createDataArray("Faces", dataStore, geom->getId());
+  REQUIRE(dataArr != nullptr);
   return dynamic_cast<const AbstractGeometry::SharedFaceList*>(dataArr);
 }
 
@@ -99,6 +102,7 @@ void testGeom2D(AbstractGeometry2D* geom)
     // Vertices
     {
       auto vertices = createVertexList(geom);
+      REQUIRE(vertices != nullptr);
       geom->setVertices(vertices);
       REQUIRE(geom->getVertices() == vertices);
       const size_t numVertices = 10;

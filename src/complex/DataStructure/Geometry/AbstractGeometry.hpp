@@ -115,11 +115,11 @@ public:
   using MeshIndexArrayType = DataArray<MeshIndexType>;
   using SharedVertexList = FloatArray;
   using SharedEdgeList = MeshIndexArrayType;
+  using SharedFaceList = MeshIndexArrayType;
   using SharedTriList = MeshIndexArrayType;
   using SharedQuadList = MeshIndexArrayType;
   using SharedTetList = MeshIndexArrayType;
   using SharedHexList = MeshIndexArrayType;
-  using SharedFaceList = MeshIndexArrayType;
   using ElementDynamicList = DynamicListArray<uint16_t, MeshIndexType>;
 
   /**
