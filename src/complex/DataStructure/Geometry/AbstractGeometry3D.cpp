@@ -59,7 +59,7 @@ void AbstractGeometry3D::resizeVertexList(size_t numVertices)
 
 void AbstractGeometry3D::setVertices(const SharedVertexList* vertices)
 {
-  if(nullptr == vertices)
+  if(vertices == nullptr)
   {
     m_VertexListId.reset();
     return;

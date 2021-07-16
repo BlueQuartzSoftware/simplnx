@@ -10,7 +10,7 @@ TEST_CASE("GridMontage")
 {
   DataStructure ds;
   auto montage = dynamic_cast<GridMontage*>(ds.createMontage<GridMontage>("Grid"));
-  REQUIRE(nullptr != montage);
+  REQUIRE(montage != nullptr);
 
   const size_t rowCount = 3;
   const size_t colCount = 2;

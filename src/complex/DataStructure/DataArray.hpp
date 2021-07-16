@@ -13,7 +13,7 @@ namespace complex
  * retrieve array data within the DataStructure. The DataArray is designed to
  * allow expandability into multiple sources of data, including out-of-core data.
  */
-template <typename T>
+template <class T>
 class DataArray : public DataObject
 {
 public:
@@ -217,7 +217,7 @@ public:
   void setDataStore(store_type* store)
   {
     m_DataStore = std::shared_ptr<store_type>(store);
-    if(nullptr == m_DataStore)
+    if(m_DataStore == nullptr)
     {
       m_DataStore = std::shared_ptr<store_type>(new EmptyDataStore<T>());
     }

@@ -136,7 +136,7 @@ public:
    */
   inline reference at(size_type index)
   {
-    assert((index < Dimensions));
+    assert(index < Dimensions);
     return m_Array.at(index);
   }
 
@@ -147,7 +147,7 @@ public:
    */
   inline const_reference at(size_type index) const
   {
-    assert((index < Dimensions));
+    assert(index < Dimensions);
     return m_Array.at(index);
   }
 
@@ -319,10 +319,7 @@ public:
   /**
    * @brief Vec2 Default constructor initializes all values to ZERO.
    */
-  Vec2()
-  : Array<T, 2>()
-  {
-  }
+  Vec2() = default;
 
   /**
    * @brief Vec2 constructor taking both X and Y values
@@ -500,10 +497,7 @@ public:
   /**
    * @brief Vec3 Default constructor initializes all values to ZERO.
    */
-  Vec3()
-  : Array<T, 3>()
-  {
-  }
+  Vec3() = default;
 
   /**
    * @brief Constructs a Vec3 using individual X, Y, and Z values.
@@ -701,10 +695,7 @@ public:
   /**
    * @brief Vec4 Default constructor initializes all values to ZERO.
    */
-  Vec4()
-  : Array<T, 4>()
-  {
-  }
+  Vec4() = default;
 
   /**
    * @brief Constructs a Vec4 using X, Y, Z, and W values.
@@ -924,10 +915,7 @@ public:
   /**
    * @brief Vec6 Default constructor initializes all values to ZERO.
    */
-  Vec6()
-  : Array<T, 4>()
-  {
-  }
+  Vec6() = default;
 
   /**
    * @brief Constructs a Vec6 using specified values.
@@ -1086,10 +1074,7 @@ public:
   /**
    * @brief Vec7 Default constructor initializes all values to ZERO.
    */
-  Vec7()
-  : Array<T, 7>()
-  {
-  }
+  Vec7() = default;
 
   /**
    * @brief Constructs a Vec7 with the specified values.
@@ -1152,7 +1137,7 @@ public:
    * @param data
    */
   Vec7(const std::vector<T>& data)
-  : Array<T, 7>()
+  : Array<T, 7>(data)
   {
   }
 

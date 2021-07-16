@@ -1,5 +1,7 @@
 #include "GridTileIndex.hpp"
 
+#include <stdexcept>
+
 #include "complex/DataStructure/Montage/GridMontage.hpp"
 
 using namespace complex;
@@ -61,7 +63,7 @@ const AbstractGeometry* GridTileIndex::getGeometry() const
 
 TooltipGenerator GridTileIndex::getToolTipGenerator() const
 {
-  throw std::exception();
+  throw std::runtime_error("");
 }
 
 bool GridTileIndex::isValid() const

@@ -1,8 +1,10 @@
-#include <dlfcn.h>
+#include "PluginLoader.hpp"
+
 #include <iostream>
 
+#include <dlfcn.h>
+
 #include "complex/Plugin/AbstractPlugin.hpp"
-#include "complex/Plugin/PluginLoader.hpp"
 
 using namespace complex;
 
