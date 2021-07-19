@@ -15,7 +15,7 @@
 
 namespace complex
 {
-class IFilter
+class COMPLEX_EXPORT IFilter
 {
 public:
   struct Message
@@ -44,41 +44,17 @@ public:
       }
     }
 
+    void operator()(const std::string& message) const
+    {
+      operator()(Message{Message::Type::Info, message});
+    }
+
+    void operator()(Message::Type type, const std::string& message) const
+    {
+      operator()(Message{type, message});
+    }
+
     Callback m_Callback;
-  };
-
-  struct DataCheckResult
-  {
-    nonstd::expected<OutputActions, std::vector<Error>> result;
-    std::vector<Warning> warnings;
-
-    [[nodiscard]] bool hasErrors() const
-    {
-      return !result.has_value();
-    }
-  };
-
-  struct ExecuteResult
-  {
-    std::vector<Error> errors;
-    std::vector<Warning> warnings;
-
-    static ExecuteResult makeExecuteResult(const DataCheckResult& dataCheckResult)
-    {
-      ExecuteResult result{dataCheckResult.result.error(), dataCheckResult.warnings};
-      return result;
-    }
-
-    static ExecuteResult makeExecuteResult(DataCheckResult&& dataCheckResult)
-    {
-      ExecuteResult result{std::move(dataCheckResult.result.error()), std::move(dataCheckResult.warnings)};
-      return result;
-    }
-
-    [[nodiscard]] bool hasErrors() const
-    {
-      return !errors.empty();
-    }
   };
 
   virtual ~IFilter() noexcept = default;
@@ -120,7 +96,7 @@ public:
    * @param messageHandler
    * @return
    */
-  DataCheckResult dataCheck(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
+  Result<OutputActions> preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
 
   /**
    * @brief
@@ -129,7 +105,7 @@ public:
    * @param messageHandler
    * @return
    */
-  ExecuteResult execute(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {});
+  Result<> execute(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
 
   /**
    * @brief
@@ -156,7 +132,7 @@ private:
    * @param messageHandler
    * @return
    */
-  virtual DataCheckResult dataCheckImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const = 0;
+  virtual Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const = 0;
 
   /**
    * @brief
@@ -165,6 +141,6 @@ private:
    * @param messageHandler
    * @return
    */
-  virtual ExecuteResult executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) = 0;
+  virtual Result<> executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const = 0;
 };
 } // namespace complex

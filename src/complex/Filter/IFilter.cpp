@@ -30,7 +30,7 @@ void moveResult(complex::Result<T>& result, std::vector<complex::Error>& errors,
 
 namespace complex
 {
-IFilter::DataCheckResult IFilter::dataCheck(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+Result<OutputActions> IFilter::preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   Parameters params = parameters();
 
@@ -58,7 +58,7 @@ IFilter::DataCheckResult IFilter::dataCheck(const DataStructure& data, const Arg
 
     std::any constructedArg = parameter->construct(resolvedArgs);
 
-    std::vector<std::type_index> acceptedTypes = parameter->acceptedTypes();
+    IParameter::AcceptedTypes acceptedTypes = parameter->acceptedTypes();
 
     if(std::find(acceptedTypes.cbegin(), acceptedTypes.cend(), constructedArg.type()) == acceptedTypes.cend())
     {
@@ -96,20 +96,20 @@ IFilter::DataCheckResult IFilter::dataCheck(const DataStructure& data, const Arg
 
   if(!errors.empty())
   {
-    return DataCheckResult{nonstd::make_unexpected(std::move(errors)), std::move(warnings)};
+    return {nonstd::make_unexpected(std::move(errors)), std::move(warnings)};
   }
 
-  auto implResult = dataCheckImpl(data, args, messageHandler);
+  auto implResult = preflightImpl(data, args, messageHandler);
 
   for(auto&& warning : warnings)
   {
-    implResult.warnings.push_back(std::move(warning));
+    implResult.warnings().push_back(std::move(warning));
   }
 
   return implResult;
 }
 
-IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler)
+Result<> IFilter::execute(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   // determine required parameters
 
@@ -117,10 +117,10 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& ar
 
   // resolve dependencies
 
-  auto result = dataCheck(data, args, messageHandler);
-  if(result.hasErrors())
+  auto result = preflight(data, args, messageHandler);
+  if(!result.valid())
   {
-    return ExecuteResult::makeExecuteResult(std::move(result));
+    return convertResult(std::move(result));
   }
 
   // apply actions
