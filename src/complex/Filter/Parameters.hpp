@@ -16,10 +16,10 @@ public:
   Parameters() = default;
   ~Parameters() noexcept = default;
 
-  Parameters(const Parameters&) = delete;
+  Parameters(const Parameters& rhs);
   Parameters(Parameters&&) noexcept = default;
 
-  Parameters& operator=(const Parameters&) = delete;
+  Parameters& operator=(const Parameters& rhs);
   Parameters& operator=(Parameters&&) noexcept = default;
 
   bool contains(const std::string& name) const
