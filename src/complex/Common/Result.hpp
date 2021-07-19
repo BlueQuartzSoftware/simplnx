@@ -76,4 +76,16 @@ struct Result : public std::conditional_t<std::is_same_v<T, void>, detail::Resul
 
   std::vector<Warning> m_Warnings;
 };
+
+template <class T>
+Result<> convertResult(Result<T>&& result)
+{
+  Result<> voidResult;
+  if(!result.valid())
+  {
+    voidResult.m_Expected = nonstd::make_unexpected(std::move(result.errors()));
+  }
+  voidResult.warnings() = std::move(result.warnings());
+  return voidResult;
+}
 } // namespace complex
