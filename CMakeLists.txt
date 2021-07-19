@@ -84,6 +84,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Common/Result.hpp
   ${COMPLEX_SOURCE_DIR}/Common/RgbColor.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Types.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Uuid.hpp
 
   ${COMPLEX_SOURCE_DIR}/Core/Application.hpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.hpp
