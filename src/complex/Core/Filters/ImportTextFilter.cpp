@@ -45,14 +45,14 @@ template <class T>
 Result<> ReadFile(const fs::path& inputPath, DataArray<T>& data, u64 skipLines, char delimiter)
 {
   std::ifstream inputFile(inputPath);
-  std::string line;
 
   for(u64 i = 0; i < skipLines; i++)
   {
-    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), delimiter);
+    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   }
 
   usize index = 0;
+  std::string line;
   while(std::getline(inputFile, line))
   {
     std::stringstream stream(line);
