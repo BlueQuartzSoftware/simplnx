@@ -113,6 +113,7 @@ struct Uuid
 
     Uuid uuid{};
 
+    // time_low (4 bytes)
     usize result = detail::String2Bytes(string, index, 4, uuid.data, 0);
     if(result == 0)
     {
@@ -121,6 +122,7 @@ struct Uuid
     index += result;
     index += string[index] == '-' ? 1 : 0;
 
+    // time_mid (2 bytes)
     result = detail::String2Bytes(string, index, 2, uuid.data, 4);
     if(result == 0)
     {
@@ -129,6 +131,7 @@ struct Uuid
     index += result;
     index += string[index] == '-' ? 1 : 0;
 
+    // time_hi_and_version (2 bytes)
     result = detail::String2Bytes(string, index, 2, uuid.data, 6);
     if(result == 0)
     {
@@ -137,6 +140,7 @@ struct Uuid
     index += result;
     index += string[index] == '-' ? 1 : 0;
 
+    // clock_seq_hi_and_res_seq_low (2 bytes)
     result = detail::String2Bytes(string, index, 2, uuid.data, 8);
     if(result == 0)
     {
@@ -145,6 +149,7 @@ struct Uuid
     index += result;
     index += string[index] == '-' ? 1 : 0;
 
+    // node (6 bytes)
     result = detail::String2Bytes(string, index, 6, uuid.data, 10);
     if(result == 0)
     {
