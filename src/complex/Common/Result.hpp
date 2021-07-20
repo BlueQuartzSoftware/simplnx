@@ -44,24 +44,27 @@ struct ResultVoid
 {
   nonstd::expected<void, std::vector<Error>> m_Expected;
 };
+
+template <class T>
+using ResultBaseT = std::conditional_t<std::is_same_v<T, void>, detail::ResultVoid, detail::ResultBase<T>>;
 } // namespace detail
 
 template <class T = void>
-struct Result : public std::conditional_t<std::is_same_v<T, void>, detail::ResultVoid, detail::ResultBase<T>>
+struct Result : public detail::ResultBaseT<T>
 {
   [[nodiscard]] bool valid() const
   {
-    return m_Expected.has_value();
+    return detail::ResultBaseT<T>::m_Expected.has_value();
   }
 
   [[nodiscard]] std::vector<Error>& errors()
   {
-    return m_Expected.error();
+    return detail::ResultBaseT<T>::m_Expected.error();
   }
 
   [[nodiscard]] const std::vector<Error>& errors() const
   {
-    return m_Expected.error();
+    return detail::ResultBaseT<T>::m_Expected.error();
   }
 
   [[nodiscard]] std::vector<Warning>& warnings()
