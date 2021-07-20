@@ -154,6 +154,7 @@ set(COMPLEX_HDRS
 
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/BoolParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/NumberParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/StringParameter.hpp
 )
 
 set(COMPLEX_GENERATED_HEADERS
@@ -227,6 +228,7 @@ set(COMPLEX_SRCS
 
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/BoolParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/NumberParameter.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/StringParameter.cpp
 )
 
 if(WIN32)
