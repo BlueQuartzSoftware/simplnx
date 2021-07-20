@@ -153,6 +153,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
 
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/BoolParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/InputFileParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/NumberParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/NumericTypeParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/StringParameter.hpp
@@ -228,6 +229,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
 
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/BoolParameter.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/InputFileParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/NumberParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/NumericTypeParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/StringParameter.cpp
