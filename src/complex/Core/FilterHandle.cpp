@@ -1,8 +1,7 @@
 #include "complex/Core/FilterHandle.hpp"
-#include "complex/Core/Application.hpp"
 
-using namespace complex;
-
+namespace complex
+{
 FilterHandle::FilterHandle(const std::string& filterName, const FilterIdType& filterId, const PluginIdType& pluginId)
 : m_FilterName(filterName)
 , m_FilterId(filterId)
@@ -10,21 +9,15 @@ FilterHandle::FilterHandle(const std::string& filterName, const FilterIdType& fi
 {
 }
 
-FilterHandle::FilterHandle(const FilterHandle& rhs)
-: m_FilterName(rhs.m_FilterName)
-, m_FilterId(rhs.m_FilterId)
-, m_PluginId(rhs.m_PluginId)
-{
-}
+FilterHandle::FilterHandle(const FilterHandle& rhs) = default;
 
-FilterHandle::FilterHandle(FilterHandle&& rhs) noexcept
-: m_FilterName(std::move(rhs.m_FilterName))
-, m_FilterId(std::move(rhs.m_FilterId))
-, m_PluginId(std::move(rhs.m_PluginId))
-{
-}
+FilterHandle::FilterHandle(FilterHandle&& rhs) noexcept = default;
 
-FilterHandle::~FilterHandle() = default;
+FilterHandle& FilterHandle::operator=(const FilterHandle& rhs) = default;
+
+FilterHandle& FilterHandle::operator=(FilterHandle&& rhs) noexcept = default;
+
+FilterHandle::~FilterHandle() noexcept = default;
 
 std::string FilterHandle::getFilterName() const
 {
@@ -41,30 +34,13 @@ FilterHandle::PluginIdType FilterHandle::getPluginId() const
   return m_PluginId;
 }
 
-bool FilterHandle::operator<(const FilterHandle& rhs) const noexcept
+bool operator==(const FilterHandle& lhs, const FilterHandle& rhs) noexcept
 {
-  if(getPluginId() < rhs.getPluginId())
-  {
-    return true;
-  }
-  else if(getPluginId() > rhs.getPluginId())
-  {
-    return false;
-  }
-  else
-  {
-    return getFilterId() < rhs.getFilterId();
-  }
+  return (lhs.getPluginId() != rhs.getPluginId()) && (lhs.getFilterId() == rhs.getFilterId());
 }
 
-bool operator==(const complex::FilterHandle& lhs, const complex::FilterHandle& rhs) noexcept
+bool operator!=(const FilterHandle& lhs, const FilterHandle& rhs) noexcept
 {
-  if(lhs.getPluginId() != rhs.getPluginId())
-  {
-    return false;
-  }
-  else
-  {
-    return lhs.getFilterId() == rhs.getFilterId();
-  }
+  return !(lhs == rhs);
 }
+} // namespace complex

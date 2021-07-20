@@ -1,7 +1,9 @@
 #pragma once
 
+#include <functional>
 #include <string>
 
+#include "complex/Common/Uuid.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
@@ -21,13 +23,15 @@ public:
    * @brief The FilterIdType alias points to the AbstractFilter::ID type while
    * avoiding circular references while compiling.
    */
-  using FilterIdType = std::string;
+  using FilterIdType = Uuid;
 
   /**
    * @brief The PluginIdType alias points to the AbstractPlugin::ID type while
    * avoiding circular references while compiling.
    */
-  using PluginIdType = std::string;
+  using PluginIdType = Uuid;
+
+  FilterHandle() = delete;
 
   /**
    * @brief Constructs a FilterHandle for the target filter and plugin ID.
@@ -50,7 +54,11 @@ public:
    */
   FilterHandle(FilterHandle&& rhs) noexcept;
 
-  ~FilterHandle();
+  FilterHandle& operator=(const FilterHandle& rhs);
+
+  FilterHandle& operator=(FilterHandle&& rhs) noexcept;
+
+  ~FilterHandle() noexcept;
 
   /**
    * @brief Returns the name of the target filter as provided to the constructor.
@@ -70,22 +78,11 @@ public:
    */
   PluginIdType getPluginId() const;
 
-  /**
-   * @brief Less than operator is required for including within std::set.
-   * Returns true if the plugin ID is less than the other handle's plugin ID.
-   * Returns true if the filter ID is less than the other handle's filter ID
-   * and the plugin IDs are identical. Returns false otherwise.
-   * @param rhs
-   * @return bool
-   */
-  bool operator<(const FilterHandle& rhs) const noexcept;
-
 private:
   std::string m_FilterName;
   FilterIdType m_FilterId;
   PluginIdType m_PluginId;
 };
-} // namespace complex
 
 /**
  * @brief The FilterHandle equality operator checks that the filter name,
@@ -94,4 +91,22 @@ private:
  * @param rhs
  * @return bool
  */
-bool operator==(const complex::FilterHandle& lhs, const complex::FilterHandle& rhs) noexcept;
+bool operator==(const FilterHandle& lhs, const FilterHandle& rhs) noexcept;
+
+bool operator!=(const FilterHandle& lhs, const FilterHandle& rhs) noexcept;
+} // namespace complex
+
+namespace std
+{
+template <>
+struct hash<complex::FilterHandle>
+{
+  std::size_t operator()(const complex::FilterHandle& value) const noexcept
+  {
+    std::hash<complex::FilterHandle::FilterIdType> hasher;
+    std::size_t h1 = hasher(value.getPluginId());
+    std::size_t h2 = hasher(value.getFilterId());
+    return h1 ^ (h2 << 1);
+  }
+};
+} // namespace std

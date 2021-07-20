@@ -1,8 +1,8 @@
 #pragma once
 
-#include <map>
-#include <set>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "complex/Core/FilterHandle.hpp"
 
@@ -25,7 +25,7 @@ using FilterCreationFunc = IFilter* (*)();
 class COMPLEX_EXPORT AbstractPlugin
 {
 public:
-  using IdType = std::string;
+  using IdType = Uuid;
 
   virtual ~AbstractPlugin();
 
@@ -68,7 +68,7 @@ public:
    * @brief Returns a set of FilterHandles pointing to each of the filters contained in the plugin.
    * @return std::set<complex::FilterHandle>
    */
-  std::set<FilterHandle> getFilterHandles() const;
+  std::unordered_set<FilterHandle> getFilterHandles() const;
 
   /**
    * @brief Returns the plugin's vendor name.
@@ -105,8 +105,8 @@ private:
   std::string m_Name;
   std::string m_Description;
   std::string m_Vendor;
-  std::set<FilterHandle> m_FilterHandles;
-  std::map<FilterHandle::FilterIdType, FilterCreationFunc> m_InitializerMap;
+  std::unordered_set<FilterHandle> m_FilterHandles;
+  std::unordered_map<FilterHandle::FilterIdType, FilterCreationFunc> m_InitializerMap;
 
   /**
    * @brief Add an item to the list of FilterHandles.

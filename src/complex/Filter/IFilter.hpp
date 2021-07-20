@@ -7,6 +7,7 @@
 #include <nonstd/expected.hpp>
 
 #include "complex/Common/Result.hpp"
+#include "complex/Common/Uuid.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Filter/Output.hpp"
@@ -75,7 +76,7 @@ public:
    * @brief
    * @return
    */
-  [[nodiscard]] virtual std::string uuid() const = 0;
+  [[nodiscard]] virtual Uuid uuid() const = 0;
 
   /**
    * @brief

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <map>
 #include <memory>
-#include <set>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "complex/Core/FilterHandle.hpp"
@@ -37,7 +37,7 @@ public:
    * @brief Returns a set of FilterHandles for each of the filters.
    * @return std::set<complex::FilterHandle>
    */
-  std::set<complex::FilterHandle> getFilterHandles() const;
+  std::unordered_set<complex::FilterHandle> getFilterHandles() const;
 
   /**
    * @brief Searches the FilterHandles for the text in the filter and plugin
@@ -87,7 +87,7 @@ public:
    * @brief Returns a set of pointers to loaded plugins.
    * @return std::set<complex::AbstractPlugin*>
    */
-  std::set<complex::AbstractPlugin*> getLoadedPlugins() const;
+  std::unordered_set<complex::AbstractPlugin*> getLoadedPlugins() const;
 
   /**
    * @brief Returns a pointer to the plugin with the specified ID. Returns
@@ -99,7 +99,7 @@ public:
 
 protected:
 private:
-  std::set<FilterHandle> m_FilterHandles;
-  std::map<FilterHandle::PluginIdType, std::shared_ptr<complex::PluginLoader>> m_PluginMap;
+  std::unordered_set<FilterHandle> m_FilterHandles;
+  std::unordered_map<FilterHandle::PluginIdType, std::shared_ptr<complex::PluginLoader>> m_PluginMap;
 };
 } // namespace complex
