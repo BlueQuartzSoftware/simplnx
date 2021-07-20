@@ -76,4 +76,9 @@ Result<> ChoicesParameter::validateIndex(ValueType index) const
 
   return {};
 }
+
+ChoicesParameter::Choices ChoicesParameter::choices() const
+{
+  return m_Choices;
+}
 } // namespace complex

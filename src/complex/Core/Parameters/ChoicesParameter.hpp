@@ -80,6 +80,12 @@ public:
    */
   [[nodiscard]] Result<> validateIndex(ValueType index) const;
 
+  /**
+   * @brief
+   * @return
+   */
+  [[nodiscard]] Choices choices() const;
+
 private:
   ValueType m_DefaultValue = {};
   Choices m_Choices = {};
