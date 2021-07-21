@@ -140,18 +140,18 @@ Result<> NumberParameter<T>::validateNumber(ValueType value) const
   return {};
 }
 
-template class COMPLEX_EXPORT NumberParameter<i8>;
-template class COMPLEX_EXPORT NumberParameter<u8>;
+template class COMPLEX_TEMPLATE_EXPORT NumberParameter<i8>;
+template class COMPLEX_TEMPLATE_EXPORT NumberParameter<u8>;
 
-template class COMPLEX_EXPORT NumberParameter<i16>;
-template class COMPLEX_EXPORT NumberParameter<u16>;
+template class COMPLEX_TEMPLATE_EXPORT NumberParameter<i16>;
+template class COMPLEX_TEMPLATE_EXPORT NumberParameter<u16>;
 
-template class COMPLEX_EXPORT NumberParameter<i32>;
-template class COMPLEX_EXPORT NumberParameter<u32>;
+template class COMPLEX_TEMPLATE_EXPORT NumberParameter<i32>;
+template class COMPLEX_TEMPLATE_EXPORT NumberParameter<u32>;
 
-template class COMPLEX_EXPORT NumberParameter<i64>;
-template class COMPLEX_EXPORT NumberParameter<u64>;
+template class COMPLEX_TEMPLATE_EXPORT NumberParameter<i64>;
+template class COMPLEX_TEMPLATE_EXPORT NumberParameter<u64>;
 
-template class COMPLEX_EXPORT NumberParameter<f32>;
-template class COMPLEX_EXPORT NumberParameter<f64>;
+template class COMPLEX_TEMPLATE_EXPORT NumberParameter<f32>;
+template class COMPLEX_TEMPLATE_EXPORT NumberParameter<f64>;
 } // namespace complex
