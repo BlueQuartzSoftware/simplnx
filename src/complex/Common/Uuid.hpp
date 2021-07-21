@@ -99,7 +99,7 @@ struct Uuid
 
     bool hasDashes = string[index + 8] == '-';
 
-    usize totalSize = 32 + (hasBraces ? 2 : 0) + (hasDashes ? 4 : 1);
+    usize totalSize = 32ull + (hasBraces ? 2 : 0) + (hasDashes ? 4 : 1);
 
     if(string.size() != totalSize)
     {
