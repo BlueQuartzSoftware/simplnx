@@ -6,6 +6,9 @@
 #include <optional>
 #include <string_view>
 
+#include <fmt/core.h>
+
+#include "complex/Common/Bit.hpp"
 #include "complex/Common/Types.hpp"
 
 namespace complex
@@ -69,6 +72,7 @@ namespace detail
 
 /**
  * @brief Uuid struct
+ * Stored in big-endian order as according RFC 4122
  */
 struct Uuid
 {
@@ -159,6 +163,46 @@ struct Uuid
     return uuid;
   }
 
+  [[nodiscard]] inline constexpr u32 time_low() const noexcept
+  {
+    return bit_cast_int<u32, endian::big>(data.data());
+  }
+
+  [[nodiscard]] inline constexpr u16 time_mid() const noexcept
+  {
+    return bit_cast_int<u16, endian::big>(data.data() + 4);
+  }
+
+  [[nodiscard]] inline constexpr u16 time_hi_version() const noexcept
+  {
+    return bit_cast_int<u16, endian::big>(data.data() + 6);
+  }
+
+  [[nodiscard]] inline constexpr u16 clock_seq_hi_and_res_clock_seq_low() const noexcept
+  {
+    return bit_cast_int<u16, endian::big>(data.data() + 8);
+  }
+
+  [[nodiscard]] inline constexpr u8 clock_seq_hi_variant() const noexcept
+  {
+    return bit_cast_int<u8, endian::big>(data.data() + 8);
+  }
+
+  [[nodiscard]] inline constexpr u8 clock_seq_low() const noexcept
+  {
+    return bit_cast_int<u8, endian::big>(data.data() + 9);
+  }
+
+  [[nodiscard]] inline constexpr u64 node() const noexcept
+  {
+    return bit_cast_int<u64, endian::big, 6>(data.data() + 10);
+  }
+
+  [[nodiscard]] inline std::string str() const
+  {
+    return fmt::format("{:x}-{:x}-{:x}-{:x}{:x}-{:x}", time_low(), time_mid(), time_hi_version(), clock_seq_hi_variant(), clock_seq_low(), node());
+  }
+
   std::array<std::byte, 16> data;
 };
 
@@ -187,10 +231,8 @@ struct hash<complex::Uuid>
 {
   std::size_t operator()(const complex::Uuid& value) const noexcept
   {
-    std::uint64_t v1 = 0;
-    std::uint64_t v2 = 0;
-    std::memcpy(&v1, value.data.data(), sizeof(v1));
-    std::memcpy(&v2, value.data.data() + sizeof(v1), sizeof(v2));
+    std::uint64_t v1 = complex::bit_cast_ptr<std::uint64_t>(value.data.data());
+    std::uint64_t v2 = complex::bit_cast_ptr<std::uint64_t>(value.data.data() + sizeof(v1));
     return v1 ^ v2;
   }
 };
