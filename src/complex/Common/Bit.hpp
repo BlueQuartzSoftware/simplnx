@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <type_traits>
 
 #include "complex/Common/Types.hpp"

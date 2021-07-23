@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <cstring>
 #include <functional>
 #include <optional>
 #include <string_view>
