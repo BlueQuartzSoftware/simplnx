@@ -36,7 +36,7 @@ FilterHandle::PluginIdType FilterHandle::getPluginId() const
 
 bool operator==(const FilterHandle& lhs, const FilterHandle& rhs) noexcept
 {
-  return (lhs.getPluginId() != rhs.getPluginId()) && (lhs.getFilterId() == rhs.getFilterId());
+  return (lhs.getPluginId() == rhs.getPluginId()) && (lhs.getFilterId() == rhs.getFilterId());
 }
 
 bool operator!=(const FilterHandle& lhs, const FilterHandle& rhs) noexcept
