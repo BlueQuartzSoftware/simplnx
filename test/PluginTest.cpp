@@ -2,21 +2,32 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <filesystem>
 
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterHandle.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Filtering/AbstractFilter.hpp"
+#include "complex/Filter/IFilter.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
-
-#include "PluginDir.hpp"
+#include "Test2Plugin.hpp"
+#include "TestPlugin.hpp"
+#include "Test2Filter.hpp"
+#include "TestFilter.hpp"
 
 using namespace complex;
 
+namespace PluginDir
+{
+inline const std::string InstallPrefixDir = R"(@CMAKE_INSTALL_PREFIX@)";
+inline const std::string InstallBinDir("@CMAKE_INSTALL_BINDIR@");
+
+inline const std::filesystem::path Path = std::filesystem::path(InstallPrefixDir) / InstallBinDir;
+} // namespace PluginDir
+
 namespace
 {
-FilterHandle testHandle("Test Filter", 1, "05cc618b-781f-4ac0-b9ac-43f26ce1854f");
-FilterHandle test2Handle("Test2 Filter", 1, "05cc618b-781f-4ac0-b9ac-43f26ce1854e");
+FilterHandle testHandle("Test Filter", complex::Uuid::FromString("4a8fb14c-2d42-45c7-86cd-e7d7bb09967f").value(), TestPlugin::ID);
+FilterHandle test2Handle("Test 2 Filter", complex::Uuid::FromString("6060a977-31f5-442c-be83-aa3fc4f8268c").value(), Test2Plugin::ID);
 } // namespace
 
 void testLoadingPlugins()
@@ -50,7 +61,7 @@ void testLoadingPlugins()
   {
     throw std::runtime_error("");
   }
-  if(filter->getName() != "Test Filter")
+  if(filter->humanName() != "Test Filter")
   {
     throw std::runtime_error("");
   }
@@ -61,7 +72,7 @@ void testLoadingPlugins()
   {
     throw std::runtime_error("");
   }
-  if(filter2->getName() != "Test Filter 2")
+  if(filter2->humanName() != "Test 2 Filter")
   {
     throw std::runtime_error("");
   }
@@ -99,7 +110,7 @@ void testSingleton()
   {
     throw std::runtime_error("");
   }
-  if(filter->getName() != "Test Filter")
+  if(filter->humanName() != "Test Filter")
   {
     throw std::runtime_error("");
   }
@@ -110,7 +121,7 @@ void testSingleton()
   {
     throw std::runtime_error("");
   }
-  if(filter2->getName() != "Test Filter 2")
+  if(filter2->humanName() != "Test 2 Filter")
   {
     throw std::runtime_error("");
   }

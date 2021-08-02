@@ -3,13 +3,12 @@
 #include <vector>
 
 #include "complex/Plugin/AbstractPlugin.hpp"
-
 #include "test/test2plugin_export.hpp"
 
 class TEST2PLUGIN_EXPORT Test2Plugin : public complex::AbstractPlugin
 {
 public:
-  static const IdType ID;
+  static const complex::AbstractPlugin::IdType ID;
 
   Test2Plugin();
   ~Test2Plugin() override;

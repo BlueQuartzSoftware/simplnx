@@ -3,20 +3,20 @@
 
 using namespace complex;
 
-const AbstractPlugin::IdType Test2Plugin::ID = "05cc618b-781f-4ac0-b9ac-43f26ce1854e";
+const complex::AbstractPlugin::IdType Test2Plugin::ID = complex::Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854e").value();
 
-AbstractFilter* createTestFilter()
+complex::IFilter* createTestFilter()
 {
   return new Test2Filter();
 }
 
-AbstractPlugin* initPlugin()
+complex::AbstractPlugin* initPlugin()
 {
   return new Test2Plugin();
 }
 
 Test2Plugin::Test2Plugin()
-: AbstractPlugin(ID, "Test 2 Plugin", "Description")
+: complex::AbstractPlugin(ID, "Test 2 Plugin", "Description")
 {
   addFilter(&createTestFilter);
 }

@@ -1,24 +1,63 @@
 #pragma once
 
-#include "complex/Filtering/AbstractFilter.hpp"
+#include "complex/Filter/IFilter.hpp"
+#include "complex/complex_export.hpp"
+#include "complex/Core/FilterHandle.hpp"
 
-//#include "test/testplugin_export.hpp"
-
-class TestFilter : public complex::AbstractFilter
+class TestFilter : public complex::IFilter
 {
 public:
-  static const IdType ID;
+  static const complex::Uuid ID;
+  
+  TestFilter() = default;
+  ~TestFilter() noexcept override = default;
 
-  TestFilter();
-  virtual ~TestFilter();
+  TestFilter(const TestFilter&) = delete;
+  TestFilter(TestFilter&&) = delete;
+
+  TestFilter& operator=(const TestFilter&) = delete;
+  TestFilter& operator=(TestFilter&&) = delete;
+  
+    /**
+   * @brief
+   * @return
+   */
+  [[nodiscard]] std::string name() const override;
 
   /**
    * @brief
-   * @return Parameters
+   * @return
    */
-  complex::Parameters parameters() const override;
+  [[nodiscard]] complex::Uuid uuid() const override;
 
-protected:
-  bool preflightImpl(const complex::DataStructure& data, const complex::Arguments& args) const override;
-  void executeImpl(complex::DataStructure& data, const complex::Arguments& args) const override;
+  /**
+   * @brief
+   * @return
+   */
+  [[nodiscard]] std::string humanName() const override;
+
+  /**
+   * @brief
+   * @return
+   */
+  [[nodiscard]] complex::Parameters parameters() const override;
+
+protected:  
+  /**
+   * @brief
+   * @param data
+   * @param args
+   * @param messageHandler
+   * @return
+   */
+  complex::Result<complex::OutputActions> preflightImpl(const complex::DataStructure& data, const complex::Arguments& args, const complex::IFilter::MessageHandler& messageHandler) const override;
+
+  /**
+   * @brief
+   * @param data
+   * @param args
+   * @param messageHandler
+   * @return
+   */
+  complex::Result<> executeImpl(complex::DataStructure& data, const complex::Arguments& args, const complex::IFilter::MessageHandler& messageHandler) const override;
 };

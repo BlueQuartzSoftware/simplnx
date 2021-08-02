@@ -51,6 +51,7 @@ target_include_directories(TestPlugin
     $<BUILD_INTERFACE:${PLUGIN_GENERATED_DIR}>
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/tests/Plugin>
 )
+#target_include_directories(TestPlugin PRIVATE ${COMPLX_SOURCE_DIR}/src)
 
 install(TARGETS TestPlugin
     PUBLIC_HEADER DESTINATION include/TestPlugin
@@ -103,6 +104,7 @@ target_include_directories(Test2Plugin
     $<BUILD_INTERFACE:${PLUGIN_GENERATED_DIR}>
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/tests/Plugin>
 )
+#target_include_directories(Test2Plugin PRIVATE ${COMPLX_SOURCE_DIR}/src)
 
 install(TARGETS Test2Plugin
     PUBLIC_HEADER DESTINATION include/Test2Plugin

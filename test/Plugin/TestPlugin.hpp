@@ -9,7 +9,7 @@
 class TESTPLUGIN_EXPORT TestPlugin : public complex::AbstractPlugin
 {
 public:
-  static const IdType ID;
+  static const complex::AbstractPlugin::IdType ID;
 
   TestPlugin();
   ~TestPlugin() override;

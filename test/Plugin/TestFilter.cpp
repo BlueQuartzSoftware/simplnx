@@ -3,31 +3,38 @@
 #include <iostream>
 #include <string>
 
-#include "complex/Filtering/AbstractFilter.hpp"
-
 using namespace complex;
 
-const AbstractFilter::IdType TestFilter::ID = 1;
+const Uuid TestFilter::ID = complex::Uuid::FromString("4a8fb14c-2d42-45c7-86cd-e7d7bb09967f").value();
 
-TestFilter::TestFilter()
-: AbstractFilter("Test Filter", TestFilter::ID)
+std::string TestFilter::name() const
 {
+  return "TestFilter";
 }
 
-TestFilter::~TestFilter() = default;
+Uuid TestFilter::uuid() const
+{
+  return ID;
+}
 
-complex::Parameters TestFilter::parameters() const
+std::string TestFilter::humanName() const
+{
+  return "Test Filter";
+}
+
+Parameters TestFilter::parameters() const
 {
   return {};
 }
 
-bool TestFilter::preflightImpl(const DataStructure& data, const Arguments& args) const
+complex::Result<complex::OutputActions> TestFilter::preflightImpl(const complex::DataStructure& data, const complex::Arguments& args, const complex::IFilter::MessageHandler& messageHandler) const
 {
   std::cout << "Preflight TestFilter" << std::endl;
-  return true;
+  return {};
 }
 
-void TestFilter::executeImpl(DataStructure& data, const Arguments& args) const
+complex::Result<> TestFilter::executeImpl(complex::DataStructure& data, const complex::Arguments& args, const complex::IFilter::MessageHandler& messageHandler) const
 {
   std::cout << "Executing TestFilter" << std::endl;
+  return {};
 }

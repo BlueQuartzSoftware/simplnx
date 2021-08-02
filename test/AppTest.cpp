@@ -2,13 +2,20 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <filesystem>
 
 #include "complex/Core/Application.hpp"
-#include "complex/Filtering/AbstractFilter.hpp"
-
-#include "PluginDir.hpp"
+#include "complex/Filter/IFilter.hpp"
 
 using namespace complex;
+
+namespace PluginDir
+{
+inline const std::string InstallPrefixDir = R"(@CMAKE_INSTALL_PREFIX@)";
+inline const std::string InstallBinDir("@CMAKE_INSTALL_BINDIR@");
+
+inline const std::filesystem::path Path = std::filesystem::path(InstallPrefixDir) / InstallBinDir;
+} // namespace PluginDir
 
 void createApp()
 {
@@ -33,7 +40,7 @@ void testFilterList()
     {
       throw std::runtime_error("");
     }
-    std::cout << "  " << filter->getName() << "\n";
+    std::cout << "  " << filter->humanName() << "\n";
   }
   std::cout << std::endl;
 }
