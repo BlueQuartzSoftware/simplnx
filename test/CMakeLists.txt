@@ -21,6 +21,9 @@ add_executable(complex_plugin_test
   PluginTest.cpp
 )
 
+configure_file( cmake/PluginDir.hpp.in ${PROJECT_BINARY_DIR}/generated/PluginDir.hpp )
+include_directories( ${PROJECT_BINARY_DIR}/generated/ ) 
+
 target_include_directories(complex_app_test PRIVATE ${COMPLX_SOURCE_DIR}/test/Plugin)
 target_include_directories(complex_plugin_test PRIVATE ${COMPLX_SOURCE_DIR}/test/Plugin)
 

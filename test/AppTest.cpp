@@ -7,15 +7,9 @@
 #include "complex/Core/Application.hpp"
 #include "complex/Filter/IFilter.hpp"
 
+#include "PluginDir.hpp"
+
 using namespace complex;
-
-namespace PluginDir
-{
-inline const std::string InstallPrefixDir = R"(@CMAKE_INSTALL_PREFIX@)";
-inline const std::string InstallBinDir("@CMAKE_INSTALL_BINDIR@");
-
-inline const std::filesystem::path Path = std::filesystem::path(InstallPrefixDir) / InstallBinDir;
-} // namespace PluginDir
 
 void createApp()
 {

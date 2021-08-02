@@ -14,15 +14,9 @@
 #include "Test2Filter.hpp"
 #include "TestFilter.hpp"
 
+#include "PluginDir.hpp"
+
 using namespace complex;
-
-namespace PluginDir
-{
-inline const std::string InstallPrefixDir = R"(@CMAKE_INSTALL_PREFIX@)";
-inline const std::string InstallBinDir("@CMAKE_INSTALL_BINDIR@");
-
-inline const std::filesystem::path Path = std::filesystem::path(InstallPrefixDir) / InstallBinDir;
-} // namespace PluginDir
 
 namespace
 {
