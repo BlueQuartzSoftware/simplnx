@@ -158,6 +158,7 @@ set(COMPLEX_HDRS
 
   ${COMPLEX_SOURCE_DIR}/Core/Filters/ImportTextFilter.hpp
 
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/ArrayCreationParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/BoolParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/ChoicesParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/InputFileParameter.hpp
@@ -237,6 +238,7 @@ set(COMPLEX_SRCS
 
   ${COMPLEX_SOURCE_DIR}/Core/Filters/ImportTextFilter.cpp
 
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/ArrayCreationParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/BoolParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/ChoicesParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/InputFileParameter.cpp

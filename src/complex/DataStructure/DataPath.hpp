@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -18,6 +19,8 @@ namespace complex
 class COMPLEX_EXPORT DataPath
 {
 public:
+  static std::optional<DataPath> FromString(std::string_view string, char delimter = '/');
+
   /**
    * @brief Creates a DataPath using a vector of DataObject names.
    * @param path

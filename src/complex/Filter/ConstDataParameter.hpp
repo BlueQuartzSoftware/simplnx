@@ -17,7 +17,7 @@ public:
 
   [[nodiscard]] Mutability mutability() const final;
 
-  [[nodiscard]] virtual std::any resolve(const DataStructure& dataStructure, const std::any& value) const = 0;
+  [[nodiscard]] virtual Result<std::any> resolve(const DataStructure& dataStructure, const std::any& value) const = 0;
 
 protected:
   ConstDataParameter() = delete;
