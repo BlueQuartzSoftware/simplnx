@@ -29,7 +29,7 @@ std::vector<T> split(std::string_view string, char delimiter, bool ignoreEmpty =
           end = start;
           continue;
         }
-        parts.push_back(string.substr(start, end - start));
+        parts.push_back(T{string.substr(start, end - start)});
         start = i + 1;
         end = start;
         continue;
@@ -39,7 +39,7 @@ std::vector<T> split(std::string_view string, char delimiter, bool ignoreEmpty =
 
     if(start != end)
     {
-      parts.push_back(string.substr(start, end - start));
+      parts.push_back(T{string.substr(start, end - start)});
     }
   }
   else
@@ -48,7 +48,7 @@ std::vector<T> split(std::string_view string, char delimiter, bool ignoreEmpty =
     {
       if(string[i] == delimiter)
       {
-        parts.push_back(string.substr(start, end - start));
+        parts.push_back(T{string.substr(start, end - start)});
         start = i + 1;
         end = start;
         continue;
@@ -56,7 +56,7 @@ std::vector<T> split(std::string_view string, char delimiter, bool ignoreEmpty =
       end++;
     }
 
-    parts.push_back(string.substr(start, end - start));
+    parts.push_back(T{string.substr(start, end - start)});
   }
 
   return parts;
