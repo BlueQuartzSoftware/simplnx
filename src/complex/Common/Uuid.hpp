@@ -199,7 +199,7 @@ struct Uuid
 
   [[nodiscard]] inline std::string str() const
   {
-    return fmt::format("{:x}-{:x}-{:x}-{:x}{:x}-{:x}", time_low(), time_mid(), time_hi_version(), clock_seq_hi_variant(), clock_seq_low(), node());
+    return fmt::format("{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:012x}", time_low(), time_mid(), time_hi_version(), clock_seq_hi_variant(), clock_seq_low(), node());
   }
 
   std::array<std::byte, 16> data;
