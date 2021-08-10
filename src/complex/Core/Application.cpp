@@ -63,6 +63,11 @@ JsonPipelineBuilder* Application::getPipelineBuilder() const
   return nullptr;
 }
 
+H5DataReader* Application::getDataStructureReader() const
+{
+  return m_DataReader.get();
+}
+
 void Application::loadPlugin(const std::string& path)
 {
   getFilterList()->addPlugin(path);

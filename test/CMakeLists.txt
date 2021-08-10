@@ -2,6 +2,8 @@ find_package(Catch2 CONFIG REQUIRED)
 
 include(Catch)
 
+add_subdirectory(Plugin)
+
 add_executable(complex_test
   complex_test_main.cpp
   ArgumentsTest.cpp
@@ -13,6 +15,7 @@ add_executable(complex_test
   BitTest.cpp
   UuidTest.cpp
   CoreFilterTest.cpp
+  PluginTest.cpp
 )
 
 target_link_libraries(complex_test

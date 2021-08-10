@@ -5,7 +5,7 @@ using namespace complex;
 
 const AbstractPlugin::IdType TestPlugin::ID = "05cc618b-781f-4ac0-b9ac-43f26ce1854f";
 
-AbstractFilter* createTestFilter()
+IFilter* createTestFilter()
 {
   return new TestFilter();
 }
@@ -22,3 +22,8 @@ TestPlugin::TestPlugin()
 }
 
 TestPlugin::~TestPlugin() = default;
+
+std::vector<complex::IH5DataFactory*> TestPlugin::getDataFactories() const
+{
+  return {};
+}

@@ -8,15 +8,17 @@
 
 #include "complex/Common/Types.hpp"
 
+#include "complex/complex_export.hpp"
+
 namespace complex
 {
-struct Error
+struct COMPLEX_EXPORT Error
 {
   i32 code = 0;
   std::string message;
 };
 
-struct Warning
+struct COMPLEX_EXPORT Warning
 {
   i32 code = 0;
   std::string message;
@@ -40,7 +42,7 @@ struct ResultBase
   nonstd::expected<T, std::vector<Error>> m_Expected;
 };
 
-struct ResultVoid
+struct COMPLEX_EXPORT ResultVoid
 {
   nonstd::expected<void, std::vector<Error>> m_Expected;
 };

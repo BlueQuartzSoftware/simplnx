@@ -11,6 +11,7 @@
 namespace complex
 {
 class AbstractPlugin;
+class H5DataReader;
 class JsonPipelineBuilder;
 // class RestServer;
 
@@ -74,6 +75,12 @@ public:
    */
   JsonPipelineBuilder* getPipelineBuilder() const;
 
+  /**
+   * @brief 
+   * @return H5DataReader*
+  */
+  H5DataReader* getDataStructureReader() const;
+
 protected:
 private:
   /**
@@ -91,5 +98,6 @@ private:
   std::unique_ptr<complex::FilterList> m_FilterList;
   std::vector<std::unique_ptr<AbstractPlugin>> m_Plugins;
   // std::unique_ptr<complex::RestServer> m_RestServer;
+  std::unique_ptr<H5DataReader> m_DataReader;
 };
 } // namespace complex

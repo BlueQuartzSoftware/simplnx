@@ -122,6 +122,18 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.hpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterList.hpp
 
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/EdgeGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/GridMontageFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/HexahedralGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ImageGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/QuadGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ScalarDataFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TetrahedralGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TriangleGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/VertexGeomFactory.hpp
+
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.hpp
@@ -142,10 +154,13 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.hpp
+
   ${COMPLEX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
+
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
   ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
+  
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
@@ -182,6 +197,8 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataReader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IH5DataFactory.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
@@ -248,6 +265,8 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataReader.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp

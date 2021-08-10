@@ -133,7 +133,6 @@ public:
 protected:
   IFilter() = default;
 
-private:
   /**
    * @brief
    * @param data

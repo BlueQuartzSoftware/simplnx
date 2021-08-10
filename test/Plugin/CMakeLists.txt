@@ -49,8 +49,15 @@ target_include_directories(TestPlugin
     PUBLIC
     $<BUILD_INTERFACE:${TestPlugin_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${PLUGIN_GENERATED_DIR}>
-    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/tests/Plugin>
+    $<BUILD_INTERFACE:${COMPLEX_BINARY_DIR}/test/Plugin>
 )
+
+add_custom_command(TARGET TestPlugin POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${PROJECT_SOURCE_DIR}/libs"
+    $<TARGET_FILE_DIR:${CMAKE_BINARY_DIR}/test/Plugin>)
+
+message(STATUS "Plugin Dir: ${CMAKE_BINARY_DIR}/test/Plugins")
 
 install(TARGETS TestPlugin
     PUBLIC_HEADER DESTINATION include/TestPlugin
@@ -101,7 +108,7 @@ target_include_directories(Test2Plugin
     PUBLIC
     $<BUILD_INTERFACE:${TestPlugin_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${PLUGIN_GENERATED_DIR}>
-    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/tests/Plugin>
+    $<BUILD_INTERFACE:${COMPLEX_BINARY_DIR}/tests/Plugin>
 )
 
 install(TARGETS Test2Plugin

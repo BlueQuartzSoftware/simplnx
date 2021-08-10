@@ -3,31 +3,45 @@
 #include <iostream>
 #include <string>
 
-#include "complex/Filtering/AbstractFilter.hpp"
-
 using namespace complex;
 
-const AbstractFilter::IdType TestFilter::ID = 1;
+const std::string TestFilter::ID = "1";
 
 TestFilter::TestFilter()
-: AbstractFilter("Test Filter", TestFilter::ID)
+: IFilter()
 {
 }
 
 TestFilter::~TestFilter() = default;
+
+std::string TestFilter::name() const
+{
+  return "TestFilter";
+}
+
+std::string TestFilter::uuid() const
+{
+  return ID;
+}
+
+std::string TestFilter::humanName() const
+{
+  return "Test Filter";
+}
 
 complex::Parameters TestFilter::parameters() const
 {
   return {};
 }
 
-bool TestFilter::preflightImpl(const DataStructure& data, const Arguments& args) const
+IFilter::DataCheckResult TestFilter::dataCheckImpl(const complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const
 {
   std::cout << "Preflight TestFilter" << std::endl;
-  return true;
+  return {};
 }
 
-void TestFilter::executeImpl(DataStructure& data, const Arguments& args) const
+IFilter::ExecuteResult TestFilter::executeImpl(complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler)
 {
   std::cout << "Executing TestFilter" << std::endl;
+  return {};
 }
