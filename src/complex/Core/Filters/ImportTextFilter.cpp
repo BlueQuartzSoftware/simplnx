@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 
+#include "complex/Core/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Core/Parameters/ChoicesParameter.hpp"
 #include "complex/Core/Parameters/InputFileParameter.hpp"
 #include "complex/Core/Parameters/NumberParameter.hpp"
@@ -93,12 +94,19 @@ Parameters ImportTextFilter::parameters() const
   params.insert(std::make_unique<UInt64Parameter>(k_NSkipLinesKey, "Skip Header Lines", "Number of lines to skip in the file", 0));
   params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoiceKey, "Delimiter", "Delimiter for values on a line", 0,
                                                    ChoicesParameter::Choices{", (comma)", "; (semicolon)", "  (space)", ": (colon)", "\\t (Tab)"}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_DataArrayKey, "Created Array", "Array storing the file data", DataPath{}));
   return params;
 }
 
 Result<OutputActions> ImportTextFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  return {};
+  auto numericType = args.value<NumericType>(k_ScalarTypeKey);
+  auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{}, DataPath{});
+
+  OutputActions actions;
+  actions.actions.push_back(std::move(action));
+
+  return {std::move(actions)};
 }
 
 Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
