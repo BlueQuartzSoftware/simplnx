@@ -12,10 +12,10 @@ public:
   ~TestFilter1() noexcept override = default;
 
   TestFilter1(const TestFilter1&) = delete;
-  TestFilter1(TestFilter1&&) = delete;
+  TestFilter1(TestFilter1&&) noexcept = delete;
 
   TestFilter1& operator=(const TestFilter1&) = delete;
-  TestFilter1& operator=(TestFilter1&&) = delete;
+  TestFilter1& operator=(TestFilter1&&) noexcept = delete;
 
   /**
    * @brief

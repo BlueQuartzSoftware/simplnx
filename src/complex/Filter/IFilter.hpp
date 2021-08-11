@@ -61,10 +61,10 @@ public:
   virtual ~IFilter() noexcept = default;
 
   IFilter(const IFilter&) = delete;
-  IFilter(IFilter&&) = delete;
+  IFilter(IFilter&&) noexcept = delete;
 
   IFilter& operator=(const IFilter&) = delete;
-  IFilter& operator=(IFilter&&) = delete;
+  IFilter& operator=(IFilter&&) noexcept = delete;
 
   /**
    * @brief
