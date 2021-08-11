@@ -7,16 +7,16 @@
 #include <nonstd/expected.hpp>
 
 #include "complex/Common/Result.hpp"
+#include "complex/Common/Uuid.hpp"
+#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Filter/Output.hpp"
 #include "complex/Filter/Parameters.hpp"
 #include "complex/complex_export.hpp"
 
-#include "complex/DataStructure/DataStructure.hpp"
-
 namespace complex
 {
-class IFilter
+class COMPLEX_EXPORT IFilter
 {
 public:
   struct Message
@@ -33,40 +33,29 @@ public:
     std::string message;
   };
 
-  using MessageHandler = std::function<void(const Message&)>;
-
-  struct DataCheckResult
+  struct MessageHandler
   {
-    nonstd::expected<OutputActions, std::vector<Error>> result;
-    std::vector<Warning> warnings;
+    using Callback = std::function<void(const Message&)>;
 
-    [[nodiscard]] bool hasErrors() const
+    void operator()(const Message& message) const
     {
-      return !result.has_value();
-    }
-  };
-
-  struct ExecuteResult
-  {
-    std::vector<Error> errors;
-    std::vector<Warning> warnings;
-
-    static ExecuteResult makeExecuteResult(const DataCheckResult& dataCheckResult)
-    {
-      ExecuteResult result{dataCheckResult.result.error(), dataCheckResult.warnings};
-      return result;
+      if(m_Callback)
+      {
+        m_Callback(message);
+      }
     }
 
-    static ExecuteResult makeExecuteResult(DataCheckResult&& dataCheckResult)
+    void operator()(const std::string& message) const
     {
-      ExecuteResult result{std::move(dataCheckResult.result.error()), std::move(dataCheckResult.warnings)};
-      return result;
+      operator()(Message{Message::Type::Info, message});
     }
 
-    [[nodiscard]] bool hasErrors() const
+    void operator()(Message::Type type, const std::string& message) const
     {
-      return !errors.empty();
+      operator()(Message{type, message});
     }
+
+    Callback m_Callback;
   };
 
   virtual ~IFilter() noexcept = default;
@@ -87,7 +76,7 @@ public:
    * @brief
    * @return
    */
-  [[nodiscard]] virtual std::string uuid() const = 0;
+  [[nodiscard]] virtual Uuid uuid() const = 0;
 
   /**
    * @brief
@@ -108,7 +97,7 @@ public:
    * @param messageHandler
    * @return
    */
-  DataCheckResult dataCheck(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
+  Result<OutputActions> preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
 
   /**
    * @brief
@@ -117,7 +106,7 @@ public:
    * @param messageHandler
    * @return
    */
-  ExecuteResult execute(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {});
+  Result<> execute(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
 
   /**
    * @brief
@@ -131,7 +120,7 @@ public:
    * @param json
    * @return
    */
-  [[nodiscard]] nonstd::expected<Arguments, Result> fromJson(const nlohmann::json& json) const;
+  [[nodiscard]] Result<Arguments> fromJson(const nlohmann::json& json) const;
 
 protected:
   IFilter() = default;
@@ -144,7 +133,7 @@ private:
    * @param messageHandler
    * @return
    */
-  virtual DataCheckResult dataCheckImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const = 0;
+  virtual Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const = 0;
 
   /**
    * @brief
@@ -153,6 +142,6 @@ private:
    * @param messageHandler
    * @return
    */
-  virtual ExecuteResult executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) = 0;
+  virtual Result<> executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const = 0;
 };
 } // namespace complex

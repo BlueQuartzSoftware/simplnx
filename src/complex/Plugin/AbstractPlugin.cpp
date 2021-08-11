@@ -50,7 +50,7 @@ bool AbstractPlugin::containsFilterId(FilterHandle::FilterIdType uuid) const
   return m_InitializerMap.find(uuid) != m_InitializerMap.end();
 }
 
-std::set<FilterHandle> AbstractPlugin::getFilterHandles() const
+std::unordered_set<FilterHandle> AbstractPlugin::getFilterHandles() const
 {
   return m_FilterHandles;
 }

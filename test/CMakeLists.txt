@@ -10,6 +10,8 @@ add_executable(complex_test
   DataStructObserver.hpp
   DataStructObserver.cpp
   MontageTest.cpp
+  BitTest.cpp
+  UuidTest.cpp
 )
 
 target_link_libraries(complex_test
