@@ -67,15 +67,19 @@ set(COMPLEX_GENERATED_DIR ${PROJECT_BINARY_DIR}/generated)
 set(COMPLEX_GENERATED_HEADER_DIR ${PROJECT_BINARY_DIR}/generated/complex)
 set(COMPLEX_EXPORT_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/complex_export.hpp)
 
+file(READ ${PROJECT_SOURCE_DIR}/cmake/complex_export_extra.hpp COMPLEX_EXPORT_HEADER_EXTRA)
+
 include(GenerateExportHeader)
 generate_export_header(complex
   EXPORT_FILE_NAME ${COMPLEX_EXPORT_HEADER}
+  CUSTOM_CONTENT_FROM_VARIABLE COMPLEX_EXPORT_HEADER_EXTRA
 )
 
 set(COMPLEX_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/complex)
 
 set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Common/Array.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Bit.hpp
   ${COMPLEX_SOURCE_DIR}/Common/BoundingBox.hpp
   ${COMPLEX_SOURCE_DIR}/Common/EulerAngle.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Point2D.hpp
@@ -84,6 +88,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Common/Result.hpp
   ${COMPLEX_SOURCE_DIR}/Common/RgbColor.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Types.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Uuid.hpp
 
   ${COMPLEX_SOURCE_DIR}/Core/Application.hpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.hpp
@@ -135,16 +140,33 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/ScalarData.hpp
 
+  ${COMPLEX_SOURCE_DIR}/Filter/AbstractParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Arguments.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/ConstDataParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/DataParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/IFilter.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/IParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/MutableDataParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Output.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Core/Filters/ImportTextFilter.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/Filters/TestFilter1.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/Filters/TestFilter2.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/ArrayCreationParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/BoolParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/ChoicesParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/InputFileParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/NumberParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/NumericTypeParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/StringParameter.hpp
 )
 
 set(COMPLEX_GENERATED_HEADERS
@@ -198,11 +220,16 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.cpp
 
+  ${COMPLEX_SOURCE_DIR}/Filter/AbstractParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Arguments.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/ConstDataParameter.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/DataParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/IFilter.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/IParameter.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/MutableDataParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Output.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.cpp
 
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
 
@@ -210,6 +237,18 @@ set(COMPLEX_SRCS
 
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Core/Filters/ImportTextFilter.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/Filters/TestFilter1.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/Filters/TestFilter2.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/ArrayCreationParameter.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/BoolParameter.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/ChoicesParameter.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/InputFileParameter.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/NumberParameter.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/NumericTypeParameter.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/StringParameter.cpp
 )
 
 if(WIN32)

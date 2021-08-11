@@ -1,5 +1,6 @@
 [Bb]uild/
 .vscode/
+.idea/
 vcpkg_installed/
 .DS_Store
 CMakeUserPresets.json

@@ -81,14 +81,14 @@ bool FilterList::addPlugin(const std::string& path)
   return addPlugin(std::make_shared<PluginLoader>(path));
 }
 
-std::set<complex::FilterHandle> FilterList::getFilterHandles() const
+std::unordered_set<complex::FilterHandle> FilterList::getFilterHandles() const
 {
   return m_FilterHandles;
 }
 
-std::set<complex::AbstractPlugin*> FilterList::getLoadedPlugins() const
+std::unordered_set<complex::AbstractPlugin*> FilterList::getLoadedPlugins() const
 {
-  std::set<AbstractPlugin*> plugins;
+  std::unordered_set<AbstractPlugin*> plugins;
   for(auto& iter : m_PluginMap)
   {
     if(!iter.second->isLoaded())

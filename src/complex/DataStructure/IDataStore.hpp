@@ -16,11 +16,14 @@ public:
   /////////////////////////////////
   // Begin std::iterator support //
   /////////////////////////////////
-  class Iterator : public std::iterator<std::random_access_iterator_tag, T, int64_t, T*, T&>
+  class Iterator
   {
   public:
-    using reference = T&;
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = T;
     using difference_type = int64_t;
+    using pointer = T*;
+    using reference = T&;
 
     Iterator(IDataStore& dataStore, size_t index)
     : m_DataStore(dataStore)
@@ -119,11 +122,14 @@ public:
     IDataStore& m_DataStore;
     size_t m_Index = 0;
   };
-  class ConstIterator : public std::iterator<std::random_access_iterator_tag, T, int64_t, const T*, const T&>
+  class ConstIterator
   {
   public:
-    using reference = const T&;
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = T;
     using difference_type = int64_t;
+    using pointer = const T*;
+    using reference = const T&;
 
     ConstIterator(const IDataStore& dataStore, size_t index)
     : m_DataStore(dataStore)
