@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "complex/Core/Application.hpp"
+#include "complex/Filter/IFilter.hpp"
 
 using namespace complex;
 
