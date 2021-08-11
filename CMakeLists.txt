@@ -157,6 +157,8 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
 
   ${COMPLEX_SOURCE_DIR}/Core/Filters/ImportTextFilter.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/Filters/TestFilter1.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/Filters/TestFilter2.hpp
 
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/ArrayCreationParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/BoolParameter.hpp
@@ -237,6 +239,8 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
 
   ${COMPLEX_SOURCE_DIR}/Core/Filters/ImportTextFilter.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/Filters/TestFilter1.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/Filters/TestFilter2.cpp
 
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/ArrayCreationParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/BoolParameter.cpp
