@@ -5,13 +5,15 @@
 
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterHandle.hpp"
-//#include "complex/Filtering/AbstractFilter.hpp"
+#include "complex/Filter/IFilter.hpp"
+#include "complex/ImportCoreFilters.hpp"
 #include "complex/Plugin/PluginLoader.hpp"
 
 using namespace complex;
 
 FilterList::FilterList()
 {
+  registerCoreFilters();
 }
 
 FilterList::~FilterList() = default;
@@ -44,6 +46,12 @@ AbstractPlugin* FilterList::getPluginById(const FilterHandle::PluginIdType& id) 
 
 complex::IFilter* FilterList::createFilter(const complex::FilterHandle& handle) const
 {
+  // Core filter
+  if(handle.getPluginId() == Uuid{})
+  {
+    return createCoreFilter(handle.getFilterId());
+  }
+  // Plugin filter
   const auto& loader = m_PluginMap.at(handle.getPluginId());
   if(!loader->isLoaded())
   {
@@ -98,4 +106,21 @@ std::unordered_set<complex::AbstractPlugin*> FilterList::getLoadedPlugins() cons
     plugins.insert(iter.second->getPlugin());
   }
   return plugins;
+}
+
+void FilterList::addCoreFilter(FilterCreationFunc func)
+{
+  IFilter* filter = func();
+  m_CoreFiltersMap[filter->uuid()] = func;
+  m_FilterHandles.insert(FilterHandle(filter->name(), filter->uuid(), {}));
+  delete filter;
+}
+
+IFilter* FilterList::createCoreFilter(const FilterHandle::FilterIdType& filterId) const
+{
+  if(m_CoreFiltersMap.find(filterId) == m_CoreFiltersMap.end())
+  {
+    return nullptr;
+  }
+  return m_CoreFiltersMap.at(filterId)();
 }

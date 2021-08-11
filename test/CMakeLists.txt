@@ -12,6 +12,7 @@ add_executable(complex_test
   MontageTest.cpp
   BitTest.cpp
   UuidTest.cpp
+  CoreFilterTest.cpp
 )
 
 add_executable(complex_app_test

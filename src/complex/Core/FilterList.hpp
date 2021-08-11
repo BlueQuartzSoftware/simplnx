@@ -16,6 +16,8 @@ class IFilter;
 class AbstractPlugin;
 class PluginLoader;
 
+using FilterCreationFunc = IFilter* (*)();
+
 /**
  * @class FilterList
  * @brief The FilterList class serves as a lookup point for finding and
@@ -99,7 +101,34 @@ public:
 
 protected:
 private:
+  /**
+   * @brief Registers core filters with the FilterList.
+   *
+   * This method is defined within a CMake generated source file.
+   */
+  void registerCoreFilters();
+
+  /**
+   * @brief Registers a specific core filter with the FilterList.
+   *
+   * This method should only be called within registerCoreFilters().
+   * @param func
+   */
+  void addCoreFilter(FilterCreationFunc func);
+
+  /**
+   * @brief Attempts to create and return a filter with the specified ID
+   * from the list of core filters. Returns nullptr if no core filter with
+   * the specified ID could be found.
+   * @param filterId
+   * @return IFilter*
+   */
+  IFilter* createCoreFilter(const FilterHandle::FilterIdType& filterId) const;
+
+  ////////////
+  // Variables
   std::unordered_set<FilterHandle> m_FilterHandles;
+  std::unordered_map<FilterHandle::FilterIdType, FilterCreationFunc> m_CoreFiltersMap;
   std::unordered_map<FilterHandle::PluginIdType, std::shared_ptr<complex::PluginLoader>> m_PluginMap;
 };
 } // namespace complex

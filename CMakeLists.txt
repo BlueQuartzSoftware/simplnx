@@ -75,6 +75,36 @@ generate_export_header(complex
   CUSTOM_CONTENT_FROM_VARIABLE COMPLEX_EXPORT_HEADER_EXTRA
 )
 
+# Specify core filters and parameters here
+set(CoreFilters
+  ImportTextFilter
+)
+set(CoreParameters
+  ArrayCreationParameter
+  BoolParameter
+  ChoicesParameter
+  InputFileParameter
+  NumberParameter
+  NumericTypeParameter
+  StringParameter
+)
+
+# Generate core filter import header
+set(CreateCoreFilters "")
+set(AddCoreFilters "")
+
+foreach(filter ${CoreFilters})
+  list(APPEND CoreFilterIncludes "#include \"complex/Core/Filters/${filter}.hpp\"")
+  list(APPEND CreateCoreFilters "IFilter* create${filter}(){ return new ${filter}; }")
+  list(APPEND AddCoreFilters "  addCoreFilter(&create${filter});")
+endforeach()
+configure_file(
+  "cmake/ImportCoreFilters.hpp.in"
+  "${COMPLEX_GENERATED_HEADER_DIR}/ImportCoreFilters.hpp"
+  @ONLY
+)
+# End generate core filter headers
+
 set(COMPLEX_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/complex)
 
 set(COMPLEX_HDRS
@@ -155,20 +185,11 @@ set(COMPLEX_HDRS
 
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
-
-  ${COMPLEX_SOURCE_DIR}/Core/Filters/ImportTextFilter.hpp
-
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/ArrayCreationParameter.hpp
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/BoolParameter.hpp
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/ChoicesParameter.hpp
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/InputFileParameter.hpp
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/NumberParameter.hpp
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/NumericTypeParameter.hpp
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/StringParameter.hpp
 )
 
 set(COMPLEX_GENERATED_HEADERS
   ${COMPLEX_EXPORT_HEADER}
+  ${COMPLEX_GENERATED_HEADER_DIR}/ImportCoreFilters.hpp
 )
 
 set(COMPLEX_ALL_HDRS
@@ -235,17 +256,27 @@ set(COMPLEX_SRCS
 
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
-
-  ${COMPLEX_SOURCE_DIR}/Core/Filters/ImportTextFilter.cpp
-
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/ArrayCreationParameter.cpp
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/BoolParameter.cpp
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/ChoicesParameter.cpp
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/InputFileParameter.cpp
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/NumberParameter.cpp
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/NumericTypeParameter.cpp
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/StringParameter.cpp
 )
+
+# Add Core Filters
+foreach(filter ${CoreFilters})
+  list(APPEND COMPLEX_HDRS
+    "${COMPLEX_SOURCE_DIR}/Core/Filters/${filter}.hpp"
+  )
+  list(APPEND COMPLEX_SRCS
+    "${COMPLEX_SOURCE_DIR}/Core/Filters/${filter}.cpp"
+  )
+endforeach()
+
+# Add Core FilterParameters
+foreach(param ${CoreParameters})
+  list(APPEND COMPLEX_HDRS
+    "${COMPLEX_SOURCE_DIR}/Core/Parameters/${param}.hpp"
+  )
+  list(APPEND COMPLEX_SRCS
+    "${COMPLEX_SOURCE_DIR}/Core/Parameters/${param}.cpp"
+  )
+endforeach()
 
 if(WIN32)
   list(APPEND COMPLEX_SRCS
