@@ -12,10 +12,10 @@ public:
   ~ImportTextFilter() noexcept override = default;
 
   ImportTextFilter(const ImportTextFilter&) = delete;
-  ImportTextFilter(ImportTextFilter&&) = delete;
+  ImportTextFilter(ImportTextFilter&&) noexcept = delete;
 
   ImportTextFilter& operator=(const ImportTextFilter&) = delete;
-  ImportTextFilter& operator=(ImportTextFilter&&) = delete;
+  ImportTextFilter& operator=(ImportTextFilter&&) noexcept = delete;
 
   /**
    * @brief
