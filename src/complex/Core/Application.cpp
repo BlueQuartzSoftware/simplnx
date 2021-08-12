@@ -25,7 +25,7 @@ std::filesystem::path findCurrentPath()
   int32_t bytes = MIN(readlink("/proc/self/exe", pBuf, len), len - 1);
   if(bytes >= 0)
     pBuf[bytes] = '\0';
-  return std::filesystem::path(pBuf).parent_path();
+  return std::filesystem::path(pBuf);
 }
 #elif _WIN32
 std::filesystem::path findCurrentPath()
@@ -33,7 +33,7 @@ std::filesystem::path findCurrentPath()
   char pBuf[256];
   size_t len = sizeof(pBuf);
   int32_t bytes = GetModuleFileName(NULL, pBuf, len);
-  return std::filesystem::path(pBuf).parent_path();
+  return std::filesystem::path(pBuf);
 }
 #else
 std::filesystem::path findCurrentPath()
@@ -81,6 +81,11 @@ Application* Application::Instance()
 std::filesystem::path Application::getCurrentPath() const
 {
   return m_CurrentPath;
+}
+
+std::filesystem::path Application::getCurrentDir() const
+{
+  return m_CurrentPath.parent_path();
 }
 
 void Application::loadPlugins(const std::filesystem::path& pluginDir)

@@ -20,7 +20,7 @@ FilterHandle test2Handle("Test2 Filter", "1", "05cc618b-781f-4ac0-b9ac-43f26ce18
 TEST_CASE("Test Loading Plugins")
 {
   Application app;
-  std::filesystem::path pluginPath = app.getCurrentPath().string() + ::PluginDir;
+  std::filesystem::path pluginPath = app.getCurrentDir().string() + ::PluginDir;
   app.loadPlugins(pluginPath);
 
   auto filterList = app.getFilterList();
@@ -42,11 +42,11 @@ TEST_CASE("Test Loading Plugins")
 void initApplication()
 {
   Application* app = new Application();
-  std::filesystem::path pluginPath = app->getCurrentPath().string() + ::PluginDir;
+  std::filesystem::path pluginPath = app->getCurrentDir().string() + ::PluginDir;
   app->loadPlugins(pluginPath);
 }
 
-TEST_CASE("Test Singleton")
+TEST_CASE("Test Application Singleton")
 {
   initApplication();
   REQUIRE(Application::Instance() != nullptr);

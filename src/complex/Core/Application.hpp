@@ -82,10 +82,16 @@ public:
   H5DataReader* getDataStructureReader() const;
 
   /**
-   * @brief Returns the filepath pointing to the executable.
+   * @brief Returns a filepath pointing to the executable.
    * @return std::filesystem::path
    */
   std::filesystem::path getCurrentPath() const;
+
+  /**
+   * @brief Returns a filepath pointing to the executable's directory.
+   * @return std::filesystem::path
+   */
+  std::filesystem::path getCurrentDir() const;
 
 protected:
 private:
