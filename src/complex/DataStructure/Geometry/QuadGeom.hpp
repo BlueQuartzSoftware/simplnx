@@ -261,22 +261,6 @@ public:
    */
   uint32_t getXdmfGridType() const override;
 
-  /**
-   * @brief
-   * @param out
-   * @param hdfFileName
-   * @return H5::ErrorType
-   */
-  H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const override;
-
-  /**
-   * @brief
-   * @param in
-   * @param hdfFileName
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readFromXdmfText(std::istream& in, const std::string& hdfFileName) override;
-
 protected:
   /**
    * @brief

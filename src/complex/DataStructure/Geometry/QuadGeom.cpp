@@ -403,16 +403,6 @@ uint32_t QuadGeom::getXdmfGridType() const
   throw std::runtime_error("");
 }
 
-H5::ErrorType QuadGeom::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
-{
-  throw std::runtime_error("");
-}
-
-H5::ErrorType QuadGeom::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
-{
-  throw std::runtime_error("");
-}
-
 void QuadGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)
 {
   if(!elementsContainingVert)

@@ -14,6 +14,9 @@ class IH5DataFactory;
 class COMPLEX_EXPORT H5DataReader
 {
 public:
+  /**
+   * @brief Constructs an H5DataReader and registers core H5DataFactories.
+   */
   H5DataReader();
   virtual ~H5DataReader();
 
@@ -44,6 +47,13 @@ public:
   DataStructure createDataStructure(H5::IdType topLevelGroup) const;
 
 private:
+  /**
+   * @brief Adds factories for DataObject subclasses defined within complex itself.
+   */
+  void addCoreFactories();
+
+  ////////////
+  // Variables
   std::map<std::string, std::shared_ptr<IH5DataFactory>> m_Factories;
 };
 } // namespace complex

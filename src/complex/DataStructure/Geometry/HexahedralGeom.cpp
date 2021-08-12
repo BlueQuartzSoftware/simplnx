@@ -481,16 +481,6 @@ uint32_t HexahedralGeom::getXdmfGridType() const
   throw std::runtime_error("");
 }
 
-H5::ErrorType HexahedralGeom::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
-{
-  throw std::runtime_error("");
-}
-
-H5::ErrorType HexahedralGeom::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
-{
-  throw std::runtime_error("");
-}
-
 void HexahedralGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)
 {
   if(!elementsContainingVert)

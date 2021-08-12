@@ -36,12 +36,12 @@ complex::Parameters Test2Filter::parameters() const
 
 IFilter::DataCheckResult Test2Filter::dataCheckImpl(const complex::DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  std::cout << "Preflight TestFilter2" << std::endl;
+  //std::cout << "Preflight TestFilter2" << std::endl;
   return {};
 }
 
 IFilter::ExecuteResult Test2Filter::executeImpl(complex::DataStructure& data, const Arguments& args, const MessageHandler& messageHandler)
 {
-  std::cout << "Executing TestFilter2" << std::endl;
+  //std::cout << "Executing TestFilter2" << std::endl;
   return {};
 }

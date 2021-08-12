@@ -5,13 +5,13 @@
 #include <vector>
 
 #include "complex/Core/FilterList.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DataReader.hpp"
 
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
 class AbstractPlugin;
-class H5DataReader;
 class JsonPipelineBuilder;
 // class RestServer;
 
@@ -53,7 +53,7 @@ public:
    * @brief Loads plugins in the target directory
    * @param pluginDir
    */
-  void loadPlugins(const std::string& pluginDir);
+  void loadPlugins(const std::filesystem::path& pluginDir);
 
   /**
    * @brief Returns a pointer to the Application's FilterList.
@@ -76,13 +76,24 @@ public:
   JsonPipelineBuilder* getPipelineBuilder() const;
 
   /**
-   * @brief 
+   * @brief
    * @return H5DataReader*
-  */
+   */
   H5DataReader* getDataStructureReader() const;
+
+  /**
+   * @brief Returns the filepath pointing to the executable.
+   * @return std::filesystem::path
+   */
+  std::filesystem::path getCurrentPath() const;
 
 protected:
 private:
+  /**
+   * @brief Performs initialization work shared between constructors.
+   */
+  void initialize();
+
   /**
    * @brief Loads the plugin at the specified file path.
    * @param path
@@ -99,5 +110,6 @@ private:
   std::vector<std::unique_ptr<AbstractPlugin>> m_Plugins;
   // std::unique_ptr<complex::RestServer> m_RestServer;
   std::unique_ptr<H5DataReader> m_DataReader;
+  std::filesystem::path m_CurrentPath = "";
 };
 } // namespace complex

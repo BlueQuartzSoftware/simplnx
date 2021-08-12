@@ -5,7 +5,7 @@
 
 namespace complex
 {
-class VertexGeomFactory : public IH5DataFactory
+class COMPLEX_EXPORT VertexGeomFactory : public IH5DataFactory
 {
 public:
   VertexGeomFactory()

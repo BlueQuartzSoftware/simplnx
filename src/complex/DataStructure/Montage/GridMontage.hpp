@@ -71,7 +71,7 @@ public:
   size_t getDepth() const;
 
   /**
-   * @brief
+   * @brief Returns the 3D tile dimensions as a SizeVec3.
    * @return SizeVec3
    */
   SizeVec3 getGridSize() const;
@@ -85,8 +85,8 @@ public:
   void resizeTileDims(size_t row, size_t col, size_t depth);
 
   /**
-   * @brief Returns the GridTileIndex for the specified tile position. Returns an invalid
-   * GridTileIndex if the tile position is out of bounds.
+   * @brief Returns the GridTileIndex for the specified tile position. Returns
+   * an invalid GridTileIndex if the tile position is out of bounds.
    * @param row
    * @param col
    * @param depth
@@ -94,8 +94,22 @@ public:
    */
   GridTileIndex getTileIndex(size_t row, size_t col, size_t depth) const;
 
+  /**
+   * @brief Returns a GridTileIndex pointing at the specified 3D tile index.
+   * Returns an invalid index if the position is outside of the current
+   * dimensions.
+   * @param pos
+   * @return GridTileIndex
+   */
   GridTileIndex getTileIndex(const SizeVec3& pos) const;
 
+  /**
+   * @brief Returns the 3D tile position of the specified geometry if it could
+   * be found within the montage. Returns an empty object if the geometry could
+   * not be found.
+   * @param geom
+   * @return std::optional<SizeVec3>
+   */
   std::optional<SizeVec3> getTilePosOfGeometry(const AbstractGeometry* geom) const;
 
   /**
@@ -123,12 +137,20 @@ public:
   const AbstractGeometry* getGeometry(const AbstractTileIndex* index) const override;
 
   /**
-   * @brief
+   * @brief Sets the geometry at the position specified by the provided
+   * AbstractTileIndex. Does nothing if the index does not reference a valid
+   * position within the montage.
    * @param index
    * @param geom
    */
   void setGeometry(const AbstractTileIndex* index, AbstractGeometry* geom) override;
 
+  /**
+   * @brief Sets the geometry at the specified 3D tile position. Does nothing
+   * if the tile position is not within the current dimensions.
+   * @param position
+   * @param geom
+   */
   void setGeometry(const SizeVec3& position, AbstractGeometry* geom);
 
   /**
@@ -146,38 +168,22 @@ public:
   const AbstractGeometry* getGeometry(const SizeVec3& position) const;
 
   /**
-   * @brief
+   * @brief Returns a TooltipGenerator for generating the appropriate HTML tooltips.
    * @return TooltipGenerator
    */
   TooltipGenerator getTooltipGenerator() const override;
 
   /**
-   * @brief
+   * @brief Returns the current dimensions as a SizeVec3.
    * @return DimensionsType
    */
   DimensionsType getDimensions() const;
 
   /**
-   * @brief
+   * @brief Returns the geometry bounds in 3D.
    * @return BoundsType
    */
   BoundsType getBounds() const;
-
-  /**
-   * @brief
-   * @param out
-   * @param hdfFileName
-   * @return H5::ErrorType
-   */
-  H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const override;
-
-  /**
-   * @brief
-   * @param in
-   * @param hdfFileName
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readFromXdmfText(std::istream& in, const std::string& hdfFileName) override;
 
 protected:
   /**
@@ -188,16 +194,36 @@ protected:
   GridMontage(DataStructure* ds, const std::string& name);
 
   /**
-   * @brief
+   * @brief Returns the appropriate linear offset from the provided
+   * GridTileIndex.
    * @param tileId
    * @return size_t
    */
   size_t getOffsetFromTileId(const TileIdType& tileId) const;
 
+  /**
+   * @brief Returns the appropriate linear offset for the specified 3D tile
+   * index. This is done by calling getOffsetFromTilePos using the current
+   * dimensions.
+   * @param tilePos
+   * @return size_t
+   */
   size_t getOffsetFromTilePos(const SizeVec3& tilePos) const;
 
+  /**
+   * @brief Returns the appropriate linear offset for the specified 3D tile
+   * index and dimensions.
+   * @param tilePos
+   * @param dims
+   * @return size_t
+   */
   static size_t getOffsetFromTilePos(const SizeVec3& tilePos, const DimensionsType& dims);
 
+  /**
+   * @brief Returns the 3D tile position from the specified linear index.
+   * @param offset
+   * @return SizeVec3
+   */
   SizeVec3 getTilePosFromOffset(size_t offset) const;
 
 private:

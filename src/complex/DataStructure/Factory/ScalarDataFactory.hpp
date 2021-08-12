@@ -5,7 +5,7 @@
 
 namespace complex
 {
-class ScalarDataFactory : public IH5DataFactory
+class COMPLEX_EXPORT ScalarDataFactory : public IH5DataFactory
 {
 public:
   ScalarDataFactory()

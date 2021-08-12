@@ -1,13 +1,43 @@
 #include "H5DataReader.hpp"
 
+#include "complex/DataStructure/Factory/DataArrayFactory.hpp"
+#include "complex/DataStructure/Factory/DataGroupFactory.hpp"
+#include "complex/DataStructure/Factory/EdgeGeomFactory.hpp"
+#include "complex/DataStructure/Factory/GridMontageFactory.hpp"
+#include "complex/DataStructure/Factory/HexahedralGeomFactory.hpp"
+#include "complex/DataStructure/Factory/ImageGeomFactory.hpp"
+#include "complex/DataStructure/Factory/QuadGeomFactory.hpp"
+#include "complex/DataStructure/Factory/RectGridGeomFactory.hpp"
+#include "complex/DataStructure/Factory/ScalarDataFactory.hpp"
+#include "complex/DataStructure/Factory/TetrahedralGeomFactory.hpp"
+#include "complex/DataStructure/Factory/TriangleGeomFactory.hpp"
+#include "complex/DataStructure/Factory/VertexGeomFactory.hpp"
 #include "complex/Utilities/Parsing/HDF5/IH5DataFactory.hpp"
 
 using namespace complex;
 
 H5DataReader::H5DataReader()
 {
+  addCoreFactories();
 }
+
 H5DataReader::~H5DataReader() = default;
+
+void H5DataReader::addCoreFactories()
+{
+  addFactory(new DataArrayFactory());
+  addFactory(new DataGroupFactory());
+  addFactory(new EdgeGeomFactory());
+  addFactory(new GridMontageFactory());
+  addFactory(new HexahedralGeomFactory());
+  addFactory(new ImageGeomFactory());
+  addFactory(new QuadGeomFactory());
+  addFactory(new RectGridGeomFactory());
+  addFactory(new ScalarDataFactory());
+  addFactory(new TetrahedralGeomFactory());
+  addFactory(new TriangleGeomFactory());
+  addFactory(new VertexGeomFactory());
+}
 
 void H5DataReader::addFactory(IH5DataFactory* factory)
 {

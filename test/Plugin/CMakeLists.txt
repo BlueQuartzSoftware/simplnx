@@ -24,6 +24,9 @@ set(Plugin_SRCS
 add_library(TestPlugin SHARED)
 set_target_properties(TestPlugin PROPERTIES
     FOLDER "Tests/Plugins"
+    SUFFIX ".complex"
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>/test/Plugins
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>/test/Plugins
 )
 target_link_libraries(TestPlugin PUBLIC complex)
 
@@ -52,13 +55,6 @@ target_include_directories(TestPlugin
     $<BUILD_INTERFACE:${COMPLEX_BINARY_DIR}/test/Plugin>
 )
 
-add_custom_command(TARGET TestPlugin POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${PROJECT_SOURCE_DIR}/libs"
-    $<TARGET_FILE_DIR:${CMAKE_BINARY_DIR}/test/Plugin>)
-
-message(STATUS "Plugin Dir: ${CMAKE_BINARY_DIR}/test/Plugins")
-
 install(TARGETS TestPlugin
     PUBLIC_HEADER DESTINATION include/TestPlugin
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -83,6 +79,9 @@ set(Plugin2_SRCS
 add_library(Test2Plugin SHARED)
 set_target_properties(Test2Plugin PROPERTIES
     FOLDER "Tests/Plugins"
+    SUFFIX ".complex"
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>/test/Plugins
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>/test/Plugins
 )
 target_link_libraries(Test2Plugin PUBLIC complex)
 

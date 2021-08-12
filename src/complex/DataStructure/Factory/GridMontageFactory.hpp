@@ -5,7 +5,7 @@
 
 namespace complex
 {
-class GridMontageFactory : public IH5DataFactory
+class COMPLEX_EXPORT GridMontageFactory : public IH5DataFactory
 {
 public:
   GridMontageFactory()

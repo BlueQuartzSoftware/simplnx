@@ -5,7 +5,7 @@
 
 namespace complex
 {
-class DataGroupFactory : public IH5DataFactory
+class COMPLEX_EXPORT DataGroupFactory : public IH5DataFactory
 {
 public:
   DataGroupFactory()

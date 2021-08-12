@@ -1,25 +1,68 @@
 #include "Application.hpp"
 
 #include <filesystem>
+#include <iostream>
+
+#ifdef __linux__
+#include <limits.h>
+#include <unistd.h>
+#elif _WIN32
+#include <Windows.h>
+#endif
 
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterList.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
+#include "complex/Plugin/PluginLoader.hpp"
 
 using namespace complex;
+
+#ifdef __linux__
+std::filesystem::path findCurrentPath()
+{
+  char pBuf[256];
+  size_t len = sizeof(pBuf);
+  int32_t bytes = MIN(readlink("/proc/self/exe", pBuf, len), len - 1);
+  if(bytes >= 0)
+    pBuf[bytes] = '\0';
+  return std::filesystem::path(pBuf).parent_path();
+}
+#elif _WIN32
+std::filesystem::path findCurrentPath()
+{
+  char pBuf[256];
+  size_t len = sizeof(pBuf);
+  int32_t bytes = GetModuleFileName(NULL, pBuf, len);
+  return std::filesystem::path(pBuf).parent_path();
+}
+#else
+std::filesystem::path findCurrentPath()
+{
+  return std::filesystem::path();
+}
+}
+#endif
 
 Application* Application::s_Instance = nullptr;
 
 Application::Application()
 : m_FilterList(new FilterList())
+, m_DataReader(new H5DataReader())
 {
-  s_Instance = this;
+  initialize();
 }
 
 Application::Application(int argc, char** argv)
 : m_FilterList(new FilterList())
+, m_DataReader(new H5DataReader())
+{
+  initialize();
+}
+
+void Application::initialize()
 {
   s_Instance = this;
+  m_CurrentPath = findCurrentPath();
 }
 
 Application::~Application()
@@ -35,13 +78,18 @@ Application* Application::Instance()
   return s_Instance;
 }
 
-void Application::loadPlugins(const std::string& pluginDir)
+std::filesystem::path Application::getCurrentPath() const
+{
+  return m_CurrentPath;
+}
+
+void Application::loadPlugins(const std::filesystem::path& pluginDir)
 {
   for(const auto& entry : std::filesystem::directory_iterator(pluginDir))
   {
     auto path = std::filesystem::path(entry.path());
-    std::string filename = path.filename().string();
-    if(filename.find("Plugin.") != std::string::npos)
+    std::string extension = path.extension().string();
+    if(extension == ".complex")
     {
       loadPlugin(path.string());
     }
@@ -70,5 +118,16 @@ H5DataReader* Application::getDataStructureReader() const
 
 void Application::loadPlugin(const std::string& path)
 {
-  getFilterList()->addPlugin(path);
+  auto pluginLoader = std::make_shared<PluginLoader>(path);
+  getFilterList()->addPlugin(pluginLoader);
+
+  auto plugin = pluginLoader->getPlugin();
+  if((plugin != nullptr) && (m_DataReader != nullptr))
+  {
+    auto factories = plugin->getDataFactories();
+    for(auto factory : factories)
+    {
+      m_DataReader->addFactory(factory);
+    }
+  }
 }

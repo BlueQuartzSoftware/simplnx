@@ -442,16 +442,6 @@ uint32_t TetrahedralGeom::getXdmfGridType() const
   throw std::runtime_error("");
 }
 
-H5::ErrorType TetrahedralGeom::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
-{
-  throw std::runtime_error("");
-}
-
-H5::ErrorType TetrahedralGeom::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
-{
-  throw std::runtime_error("");
-}
-
 void TetrahedralGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)
 {
   if(!elementsContainingVert)

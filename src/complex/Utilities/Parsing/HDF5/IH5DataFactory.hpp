@@ -39,6 +39,8 @@ protected:
   /**
    * @brief Default constructor
    */
-  IH5DataFactory();
+  IH5DataFactory()
+  {
+  }
 };
 } // namespace complex

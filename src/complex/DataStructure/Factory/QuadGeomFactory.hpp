@@ -5,7 +5,7 @@
 
 namespace complex
 {
-class QuadGeomFactory : public IH5DataFactory
+class COMPLEX_EXPORT QuadGeomFactory : public IH5DataFactory
 {
 public:
   QuadGeomFactory()

@@ -242,28 +242,6 @@ public:
     }
   }
 
-  /**
-   * @brief Writes the DataObject to the specified XDMF file.
-   * @param out
-   * @param hdfFileName
-   * @return H5::ErrorType
-   */
-  H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const override
-  {
-    throw std::runtime_error("");
-  }
-
-  /**
-   * @brief Reads and replaces values from the provided input stream.
-   * @param in
-   * @param hdfFileName
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readFromXdmfText(std::istream& in, const std::string& hdfFileName) override
-  {
-    throw std::runtime_error("");
-  }
-
 protected:
   /**
    * @brief

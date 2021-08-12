@@ -544,16 +544,6 @@ uint32_t RectGridGeom::getXdmfGridType() const
   throw std::runtime_error("");
 }
 
-H5::ErrorType RectGridGeom::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
-{
-  throw std::runtime_error("");
-}
-
-H5::ErrorType RectGridGeom::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
-{
-  throw std::runtime_error("");
-}
-
 void RectGridGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)
 {
 }

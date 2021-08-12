@@ -5,7 +5,7 @@
 
 namespace complex
 {
-class HexahedralGeomFactory : public IH5DataFactory
+class COMPLEX_EXPORT HexahedralGeomFactory : public IH5DataFactory
 {
 public:
   HexahedralGeomFactory()

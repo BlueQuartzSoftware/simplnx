@@ -41,13 +41,3 @@ bool DataGroup::canInsert(const DataObject* obj) const
 {
   return BaseGroup::canInsert(obj);
 }
-
-H5::ErrorType DataGroup::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
-{
-  throw std::runtime_error("");
-}
-
-H5::ErrorType DataGroup::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
-{
-  throw std::runtime_error("");
-}

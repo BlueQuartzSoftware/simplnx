@@ -387,16 +387,6 @@ uint32_t TriangleGeom::getXdmfGridType() const
   throw std::runtime_error("");
 }
 
-H5::ErrorType TriangleGeom::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
-{
-  throw std::runtime_error("");
-}
-
-H5::ErrorType TriangleGeom::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
-{
-  throw std::runtime_error("");
-}
-
 void TriangleGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)
 {
   if(!elementsContainingVert)

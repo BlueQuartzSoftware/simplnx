@@ -5,7 +5,7 @@
 
 namespace complex
 {
-class ImageGeomFactory : public IH5DataFactory
+class COMPLEX_EXPORT ImageGeomFactory : public IH5DataFactory
 {
 public:
   ImageGeomFactory()
