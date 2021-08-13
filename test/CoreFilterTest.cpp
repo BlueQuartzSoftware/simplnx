@@ -19,6 +19,5 @@ TEST_CASE("Create Core Filter")
   {
     auto coreFilter = filterList->createFilter(handle);
     REQUIRE(coreFilter != nullptr);
-    delete coreFilter;
   }
 }

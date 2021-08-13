@@ -4,7 +4,6 @@
 
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterHandle.hpp"
-#include "complex/Filter/IFilter.hpp"
 #include "complex/ImportCoreFilters.hpp"
 #include "complex/Plugin/PluginLoader.hpp"
 
@@ -43,7 +42,7 @@ AbstractPlugin* FilterList::getPluginById(const FilterHandle::PluginIdType& id) 
   return nullptr;
 }
 
-IFilter* FilterList::createFilter(const FilterHandle& handle) const
+IFilter::UniquePointer FilterList::createFilter(const FilterHandle& handle) const
 {
   // Core filter
   if(handle.getPluginId() == Uuid{})
@@ -109,13 +108,12 @@ std::unordered_set<AbstractPlugin*> FilterList::getLoadedPlugins() const
 
 void FilterList::addCoreFilter(FilterCreationFunc func)
 {
-  IFilter* filter = func();
+  IFilter::UniquePointer filter = func();
   m_CoreFiltersMap[filter->uuid()] = func;
   m_FilterHandles.insert(FilterHandle(filter->name(), filter->uuid(), {}));
-  delete filter;
 }
 
-IFilter* FilterList::createCoreFilter(const FilterHandle::FilterIdType& filterId) const
+IFilter::UniquePointer FilterList::createCoreFilter(const FilterHandle::FilterIdType& filterId) const
 {
   if(m_CoreFiltersMap.find(filterId) == m_CoreFiltersMap.end())
   {

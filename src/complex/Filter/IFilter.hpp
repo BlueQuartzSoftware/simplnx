@@ -152,4 +152,6 @@ private:
    */
   virtual Result<> executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const = 0;
 };
+
+using FilterCreationFunc = IFilter::UniquePointer (*)();
 } // namespace complex

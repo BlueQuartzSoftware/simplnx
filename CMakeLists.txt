@@ -98,8 +98,7 @@ set(AddCoreFilters "")
 
 foreach(filter ${CoreFilters})
   string(APPEND CoreFilterIncludes "#include \"complex/Core/Filters/${filter}.hpp\"\n")
-  string(APPEND CreateCoreFilters "IFilter* create${filter}(){ return new ${filter}(); }\n")
-  string(APPEND AddCoreFilters "  addCoreFilter(&create${filter});\n")
+  string(APPEND AddCoreFilters "  addCoreFilter([]() -> IFilter::UniquePointer { return std::make_unique<${filter}>(); });\n")
 endforeach()
 
 configure_file("cmake/ImportCoreFilters.hpp.in" "${COMPLEX_GENERATED_HEADER_DIR}/ImportCoreFilters.hpp" @ONLY)
