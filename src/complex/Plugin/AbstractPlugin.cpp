@@ -55,7 +55,7 @@ std::unordered_set<FilterHandle> AbstractPlugin::getFilterHandles() const
   return m_FilterHandles;
 }
 
-complex::IFilter* AbstractPlugin::createFilter(FilterHandle::FilterIdType id) const
+IFilter* AbstractPlugin::createFilter(FilterHandle::FilterIdType id) const
 {
   if(!containsFilterId(id))
   {

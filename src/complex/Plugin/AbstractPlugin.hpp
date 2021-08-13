@@ -60,13 +60,13 @@ public:
    * does not contain a filter with the specified ID, this function returns
    * nullptr.
    * @param id
-   * @return complex::AbstractFilter*
+   * @return AbstractFilter*
    */
-  complex::IFilter* createFilter(FilterHandle::FilterIdType id) const;
+  IFilter* createFilter(FilterHandle::FilterIdType id) const;
 
   /**
    * @brief Returns a set of FilterHandles pointing to each of the filters contained in the plugin.
-   * @return std::set<complex::FilterHandle>
+   * @return std::set<FilterHandle>
    */
   std::unordered_set<FilterHandle> getFilterHandles() const;
 

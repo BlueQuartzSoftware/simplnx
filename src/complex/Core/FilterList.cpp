@@ -17,9 +17,9 @@ FilterList::FilterList()
 
 FilterList::~FilterList() = default;
 
-std::vector<complex::FilterHandle> FilterList::search(const std::string& text) const
+std::vector<FilterHandle> FilterList::search(const std::string& text) const
 {
-  std::vector<complex::FilterHandle> handles;
+  std::vector<FilterHandle> handles;
   for(const auto& handle : getFilterHandles())
   {
     if(handle.getFilterName().find(text) != std::string::npos)
@@ -43,7 +43,7 @@ AbstractPlugin* FilterList::getPluginById(const FilterHandle::PluginIdType& id) 
   return nullptr;
 }
 
-complex::IFilter* FilterList::createFilter(const complex::FilterHandle& handle) const
+IFilter* FilterList::createFilter(const FilterHandle& handle) const
 {
   // Core filter
   if(handle.getPluginId() == Uuid{})
@@ -59,7 +59,7 @@ complex::IFilter* FilterList::createFilter(const complex::FilterHandle& handle) 
   return loader->getPlugin()->createFilter(handle.getFilterId());
 }
 
-complex::AbstractPlugin* FilterList::getPlugin(const complex::FilterHandle& handle) const
+AbstractPlugin* FilterList::getPlugin(const FilterHandle& handle) const
 {
   for(const auto& iter : m_PluginMap)
   {
@@ -88,12 +88,12 @@ bool FilterList::addPlugin(const std::string& path)
   return addPlugin(std::make_shared<PluginLoader>(path));
 }
 
-std::unordered_set<complex::FilterHandle> FilterList::getFilterHandles() const
+std::unordered_set<FilterHandle> FilterList::getFilterHandles() const
 {
   return m_FilterHandles;
 }
 
-std::unordered_set<complex::AbstractPlugin*> FilterList::getLoadedPlugins() const
+std::unordered_set<AbstractPlugin*> FilterList::getLoadedPlugins() const
 {
   std::unordered_set<AbstractPlugin*> plugins;
   for(auto& iter : m_PluginMap)

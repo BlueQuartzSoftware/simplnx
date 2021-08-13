@@ -37,17 +37,17 @@ public:
 
   /**
    * @brief Returns a set of FilterHandles for each of the filters.
-   * @return std::set<complex::FilterHandle>
+   * @return std::set<FilterHandle>
    */
-  std::unordered_set<complex::FilterHandle> getFilterHandles() const;
+  std::unordered_set<FilterHandle> getFilterHandles() const;
 
   /**
    * @brief Searches the FilterHandles for the text in the filter and plugin
    * names. Returns a vector of the FilterHandles that contain the specified text.
    * @param text
-   * @return std::vector<complex::FilterHandle>
+   * @return std::vector<FilterHandle>
    */
-  std::vector<complex::FilterHandle> search(const std::string& text) const;
+  std::vector<FilterHandle> search(const std::string& text) const;
 
   /**
    * @brief Attempts to create an IFilter specified by the given
@@ -57,17 +57,17 @@ public:
    * It is the caller's responsibility to delete the pointer when they are
    * finished with it.
    * @param handle
-   * @return complex::IFilter*
+   * @return IFilter*
    */
-  complex::IFilter* createFilter(const complex::FilterHandle& handle) const;
+  IFilter* createFilter(const FilterHandle& handle) const;
 
   /**
    * @brief Returns the AbstractPlugin pointer corresponding to the specified
    * FilterHandle. Returns nullptr if the plugin could not be found.
    * @param handle
-   * @return complex::AbstractPlugin*
+   * @return AbstractPlugin*
    */
-  complex::AbstractPlugin* getPlugin(const complex::FilterHandle& handle) const;
+  AbstractPlugin* getPlugin(const FilterHandle& handle) const;
 
   /**
    * @brief Attempts to add a plugin using the specified PluginLoader. Returns
@@ -87,9 +87,9 @@ public:
 
   /**
    * @brief Returns a set of pointers to loaded plugins.
-   * @return std::set<complex::AbstractPlugin*>
+   * @return std::set<AbstractPlugin*>
    */
-  std::unordered_set<complex::AbstractPlugin*> getLoadedPlugins() const;
+  std::unordered_set<AbstractPlugin*> getLoadedPlugins() const;
 
   /**
    * @brief Returns a pointer to the plugin with the specified ID. Returns
@@ -129,6 +129,6 @@ private:
   // Variables
   std::unordered_set<FilterHandle> m_FilterHandles;
   std::unordered_map<FilterHandle::FilterIdType, FilterCreationFunc> m_CoreFiltersMap;
-  std::unordered_map<FilterHandle::PluginIdType, std::shared_ptr<complex::PluginLoader>> m_PluginMap;
+  std::unordered_map<FilterHandle::PluginIdType, std::shared_ptr<PluginLoader>> m_PluginMap;
 };
 } // namespace complex
