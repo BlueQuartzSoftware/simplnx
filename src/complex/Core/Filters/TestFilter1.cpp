@@ -37,6 +37,11 @@ Parameters TestFilter1::parameters() const
   return params;
 }
 
+IFilter::UniquePointer TestFilter1::clone() const
+{
+  return std::make_unique<TestFilter1>();
+}
+
 Result<OutputActions> TestFilter1::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   return {};

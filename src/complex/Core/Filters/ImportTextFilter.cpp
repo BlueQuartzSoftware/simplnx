@@ -98,6 +98,11 @@ Parameters ImportTextFilter::parameters() const
   return params;
 }
 
+IFilter::UniquePointer ImportTextFilter::clone() const
+{
+  return std::make_unique<ImportTextFilter>();
+}
+
 Result<OutputActions> ImportTextFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   auto numericType = args.value<NumericType>(k_ScalarTypeKey);

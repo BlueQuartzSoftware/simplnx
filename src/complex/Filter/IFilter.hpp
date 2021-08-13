@@ -19,6 +19,8 @@ namespace complex
 class COMPLEX_EXPORT IFilter
 {
 public:
+  using UniquePointer = std::unique_ptr<IFilter>;
+
   struct Message
   {
     enum class Type : u8
@@ -89,6 +91,12 @@ public:
    * @return
    */
   [[nodiscard]] virtual Parameters parameters() const = 0;
+
+  /**
+   * @brief
+   * @return
+   */
+  [[nodiscard]] virtual UniquePointer clone() const = 0;
 
   /**
    * @brief
