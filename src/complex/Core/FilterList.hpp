@@ -7,16 +7,14 @@
 #include <vector>
 
 #include "complex/Core/FilterHandle.hpp"
+#include "complex/Filter/IFilter.hpp"
 
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
-class IFilter;
 class AbstractPlugin;
 class PluginLoader;
-
-using FilterCreationFunc = IFilter* (*)();
 
 /**
  * @class FilterList
@@ -53,13 +51,10 @@ public:
    * @brief Attempts to create an IFilter specified by the given
    * FilterHandle. Returns a pointer to the created filter if one was created.
    * Returns nullptr otherwise.
-   *
-   * It is the caller's responsibility to delete the pointer when they are
-   * finished with it.
    * @param handle
    * @return IFilter*
    */
-  IFilter* createFilter(const FilterHandle& handle) const;
+  IFilter::UniquePointer createFilter(const FilterHandle& handle) const;
 
   /**
    * @brief Returns the AbstractPlugin pointer corresponding to the specified
@@ -123,7 +118,7 @@ private:
    * @param filterId
    * @return IFilter*
    */
-  IFilter* createCoreFilter(const FilterHandle::FilterIdType& filterId) const;
+  IFilter::UniquePointer createCoreFilter(const FilterHandle::FilterIdType& filterId) const;
 
   ////////////
   // Variables

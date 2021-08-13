@@ -4,8 +4,6 @@
 
 namespace complex
 {
-@CreateCoreFilters@
-
 void FilterList::registerCoreFilters()
 {
 @AddCoreFilters@

@@ -5,16 +5,12 @@
 #include <unordered_set>
 
 #include "complex/Core/FilterHandle.hpp"
+#include "complex/Filter/IFilter.hpp"
 
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
-class IFilter;
-class AbstractPlugin;
-
-using FilterCreationFunc = IFilter* (*)();
-
 /**
  * @class AbstractPlugin
  * @brief The AbstractPlugin class is the base class for all C++ plugins for
@@ -62,7 +58,7 @@ public:
    * @param id
    * @return AbstractFilter*
    */
-  IFilter* createFilter(FilterHandle::FilterIdType id) const;
+  IFilter::UniquePointer createFilter(FilterHandle::FilterIdType id) const;
 
   /**
    * @brief Returns a set of FilterHandles pointing to each of the filters contained in the plugin.
