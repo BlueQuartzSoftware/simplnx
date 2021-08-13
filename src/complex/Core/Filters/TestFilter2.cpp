@@ -40,6 +40,11 @@ Parameters TestFilter2::parameters() const
   return params;
 }
 
+IFilter::UniquePointer TestFilter2::clone() const
+{
+  return std::make_unique<TestFilter2>();
+}
+
 Result<OutputActions> TestFilter2::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   return {};

@@ -41,6 +41,12 @@ public:
    */
   [[nodiscard]] Parameters parameters() const override;
 
+  /**
+   * @brief
+   * @return
+   */
+  [[nodiscard]] UniquePointer clone() const override;
+
 private:
   /**
    * @brief
