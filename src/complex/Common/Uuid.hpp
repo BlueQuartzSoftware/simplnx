@@ -71,7 +71,7 @@ namespace detail
 
 /**
  * @brief Uuid struct
- * Stored in big-endian order as according RFC 4122
+ * Stored in big-endian order as according to RFC 4122
  */
 struct Uuid
 {
