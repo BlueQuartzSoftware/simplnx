@@ -9,6 +9,7 @@ namespace complex
 ChoicesParameter::ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const Choices& choices)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
+, m_Choices(choices)
 {
 }
 
