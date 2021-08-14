@@ -32,6 +32,11 @@ public:
     return m_Params.size();
   }
 
+  bool empty() const
+  {
+    return m_Params.empty();
+  }
+
   auto begin()
   {
     return m_Params.begin();
