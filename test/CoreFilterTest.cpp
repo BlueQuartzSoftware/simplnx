@@ -19,5 +19,11 @@ TEST_CASE("Create Core Filter")
   {
     auto coreFilter = filterList->createFilter(handle);
     REQUIRE(coreFilter != nullptr);
+    auto params = coreFilter->parameters();
+    for(const auto& [name, param] : params)
+    {
+      REQUIRE(!name.empty());
+      REQUIRE(param != nullptr);
+    }
   }
 }
