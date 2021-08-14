@@ -25,8 +25,8 @@ add_library(TestPlugin SHARED)
 set_target_properties(TestPlugin PROPERTIES
     FOLDER "Tests/Plugins"
     SUFFIX ".complex"
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>/test/Plugins
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>/test/Plugins
+    LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/test/Plugins
+    RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/test/Plugins
 )
 target_link_libraries(TestPlugin PUBLIC complex)
 
@@ -80,8 +80,8 @@ add_library(Test2Plugin SHARED)
 set_target_properties(Test2Plugin PROPERTIES
     FOLDER "Tests/Plugins"
     SUFFIX ".complex"
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>/test/Plugins
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>/test/Plugins
+    LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/test/Plugins
+    RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/test/Plugins
 )
 target_link_libraries(Test2Plugin PUBLIC complex)
 

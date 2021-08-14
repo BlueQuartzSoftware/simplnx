@@ -1,6 +1,6 @@
 #include <string>
 
-#include "catch.hpp"
+#include <catch2/catch.hpp>
 
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterHandle.hpp"
@@ -28,15 +28,21 @@ TEST_CASE("Test Loading Plugins")
 
   REQUIRE(filterHandles.size() == 2);
 
-  auto filter = filterList->createFilter(testHandle);
-  REQUIRE(filter != nullptr);
-  REQUIRE(filter->humanName() == "Test Filter");
-  filter->execute(DataStructure(), {});
-
-  auto filter2 = filterList->createFilter(test2Handle);
-  REQUIRE(filter2 != nullptr);
-  REQUIRE(filter2->humanName() == "Test Filter 2");
-  filter2->execute(DataStructure(), {});
+  DataStructure ds;
+  {
+    IFilter* filter = filterList->createFilter(testHandle);
+    REQUIRE(filter != nullptr);
+    REQUIRE(filter->humanName() == "Test Filter");
+    filter->execute(ds, {});
+    delete filter;
+  }
+  {
+    IFilter* filter2 = filterList->createFilter(test2Handle);
+    REQUIRE(filter2 != nullptr);
+    REQUIRE(filter2->humanName() == "Test Filter 2");
+    filter2->execute(ds, {});
+    delete filter2;
+  }
 }
 
 void initApplication()
@@ -46,7 +52,7 @@ void initApplication()
   app->loadPlugins(pluginPath);
 }
 
-TEST_CASE("Test Application Singleton")
+TEST_CASE("Test Singleton")
 {
   initApplication();
   REQUIRE(Application::Instance() != nullptr);
@@ -58,15 +64,21 @@ TEST_CASE("Test Application Singleton")
   REQUIRE(filterHandles.size() == 2);
 
   // Create and execute filters
-  auto filter = filterList->createFilter(testHandle);
-  REQUIRE(filter != nullptr);
-  REQUIRE(filter->humanName() == "Test Filter");
-  filter->execute(DataStructure(), {});
-
-  auto filter2 = filterList->createFilter(test2Handle);
-  REQUIRE(filter2 != nullptr);
-  REQUIRE(filter2->humanName() == "Test Filter 2");
-  filter2->execute(DataStructure(), {});
+  DataStructure ds;
+  {
+    IFilter* filter = filterList->createFilter(testHandle);
+    REQUIRE(filter != nullptr);
+    REQUIRE(filter->humanName() == "Test Filter");
+    filter->execute(ds, {});
+    delete filter;
+  }
+  {
+    IFilter* filter2 = filterList->createFilter(test2Handle);
+    REQUIRE(filter2 != nullptr);
+    REQUIRE(filter2->humanName() == "Test Filter 2");
+    filter2->execute(ds, {});
+    delete filter2;
+  }
 
   delete Application::Instance();
   REQUIRE(Application::Instance() == nullptr);

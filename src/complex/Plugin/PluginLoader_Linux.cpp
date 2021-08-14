@@ -52,9 +52,10 @@ void PluginLoader::unloadPlugin()
   {
     return;
   }
-
+  
+  m_Plugin = nullptr;
   dlclose(m_Handle);
-  m_Handle = nullptr;
+  m_Handle = nullptr;  
 }
 
 AbstractPlugin* PluginLoader::getPlugin() const

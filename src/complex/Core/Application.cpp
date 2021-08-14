@@ -4,6 +4,7 @@
 #include <iostream>
 
 #ifdef __linux__
+#include <algorithm>
 #include <limits.h>
 #include <unistd.h>
 #elif _WIN32
@@ -22,7 +23,7 @@ std::filesystem::path findCurrentPath()
 {
   char pBuf[256];
   size_t len = sizeof(pBuf);
-  int32_t bytes = MIN(readlink("/proc/self/exe", pBuf, len), len - 1);
+  int32_t bytes = std::min(readlink("/proc/self/exe", pBuf, len), static_cast<ssize_t>(len - 1));
   if(bytes >= 0)
     pBuf[bytes] = '\0';
   return std::filesystem::path(pBuf);

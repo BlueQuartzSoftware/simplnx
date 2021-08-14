@@ -107,7 +107,6 @@ private:
   ////////////
   // Variables
   std::unique_ptr<complex::FilterList> m_FilterList;
-  std::vector<std::unique_ptr<AbstractPlugin>> m_Plugins;
   // std::unique_ptr<complex::RestServer> m_RestServer;
   std::filesystem::path m_CurrentPath = "";
 };
