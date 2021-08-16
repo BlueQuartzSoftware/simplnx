@@ -76,8 +76,7 @@ std::string ImportTextFilter::name() const
 
 Uuid ImportTextFilter::uuid() const
 {
-  constexpr Uuid uuid = *Uuid::FromString("25f7df3e-ca3e-4634-adda-732c0e56efd4");
-  return uuid;
+  return FilterTraits<ImportTextFilter>::uuid;
 }
 
 std::string ImportTextFilter::humanName() const

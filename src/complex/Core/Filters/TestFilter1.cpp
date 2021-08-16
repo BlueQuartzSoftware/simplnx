@@ -20,8 +20,7 @@ std::string TestFilter1::name() const
 
 Uuid TestFilter1::uuid() const
 {
-  constexpr Uuid uuid = *Uuid::FromString("dd92896b-26ec-4419-b905-567e93e8f39d");
-  return uuid;
+  return FilterTraits<TestFilter1>::uuid;
 }
 
 std::string TestFilter1::humanName() const

@@ -14,8 +14,7 @@ ArrayCreationParameter::ArrayCreationParameter(const std::string& name, const st
 
 Uuid ArrayCreationParameter::uuid() const
 {
-  constexpr Uuid uuid = *Uuid::FromString("ab047a7d-f81b-4e6f-99b5-610e7b69fc5b");
-  return uuid;
+  return ParameterTraits<ArrayCreationParameter>::uuid;
 }
 
 IParameter::AcceptedTypes ArrayCreationParameter::acceptedTypes() const

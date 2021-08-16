@@ -1,6 +1,7 @@
 #pragma once
 
 #include "complex/Common/Types.hpp"
+#include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Filter/ValueParameter.hpp"
 #include "complex/complex_export.hpp"
 
@@ -72,5 +73,11 @@ public:
 
 private:
   ValueType m_DefaultValue = {};
+};
+
+template <>
+struct ParameterTraits<NumericTypeParameter>
+{
+  static inline constexpr Uuid uuid = *Uuid::FromString("a8ff9dbd-45e7-4ed6-8537-12dd53069bce");
 };
 } // namespace complex

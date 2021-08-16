@@ -14,8 +14,7 @@ BoolParameter::BoolParameter(const std::string& name, const std::string& humanNa
 
 Uuid BoolParameter::uuid() const
 {
-  constexpr Uuid uuid = *Uuid::FromString("b6936d18-7476-4855-9e13-e795d717c50f");
-  return uuid;
+  return ParameterTraits<BoolParameter>::uuid;
 }
 
 IParameter::AcceptedTypes BoolParameter::acceptedTypes() const

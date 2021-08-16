@@ -4,12 +4,6 @@
 
 #include <nlohmann/json.hpp>
 
-namespace
-{
-template <class...>
-constexpr std::false_type always_false{};
-} // namespace
-
 namespace complex
 {
 template <class T>
@@ -22,60 +16,7 @@ NumberParameter<T>::NumberParameter(const std::string& name, const std::string& 
 template <class T>
 Uuid NumberParameter<T>::uuid() const
 {
-  if constexpr(std::is_same_v<T, i8>)
-  {
-    constexpr Uuid uuid = *Uuid::FromString("cae73834-68f8-4235-b010-8bea87d8ff7a");
-    return uuid;
-  }
-  else if constexpr(std::is_same_v<T, u8>)
-  {
-    constexpr Uuid uuid = *Uuid::FromString("6c3efeff-ce8f-47c0-83d1-262f2b2dd6cc");
-    return uuid;
-  }
-  else if constexpr(std::is_same_v<T, i16>)
-  {
-    constexpr Uuid uuid = *Uuid::FromString("44ae56e8-e6e7-4e4d-8128-dd3dc2c6696e");
-    return uuid;
-  }
-  else if constexpr(std::is_same_v<T, u16>)
-  {
-    constexpr Uuid uuid = *Uuid::FromString("156a6f46-77e5-41d8-8f5a-65ba1da52f2a");
-    return uuid;
-  }
-  else if constexpr(std::is_same_v<T, i32>)
-  {
-    constexpr Uuid uuid = *Uuid::FromString("21acff45-a653-45db-a0d1-f43cd344b93a");
-    return uuid;
-  }
-  else if constexpr(std::is_same_v<T, u32>)
-  {
-    constexpr Uuid uuid = *Uuid::FromString("e9521130-276c-40c7-95d7-0b4cb4f80649");
-    return uuid;
-  }
-  else if constexpr(std::is_same_v<T, i64>)
-  {
-    constexpr Uuid uuid = *Uuid::FromString("b2039349-bd3a-4dbb-93d2-b4b5c633e697");
-    return uuid;
-  }
-  else if constexpr(std::is_same_v<T, u64>)
-  {
-    constexpr Uuid uuid = *Uuid::FromString("36d91b23-5500-4ed4-bdf3-d680f54ee5d1");
-    return uuid;
-  }
-  else if constexpr(std::is_same_v<T, f32>)
-  {
-    constexpr Uuid uuid = *Uuid::FromString("e4452dfe-2f70-4833-819e-0cbbec21289b");
-    return uuid;
-  }
-  else if constexpr(std::is_same_v<T, f64>)
-  {
-    constexpr Uuid uuid = *Uuid::FromString("f2a18fff-a095-47d7-b436-ede41b5ea21a");
-    return uuid;
-  }
-  else
-  {
-    static_assert(always_false<T>, "Invalid type");
-  }
+  return ParameterTraits<NumberParameter<T>>::uuid;
 }
 
 template <class T>
