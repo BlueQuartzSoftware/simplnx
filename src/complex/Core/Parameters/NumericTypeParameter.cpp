@@ -65,8 +65,7 @@ NumericTypeParameter::NumericTypeParameter(const std::string& name, const std::s
 
 Uuid NumericTypeParameter::uuid() const
 {
-  constexpr Uuid uuid = *Uuid::FromString("b6936d18-7476-4855-9e13-e795d717c50f");
-  return uuid;
+  return ParameterTraits<NumericTypeParameter>::uuid;
 }
 
 IParameter::AcceptedTypes NumericTypeParameter::acceptedTypes() const

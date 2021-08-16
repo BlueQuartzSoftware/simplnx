@@ -172,10 +172,12 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Arguments.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/ConstDataParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/DataParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/FilterTraits.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/IFilter.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/IParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/MutableDataParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Output.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/ParameterTraits.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.hpp
 

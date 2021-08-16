@@ -14,8 +14,7 @@ StringParameter::StringParameter(const std::string& name, const std::string& hum
 
 Uuid StringParameter::uuid() const
 {
-  constexpr Uuid uuid = *Uuid::FromString("ab047a7d-f81b-4e6f-99b5-610e7b69fc5b");
-  return uuid;
+  return ParameterTraits<StringParameter>::uuid;
 }
 
 IParameter::AcceptedTypes StringParameter::acceptedTypes() const

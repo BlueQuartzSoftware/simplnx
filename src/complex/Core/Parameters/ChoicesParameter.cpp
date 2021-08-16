@@ -15,8 +15,7 @@ ChoicesParameter::ChoicesParameter(const std::string& name, const std::string& h
 
 Uuid ChoicesParameter::uuid() const
 {
-  constexpr Uuid uuid = *Uuid::FromString("ee4d5ce2-9582-48fa-b182-8a766ce0feff");
-  return uuid;
+  return ParameterTraits<ChoicesParameter>::uuid;
 }
 
 IParameter::AcceptedTypes ChoicesParameter::acceptedTypes() const

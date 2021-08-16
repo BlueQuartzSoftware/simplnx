@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Filter/ValueParameter.hpp"
 #include "complex/complex_export.hpp"
 
@@ -89,5 +90,11 @@ public:
 private:
   ValueType m_DefaultValue = {};
   Choices m_Choices = {};
+};
+
+template <>
+struct ParameterTraits<ChoicesParameter>
+{
+  static inline constexpr Uuid uuid = *Uuid::FromString("ee4d5ce2-9582-48fa-b182-8a766ce0feff");
 };
 } // namespace complex

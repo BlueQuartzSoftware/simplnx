@@ -16,8 +16,7 @@ InputFileParameter::InputFileParameter(const std::string& name, const std::strin
 
 Uuid InputFileParameter::uuid() const
 {
-  constexpr Uuid uuid = *Uuid::FromString("f9a93f3d-21ef-43a1-a958-e57cbf3b2909");
-  return uuid;
+  return ParameterTraits<InputFileParameter>::uuid;
 }
 
 IParameter::AcceptedTypes InputFileParameter::acceptedTypes() const

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 #include "complex/complex_export.hpp"
 
@@ -65,5 +66,11 @@ private:
    * @return
    */
   Result<> executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const override;
+};
+
+template <>
+struct FilterTraits<TestFilter1>
+{
+  static inline constexpr Uuid uuid = *Uuid::FromString("dd92896b-26ec-4419-b905-567e93e8f39d");
 };
 } // namespace complex

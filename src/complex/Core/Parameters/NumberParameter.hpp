@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Filter/ValueParameter.hpp"
 
 namespace complex
@@ -109,4 +110,64 @@ using UInt64Parameter = NumberParameter<u64>;
 
 using Float32Parameter = NumberParameter<f32>;
 using Float64Parameter = NumberParameter<f64>;
+
+template <>
+struct ParameterTraits<Int8Parameter>
+{
+  static inline constexpr Uuid uuid = *Uuid::FromString("cae73834-68f8-4235-b010-8bea87d8ff7a");
+};
+
+template <>
+struct ParameterTraits<UInt8Parameter>
+{
+  static inline constexpr Uuid uuid = *Uuid::FromString("6c3efeff-ce8f-47c0-83d1-262f2b2dd6cc");
+};
+
+template <>
+struct ParameterTraits<Int16Parameter>
+{
+  static inline constexpr Uuid uuid = *Uuid::FromString("44ae56e8-e6e7-4e4d-8128-dd3dc2c6696e");
+};
+
+template <>
+struct ParameterTraits<UInt16Parameter>
+{
+  static inline constexpr Uuid uuid = *Uuid::FromString("156a6f46-77e5-41d8-8f5a-65ba1da52f2a");
+};
+
+template <>
+struct ParameterTraits<Int32Parameter>
+{
+  static inline constexpr Uuid uuid = *Uuid::FromString("21acff45-a653-45db-a0d1-f43cd344b93a");
+};
+
+template <>
+struct ParameterTraits<UInt32Parameter>
+{
+  static inline constexpr Uuid uuid = *Uuid::FromString("e9521130-276c-40c7-95d7-0b4cb4f80649");
+};
+
+template <>
+struct ParameterTraits<Int64Parameter>
+{
+  static inline constexpr Uuid uuid = *Uuid::FromString("b2039349-bd3a-4dbb-93d2-b4b5c633e697");
+};
+
+template <>
+struct ParameterTraits<UInt64Parameter>
+{
+  static inline constexpr Uuid uuid = *Uuid::FromString("36d91b23-5500-4ed4-bdf3-d680f54ee5d1");
+};
+
+template <>
+struct ParameterTraits<Float32Parameter>
+{
+  static inline constexpr Uuid uuid = *Uuid::FromString("e4452dfe-2f70-4833-819e-0cbbec21289b");
+};
+
+template <>
+struct ParameterTraits<Float64Parameter>
+{
+  static inline constexpr Uuid uuid = *Uuid::FromString("f2a18fff-a095-47d7-b436-ede41b5ea21a");
+};
 } // namespace complex
