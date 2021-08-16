@@ -69,6 +69,17 @@ Result<> ReadFile(const fs::path& inputPath, DataArray<T>& data, u64 skipLines, 
 
 namespace complex
 {
+ImportTextFilter::ImportTextFilter()
+{
+    m_params.insert(std::make_unique<InputFileParameter>(k_InputFileKey, "Input File", "File to read from", ""));
+    m_params.insert(std::make_unique<NumericTypeParameter>(k_ScalarTypeKey, "Scalar Type", "Type to interpret data as", NumericType::i8));
+    m_params.insert(std::make_unique<UInt64Parameter>(k_NCompKey, "Number of Components", "Number of columns", 0));
+    m_params.insert(std::make_unique<UInt64Parameter>(k_NSkipLinesKey, "Skip Header Lines", "Number of lines to skip in the file", 0));
+    m_params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoiceKey, "Delimiter", "Delimiter for values on a line", 0,
+                                                     ChoicesParameter::Choices{", (comma)", "; (semicolon)", "  (space)", ": (colon)", "\\t (Tab)"}));
+    m_params.insert(std::make_unique<ArrayCreationParameter>(k_DataArrayKey, "Created Array", "Array storing the file data", DataPath{}));
+}
+
 std::string ImportTextFilter::name() const
 {
   return "ImportTextFilter";
@@ -85,17 +96,9 @@ std::string ImportTextFilter::humanName() const
   return "Import Text Data";
 }
 
-Parameters ImportTextFilter::parameters() const
+Parameters const& ImportTextFilter::parameters() const
 {
-  Parameters params;
-  params.insert(std::make_unique<InputFileParameter>(k_InputFileKey, "Input File", "File to read from", ""));
-  params.insert(std::make_unique<NumericTypeParameter>(k_ScalarTypeKey, "Scalar Type", "Type to interpret data as", NumericType::i8));
-  params.insert(std::make_unique<UInt64Parameter>(k_NCompKey, "Number of Components", "Number of columns", 0));
-  params.insert(std::make_unique<UInt64Parameter>(k_NSkipLinesKey, "Skip Header Lines", "Number of lines to skip in the file", 0));
-  params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoiceKey, "Delimiter", "Delimiter for values on a line", 0,
-                                                   ChoicesParameter::Choices{", (comma)", "; (semicolon)", "  (space)", ": (colon)", "\\t (Tab)"}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_DataArrayKey, "Created Array", "Array storing the file data", DataPath{}));
-  return params;
+    return m_params;
 }
 
 IFilter::UniquePointer ImportTextFilter::clone() const

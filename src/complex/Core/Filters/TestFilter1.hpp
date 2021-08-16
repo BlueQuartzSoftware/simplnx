@@ -8,7 +8,7 @@ namespace complex
 class COMPLEX_EXPORT TestFilter1 : public IFilter
 {
 public:
-  TestFilter1() = default;
+  TestFilter1();
   ~TestFilter1() noexcept override = default;
 
   TestFilter1(const TestFilter1&) = delete;
@@ -39,7 +39,7 @@ public:
    * @brief
    * @return
    */
-  [[nodiscard]] Parameters parameters() const override;
+  [[nodiscard]] Parameters const& parameters() const override;
 
   /**
    * @brief
@@ -65,5 +65,10 @@ private:
    * @return
    */
   Result<> executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const override;
+
+  /**
+   * @brief
+   */
+  Parameters m_params;
 };
 } // namespace complex

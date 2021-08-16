@@ -15,6 +15,14 @@ constexpr const char k_Param3[] = "param3";
 
 namespace complex
 {
+
+TestFilter2::TestFilter2()
+{
+    m_params.insert(std::make_unique<Int32Parameter>(k_Param1, "Parameter 1", "The 1st parameter", 0));
+    m_params.insert(std::make_unique<StringParameter>(k_Param2, "Parameter 2", "The 2nd parameter", "test string"));
+    m_params.insert(std::make_unique<ChoicesParameter>(k_Param3, "Parameter 3", "The 3rd parameter", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
+}
+
 std::string TestFilter2::name() const
 {
   return "TestFilter2";
@@ -31,13 +39,9 @@ std::string TestFilter2::humanName() const
   return "Test Filter 2";
 }
 
-Parameters TestFilter2::parameters() const
+Parameters const& TestFilter2::parameters() const
 {
-  Parameters params;
-  params.insert(std::make_unique<Int32Parameter>(k_Param1, "Parameter 1", "The 1st parameter", 0));
-  params.insert(std::make_unique<StringParameter>(k_Param2, "Parameter 2", "The 2nd parameter", "test string"));
-  params.insert(std::make_unique<ChoicesParameter>(k_Param3, "Parameter 3", "The 3rd parameter", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
-  return params;
+  return m_params;
 }
 
 IFilter::UniquePointer TestFilter2::clone() const

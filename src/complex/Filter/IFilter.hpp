@@ -90,7 +90,7 @@ public:
    * @brief
    * @return
    */
-  [[nodiscard]] virtual Parameters parameters() const = 0;
+  [[nodiscard]] virtual Parameters const& parameters() const = 0;
 
   /**
    * @brief

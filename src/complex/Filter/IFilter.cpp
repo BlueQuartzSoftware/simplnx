@@ -32,7 +32,7 @@ namespace complex
 {
 Result<OutputActions> IFilter::preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  Parameters params = parameters();
+  Parameters const& params = parameters();
 
   std::vector<Error> errors;
   std::vector<Warning> warnings;
@@ -131,7 +131,7 @@ Result<> IFilter::execute(DataStructure& data, const Arguments& args, const Mess
 nlohmann::json IFilter::toJson(const Arguments& args) const
 {
   nlohmann::json json;
-  Parameters params = parameters();
+  Parameters const& params = parameters();
   for(auto&& [name, param] : params)
   {
     nlohmann::json parameterJson = param->toJson(args.at(name));
@@ -142,7 +142,7 @@ nlohmann::json IFilter::toJson(const Arguments& args) const
 
 Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
 {
-  Parameters params = parameters();
+  Parameters const& params = parameters();
   Arguments args;
   std::vector<Error> errors;
   std::vector<Warning> warnings;

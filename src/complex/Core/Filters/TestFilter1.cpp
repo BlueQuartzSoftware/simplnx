@@ -13,6 +13,12 @@ constexpr const char k_Param2[] = "param2";
 
 namespace complex
 {
+TestFilter1::TestFilter1()
+{
+    m_params.insert(std::make_unique<Float32Parameter>(k_Param1, "Parameter 1", "The 1st parameter", 0.0f));
+    m_params.insert(std::make_unique<BoolParameter>(k_Param2, "Parameter 2", "The 2nd parameter", false));
+}
+
 std::string TestFilter1::name() const
 {
   return "TestFilter1";
@@ -29,12 +35,9 @@ std::string TestFilter1::humanName() const
   return "Test Filter 1";
 }
 
-Parameters TestFilter1::parameters() const
+Parameters const& TestFilter1::parameters() const
 {
-  Parameters params;
-  params.insert(std::make_unique<Float32Parameter>(k_Param1, "Parameter 1", "The 1st parameter", 0.0f));
-  params.insert(std::make_unique<BoolParameter>(k_Param2, "Parameter 2", "The 2nd parameter", false));
-  return params;
+    return m_params;
 }
 
 IFilter::UniquePointer TestFilter1::clone() const
