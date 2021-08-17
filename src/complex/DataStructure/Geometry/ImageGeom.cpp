@@ -452,16 +452,6 @@ uint32_t ImageGeom::getXdmfGridType() const
   throw std::runtime_error("");
 }
 
-H5::ErrorType ImageGeom::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
-{
-  throw std::runtime_error("");
-}
-
-H5::ErrorType ImageGeom::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
-{
-  throw std::runtime_error("");
-}
-
 void ImageGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)
 {
   (void)elementsContainingVert;

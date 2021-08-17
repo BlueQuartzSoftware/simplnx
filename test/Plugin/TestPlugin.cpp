@@ -1,13 +1,15 @@
-#include "TestPlugin.hpp"
+#include <optional>
+
 #include "TestFilter.hpp"
+#include "TestPlugin.hpp"
 
 using namespace complex;
 
-const AbstractPlugin::IdType TestPlugin::ID = "05cc618b-781f-4ac0-b9ac-43f26ce1854f";
+const AbstractPlugin::IdType TestPlugin::ID = Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value();
 
-AbstractFilter* createTestFilter()
+IFilter::UniquePointer createTestFilter()
 {
-  return new TestFilter();
+  return IFilter::UniquePointer(new TestFilter());
 }
 
 AbstractPlugin* initPlugin()

@@ -1,132 +1,96 @@
-#include <exception>
-#include <iostream>
-#include <stdexcept>
 #include <string>
+
+#include <catch2/catch.hpp>
 
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterHandle.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Filtering/AbstractFilter.hpp"
+#include "complex/Filter/IFilter.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
-
-#include "PluginDir.hpp"
 
 using namespace complex;
 
 namespace
 {
-FilterHandle testHandle("Test Filter", 1, "05cc618b-781f-4ac0-b9ac-43f26ce1854f");
-FilterHandle test2Handle("Test2 Filter", 1, "05cc618b-781f-4ac0-b9ac-43f26ce1854e");
+inline const std::string PluginDir = "/test/Plugins";
+FilterHandle testHandle("Test Filter", Uuid::FromString("5502c3f7-37a8-4a86-b003-1c856be02491").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
+FilterHandle test2Handle("Test2 Filter", Uuid::FromString("ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854e").value());
 } // namespace
 
-void testLoadingPlugins()
+std::string getPluginDir(const std::filesystem::path& appDir)
 {
-  std::cout << "testLoadingPlugins()" << std::endl;
+#ifdef __APPLE__
+  return appDir.parent_path().string() + ::PluginDir;
+#else
+  return appDir.string() + ::PluginDir;
+#endif
+}
 
+TEST_CASE("Test Loading Plugins")
+{
   Application app;
-  app.loadPlugins(PluginDir::Path.string());
+  std::filesystem::path pluginPath = getPluginDir(app.getCurrentDir());
+  app.loadPlugins(pluginPath);
 
   auto filterList = app.getFilterList();
   auto filterHandles = filterList->getFilterHandles();
+  auto plugins = filterList->getLoadedPlugins();
 
-  std::cout << " Loaded Plugins:\n";
-  for(auto& plugin : filterList->getLoadedPlugins())
-  {
-    std::cout << "  " << plugin->getName() << "\n";
-    for(auto& handle : plugin->getFilterHandles())
-    {
-      std::cout << "    " << handle.getFilterName() << "\n";
-    }
-  }
-  std::cout << std::endl;
+  REQUIRE(plugins.size() == 2);
+  REQUIRE(filterHandles.size() >= 2);
 
-  if(filterHandles.size() != 2)
+  DataStructure ds;
   {
-    throw std::runtime_error("");
+    IFilter::UniquePointer filter = filterList->createFilter(testHandle);
+    REQUIRE(filter != nullptr);
+    REQUIRE(filter->humanName() == "Test Filter");
+    filter->execute(ds, {});
   }
-
-  auto filter = filterList->createFilter(testHandle);
-  if(filter == nullptr)
   {
-    throw std::runtime_error("");
+    IFilter::UniquePointer filter2 = filterList->createFilter(test2Handle);
+    REQUIRE(filter2 != nullptr);
+    REQUIRE(filter2->humanName() == "Test Filter 2");
+    filter2->execute(ds, {});
   }
-  if(filter->getName() != "Test Filter")
-  {
-    throw std::runtime_error("");
-  }
-  filter->execute(DataStructure(), {});
-
-  auto filter2 = filterList->createFilter(test2Handle);
-  if(filter2 == nullptr)
-  {
-    throw std::runtime_error("");
-  }
-  if(filter2->getName() != "Test Filter 2")
-  {
-    throw std::runtime_error("");
-  }
-  filter2->execute(DataStructure(), {});
-  std::cout << "\n" << std::endl;
 }
 
-void testSingleton()
+void initApplication()
 {
-  std::cout << "testApplicationSingleton" << std::endl;
+  Application* app = new Application();
+  std::filesystem::path pluginPath = getPluginDir(app->getCurrentDir());
+  app->loadPlugins(pluginPath);
+}
+
+TEST_CASE("Test Singleton")
+{
+  initApplication();
+  REQUIRE(Application::Instance() != nullptr);
 
   auto filterList = Application::Instance()->getFilterList();
   auto filterHandles = filterList->getFilterHandles();
+  auto plugins = filterList->getLoadedPlugins();
 
-  std::cout << " Loaded Plugins:\n";
-  for(auto& plugin : filterList->getLoadedPlugins())
-  {
-    std::cout << "  " << plugin->getName() << "\n";
-    for(auto& handle : plugin->getFilterHandles())
-    {
-      std::cout << "    " << handle.getFilterName() << "\n";
-    }
-  }
-  std::cout << std::endl;
+  // Check plugins were loaded
+  REQUIRE(plugins.size() == 2);
 
   // Check filters loaded
-  if(filterHandles.size() != 2)
-  {
-    throw std::runtime_error("");
-  }
+  REQUIRE(filterHandles.size() >= 2);
 
   // Create and execute filters
-  auto filter = filterList->createFilter(testHandle);
-  if(filter == nullptr)
+  DataStructure ds;
   {
-    throw std::runtime_error("");
+    IFilter::UniquePointer filter = filterList->createFilter(testHandle);
+    REQUIRE(filter != nullptr);
+    REQUIRE(filter->humanName() == "Test Filter");
+    filter->execute(ds, {});
   }
-  if(filter->getName() != "Test Filter")
   {
-    throw std::runtime_error("");
+    IFilter::UniquePointer filter2 = filterList->createFilter(test2Handle);
+    REQUIRE(filter2 != nullptr);
+    REQUIRE(filter2->humanName() == "Test Filter 2");
+    filter2->execute(ds, {});
   }
-  filter->execute(DataStructure(), {});
 
-  auto filter2 = filterList->createFilter(test2Handle);
-  if(filter2 == nullptr)
-  {
-    throw std::runtime_error("");
-  }
-  if(filter2->getName() != "Test Filter 2")
-  {
-    throw std::runtime_error("");
-  }
-  filter2->execute(DataStructure(), {});
-
-  std::cout << std::endl;
-}
-
-int main(int argc, char** argv)
-{
-  std::cout << "PluginTest" << std::endl;
-
-  testLoadingPlugins();
-
-  Application app;
-  app.loadPlugins(PluginDir::Path.string());
-  testSingleton();
-  return 0;
+  delete Application::Instance();
+  REQUIRE(Application::Instance() == nullptr);
 }

@@ -405,13 +405,3 @@ void DataStructure::removeObserver(AbstractDataStructureObserver* obs)
 {
   m_Observers.erase(obs);
 }
-
-H5::ErrorType DataStructure::writeXdmfFile(const std::filesystem::path& hdfFilePath) const
-{
-  throw std::runtime_error("");
-}
-
-H5::ErrorType DataStructure::readXdmfFile(const std::filesystem::path& hdfFilePath)
-{
-  throw std::runtime_error("");
-}

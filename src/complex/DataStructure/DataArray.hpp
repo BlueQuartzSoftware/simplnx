@@ -293,30 +293,6 @@ public:
   }
 
   /**
-   * @brief Generates text for the XDMF file and appends it to the output stream.
-   * Returns an H5::ErrorType specifying any error that might have occurred.
-   * @param out
-   * @param hdfFileName
-   * @return H5::ErrorType
-   */
-  H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const override
-  {
-    throw std::runtime_error("");
-  }
-
-  /**
-   * @brief Reads and overwrites data from the provided input stream. Returns an
-   * H5::ErrorType specifying any error that might have occurred.
-   * @param in
-   * @param hdfFileName
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readFromXdmfText(std::istream& in, const std::string& hdfFileName) override
-  {
-    throw std::runtime_error("");
-  }
-
-  /**
    * @brief Copy assignment operator
    * @param rhs
    * @return DataArray&

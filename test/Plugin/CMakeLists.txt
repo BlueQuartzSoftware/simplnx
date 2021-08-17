@@ -24,7 +24,16 @@ set(Plugin_SRCS
 add_library(TestPlugin SHARED)
 set_target_properties(TestPlugin PROPERTIES
     FOLDER "Tests/Plugins"
+    SUFFIX ".complex"
+    LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/test/Plugins
+    RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/test/Plugins
 )
+if(APPLE)
+  set_target_properties(TestPlugin PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/complex_test.app/Contents/test/Plugins
+    RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/complex_test.app/Contents/test/Plugins
+  )
+endif()
 target_link_libraries(TestPlugin PUBLIC complex)
 
 generate_export_header(TestPlugin
@@ -49,7 +58,7 @@ target_include_directories(TestPlugin
     PUBLIC
     $<BUILD_INTERFACE:${TestPlugin_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${PLUGIN_GENERATED_DIR}>
-    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/tests/Plugin>
+    $<BUILD_INTERFACE:${COMPLEX_BINARY_DIR}/test/Plugin>
 )
 
 install(TARGETS TestPlugin
@@ -76,7 +85,16 @@ set(Plugin2_SRCS
 add_library(Test2Plugin SHARED)
 set_target_properties(Test2Plugin PROPERTIES
     FOLDER "Tests/Plugins"
+    SUFFIX ".complex"
+    LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/test/Plugins
+    RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/test/Plugins
 )
+if(APPLE)
+  set_target_properties(Test2Plugin PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/complex_test.app/Contents/test/Plugins
+    RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/complex_test.app/Contents/test/Plugins
+  )
+endif()
 target_link_libraries(Test2Plugin PUBLIC complex)
 
 generate_export_header(Test2Plugin
@@ -101,7 +119,7 @@ target_include_directories(Test2Plugin
     PUBLIC
     $<BUILD_INTERFACE:${TestPlugin_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${PLUGIN_GENERATED_DIR}>
-    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/tests/Plugin>
+    $<BUILD_INTERFACE:${COMPLEX_BINARY_DIR}/tests/Plugin>
 )
 
 install(TARGETS Test2Plugin

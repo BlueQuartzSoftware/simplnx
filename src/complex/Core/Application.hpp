@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
@@ -12,7 +13,6 @@ namespace complex
 {
 class AbstractPlugin;
 class JsonPipelineBuilder;
-// class RestServer;
 
 /**
  * @class Application
@@ -52,7 +52,7 @@ public:
    * @brief Loads plugins in the target directory
    * @param pluginDir
    */
-  void loadPlugins(const std::string& pluginDir);
+  void loadPlugins(const std::filesystem::path& pluginDir);
 
   /**
    * @brief Returns a pointer to the Application's FilterList.
@@ -61,21 +61,31 @@ public:
   FilterList* getFilterList() const;
 
   /**
-   * @brief Starts a REST server using the target port.
-   * @param port
-   * @return RestServer*
-   */
-  // RestServer* startRestServer(int32_t port);
-
-  /**
    * @brief Returns a pointer to the JsonPipelineBuilder. It is the caller's
    * responsibility to delete the pointer when they are done with it.
    * @return JsonPipelineBuilder*
    */
   JsonPipelineBuilder* getPipelineBuilder() const;
 
+  /**
+   * @brief Returns a filepath pointing to the executable.
+   * @return std::filesystem::path
+   */
+  std::filesystem::path getCurrentPath() const;
+
+  /**
+   * @brief Returns a filepath pointing to the executable's directory.
+   * @return std::filesystem::path
+   */
+  std::filesystem::path getCurrentDir() const;
+
 protected:
 private:
+  /**
+   * @brief Performs initialization work shared between constructors.
+   */
+  void initialize();
+
   /**
    * @brief Loads the plugin at the specified file path.
    * @param path
@@ -89,7 +99,6 @@ private:
   ////////////
   // Variables
   std::unique_ptr<complex::FilterList> m_FilterList;
-  std::vector<std::unique_ptr<AbstractPlugin>> m_Plugins;
-  // std::unique_ptr<complex::RestServer> m_RestServer;
+  std::filesystem::path m_CurrentPath = "";
 };
 } // namespace complex

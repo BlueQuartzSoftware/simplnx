@@ -239,58 +239,6 @@ uint32_t VertexGeom::getXdmfGridType() const
   throw std::runtime_error("");
 }
 
-H5::ErrorType VertexGeom::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
-{
-  H5::ErrorType err = 0;
-
-  // Always start the grid
-  out << "  <!-- *************** START OF " << getName() << " *************** -->"
-      << "\n";
-  out << "  <Grid Name=\"" << getName() << R"(" GridType="Uniform">)"
-      << "\n";
-  if(getTimeSeriesEnabled())
-  {
-    out << R"(    <Time TimeType="Single" Value=")" << getTimeValue() << "\"/>\n";
-  }
-
-  out << R"(    <Topology TopologyType="Polyvertex" NumberOfElements=")" << getNumberOfVertices() << "\">"
-      << "\n";
-  out << R"(      <DataItem Format="HDF" NumberType="Int" Dimensions=")" << getNumberOfVertices() << "\">"
-      << "\n";
-  out << "        " << hdfFileName << ":/DataContainers/" << getName() << "/"
-      << "_COMPLEX_GEOMETRY_"
-      << "/"
-      << "Verts"
-      << "\n";
-  out << "      </DataItem>"
-      << "\n";
-  out << "    </Topology>"
-      << "\n";
-
-  out << "    <Geometry Type=\"XYZ\">"
-      << "\n";
-  out << R"(      <DataItem Format="HDF"  Dimensions=")" << getNumberOfVertices() << R"( 3" NumberType="Float" Precision="4">)"
-      << "\n";
-  out << "        " << hdfFileName << ":/DataContainers/" << getName() << "/"
-      << "_COMPLEX_GEOMETRY_"
-      << "/"
-      << "SharedVertexList"
-      << "\n";
-  out << "      </DataItem>"
-      << "\n";
-  out << "    </Geometry>"
-      << "\n";
-  out << ""
-      << "\n";
-
-  return err;
-}
-
-H5::ErrorType VertexGeom::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
-{
-  throw std::runtime_error("");
-}
-
 void VertexGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)
 {
 }
