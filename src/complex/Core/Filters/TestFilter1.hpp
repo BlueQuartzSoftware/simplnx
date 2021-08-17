@@ -67,10 +67,6 @@ private:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const override;
 };
-
-template <>
-struct FilterTraits<TestFilter1>
-{
-  static inline constexpr Uuid uuid = *Uuid::FromString("dd92896b-26ec-4419-b905-567e93e8f39d");
-};
 } // namespace complex
+
+COMPLEX_DEF_FILTER_TRAITS(complex::TestFilter1, "dd92896b-26ec-4419-b905-567e93e8f39d");

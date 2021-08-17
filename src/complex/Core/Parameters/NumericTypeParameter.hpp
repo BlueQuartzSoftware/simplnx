@@ -74,10 +74,6 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
-
-template <>
-struct ParameterTraits<NumericTypeParameter>
-{
-  static inline constexpr Uuid uuid = *Uuid::FromString("a8ff9dbd-45e7-4ed6-8537-12dd53069bce");
-};
 } // namespace complex
+
+COMPLEX_DEF_PARAMETER_TRAITS(complex::NumericTypeParameter, "a8ff9dbd-45e7-4ed6-8537-12dd53069bce");

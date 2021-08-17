@@ -17,7 +17,7 @@ namespace complex
 {
 std::string TestFilter2::name() const
 {
-  return "TestFilter2";
+  return FilterTraits<TestFilter2>::name;
 }
 
 Uuid TestFilter2::uuid() const
