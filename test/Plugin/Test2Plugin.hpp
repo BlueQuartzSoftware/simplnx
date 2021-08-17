@@ -13,13 +13,6 @@ public:
 
   Test2Plugin();
   ~Test2Plugin() override;
-
-  /**
-   * @brief Returns a collection of HDF5 DataStructure factories available
-   * through the plugin.
-   * @return std::vector<complex::IH5DataFactory*>
-   */
-  std::vector<complex::IH5DataFactory*> getDataFactories() const override;
 };
 
 extern "C" {

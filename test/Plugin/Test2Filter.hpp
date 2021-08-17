@@ -7,7 +7,7 @@
 class TEST2PLUGIN_EXPORT Test2Filter : public complex::IFilter
 {
 public:
-  static const std::string ID;
+  static const complex::Uuid ID;
 
   Test2Filter();
   virtual ~Test2Filter();
@@ -20,9 +20,9 @@ public:
 
   /**
    * @brief Returns the filters ID as a std::string.
-   * @return std::string
+   * @return complex::Uuid
    */
-  [[nodiscard]] std::string uuid() const override;
+  [[nodiscard]] complex::Uuid uuid() const override;
 
   /**
    * @brief Returns the filter's human label.
@@ -36,6 +36,12 @@ public:
    */
   [[nodiscard]] complex::Parameters parameters() const override;
 
+  /**
+   * @brief Returns a unique_pointer to a copy of the filter.
+   * @return complex::IFilter::UniquePointer
+   */
+  [[nodiscard]] UniquePointer clone() const override;
+
 protected:
   /**
    * @brief Filter-specifics for performing dataCheck.
@@ -44,7 +50,7 @@ protected:
    * @param messageHandler
    * @return DataCheckResult
    */
-  DataCheckResult dataCheckImpl(const complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const override;
+  complex::Result<complex::OutputActions> preflightImpl(const complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const override;
 
   /**
    * @brief Filter-specifics for performing execute.
@@ -53,5 +59,5 @@ protected:
    * @param messageHandler
    * @return ExecuteResult
    */
-  ExecuteResult executeImpl(complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) override;
+  complex::Result<> executeImpl(complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const override;
 };

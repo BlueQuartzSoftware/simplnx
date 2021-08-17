@@ -13,7 +13,6 @@ namespace complex
 {
 class AbstractPlugin;
 class JsonPipelineBuilder;
-// class RestServer;
 
 /**
  * @class Application
@@ -62,13 +61,6 @@ public:
   FilterList* getFilterList() const;
 
   /**
-   * @brief Starts a REST server using the target port.
-   * @param port
-   * @return RestServer*
-   */
-  // RestServer* startRestServer(int32_t port);
-
-  /**
    * @brief Returns a pointer to the JsonPipelineBuilder. It is the caller's
    * responsibility to delete the pointer when they are done with it.
    * @return JsonPipelineBuilder*
@@ -107,7 +99,6 @@ private:
   ////////////
   // Variables
   std::unique_ptr<complex::FilterList> m_FilterList;
-  // std::unique_ptr<complex::RestServer> m_RestServer;
   std::filesystem::path m_CurrentPath = "";
 };
 } // namespace complex

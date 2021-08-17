@@ -1,13 +1,15 @@
-#include "Test2Plugin.hpp"
+#include <optional>
+
 #include "Test2Filter.hpp"
+#include "Test2Plugin.hpp"
 
 using namespace complex;
 
-const AbstractPlugin::IdType Test2Plugin::ID = "05cc618b-781f-4ac0-b9ac-43f26ce1854e";
+const AbstractPlugin::IdType Test2Plugin::ID = Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854e").value();
 
-IFilter* createTestFilter()
+IFilter::UniquePointer createTestFilter()
 {
-  return new Test2Filter();
+  return IFilter::UniquePointer(new Test2Filter());
 }
 
 AbstractPlugin* initPlugin()
@@ -22,8 +24,3 @@ Test2Plugin::Test2Plugin()
 }
 
 Test2Plugin::~Test2Plugin() = default;
-
-std::vector<complex::IH5DataFactory*> Test2Plugin::getDataFactories() const
-{
-  return {};
-}

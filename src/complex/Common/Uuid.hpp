@@ -9,6 +9,7 @@
 
 #include "complex/Common/Bit.hpp"
 #include "complex/Common/Types.hpp"
+#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -73,7 +74,7 @@ namespace detail
  * @brief Uuid struct
  * Stored in big-endian order as according to RFC 4122
  */
-struct Uuid
+struct COMPLEX_EXPORT Uuid
 {
   /**
    * @brief Parses a uuid string into a Uuid.

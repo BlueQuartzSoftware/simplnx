@@ -1,11 +1,12 @@
 #include "Test2Filter.hpp"
 
 #include <iostream>
+#include <optional>
 #include <string>
 
 using namespace complex;
 
-const std::string Test2Filter::ID = "1";
+const complex::Uuid Test2Filter::ID = Uuid::FromString("ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04").value();
 
 Test2Filter::Test2Filter()
 : IFilter()
@@ -19,7 +20,7 @@ std::string Test2Filter::name() const
   return "Test2Filter";
 }
 
-std::string Test2Filter::uuid() const
+complex::Uuid Test2Filter::uuid() const
 {
   return ID;
 }
@@ -34,14 +35,19 @@ complex::Parameters Test2Filter::parameters() const
   return {};
 }
 
-IFilter::DataCheckResult Test2Filter::dataCheckImpl(const complex::DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+complex::IFilter::UniquePointer Test2Filter::clone() const
 {
-  //std::cout << "Preflight TestFilter2" << std::endl;
+  return UniquePointer(new Test2Filter());
+}
+
+Result<OutputActions> Test2Filter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+{
+  // std::cout << "Preflight TestFilter2" << std::endl;
   return {};
 }
 
-IFilter::ExecuteResult Test2Filter::executeImpl(complex::DataStructure& data, const Arguments& args, const MessageHandler& messageHandler)
+Result<> Test2Filter::executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  //std::cout << "Executing TestFilter2" << std::endl;
+  // std::cout << "Executing TestFilter2" << std::endl;
   return {};
 }

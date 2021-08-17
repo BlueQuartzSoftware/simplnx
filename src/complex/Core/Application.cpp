@@ -47,7 +47,7 @@ std::filesystem::path findCurrentPath()
     return std::filesystem::path(path);
   else
     printf("buffer too small; need size %u\n", size);
-    return std::filesystem::path();
+  return std::filesystem::path();
 }
 #endif
 
