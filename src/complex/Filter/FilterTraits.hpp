@@ -11,3 +11,17 @@ struct FilterTraits
 {
 };
 } // namespace complex
+
+#define COMPLEX_DEF_FILTER_TRAITS_NAMED(type, nameString, uuidString)                                                                                                                                  \
+  template <>                                                                                                                                                                                          \
+  struct complex::FilterTraits<type>                                                                                                                                                                   \
+  {                                                                                                                                                                                                    \
+    static inline constexpr const char* name = nameString;                                                                                                                                             \
+    static inline constexpr complex::Uuid uuid = *complex::Uuid::FromString(uuidString);                                                                                                               \
+  }
+
+#define COMPLEX_DEF_FILTER_TRAITS(type, uuidString) COMPLEX_DEF_FILTER_TRAITS_NAMED(type, #type, uuidString)
+
+#define COMPLEX_NAMESPACE_CONCAT(nameSpace, type) nameSpace::type
+
+#define COMPLEX_DEF_FILTER_TRAITS_NAMEDSPACED(type, nameSpace, uuidString) COMPLEX_DEF_FILTER_TRAITS_NAMED(COMPLEX_NAMESPACE_CONCAT(nameSpace, type), #type, uuidString)

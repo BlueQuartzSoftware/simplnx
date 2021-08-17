@@ -71,7 +71,7 @@ namespace complex
 {
 std::string ImportTextFilter::name() const
 {
-  return "ImportTextFilter";
+  return FilterTraits<ImportTextFilter>::name;
 }
 
 Uuid ImportTextFilter::uuid() const
