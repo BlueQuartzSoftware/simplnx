@@ -87,7 +87,7 @@ bool FilterList::addPlugin(const std::string& path)
   return addPlugin(std::make_shared<PluginLoader>(path));
 }
 
-std::unordered_set<FilterHandle> FilterList::getFilterHandles() const
+const std::unordered_set<FilterHandle>& FilterList::getFilterHandles() const
 {
   return m_FilterHandles;
 }
