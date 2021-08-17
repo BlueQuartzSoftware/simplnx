@@ -1,7 +1,7 @@
 #include <optional>
 
-#include "TestPlugin.hpp"
 #include "TestFilter.hpp"
+#include "TestPlugin.hpp"
 
 using namespace complex;
 

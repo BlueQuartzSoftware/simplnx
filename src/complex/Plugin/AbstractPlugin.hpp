@@ -12,7 +12,7 @@
 
 namespace complex
 {
-using FilterCreationFunc = IFilter::UniquePointer(*)();
+using FilterCreationFunc = IFilter::UniquePointer (*)();
 
 /**
  * @class AbstractPlugin
