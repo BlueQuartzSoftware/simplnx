@@ -9,6 +9,8 @@
 #include <unistd.h>
 #elif _WIN32
 #include <Windows.h>
+#elif __APPLE__
+#include <mach-o/dyld.h>
 #endif
 
 #include "complex/Core/Application.hpp"
@@ -39,8 +41,13 @@ std::filesystem::path findCurrentPath()
 #else
 std::filesystem::path findCurrentPath()
 {
-  return std::filesystem::path();
-}
+  char path[1024];
+  uint32_t size = sizeof(path);
+  if(_NSGetExecutablePath(path, &size) == 0)
+    return std::filesystem::path(path);
+  else
+    printf("buffer too small; need size %u\n", size);
+    return std::filesystem::path();
 }
 #endif
 

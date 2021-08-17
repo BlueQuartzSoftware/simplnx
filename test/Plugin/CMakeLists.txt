@@ -28,6 +28,12 @@ set_target_properties(TestPlugin PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/test/Plugins
     RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/test/Plugins
 )
+if(APPLE)
+  set_target_properties(TestPlugin PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/complex_test.app/Contents/test/Plugins
+    RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/complex_test.app/Contents/test/Plugins
+  )
+endif()
 target_link_libraries(TestPlugin PUBLIC complex)
 
 generate_export_header(TestPlugin
@@ -83,6 +89,12 @@ set_target_properties(Test2Plugin PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/test/Plugins
     RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/test/Plugins
 )
+if(APPLE)
+  set_target_properties(Test2Plugin PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/complex_test.app/Contents/test/Plugins
+    RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/complex_test.app/Contents/test/Plugins
+  )
+endif()
 target_link_libraries(Test2Plugin PUBLIC complex)
 
 generate_export_header(Test2Plugin
