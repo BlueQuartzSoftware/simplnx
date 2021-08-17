@@ -37,7 +37,7 @@ public:
    * @brief Returns a set of FilterHandles for each of the filters.
    * @return std::set<FilterHandle>
    */
-  std::unordered_set<FilterHandle> getFilterHandles() const;
+  const std::unordered_set<FilterHandle>& getFilterHandles() const;
 
   /**
    * @brief Searches the FilterHandles for the text in the filter and plugin

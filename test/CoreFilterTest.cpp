@@ -12,10 +12,10 @@ TEST_CASE("Create Core Filter")
   REQUIRE(filterList != nullptr);
 
   // Only core filters should exists since plugins were not loaded
-  auto handles = filterList->getFilterHandles();
+  const auto& handles = filterList->getFilterHandles();
   REQUIRE(handles.size() > 0);
 
-  for(auto handle : handles)
+  for(const auto& handle : handles)
   {
     auto coreFilter = filterList->createFilter(handle);
     REQUIRE(coreFilter != nullptr);

@@ -91,9 +91,9 @@ private:
  * @param rhs
  * @return bool
  */
-bool operator==(const FilterHandle& lhs, const FilterHandle& rhs) noexcept;
+bool COMPLEX_EXPORT operator==(const FilterHandle& lhs, const FilterHandle& rhs) noexcept;
 
-bool operator!=(const FilterHandle& lhs, const FilterHandle& rhs) noexcept;
+bool COMPLEX_EXPORT operator!=(const FilterHandle& lhs, const FilterHandle& rhs) noexcept;
 } // namespace complex
 
 namespace std
