@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #include "complex/Core/FilterHandle.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -11,6 +12,8 @@
 
 namespace complex
 {
+using FilterCreationFunc = IFilter::UniquePointer (*)();
+
 /**
  * @class AbstractPlugin
  * @brief The AbstractPlugin class is the base class for all C++ plugins for
@@ -61,8 +64,9 @@ public:
   IFilter::UniquePointer createFilter(FilterHandle::FilterIdType id) const;
 
   /**
-   * @brief Returns a set of FilterHandles pointing to each of the filters contained in the plugin.
-   * @return std::set<FilterHandle>
+   * @brief Returns a set of FilterHandles pointing to each of the filters
+   * contained in the plugin.
+   * @return std::set<complex::FilterHandle>
    */
   std::unordered_set<FilterHandle> getFilterHandles() const;
 

@@ -1,33 +1,51 @@
 #include "TestFilter.hpp"
 
 #include <iostream>
+#include <optional>
 #include <string>
-
-#include "complex/Filtering/AbstractFilter.hpp"
 
 using namespace complex;
 
-const AbstractFilter::IdType TestFilter::ID = 1;
+const complex::Uuid TestFilter::ID = Uuid::FromString("5502c3f7-37a8-4a86-b003-1c856be02491").value();
 
 TestFilter::TestFilter()
-: AbstractFilter("Test Filter", TestFilter::ID)
+: IFilter()
 {
 }
 
 TestFilter::~TestFilter() = default;
+
+std::string TestFilter::name() const
+{
+  return "TestFilter";
+}
+
+complex::Uuid TestFilter::uuid() const
+{
+  return ID;
+}
+
+std::string TestFilter::humanName() const
+{
+  return "Test Filter";
+}
 
 complex::Parameters TestFilter::parameters() const
 {
   return {};
 }
 
-bool TestFilter::preflightImpl(const DataStructure& data, const Arguments& args) const
+complex::IFilter::UniquePointer TestFilter::clone() const
 {
-  std::cout << "Preflight TestFilter" << std::endl;
-  return true;
+  return UniquePointer(new TestFilter());
 }
 
-void TestFilter::executeImpl(DataStructure& data, const Arguments& args) const
+complex::Result<OutputActions> TestFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  std::cout << "Executing TestFilter" << std::endl;
+  return {};
+}
+
+complex::Result<> TestFilter::executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+{
+  return {};
 }

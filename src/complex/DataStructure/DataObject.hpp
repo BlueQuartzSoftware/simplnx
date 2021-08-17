@@ -132,22 +132,6 @@ public:
   Metadata* getMetadata() const;
 
   /**
-   * @brief Writes the DataObject to the specified XDMF file.
-   * @param out
-   * @param hdfFileName
-   * @return H5::ErrorType
-   */
-  virtual H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const = 0;
-
-  /**
-   * @brief Reads and replaces values from the provided input stream.
-   * @param in
-   * @param hdfFileName
-   * @return H5::ErrorType
-   */
-  virtual H5::ErrorType readFromXdmfText(std::istream& in, const std::string& hdfFileName) = 0;
-
-  /**
    * @brief Checks if the DataObject has an HDF5 ID assigned to it.
    * @return bool
    */

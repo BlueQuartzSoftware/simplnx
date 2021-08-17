@@ -1,25 +1,74 @@
 #include "Application.hpp"
 
 #include <filesystem>
+#include <iostream>
+
+#ifdef __linux__
+#include <algorithm>
+#include <limits.h>
+#include <unistd.h>
+#elif _WIN32
+#include <Windows.h>
+#elif __APPLE__
+#include <mach-o/dyld.h>
+#endif
 
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterList.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
+#include "complex/Plugin/PluginLoader.hpp"
 
 using namespace complex;
+
+#ifdef __linux__
+std::filesystem::path findCurrentPath()
+{
+  char pBuf[256];
+  size_t len = sizeof(pBuf);
+  int32_t bytes = std::min(readlink("/proc/self/exe", pBuf, len), static_cast<ssize_t>(len - 1));
+  if(bytes >= 0)
+    pBuf[bytes] = '\0';
+  return std::filesystem::path(pBuf);
+}
+#elif _WIN32
+std::filesystem::path findCurrentPath()
+{
+  char pBuf[256];
+  size_t len = sizeof(pBuf);
+  int32_t bytes = GetModuleFileName(NULL, pBuf, len);
+  return std::filesystem::path(pBuf);
+}
+#else
+std::filesystem::path findCurrentPath()
+{
+  char path[1024];
+  uint32_t size = sizeof(path);
+  if(_NSGetExecutablePath(path, &size) == 0)
+    return std::filesystem::path(path);
+  else
+    printf("buffer too small; need size %u\n", size);
+  return std::filesystem::path();
+}
+#endif
 
 Application* Application::s_Instance = nullptr;
 
 Application::Application()
 : m_FilterList(new FilterList())
 {
-  s_Instance = this;
+  initialize();
 }
 
 Application::Application(int argc, char** argv)
 : m_FilterList(new FilterList())
 {
+  initialize();
+}
+
+void Application::initialize()
+{
   s_Instance = this;
+  m_CurrentPath = findCurrentPath();
 }
 
 Application::~Application()
@@ -35,13 +84,23 @@ Application* Application::Instance()
   return s_Instance;
 }
 
-void Application::loadPlugins(const std::string& pluginDir)
+std::filesystem::path Application::getCurrentPath() const
+{
+  return m_CurrentPath;
+}
+
+std::filesystem::path Application::getCurrentDir() const
+{
+  return m_CurrentPath.parent_path();
+}
+
+void Application::loadPlugins(const std::filesystem::path& pluginDir)
 {
   for(const auto& entry : std::filesystem::directory_iterator(pluginDir))
   {
     auto path = std::filesystem::path(entry.path());
-    std::string filename = path.filename().string();
-    if(filename.find("Plugin.") != std::string::npos)
+    std::string extension = path.extension().string();
+    if(extension == ".complex")
     {
       loadPlugin(path.string());
     }
@@ -65,5 +124,6 @@ JsonPipelineBuilder* Application::getPipelineBuilder() const
 
 void Application::loadPlugin(const std::string& path)
 {
-  getFilterList()->addPlugin(path);
+  auto pluginLoader = std::make_shared<PluginLoader>(path);
+  getFilterList()->addPlugin(pluginLoader);
 }

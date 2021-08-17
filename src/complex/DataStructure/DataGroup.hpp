@@ -52,22 +52,6 @@ public:
    */
   DataObject* shallowCopy() override;
 
-  /**
-   * @brief Writes information for the XDMF file to the output stream.
-   * @param out
-   * @param hdfFileName
-   * @return H5::ErrorType
-   */
-  H5::ErrorType generateXdmfText(std::ostream& out, const std::string& hdfFileName) const override;
-
-  /**
-   * @brief Reads information from the XDMF file through the input stream.
-   * @param in
-   * @param hdfFileName
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readFromXdmfText(std::istream& in, const std::string& hdfFileName) override;
-
 protected:
   /**
    * @brief Checks if the provided DataObject can be added to the container.

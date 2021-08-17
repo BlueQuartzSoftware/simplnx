@@ -142,10 +142,13 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.hpp
+
   ${COMPLEX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
+
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
   ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
+  
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
@@ -276,6 +279,10 @@ endforeach()
 if(WIN32)
   list(APPEND COMPLEX_SRCS
     ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader_Win.cpp
+  )
+elseif(APPLE)
+  list(APPEND COMPLEX_SRCS
+    ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader_Mac.cpp
   )
 elseif(UNIX)
   list(APPEND COMPLEX_SRCS

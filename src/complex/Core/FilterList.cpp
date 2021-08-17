@@ -110,7 +110,7 @@ void FilterList::addCoreFilter(FilterCreationFunc func)
 {
   IFilter::UniquePointer filter = func();
   m_CoreFiltersMap[filter->uuid()] = func;
-  m_FilterHandles.insert(FilterHandle(filter->name(), filter->uuid(), {}));
+  m_FilterHandles.insert(FilterHandle(filter->humanName(), filter->uuid(), {}));
 }
 
 IFilter::UniquePointer FilterList::createCoreFilter(const FilterHandle::FilterIdType& filterId) const

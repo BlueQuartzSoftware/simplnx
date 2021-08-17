@@ -48,6 +48,11 @@ size_t GridMontage::getDepth() const
   return m_DepthCount;
 }
 
+SizeVec3 GridMontage::getGridSize() const
+{
+  return {m_ColumnCount, m_RowCount, m_DepthCount};
+}
+
 void GridMontage::resizeTileDims(size_t row, size_t col, size_t depth)
 {
   const CollectionType& oldCollection = getCollection();
@@ -82,12 +87,24 @@ void GridMontage::resizeTileDims(size_t row, size_t col, size_t depth)
 
 GridTileIndex GridMontage::getTileIndex(size_t col, size_t row, size_t depth) const
 {
-  return getTileIndex({col, row, depth});
+  if(col >= m_ColumnCount)
+  {
+    return GridTileIndex();
+  }
+  if(row >= m_RowCount)
+  {
+    return GridTileIndex();
+  }
+  if(depth >= m_DepthCount)
+  {
+    return GridTileIndex();
+  }
+  return GridTileIndex(this, {col, row, depth});
 }
 
 GridTileIndex GridMontage::getTileIndex(const SizeVec3& pos) const
 {
-  return GridTileIndex(this, pos);
+  return getTileIndex(pos[0], pos[1], pos[2]);
 }
 
 std::optional<SizeVec3> GridMontage::getTilePosOfGeometry(const AbstractGeometry* geom) const
@@ -173,16 +190,6 @@ GridMontage::DimensionsType GridMontage::getDimensions() const
 }
 
 GridMontage::BoundsType GridMontage::getBounds() const
-{
-  throw std::runtime_error("");
-}
-
-H5::ErrorType GridMontage::generateXdmfText(std::ostream& out, const std::string& hdfFileName) const
-{
-  throw std::runtime_error("");
-}
-
-H5::ErrorType GridMontage::readFromXdmfText(std::istream& in, const std::string& hdfFileName)
 {
   throw std::runtime_error("");
 }

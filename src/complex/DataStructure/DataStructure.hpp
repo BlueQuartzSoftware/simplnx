@@ -352,20 +352,6 @@ public:
    */
   ConstIterator end() const;
 
-  /**
-   * @brief Writes the DataStructure as an XDMF file at the specified filepath
-   * @param hdfFilePath
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeXdmfFile(const std::filesystem::path& hdfFilePath) const;
-
-  /**
-   * @brief Reads the DataStructure from the specified XDMF filepath.
-   * @param xdmfFilePath
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readXdmfFile(const std::filesystem::path& xdmfFilePath);
-
 protected:
   /**
    * @brief Returns the shared pointer for the specified DataObject.
