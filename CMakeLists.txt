@@ -63,6 +63,16 @@ if(UNIX)
   )
 endif()
 
+option(COMPLEX_ENABLE_LINK_FILESYSTEM "Enables linking to a C++ filesystem library" OFF)
+if(COMPLEX_ENABLE_LINK_FILESYSTEM)
+  set(COMPLEX_FILESYSTEM_LIB "stdc++fs" CACHE STRING "C++ filesystem library to link to")
+  set_property(CACHE COMPLEX_FILESYSTEM_LIB PROPERTY STRINGS "stdc++fs" "c++fs")
+  target_link_libraries(complex
+    PUBLIC
+      ${COMPLEX_FILESYSTEM_LIB}
+  )
+endif()
+
 set(COMPLEX_GENERATED_DIR ${PROJECT_BINARY_DIR}/generated)
 set(COMPLEX_GENERATED_HEADER_DIR ${PROJECT_BINARY_DIR}/generated/complex)
 set(COMPLEX_EXPORT_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/complex_export.hpp)
