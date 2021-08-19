@@ -35,7 +35,7 @@ public:
 
   /**
    * @brief Returns a set of FilterHandles for each of the filters.
-   * @return std::set<FilterHandle>
+   * @return std::unordered_set<FilterHandle>
    */
   const std::unordered_set<FilterHandle>& getFilterHandles() const;
 
@@ -82,7 +82,7 @@ public:
 
   /**
    * @brief Returns a set of pointers to loaded plugins.
-   * @return std::set<AbstractPlugin*>
+   * @return std::unordered_set<AbstractPlugin*>
    */
   std::unordered_set<AbstractPlugin*> getLoadedPlugins() const;
 
