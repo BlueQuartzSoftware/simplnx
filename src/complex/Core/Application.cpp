@@ -2,14 +2,15 @@
 
 #include <filesystem>
 #include <iostream>
+#include <stdexcept>
+#include <vector>
 
-#ifdef __linux__
-#include <algorithm>
+#if defined(__linux__)
 #include <limits.h>
 #include <unistd.h>
-#elif _WIN32
+#elif defined(_WIN32)
 #include <Windows.h>
-#elif __APPLE__
+#elif defined(__APPLE__)
 #include <mach-o/dyld.h>
 #endif
 
@@ -20,36 +21,50 @@
 
 using namespace complex;
 
-#ifdef __linux__
+namespace
+{
 std::filesystem::path findCurrentPath()
 {
-  char pBuf[256];
-  size_t len = sizeof(pBuf);
-  int32_t bytes = std::min(readlink("/proc/self/exe", pBuf, len), static_cast<ssize_t>(len - 1));
-  if(bytes >= 0)
-    pBuf[bytes] = '\0';
-  return std::filesystem::path(pBuf);
+#if defined(__linux__)
+  std::vector<char> buffer(PATH_MAX + 1);
+  ssize_t bytesWritten = readlink("/proc/self/exe", buffer.data(), buffer.size());
+  if(bytesWritten < 0)
+  {
+    throw std::runtime_error("Failed to get executable path");
+  }
+  if(bytesWritten >= buffer.size())
+  {
+    throw std::runtime_error("Failed to get executable path. Path too long for buffer.");
+  }
+  buffer[bytesWritten] = '\0';
+  return std::filesystem::path(buffer.data());
 }
-#elif _WIN32
-std::filesystem::path findCurrentPath()
-{
-  char pBuf[256];
-  size_t len = sizeof(pBuf);
-  int32_t bytes = GetModuleFileName(NULL, pBuf, len);
-  return std::filesystem::path(pBuf);
-}
+#elif defined(_WIN32)
+  std::vector<WCHAR> buffer(MAX_PATH + 1);
+  DWORD bytesWritten = GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+  if(bytesWritten == 0)
+  {
+    throw std::runtime_error("Failed to get executable path");
+  }
+  if(bytesWritten >= static_cast<DWORD>(buffer.size()))
+  {
+    throw std::runtime_error("Failed to get executable path. Path too long for buffer.");
+  }
+  return std::filesystem::path(buffer.data());
+#elif defined(__APPLE__)
+  std::vector<char> buffer(MAXPATHLEN + 1);
+  uint32_t size = static_cast<uint32_t>(buffer.size());
+  int result = _NSGetExecutablePath(buffer.data(), &size);
+  if(result != 0)
+  {
+    throw std::runtime_error("Failed to get executable path. Path too long buffer.");
+  }
+  return std::filesystem::path(buffer.data());
 #else
-std::filesystem::path findCurrentPath()
-{
-  char path[1024];
-  uint32_t size = sizeof(path);
-  if(_NSGetExecutablePath(path, &size) == 0)
-    return std::filesystem::path(path);
-  else
-    printf("buffer too small; need size %u\n", size);
-  return std::filesystem::path();
-}
+  static_assert(false, "Unsupported platform for findCurrentPath()");
 #endif
+}
+} // namespace
 
 Application* Application::s_Instance = nullptr;
 
