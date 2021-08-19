@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 
 #include "test/test2plugin_export.hpp"
@@ -7,10 +8,8 @@
 class TEST2PLUGIN_EXPORT Test2Filter : public complex::IFilter
 {
 public:
-  static const complex::Uuid ID;
-
   Test2Filter();
-  virtual ~Test2Filter();
+  ~Test2Filter() override;
 
   /**
    * @brief Returns the name of the filter.
@@ -61,3 +60,5 @@ protected:
    */
   complex::Result<> executeImpl(complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const override;
 };
+
+COMPLEX_DEF_FILTER_TRAITS(Test2Filter, "ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04");
