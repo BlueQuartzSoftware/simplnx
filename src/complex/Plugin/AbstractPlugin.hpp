@@ -66,7 +66,7 @@ public:
   /**
    * @brief Returns a set of FilterHandles pointing to each of the filters
    * contained in the plugin.
-   * @return std::set<complex::FilterHandle>
+   * @return std::unordered_set<complex::FilterHandle>
    */
   std::unordered_set<FilterHandle> getFilterHandles() const;
 
