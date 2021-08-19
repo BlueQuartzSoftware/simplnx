@@ -48,7 +48,7 @@ public:
    */
   [[nodiscard]] UniquePointer clone() const override;
 
-private:
+protected:
   /**
    * @brief
    * @param data
