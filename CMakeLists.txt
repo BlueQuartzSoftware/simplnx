@@ -100,6 +100,7 @@ set(CoreParameters
   NumberParameter
   NumericTypeParameter
   StringParameter
+  VectorParameter
 )
 
 # Generate core filter import header
