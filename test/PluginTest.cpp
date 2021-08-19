@@ -9,27 +9,28 @@
 #include "complex/Plugin/AbstractPlugin.hpp"
 
 using namespace complex;
+namespace fs = std::filesystem;
 
 namespace
 {
-inline const std::string PluginDir = "/test/Plugins";
-FilterHandle testHandle("Test Filter", Uuid::FromString("5502c3f7-37a8-4a86-b003-1c856be02491").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
-FilterHandle test2Handle("Test2 Filter", Uuid::FromString("ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854e").value());
-} // namespace
+const fs::path PluginDir = "test/Plugins";
+const FilterHandle testHandle("Test Filter", Uuid::FromString("5502c3f7-37a8-4a86-b003-1c856be02491").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
+const FilterHandle test2Handle("Test2 Filter", Uuid::FromString("ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854e").value());
 
-std::string getPluginDir(const std::filesystem::path& appDir)
+fs::path getPluginDir(const fs::path& appDir)
 {
 #ifdef __APPLE__
-  return appDir.parent_path().string() + ::PluginDir;
+  return appDir.parent_path() / ::PluginDir;
 #else
-  return appDir.string() + ::PluginDir;
+  return appDir / ::PluginDir;
 #endif
 }
+} // namespace
 
 TEST_CASE("Test Loading Plugins")
 {
   Application app;
-  std::filesystem::path pluginPath = getPluginDir(app.getCurrentDir());
+  fs::path pluginPath = getPluginDir(app.getCurrentDir());
   app.loadPlugins(pluginPath);
 
   auto filterList = app.getFilterList();
@@ -57,7 +58,7 @@ TEST_CASE("Test Loading Plugins")
 void initApplication()
 {
   Application* app = new Application();
-  std::filesystem::path pluginPath = getPluginDir(app->getCurrentDir());
+  fs::path pluginPath = getPluginDir(app->getCurrentDir());
   app->loadPlugins(pluginPath);
 }
 
