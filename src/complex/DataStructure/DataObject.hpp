@@ -19,6 +19,11 @@ class BaseGroup;
 class DataPath;
 class DataStructure;
 
+namespace H5::Constants::DataObject
+{
+extern const std::string ObjectTypeTag;
+}
+
 /**
  * @class DataObject
  * @brief The DataObject class is the base class for all items stored in the
@@ -72,6 +77,12 @@ public:
    * @return DataObject*
    */
   virtual DataObject* shallowCopy() = 0;
+
+  /**
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+  */
+  virtual std::string getTypeName() const = 0;
 
   /**
    * @brief Returns the DataObject's ID value.
@@ -138,10 +149,17 @@ public:
   bool hasH5Id() const;
 
   /**
-   * @brief Returns the HDF5 ID used by the DataObject.
+   * @brief Returns the H5 ID used by the DataObject.
    * @return H5::IdType
    */
   H5::IdType getH5Id() const;
+
+  /**
+   * @brief Writes the DataObject to the target HDF5 group.
+   * @param groupId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5(H5::IdType groupId) const;
 
 protected:
   /**
@@ -150,7 +168,13 @@ protected:
    * @param ds
    * @param name
    */
-  DataObject(DataStructure* ds, const std::string& name);
+  DataObject(DataStructure& ds, const std::string& name);
+
+  /**
+   * @brief Attempts to add the specified 
+   * @return bool
+   */
+  static bool AddObjectToDS(DataStructure& ds, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId);
 
   /**
    * @brief Marks the specified BaseGroup as a parent.
@@ -176,6 +200,14 @@ protected:
    * @param ds
    */
   virtual void setDataStructure(DataStructure* ds);
+
+  /**
+   * @brief Implementation-specific details for writing the DataObject to HDF5.
+   * @param parentId
+   * @param groupId
+   * @return H5::ErrorType
+   */
+  virtual H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const = 0;
 
 private:
   /**

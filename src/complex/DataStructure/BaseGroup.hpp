@@ -41,9 +41,9 @@ public:
 
   /**
    * @brief Returns the underlying DataMap by value.
-   * @return DataMap
+   * @return const DataMap&
    */
-  DataMap getDataMap() const;
+  const DataMap& getDataMap() const;
 
   /**
    * @brief Returns true if a child with the specified name exists in the
@@ -151,7 +151,7 @@ protected:
    * @param ds
    * @param name
    */
-  BaseGroup(DataStructure* ds, const std::string& name);
+  BaseGroup(DataStructure& ds, const std::string& name);
 
   /**
    * @brief Checks if the provided DataObject can be added to the container. This is a
@@ -169,6 +169,28 @@ protected:
    * @param ds
    */
   void setDataStructure(DataStructure* ds) override;
+
+  /**
+   * @brief Returns the underlying DataMap by reference.
+   * @return DataMap&
+   */
+  DataMap& getDataMap();
+
+  /**
+   * @brief Reads the DataStructure group from a target HDF5 group.
+   * @param targetId
+   * @param parentId
+   * @return H5::Error
+   */
+  virtual H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType parentId);
+
+  /**
+   * @brief Writes the contained DataObjects to the target HDF5 group.
+   * @param parentId
+   * @param groupId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const override;
 
 private:
   DataMap m_DataMap;

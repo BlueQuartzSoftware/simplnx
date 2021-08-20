@@ -1,8 +1,20 @@
 #include "complex/DataStructure/DataMap.hpp"
 
+#include "complex/Core/Application.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
+#include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/DataStructure/Geometry/EdgeGeom.hpp"
+#include "complex/DataStructure/Geometry/HexahedralGeom.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/Geometry/QuadGeom.hpp"
+#include "complex/DataStructure/Geometry/RectGridGeom.hpp"
+#include "complex/DataStructure/Geometry/TetrahedralGeom.hpp"
+#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
+#include "complex/DataStructure/Geometry/VertexGeom.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
+#include "complex/Utilities/Parsing/HDF5/IH5DataFactory.hpp"
 
 using namespace complex;
 
@@ -91,7 +103,7 @@ std::vector<DataMap::IdType> DataMap::getAllKeys() const
   for(auto& pair : m_Map)
   {
     keys.push_back(pair.first);
-    if(auto group = dynamic_cast<BaseGroup*>(pair.second.get()))
+    if(const BaseGroup* group = dynamic_cast<BaseGroup*>(pair.second.get()))
     {
       auto childKeys = group->getDataMap().getAllKeys();
       keys.insert(keys.end(), childKeys.begin(), childKeys.end());
@@ -106,7 +118,7 @@ std::map<DataMap::IdType, std::weak_ptr<DataObject>> DataMap::getAllItems() cons
   for(auto& pair : m_Map)
   {
     map[pair.first] = pair.second;
-    if(auto group = dynamic_cast<BaseGroup*>(pair.second.get()))
+    if(const BaseGroup* group = dynamic_cast<BaseGroup*>(pair.second.get()))
     {
       map.merge(group->getDataMap().getAllItems());
     }
@@ -242,4 +254,54 @@ DataMap::ConstIterator DataMap::begin() const
 DataMap::ConstIterator DataMap::end() const
 {
   return m_Map.end();
+}
+
+DataMap& DataMap::operator=(const DataMap& rhs)
+{
+  m_Map = rhs.m_Map;
+  return *this;
+}
+
+DataMap& DataMap::operator=(DataMap&& rhs) noexcept
+{
+  m_Map = std::move(rhs.m_Map);
+  return *this;
+}
+
+H5::ErrorType DataMap::readH5Group(DataStructure& ds, H5::IdType groupId, const std::optional<DataObject::IdType>& parentId)
+{
+  const std::string ObjectTypeTag = H5::Constants::DataObject::ObjectTypeTag;
+
+  hsize_t count;
+  H5Gget_num_objs(groupId, &count);
+  for(hsize_t i = 0; i < count; i++)
+  {
+    const std::string name = H5::Reader::Generic::getNameAtIdx(groupId, i);
+    hid_t objId = H5Gopen(groupId, name.c_str(), H5P_DEFAULT);
+    std::string typeName;
+    H5::Reader::Generic::readStringAttribute(groupId, name, ObjectTypeTag, typeName);
+    //H5::Reader::Generic::readStringAttribute(objId, ObjectTypeTag, ObjectTypeTag, typeName);
+
+    IH5DataFactory* factory = Application::Instance()->getDataStructureReader()->getFactory(typeName);
+    if(factory->createFromHdf5(ds, objId, groupId, parentId) < 0)
+    {
+      throw std::runtime_error("Error reading DataMap from HDF5");
+    }
+
+    H5Gclose(objId);
+  }
+  return 0;
+}
+
+H5::ErrorType DataMap::writeH5Group(H5::IdType groupId) const
+{
+  for(const auto& iter : *this)
+  {
+    herr_t err = iter.second->writeHdf5(groupId);
+    if(err < 0)
+    {
+      return err;
+    }
+  }
+  return 0;
 }

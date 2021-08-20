@@ -2,6 +2,13 @@
 
 namespace complex
 {
+FilterHandle::FilterHandle(const FilterIdType& filterId, const PluginIdType& pluginId)
+: m_FilterName("[Unknown]")
+, m_FilterId(filterId)
+, m_PluginId(pluginId)
+{
+}
+
 FilterHandle::FilterHandle(const std::string& filterName, const FilterIdType& filterId, const PluginIdType& pluginId)
 : m_FilterName(filterName)
 , m_FilterId(filterId)

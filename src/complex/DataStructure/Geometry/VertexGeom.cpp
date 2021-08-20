@@ -4,20 +4,21 @@
 
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 using namespace complex;
 
-VertexGeom::VertexGeom(DataStructure* ds, const std::string& name)
+VertexGeom::VertexGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry(ds, name)
 {
 }
 
-VertexGeom::VertexGeom(DataStructure* ds, const std::string& name, size_t numVertices, bool allocate)
+VertexGeom::VertexGeom(DataStructure& ds, const std::string& name, size_t numVertices, bool allocate)
 : AbstractGeometry(ds, name)
 {
 }
 
-VertexGeom::VertexGeom(DataStructure* ds, const std::string& name, const SharedVertexList* vertices)
+VertexGeom::VertexGeom(DataStructure& ds, const std::string& name, const SharedVertexList* vertices)
 : AbstractGeometry(ds, name)
 {
 }
@@ -37,6 +38,21 @@ VertexGeom::VertexGeom(VertexGeom&& other) noexcept
 }
 
 VertexGeom::~VertexGeom() = default;
+
+VertexGeom* VertexGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<VertexGeom>(new VertexGeom(ds, name));
+  if(!AddObjectToDS(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+std::string VertexGeom::getTypeName() const
+{
+  return getGeometryTypeAsString();
+}
 
 DataObject* VertexGeom::shallowCopy()
 {
@@ -134,7 +150,7 @@ AbstractGeometry::StatusCode VertexGeom::findElementSizes()
   auto dataStore = new DataStore<float>(1, getNumberOfElements());
   dataStore->fill(0.0f);
 
-  auto vertexSizes = getDataStructure()->createDataArray<float>("Voxel Sizes", dataStore, getId());
+  FloatArray* vertexSizes = DataArray<float>::Create(*getDataStructure(), "Voxel Sizes", dataStore, getId());
   m_VertexSizesId = vertexSizes->getId();
   return 1;
 }
@@ -259,4 +275,14 @@ void VertexGeom::setElementSizes(const FloatArray* elementSizes)
     return;
   }
   m_VertexSizesId = elementSizes->getId();
+}
+
+H5::ErrorType VertexGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
+{
+  return getDataMap().readH5Group(*getDataStructure(), targetId);
+}
+
+H5::ErrorType VertexGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+{
+  return getDataMap().writeH5Group(groupId);
 }

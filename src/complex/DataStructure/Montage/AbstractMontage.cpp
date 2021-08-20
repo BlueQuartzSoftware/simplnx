@@ -4,7 +4,7 @@
 
 using namespace complex;
 
-AbstractMontage::AbstractMontage(DataStructure* ds, const std::string& name)
+AbstractMontage::AbstractMontage(DataStructure& ds, const std::string& name)
 : BaseGroup(ds, name)
 {
 }

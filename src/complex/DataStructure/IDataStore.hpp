@@ -3,8 +3,16 @@
 #include <algorithm>
 #include <iterator>
 
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
+
 namespace complex
 {
+namespace H5::Constants::DataStore
+{
+static const std::string TupleCount = "TupleCount";
+static const std::string TupleSize = "TupleSize";
+} // namespace H5::Constants::DataStore
+
 template <typename T>
 class IDataStore
 {
@@ -301,15 +309,6 @@ public:
   virtual reference operator[](size_t index) = 0;
 
   /**
-   * @brief Fills the IDataStore with the specified value.
-   * @param value
-   */
-  virtual void fill(value_type value)
-  {
-    std::fill(begin(), end(), value);
-  }
-
-  /**
    * @brief Returns a deep copy of the data store and all its data.
    * @return IDataStore*
    */
@@ -351,6 +350,23 @@ public:
     return ConstIterator(*this, getSize());
   }
 
+  /**
+   * @brief Fills the IDataStore with the specified value.
+   * @param value
+   */
+  virtual void fill(value_type value)
+  {
+    std::fill(begin(), end(), value);
+  }
+
+  /**
+   * @brief Writes the data store to HDF5. Returns the HDF5 error code should
+   * one be encountered. Otherwise, returns 0.
+   * @param dataId
+   * @return H5::ErrorType
+   */
+  virtual H5::ErrorType writeHdf5(H5::IdType dataId) const = 0;
+
 protected:
   /**
    * @brief Default constructor
@@ -365,5 +381,4 @@ typename Iter::difference_type distance(Iter first, Iter last)
 {
   return last - first;
 }
-
 } // namespace complex

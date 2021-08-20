@@ -1,13 +1,15 @@
 #include "RectGridGeom.hpp"
 
+#include <iterator>
 #include <stdexcept>
 
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 using namespace complex;
 
-RectGridGeom::RectGridGeom(DataStructure* ds, const std::string& name)
+RectGridGeom::RectGridGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometryGrid(ds, name)
 {
 }
@@ -33,6 +35,21 @@ RectGridGeom::RectGridGeom(RectGridGeom&& other) noexcept
 }
 
 RectGridGeom::~RectGridGeom() = default;
+
+RectGridGeom* RectGridGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(ds, name));
+  if(!AddObjectToDS(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+std::string RectGridGeom::getTypeName() const
+{
+  return getGeometryTypeAsString();
+}
 
 DataObject* RectGridGeom::shallowCopy()
 {
@@ -140,7 +157,7 @@ AbstractGeometry::StatusCode RectGridGeom::findElementSizes()
     }
   }
 
-  FloatArray* sizeArray = getDataStructure()->createDataArray<float>("Voxel Sizes", sizes, getId());
+  FloatArray* sizeArray = DataArray<float>::Create(*getDataStructure(), "Voxel Sizes", sizes, getId());
   if(!sizeArray)
   {
     delete sizes;
@@ -564,4 +581,14 @@ void RectGridGeom::setElementSizes(const FloatArray* elementSizes)
     return;
   }
   m_VoxelSizesId = elementSizes->getId();
+}
+
+H5::ErrorType RectGridGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
+{
+  return getDataMap().readH5Group(*getDataStructure(), targetId);
+}
+
+H5::ErrorType RectGridGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+{
+  return getDataMap().writeH5Group(groupId);
 }

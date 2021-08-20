@@ -15,7 +15,7 @@ using namespace complex;
 template <typename T>
 T* createGeom(DataStructure& ds)
 {
-  auto geom = ds.createGeometry<T>("Geom");
+  auto geom = T::Create(ds, "Geom");
   T* output = dynamic_cast<T*>(geom);
   REQUIRE(output != nullptr);
   return output;
@@ -25,7 +25,7 @@ const AbstractGeometry::SharedVertexList* createVertexList(AbstractGeometry* geo
 {
   auto ds = geom->getDataStructure();
   auto dataStore = new DataStore<float>(3, 0);
-  auto dataArr = ds->createDataArray("Vertices", dataStore, geom->getId());
+  auto dataArr = DataArray<float>::Create(*ds, "Vertices", dataStore, geom->getId());
   REQUIRE(dataArr != nullptr);
   return dynamic_cast<const AbstractGeometry::SharedVertexList*>(dataArr);
 }
@@ -34,7 +34,7 @@ const AbstractGeometry::SharedEdgeList* createEdgeList(AbstractGeometry* geom)
 {
   auto ds = geom->getDataStructure();
   auto dataStore = new DataStore<uint64_t>(2, 0);
-  auto dataArr = ds->createDataArray("Edges", dataStore, geom->getId());
+  auto dataArr = DataArray<uint64_t>::Create(*ds, "Edges", dataStore, geom->getId());
   REQUIRE(dataArr != nullptr);
   return dynamic_cast<const AbstractGeometry::SharedEdgeList*>(dataArr);
 }
@@ -43,7 +43,7 @@ const AbstractGeometry::SharedFaceList* createFaceList(AbstractGeometry* geom)
 {
   auto ds = geom->getDataStructure();
   auto dataStore = new DataStore<uint64_t>(4, 0);
-  auto dataArr = ds->createDataArray("Faces", dataStore, geom->getId());
+  auto dataArr = DataArray<uint64_t>::Create(*ds, "Faces", dataStore, geom->getId());
   REQUIRE(dataArr != nullptr);
   return dynamic_cast<const AbstractGeometry::SharedFaceList*>(dataArr);
 }

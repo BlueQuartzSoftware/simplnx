@@ -2,9 +2,11 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
@@ -209,6 +211,35 @@ public:
    * @return ConstIterator
    */
   ConstIterator end() const;
+
+  /**
+   * @brief Copy assignment operator
+   * @param rhs
+   * @return DataMap&
+   */
+  DataMap& operator=(const DataMap& rhs);
+
+  /**
+   * @brief Move assignment operator
+   * @param rhs
+   * @return DataMap&
+   */
+  DataMap& operator=(DataMap&& rhs) noexcept;
+
+  /**
+   * @brief Fills the DataMap with values taken from the specified HDF5 group ID.
+   * @param ds Top-level DataStructure
+   * @param groupId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType readH5Group(DataStructure& ds, H5::IdType groupId, const std::optional<IdType>& parent = {});
+
+  /**
+   * @brief Writes the DataMap and its DataObjects to the target HDF5 group.
+   * @param groupId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeH5Group(H5::IdType groupId) const;
 
 private:
   MapType m_Map;

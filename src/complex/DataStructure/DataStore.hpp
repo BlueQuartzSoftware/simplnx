@@ -1,8 +1,12 @@
 #pragma once
 
+#include <memory>
 #include <stdexcept>
 
+#include <hdf5.h>
+
 #include "complex/DataStructure/IDataStore.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
 namespace complex
 {
@@ -28,7 +32,20 @@ public:
   DataStore(size_t tupleSize, size_t tupleCount)
   : m_TupleSize(tupleSize)
   , m_TupleCount(tupleCount)
-  , m_Data(tupleSize * tupleCount)
+  , m_Data(std::make_unique<value_type[]>(tupleSize * tupleCount))
+  {
+  }
+
+  /**
+   * @brief Constructs a DataStore with the specified tupleSize and tupleCount.
+   * @param tupleSize
+   * @param tupleCount
+   * @param data
+   */
+  DataStore(size_t tupleSize, size_t tupleCount, std::unique_ptr<value_type[]>&& data)
+  : m_TupleSize(tupleSize)
+  , m_TupleCount(tupleCount)
+  , m_Data(std::move(data))
   {
   }
 
@@ -39,8 +56,13 @@ public:
   DataStore(const DataStore& other)
   : m_TupleCount(other.m_TupleCount)
   , m_TupleSize(other.m_TupleSize)
-  , m_Data(other.m_Data)
+  , m_Data(std::make_unique<value_type[]>(m_TupleCount * m_TupleSize))
   {
+    const size_t count = m_TupleCount * m_TupleSize;
+    for(size_t i = 0; i < count; i++)
+    {
+      m_Data[i] = other.m_Data[i];
+    }
   }
 
   /**
@@ -80,8 +102,17 @@ public:
    */
   void resizeTuples(size_t numTuples) override
   {
+    auto oldSize = this->getSize();
     m_TupleCount = numTuples;
-    m_Data.resize(this->getSize());
+    auto newSize = this->getSize();
+
+    auto data = new value_type[newSize];
+    for(size_t i = 0; i < newSize && i < oldSize; i++)
+    {
+      data[i] = m_Data[i];
+    }
+
+    m_Data.reset(data);
   }
 
   /**
@@ -158,9 +189,61 @@ public:
     return copy;
   }
 
+  /**
+   * @brief Writes the data store to HDF5. Returns the HDF5 error code should
+   * one be encountered. Otherwise, returns 0.
+   * @param dataId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5(H5::IdType dataId) const override
+  {
+    int32_t rank = 1;
+
+    size_t dataSize = m_TupleSize * m_TupleCount;
+
+    hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
+    hid_t dataspaceId = H5Screate_simple(rank, &dataSize, nullptr);
+    auto err = H5::Writer::Generic::writeScalarAttribute(dataId, ".", H5::Constants::DataStore::TupleCount, m_TupleCount);
+    if(err < 0)
+    {
+      throw std::runtime_error("Error writing DataStore tuple count");
+    }
+    err = H5::Writer::Generic::writeScalarAttribute(dataId, ".", H5::Constants::DataStore::TupleSize, m_TupleSize);
+    if(err < 0)
+    {
+      throw std::runtime_error("Error writing DataStore tuple size");
+    }
+    hid_t storeId = H5Dcreate1(dataId, "DataStore", dataType, dataspaceId, H5P_DEFAULT);
+    err = H5Dwrite(storeId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, m_Data.get());
+    if(H5Dclose(storeId) < 0)
+    {
+      throw std::runtime_error("Error closing HDF5 data store");
+    }
+    if(H5Sclose(dataspaceId) < 0)
+    {
+      throw std::runtime_error("Error closing HDF5 dataspace");
+    }
+
+    return err;
+  }
+
+  H5::ErrorType readHdf5(H5::IdType dataId)
+  {
+    auto buffer = std::make_unique<T[]>(tDims * cDims);
+    hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
+    auto err = H5Dread(daId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer.get());
+    if(err < 0)
+    {
+      throw std::runtime_error("");
+    }
+    H5Tclose(dataType);
+
+    auto dataStore = new complex::DataStore<T>(cDims, tDims, std::move(buffer));
+  }
+
 private:
   size_t m_TupleSize;
   size_t m_TupleCount;
-  std::vector<value_type> m_Data;
+  std::unique_ptr<value_type[]> m_Data;
 };
 } // namespace complex

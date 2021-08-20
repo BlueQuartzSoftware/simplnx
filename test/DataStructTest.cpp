@@ -16,9 +16,9 @@ TEST_CASE("DataGroupTree")
 {
   // Create structuure
   DataStructure dataStr;
-  auto group = dataStr.createGroup("Foo");
-  auto child = dataStr.createGroup("bar", group->getId());
-  auto grandchild = dataStr.createGroup("bazz", child->getId());
+  auto group = DataGroup::Create(dataStr, "Foo");
+  auto child = DataGroup::Create(dataStr, "bar", group->getId());
+  auto grandchild = DataGroup::Create(dataStr, "bazz", child->getId());
 
   auto groupId = group->getId();
   auto childId = child->getId();
@@ -50,10 +50,10 @@ TEST_CASE("DataGroupGraph")
 {
   // Create DataStructure
   DataStructure dataStr;
-  auto group = dataStr.createGroup("Foo");
-  auto child1 = dataStr.createGroup("Bar1", group->getId());
-  auto child2 = dataStr.createGroup("Bar2", group->getId());
-  auto grandchild = dataStr.createGroup("Bazz", child1->getId());
+  auto group = DataGroup::Create(dataStr, "Foo");
+  auto child1 = DataGroup::Create(dataStr, "Bar1", group->getId());
+  auto child2 = DataGroup::Create(dataStr, "Bar2", group->getId());
+  auto grandchild = DataGroup::Create(dataStr, "Bazz", child1->getId());
 
   // Get IDs
   auto groupId = group->getId();
@@ -92,10 +92,10 @@ TEST_CASE("DataPathTest")
 {
   // Create DataStructure
   DataStructure dataStr;
-  auto group = dataStr.createGroup("Foo");
-  auto child1 = dataStr.createGroup("Bar1", group->getId());
-  auto child2 = dataStr.createGroup("Bar2", group->getId());
-  auto grandchild = dataStr.createGroup("Bazz", child1->getId());
+  auto group = DataGroup::Create(dataStr, "Foo");
+  auto child1 = DataGroup::Create(dataStr, "Bar1", group->getId());
+  auto child2 = DataGroup::Create(dataStr, "Bar2", group->getId());
+  auto grandchild = DataGroup::Create(dataStr, "Bazz", child1->getId());
 
   auto child2Id = child2->getId();
   auto grandchildId = grandchild->getId();
@@ -124,10 +124,10 @@ TEST_CASE("DataPathTest")
 TEST_CASE("LinkedPathTest")
 {
   DataStructure dataStr;
-  auto group = dataStr.createGroup("Foo");
-  auto child1 = dataStr.createGroup("Bar1", group->getId());
-  auto child2 = dataStr.createGroup("Bar2", group->getId());
-  auto grandchild = dataStr.createGroup("Bazz", child1->getId());
+  auto group = DataGroup::Create(dataStr, "Foo");
+  auto child1 = DataGroup::Create(dataStr, "Bar1", group->getId());
+  auto child2 = DataGroup::Create(dataStr, "Bar2", group->getId());
+  auto grandchild = DataGroup::Create(dataStr, "Bazz", child1->getId());
 
   auto child2Id = child2->getId();
   auto grandchildId = grandchild->getId();
@@ -159,10 +159,10 @@ TEST_CASE("DataStructureListenerTest")
   DataStructObserver dsListener(dataStr);
 
   // Adds items to the DataStructure. Each addition should trigger dsListener.
-  auto group = dataStr.createGroup("Foo");
-  auto child1 = dataStr.createGroup("Bar1", group->getId());
-  auto child2 = dataStr.createGroup("Bar2", group->getId());
-  auto grandchild = dataStr.createGroup("Bazz", child1->getId());
+  auto group = DataGroup::Create(dataStr, "Foo");
+  auto child1 = DataGroup::Create(dataStr, "Bar1", group->getId());
+  auto child2 = DataGroup::Create(dataStr, "Bar2", group->getId());
+  auto grandchild = DataGroup::Create(dataStr, "Bazz", child1->getId());
 
   auto groupId = group->getId();
   auto child2Id = child2->getId();
@@ -182,10 +182,10 @@ TEST_CASE("DataStructureListenerTest")
 TEST_CASE("DataStructureCopyTest")
 {
   DataStructure dataStr;
-  auto group = dataStr.createGroup("Foo");
-  auto child1 = dataStr.createGroup("Bar1", group->getId());
-  auto child2 = dataStr.createGroup("Bar2", group->getId());
-  auto grandchild = dataStr.createGroup("Bazz", child1->getId());
+  auto group = DataGroup::Create(dataStr, "Foo");
+  auto child1 = DataGroup::Create(dataStr, "Bar1", group->getId());
+  auto child2 = DataGroup::Create(dataStr, "Bar2", group->getId());
+  auto grandchild = DataGroup::Create(dataStr, "Bazz", child1->getId());
 
   auto groupId = group->getId();
   auto child1Id = child1->getId();
@@ -210,12 +210,12 @@ TEST_CASE("DataStructureCopyTest")
   REQUIRE(dataStrCopy.getData(grandchildId) != dataStr.getData(grandchildId));
 
   // Create new group
-  auto newGroup = dataStr.createGroup("New Group", child2Id);
+  auto newGroup = DataGroup::Create(dataStr, "New Group", child2Id);
   auto newId = newGroup->getId();
   REQUIRE(dataStr.getData(newId));
   REQUIRE(!dataStrCopy.getData(newId));
 
-  auto newGroup2 = dataStrCopy.createGroup("New Group (2)", child2Id);
+  auto newGroup2 = DataGroup::Create(dataStrCopy, "New Group (2)", child2Id);
   auto newId2 = newGroup2->getId();
   REQUIRE(!dataStr.getData(newId2));
   REQUIRE(dataStrCopy.getData(newId2));
@@ -271,7 +271,7 @@ TEST_CASE("DataArrayTest")
   DataStructure dataStr;
 
   auto store = new DataStore<int32_t>(2, 2);
-  auto dataArr = dataStr.createDataArray<int32_t>("array", store);
+  auto dataArr = DataArray<int32_t>::Create(dataStr, "array", store);
 
   SECTION("test size")
   {
@@ -315,7 +315,7 @@ TEST_CASE("ScalarDataTest")
 {
   DataStructure dataStr;
   const int32_t value = 6;
-  auto scalar = dataStr.createScalar<int32_t>("scalar", value);
+  auto scalar = ScalarData<int32_t>::Create(dataStr, "scalar", value);
 
   // get value
   REQUIRE(value == scalar->getValue());

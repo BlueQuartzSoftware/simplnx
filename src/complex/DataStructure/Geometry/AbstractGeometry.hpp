@@ -336,7 +336,7 @@ public:
   void setSpatialDimensionality(uint32_t value);
 
   //////////
-  // HDF5 //
+  // H5 //
   //////////
 
   ///**
@@ -365,9 +365,17 @@ public:
   // */
   // virtual StatusCode readGeometryFromHDF5(bool preflight) = 0;
 
-  //////////
-  // HDF5 //
-  //////////
+  /**
+   * @brief Reads values from HDF5
+   * @param targetId
+   * @param groupId
+   * @return H5::ErrorType
+   */
+  virtual H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType groupId) = 0;
+
+  ////////
+  // H5 //
+  ////////
 
   /**
    * @brief
@@ -380,7 +388,7 @@ protected:
    * @param ds
    * @param name
    */
-  AbstractGeometry(DataStructure* ds, const std::string& name);
+  AbstractGeometry(DataStructure& ds, const std::string& name);
 
   /**
    * @brief

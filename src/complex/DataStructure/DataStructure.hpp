@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 
-#include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataMap.hpp"
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataStore.hpp"
@@ -36,6 +35,25 @@ class DataPath;
  */
 class COMPLEX_EXPORT DataStructure
 {
+protected:
+  /**
+   * @brief Returns the shared pointer for the specified DataObject.
+   * Returns nullptr if no DataObject is found.
+   * @param id
+   * @return std::shared_ptr<DataObject>
+   */
+  std::shared_ptr<DataObject> getSharedData(DataObject::IdType id) const;
+
+  /**
+   * @brief Finalizes adding a DataObject to the DataStructure. This should
+   * be called by the create* methods to prevent duplicating code. Returns
+   * true if the data was successfully added. Returns false otherwise.
+   * @param obj
+   * @param parent = {}
+   * @return bool
+   */
+  bool finishAddingObject(const std::shared_ptr<DataObject>& obj, const std::optional<DataObject::IdType>& parent = {});
+
 public:
   using Iterator = DataMap::Iterator;
   using ConstIterator = DataMap::ConstIterator;
@@ -179,116 +197,6 @@ public:
   LinkedPath getLinkedPath(const DataPath& path) const;
 
   /**
-   * @brief Creates a ScalarData object for the target parent container
-   * specified by the given IdType. A default value can be specified.
-   * Returns an EditableScalar object that serves as an editable wrapper
-   * for the created ScalarData.
-   * @param parent
-   * @param defaultValue
-   * @return ScalarData<T>*
-   */
-  template <typename T>
-  ScalarData<T>* createScalar(const std::string& name, T defaultValue, const std::optional<DataObject::IdType>& parent = {})
-  {
-    auto scalar = std::shared_ptr<ScalarData<T>>(new ScalarData<T>(this, name, defaultValue));
-    if(!finishAddingObject(scalar, parent))
-    {
-      return nullptr;
-    }
-    return scalar.get();
-  }
-
-  /**
-   * @brief Creates and adds a DataArray with the specified name and data
-   * store to the DataStructure. A pointer to the created DataArray is returned
-   * if it could be added to the specified parent. If the DataArray could not
-   * be added, returns nullptr.
-   * @param parent
-   * @param dataStore
-   * @return DataArray<T>*
-   */
-  template <typename T>
-  DataArray<T>* createDataArray(const std::string& name, IDataStore<T>* dataStore, const std::optional<DataObject::IdType>& parent = {})
-  {
-    DataArray<T>* dataArr = new DataArray<T>(this, name, dataStore);
-    std::shared_ptr<DataObject> dataArrPtr(dataArr);
-    if(!finishAddingObject(dataArrPtr, parent))
-    {
-      return nullptr;
-    }
-    return dataArr;
-  }
-
-  /**
-   * @brief
-   * @tparam T
-   * @tparam K
-   * @param name
-   * @param parent = {}
-   * @return DynamicListArray*
-   */
-  template <typename T, typename K>
-  DynamicListArray<T, K>* createDynamicList(const std::string& name, const std::optional<DataObject::IdType>& parent = {})
-  {
-    std::shared_ptr<DynamicListArray<T, K>> dyList(new DynamicListArray<T, K>(this, name));
-    if(!finishAddingObject(dyList, parent))
-    {
-      return nullptr;
-    }
-    return dyList.get();
-  }
-
-  /**
-   * @brief Creates and adds a DataGroup to the DataStructure. If the parent
-   * parameter is not provided, the group is added to the top of the DataStructure.
-   * The created DataGroup is returned by a raw pointer.
-   * @param parent
-   * @return DataGroup*
-   */
-  DataGroup* createGroup(const std::string& name, const std::optional<DataObject::IdType>& parent = {});
-
-  /**
-   * @brief Creates a specified montage type and adds it to the DataStructure.
-   * The created montage is returned as a raw pointer. If the parent parameter
-   * is not provided, the montage is added to the top of the DataStructure.
-   *
-   * If the specified type is not a montage, this method throws an exception.
-   * @param parent
-   * @return AbstractMontage*
-   */
-  template <class T>
-  AbstractMontage* createMontage(const std::string& name, const std::optional<DataObject::IdType>& parent = {})
-  {
-    AbstractMontage* montage = new T(this, name);
-    std::shared_ptr<DataObject> montagePtr(montage);
-    if(!finishAddingObject(montagePtr, parent))
-    {
-      return nullptr;
-    }
-    return montage;
-  }
-
-  /**
-   * @brief Creates a specified geometry type and adds it to the DataStructure.
-   * The created geometry is returned as a raw pointer. If the parent parameter
-   * is not provided, the geometry is added to the top of the DataStructure.
-   *
-   * If the specified type is not a geometry, this method throws an exception.
-   * @param parent
-   * @return AbstractGeometry*
-   */
-  template <class T>
-  AbstractGeometry* createGeometry(const std::string& name, const std::optional<DataObject::IdType>& parent = {})
-  {
-    std::shared_ptr<AbstractGeometry> geometry(new T(this, name));
-    if(!finishAddingObject(geometry, parent))
-    {
-      return nullptr;
-    }
-    return geometry.get();
-  }
-
-  /**
    * @brief Returns the top-level of the DataStructure.
    * @return std::vector<DataObject*>
    */
@@ -352,24 +260,33 @@ public:
    */
   ConstIterator end() const;
 
-protected:
   /**
-   * @brief Returns the shared pointer for the specified DataObject.
-   * Returns nullptr if no DataObject is found.
-   * @param id
-   * @return std::shared_ptr<DataObject>
+   * @brief Writes the DataStructure to the target HDF5 file or group.
+   * @param fileId parent ID
+   * @return H5::ErrorType
    */
-  std::shared_ptr<DataObject> getSharedData(DataObject::IdType id) const;
+  H5::ErrorType writeHdf5(H5::IdType fileId) const;
 
   /**
-   * @brief Finalizes adding a DataObject to the DataStructure. This should
-   * be called by the create* methods to prevent duplicating code. Returns
-   * true if the data was successfully added. Returns false otherwise.
-   * @param obj
-   * @param parent = {}
-   * @return bool
+   * @brief Creates a DataStructure by reading the specified HDF5 file ID.
+   * @param fileId
+   * @return H5::ErrorType
    */
-  bool finishAddingObject(const std::shared_ptr<DataObject>& obj, const std::optional<DataObject::IdType>& parent = {});
+  static DataStructure ReadFromHdf5(H5::IdType fileId, H5::ErrorType& err);
+
+  /**
+   * @brief Copy assignment operator. The copied DataStructure's observers are not retained.
+   * @param rhs
+   * @return DataStructure&
+   */
+  DataStructure& operator=(const DataStructure& rhs);
+
+  /**
+   * @brief Move assignment operator. The moved DataStructure's observers are retained.
+   * @param rhs
+   * @return DataStructure&
+   */
+  DataStructure& operator=(DataStructure&& rhs) noexcept;
 
 private:
   /**

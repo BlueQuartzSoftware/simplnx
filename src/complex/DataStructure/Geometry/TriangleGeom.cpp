@@ -5,20 +5,21 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/DynamicListArray.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 using namespace complex;
 
-TriangleGeom::TriangleGeom(DataStructure* ds, const std::string& name)
+TriangleGeom::TriangleGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry2D(ds, name)
 {
 }
 
-TriangleGeom::TriangleGeom(DataStructure* ds, const std::string& name, size_t numTriangles, const SharedVertexList* vertices, bool allocate)
+TriangleGeom::TriangleGeom(DataStructure& ds, const std::string& name, size_t numTriangles, const SharedVertexList* vertices, bool allocate)
 : AbstractGeometry2D(ds, name)
 {
 }
 
-TriangleGeom::TriangleGeom(DataStructure* ds, const std::string& name, const SharedTriList* triangles, const SharedVertexList* vertices)
+TriangleGeom::TriangleGeom(DataStructure& ds, const std::string& name, const SharedTriList* triangles, const SharedVertexList* vertices)
 : AbstractGeometry2D(ds, name)
 {
 }
@@ -44,6 +45,21 @@ TriangleGeom::TriangleGeom(TriangleGeom&& other) noexcept
 }
 
 TriangleGeom::~TriangleGeom() = default;
+
+TriangleGeom* TriangleGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(ds, name));
+  if(!AddObjectToDS(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+std::string TriangleGeom::getTypeName() const
+{
+  return getGeometryTypeAsString();
+}
 
 DataObject* TriangleGeom::shallowCopy()
 {
@@ -152,7 +168,7 @@ size_t TriangleGeom::getNumberOfElements() const
 AbstractGeometry::StatusCode TriangleGeom::findElementSizes()
 {
   auto dataStore = new DataStore<float>(1, getNumberOfTris());
-  auto triangleSizes = getDataStructure()->createDataArray<float>("Triangle Areas", dataStore, getId());
+  FloatArray* triangleSizes = DataArray<float>::Create(*getDataStructure(), "Triangle Areas", dataStore, getId());
   GeometryHelpers::Topology::Find2DElementAreas(getTriangles(), getVertices(), triangleSizes);
   if(triangleSizes == nullptr)
   {
@@ -176,7 +192,7 @@ void TriangleGeom::deleteElementSizes()
 
 AbstractGeometry::StatusCode TriangleGeom::findElementsContainingVert()
 {
-  auto trianglesContainingVert = getDataStructure()->createDynamicList<uint16_t, MeshIndexType>("Triangles Containing Vert", getId());
+  auto trianglesContainingVert = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Triangles Containing Vert", getId());
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16_t, MeshIndexType>(getTriangles(), trianglesContainingVert, getNumberOfVertices());
   if(trianglesContainingVert == nullptr)
   {
@@ -209,7 +225,7 @@ AbstractGeometry::StatusCode TriangleGeom::findElementNeighbors()
       return err;
     }
   }
-  auto triangleNeighbors = getDataStructure()->createDynamicList<uint16_t, MeshIndexType>("Triangle Neighbors", getId());
+  auto triangleNeighbors = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Triangle Neighbors", getId());
   err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16_t, MeshIndexType>(getTriangles(), getElementsContainingVert(), triangleNeighbors, AbstractGeometry::Type::Triangle);
   if(triangleNeighbors == nullptr)
   {
@@ -234,7 +250,7 @@ void TriangleGeom::deleteElementNeighbors()
 AbstractGeometry::StatusCode TriangleGeom::findElementCentroids()
 {
   auto dataStore = new DataStore<float>(3, getNumberOfTris());
-  auto triangleCentroids = getDataStructure()->createDataArray<float>("Triangle Centroids", dataStore, getId());
+  auto triangleCentroids = DataArray<float>::Create(*getDataStructure(), "Triangle Centroids", dataStore, getId());
   GeometryHelpers::Topology::FindElementCentroids(getTriangles(), getVertices(), triangleCentroids);
   if(triangleCentroids == nullptr)
   {
@@ -336,7 +352,7 @@ size_t TriangleGeom::getNumberOfVertices() const
 AbstractGeometry::StatusCode TriangleGeom::findEdges()
 {
   auto dataStore = new DataStore<uint64_t>(2, 0);
-  auto edgeList = getDataStructure()->createDataArray<uint64_t>("Edge List", dataStore, getId());
+  DataArray<uint64_t>* edgeList = DataArray<uint64_t>::Create(*getDataStructure(), "Edge List", dataStore, getId());
   GeometryHelpers::Connectivity::Find2DElementEdges(getTriangles(), edgeList);
   if(edgeList == nullptr)
   {
@@ -371,7 +387,7 @@ void TriangleGeom::getVertCoordsAtEdge(size_t edgeId, Point3D<float>& vert1, Poi
 AbstractGeometry::StatusCode TriangleGeom::findUnsharedEdges()
 {
   auto dataStore = new DataStore<MeshIndexType>(2, 0);
-  auto unsharedEdgeList = getDataStructure()->createDataArray("Unshared Edge List", dataStore, getId());
+  auto unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", dataStore, getId());
   GeometryHelpers::Connectivity::Find2DUnsharedEdges(getTriangles(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
@@ -425,4 +441,14 @@ void TriangleGeom::setElementSizes(const FloatArray* elementSizes)
     return;
   }
   m_TriangleSizesId = elementSizes->getId();
+}
+
+H5::ErrorType TriangleGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
+{
+  return getDataMap().readH5Group(*getDataStructure(), targetId);
+}
+
+H5::ErrorType TriangleGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+{
+  return getDataMap().writeH5Group(groupId);
 }

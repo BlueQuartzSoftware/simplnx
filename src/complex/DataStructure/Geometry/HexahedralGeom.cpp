@@ -4,20 +4,21 @@
 
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 using namespace complex;
 
-HexahedralGeom::HexahedralGeom(DataStructure* ds, const std::string& name)
+HexahedralGeom::HexahedralGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry3D(ds, name)
 {
 }
 
-HexahedralGeom::HexahedralGeom(DataStructure* ds, const std::string& name, size_t numHexas, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
+HexahedralGeom::HexahedralGeom(DataStructure& ds, const std::string& name, size_t numHexas, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
 : AbstractGeometry3D(ds, name)
 {
 }
 
-HexahedralGeom::HexahedralGeom(DataStructure* ds, const std::string& name, const std::shared_ptr<SharedHexList>& hexas, const std::shared_ptr<SharedVertexList>& vertices)
+HexahedralGeom::HexahedralGeom(DataStructure& ds, const std::string& name, const std::shared_ptr<SharedHexList>& hexas, const std::shared_ptr<SharedVertexList>& vertices)
 : AbstractGeometry3D(ds, name)
 {
 }
@@ -43,6 +44,21 @@ HexahedralGeom::HexahedralGeom(HexahedralGeom&& other) noexcept
 }
 
 HexahedralGeom::~HexahedralGeom() = default;
+
+HexahedralGeom* HexahedralGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(ds, name));
+  if(!AddObjectToDS(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+std::string HexahedralGeom::getTypeName() const
+{
+  return "HexahedralGeom";
+}
 
 DataObject* HexahedralGeom::shallowCopy()
 {
@@ -174,7 +190,7 @@ size_t HexahedralGeom::getNumberOfElements() const
 AbstractGeometry::StatusCode HexahedralGeom::findElementSizes()
 {
   auto dataStore = new DataStore<float>(1, getNumberOfHexas());
-  auto hexSizes = getDataStructure()->createDataArray<float>("Hex Volumes", dataStore, getId());
+  FloatArray* hexSizes = DataArray<float>::Create(*getDataStructure(), "Hex Volumes", dataStore, getId());
   m_HexSizesId = hexSizes->getId();
   GeometryHelpers::Topology::FindHexVolumes<uint64_t>(getHexahedrals(), getVertices(), hexSizes);
   if(getElementSizes() == nullptr)
@@ -198,7 +214,7 @@ void HexahedralGeom::deleteElementSizes()
 
 AbstractGeometry::StatusCode HexahedralGeom::findElementsContainingVert()
 {
-  auto hexasControllingVert = getDataStructure()->createDynamicList<uint16_t, MeshIndexType>("Hex Containing Vertices", getId());
+  auto hexasControllingVert = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Hex Containing Vertices", getId());
   m_HexasContainingVertId = hexasControllingVert->getId();
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16_t, MeshIndexType>(getHexahedrals(), hexasControllingVert, getNumberOfVertices());
   if(getElementsContainingVert() == nullptr)
@@ -231,7 +247,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findElementNeighbors()
       return err;
     }
   }
-  auto hexNeighbors = getDataStructure()->createDynamicList<uint16_t, MeshIndexType>("Hex Neighbors", getId());
+  auto hexNeighbors = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Hex Neighbors", getId());
   m_HexNeighborsId = hexNeighbors->getId();
   err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16_t, MeshIndexType>(getHexahedrals(), getElementsContainingVert(), hexNeighbors, AbstractGeometry::Type::Hexahedral);
   if(getElementNeighbors() == nullptr)
@@ -256,7 +272,7 @@ void HexahedralGeom::deleteElementNeighbors()
 AbstractGeometry::StatusCode HexahedralGeom::findElementCentroids()
 {
   auto dataStore = new DataStore<float>(3, getNumberOfHexas());
-  auto hexCentroids = getDataStructure()->createDataArray<float>("Hex Centroids", dataStore, getId());
+  auto hexCentroids = DataArray<float>::Create(*getDataStructure(), "Hex Centroids", dataStore, getId());
   m_HexCentroidsId = hexCentroids->getId();
   GeometryHelpers::Topology::FindElementCentroids<uint64_t>(getHexahedrals(), getVertices(), hexCentroids);
   if(getElementCentroids() == nullptr)
@@ -369,7 +385,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findFaces()
 AbstractGeometry::StatusCode HexahedralGeom::findUnsharedEdges()
 {
   auto dataStore = new DataStore<MeshIndexType>(2, 0);
-  auto unsharedEdgeList = getDataStructure()->createDataArray("Unshared Edge List", dataStore, getId());
+  DataArray<MeshIndexType>* unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", dataStore, getId());
   GeometryHelpers::Connectivity::FindUnsharedHexEdges<uint64_t>(getHexahedrals(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
@@ -383,7 +399,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findUnsharedEdges()
 AbstractGeometry::StatusCode HexahedralGeom::findUnsharedFaces()
 {
   auto dataStore = new DataStore<MeshIndexType>(4, 0);
-  auto unsharedQuadList = getDataStructure()->createDataArray<MeshIndexType>("Unshared Edge List", dataStore, getId());
+  auto unsharedQuadList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", dataStore, getId());
   GeometryHelpers::Connectivity::FindUnsharedHexFaces<uint64_t>(getHexahedrals(), unsharedQuadList);
   if(unsharedQuadList == nullptr)
   {
@@ -519,4 +535,14 @@ void HexahedralGeom::setElementSizes(const FloatArray* elementSizes)
     return;
   }
   m_HexSizesId = elementSizes->getId();
+}
+
+H5::ErrorType HexahedralGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
+{
+  return getDataMap().readH5Group(*getDataStructure(), targetId);
+}
+
+H5::ErrorType HexahedralGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+{
+  return getDataMap().writeH5Group(groupId);
 }
