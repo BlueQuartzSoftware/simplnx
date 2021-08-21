@@ -31,7 +31,7 @@ public:
    */
   FilterList();
 
-  virtual ~FilterList();
+  ~FilterList();
 
   /**
    * @brief Returns a set of FilterHandles for each of the filters.
@@ -94,7 +94,6 @@ public:
    */
   AbstractPlugin* getPluginById(const FilterHandle::PluginIdType& id) const;
 
-protected:
 private:
   /**
    * @brief Registers core filters with the FilterList.

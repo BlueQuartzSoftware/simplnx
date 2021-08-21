@@ -9,12 +9,12 @@
 class TESTPLUGIN_EXPORT TestPlugin : public complex::AbstractPlugin
 {
 public:
-  static const IdType ID;
-
   TestPlugin();
   ~TestPlugin() override;
-};
 
-extern "C" {
-TESTPLUGIN_EXPORT complex::AbstractPlugin* initPlugin();
-}
+  TestPlugin(const TestPlugin&) = delete;
+  TestPlugin(TestPlugin&&) = delete;
+
+  TestPlugin& operator=(const TestPlugin&) = delete;
+  TestPlugin& operator=(TestPlugin&&) = delete;
+};

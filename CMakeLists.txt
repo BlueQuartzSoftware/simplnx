@@ -260,6 +260,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.cpp
 
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
+  ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
 
@@ -286,20 +287,6 @@ foreach(param ${CoreParameters})
     "${COMPLEX_SOURCE_DIR}/Core/Parameters/${param}.cpp"
   )
 endforeach()
-
-if(WIN32)
-  list(APPEND COMPLEX_SRCS
-    ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader_Win.cpp
-  )
-elseif(APPLE)
-  list(APPEND COMPLEX_SRCS
-    ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader_Mac.cpp
-  )
-elseif(UNIX)
-  list(APPEND COMPLEX_SRCS
-    ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader_Linux.cpp
-  )
-endif()
 
 set(COMPLEX_ALL_HDRS
   ${COMPLEX_HDRS}
