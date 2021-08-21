@@ -1,7 +1,7 @@
 #pragma once
 
+#include <filesystem>
 #include <memory>
-#include <string>
 
 #include "complex/Plugin/AbstractPlugin.hpp"
 
@@ -24,9 +24,9 @@ public:
    * destroyed.
    * @param path = ""
    */
-  PluginLoader(const std::string& path = "");
+  PluginLoader(const std::filesystem::path& path);
 
-  virtual ~PluginLoader();
+  ~PluginLoader();
 
   /**
    * @brief Returns true if the plugin is loaded. Returns false otherwise.
@@ -53,10 +53,8 @@ private:
 
   ////////////
   // Variables
-  std::string m_Path;
+  std::filesystem::path m_Path;
   void* m_Handle = nullptr;
   std::shared_ptr<AbstractPlugin> m_Plugin;
 };
-
-typedef AbstractPlugin* (*InitPluginFunc)();
 } // namespace complex

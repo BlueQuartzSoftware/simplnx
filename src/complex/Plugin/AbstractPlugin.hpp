@@ -12,8 +12,6 @@
 
 namespace complex
 {
-using FilterCreationFunc = IFilter::UniquePointer (*)();
-
 /**
  * @class AbstractPlugin
  * @brief The AbstractPlugin class is the base class for all C++ plugins for
@@ -83,7 +81,7 @@ protected:
    * @param name
    * @param description
    */
-  AbstractPlugin(IdType id, const std::string& name, const std::string& description);
+  AbstractPlugin(IdType id, const std::string& name, const std::string& description, const std::string& vendor);
 
   /**
    * @brief Records information for creating a filter using the provided
@@ -94,12 +92,6 @@ protected:
    */
   void addFilter(FilterCreationFunc filterFunc);
 
-  /**
-   * @brief Sets the plugin vendor name.
-   * @param vendor
-   */
-  void setVendor(const std::string& vendor);
-
 private:
   IdType m_Id;
   std::string m_Name;
@@ -107,11 +99,44 @@ private:
   std::string m_Vendor;
   std::unordered_set<FilterHandle> m_FilterHandles;
   std::unordered_map<FilterHandle::FilterIdType, FilterCreationFunc> m_InitializerMap;
-
-  /**
-   * @brief Add an item to the list of FilterHandles.
-   * @param addHandle
-   */
-  void addFilterHandle(const FilterHandle& addHandle);
 };
+
+using CreatePluginFunc = AbstractPlugin* (*)();
+using DestroyPluginFunc = bool (*)(AbstractPlugin*);
 } // namespace complex
+
+#define COMPLEX_CREATE_PLUGIN_FUNC COMPLEX_CreatePlugin
+#define COMPLEX_DESTROY_PLUGIN_FUNC COMPLEX_DestroyPlugin
+
+#define COMPLEX_STRINGIFY_IMPL(x) #x
+#define COMPLEX_STRINGIFY(x) COMPLEX_STRINGIFY_IMPL(x)
+
+#define COMPLEX_CREATE_PLUGIN_FUNC_NAME COMPLEX_STRINGIFY(COMPLEX_CREATE_PLUGIN_FUNC)
+#define COMPLEX_DESTROY_PLUGIN_FUNC_NAME COMPLEX_STRINGIFY(COMPLEX_DESTROY_PLUGIN_FUNC)
+
+#if defined(_WIN32)
+#define COMPLEX_PLUGIN_EXPORT __declspec(dllexport)
+#else
+#define COMPLEX_PLUGIN_EXPORT __attribute__((visibility("default")))
+#endif
+
+#define COMPLEX_DEF_PLUGIN_IMPL(pluginType, createName, destroyName)                                                                                                                                   \
+  extern "C" {                                                                                                                                                                                         \
+  COMPLEX_PLUGIN_EXPORT complex::AbstractPlugin* createName()                                                                                                                                          \
+  {                                                                                                                                                                                                    \
+    return new pluginType();                                                                                                                                                                           \
+  }                                                                                                                                                                                                    \
+                                                                                                                                                                                                       \
+  COMPLEX_PLUGIN_EXPORT bool destroyName(complex::AbstractPlugin* plugin)                                                                                                                              \
+  {                                                                                                                                                                                                    \
+    auto convertedPlugin = dynamic_cast<pluginType*>(plugin);                                                                                                                                          \
+    if(convertedPlugin == nullptr)                                                                                                                                                                     \
+    {                                                                                                                                                                                                  \
+      return false;                                                                                                                                                                                    \
+    }                                                                                                                                                                                                  \
+    delete plugin;                                                                                                                                                                                     \
+    return true;                                                                                                                                                                                       \
+  }                                                                                                                                                                                                    \
+  }
+
+#define COMPLEX_DEF_PLUGIN(pluginType) COMPLEX_DEF_PLUGIN_IMPL(pluginType, COMPLEX_CREATE_PLUGIN_FUNC, COMPLEX_DESTROY_PLUGIN_FUNC)

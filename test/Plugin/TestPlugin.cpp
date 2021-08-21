@@ -1,26 +1,20 @@
-#include <optional>
+#include "TestPlugin.hpp"
 
 #include "TestFilter.hpp"
-#include "TestPlugin.hpp"
 
 using namespace complex;
 
-const AbstractPlugin::IdType TestPlugin::ID = Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value();
-
-IFilter::UniquePointer createTestFilter()
+namespace
 {
-  return IFilter::UniquePointer(new TestFilter());
-}
-
-AbstractPlugin* initPlugin()
-{
-  return new TestPlugin();
-}
+constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+} // namespace
 
 TestPlugin::TestPlugin()
-: AbstractPlugin(ID, "Test Plugin", "Description")
+: AbstractPlugin(k_ID, "Test Plugin", "Description", "BlueQuartz Software")
 {
-  addFilter(&createTestFilter);
+  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<TestFilter>(); });
 }
 
 TestPlugin::~TestPlugin() = default;
+
+COMPLEX_DEF_PLUGIN(TestPlugin)

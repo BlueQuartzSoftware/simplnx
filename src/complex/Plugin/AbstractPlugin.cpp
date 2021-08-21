@@ -1,15 +1,19 @@
 #include "AbstractPlugin.hpp"
 
 #include <memory>
+#include <stdexcept>
+
+#include <fmt/core.h>
 
 #include "complex/Filter/IFilter.hpp"
 
 using namespace complex;
 
-AbstractPlugin::AbstractPlugin(IdType id, const std::string& name, const std::string& description)
+AbstractPlugin::AbstractPlugin(IdType id, const std::string& name, const std::string& description, const std::string& vendor)
 : m_Id(id)
 , m_Name(name)
 , m_Description(description)
+, m_Vendor(vendor)
 {
 }
 
@@ -35,16 +39,6 @@ std::string AbstractPlugin::getVendor() const
   return m_Vendor;
 }
 
-void AbstractPlugin::setVendor(const std::string& vendor)
-{
-  m_Vendor = vendor;
-}
-
-void AbstractPlugin::addFilterHandle(const FilterHandle& addHandle)
-{
-  m_FilterHandles.insert(addHandle);
-}
-
 bool AbstractPlugin::containsFilterId(FilterHandle::FilterIdType uuid) const
 {
   return m_InitializerMap.find(uuid) != m_InitializerMap.end();
@@ -67,12 +61,21 @@ IFilter::UniquePointer AbstractPlugin::createFilter(FilterHandle::FilterIdType i
 
 void AbstractPlugin::addFilter(FilterCreationFunc filterFunc)
 {
-  std::shared_ptr<IFilter> filter(filterFunc());
-  if(!filter)
+  IFilter::UniquePointer filter = filterFunc();
+  if(filter == nullptr)
   {
-    return;
+    throw std::runtime_error(fmt::format("Failed to instantiate filter in plugin \"{}\"", getName()));
   }
 
-  m_FilterHandles.insert(FilterHandle(filter->humanName(), filter->uuid(), getId()));
-  m_InitializerMap[filter->uuid()] = filterFunc;
+  Uuid uuid = filter->uuid();
+
+  if(m_InitializerMap.count(uuid) > 0)
+  {
+    IFilter::UniquePointer existingFilter = m_InitializerMap[uuid]();
+    throw std::runtime_error(fmt::format("Attempted to add filter \"{}\" with uuid \"{}\" in plugin \"{}\", but filter \"{}\" already exists with that uuid", filter->name(), uuid.str(), getName(),
+                                         existingFilter->name()));
+  }
+
+  m_FilterHandles.insert(FilterHandle(filter->humanName(), uuid, getId()));
+  m_InitializerMap[uuid] = filterFunc;
 }

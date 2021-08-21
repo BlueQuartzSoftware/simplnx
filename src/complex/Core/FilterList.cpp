@@ -1,6 +1,9 @@
 #include "FilterList.hpp"
 
 #include <memory>
+#include <stdexcept>
+
+#include <fmt/core.h>
 
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterHandle.hpp"
@@ -76,9 +79,16 @@ bool FilterList::addPlugin(const std::shared_ptr<PluginLoader>& loader)
   {
     return false;
   }
-  auto pluginHandles = loader->getPlugin()->getFilterHandles();
+  AbstractPlugin* plugin = loader->getPlugin();
+  Uuid pluginUuid = plugin->getId();
+  if(m_PluginMap.count(pluginUuid) > 0)
+  {
+    throw std::runtime_error(fmt::format("Attempted to add plugin \"{}\" with uuid \"{}\", but plugin \"{}\" already exists with that uuid", plugin->getName(), pluginUuid.str(),
+                                         m_PluginMap[pluginUuid]->getPlugin()->getName()));
+  }
+  auto pluginHandles = plugin->getFilterHandles();
   m_FilterHandles.merge(pluginHandles);
-  m_PluginMap[loader->getPlugin()->getId()] = loader;
+  m_PluginMap[pluginUuid] = loader;
   return true;
 }
 
@@ -109,8 +119,19 @@ std::unordered_set<AbstractPlugin*> FilterList::getLoadedPlugins() const
 void FilterList::addCoreFilter(FilterCreationFunc func)
 {
   IFilter::UniquePointer filter = func();
-  m_CoreFiltersMap[filter->uuid()] = func;
-  m_FilterHandles.insert(FilterHandle(filter->humanName(), filter->uuid(), {}));
+  if(filter == nullptr)
+  {
+    throw std::runtime_error("Failed to instantiate core filter");
+  }
+  Uuid uuid = filter->uuid();
+  if(m_CoreFiltersMap.count(uuid) > 0)
+  {
+    IFilter::UniquePointer existingFilter = m_CoreFiltersMap[uuid]();
+    throw std::runtime_error(
+        fmt::format("Attempted to add core filter \"{}\" with uuid \"{}\", but core filter \"{}\" already exists with that uuid", filter->name(), uuid.str(), existingFilter->name()));
+  }
+  m_CoreFiltersMap[uuid] = func;
+  m_FilterHandles.insert(FilterHandle(filter->humanName(), uuid, {}));
 }
 
 IFilter::UniquePointer FilterList::createCoreFilter(const FilterHandle::FilterIdType& filterId) const
