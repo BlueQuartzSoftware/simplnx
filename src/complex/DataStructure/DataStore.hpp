@@ -6,7 +6,8 @@
 #include <hdf5.h>
 
 #include "complex/DataStructure/IDataStore.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 namespace complex
 {
@@ -199,7 +200,7 @@ public:
   {
     int32_t rank = 1;
 
-    size_t dataSize = m_TupleSize * m_TupleCount;
+    uint64_t dataSize = m_TupleSize * m_TupleCount;
 
     hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
     hid_t dataspaceId = H5Screate_simple(rank, &dataSize, nullptr);
@@ -227,23 +228,47 @@ public:
     return err;
   }
 
-  H5::ErrorType readHdf5(H5::IdType dataId)
+  static DataStore* readHdf5(H5::IdType dataId)
   {
-    auto buffer = std::make_unique<T[]>(tDims * cDims);
-    hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
-    auto err = H5Dread(daId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer.get());
-    if(err < 0)
-    {
-      throw std::runtime_error("");
-    }
-    H5Tclose(dataType);
+    uint64_t tDims;
+    uint64_t cDims;
+    H5::Reader::Generic::readScalarAttribute(dataId, ".", H5::Constants::DataStore::TupleCount, tDims);
+    H5::Reader::Generic::readScalarAttribute(dataId, ".", H5::Constants::DataStore::TupleSize, cDims);
 
-    auto dataStore = new complex::DataStore<T>(cDims, tDims, std::move(buffer));
+    auto buffer = new T[tDims * cDims];
+    try
+    {
+      //auto buffer = std::make_unique<T[]>(tDims * cDims);
+      hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
+      auto err = H5Dread(dataId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
+      if(err < 0)
+      {
+        throw std::runtime_error("Error reading DataStore from HDF5");
+      }
+      H5Tclose(dataType);
+    }
+    catch(const std::exception& e)
+    {
+      std::cerr << e.what() << '\n';
+      throw std::runtime_error("Error creating DataStore.\nTupleCount: " + std::to_string(tDims) + "\nTupleSize: " + std::to_string(cDims));
+    }
+    delete[] buffer;
+
+    try{
+      auto buffer = std::make_unique<T[]>(5);
+      auto dataStore = new complex::DataStore<T>(cDims, tDims, std::move(buffer));
+      return dataStore;
+    }
+    catch(const std::exception& e)
+    {
+      throw std::runtime_error("Error creating DataStore in DataStore::readHdf5");
+    }
+    return nullptr;
   }
 
 private:
-  size_t m_TupleSize;
-  size_t m_TupleCount;
+  uint64_t m_TupleSize;
+  uint64_t m_TupleCount;
   std::unique_ptr<value_type[]> m_Data;
 };
 } // namespace complex

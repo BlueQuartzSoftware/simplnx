@@ -2,6 +2,10 @@
 
 #include <fmt/core.h>
 
+#include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataStore.hpp"
+#include "complex/DataStructure/EmptyDataStore.hpp"
+
 using namespace complex;
 
 namespace

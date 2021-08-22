@@ -4,6 +4,7 @@
 
 #include "complex/Common/Array.hpp"
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/Utilities/Math/GeometryMath.hpp"
 
 namespace complex

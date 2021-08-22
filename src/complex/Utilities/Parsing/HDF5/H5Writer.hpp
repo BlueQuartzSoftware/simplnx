@@ -5,6 +5,10 @@
 #include <string>
 #include <vector>
 
+#define H5_USE_110_API
+#include <H5Opublic.h>
+#include <hdf5.h>
+
 #include "H5.hpp"
 
 #include "complex/DataStructure/DataStructure.hpp"
@@ -145,7 +149,7 @@ H5::ErrorType writePointerAttribute(H5::IdType locationID, const std::string& ob
 {
   hid_t objectID, dataspaceID, attributeID;
   herr_t hasAttribute;
-  H5O_info_t objectInfo;
+  H5O_info1_t objectInfo;
   herr_t error = 0;
   herr_t returnError = 0;
   hid_t dataType = Support::HDFTypeForPrimitive<T>();
@@ -156,13 +160,13 @@ H5::ErrorType writePointerAttribute(H5::IdType locationID, const std::string& ob
   }
   /* Get the type of object */
 
-  if(H5Oget_info_by_name(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT) < 0)
+  if(H5Oget_info_by_name1(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT) < 0)
   {
     std::cout << "Error getting object info at locationID (" << locationID << ") with object name (" << objectName << ")" << std::endl;
     return -1;
   }
   /* Open the object */
-  objectID = openId(locationID, objectName, objectInfo.type);
+  objectID = Support::openId(locationID, objectName, objectInfo.type);
   if(objectID < 0)
   {
     std::cout << "Error opening Object for Attribute operations." << std::endl;
@@ -173,7 +177,7 @@ H5::ErrorType writePointerAttribute(H5::IdType locationID, const std::string& ob
   if(dataspaceID >= 0)
   {
     /* Verify if the attribute already exists */
-    hasAttribute = findAttribute(objectID, attributeName);
+    hasAttribute = Support::findAttribute(objectID, attributeName);
 
     /* The attribute already exists, delete it */
     if(hasAttribute == 1)

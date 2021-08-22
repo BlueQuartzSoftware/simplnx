@@ -10,12 +10,7 @@
 
 #include "complex/DataStructure/DataMap.hpp"
 #include "complex/DataStructure/DataObject.hpp"
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/DynamicListArray.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "complex/DataStructure/LinkedPath.hpp"
-#include "complex/DataStructure/Montage/AbstractMontage.hpp"
-#include "complex/DataStructure/ScalarData.hpp"
 
 #include "complex/complex_export.hpp"
 

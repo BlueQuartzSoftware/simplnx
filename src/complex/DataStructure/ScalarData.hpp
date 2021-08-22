@@ -28,7 +28,7 @@ public:
    * @param parentId = {}
    * @return ScalarData*
    */
-  static ScalarData* ScalarData::Create(DataStructure& ds, const std::string& name, value_type defaultValue, const std::optional<IdType>& parentId = {})
+  static ScalarData* Create(DataStructure& ds, const std::string& name, value_type defaultValue, const std::optional<IdType>& parentId = {})
   {
     auto data = std::shared_ptr<ScalarData>(new ScalarData(ds, name, defaultValue));
     if(!AddObjectToDS(ds, data, parentId))
@@ -164,7 +164,7 @@ public:
    * @param dataId
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType dataId) const
+  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType dataId) const override
   {
     return H5::Writer::Generic::writeScalarAttribute(parentId, getName(), "Value", m_Data);
   }

@@ -1,5 +1,6 @@
 #include "AbstractGeometry3D.hpp"
 
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 
 using namespace complex;

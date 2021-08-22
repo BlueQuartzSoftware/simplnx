@@ -3,12 +3,11 @@
 #include <string>
 #include <vector>
 
+#define H5_USE_110_API
 #include <H5Opublic.h>
 #include <hdf5.h>
 
 #include "complex/complex_export.hpp"
-
-#define H5_USE_110_API
 
 #define HDF_ERROR_HANDLER_OFF                                                                                                                                                                          \
   herr_t (*_oldHDF_error_func)(hid_t, void*);                                                                                                                                                          \
@@ -175,7 +174,7 @@ inline hid_t COMPLEX_EXPORT HDFTypeForPrimitive()
   }
   else
   {
-    static_assert(detail::always_false<T>, "HDFTypeForPrimitive does not support this type");
+    throw std::runtime_error("HDFTypeForPrimitive does not support this type");
     return -1;
   }
 }

@@ -4,6 +4,7 @@
 #include <numeric>
 
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
 
 using namespace complex;
@@ -28,40 +29,8 @@ std::string DataArrayFactory::getDataTypeName() const
 
 void readDims(H5::IdType daId, uint64_t& tupleCount, uint64_t& tupleSize)
 {
-  hid_t compType = H5::Support::HDFTypeForPrimitive<uint64_t>();
-  H5::ErrorType err = 0;
-
-  {
-    hid_t compId = H5Aopen(daId, Constants::CompDims.c_str(), H5P_DEFAULT);
-    size_t compSize = H5Aget_storage_size(compId) / 8;
-    auto buffer = new int64_t[compSize];
-    err = H5Aread(compId, compType, buffer);
-    if(err < 0)
-    {
-      throw std::runtime_error("Error reading HDF5 DataStore");
-    }
-    H5Aclose(compId);
-
-    tupleSize = std::accumulate(buffer, buffer + compSize, static_cast<size_t>(0));
-    delete[] buffer;
-  }
-
-  {
-    hid_t tupleId = H5Aopen(daId, Constants::TupleDims.c_str(), H5P_DEFAULT);
-    size_t tupleSize = H5Aget_storage_size(tupleId) / 8;
-    auto buffer = new int64_t[tupleSize];
-    err = H5Aread(tupleId, compType, buffer);
-    if(err < 0)
-    {
-      throw std::runtime_error("Error reading HDF5 DataStore");
-    }
-    H5Aclose(tupleId);
-
-    tupleCount = std::accumulate(buffer, buffer + tupleSize, static_cast<size_t>(0));
-    delete[] buffer;
-  }
-
-  H5Tclose(compType);
+  H5::Reader::Generic::readScalarAttribute(daId, ".", H5::Constants::DataStore::TupleCount, tupleCount);
+  H5::Reader::Generic::readScalarAttribute(daId, ".", H5::Constants::DataStore::TupleSize, tupleSize);
 }
 
 template <typename T>
@@ -72,7 +41,7 @@ DataStore<T>* createDataStore(H5::IdType dataStoreId, uint64_t tupleCount, uint6
   err = H5Dread(dataStoreId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer.get());
   if(err < 0)
   {
-    throw std::runtime_error("Error reading HDF5 DataStore");
+    throw std::runtime_error("DataArrayFactory: Error reading HDF5 DataStore");
   }
   H5Tclose(dataType);
 
@@ -95,7 +64,7 @@ H5::ErrorType DataArrayFactory::createFromHdf5(DataStructure& ds, H5::IdType tar
     hid_t dataTypeId = H5Dget_type(dataStoreId);
     if(dataTypeId < 0)
     {
-      throw std::runtime_error("Cannot determine DataArray type when reading from HDF5.");
+      throw std::runtime_error("DataArrayFactory: Cannot determine DataArray type when reading from HDF5.");
     }
 
     if(H5Tequal(dataTypeId, H5T_NATIVE_FLOAT) > 0)

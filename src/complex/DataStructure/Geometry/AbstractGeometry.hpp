@@ -335,48 +335,6 @@ public:
    */
   void setSpatialDimensionality(uint32_t value);
 
-  //////////
-  // H5 //
-  //////////
-
-  ///**
-  // * @brief
-  // * @param parentId
-  // * @param generateXdmfText
-  // * @return StatusCode
-  // */
-  // virtual StatusCode writeGeometryToHDF5(hid_t parentId, bool generateXdmfText) const = 0;
-
-  ///**
-  // * @brief
-  // * @param ostream& out
-  // * @param string dcName
-  // * @param string hdfFileName
-  // * @return StatusCode
-  // */
-  // virtual StatusCode generateXdmfText() const = 0;
-
-  ///**
-  // * @brief
-  // * @param parentId
-  // * @param hid_t
-  // * @param preflight
-  // * @return StatusCode
-  // */
-  // virtual StatusCode readGeometryFromHDF5(bool preflight) = 0;
-
-  /**
-   * @brief Reads values from HDF5
-   * @param targetId
-   * @param groupId
-   * @return H5::ErrorType
-   */
-  virtual H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType groupId) = 0;
-
-  ////////
-  // H5 //
-  ////////
-
   /**
    * @brief
    */

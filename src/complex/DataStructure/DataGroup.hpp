@@ -6,7 +6,6 @@
 
 namespace complex
 {
-
 /**
  * @class DataContainer
  * @brief The DataGroup class is instantiable implementation of BaseGroup.
@@ -58,7 +57,7 @@ public:
    * @param parentId
    * @return H5::Error
   */
-  H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType parentId);
+  H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType parentId) override;
 
   /**
    * @brief Writes the DataObject to the target HDF5 group.

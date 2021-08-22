@@ -7,6 +7,7 @@
 #include <hdf5.h>
 
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
 #include "complex/DataStructure/Geometry/EdgeGeom.hpp"
 #include "complex/DataStructure/Geometry/HexahedralGeom.hpp"
@@ -865,5 +866,5 @@ complex::DataObject* createDataArray(complex::DataStructure& ds, hid_t gid, size
   {
     dataStore = new EmptyDataStore<T>(tupleCount, compCount);
   }
-  return ds.createDataArray(name, dataStore, parent);
+  return DataArray<T>::Create(ds, name, dataStore, parent);
 }

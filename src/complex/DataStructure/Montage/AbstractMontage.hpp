@@ -124,14 +124,6 @@ public:
    */
   virtual ConstIterator end() const;
 
-  /**
-   * @brief Reads values from HDF5
-   * @param targetId
-   * @param groupId
-   * @return H5::ErrorType
-   */
-  virtual H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType groupId) = 0;
-
 protected:
   /**
    * @brief

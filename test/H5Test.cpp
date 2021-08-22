@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include <iostream>
 #include <string>
 
 #include <hdf5.h>
@@ -7,7 +8,9 @@
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/DataStructure/ScalarData.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Montage/GridMontage.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
@@ -30,10 +33,14 @@ std::string getLegacyFilepath(const Application& app)
 
 std::string getComplexH5File(const Application& app)
 {
+#if __APPLE__
+  return app.getCurrentDir().parent_path().parent_path().parent_path().string() + Constants::ComplexH5File;
+#else
   return app.getCurrentDir().string() + Constants::ComplexH5File;
+#endif
 }
 
-constexpr bool equalsf(const FloatVec3& lhs, const FloatVec3& rhs)
+bool equalsf(const FloatVec3& lhs, const FloatVec3& rhs)
 {
   for(size_t i = 0; i < 3; i++)
   {
@@ -141,19 +148,26 @@ TEST_CASE("complex IO")
   Application app;
 
   // Write HDF5 file
+  try
   {
     DataStructure ds = getTestDataStructure();
     auto fileId = H5Fcreate(getComplexH5File(app).c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     REQUIRE(fileId > 0);
 
-    herr_t err = ds.writeHdf5(fileId);
+    herr_t err;
+    err = ds.writeHdf5(fileId);
     REQUIRE(err <= 0);
 
     err = H5Fclose(fileId);
     REQUIRE(err <= 0);
   }
+  catch(const std::exception& e)
+  {
+    FAIL(e.what());
+  }
 
   // Read HDF5 file
+  try
   {
     auto fileId = H5Fopen(getComplexH5File(app).c_str(), H5P_DEFAULT, H5P_DEFAULT);
     REQUIRE(fileId > 0);
@@ -164,5 +178,9 @@ TEST_CASE("complex IO")
 
     err = H5Fclose(fileId);
     REQUIRE(err <= 0);
+  }
+  catch(const std::exception& e)
+  {
+    FAIL(e.what());
   }
 }

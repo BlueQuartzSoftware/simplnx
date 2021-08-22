@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/EdgeGeom.hpp"
 #include "complex/DataStructure/Geometry/HexahedralGeom.hpp"

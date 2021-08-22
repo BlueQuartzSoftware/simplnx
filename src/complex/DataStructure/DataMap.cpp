@@ -2,17 +2,7 @@
 
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/Geometry/EdgeGeom.hpp"
-#include "complex/DataStructure/Geometry/HexahedralGeom.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/DataStructure/Geometry/QuadGeom.hpp"
-#include "complex/DataStructure/Geometry/RectGridGeom.hpp"
-#include "complex/DataStructure/Geometry/TetrahedralGeom.hpp"
-#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
-#include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
 #include "complex/Utilities/Parsing/HDF5/IH5DataFactory.hpp"
 

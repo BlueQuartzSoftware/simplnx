@@ -3,9 +3,12 @@
 #include <algorithm>
 #include <exception>
 
+#include <hdf5.h>
+
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Metadata.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 using namespace complex;
 

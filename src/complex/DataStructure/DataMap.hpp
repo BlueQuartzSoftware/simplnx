@@ -23,7 +23,7 @@ class DataObject;
 class COMPLEX_EXPORT DataMap
 {
 public:
-  using IdType = size_t;
+  using IdType = uint64_t;
   using MapType = std::map<IdType, std::shared_ptr<DataObject>>;
   using Iterator = typename MapType::iterator;
   using ConstIterator = typename MapType::const_iterator;
