@@ -38,7 +38,6 @@ std::filesystem::path findCurrentPath()
   }
   buffer[bytesWritten] = '\0';
   return std::filesystem::path(buffer.data());
-}
 #elif defined(_WIN32)
   std::vector<WCHAR> buffer(MAX_PATH + 1);
   DWORD bytesWritten = GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
@@ -52,7 +51,7 @@ std::filesystem::path findCurrentPath()
   }
   return std::filesystem::path(buffer.data());
 #elif defined(__APPLE__)
-  std::vector<char> buffer(MAXPATHLEN + 1);
+  std::vector<char> buffer(1024 + 1);
   uint32_t size = static_cast<uint32_t>(buffer.size());
   int result = _NSGetExecutablePath(buffer.data(), &size);
   if(result != 0)
