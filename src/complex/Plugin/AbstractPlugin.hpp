@@ -55,11 +55,11 @@ public:
   bool containsFilterId(FilterHandle::FilterIdType id) const;
 
   /**
-   * @brief Create's an AbstractFilter with the specified ID. If the plugin
+   * @brief Create's an IFilter with the specified ID. If the plugin
    * does not contain a filter with the specified ID, this function returns
    * nullptr.
    * @param id
-   * @return AbstractFilter*
+   * @return IFilter::UniquePointer
    */
   IFilter::UniquePointer createFilter(FilterHandle::FilterIdType id) const;
 

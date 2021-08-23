@@ -249,6 +249,13 @@ DataMap::ConstIterator DataMap::end() const
 DataMap& DataMap::operator=(const DataMap& rhs)
 {
   m_Map = rhs.m_Map;
+  auto keys = rhs.getKeys();
+  for(auto& key : keys)
+  {
+    DataObject* copy = rhs.m_Map.at(key)->deepCopy();
+    m_Map[key] = std::shared_ptr<DataObject>(copy);
+  }
+  
   return *this;
 }
 

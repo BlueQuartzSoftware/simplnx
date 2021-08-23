@@ -408,6 +408,16 @@ DataStructure& DataStructure::operator=(const DataStructure& rhs)
   m_DataObjects = rhs.m_DataObjects;
   m_RootGroup = rhs.m_RootGroup;
   m_IsValid = rhs.m_IsValid;
+
+  std::map<DataObject::IdType, std::shared_ptr<DataObject>> m_CopyData;
+  for(auto& dataPair : m_DataObjects)
+  {
+    auto id = dataPair.first;
+    auto copy = std::shared_ptr<DataObject>(dataPair.second.lock()->shallowCopy());
+    m_CopyData[id] = copy;
+    m_DataObjects[id] = copy;
+  }
+  m_RootGroup.setDataStructure(this);
   return *this;
 }
 
@@ -417,6 +427,7 @@ DataStructure& DataStructure::operator=(DataStructure&& rhs) noexcept
   m_RootGroup = std::move(rhs.m_RootGroup);
   m_IsValid = std::move(rhs.m_IsValid);
   m_Observers = std::move(rhs.m_Observers);
+  m_RootGroup.setDataStructure(this);
   return *this;
 }
 

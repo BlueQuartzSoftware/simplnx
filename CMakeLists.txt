@@ -217,6 +217,10 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.hpp
 
+  ${COMPLEX_SOURCE_DIR}/Pipeline/FilterNode.hpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/IPipelineNode.hpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/PipelineSegment.hpp
+
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
   ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
 
@@ -304,6 +308,10 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Output.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Pipeline/FilterNode.cpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/IPipelineNode.cpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/PipelineSegment.cpp
 
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
   ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.cpp

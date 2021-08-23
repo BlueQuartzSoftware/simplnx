@@ -17,6 +17,7 @@ add_executable(complex_test
   BitTest.cpp
   UuidTest.cpp
   CoreFilterTest.cpp
+  PipelineTest.cpp
   PluginTest.cpp
 )
 
