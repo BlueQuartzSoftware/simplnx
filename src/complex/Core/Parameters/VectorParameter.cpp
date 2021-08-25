@@ -14,7 +14,7 @@ namespace complex
 {
 template <class T>
 VectorParameter<T>::VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const NamesType& names)
-: ValueParameter(name, humanName, helpText)
+: VectorParameterBase(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 , m_Names(names)
 {
