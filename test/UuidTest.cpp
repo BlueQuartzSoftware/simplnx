@@ -48,4 +48,18 @@ TEST_CASE("UuidTest")
 
     REQUIRE(uuid->str() == k_UuidString);
   }
+  SECTION("comparison")
+  {
+    std::optional<Uuid> uuid1 = Uuid::FromString("c95d4cae-f129-4fb7-8cee-837ec05309c1");
+    REQUIRE(uuid1.has_value());
+    std::optional<Uuid> uuid2 = Uuid::FromString("cefba6b0-cc46-49a7-85c1-184699faf85f");
+    REQUIRE(uuid2.has_value());
+
+    REQUIRE(*uuid1 != *uuid2);
+    REQUIRE(*uuid1 < *uuid2);
+    REQUIRE(*uuid1 <= *uuid2);
+    REQUIRE_FALSE(*uuid1 == *uuid2);
+    REQUIRE_FALSE(*uuid1 > *uuid2);
+    REQUIRE_FALSE(*uuid1 >= *uuid2);
+  }
 }

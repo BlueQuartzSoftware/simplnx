@@ -76,6 +76,8 @@ namespace detail
  */
 struct COMPLEX_EXPORT Uuid
 {
+  static inline constexpr usize k_Size = 16;
+
   /**
    * @brief Parses a uuid string into a Uuid.
    * @param string Must be of the form "{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}".
@@ -203,12 +205,12 @@ struct COMPLEX_EXPORT Uuid
     return fmt::format("{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:012x}", time_low(), time_mid(), time_hi_version(), clock_seq_hi_variant(), clock_seq_low(), node());
   }
 
-  std::array<std::byte, 16> data;
+  std::array<std::byte, k_Size> data;
 };
 
 inline constexpr bool operator==(const Uuid& lhs, const Uuid& rhs) noexcept
 {
-  for(usize i = 0; i < lhs.data.size(); i++)
+  for(usize i = 0; i < Uuid::k_Size; i++)
   {
     if(lhs.data[i] != rhs.data[i])
     {
@@ -221,6 +223,37 @@ inline constexpr bool operator==(const Uuid& lhs, const Uuid& rhs) noexcept
 inline constexpr bool operator!=(const Uuid& lhs, const Uuid& rhs) noexcept
 {
   return !(lhs == rhs);
+}
+
+inline constexpr bool operator<(const Uuid& lhs, const Uuid& rhs) noexcept
+{
+  for(usize i = 0; i < Uuid::k_Size; i++)
+  {
+    if(lhs.data[i] < rhs.data[i])
+    {
+      return true;
+    }
+    if(rhs.data[i] < lhs.data[i])
+    {
+      return false;
+    }
+  }
+  return false;
+}
+
+inline constexpr bool operator>(const Uuid& lhs, const Uuid& rhs) noexcept
+{
+  return rhs < lhs;
+}
+
+inline constexpr bool operator<=(const Uuid& lhs, const Uuid& rhs) noexcept
+{
+  return !(rhs < lhs);
+}
+
+inline constexpr bool operator>=(const Uuid& lhs, const Uuid& rhs) noexcept
+{
+  return !(lhs < rhs);
 }
 } // namespace complex
 
