@@ -77,4 +77,4 @@ private:
 };
 } // namespace complex
 
-COMPLEX_DEF_PARAMETER_TRAITS(complex::StringParameter, "ab047a7d-f81b-4e6f-99b5-610e7b69fc5b");
+COMPLEX_DEF_PARAMETER_TRAITS(complex::StringParameter, "5d6d1868-05f8-11ec-9a03-0242ac130003");

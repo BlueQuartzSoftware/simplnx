@@ -7,13 +7,32 @@
 
 namespace complex
 {
+class VectorParameterBase : public ValueParameter
+{
+public:
+    using NamesType = std::vector<std::string>;
+
+    /**
+     * @brief
+     * @return
+     */
+    [[nodiscard]] virtual const NamesType& names() const = 0;
+
+    /**
+     * @brief
+     * @return
+     */
+    [[nodiscard]] virtual usize size() const = 0;
+protected:
+    using ValueParameter::ValueParameter;
+};
+
 template <class T>
-class VectorParameter : public ValueParameter
+class VectorParameter : public VectorParameterBase
 {
 public:
   using ValueType = std::vector<T>;
   using ElementType = typename ValueType::value_type;
-  using NamesType = std::vector<std::string>;
 
   VectorParameter() = delete;
   VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const NamesType& names);
