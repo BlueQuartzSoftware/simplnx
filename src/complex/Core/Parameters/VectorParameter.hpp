@@ -10,21 +10,22 @@ namespace complex
 class VectorParameterBase : public ValueParameter
 {
 public:
-    using NamesType = std::vector<std::string>;
+  using NamesType = std::vector<std::string>;
 
-    /**
-     * @brief
-     * @return
-     */
-    [[nodiscard]] virtual const NamesType& names() const = 0;
+  /**
+   * @brief
+   * @return
+   */
+  [[nodiscard]] virtual const NamesType& names() const = 0;
 
-    /**
-     * @brief
-     * @return
-     */
-    [[nodiscard]] virtual usize size() const = 0;
+  /**
+   * @brief
+   * @return
+   */
+  [[nodiscard]] virtual usize size() const = 0;
+
 protected:
-    using ValueParameter::ValueParameter;
+  using ValueParameter::ValueParameter;
 };
 
 template <class T>
@@ -90,13 +91,13 @@ public:
    * @brief
    * @return
    */
-  [[nodiscard]] const NamesType& names() const;
+  [[nodiscard]] const NamesType& names() const override;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] usize size() const;
+  [[nodiscard]] usize size() const override;
 
   /**
    * @brief
