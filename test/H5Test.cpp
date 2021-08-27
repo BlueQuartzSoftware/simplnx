@@ -10,33 +10,42 @@
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/ScalarData.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Montage/GridMontage.hpp"
+#include "complex/DataStructure/ScalarData.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 #define H5_USE_110_API
 
 using namespace complex;
+namespace fs = std::filesystem;
 
+namespace
+{
 namespace Constants
 {
-inline const std::string LegacyFilepath = "/test/data/SmallN100.dream3d";
-inline const std::string ComplexH5File = "/test/data/new.h5";
+const fs::path DataDir = "test/data";
+const fs::path LegacyFilepath = DataDir / "SmallN100.dream3d";
+const fs::path ComplexH5File = DataDir / "new.h5";
 } // namespace Constants
 
-std::string getLegacyFilepath(const Application& app)
+fs::path getDataDir(const Application& app)
 {
-  return app.getCurrentDir().string() + Constants::LegacyFilepath;
+  return app.getCurrentDir() / Constants::DataDir;
 }
 
-std::string getComplexH5File(const Application& app)
+fs::path getLegacyFilepath(const Application& app)
+{
+  return app.getCurrentDir() / Constants::LegacyFilepath;
+}
+
+fs::path getComplexH5File(const Application& app)
 {
 #if __APPLE__
-  return app.getCurrentDir().parent_path().parent_path().parent_path().string() + Constants::ComplexH5File;
+  return app.getCurrentDir().parent_path().parent_path().parent_path() / Constants::ComplexH5File;
 #else
-  return app.getCurrentDir().string() + Constants::ComplexH5File;
+  return app.getCurrentDir() / Constants::ComplexH5File;
 #endif
 }
 
@@ -52,6 +61,7 @@ bool equalsf(const FloatVec3& lhs, const FloatVec3& rhs)
   }
   return true;
 }
+} // namespace
 
 TEST_CASE("Read Legacy DREAM.3D Data")
 {
@@ -147,11 +157,22 @@ TEST_CASE("complex IO")
 {
   Application app;
 
+  fs::path dataDir = getDataDir(app);
+
+  if(!fs::exists(dataDir))
+  {
+    REQUIRE(fs::create_directories(dataDir));
+  }
+
+  fs::path filePath = getComplexH5File(app);
+
+  std::string filePathString = filePath.string();
+
   // Write HDF5 file
   try
   {
     DataStructure ds = getTestDataStructure();
-    auto fileId = H5Fcreate(getComplexH5File(app).c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    auto fileId = H5Fcreate(filePathString.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     REQUIRE(fileId > 0);
 
     herr_t err;
@@ -160,8 +181,7 @@ TEST_CASE("complex IO")
 
     err = H5Fclose(fileId);
     REQUIRE(err <= 0);
-  }
-  catch(const std::exception& e)
+  } catch(const std::exception& e)
   {
     FAIL(e.what());
   }
@@ -169,7 +189,7 @@ TEST_CASE("complex IO")
   // Read HDF5 file
   try
   {
-    auto fileId = H5Fopen(getComplexH5File(app).c_str(), H5P_DEFAULT, H5P_DEFAULT);
+    auto fileId = H5Fopen(filePathString.c_str(), H5P_DEFAULT, H5P_DEFAULT);
     REQUIRE(fileId > 0);
 
     herr_t err;
@@ -178,8 +198,7 @@ TEST_CASE("complex IO")
 
     err = H5Fclose(fileId);
     REQUIRE(err <= 0);
-  }
-  catch(const std::exception& e)
+  } catch(const std::exception& e)
   {
     FAIL(e.what());
   }
