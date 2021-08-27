@@ -10,7 +10,7 @@ namespace H5
 {
 using IdType = int64_t;
 using ErrorType = int32_t;
-using SizeType = uint64_t;
+using SizeType = unsigned long long;
 
 inline const std::string DataTypeTag = "DataType";
 inline const std::string CompDims = "ComponentDimensions";
