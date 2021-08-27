@@ -35,27 +35,27 @@ namespace
 namespace Constants
 {
 const fs::path DataDir = "test/data";
-const fs::path LegacyFilepath = DataDir / "SmallN100.dream3d";
-const fs::path ComplexH5File = DataDir / "new.h5";
+const fs::path LegacyFilepath = "SmallN100.dream3d";
+const fs::path ComplexH5File = "new.h5";
 } // namespace Constants
 
 fs::path getDataDir(const Application& app)
 {
+#if __APPLE__
+  return app.getCurrentDir().parent_path().parent_path().parent_path() / Constants::DataDir;
+#else
   return app.getCurrentDir() / Constants::DataDir;
+#endif
 }
 
 fs::path getLegacyFilepath(const Application& app)
 {
-  return app.getCurrentDir() / Constants::LegacyFilepath;
+  return getDataDir(app) / Constants::LegacyFilepath;
 }
 
 fs::path getComplexH5File(const Application& app)
 {
-#if __APPLE__
-  return app.getCurrentDir().parent_path().parent_path().parent_path() / Constants::ComplexH5File;
-#else
-  return app.getCurrentDir() / Constants::ComplexH5File;
-#endif
+  return getDataDir(app) / Constants::ComplexH5File;
 }
 
 bool equalsf(const FloatVec3& lhs, const FloatVec3& rhs)
