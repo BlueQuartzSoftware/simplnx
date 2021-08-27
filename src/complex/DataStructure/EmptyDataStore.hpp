@@ -155,6 +155,17 @@ public:
     return new EmptyDataStore(*this);
   }
 
+  /**
+   * @brief Writes the data store to HDF5. Returns the HDF5 error code should
+   * one be encountered. Otherwise, returns 0.
+   * @param dataId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5(H5::IdType dataId) const override
+  {
+    throw std::runtime_error("");
+  }
+
 private:
   size_t m_TupleSize;
   size_t m_TupleCount;

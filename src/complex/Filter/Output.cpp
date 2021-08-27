@@ -2,6 +2,10 @@
 
 #include <fmt/core.h>
 
+#include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataStore.hpp"
+#include "complex/DataStructure/EmptyDataStore.hpp"
+
 using namespace complex;
 
 namespace
@@ -38,7 +42,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& dim
   std::string name = path[last];
 
   auto* store = CreateDataStore<T>(dims[0], dims[1], mode);
-  auto dataArray = dataStructure.createDataArray<T>(name, store, parentObject->getId());
+  auto dataArray = DataArray<T>::Create(dataStructure, name, store, parentObject->getId());
   if(dataArray == nullptr)
   {
     return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("Unable to create DataArray at \"{}\"", path.toString())}})};

@@ -31,6 +31,15 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param parentId = {}
+   * @return ImageGeom*
+   */
+  static ImageGeom* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   ImageGeom(const ImageGeom& other);
@@ -42,6 +51,12 @@ public:
   ImageGeom(ImageGeom&& other) noexcept;
 
   virtual ~ImageGeom();
+
+  /**
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  std::string getTypeName() const override;
 
   /**
    * @brief
@@ -373,13 +388,29 @@ public:
    */
   uint32_t getXdmfGridType() const override;
 
+  /**
+   * @brief Reads values from HDF5
+   * @param targetId
+   * @param groupId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType groupId) override;
+
+  /**
+   * @brief Writes the geometry to HDF5 using the provided parent group ID.
+   * @param parentId
+   * @param groupId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const override;
+
 protected:
   /**
    * @brief
    * @param ds
    * @param name
    */
-  ImageGeom(DataStructure* ds, const std::string& name);
+  ImageGeom(DataStructure& ds, const std::string& name);
 
   /**
    * @brief

@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "complex/DataStructure/DataObject.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 namespace complex
 {
@@ -20,15 +21,21 @@ public:
   using value_type = T;
 
   /**
-   * @brief Constructs a ScalarData object with the target name and value.
+   * @brief
    * @param ds
    * @param name
    * @param defaultValue
+   * @param parentId = {}
+   * @return ScalarData*
    */
-  ScalarData(DataStructure* ds, const std::string& name, value_type defaultValue)
-  : DataObject(ds, name)
-  , m_Data(defaultValue)
+  static ScalarData* Create(DataStructure& ds, const std::string& name, value_type defaultValue, const std::optional<IdType>& parentId = {})
   {
+    auto data = std::shared_ptr<ScalarData>(new ScalarData(ds, name, defaultValue));
+    if(!AddObjectToDS(ds, data, parentId))
+    {
+      return nullptr;
+    }
+    return data.get();
   }
 
   /**
@@ -54,6 +61,15 @@ public:
   virtual ~ScalarData() = default;
 
   /**
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  std::string getTypeName() const override
+  {
+    return "ScalarData";
+  }
+
+  /**
    * @brief Returns a shallow copy of the ScalarData.
    * @return DataObject*
    */
@@ -68,7 +84,7 @@ public:
    */
   DataObject* deepCopy() override
   {
-    return new ScalarData(getDataStructure(), getName(), getValue());
+    return Create(*getDataStructure(), getName(), getValue());
   }
 
   /**
@@ -142,7 +158,30 @@ public:
     return m_Data != rhs;
   }
 
+  /**
+   * @brief Writes the ScalarData to HDF5 using the provided parent ID.
+   * @param parentId
+   * @param dataId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType dataId) const override
+  {
+    return H5::Writer::Generic::writeScalarAttribute(parentId, getName(), "Value", m_Data);
+  }
+
 protected:
+  /**
+   * @brief Constructs a ScalarData object with the target name and value.
+   * @param ds
+   * @param name
+   * @param defaultValue
+   */
+  ScalarData(DataStructure& ds, const std::string& name, value_type defaultValue)
+  : DataObject(ds, name)
+  , m_Data(defaultValue)
+  {
+  }
+
 private:
   value_type m_Data;
 };

@@ -14,6 +14,9 @@
     },
     {
       "name": "eigen3"
+    },
+    {
+      "name": "hdf5"
     }
   ],
   "features": {

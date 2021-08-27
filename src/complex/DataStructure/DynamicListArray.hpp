@@ -23,6 +23,28 @@ public:
     K* cells;
   };
 
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param parentId
+   * @return DynamicListArray*
+   */
+  static DynamicListArray* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+  {
+    auto data = std::shared_ptr<DynamicListArray>(new DynamicListArray(ds, name));
+    if(!AddObjectToDS(ds, data, parentId))
+    {
+      return nullptr;
+    }
+    return data.get();
+  }
+
+  /**
+   * @brief Creates a copy of the specified DynamicListArray. This copy is not
+   * added to the DataStructure.
+   * @param other
+   */
   DynamicListArray(const DynamicListArray& other)
   : DataObject(other)
   , m_Array(other.m_Array)
@@ -30,6 +52,10 @@ public:
   {
   }
 
+  /**
+   * @brief Move constructor
+   * @param other
+   */
   DynamicListArray(DynamicListArray&& other)
   : DataObject(std::move(other))
   , m_Array(std::move(other.m_Array))
@@ -58,8 +84,17 @@ public:
   }
 
   /**
-   * @brief size
-   * @return
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  std::string getTypeName() const override
+  {
+    return "DynamicListArray";
+  }
+
+  /**
+   * @brief Returns the current size.
+   * @return size_t
    */
   size_t size() const
   {
@@ -248,7 +283,7 @@ protected:
    * @param ds
    * @param name
    */
-  DynamicListArray(DataStructure* ds, const std::string& name)
+  DynamicListArray(DataStructure& ds, const std::string& name)
   : DataObject(ds, name)
   {
   }
@@ -283,6 +318,17 @@ protected:
     {
       this->m_Array[i] = linkInit;
     }
+  }
+
+  /**
+   * @brief Writes the DataArray to HDF5 using the provided group ID.
+   * @param parentId
+   * @param dataId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType dataId) const override
+  {
+    throw std::runtime_error("");
   }
 
 private:

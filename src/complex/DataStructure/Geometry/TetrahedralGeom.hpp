@@ -17,6 +17,15 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param parentId = {}
+   * @return TetrahedralGeom*
+   */
+  static TetrahedralGeom* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   TetrahedralGeom(const TetrahedralGeom& other);
@@ -28,6 +37,12 @@ public:
   TetrahedralGeom(TetrahedralGeom&& other) noexcept;
 
   virtual ~TetrahedralGeom();
+
+  /**
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  std::string getTypeName() const override;
 
   /**
    * @brief
@@ -287,13 +302,29 @@ public:
    */
   uint32_t getXdmfGridType() const override;
 
+  /**
+   * @brief Reads values from HDF5
+   * @param targetId
+   * @param groupId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType groupId) override;
+
+  /**
+   * @brief Writes the geometry to HDF5 using the provided parent group ID.
+   * @param parentId
+   * @param groupId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const override;
+
 protected:
   /**
    * @brief
    * @param ds
    * @param name
    */
-  TetrahedralGeom(DataStructure* ds, const std::string& name);
+  TetrahedralGeom(DataStructure& ds, const std::string& name);
 
   /**
    * @brief
@@ -303,7 +334,7 @@ protected:
    * @param vertices
    * @param allocate = true
    */
-  TetrahedralGeom(DataStructure* ds, const std::string& name, size_t numTets, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
+  TetrahedralGeom(DataStructure& ds, const std::string& name, size_t numTets, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
 
   /**
    * @brief
@@ -312,7 +343,7 @@ protected:
    * @param tets
    * @param vertices
    */
-  TetrahedralGeom(DataStructure* ds, const std::string& name, const std::shared_ptr<SharedTetList>& tets, const std::shared_ptr<SharedVertexList>& vertices);
+  TetrahedralGeom(DataStructure& ds, const std::string& name, const std::shared_ptr<SharedTetList>& tets, const std::shared_ptr<SharedVertexList>& vertices);
 
   /**
    * @brief

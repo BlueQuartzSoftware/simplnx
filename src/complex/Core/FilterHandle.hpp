@@ -8,6 +8,9 @@
 
 namespace complex
 {
+class AbstractPlugin;
+class FilterList;
+
 /**
  * @class FilterHandle
  * @brief The FilterHandle class serves as an ID for looking up information on
@@ -19,6 +22,9 @@ namespace complex
 class COMPLEX_EXPORT FilterHandle
 {
 public:
+  friend class AbstractPlugin;
+  friend class FilterList;
+
   /**
    * @brief The FilterIdType alias points to the AbstractFilter::ID type while
    * avoiding circular references while compiling.
@@ -36,11 +42,10 @@ public:
   /**
    * @brief Constructs a FilterHandle for the target filter and plugin ID.
    * The filter name is assigned for human readability.
-   * @param filterName
    * @param filterId
    * @param pluginId
    */
-  FilterHandle(const std::string& filterName, const FilterIdType& filterId, const PluginIdType& pluginId);
+  FilterHandle(const FilterIdType& filterId, const PluginIdType& pluginId);
 
   /**
    * @brief Copy constructor
@@ -77,6 +82,16 @@ public:
    * @return PluginIdType
    */
   PluginIdType getPluginId() const;
+
+protected:
+  /**
+   * @brief Constructs a FilterHandle for the target filter and plugin ID.
+   * The filter name is assigned for human readability.
+   * @param filterName
+   * @param filterId
+   * @param pluginId
+   */
+  FilterHandle(const std::string& filterName, const FilterIdType& filterId, const PluginIdType& pluginId);
 
 private:
   std::string m_FilterName;

@@ -14,8 +14,8 @@ namespace fs = std::filesystem;
 namespace
 {
 const fs::path PluginDir = "test/Plugins";
-const FilterHandle testHandle("Test Filter", Uuid::FromString("5502c3f7-37a8-4a86-b003-1c856be02491").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
-const FilterHandle test2Handle("Test2 Filter", Uuid::FromString("ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854e").value());
+const FilterHandle testHandle(Uuid::FromString("5502c3f7-37a8-4a86-b003-1c856be02491").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
+const FilterHandle test2Handle(Uuid::FromString("ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854e").value());
 
 fs::path getPluginDir(const fs::path& appDir)
 {

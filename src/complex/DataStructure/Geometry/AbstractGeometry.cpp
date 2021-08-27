@@ -1,5 +1,6 @@
 #include "AbstractGeometry.hpp"
 
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 
 using namespace complex;
@@ -99,7 +100,7 @@ std::string AbstractGeometry::LengthUnitToString(LengthUnit unit)
   return "Unknown";
 }
 
-AbstractGeometry::AbstractGeometry(DataStructure* ds, const std::string& name)
+AbstractGeometry::AbstractGeometry(DataStructure& ds, const std::string& name)
 : BaseGroup(ds, name)
 {
 }
@@ -184,7 +185,7 @@ std::string AbstractGeometry::getInfoString(complex::InfoStringFormat format) co
 AbstractGeometry::SharedEdgeList* AbstractGeometry::createSharedEdgeList(size_t numEdges)
 {
   auto dataStore = new DataStore<MeshIndexType>(2, numEdges);
-  SharedEdgeList* edges = getDataStructure()->createDataArray<MeshIndexType>("Shared Edge List", dataStore, getId());
+  SharedEdgeList* edges = DataArray<MeshIndexType>::Create(*getDataStructure(), "Shared Edge List", dataStore, getId());
   edges->getDataStore()->fill(0.0);
   return edges;
 }

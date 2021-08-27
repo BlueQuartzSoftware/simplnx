@@ -5,15 +5,16 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 using namespace complex;
 
-EdgeGeom::EdgeGeom(DataStructure* ds, const std::string& name)
+EdgeGeom::EdgeGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry(ds, name)
 {
 }
 
-EdgeGeom::EdgeGeom(DataStructure* ds, const std::string& name, const SharedEdgeList* edges, const SharedVertexList* vertices)
+EdgeGeom::EdgeGeom(DataStructure& ds, const std::string& name, const SharedEdgeList* edges, const SharedVertexList* vertices)
 : AbstractGeometry(ds, name)
 {
   setEdges(edges);
@@ -43,6 +44,21 @@ EdgeGeom::EdgeGeom(EdgeGeom&& other) noexcept
 }
 
 EdgeGeom::~EdgeGeom() = default;
+
+EdgeGeom* EdgeGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<EdgeGeom>(new EdgeGeom(ds, name));
+  if(!AddObjectToDS(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+std::string EdgeGeom::getTypeName() const
+{
+  return "EdgeGeom";
+}
 
 DataObject* EdgeGeom::shallowCopy()
 {
@@ -261,7 +277,7 @@ size_t EdgeGeom::getNumberOfElements() const
 AbstractGeometry::StatusCode EdgeGeom::findElementSizes()
 {
   auto dataStore = new DataStore<float>(1, getNumberOfElements());
-  auto sizes = getDataStructure()->createDataArray<float>("Edge Lengths", dataStore, getId());
+  auto sizes = DataArray<float>::Create(*getDataStructure(), "Edge Lengths", dataStore, getId());
   m_EdgeSizesId = sizes->getId();
 
   Point3D<float> vert0 = {0.0f, 0.0f, 0.0f};
@@ -294,7 +310,7 @@ void EdgeGeom::deleteElementSizes()
 
 AbstractGeometry::StatusCode EdgeGeom::findElementsContainingVert()
 {
-  auto containsVert = getDataStructure()->createDynamicList<uint16_t, MeshIndexType>("Edges Containing Vert", getId());
+  auto containsVert = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Edges Containing Vert", getId());
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16_t, MeshIndexType>(getEdges(), containsVert, getNumberOfVertices());
   if(getElementsContainingVert() == nullptr)
   {
@@ -329,7 +345,7 @@ AbstractGeometry::StatusCode EdgeGeom::findElementNeighbors()
       return err;
     }
   }
-  auto edgeNeighbors = getDataStructure()->createDynamicList<uint16_t, MeshIndexType>("Edge Neighbors", getId());
+  auto edgeNeighbors = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Edge Neighbors", getId());
   if(edgeNeighbors == nullptr)
   {
     err = -1;
@@ -362,7 +378,7 @@ void EdgeGeom::deleteElementNeighbors()
 AbstractGeometry::StatusCode EdgeGeom::findElementCentroids()
 {
   auto dataStore = new DataStore<float>(3, getNumberOfElements());
-  auto edgeCentroids = getDataStructure()->createDataArray<float>("Edge Centroids", dataStore, getId());
+  FloatArray* edgeCentroids = DataArray<float>::Create(*getDataStructure(), "Edge Centroids", dataStore, getId());
   GeometryHelpers::Topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroids);
   if(getElementCentroids() == nullptr)
   {
@@ -462,4 +478,14 @@ void EdgeGeom::setElementSizes(const FloatArray* elementSizes)
     return;
   }
   m_EdgeSizesId = elementSizes->getId();
+}
+
+H5::ErrorType EdgeGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
+{
+  return getDataMap().readH5Group(*getDataStructure(), targetId);
+}
+
+H5::ErrorType EdgeGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+{
+  return getDataMap().writeH5Group(groupId);
 }

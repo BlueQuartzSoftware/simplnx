@@ -1,12 +1,16 @@
 #include "GridMontage.hpp"
 
+#include <hdf5.h>
 #include <stdexcept>
 
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 using namespace complex;
 
-GridMontage::GridMontage(DataStructure* ds, const std::string& name)
+GridMontage::GridMontage(DataStructure& ds, const std::string& name)
 : AbstractMontage(ds, name)
 {
 }
@@ -22,6 +26,21 @@ GridMontage::GridMontage(GridMontage&& other) noexcept
 }
 
 GridMontage::~GridMontage() = default;
+
+GridMontage* GridMontage::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<GridMontage>(new GridMontage(ds, name));
+  if(!AddObjectToDS(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+std::string GridMontage::getTypeName() const
+{
+  return "GridMontage";
+}
 
 DataObject* GridMontage::shallowCopy()
 {
@@ -224,4 +243,14 @@ size_t GridMontage::getOffsetFromTilePos(const SizeVec3& tilePos, const Dimensio
   const size_t numDeep = dims[2];
 
   return tilePos[0] + tilePos[1] * numCols + tilePos[2] * numCols * numRows;
+}
+
+H5::ErrorType GridMontage::readHdf5(H5::IdType targetId, H5::IdType groupId)
+{
+  return getDataMap().readH5Group(*getDataStructure(), targetId);
+}
+
+H5::ErrorType GridMontage::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+{
+  return getDataMap().writeH5Group(groupId);
 }

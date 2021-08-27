@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdexcept>
-
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
 
@@ -25,35 +23,20 @@ public:
   using Iterator = typename IDataStore<T>::Iterator;
   using ConstIterator = typename IDataStore<T>::ConstIterator;
 
-  /**
-   * @brief Constructs a DataArray with the specified tuple size, count, and
-   * constructs a DataStore with the provided default value.
-   * @param ds
-   * @param name
-   * @param store
-   */
-  DataArray(DataStructure* ds, const std::string& name, store_type* store = nullptr)
-  : DataObject(ds, name)
+  static DataArray* Create(DataStructure& ds, const std::string& name, store_type* store, const std::optional<IdType>& parentId = {})
   {
-    setDataStore(store);
+    auto data = std::shared_ptr<DataArray>(new DataArray(ds, name, store));
+    if(!AddObjectToDS(ds, data, parentId))
+    {
+      return nullptr;
+    }
+    return data.get();
   }
 
   /**
-   * @brief Constructs a DataArray with the specified tuple size, count, and
-   * DataStore. The DataArray takes ownership of the DataStore.
-   * @param ds
-   * @param name
-   * @param dataStore
-   */
-  DataArray(DataStructure* ds, const std::string& name, const weak_store& store)
-  : DataObject(ds, name)
-  {
-    setDataStore(store);
-  }
-
-  /**
-   * @brief Copy constructor creates a copy of the specified tuple size, count,
-   * and smart pointer to the target DataStore.
+   * @brief Creates a copy of the specified tuple size, count, and smart
+   * pointer to the target DataStore. This copy is not added to the
+   * DataStructure.
    * @param other
    */
   DataArray(const DataArray<T>& other)
@@ -91,7 +74,16 @@ public:
    */
   DataObject* deepCopy() override
   {
-    return new DataArray(getDataStructure(), getName(), getDataStore()->deepCopy());
+    return new DataArray(*getDataStructure(), getName(), getDataStore()->deepCopy());
+  }
+
+  /**
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  std::string getTypeName() const override
+  {
+    return "DataArray";
   }
 
   /**
@@ -314,7 +306,44 @@ public:
     return *this;
   }
 
+  /**
+   * @brief Writes the DataArray to HDF5 using the provided group ID.
+   * @param parentId
+   * @param dataId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType dataId) const override
+  {
+    return m_DataStore->writeHdf5(dataId);
+  }
+
 protected:
+  /**
+   * @brief Constructs a DataArray with the specified tuple size, count, and
+   * constructs a DataStore with the provided default value.
+   * @param ds
+   * @param name
+   * @param store
+   */
+  DataArray(DataStructure& ds, const std::string& name, store_type* store = nullptr)
+  : DataObject(ds, name)
+  {
+    setDataStore(store);
+  }
+
+  /**
+   * @brief Constructs a DataArray with the specified tuple size, count, and
+   * DataStore. The DataArray takes ownership of the DataStore.
+   * @param ds
+   * @param name
+   * @param dataStore
+   */
+  DataArray(DataStructure& ds, const std::string& name, const weak_store& store)
+  : DataObject(ds, name)
+  {
+    setDataStore(store);
+  }
+
 private:
   std::shared_ptr<IDataStore<T>> m_DataStore = nullptr;
 };
@@ -352,5 +381,4 @@ using SizeArray = DataArray<size_t>;
 using FloatArray = DataArray<float>;
 using DoubleArray = DataArray<double>;
 using VectorOfFloatArray = std::vector<std::shared_ptr<FloatArray>>;
-
 } // namespace complex

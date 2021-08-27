@@ -10,10 +10,9 @@ namespace complex
 class GridTileIndex;
 
 /**
- * class GridMontage
- *
+ * @class GridMontage
+ * @brief
  */
-
 class COMPLEX_EXPORT GridMontage : virtual public AbstractMontage
 {
 public:
@@ -22,6 +21,15 @@ public:
   using Iterator = void;
   using DimensionsType = SizeVec3;
   using TileIdType = GridTileIndex;
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param parentId = {}
+   * @return GridMontage*
+   */
+  static GridMontage* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -39,6 +47,12 @@ public:
    * Empty Destructor
    */
   virtual ~GridMontage();
+
+  /**
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  std::string getTypeName() const override;
 
   /**
    * @brief Returns a shallow copy of the current DataObject.
@@ -185,13 +199,29 @@ public:
    */
   BoundsType getBounds() const;
 
+  /**
+   * @brief Reads values from HDF5
+   * @param targetId
+   * @return H5::ErrorType
+   * @param groupId
+   */
+  H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType groupId) override;
+
+  /**
+   * @brief Writes the montage to HDF5 using the provided parent group ID.
+   * @param groupId
+   * @param parentId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const override;
+
 protected:
   /**
    * @brief
    * @param ds
    * @param name
    */
-  GridMontage(DataStructure* ds, const std::string& name);
+  GridMontage(DataStructure& ds, const std::string& name);
 
   /**
    * @brief Returns the appropriate linear offset from the provided

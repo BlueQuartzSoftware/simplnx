@@ -3,11 +3,16 @@
 #include <algorithm>
 #include <exception>
 
+#include <hdf5.h>
+
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Metadata.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 using namespace complex;
+
+const std::string H5::Constants::DataObject::ObjectTypeTag = "ObjectType";
 
 DataObject::IdType DataObject::generateId(const std::optional<IdType>& opId)
 {
@@ -19,9 +24,9 @@ DataObject::IdType DataObject::generateId(const std::optional<IdType>& opId)
   return id++;
 }
 
-DataObject::DataObject(DataStructure* ds, const std::string& name)
+DataObject::DataObject(DataStructure& ds, const std::string& name)
 : m_Name(name)
-, m_DataStructure(ds)
+, m_DataStructure(&ds)
 , m_Id(generateId())
 , m_H5Id(-1)
 {
@@ -48,6 +53,11 @@ DataObject::~DataObject()
   getDataStructure()->dataDeleted(getId(), getName());
 }
 
+bool DataObject::AddObjectToDS(DataStructure& ds, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId)
+{
+  return ds.finishAddingObject(data, parentId);
+}
+
 DataObject::IdType DataObject::getId() const
 {
   return m_Id;
@@ -57,6 +67,7 @@ DataStructure* DataObject::getDataStructure()
 {
   return m_DataStructure;
 }
+
 const DataStructure* DataObject::getDataStructure() const
 {
   return m_DataStructure;
@@ -147,4 +158,17 @@ bool DataObject::hasH5Id() const
 H5::IdType DataObject::getH5Id() const
 {
   return m_H5Id;
+}
+
+H5::ErrorType DataObject::writeHdf5(H5::IdType parentId) const
+{
+  const std::string typeName = getTypeName();
+  hid_t groupId = H5Gcreate(parentId, getName().c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  auto err = H5::Writer::Generic::writeStringAttribute(parentId, getName(), H5::Constants::DataObject::ObjectTypeTag, typeName);
+  if(err >= 0)
+  {
+    err = writeHdf5_impl(parentId, groupId);
+  }
+  H5Gclose(groupId);
+  return err;
 }
