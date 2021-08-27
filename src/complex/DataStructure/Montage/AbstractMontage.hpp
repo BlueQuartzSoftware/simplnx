@@ -26,13 +26,6 @@ public:
 
   /**
    * @brief
-   * @param ds
-   * @param name
-   */
-  AbstractMontage(DataStructure* ds, const std::string& name);
-
-  /**
-   * @brief
    * @param other
    */
   AbstractMontage(const AbstractMontage& other);
@@ -132,6 +125,13 @@ public:
   virtual ConstIterator end() const;
 
 protected:
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   */
+  AbstractMontage(DataStructure& ds, const std::string& name);
+
   /**
    * @brief Checks if the specified DataObject can be added to the montage. Returns true if
    * the object can be added. Returns false otherwise.

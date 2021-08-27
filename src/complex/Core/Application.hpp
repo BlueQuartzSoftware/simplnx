@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "complex/Core/FilterList.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DataReader.hpp"
 
 #include "complex/complex_export.hpp"
 
@@ -68,6 +69,12 @@ public:
   JsonPipelineBuilder* getPipelineBuilder() const;
 
   /**
+   * @brief
+   * @return H5DataReader*
+   */
+  H5DataReader* getDataStructureReader() const;
+
+  /**
    * @brief Returns a filepath pointing to the executable.
    * @return std::filesystem::path
    */
@@ -100,5 +107,6 @@ private:
   // Variables
   std::unique_ptr<complex::FilterList> m_FilterList;
   std::filesystem::path m_CurrentPath = "";
+  std::unique_ptr<H5DataReader> m_DataReader;
 };
 } // namespace complex

@@ -3,7 +3,7 @@
 
 using namespace complex;
 
-AbstractGeometry2D::AbstractGeometry2D(DataStructure* ds, const std::string& name)
+AbstractGeometry2D::AbstractGeometry2D(DataStructure& ds, const std::string& name)
 : AbstractGeometry(ds, name)
 {
 }

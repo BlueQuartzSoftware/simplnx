@@ -162,7 +162,7 @@ protected:
    * @param ds
    * @param name
    */
-  AbstractGeometryGrid(DataStructure* ds, const std::string& name);
+  AbstractGeometryGrid(DataStructure& ds, const std::string& name);
 
   /**
    * @brief

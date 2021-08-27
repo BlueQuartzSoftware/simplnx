@@ -29,6 +29,7 @@ find_package(fmt CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(expected-lite CONFIG REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(HDF5 REQUIRED)
 
 add_library(complex SHARED)
 add_library(complex::complex ALIAS complex)
@@ -48,12 +49,18 @@ target_compile_options(complex
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
 )
 
+target_include_directories(complex
+  PRIVATE
+    ${HDF5_INCLUDE_DIRS}
+)
+
 target_link_libraries(complex
   PUBLIC
     fmt::fmt
     nlohmann_json::nlohmann_json
     nonstd::expected-lite
     Eigen3::Eigen
+    HDF5::HDF5
 )
 
 if(UNIX)
@@ -133,6 +140,19 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.hpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterList.hpp
 
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/EdgeGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/GridMontageFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/HexahedralGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ImageGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/QuadGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/RectGridGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ScalarDataFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TetrahedralGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TriangleGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/VertexGeomFactory.hpp
+
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.hpp
@@ -177,6 +197,8 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataPath.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataStore.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/IDataStore.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.hpp
@@ -195,8 +217,19 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
+  ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
+  ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
 
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataReader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Reader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Writer.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IH5DataFactory.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
 )
@@ -212,6 +245,19 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Core/Application.cpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.cpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterList.cpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/EdgeGeomFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/GridMontageFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/HexahedralGeomFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ImageGeomFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/QuadGeomFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/RectGridGeomFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ScalarDataFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TetrahedralGeomFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TriangleGeomFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/VertexGeomFactory.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.cpp
@@ -263,6 +309,12 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataReader.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Reader.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Writer.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IH5DataFactory.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp

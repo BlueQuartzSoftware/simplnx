@@ -9,7 +9,7 @@ using namespace complex;
 TEST_CASE("GridMontage")
 {
   DataStructure ds;
-  auto montage = dynamic_cast<GridMontage*>(ds.createMontage<GridMontage>("Grid"));
+  auto montage = GridMontage::Create(ds, "Grid");
   REQUIRE(montage != nullptr);
 
   const size_t rowCount = 3;
@@ -21,11 +21,11 @@ TEST_CASE("GridMontage")
   REQUIRE(montage->getColumnCount() == colCount);
   REQUIRE(montage->getDepth() == depthCount);
 
-  auto tile1 = ds.createGeometry<ImageGeom>("Tile 1", montage->getId());
-  auto tile2 = ds.createGeometry<ImageGeom>("Tile 2", montage->getId());
-  auto tile3 = ds.createGeometry<ImageGeom>("Tile 3", montage->getId());
-  auto tile4 = ds.createGeometry<ImageGeom>("Tile 4", montage->getId());
-  auto tile5 = ds.createGeometry<ImageGeom>("Tile 5");
+  auto tile1 = ImageGeom::Create(ds, "Tile 1", montage->getId());
+  auto tile2 = ImageGeom::Create(ds, "Tile 2", montage->getId());
+  auto tile3 = ImageGeom::Create(ds, "Tile 3", montage->getId());
+  auto tile4 = ImageGeom::Create(ds, "Tile 4", montage->getId());
+  auto tile5 = ImageGeom::Create(ds, "Tile 5");
 
   auto index00 = montage->getTileIndex(0, 0, 0);
   auto index10 = montage->getTileIndex(1, 0, 0);

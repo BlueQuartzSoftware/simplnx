@@ -18,6 +18,15 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param parentId = {}
+   * @return VertexGeom*
+   */
+  static VertexGeom* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   VertexGeom(const VertexGeom& other);
@@ -29,6 +38,12 @@ public:
   VertexGeom(VertexGeom&& other) noexcept;
 
   virtual ~VertexGeom();
+
+  /**
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  std::string getTypeName() const override;
 
   /**
    * @brief
@@ -210,13 +225,29 @@ public:
    */
   uint32_t getXdmfGridType() const override;
 
+  /**
+   * @brief Reads values from HDF5
+   * @param targetId
+   * @param groupId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType groupId) override;
+
+  /**
+   * @brief Writes the geometry to HDF5 using the provided parent group ID.
+   * @param groupId
+   * @param parentId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const override;
+
 protected:
   /**
    * @brief
    * @param ds
    * @param name
    */
-  VertexGeom(DataStructure* ds, const std::string& name);
+  VertexGeom(DataStructure& ds, const std::string& name);
 
   /**
    * @brief
@@ -225,7 +256,7 @@ protected:
    * @param numVertices
    * @param allocate
    */
-  VertexGeom(DataStructure* ds, const std::string& name, size_t numVertices, bool allocate);
+  VertexGeom(DataStructure& ds, const std::string& name, size_t numVertices, bool allocate);
 
   /**
    * @brief
@@ -233,7 +264,7 @@ protected:
    * @param name
    * @param vertices
    */
-  VertexGeom(DataStructure* ds, const std::string& name, const SharedVertexList* vertices);
+  VertexGeom(DataStructure& ds, const std::string& name, const SharedVertexList* vertices);
 
   /**
    * @brief

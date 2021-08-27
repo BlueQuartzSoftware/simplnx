@@ -10,6 +10,7 @@ add_executable(complex_test
   ArgumentsTest.cpp
   DataStructTest.cpp
   GeometryTest.cpp
+  H5Test.cpp
   DataStructObserver.hpp
   DataStructObserver.cpp
   MontageTest.cpp
@@ -44,5 +45,12 @@ target_compile_options(complex_test
   PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
 )
+
+# add_custom_command(
+#   TARGET complex_test POST_BUILD
+#   COMMAND ${CMAKE_COMMAND} -E copy
+#     ${CMAKE_SOURCE_DIR}/test/data/SmallN100.dream3d
+#     $<TARGET_FILE_DIR:complex_test>/test/data/SmallN100.dream3d
+# )
 
 catch_discover_tests(complex_test)

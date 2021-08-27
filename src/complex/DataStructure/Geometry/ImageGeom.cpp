@@ -2,12 +2,14 @@
 
 #include <stdexcept>
 
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 using namespace complex;
 
-ImageGeom::ImageGeom(DataStructure* ds, const std::string& name)
+ImageGeom::ImageGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometryGrid(ds, name)
 {
 }
@@ -31,6 +33,21 @@ ImageGeom::ImageGeom(ImageGeom&& other) noexcept
 }
 
 ImageGeom::~ImageGeom() = default;
+
+ImageGeom* ImageGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<ImageGeom>(new ImageGeom(ds, name));
+  if(!AddObjectToDS(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+std::string ImageGeom::getTypeName() const
+{
+  return "ImageGeom";
+}
 
 DataObject* ImageGeom::shallowCopy()
 {
@@ -115,7 +132,7 @@ AbstractGeometry::StatusCode ImageGeom::findElementSizes()
     return -1;
   }
   auto dataStore = new DataStore<float>(1, getNumberOfElements());
-  auto voxelSizes = getDataStructure()->createDataArray<float>("Voxel Sizes", dataStore, getId());
+  auto voxelSizes = DataArray<float>::Create(*getDataStructure(), "Voxel Sizes", dataStore, getId());
   voxelSizes->getDataStore()->fill(res[0] * res[1] * res[2]);
   m_VoxelSizesId = voxelSizes->getId();
   return 1;
@@ -475,4 +492,14 @@ void ImageGeom::setElementSizes(const FloatArray* elementSizes)
     return;
   }
   m_VoxelSizesId = elementSizes->getId();
+}
+
+H5::ErrorType ImageGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
+{
+  return getDataMap().readH5Group(*getDataStructure(), targetId);
+}
+
+H5::ErrorType ImageGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+{
+  return getDataMap().writeH5Group(groupId);
 }

@@ -18,6 +18,15 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param parentId = {}
+   * @return RectGridGeom*
+   */
+  static RectGridGeom* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   RectGridGeom(const RectGridGeom& other);
@@ -29,6 +38,12 @@ public:
   RectGridGeom(RectGridGeom&& other) noexcept;
 
   virtual ~RectGridGeom();
+
+  /**
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  std::string getTypeName() const override;
 
   /**
    * @brief
@@ -331,13 +346,29 @@ public:
    */
   uint32_t getXdmfGridType() const override;
 
+  /**
+   * @brief Reads values from HDF5
+   * @param targetId
+   * @param groupId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType groupId) override;
+
+  /**
+   * @brief Writes the geometry to HDF5 using the provided parent group ID.
+   * @param parentId
+   * @param groupId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const override;
+
 protected:
   /**
    * @brief
    * @param ds
    * @param name
    */
-  RectGridGeom(DataStructure* ds, const std::string& name);
+  RectGridGeom(DataStructure& ds, const std::string& name);
 
   /**
    * @brief

@@ -1,5 +1,6 @@
 #include "DataStructure.hpp"
 
+#include <numeric>
 #include <stdexcept>
 
 #include "complex/DataStructure/BaseGroup.hpp"
@@ -9,8 +10,14 @@
 #include "complex/DataStructure/Messaging/DataRemovedMessage.hpp"
 #include "complex/DataStructure/Messaging/DataReparentedMessage.hpp"
 #include "complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
 
 using namespace complex;
+
+namespace Constants
+{
+inline const std::string DataStructureTag = "DataStructure";
+}
 
 DataStructure::DataStructure()
 : m_IsValid(true)
@@ -302,16 +309,6 @@ bool DataStructure::removeTopLevel(DataObject* data)
   return true;
 }
 
-DataGroup* DataStructure::createGroup(const std::string& name, const std::optional<DataObject::IdType>& parent)
-{
-  auto container = std::make_shared<DataGroup>(this, name);
-  if(!finishAddingObject(container, parent))
-  {
-    return nullptr;
-  }
-  return container.get();
-}
-
 bool DataStructure::finishAddingObject(const std::shared_ptr<DataObject>& obj, const std::optional<DataObject::IdType>& parent)
 {
   if(parent.has_value())
@@ -404,4 +401,43 @@ void DataStructure::addObserver(AbstractDataStructureObserver* obs)
 void DataStructure::removeObserver(AbstractDataStructureObserver* obs)
 {
   m_Observers.erase(obs);
+}
+
+DataStructure& DataStructure::operator=(const DataStructure& rhs)
+{
+  m_DataObjects = rhs.m_DataObjects;
+  m_RootGroup = rhs.m_RootGroup;
+  m_IsValid = rhs.m_IsValid;
+  return *this;
+}
+
+DataStructure& DataStructure::operator=(DataStructure&& rhs) noexcept
+{
+  m_DataObjects = std::move(rhs.m_DataObjects);
+  m_RootGroup = std::move(rhs.m_RootGroup);
+  m_IsValid = std::move(rhs.m_IsValid);
+  m_Observers = std::move(rhs.m_Observers);
+  return *this;
+}
+
+void readDataObject(DataStructure& ds, H5::IdType objId, const std::string& name)
+{
+  const std::string ObjectTypeTag = "ObjectType";
+}
+
+H5::ErrorType DataStructure::writeHdf5(H5::IdType fileId) const
+{
+  auto dsId = H5Gcreate(fileId, Constants::DataStructureTag.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  H5::ErrorType err = m_RootGroup.writeH5Group(dsId);
+  H5Gclose(dsId);
+  return err;
+}
+
+DataStructure DataStructure::ReadFromHdf5(H5::IdType fileId, H5::ErrorType& err)
+{
+  DataStructure ds;
+  hid_t dsId = H5Gopen(fileId, Constants::DataStructureTag.c_str(), H5P_DEFAULT);
+  err = ds.m_RootGroup.readH5Group(ds, dsId);
+  H5Gclose(dsId);
+  return ds;
 }

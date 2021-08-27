@@ -231,7 +231,7 @@ protected:
    * @param ds
    * @param name
    */
-  AbstractGeometry3D(DataStructure* ds, const std::string& name);
+  AbstractGeometry3D(DataStructure& ds, const std::string& name);
 
   /**
    * @brief

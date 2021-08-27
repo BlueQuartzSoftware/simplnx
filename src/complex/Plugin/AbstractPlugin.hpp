@@ -12,6 +12,8 @@
 
 namespace complex
 {
+class IH5DataFactory;
+
 /**
  * @class AbstractPlugin
  * @brief The AbstractPlugin class is the base class for all C++ plugins for
@@ -73,6 +75,13 @@ public:
    * @return std::string
    */
   std::string getVendor() const;
+
+  /**
+   * @brief Returns a collection of HDF5 DataStructure factories available
+   * through the plugin.
+   * @return std::vector<IH5DataFactory*>
+   */
+  virtual std::vector<IH5DataFactory*> getDataFactories() const = 0;
 
 protected:
   /**

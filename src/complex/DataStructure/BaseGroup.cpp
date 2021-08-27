@@ -4,7 +4,7 @@
 
 using namespace complex;
 
-BaseGroup::BaseGroup(DataStructure* ds, const std::string& name)
+BaseGroup::BaseGroup(DataStructure& ds, const std::string& name)
 : DataObject(ds, name)
 {
 }
@@ -28,7 +28,12 @@ BaseGroup::BaseGroup(BaseGroup&& other) noexcept
 
 BaseGroup::~BaseGroup() = default;
 
-DataMap BaseGroup::getDataMap() const
+const DataMap& BaseGroup::getDataMap() const
+{
+  return m_DataMap;
+}
+
+DataMap& BaseGroup::getDataMap()
 {
   return m_DataMap;
 }
@@ -132,4 +137,14 @@ BaseGroup::ConstIterator BaseGroup::begin() const
 BaseGroup::ConstIterator BaseGroup::end() const
 {
   return m_DataMap.end();
+}
+
+H5::ErrorType BaseGroup::readHdf5(H5::IdType targetId, H5::IdType parentId)
+{
+  return m_DataMap.readH5Group(*getDataStructure(), targetId, getId());
+}
+
+H5::ErrorType BaseGroup::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+{
+  return m_DataMap.writeH5Group(groupId);
 }

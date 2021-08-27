@@ -2,22 +2,24 @@
 
 #include <stdexcept>
 
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 using namespace complex;
 
-TetrahedralGeom::TetrahedralGeom(DataStructure* ds, const std::string& name)
+TetrahedralGeom::TetrahedralGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry3D(ds, name)
 {
 }
 
-TetrahedralGeom::TetrahedralGeom(DataStructure* ds, const std::string& name, size_t numTets, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
+TetrahedralGeom::TetrahedralGeom(DataStructure& ds, const std::string& name, size_t numTets, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
 : AbstractGeometry3D(ds, name)
 {
 }
 
-TetrahedralGeom::TetrahedralGeom(DataStructure* ds, const std::string& name, const std::shared_ptr<SharedTetList>& tets, const std::shared_ptr<SharedVertexList>& vertices)
+TetrahedralGeom::TetrahedralGeom(DataStructure& ds, const std::string& name, const std::shared_ptr<SharedTetList>& tets, const std::shared_ptr<SharedVertexList>& vertices)
 : AbstractGeometry3D(ds, name)
 {
 }
@@ -47,6 +49,21 @@ TetrahedralGeom::TetrahedralGeom(TetrahedralGeom&& other) noexcept
 }
 
 TetrahedralGeom::~TetrahedralGeom() = default;
+
+TetrahedralGeom* TetrahedralGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<TetrahedralGeom>(new TetrahedralGeom(ds, name));
+  if(!AddObjectToDS(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+std::string TetrahedralGeom::getTypeName() const
+{
+  return getGeometryTypeAsString();
+}
 
 DataObject* TetrahedralGeom::shallowCopy()
 {
@@ -223,7 +240,7 @@ size_t TetrahedralGeom::getNumberOfElements() const
 AbstractGeometry::StatusCode TetrahedralGeom::findElementSizes()
 {
   auto dataStore = new DataStore<float>(1, getNumberOfTets());
-  auto tetSizes = getDataStructure()->createDataArray<float>("Tet Volumes", dataStore, getId());
+  FloatArray* tetSizes = DataArray<float>::Create(*getDataStructure(), "Tet Volumes", dataStore, getId());
   GeometryHelpers::Topology::FindTetVolumes(getTetrahedra(), getVertices(), tetSizes);
   if(tetSizes == nullptr)
   {
@@ -247,7 +264,7 @@ void TetrahedralGeom::deleteElementSizes()
 
 AbstractGeometry::StatusCode TetrahedralGeom::findElementsContainingVert()
 {
-  auto tetsContainingVert = getDataStructure()->createDynamicList<uint16_t, MeshIndexType>("Elements Containing Vert", getId());
+  auto tetsContainingVert = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Elements Containing Vert", getId());
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16_t, MeshIndexType>(getTetrahedra(), tetsContainingVert, getNumberOfVertices());
   if(tetsContainingVert == nullptr)
   {
@@ -280,7 +297,7 @@ AbstractGeometry::StatusCode TetrahedralGeom::findElementNeighbors()
       return err;
     }
   }
-  auto tetNeighbors = getDataStructure()->createDynamicList<uint16_t, MeshIndexType>("Tet Neighbors", getId());
+  auto tetNeighbors = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Tet Neighbors", getId());
   err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16_t, MeshIndexType>(getTetrahedra(), getElementsContainingVert(), tetNeighbors, AbstractGeometry::Type::Tetrahedral);
   if(tetNeighbors == nullptr)
   {
@@ -305,7 +322,7 @@ void TetrahedralGeom::deleteElementNeighbors()
 AbstractGeometry::StatusCode TetrahedralGeom::findElementCentroids()
 {
   auto dataStore = new DataStore<float>(3, getNumberOfTets());
-  auto tetCentroids = getDataStructure()->createDataArray<float>("Tet Centroids", dataStore, getId());
+  DataArray<float>* tetCentroids = DataArray<float>::Create(*getDataStructure(), "Tet Centroids", dataStore, getId());
   GeometryHelpers::Topology::FindElementCentroids(getTetrahedra(), getVertices(), tetCentroids);
   if(tetCentroids == nullptr)
   {
@@ -402,7 +419,7 @@ AbstractGeometry::StatusCode TetrahedralGeom::findFaces()
 AbstractGeometry::StatusCode TetrahedralGeom::findUnsharedEdges()
 {
   auto dataStore = new DataStore<MeshIndexType>(2, 0);
-  auto unsharedEdgeList = getDataStructure()->createDataArray<MeshIndexType>("Unshared Edge List", dataStore, getId());
+  auto unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", dataStore, getId());
   GeometryHelpers::Connectivity::FindUnsharedTetEdges(getTetrahedra(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
@@ -416,7 +433,7 @@ AbstractGeometry::StatusCode TetrahedralGeom::findUnsharedEdges()
 AbstractGeometry::StatusCode TetrahedralGeom::findUnsharedFaces()
 {
   auto dataStore = new DataStore<MeshIndexType>(3, 0);
-  auto unsharedTriList = getDataStructure()->createDataArray<MeshIndexType>("Unshared Face List", dataStore, getId());
+  auto unsharedTriList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Face List", dataStore, getId());
   GeometryHelpers::Connectivity::FindUnsharedTetFaces(getTetrahedra(), unsharedTriList);
   if(unsharedTriList == nullptr)
   {
@@ -470,4 +487,14 @@ void TetrahedralGeom::setElementCentroids(const FloatArray* elementCentroids)
     return;
   }
   m_TetCentroidsId = elementCentroids->getId();
+}
+
+H5::ErrorType TetrahedralGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
+{
+  return getDataMap().readH5Group(*getDataStructure(), targetId);
+}
+
+H5::ErrorType TetrahedralGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+{
+  return getDataMap().writeH5Group(groupId);
 }

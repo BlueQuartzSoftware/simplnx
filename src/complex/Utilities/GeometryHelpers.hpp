@@ -4,6 +4,7 @@
 
 #include "complex/Common/Array.hpp"
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/Utilities/Math/GeometryMath.hpp"
 
 namespace complex
@@ -37,7 +38,7 @@ void FindElementsContainingVert(const DataArray<K>* elemList, DynamicListArray<T
 
   // Fill out lists with number of references to cells
   auto dataStore = new DataStore<K>(1, numVerts);
-  DataArray<K>* linkLocPtr = dataStructure->createDataArray<K>("_INTERNAL_USE_ONLY_Vertices", dataStore, parentId);
+  DataArray<K>* linkLocPtr = DataArray<K>::Create(*dataStructure, "_INTERNAL_USE_ONLY_Vertices", dataStore, parentId);
   linkLocPtr->getDataStore()->fill(0);
   auto linkLoc = *linkLocPtr;
   K* verts = nullptr;
@@ -129,7 +130,7 @@ ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListAr
 
   // Allocate an array of bools that we use each iteration so that we don't put duplicates into the array
   auto visitedDataStore = new DataStore<uint8_t>(1, numElems);
-  DataArray<uint8_t>* visitedPtr = dataStructure->createDataArray<uint8_t>("_INTERNAL_USE_ONLY_Visited", visitedDataStore, parentId);
+  DataArray<uint8_t>* visitedPtr = DataArray<uint8_t>::Create(*dataStructure, "_INTERNAL_USE_ONLY_Visited", visitedDataStore, parentId);
   visitedDataStore->fill(0);
   auto& visited = *visitedPtr;
 

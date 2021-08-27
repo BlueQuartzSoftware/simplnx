@@ -69,12 +69,14 @@ Application* Application::s_Instance = nullptr;
 
 Application::Application()
 : m_FilterList(new FilterList())
+, m_DataReader(new H5DataReader())
 {
   initialize();
 }
 
 Application::Application(int argc, char** argv)
 : m_FilterList(new FilterList())
+, m_DataReader(new H5DataReader())
 {
   initialize();
 }
@@ -136,8 +138,23 @@ JsonPipelineBuilder* Application::getPipelineBuilder() const
   return nullptr;
 }
 
+H5DataReader* Application::getDataStructureReader() const
+{
+  return m_DataReader.get();
+}
+
 void Application::loadPlugin(const std::string& path)
 {
   auto pluginLoader = std::make_shared<PluginLoader>(path);
   getFilterList()->addPlugin(pluginLoader);
+
+  auto plugin = pluginLoader->getPlugin();
+  if((plugin != nullptr) && (m_DataReader != nullptr))
+  {
+    auto factories = plugin->getDataFactories();
+    for(auto factory : factories)
+    {
+      m_DataReader->addFactory(factory);
+    }
+  }
 }
