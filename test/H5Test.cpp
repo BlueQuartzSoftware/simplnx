@@ -6,10 +6,6 @@
 
 #include <hdf5.h>
 
-#include <fmt/core.h>
-#include <fmt/format.h>
-#include <fmt/ostream.h>
-
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
@@ -168,17 +164,12 @@ TEST_CASE("complex IO")
 
   fs::path dataDir = getDataDir(app);
 
-  fmt::print("dataDir = {}\n", dataDir);
-
   if(!fs::exists(dataDir))
   {
-    fmt::print("Creating dataDir\n");
     REQUIRE(fs::create_directories(dataDir));
   }
 
   fs::path filePath = getComplexH5File(app);
-
-  fmt::print("filePath = {}\n", filePath);
 
   std::string filePathString = filePath.string();
 
