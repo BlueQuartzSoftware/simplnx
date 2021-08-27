@@ -200,7 +200,7 @@ public:
   {
     int32_t rank = 1;
 
-    uint64_t dataSize = m_TupleSize * m_TupleCount;
+    hsize_t dataSize = m_TupleSize * m_TupleCount;
 
     hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
     hid_t dataspaceId = H5Screate_simple(rank, &dataSize, nullptr);

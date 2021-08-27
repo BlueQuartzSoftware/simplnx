@@ -1,5 +1,6 @@
 #include "H5Support.hpp"
 
+#include <cstring>
 #include <iostream>
 
 hid_t complex::H5::Support::openId(hid_t locationID, const std::string& objectName, H5O_type_t objectType)

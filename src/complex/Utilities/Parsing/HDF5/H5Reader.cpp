@@ -137,7 +137,7 @@ complex::DataStore<T>* readH5Dataset(hid_t locId, const std::string& datasetName
   return dataStore;
 }
 
-herr_t complex::H5::Reader::Generic::readVectorOfStringDataset(hid_t locationID, const std::string& datasetName, std::vector<std::string>& data)
+herr_t complex::H5::Reader::Generic::readVectorOfStringDataset(H5::IdType locationID, const std::string& datasetName, std::vector<std::string>& data)
 {
   herr_t error = 0;
   herr_t returnError = 0;
@@ -219,7 +219,7 @@ herr_t complex::H5::Reader::Generic::readVectorOfStringDataset(hid_t locationID,
   return returnError;
 }
 
-herr_t complex::H5::Reader::Generic::readStringDataset(hid_t locationID, const std::string& datasetName, std::string& data)
+herr_t complex::H5::Reader::Generic::readStringDataset(H5::IdType locationID, const std::string& datasetName, std::string& data)
 {
   herr_t error = 0;
   herr_t returnError = 0;
@@ -273,7 +273,7 @@ herr_t complex::H5::Reader::Generic::readStringDataset(hid_t locationID, const s
   return returnError;
 }
 
-complex::H5::ErrorType complex::H5::Reader::Generic::readRequiredAttributes(hid_t gid, const std::string& name, std::string& objType, int32_t& version, std::vector<size_t>& tDims,
+complex::H5::ErrorType complex::H5::Reader::Generic::readRequiredAttributes(H5::IdType gid, const std::string& name, std::string& objType, int32_t& version, std::vector<size_t>& tDims,
                                                                             std::vector<size_t>& cDims)
 {
   H5::ErrorType err = 0;
@@ -310,7 +310,7 @@ complex::H5::ErrorType complex::H5::Reader::Generic::readRequiredAttributes(hid_
   return retErr;
 }
 
-complex::H5::ErrorType complex::H5::Reader::Generic::readStringAttribute(hid_t locationID, const std::string& objectName, const std::string& attributeName, std::string& data)
+complex::H5::ErrorType complex::H5::Reader::Generic::readStringAttribute(H5::IdType locationID, const std::string& objectName, const std::string& attributeName, std::string& data)
 {
   H5O_info_t objectInfo{};
   std::vector<char> attributeOutput;
@@ -456,7 +456,7 @@ herr_t complex::H5::Reader::Generic::getAttributeInfo(hid_t locationID, const st
 //////////////////////////
 // Begin Legacy Support //
 //////////////////////////
-std::string H5::Reader::Generic::getNameAtIdx(hid_t id, hsize_t idx)
+std::string H5::Reader::Generic::getNameAtIdx(H5::IdType id, H5::SizeType idx)
 {
   constexpr size_t size = 120;
   char name[size];
@@ -465,7 +465,7 @@ std::string H5::Reader::Generic::getNameAtIdx(hid_t id, hsize_t idx)
   return nameStr;
 }
 
-std::string H5::Reader::Generic::getName(hid_t id)
+std::string H5::Reader::Generic::getName(H5::IdType id)
 {
   constexpr size_t size = 120;
   char name[size];
