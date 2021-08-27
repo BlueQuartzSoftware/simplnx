@@ -238,7 +238,7 @@ public:
     auto buffer = new T[tDims * cDims];
     try
     {
-      //auto buffer = std::make_unique<T[]>(tDims * cDims);
+      // auto buffer = std::make_unique<T[]>(tDims * cDims);
       hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
       auto err = H5Dread(dataId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
       if(err < 0)
@@ -246,20 +246,19 @@ public:
         throw std::runtime_error("Error reading DataStore from HDF5");
       }
       H5Tclose(dataType);
-    }
-    catch(const std::exception& e)
+    } catch(const std::exception& e)
     {
       std::cerr << e.what() << '\n';
       throw std::runtime_error("Error creating DataStore.\nTupleCount: " + std::to_string(tDims) + "\nTupleSize: " + std::to_string(cDims));
     }
     delete[] buffer;
 
-    try{
+    try
+    {
       auto buffer = std::make_unique<T[]>(5);
       auto dataStore = new complex::DataStore<T>(cDims, tDims, std::move(buffer));
       return dataStore;
-    }
-    catch(const std::exception& e)
+    } catch(const std::exception& e)
     {
       throw std::runtime_error("Error creating DataStore in DataStore::readHdf5");
     }

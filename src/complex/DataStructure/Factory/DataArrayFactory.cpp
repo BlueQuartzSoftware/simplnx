@@ -13,7 +13,7 @@ namespace Constants
 {
 inline const std::string CompDims = H5::Constants::DataStore::TupleSize;
 inline const std::string TupleDims = H5::Constants::DataStore::TupleCount;
-}
+} // namespace Constants
 
 DataArrayFactory::DataArrayFactory()
 : IH5DataFactory()

@@ -577,7 +577,7 @@ void readLegacyDataArray(complex::DataStructure& ds, hid_t daId, const std::stri
   {
     createLegacyDataArray<uint64_t>(ds, name, parentId, daId, tDims, cDims);
   }
-  
+
   H5Tclose(typeId);
 }
 

@@ -8,8 +8,8 @@
 
 #include <hdf5.h>
 
-#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/DataObject.hpp"
+#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "complex/complex_export.hpp"
@@ -27,7 +27,7 @@ namespace Generic
  * @param id HDF5 group or file ID
  * @param idx HDF5 group index
  * @return std::string
-*/
+ */
 std::string COMPLEX_EXPORT getNameAtIdx(H5::IdType id, H5::SizeType idx);
 
 /**
@@ -250,7 +250,8 @@ complex::DataStructure COMPLEX_EXPORT readFile(const std::string& filepath);
  * @param metaDataOnly
  * @return complex::DataObject*
  */
-//complex::DataObject* COMPLEX_EXPORT readDataArray(complex::DataStructure& ds, H5::IdType gid, const std::string& name, const std::optional<DataObject::IdType>& parent = {}, bool metaDataOnly = false);
+// complex::DataObject* COMPLEX_EXPORT readDataArray(complex::DataStructure& ds, H5::IdType gid, const std::string& name, const std::optional<DataObject::IdType>& parent = {}, bool metaDataOnly =
+// false);
 
 /**
  * @brief
@@ -260,7 +261,7 @@ complex::DataStructure COMPLEX_EXPORT readFile(const std::string& filepath);
  * @param parent = {}
  * @return complex::DataObject*
  */
-//complex::DataObject* COMPLEX_EXPORT readDataGroup(complex::DataStructure& ds, H5::IdType gid, const std::string& name, const std::optional<DataObject::IdType>& parent = {});
+// complex::DataObject* COMPLEX_EXPORT readDataGroup(complex::DataStructure& ds, H5::IdType gid, const std::string& name, const std::optional<DataObject::IdType>& parent = {});
 
 /**
  * @brief readNeighborListData
@@ -270,7 +271,7 @@ complex::DataStructure COMPLEX_EXPORT readFile(const std::string& filepath);
  * @param metaDataOnly Read just the meta data about the DataArray or actually read all the data
  * @return
  */
-//complex::DataObject* COMPLEX_EXPORT readNeighborListData(complex::DataStructure& ds, H5::IdType gid, const std::string& name, bool metaDataOnly = false);
+// complex::DataObject* COMPLEX_EXPORT readNeighborListData(complex::DataStructure& ds, H5::IdType gid, const std::string& name, bool metaDataOnly = false);
 
 } // namespace DataStructure
 } // namespace Reader

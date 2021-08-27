@@ -270,7 +270,7 @@ H5::ErrorType DataMap::readH5Group(DataStructure& ds, H5::IdType groupId, const 
     hid_t objId = H5Gopen(groupId, name.c_str(), H5P_DEFAULT);
     std::string typeName;
     H5::Reader::Generic::readStringAttribute(groupId, name, ObjectTypeTag, typeName);
-    //H5::Reader::Generic::readStringAttribute(objId, ObjectTypeTag, ObjectTypeTag, typeName);
+    // H5::Reader::Generic::readStringAttribute(objId, ObjectTypeTag, ObjectTypeTag, typeName);
 
     IH5DataFactory* factory = Application::Instance()->getDataStructureReader()->getFactory(typeName);
     if(factory->createFromHdf5(ds, objId, groupId, parentId) < 0)

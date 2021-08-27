@@ -44,7 +44,7 @@ protected:
 
   /**
    * @brief Returns the object name at the target ID.
-   * @param targetId 
+   * @param targetId
    * @return std::string
    */
   std::string getObjName(H5::IdType targetId) const;

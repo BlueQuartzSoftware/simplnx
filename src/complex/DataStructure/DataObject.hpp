@@ -81,7 +81,7 @@ public:
   /**
    * @brief Returns typename of the DataObject as a std::string.
    * @return std::string
-  */
+   */
   virtual std::string getTypeName() const = 0;
 
   /**
@@ -171,7 +171,7 @@ protected:
   DataObject(DataStructure& ds, const std::string& name);
 
   /**
-   * @brief Attempts to add the specified 
+   * @brief Attempts to add the specified
    * @return bool
    */
   static bool AddObjectToDS(DataStructure& ds, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId);
