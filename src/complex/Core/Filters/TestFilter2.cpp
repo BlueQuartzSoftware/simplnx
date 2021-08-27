@@ -44,12 +44,12 @@ IFilter::UniquePointer TestFilter2::clone() const
   return std::make_unique<TestFilter2>();
 }
 
-Result<OutputActions> TestFilter2::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+Result<OutputActions> TestFilter2::preflightImpl(const DataStructure& data, const Arguments& args) const
 {
   return {};
 }
 
-Result<> TestFilter2::executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+Result<> TestFilter2::executeImpl(DataStructure& data, const Arguments& args) const
 {
   return {};
 }

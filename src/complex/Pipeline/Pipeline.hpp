@@ -5,12 +5,13 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Pipeline/IPipelineNode.hpp"
+#include "complex/Pipeline/Messaging/PipelineNodeObserver.hpp"
 
 namespace complex
 {
 class FilterHandle;
 
-class COMPLEX_EXPORT PipelineSegment : public IPipelineNode
+class COMPLEX_EXPORT Pipeline : public IPipelineNode, PipelineNodeObserver
 {
   using node_type = std::shared_ptr<IPipelineNode>;
   using collection_type = std::vector<node_type>;
@@ -20,8 +21,26 @@ public:
   using iterator = collection_type::iterator;
   using const_iterator = collection_type::const_iterator;
 
-  PipelineSegment();
-  virtual ~PipelineSegment();
+  /**
+   * @brief Constructs a pipeline with the specified name. If no name is
+   * provided, a default name of "Unnamed Pipeline" will be used.
+   * @param name
+   */
+  Pipeline(const std::string& name = "Unnamed Pipeline");
+
+  virtual ~Pipeline();
+
+  /**
+   * @brief Returns the pipeline's current name.
+   * @return std::string
+   */
+  std::string getName() override;
+
+  /**
+   * @brief Sets the pipeline's name.
+   * @param name
+   */
+  void setName(const std::string& name);
 
   /**
    * @brief Preflights the pipeline segment using an empty DataStructure.
@@ -143,6 +162,17 @@ public:
   bool insertAt(index_type index, const FilterHandle& handle);
 
   /**
+   * @brief Inserts a pipeline node at the specified iterator position. Returns
+   * true if the process succeeds. Returns false otherwise.
+   *
+   * This will always fail if the provided IPipelineNode is null.
+   * @param pos
+   * @param ptr
+   * @return bool
+   */
+  bool insertAt(iterator pos, const std::shared_ptr<IPipelineNode>& ptr);
+
+  /**
    * @brief Removes the specified pipeline node from the pipeline segment.
    * Returns true if the node is removed. Returns false otherwise.
    * @param node
@@ -259,7 +289,16 @@ public:
    */
   const_iterator end() const;
 
+protected:
+  /**
+   * @brief Called when the specified pipeline node emits a message.
+   * @param node
+   * @param msg
+   */
+  void onNotify(IPipelineNode* node, const std::shared_ptr<IPipelineMessage>& msg) override;
+
 private:
+  std::string m_Name;
   collection_type m_Collection;
 };
 } // namespace complex

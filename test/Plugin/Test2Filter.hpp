@@ -46,19 +46,17 @@ protected:
    * @brief Filter-specifics for performing dataCheck.
    * @param data
    * @param args
-   * @param messageHandler
    * @return DataCheckResult
    */
-  complex::Result<complex::OutputActions> preflightImpl(const complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const override;
+  complex::Result<complex::OutputActions> preflightImpl(const complex::DataStructure& data, const complex::Arguments& args) const override;
 
   /**
    * @brief Filter-specifics for performing execute.
    * @param data
    * @param args
-   * @param messageHandler
    * @return ExecuteResult
    */
-  complex::Result<> executeImpl(complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const override;
+  complex::Result<> executeImpl(complex::DataStructure& data, const complex::Arguments& args) const override;
 };
 
 COMPLEX_DEF_FILTER_TRAITS(Test2Filter, "ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04");

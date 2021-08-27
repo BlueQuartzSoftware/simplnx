@@ -9,10 +9,22 @@
 
 namespace complex
 {
+class IPipelineMessage;
+class PipelineNodeObserver;
+
 class COMPLEX_EXPORT IPipelineNode
 {
+  friend class PipelineNodeObserver;
+
 public:
   using IdType = Uuid;
+
+  enum class Status
+  {
+    Dirty = 0,
+    Executing,
+    Completed
+  };
 
   virtual ~IPipelineNode();
 
@@ -21,6 +33,12 @@ public:
    * @return IdType
    */
   IdType getId() const;
+
+  /**
+   * @brief Returns the PipelineNode's name.
+   * @return std::string
+   */
+  virtual std::string getName() = 0;
 
   /**
    * @brief Attempts to preflight the node using the provided DataStructure.
@@ -50,6 +68,12 @@ public:
   bool isDirty() const;
 
   /**
+   * @brief Returns the pipeline node status.
+   * @return Status
+  */
+  Status getStatus() const;
+
+  /**
    * @brief Returns the DataStructure
    * @return const DataStructure&
    */
@@ -62,20 +86,39 @@ public:
   void clearDataStructure();
 
 protected:
-  IPipelineNode();
+  /**
+   * @brief Sets the current node status.
+   * @param status 
+   */
+  void setStatus(Status status);
 
   /**
-   * @brief Clears the node's dirty flag.
-   * 
-   * This is a protected method and should only be called from within the
-   * execute(DataStructure&) method.
+   * @brief Notifies known observers of the provided message.
+   * @param msg
    */
-  void markNotDirty();
+  void notify(const std::shared_ptr<IPipelineMessage>& msg);
+
+  /**
+   * @brief Adds the specified observer to the list of known observers.
+   * @param obs
+   */
+  void addObserver(PipelineNodeObserver* obs);
+
+  /**
+   * @brief Removes the specified observer from the list of known observers.
+   * @param obs
+   */
+  void removeObserver(PipelineNodeObserver* obs);
+
+  /**
+   * @brief Default constructor
+  */
+  IPipelineNode();
 
   /**
    * @brief Updates the stored DataStructure. This should only be called from
    * within the execute(DataStructure&) method.
-   * @param ds 
+   * @param ds
    */
   void setDataStructure(const DataStructure& ds);
 
@@ -89,7 +132,8 @@ private:
   ////////////
   // Variables
   IdType m_Id;
-  bool m_IsDirty = true;
+  Status m_Status = Status::Dirty;
   DataStructure m_DataStructure;
+  std::vector<PipelineNodeObserver*> m_Observers;
 };
 } // namespace complex

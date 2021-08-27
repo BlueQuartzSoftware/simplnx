@@ -1,41 +1,53 @@
-#include "PipelineSegment.hpp"
+#include "Pipeline.hpp"
 
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterList.hpp"
 #include "complex/Pipeline/FilterNode.hpp"
+#include "complex/Pipeline/Messaging/PipelinePassMessage.hpp"
 
 using namespace complex;
 
-PipelineSegment::PipelineSegment()
+Pipeline::Pipeline(const std::string& name)
 : IPipelineNode()
+, m_Name(name)
 {
 }
 
-PipelineSegment::~PipelineSegment() = default;
+Pipeline::~Pipeline() = default;
 
-bool PipelineSegment::preflight() const
+std::string Pipeline::getName()
+{
+  return m_Name;
+}
+
+void Pipeline::setName(const std::string& name)
+{
+  m_Name = name;
+}
+
+bool Pipeline::preflight() const
 {
   DataStructure ds;
   return preflight(ds);
 }
 
-bool PipelineSegment::execute()
+bool Pipeline::execute()
 {
   DataStructure ds;
   return execute(ds);
 }
 
-bool PipelineSegment::preflight(DataStructure& ds) const
+bool Pipeline::preflight(DataStructure& ds) const
 {
   return preflightFrom(0, ds);
 }
 
-bool PipelineSegment::execute(DataStructure& ds)
+bool Pipeline::execute(DataStructure& ds)
 {
   return executeFrom(0, ds);
 }
 
-bool PipelineSegment::preflightFrom(const index_type& index, DataStructure& ds) const
+bool Pipeline::preflightFrom(const index_type& index, DataStructure& ds) const
 {
   if(index >= size() && index != 0)
   {
@@ -51,7 +63,7 @@ bool PipelineSegment::preflightFrom(const index_type& index, DataStructure& ds) 
   return true;
 }
 
-bool PipelineSegment::executeFrom(const index_type& index, DataStructure& ds)
+bool Pipeline::executeFrom(const index_type& index, DataStructure& ds)
 {
   if(index >= size() && index != 0)
   {
@@ -66,20 +78,21 @@ bool PipelineSegment::executeFrom(const index_type& index, DataStructure& ds)
     }
   }
   setDataStructure(ds);
+  setStatus(Status::Completed);
   return true;
 }
 
-size_t PipelineSegment::size() const
+size_t Pipeline::size() const
 {
   return m_Collection.size();
 }
 
-IPipelineNode* PipelineSegment::operator[](index_type index)
+IPipelineNode* Pipeline::operator[](index_type index)
 {
   return m_Collection[index].get();
 }
 
-IPipelineNode* PipelineSegment::at(index_type index)
+IPipelineNode* Pipeline::at(index_type index)
 {
   if(index >= size())
   {
@@ -89,7 +102,7 @@ IPipelineNode* PipelineSegment::at(index_type index)
   return m_Collection[index].get();
 }
 
-const IPipelineNode* PipelineSegment::at(index_type index) const
+const IPipelineNode* Pipeline::at(index_type index) const
 {
   if(index >= size())
   {
@@ -99,18 +112,17 @@ const IPipelineNode* PipelineSegment::at(index_type index) const
   return m_Collection[index].get();
 }
 
-bool PipelineSegment::insertAt(index_type index, IPipelineNode* node)
+bool Pipeline::insertAt(index_type index, IPipelineNode* node)
 {
-  if(index >= size())
+  if(index > size())
   {
     return false;
   }
-  collection_type::iterator pos = m_Collection.begin() + index;
   auto ptr = std::shared_ptr<IPipelineNode>(node);
-  m_Collection.emplace(pos, ptr);
+  return insertAt(begin() + index, ptr);
 }
 
-bool PipelineSegment::insertAt(index_type index, IFilter::UniquePointer& filter)
+bool Pipeline::insertAt(index_type index, IFilter::UniquePointer& filter)
 {
   if(filter == nullptr)
   {
@@ -120,112 +132,129 @@ bool PipelineSegment::insertAt(index_type index, IFilter::UniquePointer& filter)
   return insertAt(index, new FilterNode(std::move(filter)));
 }
 
-bool PipelineSegment::insertAt(index_type index, const FilterHandle& handle)
+bool Pipeline::insertAt(index_type index, const FilterHandle& handle)
 {
   auto filterList = Application::Instance()->getFilterList();
   IFilter::UniquePointer filter = filterList->createFilter(handle);
   return insertAt(index, filter);
 }
 
-bool PipelineSegment::remove(IPipelineNode* node)
+bool Pipeline::insertAt(iterator pos, const std::shared_ptr<IPipelineNode>& ptr)
+{
+  if(ptr == nullptr)
+  {
+    return false;
+  }
+
+  m_Collection.insert(pos, ptr);
+  startObservingNode(ptr.get());
+  return true;
+}
+
+bool Pipeline::remove(IPipelineNode* node)
 {
   auto iter = find(node);
   return remove(iter);
 }
 
-bool PipelineSegment::remove(iterator iter)
+bool Pipeline::remove(iterator iter)
 {
   if(iter == end())
   {
     return false;
   }
 
+  stopObservingNode(iter->get());
   m_Collection.erase(iter);
   return true;
 }
 
-bool PipelineSegment::remove(const_iterator iter)
+bool Pipeline::remove(const_iterator iter)
 {
   if(iter == end())
   {
     return false;
   }
 
+  stopObservingNode(iter->get());
   m_Collection.erase(iter);
   return true;
 }
 
-bool PipelineSegment::contains(IPipelineNode* node) const
+bool Pipeline::contains(IPipelineNode* node) const
 {
   return find(node) != end();
 }
 
-bool PipelineSegment::push_front(IPipelineNode* node)
+bool Pipeline::push_front(IPipelineNode* node)
 {
   if(node == nullptr)
   {
     return false;
   }
-  m_Collection.emplace(m_Collection.begin(), node);
-  return true;
+  return insertAt(begin(), std::shared_ptr<IPipelineNode>(node));
 }
 
-bool PipelineSegment::push_front(const FilterHandle& handle)
+bool Pipeline::push_front(const FilterHandle& handle)
 {
   return push_front(FilterNode::Create(handle));
 }
 
-bool PipelineSegment::push_back(IPipelineNode* node)
+bool Pipeline::push_back(IPipelineNode* node)
 {
   if(node == nullptr)
   {
     return false;
   }
-  m_Collection.emplace(m_Collection.end(), node);
-  return true;
+  return insertAt(end(), std::shared_ptr<IPipelineNode>(node));
 }
 
-bool PipelineSegment::push_back(const FilterHandle& handle)
+bool Pipeline::push_back(const FilterHandle& handle)
 {
   return push_back(FilterNode::Create(handle));
 }
 
-PipelineSegment::iterator PipelineSegment::find(const IdType& id)
+Pipeline::iterator Pipeline::find(const IdType& id)
 {
   return std::find_if(begin(), end(), [=](const std::shared_ptr<IPipelineNode>& node) { return node->getId() == id; });
 }
 
-PipelineSegment::const_iterator PipelineSegment::find(const IdType& id) const
+Pipeline::const_iterator Pipeline::find(const IdType& id) const
 {
   return std::find_if(begin(), end(), [=](const std::shared_ptr<IPipelineNode>& node) { return node->getId() == id; });
 }
 
-PipelineSegment::iterator PipelineSegment::find(IPipelineNode* targetNode)
+Pipeline::iterator Pipeline::find(IPipelineNode* targetNode)
 {
   return std::find_if(begin(), end(), [=](const std::shared_ptr<IPipelineNode>& node) { return node.get() == targetNode; });
 }
 
-PipelineSegment::const_iterator PipelineSegment::find(IPipelineNode* targetNode) const
+Pipeline::const_iterator Pipeline::find(IPipelineNode* targetNode) const
 {
   return std::find_if(begin(), end(), [=](const std::shared_ptr<IPipelineNode>& node) { return node.get() == targetNode; });
 }
 
-PipelineSegment::iterator PipelineSegment::begin()
+Pipeline::iterator Pipeline::begin()
 {
   return m_Collection.begin();
 }
 
-PipelineSegment::iterator PipelineSegment::end()
+Pipeline::iterator Pipeline::end()
 {
   return m_Collection.end();
 }
 
-PipelineSegment::const_iterator PipelineSegment::begin() const
+Pipeline::const_iterator Pipeline::begin() const
 {
   return m_Collection.begin();
 }
 
-PipelineSegment::const_iterator PipelineSegment::end() const
+Pipeline::const_iterator Pipeline::end() const
 {
   return m_Collection.end();
+}
+
+void Pipeline::onNotify(IPipelineNode* node, const std::shared_ptr<IPipelineMessage>& msg)
+{
+  notify(std::make_shared<PipelinePassMessage>(this, msg));
 }

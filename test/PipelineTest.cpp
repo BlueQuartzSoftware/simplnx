@@ -3,7 +3,7 @@
 #include "complex/Core/Application.hpp"
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Pipeline/FilterNode.hpp"
-#include "complex/Pipeline/PipelineSegment.hpp"
+#include "complex/Pipeline/Pipeline.hpp"
 
 using namespace complex;
 
@@ -20,7 +20,7 @@ TEST_CASE("Execute Pipeline")
   Application app;
   auto filterList = app.getFilterList();
 
-  PipelineSegment pipeline;
+  Pipeline pipeline;
   REQUIRE(pipeline.execute());
   REQUIRE(pipeline.push_front(Constants::filterHandle1));
   REQUIRE(!pipeline.execute());
@@ -33,26 +33,26 @@ TEST_CASE("Complex Pipeline")
 
   FilterHandle handle = Constants::filterHandle1;
 
-  PipelineSegment pipeline;
+  Pipeline pipeline;
   FilterNode* node = FilterNode::Create(handle);
   REQUIRE(node != nullptr);
   REQUIRE(node->getParameters().size() > 0);
   REQUIRE(pipeline.push_back(node));
 
-  auto segment2 = new PipelineSegment();
+  auto segment2 = new Pipeline();
   segment2->push_back(handle);
   REQUIRE(pipeline.push_back(segment2));
 }
 
-PipelineSegment createPipeline()
+Pipeline createPipeline()
 {
-  PipelineSegment pipeline;
+  Pipeline pipeline;
   auto node = FilterNode::Create(Constants::filterHandle1);
   pipeline.push_back(node);
   pipeline.push_back(Constants::filterHandle2);
 
   // Add additional segment to the main pipeline
-  auto segment = new PipelineSegment();
+  auto segment = new Pipeline();
   segment->push_back(Constants::ImportTextHandle);
   pipeline.push_back(segment);
 
@@ -74,6 +74,9 @@ PipelineSegment createPipeline()
     args.insert("param3", 1);
     node2->setArguments(args);
   }
+
+  pipeline.execute();
+  pipeline.getDataStructure();
 
   return pipeline;
 }

@@ -2,6 +2,8 @@
 
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterList.hpp"
+#include "complex/Pipeline/Messaging/FilterArgumentsMessage.hpp"
+#include "complex/Pipeline/Messaging/FilterNodeMessage.hpp"
 
 using namespace complex;
 
@@ -19,9 +21,15 @@ FilterNode::FilterNode(IFilter::UniquePointer&& filter)
 : IPipelineNode()
 , m_Filter(std::move(filter))
 {
+  startObservingFilter(filter.get());
 }
 
 FilterNode::~FilterNode() = default;
+
+std::string FilterNode::getName()
+{
+  return m_Filter->humanName();
+}
 
 IFilter* FilterNode::getFilter() const
 {
@@ -42,6 +50,7 @@ void FilterNode::setArguments(const Arguments& args)
 {
   m_Arguments = args;
   markDirty();
+  notify(std::make_shared<FilterArgumentsMessage>(this, args));
 }
 
 bool FilterNode::preflight(DataStructure& data) const
@@ -56,7 +65,7 @@ bool FilterNode::execute(DataStructure& data)
   if(result.errors().size() == 0)
   {
     setDataStructure(data);
-    markNotDirty();
+    setStatus(Status::Completed);
     return true;
   }
   else
@@ -65,4 +74,9 @@ bool FilterNode::execute(DataStructure& data)
     markDirty();
     return false;
   }
+}
+
+void FilterNode::onNotify(IFilter* filter, const std::shared_ptr<FilterMessage>& msg)
+{
+  notify(std::make_shared<FilterNodeMessage>(this, msg));
 }

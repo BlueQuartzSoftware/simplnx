@@ -2,12 +2,17 @@
 
 #include "IPipelineNode.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/Filter/Messaging/FilterObserver.hpp"
 
 namespace complex
 {
 class FilterHandle;
 
-class COMPLEX_EXPORT FilterNode : public IPipelineNode
+/**
+ * @class FilterNode
+ * @brief
+ */
+class COMPLEX_EXPORT FilterNode : public IPipelineNode, public FilterObserver
 {
 public:
   /**
@@ -18,7 +23,7 @@ public:
    * @return FilterNode*
    */
   static FilterNode* Create(const FilterHandle& handle);
-  
+
   /**
    * @brief Constructs a FilterNode with the specified filter.
    *
@@ -27,8 +32,13 @@ public:
    */
   FilterNode(IFilter::UniquePointer&& filter);
 
-
   virtual ~FilterNode();
+
+  /**
+   * @brief Returns the filter's human label.
+   * @return std::string
+   */
+  std::string getName() override;
 
   /**
    * @brief Returns a pointer to the wrapped filter.
@@ -69,6 +79,14 @@ public:
    * @return bool
    */
   bool execute(DataStructure& data) override;
+
+protected:
+  /**
+   * @brief Called when an observed filter notifies observers of a message.
+   * @param filter
+   * @param msg
+   */
+  void onNotify(IFilter* filter, const std::shared_ptr<FilterMessage>& msg) override;
 
 private:
   IFilter::UniquePointer m_Filter;
