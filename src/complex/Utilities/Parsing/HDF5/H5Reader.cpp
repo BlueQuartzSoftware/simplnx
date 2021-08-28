@@ -484,7 +484,6 @@ void createLegacyDataArray(complex::DataStructure& ds, const std::string& name, 
   {
     throw std::runtime_error("");
   }
-  H5Tclose(dataType);
 
   auto dataStore = new complex::DataStore<T>(cDims, tDims, std::move(buffer));
   auto dataArray = DataArray<T>::Create(ds, name, dataStore, parentId);
@@ -525,7 +524,6 @@ void readLegacyDataArrayDims(hid_t daId, size_t& tDims, size_t& cDims)
     tDims = std::accumulate(buffer, buffer + tupleSize, static_cast<size_t>(0));
     delete[] buffer;
   }
-  H5Tclose(compType);
 }
 
 void readLegacyDataArray(complex::DataStructure& ds, hid_t daId, const std::string& name, complex::DataObject::IdType parentId)
@@ -612,7 +610,6 @@ void readGenericGeomDims(complex::AbstractGeometry* geom, hid_t geomId)
   hid_t uDimId = H5Aopen(geomId, "UnitDimensionality", H5P_DEFAULT);
   H5Aread(uDimId, dataType, &uDims);
   H5Aclose(uDimId);
-  H5Tclose(dataType);
 
   geom->setSpatialDimensionality(sDims);
   geom->setUnitDimensionality(uDims);
@@ -685,7 +682,6 @@ DataObject* readLegacyImageGeom(complex::DataStructure& ds, hid_t geomId, const 
     herr_t error = H5Dread(dimsId, dimsType, H5S_ALL, H5S_ALL, H5P_DEFAULT, dims);
     image->setDimensions(SizeVec3(dims[0], dims[1], dims[2]));
     H5Dclose(dimsId);
-    H5Tclose(dimsType);
   }
 
   // ORIGIN array
@@ -696,7 +692,6 @@ DataObject* readLegacyImageGeom(complex::DataStructure& ds, hid_t geomId, const 
     herr_t error = H5Dread(originId, originType, H5S_ALL, H5S_ALL, H5P_DEFAULT, origin);
     image->setOrigin(FloatVec3(origin[0], origin[1], origin[2]));
     H5Dclose(originId);
-    H5Tclose(originType);
   }
 
   // SPACING array
@@ -707,7 +702,6 @@ DataObject* readLegacyImageGeom(complex::DataStructure& ds, hid_t geomId, const 
     herr_t error = H5Dread(spacingId, sType, H5S_ALL, H5S_ALL, H5P_DEFAULT, spacing);
     image->setSpacing(FloatVec3(spacing[0], spacing[1], spacing[2]));
     H5Dclose(spacingId);
-    H5Tclose(sType);
   }
 
   return image;

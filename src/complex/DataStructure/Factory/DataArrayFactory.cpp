@@ -43,7 +43,6 @@ DataStore<T>* createDataStore(H5::IdType dataStoreId, uint64_t tupleCount, uint6
   {
     throw std::runtime_error("DataArrayFactory: Error reading HDF5 DataStore");
   }
-  H5Tclose(dataType);
 
   return new DataStore<T>(tupleSize, tupleCount, std::move(buffer));
 }
