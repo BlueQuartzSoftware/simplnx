@@ -245,7 +245,6 @@ public:
       {
         throw std::runtime_error("Error reading DataStore from HDF5");
       }
-      H5Tclose(dataType);
     } catch(const std::exception& e)
     {
       std::cerr << e.what() << '\n';
