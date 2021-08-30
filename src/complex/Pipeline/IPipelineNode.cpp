@@ -10,21 +10,32 @@ using namespace complex;
 
 char createRandomDigit()
 {
-  return std::rand() % 256;
+  char val = std::rand() % 62 + 48;
+  if(val > 57)
+  {
+    val += 7;
+  }
+  if(val > 90)
+  {
+    val += 6;
+  }
+  return val;
 }
 
 IPipelineNode::IdType IPipelineNode::CreateId()
 {
-  std::string str;
-  for(size_t i = 0; i < 32; i++)
-  {
-    str.push_back(createRandomDigit());
-  }
-  return *Uuid::FromString(str);
+  return Uuid{};
+  //std::string str;
+  //for(size_t i = 0; i < 33; i++)
+  //{
+  //  str.push_back(createRandomDigit());
+  //}
+  //return *Uuid::FromString(str);
 }
 
-IPipelineNode::IPipelineNode()
+IPipelineNode::IPipelineNode(Pipeline* parent)
 : m_Id(CreateId())
+, m_Parent(parent)
 {
 }
 
@@ -33,6 +44,16 @@ IPipelineNode::~IPipelineNode() = default;
 IPipelineNode::IdType IPipelineNode::getId() const
 {
   return m_Id;
+}
+
+Pipeline* IPipelineNode::getParentNode() const
+{
+  return m_Parent;
+}
+
+void IPipelineNode::setParentNode(Pipeline* parent)
+{
+  m_Parent = parent;
 }
 
 void IPipelineNode::markDirty()

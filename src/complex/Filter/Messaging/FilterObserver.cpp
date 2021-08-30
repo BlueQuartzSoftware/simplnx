@@ -28,6 +28,11 @@ bool FilterObserver::isObservingFilter(IFilter* filter) const
 
 void FilterObserver::startObservingFilter(IFilter* filter)
 {
+  if(filter == nullptr)
+  {
+    return;
+  }
+
   if(isObservingFilter(filter))
   {
     return;

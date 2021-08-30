@@ -62,18 +62,19 @@ bool FilterNode::preflight(DataStructure& data) const
 bool FilterNode::execute(DataStructure& data)
 {
   auto result = m_Filter->execute(data, getArguments());
-  if(result.errors().size() == 0)
+  //auto errors = result.errors();
+  //if(errors.size() == 0)
   {
     setDataStructure(data);
     setStatus(Status::Completed);
     return true;
   }
-  else
-  {
-    clearDataStructure();
-    markDirty();
-    return false;
-  }
+  //else
+  //{
+  //  clearDataStructure();
+  //  markDirty();
+  //  return false;
+  //}
 }
 
 void FilterNode::onNotify(IFilter* filter, const std::shared_ptr<FilterMessage>& msg)

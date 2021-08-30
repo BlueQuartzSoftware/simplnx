@@ -10,6 +10,7 @@
 namespace complex
 {
 class IPipelineMessage;
+class Pipeline;
 class PipelineNodeObserver;
 
 class COMPLEX_EXPORT IPipelineNode
@@ -41,6 +42,18 @@ public:
   virtual std::string getName() = 0;
 
   /**
+   * @brief Returns the parent node.
+   * @return Pipeline*
+   */
+  Pipeline* getParentNode() const;
+
+  /**
+   * @brief Sets a new parent node.
+   * @param parent
+   */
+  void setParentNode(Pipeline* parent);
+
+  /**
    * @brief Attempts to preflight the node using the provided DataStructure.
    * Returns true if preflighting succeeded. Otherwise, this returns false.
    * @param data
@@ -70,7 +83,7 @@ public:
   /**
    * @brief Returns the pipeline node status.
    * @return Status
-  */
+   */
   Status getStatus() const;
 
   /**
@@ -88,7 +101,7 @@ public:
 protected:
   /**
    * @brief Sets the current node status.
-   * @param status 
+   * @param status
    */
   void setStatus(Status status);
 
@@ -112,8 +125,8 @@ protected:
 
   /**
    * @brief Default constructor
-  */
-  IPipelineNode();
+   */
+  IPipelineNode(Pipeline* parent = nullptr);
 
   /**
    * @brief Updates the stored DataStructure. This should only be called from
@@ -133,6 +146,7 @@ private:
   // Variables
   IdType m_Id;
   Status m_Status = Status::Dirty;
+  Pipeline* m_Parent;
   DataStructure m_DataStructure;
   std::vector<PipelineNodeObserver*> m_Observers;
 };

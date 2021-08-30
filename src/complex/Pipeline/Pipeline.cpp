@@ -146,6 +146,7 @@ bool Pipeline::insertAt(iterator pos, const std::shared_ptr<IPipelineNode>& ptr)
     return false;
   }
 
+  ptr->setParentNode(this);
   m_Collection.insert(pos, ptr);
   startObservingNode(ptr.get());
   return true;
@@ -164,7 +165,9 @@ bool Pipeline::remove(iterator iter)
     return false;
   }
 
-  stopObservingNode(iter->get());
+  auto node = iter->get();
+  node->setParentNode(nullptr);
+  stopObservingNode(node);
   m_Collection.erase(iter);
   return true;
 }
@@ -176,14 +179,51 @@ bool Pipeline::remove(const_iterator iter)
     return false;
   }
 
-  stopObservingNode(iter->get());
+  auto node = iter->get();
+  node->setParentNode(nullptr);
+  stopObservingNode(node);
   m_Collection.erase(iter);
   return true;
+}
+
+bool Pipeline::removeAt(index_type pos)
+{
+  if(pos >= size())
+  {
+    return false;
+  }
+
+  return remove(begin() + pos);
+}
+
+void Pipeline::clear()
+{
+  for(auto iter = begin(); iter != end(); iter++)
+  {
+    remove(iter);
+  }
 }
 
 bool Pipeline::contains(IPipelineNode* node) const
 {
   return find(node) != end();
+}
+
+bool Pipeline::contains(IFilter* filter) const
+{
+  for(auto node : *this)
+  {
+    auto filterNode = dynamic_cast<FilterNode*>(node.get());
+    if(filterNode == nullptr)
+    {
+      continue;
+    }
+    if(filterNode->getFilter() == filter)
+    {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool Pipeline::push_front(IPipelineNode* node)

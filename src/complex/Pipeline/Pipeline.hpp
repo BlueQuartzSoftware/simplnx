@@ -11,7 +11,7 @@ namespace complex
 {
 class FilterHandle;
 
-class COMPLEX_EXPORT Pipeline : public IPipelineNode, PipelineNodeObserver
+class COMPLEX_EXPORT Pipeline : public IPipelineNode, public PipelineNodeObserver
 {
   using node_type = std::shared_ptr<IPipelineNode>;
   using collection_type = std::vector<node_type>;
@@ -197,12 +197,33 @@ public:
   bool remove(const_iterator iter);
 
   /**
+   * @brief Attempts to remove the pipeline node at the specified index.
+   * Returns true if the node was removed. Returns false otherwise.
+   * @param pos
+   * @return bool
+   */
+  bool removeAt(index_type pos);
+
+  /**
+   * @brief Clears the pipeline of all nodes.
+   */
+  void clear();
+
+  /**
    * @brief Returns true if the pipeline segment contains the specified node.
    * Otherwise, returns false.
    * @param node
    * @return bool
    */
   bool contains(IPipelineNode* node) const;
+
+  /**
+   * @brief Returns true if the pipeline segment contains the specified filter.
+   * Otherwise, returns false.
+   * @param filter
+   * @return bool
+   */
+  bool contains(IFilter* filter) const;
 
   /**
    * @brief Inserts the specified pipeline node to the front of the pipeline
