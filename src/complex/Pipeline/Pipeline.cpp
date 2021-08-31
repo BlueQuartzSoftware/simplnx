@@ -4,6 +4,8 @@
 #include "complex/Core/FilterList.hpp"
 #include "complex/Pipeline/FilterNode.hpp"
 #include "complex/Pipeline/Messaging/PipelinePassMessage.hpp"
+#include "complex/Pipeline/Messaging/NodeAddedMessage.hpp"
+#include "complex/Pipeline/Messaging/NodeRemovedMessage.hpp"
 
 using namespace complex;
 
@@ -146,9 +148,15 @@ bool Pipeline::insertAt(iterator pos, const std::shared_ptr<IPipelineNode>& ptr)
     return false;
   }
 
+  index_type index = pos - begin();
+  if(pos == end())
+  {
+    index = size();
+  }
   ptr->setParentNode(this);
   m_Collection.insert(pos, ptr);
   startObservingNode(ptr.get());
+  notify(std::make_shared <NodeAddedMessage>(this, ptr.get(), index));
   return true;
 }
 
@@ -165,10 +173,12 @@ bool Pipeline::remove(iterator iter)
     return false;
   }
 
+  index_type index = iter - begin();
   auto node = iter->get();
   node->setParentNode(nullptr);
   stopObservingNode(node);
   m_Collection.erase(iter);
+  notify(std::make_shared<NodeRemovedMessage>(this, index));
   return true;
 }
 
