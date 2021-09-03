@@ -17,6 +17,7 @@
 namespace complex
 {
 class FilterMessage;
+class FilterObserver;
 
 /**
  * @class IFilter
