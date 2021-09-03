@@ -13,7 +13,8 @@ class FilterNode;
 
 /**
  * @class FilterNodeMessage
- * @brief
+ * @brief The FilterNodeMessage class serves as a way to pass FilterMessages
+ * from a FilterNode to PipelineObservers listening to that node.
  */
 class COMPLEX_EXPORT FilterNodeMessage : public IPipelineMessage
 {

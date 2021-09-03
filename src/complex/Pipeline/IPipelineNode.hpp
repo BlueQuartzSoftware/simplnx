@@ -59,7 +59,7 @@ public:
    * @param data
    * @return bool
    */
-  virtual bool preflight(DataStructure& data) const = 0;
+  virtual bool preflight(DataStructure& data) = 0;
 
   /**
    * @brief Attempts to execute the node using the provided DataStructure.

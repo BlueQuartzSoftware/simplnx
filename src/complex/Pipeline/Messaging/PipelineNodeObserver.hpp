@@ -12,7 +12,8 @@ class IPipelineNode;
 
 /**
  * @class PipelineNodeObserver
- * @brief
+ * @brief The PipelineNodeObserver class provides API and base functionality
+ * for derived classes to listen for messages emitted by target IPipelineNodes.
  */
 class COMPLEX_EXPORT PipelineNodeObserver
 {
@@ -20,7 +21,7 @@ class COMPLEX_EXPORT PipelineNodeObserver
 
 public:
   /**
-   * @brief 
+   * @brief Constructs a new PipelineNodeObserver.
    */
   PipelineNodeObserver();
 

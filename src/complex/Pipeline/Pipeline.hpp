@@ -11,7 +11,14 @@ namespace complex
 {
 class FilterHandle;
 
-class COMPLEX_EXPORT Pipeline : public IPipelineNode, public PipelineNodeObserver
+/**
+ * @class Pipeline
+ * @brief The Pipeline class is a type of IPipelineNode that contains a list of
+ * IPipelineNodes in a specific order that can be chained together and executed as
+ * a single entity.
+ * As a subclass of IPipelineNode, Pipelines can be nested within other Pipelines.
+ */
+class COMPLEX_EXPORT Pipeline : public IPipelineNode
 {
   using node_type = std::shared_ptr<IPipelineNode>;
   using collection_type = std::vector<node_type>;
@@ -48,7 +55,7 @@ public:
    * false otherwise.
    * @return bool
    */
-  bool preflight() const;
+  bool preflight();
 
   /**
    * @brief Executes the pipeline segment using an empty DataStructure.
@@ -65,7 +72,7 @@ public:
    * @param ds
    * @return bool
    */
-  bool preflight(DataStructure& ds) const override;
+  bool preflight(DataStructure& ds) override;
 
   /**
    * @brief Executes the pipeline segment using the provided DataStructure.
@@ -86,7 +93,7 @@ public:
    * @param ds
    * @return bool
    */
-  bool preflightFrom(const index_type& index, DataStructure& ds) const;
+  bool preflightFrom(const index_type& index, DataStructure& ds);
 
   /**
    * @brief Executes the pipeline segment from a target position using the
@@ -309,14 +316,6 @@ public:
    * @return const_iterator
    */
   const_iterator end() const;
-
-protected:
-  /**
-   * @brief Called when the specified pipeline node emits a message.
-   * @param node
-   * @param msg
-   */
-  void onNotify(IPipelineNode* node, const std::shared_ptr<IPipelineMessage>& msg) override;
 
 private:
   std::string m_Name;

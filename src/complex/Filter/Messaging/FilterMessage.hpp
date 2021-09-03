@@ -8,7 +8,8 @@ namespace complex
 {
 /**
  * @class FilterMessage
- * @brief
+ * @brief The FilterMessage class serves as the message emitted by IFilter to
+ * its known FilterObservers.
  */
 class COMPLEX_EXPORT FilterMessage
 {
@@ -22,7 +23,7 @@ public:
   };
 
   /**
-   * @brief Constructs a new FilterMessage with the given type and message
+   * @brief Constructs a new FilterMessage with the given type and message.
    * @param type
    * @param msg
    */

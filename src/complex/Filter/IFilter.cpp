@@ -7,9 +7,9 @@
 #include <nlohmann/json.hpp>
 
 #include "complex/Filter/DataParameter.hpp"
-#include "complex/Filter/ValueParameter.hpp"
 #include "complex/Filter/Messaging/FilterMessage.hpp"
 #include "complex/Filter/Messaging/FilterObserver.hpp"
+#include "complex/Filter/ValueParameter.hpp"
 
 namespace
 {

@@ -1,9 +1,11 @@
 #include "RenamedMessage.hpp"
 
+#include "complex/Pipeline/Pipeline.hpp"
+
 using namespace complex;
 
-RenamedMessage::RenamedMessage(IPipelineNode* node, const std::string& newName, const std::string& oldName)
-: IPipelineMessage(node)
+RenamedMessage::RenamedMessage(Pipeline* pipeline, const std::string& newName, const std::string& oldName)
+: IPipelineMessage(pipeline)
 , m_NewName(newName)
 , m_OldName(oldName)
 {

@@ -224,14 +224,12 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Pipeline/IPipelineNode.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/FilterArgumentsMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/FilterNodeMessage.hpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/FilterStatusMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/IPipelineMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeAddedMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeRemovedMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeStatusMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeObserver.hpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelinePassMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/RenamedMessage.hpp
 
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
@@ -329,14 +327,12 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Pipeline/IPipelineNode.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/FilterArgumentsMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/FilterNodeMessage.cpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/FilterStatusMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/IPipelineMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeAddedMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeRemovedMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeStatusMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeObserver.cpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelinePassMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/RenamedMessage.cpp
 
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp

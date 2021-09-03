@@ -3,7 +3,6 @@
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterList.hpp"
 #include "complex/Pipeline/FilterNode.hpp"
-#include "complex/Pipeline/Messaging/PipelinePassMessage.hpp"
 #include "complex/Pipeline/Messaging/NodeAddedMessage.hpp"
 #include "complex/Pipeline/Messaging/NodeRemovedMessage.hpp"
 
@@ -27,7 +26,7 @@ void Pipeline::setName(const std::string& name)
   m_Name = name;
 }
 
-bool Pipeline::preflight() const
+bool Pipeline::preflight()
 {
   DataStructure ds;
   return preflight(ds);
@@ -39,7 +38,7 @@ bool Pipeline::execute()
   return execute(ds);
 }
 
-bool Pipeline::preflight(DataStructure& ds) const
+bool Pipeline::preflight(DataStructure& ds)
 {
   return preflightFrom(0, ds);
 }
@@ -49,7 +48,7 @@ bool Pipeline::execute(DataStructure& ds)
   return executeFrom(0, ds);
 }
 
-bool Pipeline::preflightFrom(const index_type& index, DataStructure& ds) const
+bool Pipeline::preflightFrom(const index_type& index, DataStructure& ds)
 {
   if(index >= size() && index != 0)
   {
@@ -155,8 +154,7 @@ bool Pipeline::insertAt(iterator pos, const std::shared_ptr<IPipelineNode>& ptr)
   }
   ptr->setParentNode(this);
   m_Collection.insert(pos, ptr);
-  startObservingNode(ptr.get());
-  notify(std::make_shared <NodeAddedMessage>(this, ptr.get(), index));
+  notify(std::make_shared<NodeAddedMessage>(this, ptr.get(), index));
   return true;
 }
 
@@ -176,7 +174,6 @@ bool Pipeline::remove(iterator iter)
   index_type index = iter - begin();
   auto node = iter->get();
   node->setParentNode(nullptr);
-  stopObservingNode(node);
   m_Collection.erase(iter);
   notify(std::make_shared<NodeRemovedMessage>(this, index));
   return true;
@@ -189,10 +186,11 @@ bool Pipeline::remove(const_iterator iter)
     return false;
   }
 
+  index_type index = iter - begin();
   auto node = iter->get();
   node->setParentNode(nullptr);
-  stopObservingNode(node);
   m_Collection.erase(iter);
+  notify(std::make_shared<NodeRemovedMessage>(this, index));
   return true;
 }
 
@@ -302,9 +300,4 @@ Pipeline::const_iterator Pipeline::begin() const
 Pipeline::const_iterator Pipeline::end() const
 {
   return m_Collection.end();
-}
-
-void Pipeline::onNotify(IPipelineNode* node, const std::shared_ptr<IPipelineMessage>& msg)
-{
-  notify(std::make_shared<PipelinePassMessage>(this, msg));
 }

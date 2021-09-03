@@ -10,11 +10,15 @@ class FilterHandle;
 
 /**
  * @class FilterNode
- * @brief
+ * @brief The FilterNode class is a pipeline node specialized for wrapping an
+ * IFilter object. The node keeps track of the resulting DataStructure as well
+ * as error and warning messages.
  */
 class COMPLEX_EXPORT FilterNode : public IPipelineNode, public FilterObserver
 {
 public:
+  using Messages = std::vector<std::shared_ptr<FilterMessage>>;
+
   /**
    * @brief Attempts to construct a FilterNode based on the specified
    * FilterHandle. Returns nullptr if the corresponding filter could not be
@@ -70,7 +74,7 @@ public:
    * @param data
    * @return bool
    */
-  bool preflight(DataStructure& data) const override;
+  bool preflight(DataStructure& data) override;
 
   /**
    * @brief Attempts to execute the node using the provided DataStructure.
@@ -80,7 +84,26 @@ public:
    */
   bool execute(DataStructure& data) override;
 
+  /**
+   * @brief Returns a collection of warning messages emitted by the target filter.
+   * This collection is cleared when the node is preflighted or executed.
+   * @return Messages
+   */
+  Messages getWarnings() const;
+
+  /**
+   * @brief Returns a collection of error messages emitted by the target filter.
+   * This collection is cleared when the node is preflighted or executed.
+   * @return Messages
+   */
+  Messages getErrors() const;
+
 protected:
+  /**
+   * @brief Clears all error and warning messages.
+   */
+  void clearMsgs();
+
   /**
    * @brief Called when an observed filter notifies observers of a message.
    * @param filter
@@ -91,5 +114,7 @@ protected:
 private:
   IFilter::UniquePointer m_Filter;
   Arguments m_Arguments;
+  Messages m_WarningMsgs;
+  Messages m_ErrorMsgs;
 };
 } // namespace complex

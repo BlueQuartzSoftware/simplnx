@@ -6,6 +6,8 @@
 
 namespace complex
 {
+class Pipeline;
+
 /**
  * @class RenamedMessage
  * @brief
@@ -19,7 +21,7 @@ public:
    * @param newName
    * @param oldName
    */
-  RenamedMessage(IPipelineNode* node, const std::string& newName, const std::string& oldName);
+  RenamedMessage(Pipeline* pipeline, const std::string& newName, const std::string& oldName);
 
   virtual ~RenamedMessage();
 

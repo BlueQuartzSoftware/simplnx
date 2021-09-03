@@ -10,6 +10,11 @@ namespace complex
 {
 class IFilter;
 
+/**
+ * @class FilterObserver
+ * @brief The FilterObserver class serves to define the API and base
+ * functionality for objects listening for messages emitted by target filters.
+ */
 class COMPLEX_EXPORT FilterObserver
 {
   friend class IFilter;
@@ -52,7 +57,8 @@ public:
 
 protected:
   /**
-   * @brief 
+   * @brief Called when the specified IFilter emits a message. Both the filter
+   * and emitted message are provided through parameters.
    * @param filter
    * @param msg
    */

@@ -2,7 +2,6 @@
 
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterList.hpp"
-#include "complex/Pipeline/Messaging/FilterArgumentsMessage.hpp"
 #include "complex/Pipeline/Messaging/FilterNodeMessage.hpp"
 
 using namespace complex;
@@ -50,34 +49,64 @@ void FilterNode::setArguments(const Arguments& args)
 {
   m_Arguments = args;
   markDirty();
-  notify(std::make_shared<FilterArgumentsMessage>(this, args));
 }
 
-bool FilterNode::preflight(DataStructure& data) const
+bool FilterNode::preflight(DataStructure& data)
 {
-  auto result = m_Filter->preflight(data, getArguments());
-  return result.errors().size() > 0;
+  clearMsgs();
+  m_Filter->preflight(data, getArguments());
+  return getErrors().size() > 0;
 }
 
 bool FilterNode::execute(DataStructure& data)
 {
-  auto result = m_Filter->execute(data, getArguments());
-  //auto errors = result.errors();
-  //if(errors.size() == 0)
+  clearMsgs();
+  m_Filter->execute(data, getArguments());
+
+  auto errors = getErrors();
+  if(errors.size() == 0)
   {
     setDataStructure(data);
     setStatus(Status::Completed);
     return true;
   }
-  //else
-  //{
-  //  clearDataStructure();
-  //  markDirty();
-  //  return false;
-  //}
+  else
+  {
+    clearDataStructure();
+    markDirty();
+    return false;
+  }
+}
+
+void FilterNode::clearMsgs()
+{
+  m_ErrorMsgs.clear();
+  m_WarningMsgs.clear();
+}
+
+FilterNode::Messages FilterNode::getWarnings() const
+{
+  return m_WarningMsgs;
+}
+
+FilterNode::Messages FilterNode::getErrors() const
+{
+  return m_ErrorMsgs;
 }
 
 void FilterNode::onNotify(IFilter* filter, const std::shared_ptr<FilterMessage>& msg)
 {
+  switch(msg->getType())
+  {
+  case FilterMessage::Type::Error:
+    m_ErrorMsgs.push_back(msg);
+    break;
+  case FilterMessage::Type::Warning:
+    m_WarningMsgs.push_back(msg);
+    break;
+  default:
+    break;
+  }
+
   notify(std::make_shared<FilterNodeMessage>(this, msg));
 }

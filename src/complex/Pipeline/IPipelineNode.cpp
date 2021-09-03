@@ -2,11 +2,10 @@
 
 #include <cstdlib>
 
+#include "complex/Pipeline/Messaging/NodeStatusMessage.hpp"
 #include "complex/Pipeline/Messaging/PipelineNodeObserver.hpp"
-#include "complex/Pipeline/Messaging/FilterStatusMessage.hpp"
 
 using namespace complex;
-
 
 char createRandomDigit()
 {
@@ -25,12 +24,12 @@ char createRandomDigit()
 IPipelineNode::IdType IPipelineNode::CreateId()
 {
   return Uuid{};
-  //std::string str;
-  //for(size_t i = 0; i < 33; i++)
+  // std::string str;
+  // for(size_t i = 0; i < 33; i++)
   //{
   //  str.push_back(createRandomDigit());
   //}
-  //return *Uuid::FromString(str);
+  // return *Uuid::FromString(str);
 }
 
 IPipelineNode::IPipelineNode(Pipeline* parent)
@@ -74,7 +73,7 @@ IPipelineNode::Status IPipelineNode::getStatus() const
 void IPipelineNode::setStatus(Status status)
 {
   m_Status = status;
-  notify(std::make_shared<FilterStatusMessage>(this, status));
+  notify(std::make_shared<NodeStatusMessage>(this, status));
 }
 
 const DataStructure& IPipelineNode::getDataStructure() const

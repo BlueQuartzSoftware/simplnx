@@ -125,19 +125,22 @@ protected:
   void notify(const std::shared_ptr<FilterMessage>& msg);
 
   /**
-   * @brief Creates and notifies observers of the provided info message.
+   * @brief Creates an info message from the provided string and notifies known
+   * observers to the created message.
    * @param msg
    */
   void notifyInfo(const std::string& msg);
 
   /**
-   * @brief Creates and notifies observers of the provided error message.
+   * @brief Creates an error message from the provided string and notifies known
+   * observers to the created message.
    * @param msg
    */
   void notifyError(const std::string& msg);
 
   /**
-   * @brief Creates and notifies observers of the provided warning message.
+   * @brief Creates a warning message from the provided string and notifies known
+   * observers to the created message.
    * @param msg
    */
   void notifyWarning(const std::string& msg);

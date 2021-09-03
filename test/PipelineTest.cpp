@@ -23,7 +23,7 @@ TEST_CASE("Execute Pipeline")
   Pipeline pipeline;
   REQUIRE(pipeline.execute());
   REQUIRE(pipeline.push_front(Constants::filterHandle1));
-  //REQUIRE(!pipeline.execute());
+  REQUIRE(pipeline.execute());
   REQUIRE(!pipeline.push_back(Constants::badHandle));
 }
 
@@ -75,8 +75,7 @@ Pipeline createPipeline()
     node2->setArguments(args);
   }
 
-  pipeline.execute();
-  pipeline.getDataStructure();
+  REQUIRE(pipeline.execute());
 
   return pipeline;
 }
