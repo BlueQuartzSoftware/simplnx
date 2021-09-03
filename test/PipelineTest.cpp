@@ -1,6 +1,7 @@
 #include "catch2/catch.hpp"
 
 #include "complex/Core/Application.hpp"
+#include "complex/Core/FilterHandle.hpp"
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Pipeline/FilterNode.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
@@ -9,10 +10,10 @@ using namespace complex;
 
 namespace Constants
 {
-const FilterHandle ImportTextHandle("", *Uuid::FromString("25f7df3e-ca3e-4634-adda-732c0e56efd4"), Uuid());
-const FilterHandle filterHandle1("", *Uuid::FromString("dd92896b-26ec-4419-b905-567e93e8f39d"), Uuid());
-const FilterHandle filterHandle2("", *Uuid::FromString("1307bbbc-112d-4aaa-941f-58253787b17e"), Uuid());
-const FilterHandle badHandle("", Uuid(), Uuid());
+const FilterHandle ImportTextHandle(*Uuid::FromString("25f7df3e-ca3e-4634-adda-732c0e56efd4"), Uuid());
+const FilterHandle filterHandle1(*Uuid::FromString("dd92896b-26ec-4419-b905-567e93e8f39d"), Uuid());
+const FilterHandle filterHandle2(*Uuid::FromString("1307bbbc-112d-4aaa-941f-58253787b17e"), Uuid());
+const FilterHandle badHandle(Uuid{}, Uuid{});
 }
 
 TEST_CASE("Execute Pipeline")

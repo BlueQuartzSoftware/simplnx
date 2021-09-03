@@ -1,6 +1,7 @@
 #include "Pipeline.hpp"
 
 #include "complex/Core/Application.hpp"
+#include "complex/Core/FilterHandle.hpp"
 #include "complex/Core/FilterList.hpp"
 #include "complex/Pipeline/FilterNode.hpp"
 #include "complex/Pipeline/Messaging/NodeAddedMessage.hpp"
