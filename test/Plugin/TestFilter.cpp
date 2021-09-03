@@ -31,12 +31,12 @@ complex::IFilter::UniquePointer TestFilter::clone() const
   return std::make_unique<TestFilter>();
 }
 
-complex::Result<OutputActions> TestFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+complex::Result<OutputActions> TestFilter::preflightImpl(const DataStructure& data, const Arguments& args) const
 {
   return {};
 }
 
-complex::Result<> TestFilter::executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+complex::Result<> TestFilter::executeImpl(DataStructure& data, const Arguments& args) const
 {
   return {};
 }
