@@ -217,6 +217,21 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.hpp
 
+  ${COMPLEX_SOURCE_DIR}/Filter/Messaging/FilterMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Messaging/FilterObserver.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Pipeline/FilterNode.hpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/IPipelineNode.hpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/FilterNodeMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/IPipelineMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeAddedMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeRemovedMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeStatusMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeObserver.hpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/RenamedMessage.hpp
+
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
   ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
 
@@ -304,6 +319,21 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Output.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.cpp
+  
+  ${COMPLEX_SOURCE_DIR}/Filter/Messaging/FilterMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Messaging/FilterObserver.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Pipeline/FilterNode.cpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/IPipelineNode.cpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/FilterNodeMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/IPipelineMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeAddedMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeRemovedMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeStatusMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeObserver.cpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/RenamedMessage.cpp
 
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
   ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.cpp
