@@ -11,13 +11,14 @@ class Pipeline;
 
 /**
  * @class NodeAddedMessage
- * @brief
+ * @brief The NodeAddedMessage class exists to notify observers that a target
+ * IPipelineNode was added at the specified index.
  */
 class COMPLEX_EXPORT NodeAddedMessage : public IPipelineMessage
 {
 public:
   /**
-   * @brief 
+   * @brief
    * @param pipeline
    * @param newNode
    * @param index

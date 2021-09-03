@@ -255,7 +255,7 @@ DataMap& DataMap::operator=(const DataMap& rhs)
     DataObject* copy = rhs.m_Map.at(key)->deepCopy();
     m_Map[key] = std::shared_ptr<DataObject>(copy);
   }
-  
+
   return *this;
 }
 

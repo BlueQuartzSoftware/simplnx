@@ -14,7 +14,7 @@ const FilterHandle ImportTextHandle(*Uuid::FromString("25f7df3e-ca3e-4634-adda-7
 const FilterHandle filterHandle1(*Uuid::FromString("dd92896b-26ec-4419-b905-567e93e8f39d"), Uuid());
 const FilterHandle filterHandle2(*Uuid::FromString("1307bbbc-112d-4aaa-941f-58253787b17e"), Uuid());
 const FilterHandle badHandle(Uuid{}, Uuid{});
-}
+} // namespace Constants
 
 TEST_CASE("Execute Pipeline")
 {
