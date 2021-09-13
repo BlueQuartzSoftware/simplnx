@@ -40,6 +40,12 @@ public:
   virtual ~BaseGroup();
 
   /**
+   * @brief Returns the number of DataObjects in the group.
+   * @return size_t
+   */
+  size_t size() const;
+
+  /**
    * @brief Returns the underlying DataMap by value.
    * @return const DataMap&
    */
