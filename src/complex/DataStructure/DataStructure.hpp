@@ -32,14 +32,6 @@ class COMPLEX_EXPORT DataStructure
 {
 protected:
   /**
-   * @brief Returns the shared pointer for the specified DataObject.
-   * Returns nullptr if no DataObject is found.
-   * @param id
-   * @return std::shared_ptr<DataObject>
-   */
-  std::shared_ptr<DataObject> getSharedData(DataObject::IdType id) const;
-
-  /**
    * @brief Finalizes adding a DataObject to the DataStructure. This should
    * be called by the create* methods to prevent duplicating code. Returns
    * true if the data was successfully added. Returns false otherwise.
@@ -159,6 +151,18 @@ public:
   const DataObject* getData(const LinkedPath& path) const;
 
   /**
+   * @brief Returns the shared pointer for the specified DataObject.
+   * Returns nullptr if no DataObject is found.
+   *
+   * Use getData(DataObject::IdType) instead. This was only made public for
+   * use in visualization where select data might need to be preserved beyond
+   * the rest of the DataStructure.
+   * @param id
+   * @return std::shared_ptr<DataObject>
+   */
+  std::shared_ptr<DataObject> getSharedData(DataObject::IdType id) const;
+
+  /**
    * @brief Removes the DataObject using the specified IdType. Returns true
    * if an object was found. Otherwise, returns false.
    * @param id
@@ -196,6 +200,12 @@ public:
    * @return std::vector<DataObject*>
    */
   std::vector<DataObject*> getTopLevelData() const;
+
+  /**
+   * @brief Returns a reference to the DataMap backing the top level of the DataStructure.
+   * @return const DataMap&
+   */
+  const DataMap& getDataMap() const;
 
   /**
    * @brief Adds an additional parent to the target DataObject.

@@ -270,20 +270,18 @@ void DataStructure::dataDeleted(DataObject::IdType id, const std::string& name)
 std::vector<DataObject*> DataStructure::getTopLevelData() const
 {
   std::vector<DataObject*> topLevel;
-  for(auto& iter : m_DataObjects)
+  for(auto& iter : m_RootGroup)
   {
-    auto obj = iter.second.lock();
-    if(obj == nullptr)
-    {
-      continue;
-    }
-    if(obj->getParents().size() == 0)
-    {
-      topLevel.push_back(obj.get());
-    }
+    auto obj = iter.second;
+    topLevel.push_back(obj.get());
   }
 
   return topLevel;
+}
+
+const DataMap& DataStructure::getDataMap() const
+{
+  return m_RootGroup;
 }
 
 bool DataStructure::insertTopLevel(const std::shared_ptr<DataObject>& obj)

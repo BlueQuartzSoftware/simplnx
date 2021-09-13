@@ -54,6 +54,12 @@ public:
   DataMap deepCopy() const;
 
   /**
+   * @brief Returns the number of items in the DataMap.
+   * @return size_t
+   */
+  size_t size() const;
+
+  /**
    * @brief Attempts to insert the target DataObject into the map.
    * Returns true if it succeeded. Returns false otherwise.
    * @param obj

@@ -43,6 +43,11 @@ DataMap DataMap::deepCopy() const
   return dataMap;
 }
 
+size_t DataMap::size() const
+{
+  return m_Map.size();
+}
+
 bool DataMap::insert(const std::shared_ptr<DataObject>& obj)
 {
   m_Map[obj->getId()] = obj;
