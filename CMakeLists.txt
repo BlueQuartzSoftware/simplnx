@@ -108,6 +108,7 @@ set(CoreParameters
   NumericTypeParameter
   StringParameter
   VectorParameter
+  StackFileListInfoParameter
 )
 
 # Generate core filter import header
@@ -139,6 +140,9 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Core/Application.hpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.hpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterList.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/utils/StackFileListInfo.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/utils/FilePathGenerator.hpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.hpp
@@ -257,6 +261,8 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Core/Application.cpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.cpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterList.cpp
+  
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/utils/StackFileListInfo.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.cpp

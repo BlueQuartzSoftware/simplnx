@@ -19,6 +19,7 @@ add_executable(complex_test
   CoreFilterTest.cpp
   PipelineTest.cpp
   PluginTest.cpp
+  FilePathGeneratorTest.cpp
 )
 
 target_link_libraries(complex_test
