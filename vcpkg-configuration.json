@@ -8,10 +8,11 @@
         "eigen3",
         "expected-lite",
         "fmt",
+        "hdf5",
         "nlohmann-json",
         "pybind11"
       ],
-      "baseline": "324d79cfb52980f1cc5e78866af8c16fbe736905"
+      "baseline": "12b29be398ac1519132f3e1b29353833f5666a1c"
     }
   ]
 }
