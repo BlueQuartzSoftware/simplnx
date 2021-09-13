@@ -6,7 +6,6 @@
 
 #include <fmt/core.h>
 
-
 TEST_CASE("FilePathGenerator")
 {
 
@@ -25,9 +24,8 @@ TEST_CASE("FilePathGenerator")
   std::vector<std::string> fileList = complex::FilePathGenerator::GenerateFileList2(info, false);
   REQUIRE(fileList.size() == 4);
 
-//  for(const auto& file : fileList)
-//  {
-//    fmt::print("{}\n", file);
-//  }
-
+  //  for(const auto& file : fileList)
+  //  {
+  //    fmt::print("{}\n", file);
+  //  }
 }

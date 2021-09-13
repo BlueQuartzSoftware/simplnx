@@ -1,13 +1,11 @@
 #pragma once
 
-
 #include "complex/complex_export.hpp"
 
 #include <nlohmann/json.hpp>
 
 #include <cstdint>
 #include <string>
-
 
 namespace complex
 {
@@ -44,59 +42,59 @@ public:
   void setStartIndex(const int32_t& value);
   [[nodiscard]] int32_t getStartIndex() const;
 
-    /**
-     * @brief sets the ending index to generate the file list
-     * @param value
-     */
+  /**
+   * @brief sets the ending index to generate the file list
+   * @param value
+   */
   void setEndIndex(const int32_t& value);
   [[nodiscard]] int32_t getEndIndex() const;
 
-    /**
-     * @brief Sets the increment to use when generating the file list
-     * @param value
-     */
+  /**
+   * @brief Sets the increment to use when generating the file list
+   * @param value
+   */
   void setIncrementIndex(const int32_t& value);
   [[nodiscard]] int32_t getIncrementIndex() const;
 
-    /**
-     * @brief Sets the total number of digits to use when generating the index part of the filename.
-     * @param value
-     */
+  /**
+   * @brief Sets the total number of digits to use when generating the index part of the filename.
+   * @param value
+   */
   void setPaddingDigits(const int32_t& value);
   [[nodiscard]] int32_t getPaddingDigits() const;
 
-    /**
-     * @brief Sets the order to use when generating the file list: Low to high or High to Low
-     * @param value
-     */
+  /**
+   * @brief Sets the order to use when generating the file list: Low to high or High to Low
+   * @param value
+   */
   void setOrdering(const uint32_t& value);
   [[nodiscard]] uint32_t getOrdering() const;
 
-    /**
-     * @brief Sets the input directory path
-     * @param value
-     */
+  /**
+   * @brief Sets the input directory path
+   * @param value
+   */
   void setInputPath(const std::string& value);
   [[nodiscard]] std::string getInputPath() const;
 
-    /**
-     * @brief Sets the file prefix to use
-     * @param value
-     */
+  /**
+   * @brief Sets the file prefix to use
+   * @param value
+   */
   void setFilePrefix(const std::string& value);
   [[nodiscard]] std::string getFilePrefix() const;
 
-    /**
-     * @brief Sets the file suffix to use
-     * @param value
-     */
+  /**
+   * @brief Sets the file suffix to use
+   * @param value
+   */
   void setFileSuffix(const std::string& value);
   [[nodiscard]] std::string getFileSuffix() const;
 
-    /**
-     * @brief Sets the file extension to use
-     * @param value
-     */
+  /**
+   * @brief Sets the file extension to use
+   * @param value
+   */
   void setFileExtension(const std::string& value);
   [[nodiscard]] std::string getFileExtension() const;
 
@@ -114,7 +112,6 @@ public:
   bool fromJson(const nlohmann::json& json);
 
 private:
-
   int32_t m_StartIndex = 0;
   int32_t m_EndIndex = 0;
   int32_t m_IncrementIndex = 1;

@@ -4,14 +4,11 @@
 
 #include <fmt/core.h>
 
-
 #include <filesystem>
-#include <string>
 #include <sstream>
-
+#include <string>
 
 namespace fs = std::filesystem;
-
 
 namespace complex
 {
@@ -19,16 +16,11 @@ namespace complex
 namespace FilePathGenerator
 {
 
-
-
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
-std::vector<std::string> FilePathGenerator::GenerateFileList(int32_t start, int32_t end, int32_t increment,
-                                                             bool& hasMissingFiles, bool stackLowToHigh,
-                                                             const std::string& inputPath, const std::string& filePrefix,
-                                                             const std::string& fileSuffix, const std::string& fileExtension,
-                                                             int32_t paddingDigits)
+std::vector<std::string> FilePathGenerator::GenerateFileList(int32_t start, int32_t end, int32_t increment, bool& hasMissingFiles, bool stackLowToHigh, const std::string& inputPath,
+                                                             const std::string& filePrefix, const std::string& fileSuffix, const std::string& fileExtension, int32_t paddingDigits)
 {
   std::vector<std::string> fileList;
 
@@ -37,7 +29,6 @@ std::vector<std::string> FilePathGenerator::GenerateFileList(int32_t start, int3
     return fileList;
   }
   int32_t index = 0;
-
 
   std::stringstream fmt_string_stream;
 
@@ -57,7 +48,6 @@ std::vector<std::string> FilePathGenerator::GenerateFileList(int32_t start, int3
 
     std::string filePath = fmt::format(fmt_string_stream.str(), inputPath, filePrefix, index, fileSuffix, fileExtension);
 
-
     if(!fs::exists(filePath))
     {
       missingFiles = true;
@@ -74,40 +64,42 @@ std::vector<std::string> FilePathGenerator::GenerateFileList(int32_t start, int3
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-std::vector<std::string> FilePathGenerator::GenerateVectorFileList(int32_t start, int32_t end, int32_t compStart, int32_t compEnd, bool& hasMissingFiles, bool stackLowToHigh, const std::string& inputPath,
-                                                                    const std::string& filePrefix, const std::string& separator, const std::string& fileSuffix, const std::string& fileExtension, int32_t paddingDigits)
+std::vector<std::string> FilePathGenerator::GenerateVectorFileList(int32_t start, int32_t end, int32_t compStart, int32_t compEnd, bool& hasMissingFiles, bool stackLowToHigh,
+                                                                   const std::string& inputPath, const std::string& filePrefix, const std::string& separator, const std::string& fileSuffix,
+                                                                   const std::string& fileExtension, int32_t paddingDigits)
 {
   std::vector<std::string> fileList;
   if(!fs::exists(inputPath))
   {
     return fileList;
   }
-//  int32_t index = 0;
-//  int32_t index2 = 0;
-//
-//  std::string filename;
-//  for(int32_t i = 0; i < (end - start) + 1; ++i)
-//  {
-//    for(int32_t j = 0; j < (compEnd - compStart) + 1; j++)
-//    {
-//      if(stackLowToHigh)
-//      {
-//        index = start + i;
-//      }
-//      else
-//      {
-//        index = end - i;
-//      }
-//
-//      index2 = compStart + j;
-//
-//      filename =
-//          std::string("%1%2%3%4%5.%6").arg(filePrefix).arg(std::string::number(index), paddingDigits, '0').arg(separator).arg(std::string::number(index2), paddingDigits, '0').arg(fileSuffix).arg(fileExtension);
-//      std::string filePath = inputPath + QDir::separator() + filename;
-//      filePath = QDir::toNativeSeparators(filePath);
-//      fileList.push_back(filePath);
-//    }
-//  }
+  //  int32_t index = 0;
+  //  int32_t index2 = 0;
+  //
+  //  std::string filename;
+  //  for(int32_t i = 0; i < (end - start) + 1; ++i)
+  //  {
+  //    for(int32_t j = 0; j < (compEnd - compStart) + 1; j++)
+  //    {
+  //      if(stackLowToHigh)
+  //      {
+  //        index = start + i;
+  //      }
+  //      else
+  //      {
+  //        index = end - i;
+  //      }
+  //
+  //      index2 = compStart + j;
+  //
+  //      filename =
+  //          std::string("%1%2%3%4%5.%6").arg(filePrefix).arg(std::string::number(index), paddingDigits, '0').arg(separator).arg(std::string::number(index2), paddingDigits,
+  //          '0').arg(fileSuffix).arg(fileExtension);
+  //      std::string filePath = inputPath + QDir::separator() + filename;
+  //      filePath = QDir::toNativeSeparators(filePath);
+  //      fileList.push_back(filePath);
+  //    }
+  //  }
   return fileList;
 }
 
@@ -206,4 +198,4 @@ FilePathGenerator::TileRCIndexLayout2D FilePathGenerator::GenerateRCIndexMontage
 }
 #endif
 
-}
+} // namespace FilePathGenerator

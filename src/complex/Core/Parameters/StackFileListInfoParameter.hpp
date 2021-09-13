@@ -25,9 +25,7 @@ public:
    * @param helpText
    * @param defaultValue
    */
-  StackFileListInfoParameter(const std::string& name, const std::string& humanName,
-                             const std::string& helpText,
-                             const ValueType& defaultValue);
+  StackFileListInfoParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
 
   ~StackFileListInfoParameter() override = default;
 
@@ -73,14 +71,12 @@ public:
    */
   [[nodiscard]] std::any defaultValue() const override;
 
-
   /**
    * @brief
    * @param value
    * @return
    */
   [[nodiscard]] Result<> validate(const std::any& value) const override;
-
 
 private:
   ValueType m_DefaultValue = {};

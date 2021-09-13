@@ -43,15 +43,8 @@ nlohmann::json StackFileListInfo::toJson() const
 // -----------------------------------------------------------------------------
 bool StackFileListInfo::fromJson(const nlohmann::json& json)
 {
-  if(json["StartIndex"].is_number_float()
-     && json["EndIndex"].is_number_float()
-     && json["PaddingDigits"].is_number_float()
-     && json["Ordering"].is_number_float()
-     && json["IncrementIndex"].is_number_float()
-     && json["InputPath"].is_string()
-     && json["FilePrefix"].is_string()
-     && json["FileSuffix"].is_string()
-     && json["FileExtension"].is_string())
+  if(json["StartIndex"].is_number_float() && json["EndIndex"].is_number_float() && json["PaddingDigits"].is_number_float() && json["Ordering"].is_number_float() &&
+     json["IncrementIndex"].is_number_float() && json["InputPath"].is_string() && json["FilePrefix"].is_string() && json["FileSuffix"].is_string() && json["FileExtension"].is_string())
   {
     m_PaddingDigits = static_cast<int32_t>(json["PaddingDigits"].get<int32_t>());
     m_Ordering = static_cast<uint32_t>(json["Ordering"].get<int32_t>());
@@ -60,7 +53,7 @@ bool StackFileListInfo::fromJson(const nlohmann::json& json)
     m_FilePrefix = json["FilePrefix"].get<std::string>();
     m_FileSuffix = json["FileSuffix"].get<std::string>();
     m_FileExtension = json["FileExtension"].get<std::string>();
-     m_StartIndex = static_cast<int32_t>(json["StartIndex"].get<int32_t>());
+    m_StartIndex = static_cast<int32_t>(json["StartIndex"].get<int32_t>());
     m_EndIndex = static_cast<int32_t>(json["EndIndex"].get<int32_t>());
     return true;
   }

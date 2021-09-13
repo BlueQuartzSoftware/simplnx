@@ -5,7 +5,6 @@
 #include "complex/Core/Parameters/StackFileListInfoParameter.hpp"
 #include "complex/Core/Parameters/utils/StackFileListInfo.hpp"
 
-
 using namespace complex;
 
 namespace

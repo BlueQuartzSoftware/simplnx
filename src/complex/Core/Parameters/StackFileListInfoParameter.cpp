@@ -1,6 +1,5 @@
 #include "StackFileListInfoParameter.hpp"
 
-
 #include <fmt/core.h>
 
 namespace fs = std::filesystem;
@@ -8,12 +7,11 @@ namespace fs = std::filesystem;
 namespace complex
 {
 
-StackFileListInfoParameter::StackFileListInfoParameter(const std::string& name, const std::string& humanName,
-                                     const std::string& helpText,
-                                     const ValueType& defaultValue)
+StackFileListInfoParameter::StackFileListInfoParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
-{}
+{
+}
 
 Uuid StackFileListInfoParameter::uuid() const
 {
@@ -63,10 +61,9 @@ std::any StackFileListInfoParameter::defaultValue() const
 Result<> StackFileListInfoParameter::validate(const std::any& value) const
 {
   auto input = std::any_cast<ValueType>(value);
-  if (input.getStartIndex() < input.getEndIndex())
+  if(input.getStartIndex() < input.getEndIndex())
   {
     return {nonstd::make_unexpected(std::vector<Error>{{-1, "StartIndex must be greater than EndIndex"}})};
-
   }
   if(input.getOrdering() < 0 || input.getOrdering() > 1)
   {
@@ -75,8 +72,4 @@ Result<> StackFileListInfoParameter::validate(const std::any& value) const
   return {};
 }
 
-
-}
-
-
-
+} // namespace complex
