@@ -20,6 +20,12 @@ class COMPLEX_EXPORT IPipelineNode
 public:
   using IdType = Uuid;
 
+  enum class NodeType
+  {
+    Pipeline,
+    Filter
+  };
+
   enum class Status
   {
     Dirty = 0,
@@ -28,6 +34,12 @@ public:
   };
 
   virtual ~IPipelineNode();
+
+  /**
+   * @brief Returns the node type for quick type checking.
+   * @return NodeType
+   */
+  virtual NodeType getType() const = 0;
 
   /**
    * @brief Returns the pipeline node's ID.

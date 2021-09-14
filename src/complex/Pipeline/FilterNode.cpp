@@ -25,6 +25,11 @@ FilterNode::FilterNode(IFilter::UniquePointer&& filter)
 
 FilterNode::~FilterNode() = default;
 
+IPipelineNode::NodeType FilterNode::getType() const
+{
+  return NodeType::Filter;
+}
+
 std::string FilterNode::getName()
 {
   return m_Filter->humanName();
