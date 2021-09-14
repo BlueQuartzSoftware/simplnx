@@ -103,7 +103,7 @@ set(CoreParameters
   ArrayCreationParameter
   BoolParameter
   ChoicesParameter
-  InputFileParameter
+  FileSystemPathParameter
   NumberParameter
   NumericTypeParameter
   StringParameter

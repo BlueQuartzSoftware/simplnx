@@ -5,7 +5,7 @@
 
 #include "complex/Core/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Core/Parameters/ChoicesParameter.hpp"
-#include "complex/Core/Parameters/InputFileParameter.hpp"
+#include "complex/Core/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Core/Parameters/NumberParameter.hpp"
 #include "complex/Core/Parameters/NumericTypeParameter.hpp"
 #include "complex/DataStructure/DataArray.hpp"
@@ -121,7 +121,8 @@ std::string ImportTextFilter::humanName() const
 Parameters ImportTextFilter::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<InputFileParameter>(k_InputFileKey, "Input File", "File to read from", "<default files to read goes here>"));
+  complex::FileSystemPathInfo fspi = {.m_Path = "<default files to read goes here>", .m_PathType = FileSystemPathInfo::PathType::InputFile};
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFileKey, "Input File", "File to read from", fspi));
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarTypeKey, "Scalar Type", "Type to interpret data as", NumericType::i8));
   params.insert(std::make_unique<UInt64Parameter>(k_NTuplesKey, "Number of Tuples", "Number of tuples in resulting array (i.e. number of lines to read)", 3));
   params.insert(std::make_unique<UInt64Parameter>(k_NCompKey, "Number of Components", "Number of columns", 3));

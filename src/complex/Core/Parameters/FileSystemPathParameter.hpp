@@ -1,28 +1,46 @@
 #pragma once
 
-#include <filesystem>
-#include <string>
-
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Filter/ValueParameter.hpp"
 #include "complex/complex_export.hpp"
 
+#include <cstdint>
+#include <filesystem>
+#include <string>
+
 namespace complex
 {
-class COMPLEX_EXPORT InputFileParameter : public ValueParameter
+
+struct FileSystemPathInfo
+{
+  std::filesystem::path m_Path;
+  using EnumType = uint32_t;
+
+  enum class PathType : EnumType
+  {
+    InputFile = 0,  //!<
+    InputPath = 1,  //!<
+    OutputFile = 2, //!<
+    OutputPath = 3, //!<
+    Unknown = 4     //!<
+  };
+  PathType m_PathType = {PathType::InputFile};
+};
+
+class COMPLEX_EXPORT FileSystemPathParameter : public ValueParameter
 {
 public:
-  using ValueType = std::filesystem::path;
+  using ValueType = FileSystemPathInfo;
 
-  InputFileParameter() = delete;
-  InputFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
-  ~InputFileParameter() override = default;
+  FileSystemPathParameter() = delete;
+  FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  ~FileSystemPathParameter() override = default;
 
-  InputFileParameter(const InputFileParameter&) = delete;
-  InputFileParameter(InputFileParameter&&) noexcept = delete;
+  FileSystemPathParameter(const FileSystemPathParameter&) = delete;
+  FileSystemPathParameter(FileSystemPathParameter&&) noexcept = delete;
 
-  InputFileParameter& operator=(const InputFileParameter&) = delete;
-  InputFileParameter& operator=(InputFileParameter&&) noexcept = delete;
+  FileSystemPathParameter& operator=(const FileSystemPathParameter&) = delete;
+  FileSystemPathParameter& operator=(FileSystemPathParameter&&) noexcept = delete;
 
   /**
    * @brief
@@ -85,4 +103,4 @@ private:
 };
 } // namespace complex
 
-COMPLEX_DEF_PARAMETER_TRAITS(complex::InputFileParameter, "f9a93f3d-21ef-43a1-a958-e57cbf3b2909");
+COMPLEX_DEF_PARAMETER_TRAITS(complex::FileSystemPathParameter, "f9a93f3d-21ef-43a1-a958-e57cbf3b2909");
