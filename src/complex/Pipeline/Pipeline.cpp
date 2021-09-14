@@ -17,6 +17,11 @@ Pipeline::Pipeline(const std::string& name)
 
 Pipeline::~Pipeline() = default;
 
+IPipelineNode::NodeType Pipeline::getType() const
+{
+  return NodeType::Pipeline;
+}
+
 std::string Pipeline::getName()
 {
   return m_Name;

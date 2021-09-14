@@ -39,6 +39,12 @@ public:
   virtual ~FilterNode();
 
   /**
+   * @brief Returns the node type for quick type checking.
+   * @return NodeType
+   */
+  NodeType getType() const override;
+
+  /**
    * @brief Returns the filter's human label.
    * @return std::string
    */

@@ -38,6 +38,12 @@ public:
   virtual ~Pipeline();
 
   /**
+   * @brief Returns the node type for quick type checking.
+   * @return NodeType
+   */
+  NodeType getType() const override;
+
+  /**
    * @brief Returns the pipeline's current name.
    * @return std::string
    */
