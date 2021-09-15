@@ -60,7 +60,17 @@ bool FilterNode::preflight(DataStructure& data)
 {
   clearMsgs();
   m_Filter->preflight(data, getArguments());
-  return getErrors().size() > 0;
+  auto errors = getErrors();
+  if(errors.size() == 0)
+  {
+    setPreflightStructure(data);
+    return true;
+  }
+  else
+  {
+    clearPreflightStructure();
+    return false;
+  }
 }
 
 bool FilterNode::execute(DataStructure& data)
@@ -77,7 +87,7 @@ bool FilterNode::execute(DataStructure& data)
   }
   else
   {
-    clearDataStructure();
+    clearPreflightStructure();
     markDirty();
     return false;
   }

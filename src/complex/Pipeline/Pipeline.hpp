@@ -94,7 +94,7 @@ public:
    * provided DataStructure.
    *
    * Returns true if the pipeline segment completes without errors. Returns
-   * false otherwise.
+   * false otherwise. Returns false if the starting index is out of bounds.
    * @param index
    * @param ds
    * @return bool
@@ -102,16 +102,59 @@ public:
   bool preflightFrom(const index_type& index, DataStructure& ds);
 
   /**
+   * @brief Preflights the pipeline segment from a target position using the
+   * DataStructure at the previous index. Uses an empty DataStructure if index is 0.
+   *
+   * Returns true if the pipeline segment completes without errors. Returns
+   * false otherwise. Returns false if the starting index is out of bounds.
+   * @param index
+   * @return
+   */
+  bool preflightFrom(const index_type& index);
+
+  /**
+   * @brief Checks if the pipeline can be preflighted at the target index.
+   *
+   * Returns true if the preceeding node has preflight data or the target
+   * index is 0. Returns false otherwise.
+   * @param index
+   * @return bool
+   */
+  bool canPreflightFrom(const index_type& index) const;
+
+  /**
+   * @brief Checks if the pipeline can be executed at the target index.
+   *
+   * Returns true if the preceeding node has execution data or the target
+   * index is 0. Returns false otherwise.
+   * @param index
+   * @return bool
+   */
+  bool canExecuteFrom(const index_type& index) const;
+
+  /**
    * @brief Executes the pipeline segment from a target position using the
    * provided DataStructure.
    *
    * Returns true if the pipeline segment completes without errors. Returns
-   * false otherwise.
+   * false otherwise. Returns false if the starting index is out of bounds.
    * @param index
    * @param ds
    * @return bool
    */
   bool executeFrom(const index_type& index, DataStructure& ds);
+
+  /**
+   * @brief Executes the pipeline segment from the target position using the
+   * previous node's DataStructure. Starts with an empty DataStructure if
+   * index is 0.
+   *
+   * Returns true if the pipeline execution completes without errors. Returns
+   * false otherwise. Returns false if the starting index is out of bounds.
+   * @param index
+   * @return
+   */
+  bool executeFrom(const index_type& index);
 
   /**
    * @brief Returns the size of the pipeline segment.
