@@ -105,10 +105,29 @@ public:
   const DataStructure& getDataStructure() const;
 
   /**
+   * @brief Returns the DataStructure resulting from Preflight.
+   * @return const DataStructure&
+   */
+  const DataStructure& getPreflightStructure() const;
+
+  /**
    * @brief Clears the stored DataStructure and marks the node as dirty. The
    * dirty status does not propogate to dependent nodes.
    */
   void clearDataStructure();
+
+  /**
+   * @brief Clears the stored preflight and execute DataStructures, marks the
+   * node as dirty, and clears the preflighted flag.
+   */
+  void clearPreflightStructure();
+
+  /**
+   * @brief Returns true if the node has been preflighted and contains the
+   * resulting DataStructure. Returns false otherwise.
+   * @return bool
+   */
+  bool isPreflighted() const;
 
 protected:
   /**
@@ -147,6 +166,13 @@ protected:
    */
   void setDataStructure(const DataStructure& ds);
 
+  /**
+   * @brief Updates the stored DataStructure from preflighting the node. This
+   * should only be called from within the preflight(DataStructure&) method.
+   * @param ds
+   */
+  void setPreflightStructure(const DataStructure& ds);
+
 private:
   /**
    * @brief Creates and returns a new pipeline node ID.
@@ -160,6 +186,8 @@ private:
   Status m_Status = Status::Dirty;
   Pipeline* m_Parent;
   DataStructure m_DataStructure;
+  DataStructure m_PreflightStructure;
   std::vector<PipelineNodeObserver*> m_Observers;
+  bool m_IsPreflighted = false;
 };
 } // namespace complex

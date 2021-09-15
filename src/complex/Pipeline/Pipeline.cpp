@@ -54,6 +54,19 @@ bool Pipeline::execute(DataStructure& ds)
   return executeFrom(0, ds);
 }
 
+bool Pipeline::canPreflightFrom(const index_type& index) const
+{
+  if(index == 0)
+  {
+    return true;
+  }
+  if(index >= size())
+  {
+    return false;
+  }
+  return at(index - 1)->isPreflighted();
+}
+
 bool Pipeline::preflightFrom(const index_type& index, DataStructure& ds)
 {
   if(index >= size() && index != 0)
@@ -68,6 +81,35 @@ bool Pipeline::preflightFrom(const index_type& index, DataStructure& ds)
     }
   }
   return true;
+}
+
+bool Pipeline::preflightFrom(const index_type& index)
+{
+  if(index == 0)
+  {
+    return preflight();
+  }
+  else if(index >= size())
+  {
+    return false;
+  }
+
+  auto node = at(index - 1);
+  DataStructure ds = node->getPreflightStructure();
+  return preflightFrom(index, ds);
+}
+
+bool Pipeline::canExecuteFrom(const index_type& index) const
+{
+  if(index == 0)
+  {
+    return true;
+  }
+  if(index >= size())
+  {
+    return false;
+  }
+  return at(index - 1)->getStatus() == Status::Completed;
 }
 
 bool Pipeline::executeFrom(const index_type& index, DataStructure& ds)
@@ -87,6 +129,22 @@ bool Pipeline::executeFrom(const index_type& index, DataStructure& ds)
   setDataStructure(ds);
   setStatus(Status::Completed);
   return true;
+}
+
+bool Pipeline::executeFrom(const index_type& index)
+{
+  if(index == 0)
+  {
+    return execute();
+  }
+  else if(!canExecuteFrom(index))
+  {
+    return false;
+  }
+
+  auto node = at(index - 1);
+  DataStructure ds = node->getDataStructure();
+  return executeFrom(index, ds);
 }
 
 size_t Pipeline::size() const

@@ -86,10 +86,34 @@ void IPipelineNode::setDataStructure(const DataStructure& ds)
   m_DataStructure = ds;
 }
 
+const DataStructure& IPipelineNode::getPreflightStructure() const
+{
+  return m_PreflightStructure;
+}
+
+void IPipelineNode::setPreflightStructure(const DataStructure& ds)
+{
+  m_PreflightStructure = ds;
+  m_IsPreflighted = true;
+}
+
 void IPipelineNode::clearDataStructure()
 {
   m_DataStructure = DataStructure();
   m_Status = Status::Dirty;
+}
+
+void IPipelineNode::clearPreflightStructure()
+{
+  m_DataStructure = DataStructure();
+  m_PreflightStructure = DataStructure();
+  m_Status = Status::Dirty;
+  m_IsPreflighted = false;
+}
+
+bool IPipelineNode::isPreflighted() const
+{
+  return m_IsPreflighted;
 }
 
 void IPipelineNode::notify(const std::shared_ptr<IPipelineMessage>& msg)
