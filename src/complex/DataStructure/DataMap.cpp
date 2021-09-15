@@ -15,12 +15,6 @@ DataMap::DataMap()
 DataMap::DataMap(const DataMap& other)
 : m_Map(other.m_Map)
 {
-  auto keys = other.getKeys();
-  for(auto& key : keys)
-  {
-    DataObject* copy = other.m_Map.at(key)->deepCopy();
-    m_Map[key] = std::shared_ptr<DataObject>(copy);
-  }
 }
 
 DataMap::DataMap(DataMap&& other) noexcept
