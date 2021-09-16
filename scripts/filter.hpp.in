@@ -1,0 +1,70 @@
+#pragma once
+
+#include "complex/Filter/FilterTraits.hpp"
+#include "complex/Filter/IFilter.hpp"
+#include "complex/complex_export.hpp"
+
+namespace complex
+{
+class COMPLEX_EXPORT @FILTER_NAME@ : public IFilter
+{
+public:
+  @FILTER_NAME@() = default;
+  ~@FILTER_NAME@() noexcept override = default;
+
+  @FILTER_NAME@(const @FILTER_NAME@&) = delete;
+  @FILTER_NAME@(@FILTER_NAME@&&) noexcept = delete;
+
+  @FILTER_NAME@& operator=(const @FILTER_NAME@&) = delete;
+  @FILTER_NAME@& operator=(@FILTER_NAME@&&) noexcept = delete;
+
+  /**
+   * @brief
+   * @return
+   */
+  [[nodiscard]] std::string name() const override;
+
+  /**
+   * @brief
+   * @return
+   */
+  [[nodiscard]] Uuid uuid() const override;
+
+  /**
+   * @brief
+   * @return
+   */
+  [[nodiscard]] std::string humanName() const override;
+
+  /**
+   * @brief
+   * @return
+   */
+  [[nodiscard]] Parameters parameters() const override;
+
+  /**
+   * @brief
+   * @return
+   */
+  [[nodiscard]] UniquePointer clone() const override;
+
+protected:
+  /**
+   * @brief
+   * @param data
+   * @param args
+   * @return
+   */
+  Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args) const override;
+
+  /**
+   * @brief
+   * @param data
+   * @param args
+   * @return
+   */
+  Result<> executeImpl(DataStructure& data, const Arguments& args) const override;
+};
+} // namespace complex
+
+COMPLEX_DEF_FILTER_TRAITS(complex::@FILTER_NAME@, "@UUID@");

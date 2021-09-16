@@ -1,0 +1,71 @@
+#include "@FILTER_NAME@.hpp"
+
+// INSERT YOUR PARAMETER HEADERS
+//#include "complex/Core/Parameters/BoolParameter.hpp"
+//#include "complex/Core/Parameters/NumberParameter.hpp"
+
+
+using namespace complex;
+
+namespace
+{
+// Use this section to set the "keys" for each parameter that your filter needs
+//constexpr const char k_Param1Key[] = "param1";
+//constexpr const char k_Param2Key[] = "param2";
+} // namespace
+
+namespace complex
+{
+std::string @FILTER_NAME@::name() const
+{
+  return FilterTraits<@FILTER_NAME@>::name;
+}
+
+Uuid @FILTER_NAME@::uuid() const
+{
+  return FilterTraits<@FILTER_NAME@>::uuid;
+}
+
+std::string @FILTER_NAME@::humanName() const
+{
+  return "@FILTER_NAME@";
+}
+
+Parameters @FILTER_NAME@::parameters() const
+{
+  Parameters params;
+  // Create the parameter descriptors that are needed for this filter
+  // params.insert(std::make_unique<Float32Parameter>(k_Param1Key, "Parameter 1", "The 1st parameter", 0.1234f));
+  // params.insert(std::make_unique<BoolParameter>(k_Param2Key, "Parameter 2", "The 2nd parameter", false));
+  return params;
+}
+
+IFilter::UniquePointer @FILTER_NAME@::clone() const
+{
+  return std::make_unique<@FILTER_NAME@>();
+}
+
+Result<OutputActions> @FILTER_NAME@::preflightImpl(const DataStructure& data, const Arguments& args) const
+{
+  /** *************************************************************************
+   * Write any preflight sanity checking codes in this function
+   ***************************************************************************/
+  return {};
+}
+
+Result<> @FILTER_NAME@::executeImpl(DataStructure& data, const Arguments& args) const
+{
+  /** *************************************************************************
+   * Write your algorithm implementation in this function
+   ***************************************************************************/
+
+  /** *************************************************************************
+   * You will probably need to extract your parameters from the 'args' object
+   ***************************************************************************/
+  auto inputFloatValue = args.value<float>(k_Param1Key);
+  auto inputBoolValue = args.value<bool>(k_Param2Key);
+
+
+  return {};
+}
+} // namespace complex
