@@ -6,6 +6,11 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 
+// fmt >= 8.0.0
+#if FMT_VERSION >= 80000
+#include <fmt/xchar.h>
+#endif
+
 #if defined(_WIN32)
 #include <Windows.h>
 #define COMPLEX_TEXT_IMPL(text) L##text
