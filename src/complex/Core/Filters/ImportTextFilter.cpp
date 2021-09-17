@@ -2,7 +2,6 @@
 
 #include <filesystem>
 #include <fstream>
-#include <sstream>
 
 #include "complex/Core/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Core/Parameters/ChoicesParameter.hpp"
@@ -18,10 +17,69 @@ namespace
 {
 constexpr const char k_InputFileKey[] = "input_file";
 constexpr const char k_ScalarTypeKey[] = "scalar_type";
+constexpr const char k_NTuplesKey[] = "n_tuples";
 constexpr const char k_NCompKey[] = "n_comp";
 constexpr const char k_NSkipLinesKey[] = "n_skip_lines";
 constexpr const char k_DelimiterChoiceKey[] = "delimiter_choice";
 constexpr const char k_DataArrayKey[] = "output_data_array";
+
+class DelimiterType : public std::ctype<char>
+{
+  mask my_table[table_size];
+
+public:
+  DelimiterType(char delimiter, size_t refs = 0)
+  : std::ctype<char>(&my_table[0], false, refs)
+  {
+    std::copy_n(classic_table(), table_size, my_table);
+    my_table[static_cast<mask>(delimiter)] = (mask)space;
+  }
+};
+
+template <class T>
+Result<> ReadFile(const fs::path& inputPath, DataArray<T>& data, u64 skipLines, char delimiter)
+{
+  std::ifstream inputFile(inputPath, std::ios_base::binary);
+
+  for(u64 i = 0; i < skipLines; i++)
+  {
+    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+  }
+
+  inputFile.imbue(std::locale(std::locale(), new DelimiterType(delimiter)));
+
+  usize numTuples = data.getTupleCount();
+  usize scalarNumComp = data.getTupleSize();
+
+  usize totalSize = numTuples * scalarNumComp;
+  T value = {};
+  for(usize i = 0; i < totalSize; i++)
+  {
+    inputFile >> value;
+    if(inputFile.fail())
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-1, "Unable to convert value"}})};
+    }
+    data[i] = value;
+  }
+
+  Result<> result;
+  result.warnings().push_back(Warning{-1, "Test Warning"});
+
+  return {};
+}
+
+template <class T>
+DataArray<T>& ArrayFromPath(DataStructure& data, const DataPath& path)
+{
+  DataObject* object = data.getData(path);
+  DataArray<T>* dataArray = dynamic_cast<DataArray<T>*>(object);
+  if(dataArray == nullptr)
+  {
+    throw std::runtime_error("Can't obtain DataArray");
+  }
+  return *dataArray;
+}
 
 char IndexToDelimiter(u64 index)
 {
@@ -40,30 +98,6 @@ char IndexToDelimiter(u64 index)
   default:
     throw std::runtime_error("Invalid index");
   }
-}
-
-template <class T>
-Result<> ReadFile(const fs::path& inputPath, DataArray<T>& data, u64 skipLines, char delimiter)
-{
-  std::ifstream inputFile(inputPath);
-
-  for(u64 i = 0; i < skipLines; i++)
-  {
-    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-  }
-
-  usize index = 0;
-  std::string line;
-  while(std::getline(inputFile, line))
-  {
-    std::stringstream stream(line);
-    while(stream >> data[index])
-    {
-      index++;
-    }
-  }
-
-  return {};
 }
 } // namespace
 
@@ -89,6 +123,7 @@ Parameters ImportTextFilter::parameters() const
   Parameters params;
   params.insert(std::make_unique<InputFileParameter>(k_InputFileKey, "Input File", "File to read from", "<default files to read goes here>"));
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarTypeKey, "Scalar Type", "Type to interpret data as", NumericType::i8));
+  params.insert(std::make_unique<UInt64Parameter>(k_NTuplesKey, "Number of Tuples", "Number of tuples in resulting array (i.e. number of lines to read)", 3));
   params.insert(std::make_unique<UInt64Parameter>(k_NCompKey, "Number of Components", "Number of columns", 3));
   params.insert(std::make_unique<UInt64Parameter>(k_NSkipLinesKey, "Skip Header Lines", "Number of lines to skip in the file", 7));
   params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoiceKey, "Delimiter", "Delimiter for values on a line", 0,
@@ -105,7 +140,10 @@ IFilter::UniquePointer ImportTextFilter::clone() const
 Result<OutputActions> ImportTextFilter::preflightImpl(const DataStructure& data, const Arguments& args) const
 {
   auto numericType = args.value<NumericType>(k_ScalarTypeKey);
-  auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{}, DataPath{});
+  auto arrayPath = args.value<DataPath>(k_DataArrayKey);
+  auto nTuples = args.value<u64>(k_NTuplesKey);
+  auto nComp = args.value<u64>(k_NCompKey);
+  auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{nTuples}, nComp, arrayPath);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));
@@ -120,49 +158,50 @@ Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& arg
   auto components = args.value<u64>(k_NCompKey);
   auto skipLines = args.value<u64>(k_NSkipLinesKey);
   auto choiceIndex = args.value<u64>(k_DelimiterChoiceKey);
+  auto path = args.value<DataPath>(k_DataArrayKey);
 
   char delimiter = IndexToDelimiter(choiceIndex);
 
   switch(numericType)
   {
   case NumericType::i8: {
-    auto& dataArray = args.ref<DataArray<i8>>(k_DataArrayKey);
+    auto& dataArray = ArrayFromPath<i8>(data, path);
     return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::u8: {
-    auto& dataArray = args.ref<DataArray<u8>>(k_DataArrayKey);
+    auto& dataArray = ArrayFromPath<u8>(data, path);
     return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::i16: {
-    auto& dataArray = args.ref<DataArray<i16>>(k_DataArrayKey);
+    auto& dataArray = ArrayFromPath<i16>(data, path);
     return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::u16: {
-    auto& dataArray = args.ref<DataArray<u16>>(k_DataArrayKey);
+    auto& dataArray = ArrayFromPath<u16>(data, path);
     return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::i32: {
-    auto& dataArray = args.ref<DataArray<i32>>(k_DataArrayKey);
+    auto& dataArray = ArrayFromPath<i32>(data, path);
     return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::u32: {
-    auto& dataArray = args.ref<DataArray<u32>>(k_DataArrayKey);
+    auto& dataArray = ArrayFromPath<u32>(data, path);
     return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::i64: {
-    auto& dataArray = args.ref<DataArray<i64>>(k_DataArrayKey);
+    auto& dataArray = ArrayFromPath<i64>(data, path);
     return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::u64: {
-    auto& dataArray = args.ref<DataArray<u64>>(k_DataArrayKey);
+    auto& dataArray = ArrayFromPath<u64>(data, path);
     return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::f32: {
-    auto& dataArray = args.ref<DataArray<f32>>(k_DataArrayKey);
+    auto& dataArray = ArrayFromPath<f32>(data, path);
     return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::f64: {
-    auto& dataArray = args.ref<DataArray<f64>>(k_DataArrayKey);
+    auto& dataArray = ArrayFromPath<f64>(data, path);
     return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   default:
