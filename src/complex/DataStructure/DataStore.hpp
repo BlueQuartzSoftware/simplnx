@@ -89,7 +89,7 @@ public:
   }
 
   /**
-   * @brief Returns the tuple size.
+   * @brief Returns the number of elements in each Tuple.
    * @return size_t
    */
   size_t getTupleSize() const override

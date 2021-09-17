@@ -20,7 +20,7 @@ FilterNode::FilterNode(IFilter::UniquePointer&& filter)
 : IPipelineNode()
 , m_Filter(std::move(filter))
 {
-  startObservingFilter(filter.get());
+  startObservingFilter(m_Filter.get());
 }
 
 FilterNode::~FilterNode() = default;
