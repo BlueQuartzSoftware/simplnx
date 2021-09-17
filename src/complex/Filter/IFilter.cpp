@@ -133,7 +133,10 @@ Result<> IFilter::execute(DataStructure& data, const Arguments& args) const
     return convertResult(std::move(result));
   }
 
-  // apply actions
+  for(const auto& action : result.value().actions)
+  {
+    action->apply(data, IDataAction::Mode::Execute);
+  }
 
   return executeImpl(data, args);
 }
