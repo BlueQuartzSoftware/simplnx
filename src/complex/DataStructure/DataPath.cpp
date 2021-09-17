@@ -95,6 +95,11 @@ size_t DataPath::getLength() const
   return m_Path.size();
 }
 
+bool DataPath::empty() const
+{
+  return m_Path.empty();
+}
+
 std::vector<std::string> DataPath::getPathVector() const
 {
   return m_Path;
