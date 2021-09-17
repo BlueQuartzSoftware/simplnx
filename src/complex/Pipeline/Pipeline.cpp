@@ -187,7 +187,7 @@ bool Pipeline::insertAt(index_type index, IPipelineNode* node)
   return insertAt(begin() + index, ptr);
 }
 
-bool Pipeline::insertAt(index_type index, IFilter::UniquePointer& filter)
+bool Pipeline::insertAt(index_type index, IFilter::UniquePointer&& filter)
 {
   if(filter == nullptr)
   {
@@ -201,7 +201,7 @@ bool Pipeline::insertAt(index_type index, const FilterHandle& handle)
 {
   auto filterList = Application::Instance()->getFilterList();
   IFilter::UniquePointer filter = filterList->createFilter(handle);
-  return insertAt(index, filter);
+  return insertAt(index, std::move(filter));
 }
 
 bool Pipeline::insertAt(iterator pos, const std::shared_ptr<IPipelineNode>& ptr)
