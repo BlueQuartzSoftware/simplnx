@@ -206,7 +206,7 @@ public:
    * @param filter
    * @return bool
    */
-  bool insertAt(index_type index, IFilter::UniquePointer& filter);
+  bool insertAt(index_type index, IFilter::UniquePointer&& filter);
 
   /**
    * @brief Inserts a filter using the provided FilterHandle at the specified
