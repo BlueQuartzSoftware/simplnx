@@ -135,7 +135,11 @@ Result<> IFilter::execute(DataStructure& data, const Arguments& args) const
 
   for(const auto& action : result.value().actions)
   {
-    action->apply(data, IDataAction::Mode::Execute);
+    Result<> actionResult = action->apply(data, IDataAction::Mode::Execute);
+    if(!result.valid())
+    {
+      return actionResult;
+    }
   }
 
   return executeImpl(data, args);
