@@ -7,14 +7,24 @@
 namespace complex
 {
 /**
- * @class DataContainer
- * @brief The DataGroup class is instantiable implementation of BaseGroup.
+ * @class DataGroup
+ * @brief The DataGroup class is an instantiable implementation of BaseGroup.
  * The DataGroup class does not impose restrictions on which types of
- * DataObject.
+ * DataObject that can be stored.
  */
 class COMPLEX_EXPORT DataGroup : public BaseGroup
 {
 public:
+  /**
+   * @brief This is a static function that will create a new DataGroup object, insert it
+   * into the DataStructure and return the pointer. While the raw pointer is returned the
+   * DataStructure takes ownership of the object and will delete the object when needed.
+   *
+   * @param ds The DataStructure object to insert the newly created DataGroup into
+   * @param name  The name of the DataGroup
+   * @param parentId [Optional] The id of the parent to the newly constructed DataGroup, if there is one.
+   * @return Raw pointer to the newly constructed DataGroup.
+   */
   static DataGroup* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
 
   /**

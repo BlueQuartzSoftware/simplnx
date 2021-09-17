@@ -72,7 +72,7 @@ Result<OutputActions> IFilter::preflight(const DataStructure& data, const Argume
 
     if(std::find(acceptedTypes.cbegin(), acceptedTypes.cend(), constructedArg.type()) == acceptedTypes.cend())
     {
-      throw std::invalid_argument("Invalid argument type");
+      throw std::invalid_argument(fmt::format("Invalid argument type for argument '{}' for filter '{}'", name, humanName()));
     }
 
     switch(parameter->type())
