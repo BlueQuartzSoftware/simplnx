@@ -84,15 +84,15 @@ TEST_CASE("RunCoreFilter")
     args.insert("n_skip_lines", std::make_any<u64>(k_NSkipLines));
     args.insert("delimiter_choice", std::make_any<u64>(0));
     args.insert("output_data_array", std::make_any<DataPath>(dataPath));
-    //auto callback = [](const IFilter::Message& message) { fmt::print("{}: {}\n", message.type, message.message); };
-    //Result<> result = filter.execute(ds, args, IFilter::MessageHandler{callback});
+    // auto callback = [](const IFilter::Message& message) { fmt::print("{}: {}\n", message.type, message.message); };
+    // Result<> result = filter.execute(ds, args, IFilter::MessageHandler{callback});
     Result<> result = filter.execute(ds, args);
     for(const auto& warning : result.warnings())
     {
-      //fmt::print("Warning {}: {}\n", warning.code, warning.message);
+      // fmt::print("Warning {}: {}\n", warning.code, warning.message);
       UNSCOPED_INFO(fmt::format("Warning {}: {}", warning.code, warning.message));
     }
-    //std::vector<Error> errors = result.valid() ? std::vector<Error>{} : result.errors();
+    // std::vector<Error> errors = result.valid() ? std::vector<Error>{} : result.errors();
     if(!result.valid())
     {
       for(const auto& error : result.errors())
@@ -102,7 +102,7 @@ TEST_CASE("RunCoreFilter")
       }
     }
     CAPTURE(result.warnings());
-    //CAPTURE(errors);
+    // CAPTURE(errors);
     REQUIRE(result.valid());
     const auto* dataArrayPtr = dynamic_cast<DataArray<i32>*>(ds.getData(dataPath));
     REQUIRE(dataArrayPtr != nullptr);
