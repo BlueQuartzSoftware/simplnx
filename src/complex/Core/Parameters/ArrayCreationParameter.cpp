@@ -74,10 +74,14 @@ Result<> ArrayCreationParameter::validate(const DataStructure& dataStructure, co
 
 Result<> ArrayCreationParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
 {
+  if(value.empty())
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{{-1, "DataPath cannot be empty"}})};
+  }
   const DataObject* object = dataStructure.getData(value);
   if(object != nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("Object already exists at path \"{}\"", value.toString())}})};
+    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("Object already exists at path \"{}\"", value.toString())}})};
   }
 
   return {};
