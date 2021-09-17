@@ -69,7 +69,7 @@ Result<> ChoicesParameter::validate(const std::any& value) const
 
 Result<> ChoicesParameter::validateIndex(ValueType index) const
 {
-  if(index < m_Choices.size())
+  if(index >= m_Choices.size())
   {
     return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("Index \"{}\" must be less than {}", index, m_Choices.size())}})};
   }
