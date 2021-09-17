@@ -41,7 +41,7 @@ class CreateArrayAction : public IDataAction
 public:
   CreateArrayAction() = delete;
 
-  CreateArrayAction(NumericType type, const std::vector<usize>& dims, const DataPath& path);
+  CreateArrayAction(NumericType type, const std::vector<usize>& dims, u64 nComp, const DataPath& path);
 
   ~CreateArrayAction() noexcept override;
 
@@ -78,6 +78,7 @@ public:
 private:
   NumericType m_Type;
   std::vector<usize> m_Dims;
+  u64 m_NComp;
   DataPath m_Path;
 };
 
