@@ -48,6 +48,12 @@ public:
   size_t getLength() const;
 
   /**
+   * @brief Return true if the path is empty
+   * @return bool
+   */
+  bool empty() const;
+
+  /**
    * @brief Returns the path as a vector of strings.
    * @return std::vector<std::string>
    */
