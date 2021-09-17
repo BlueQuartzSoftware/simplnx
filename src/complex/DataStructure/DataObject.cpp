@@ -1,8 +1,5 @@
 #include "DataObject.hpp"
 
-#include <algorithm>
-#include <exception>
-
 #include <hdf5.h>
 
 #include "complex/DataStructure/BaseGroup.hpp"
@@ -10,9 +7,13 @@
 #include "complex/DataStructure/Metadata.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
+#include <algorithm>
+#include <exception>
+
 using namespace complex;
 
 const std::string H5::Constants::DataObject::ObjectTypeTag = "ObjectType";
+
 
 DataObject::IdType DataObject::generateId(const std::optional<IdType>& opId)
 {
@@ -21,11 +22,11 @@ DataObject::IdType DataObject::generateId(const std::optional<IdType>& opId)
   {
     id = opId.value();
   }
-  return id++;
+  return ++id;
 }
 
-DataObject::DataObject(DataStructure& ds, const std::string& name)
-: m_Name(name)
+DataObject::DataObject(DataStructure& ds, std::string name)
+: m_Name(std::move(name))
 , m_DataStructure(&ds)
 , m_Id(generateId())
 , m_H5Id(-1)
@@ -42,9 +43,9 @@ DataObject::DataObject(const DataObject& other)
 
 DataObject::DataObject(DataObject&& other) noexcept
 : m_Name(std::move(other.m_Name))
-, m_DataStructure(std::move(other.m_DataStructure))
-, m_Id(std::move(other.m_Id))
-, m_H5Id(std::move(other.m_H5Id))
+, m_DataStructure(other.m_DataStructure)
+, m_Id(other.m_Id)
+, m_H5Id(other.m_H5Id)
 {
 }
 
@@ -85,14 +86,8 @@ std::string DataObject::getName() const
 
 bool DataObject::canRename(const std::string& name) const
 {
-  for(BaseGroup* parent : m_ParentList)
-  {
-    if(parent->contains(name))
-    {
-      return false;
-    }
-  }
-  return true;
+    return !std::any_of(m_ParentList.cbegin(), m_ParentList.cend(),
+                [name](BaseGroup* parent){return parent->contains(name);});
 }
 
 bool DataObject::rename(const std::string& name)
@@ -133,13 +128,13 @@ void DataObject::replaceParent(BaseGroup* oldParent, BaseGroup* newParent)
 
 std::vector<DataPath> DataObject::getDataPaths() const
 {
-  if(m_ParentList.size() == 0)
+  if(m_ParentList.empty())
   {
     return {DataPath({getName()})};
   }
 
   std::vector<DataPath> paths;
-  for(auto parent : m_ParentList)
+  for(auto* parent : m_ParentList)
   {
     auto parentPaths = parent->getDataPaths();
     for(auto& dataPath : parentPaths)

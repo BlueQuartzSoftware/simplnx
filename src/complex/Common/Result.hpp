@@ -7,7 +7,6 @@
 #include <nonstd/expected.hpp>
 
 #include "complex/Common/Types.hpp"
-
 #include "complex/complex_export.hpp"
 
 namespace complex
@@ -54,26 +53,55 @@ using ResultBaseT = std::conditional_t<std::is_same_v<T, void>, detail::ResultVo
 template <class T = void>
 struct Result : public detail::ResultBaseT<T>
 {
+  /**
+   * @brief Returns if this Result object has any values
+   * @return
+   */
   [[nodiscard]] bool valid() const
   {
     return detail::ResultBaseT<T>::m_Expected.has_value();
   }
 
+  /**
+   * @brief Returns if this Result is invalid. Convenience function.
+   * @return
+   */
+  [[nodiscard]] bool invalid() const
+  {
+    return valid() == false;
+  }
+
+  /**
+   * @brief Returns the collection of Error objects
+   * @return
+   */
   [[nodiscard]] std::vector<Error>& errors()
   {
     return detail::ResultBaseT<T>::m_Expected.error();
   }
 
+  /**
+   * @brief Returns the collection of Error objects
+   * @return
+   */
   [[nodiscard]] const std::vector<Error>& errors() const
   {
     return detail::ResultBaseT<T>::m_Expected.error();
   }
 
+  /**
+   * @brief Returns the collection of Warning Objects
+   * @return
+   */
   [[nodiscard]] std::vector<Warning>& warnings()
   {
     return m_Warnings;
   }
 
+  /**
+   * @brief Returns the collection of Warning Objects
+   * @return
+   */
   [[nodiscard]] const std::vector<Warning>& warnings() const
   {
     return m_Warnings;

@@ -168,7 +168,7 @@ protected:
    * @param ds
    * @param name
    */
-  DataObject(DataStructure& ds, const std::string& name);
+  DataObject(DataStructure& ds, std::string name);
 
   /**
    * @brief Attempts to add the specified
