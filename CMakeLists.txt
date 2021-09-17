@@ -95,6 +95,7 @@ generate_export_header(complex
 # Specify core filters and parameters here
 set(CoreFilters
   ImportTextFilter
+  CreateDataArray
   TestFilter1
   TestFilter2
 )
@@ -474,3 +475,6 @@ option(COMPLEX_BUILD_DOCS "Enables building COMPLEX documentation" OFF)
 if(COMPLEX_BUILD_DOCS)
   add_subdirectory(docs)
 endif()
+
+add_executable(sandbox ${complex_SOURCE_DIR}/sandbox/sandbox.cpp)
+target_link_libraries(sandbox complex::complex)
