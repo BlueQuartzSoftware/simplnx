@@ -3,6 +3,8 @@
 #include <memory>
 #include <vector>
 
+#include "nod/nod.hpp"
+
 #include "complex/Common/Uuid.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/complex_export.hpp"
@@ -19,6 +21,7 @@ class COMPLEX_EXPORT IPipelineNode
 
 public:
   using IdType = Uuid;
+  using signal_type = nod::signal<void (IPipelineNode*, const std::shared_ptr<IPipelineMessage>&)>;
 
   enum class NodeType
   {
@@ -129,6 +132,12 @@ public:
    */
   bool isPreflighted() const;
 
+  /**
+   * @brief Returns a reference to the signal used for messaging.
+   * @return PipelineNodeObserver::signal_type&
+   */
+  signal_type& getSignal();
+
 protected:
   /**
    * @brief Sets the current node status.
@@ -189,5 +198,6 @@ private:
   DataStructure m_PreflightStructure;
   std::vector<PipelineNodeObserver*> m_Observers;
   bool m_IsPreflighted = false;
+  signal_type m_Signal;
 };
 } // namespace complex

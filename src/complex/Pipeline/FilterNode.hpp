@@ -1,8 +1,9 @@
 #pragma once
 
-#include "IPipelineNode.hpp"
+#include "nod/nod.hpp"
+
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Filter/Messaging/FilterObserver.hpp"
+#include "complex/Pipeline/IPipelineNode.hpp"
 
 namespace complex
 {
@@ -14,10 +15,11 @@ class FilterHandle;
  * IFilter object. The node keeps track of the resulting DataStructure as well
  * as error and warning messages.
  */
-class COMPLEX_EXPORT FilterNode : public IPipelineNode, public FilterObserver
+class COMPLEX_EXPORT FilterNode : public IPipelineNode
 {
 public:
-  using Messages = std::vector<std::shared_ptr<FilterMessage>>;
+  using WarningsChangedSignal = nod::signal<void(std::vector<complex::Warning>)>;
+  using ErrorsChangedSignal = nod::signal<void(std::vector<complex::Error>)>;
 
   /**
    * @brief Attempts to construct a FilterNode based on the specified
@@ -91,36 +93,25 @@ public:
   bool execute(DataStructure& data) override;
 
   /**
-   * @brief Returns a collection of warning messages emitted by the target filter.
+   * @brief Returns a collection of warnings returned by the target filter.
    * This collection is cleared when the node is preflighted or executed.
-   * @return Messages
+   * @return std::vector<complex::Warning>
    */
-  Messages getWarnings() const;
+  std::vector<Warning> getWarnings() const;
 
   /**
-   * @brief Returns a collection of error messages emitted by the target filter.
+   * @brief Returns a collection of errors emitted by the target filter.
    * This collection is cleared when the node is preflighted or executed.
-   * @return Messages
+   * @return std::vector<complex::Error>
    */
-  Messages getErrors() const;
-
-protected:
-  /**
-   * @brief Clears all error and warning messages.
-   */
-  void clearMsgs();
-
-  /**
-   * @brief Called when an observed filter notifies observers of a message.
-   * @param filter
-   * @param msg
-   */
-  void onNotify(IFilter* filter, const std::shared_ptr<FilterMessage>& msg) override;
+  std::vector<Error> getErrors() const;
 
 private:
   IFilter::UniquePointer m_Filter;
   Arguments m_Arguments;
-  Messages m_WarningMsgs;
-  Messages m_ErrorMsgs;
+  std::vector<Warning> m_Warnings;
+  std::vector<Error> m_Errors;
+  WarningsChangedSignal m_WarningsSignal;
+  ErrorsChangedSignal m_ErrorsSignal;
 };
 } // namespace complex

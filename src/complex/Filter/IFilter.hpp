@@ -16,9 +16,6 @@
 
 namespace complex
 {
-class FilterMessage;
-class FilterObserver;
-
 /**
  * @class IFilter
  * @brief
@@ -118,48 +115,6 @@ protected:
    * @return
    */
   virtual Result<> executeImpl(DataStructure& data, const Arguments& args) const = 0;
-
-  /**
-   * @brief Notifies known observers of the provided message.
-   * @param msg
-   */
-  void notify(const std::shared_ptr<FilterMessage>& msg);
-
-  /**
-   * @brief Creates an info message from the provided string and notifies known
-   * observers to the created message.
-   * @param msg
-   */
-  void notifyInfo(const std::string& msg);
-
-  /**
-   * @brief Creates an error message from the provided string and notifies known
-   * observers to the created message.
-   * @param msg
-   */
-  void notifyError(const std::string& msg);
-
-  /**
-   * @brief Creates a warning message from the provided string and notifies known
-   * observers to the created message.
-   * @param msg
-   */
-  void notifyWarning(const std::string& msg);
-
-  /**
-   * @brief Adds the specified observer to the list of known observers.
-   * @param obs
-   */
-  void addObserver(FilterObserver* obs);
-
-  /**
-   * @brief Removes the specified observer from the list of known observers.
-   * @param obs
-   */
-  void removeObserver(FilterObserver* obs);
-
-private:
-  std::vector<FilterObserver*> m_Observers;
 };
 
 using FilterCreationFunc = IFilter::UniquePointer (*)();

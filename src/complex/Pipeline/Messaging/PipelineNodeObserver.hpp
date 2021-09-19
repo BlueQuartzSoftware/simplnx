@@ -1,7 +1,10 @@
 #pragma once
 
+#include <map>
 #include <memory>
 #include <vector>
+
+#include "nod/nod.hpp"
 
 #include "complex/complex_export.hpp"
 
@@ -29,17 +32,15 @@ public:
 
   /**
    * @brief Returns a collection of observed pipeline nodes.
-   * @return std::vector<IPipelineNode*>
+   * @return IPipelineNode*
    */
-  std::vector<IPipelineNode*> getObservedNodes() const;
+  IPipelineNode* getObservedNode() const;
 
   /**
-   * @brief Returns true if the specified node is being observed. Returns
-   * false otherwise.
-   * @param node
+   * @brief Returns true an IPipelineNode is being observed. Returns false otherwise.
    * @return bool
    */
-  bool isObservingNode(IPipelineNode* node) const;
+  bool isObservingNode() const;
 
   /**
    * @brief Start observing the specified pipeline node.
@@ -62,6 +63,7 @@ protected:
   virtual void onNotify(IPipelineNode* node, const std::shared_ptr<IPipelineMessage>& msg) = 0;
 
 private:
-  std::vector<IPipelineNode*> m_ObservedNodes;
+  IPipelineNode* m_ObservedNode = nullptr;
+  nod::connection m_Connection;
 };
 } // namespace complex
