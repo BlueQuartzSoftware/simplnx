@@ -269,4 +269,23 @@ private:
   uint64_t m_TupleCount;
   std::unique_ptr<value_type[]> m_Data;
 };
+
+// Declare aliases
+using CharDataStore = DataStore<char>;
+using UCharDataStore = DataStore<unsigned char>;
+
+using UInt8DataStore = DataStore<uint8_t>;
+using UInt16DataStore = DataStore<uint16_t>;
+using UInt32DataStore = DataStore<uint32_t>;
+using UInt64DataStore = DataStore<uint64_t>;
+
+using Int8DataStore = DataStore<int8_t>;
+using Int16DataStore = DataStore<int16_t>;
+using Int32DataStore = DataStore<int32_t>;
+using Int64DataStore = DataStore<int64_t>;
+using SizeDataStore = DataStore<size_t>;
+
+using FloatDataStore = DataStore<float>;
+using DoubleDataStore = DataStore<double>;
+
 } // namespace complex
