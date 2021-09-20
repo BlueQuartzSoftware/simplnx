@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 
+#include "complex/Common/StringLiteral.hpp"
 #include "complex/Core/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Core/Parameters/ChoicesParameter.hpp"
 #include "complex/Core/Parameters/FileSystemPathParameter.hpp"
@@ -15,13 +16,13 @@ using namespace complex;
 
 namespace
 {
-constexpr const char k_InputFileKey[] = "input_file";
-constexpr const char k_ScalarTypeKey[] = "scalar_type";
-constexpr const char k_NTuplesKey[] = "n_tuples";
-constexpr const char k_NCompKey[] = "n_comp";
-constexpr const char k_NSkipLinesKey[] = "n_skip_lines";
-constexpr const char k_DelimiterChoiceKey[] = "delimiter_choice";
-constexpr const char k_DataArrayKey[] = "output_data_array";
+constexpr StringLiteral k_InputFileKey = "input_file";
+constexpr StringLiteral k_ScalarTypeKey = "scalar_type";
+constexpr StringLiteral k_NTuplesKey = "n_tuples";
+constexpr StringLiteral k_NCompKey = "n_comp";
+constexpr StringLiteral k_NSkipLinesKey = "n_skip_lines";
+constexpr StringLiteral k_DelimiterChoiceKey = "delimiter_choice";
+constexpr StringLiteral k_DataArrayKey = "output_data_array";
 
 class DelimiterType : public std::ctype<char>
 {
@@ -105,7 +106,7 @@ namespace complex
 {
 std::string ImportTextFilter::name() const
 {
-  return FilterTraits<ImportTextFilter>::name;
+  return FilterTraits<ImportTextFilter>::name.str();
 }
 
 Uuid ImportTextFilter::uuid() const
@@ -122,14 +123,14 @@ Parameters ImportTextFilter::parameters() const
 {
   Parameters params;
   params.insert(
-      std::make_unique<FileSystemPathParameter>(k_InputFileKey, "Input File", "File to read from", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<NumericTypeParameter>(k_ScalarTypeKey, "Scalar Type", "Type to interpret data as", NumericType::i8));
-  params.insert(std::make_unique<UInt64Parameter>(k_NTuplesKey, "Number of Tuples", "Number of tuples in resulting array (i.e. number of lines to read)", 3));
-  params.insert(std::make_unique<UInt64Parameter>(k_NCompKey, "Number of Components", "Number of columns", 3));
-  params.insert(std::make_unique<UInt64Parameter>(k_NSkipLinesKey, "Skip Header Lines", "Number of lines to skip in the file", 7));
-  params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoiceKey, "Delimiter", "Delimiter for values on a line", 0,
+      std::make_unique<FileSystemPathParameter>(k_InputFileKey.str(), "Input File", "File to read from", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<NumericTypeParameter>(k_ScalarTypeKey.str(), "Scalar Type", "Type to interpret data as", NumericType::i8));
+  params.insert(std::make_unique<UInt64Parameter>(k_NTuplesKey.str(), "Number of Tuples", "Number of tuples in resulting array (i.e. number of lines to read)", 3));
+  params.insert(std::make_unique<UInt64Parameter>(k_NCompKey.str(), "Number of Components", "Number of columns", 3));
+  params.insert(std::make_unique<UInt64Parameter>(k_NSkipLinesKey.str(), "Skip Header Lines", "Number of lines to skip in the file", 7));
+  params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoiceKey.str(), "Delimiter", "Delimiter for values on a line", 0,
                                                    ChoicesParameter::Choices{", (comma)", "; (semicolon)", "  (space)", ": (colon)", "\\t (Tab)"}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_DataArrayKey, "Created Array", "Array storing the file data", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_DataArrayKey.str(), "Created Array", "Array storing the file data", DataPath{}));
   return params;
 }
 
@@ -140,10 +141,10 @@ IFilter::UniquePointer ImportTextFilter::clone() const
 
 Result<OutputActions> ImportTextFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  auto numericType = args.value<NumericType>(k_ScalarTypeKey);
-  auto arrayPath = args.value<DataPath>(k_DataArrayKey);
-  auto nTuples = args.value<u64>(k_NTuplesKey);
-  auto nComp = args.value<u64>(k_NCompKey);
+  auto numericType = args.value<NumericType>(k_ScalarTypeKey.c_str());
+  auto arrayPath = args.value<DataPath>(k_DataArrayKey.c_str());
+  auto nTuples = args.value<u64>(k_NTuplesKey.c_str());
+  auto nComp = args.value<u64>(k_NCompKey.c_str());
   auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{nTuples}, nComp, arrayPath);
 
   OutputActions actions;
@@ -154,12 +155,12 @@ Result<OutputActions> ImportTextFilter::preflightImpl(const DataStructure& data,
 
 Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  auto inputFilePath = args.value<fs::path>(k_InputFileKey);
-  auto numericType = args.value<NumericType>(k_ScalarTypeKey);
-  auto components = args.value<u64>(k_NCompKey);
-  auto skipLines = args.value<u64>(k_NSkipLinesKey);
-  auto choiceIndex = args.value<u64>(k_DelimiterChoiceKey);
-  auto path = args.value<DataPath>(k_DataArrayKey);
+  auto inputFilePath = args.value<fs::path>(k_InputFileKey.c_str());
+  auto numericType = args.value<NumericType>(k_ScalarTypeKey.c_str());
+  auto components = args.value<u64>(k_NCompKey.c_str());
+  auto skipLines = args.value<u64>(k_NSkipLinesKey.c_str());
+  auto choiceIndex = args.value<u64>(k_DelimiterChoiceKey.c_str());
+  auto path = args.value<DataPath>(k_DataArrayKey.c_str());
 
   char delimiter = IndexToDelimiter(choiceIndex);
 

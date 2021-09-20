@@ -8,7 +8,7 @@ TestFilter::~TestFilter() = default;
 
 std::string TestFilter::name() const
 {
-  return FilterTraits<TestFilter>::name;
+  return FilterTraits<TestFilter>::name.str();
 }
 
 complex::Uuid TestFilter::uuid() const
