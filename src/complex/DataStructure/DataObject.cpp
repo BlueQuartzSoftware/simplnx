@@ -14,7 +14,6 @@ using namespace complex;
 
 const std::string H5::Constants::DataObject::ObjectTypeTag = "ObjectType";
 
-
 DataObject::IdType DataObject::generateId(const std::optional<IdType>& opId)
 {
   static IdType id = 0;
@@ -86,8 +85,7 @@ std::string DataObject::getName() const
 
 bool DataObject::canRename(const std::string& name) const
 {
-    return !std::any_of(m_ParentList.cbegin(), m_ParentList.cend(),
-                [name](BaseGroup* parent){return parent->contains(name);});
+  return !std::any_of(m_ParentList.cbegin(), m_ParentList.cend(), [name](BaseGroup* parent) { return parent->contains(name); });
 }
 
 bool DataObject::rename(const std::string& name)
