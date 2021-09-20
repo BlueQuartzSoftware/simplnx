@@ -50,11 +50,16 @@ template <class T>
 using ResultBaseT = std::conditional_t<std::is_same_v<T, void>, detail::ResultVoid, detail::ResultBase<T>>;
 } // namespace detail
 
+/**
+ * @brief Result is meant for reporting errors/warnings from a function with an optional contained type.
+ * Functions similiarly to std::optional. Warnings are always accessible, and either the contained type or errors is accessible at a time.
+ * @tparam T Contained type. May be void.
+ */
 template <class T = void>
 struct Result : public detail::ResultBaseT<T>
 {
   /**
-   * @brief Returns if this Result object has any values
+   * @brief Returns true if there are no errors, i.e. it is valid to access the contained type.
    * @return
    */
   [[nodiscard]] bool valid() const
@@ -63,12 +68,12 @@ struct Result : public detail::ResultBaseT<T>
   }
 
   /**
-   * @brief Returns if this Result is invalid. Convenience function.
+   * @brief Equivalent to !valid()
    * @return
    */
   [[nodiscard]] bool invalid() const
   {
-    return valid() == false;
+    return !valid();
   }
 
   /**
