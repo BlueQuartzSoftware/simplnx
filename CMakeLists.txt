@@ -99,16 +99,16 @@ set(CoreFilters
   TestFilter2
 )
 
-set(CoreParameters
-  ArrayCreationParameter
-  BoolParameter
-  ChoicesParameter
-  InputFileParameter
-  NumberParameter
-  NumericTypeParameter
-  StringParameter
-  VectorParameter
-  StackFileListInfoParameter
+set(    CoreParameters
+        ArrayCreationParameter
+        BoolParameter
+        ChoicesParameter
+        InputFileParameter
+        NumberParameter
+        NumericTypeParameter
+        StringParameter
+        VectorParameter
+        GeneratedFileListParameter
 )
 
 # Generate core filter import header
@@ -141,7 +141,6 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.hpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterList.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/utils/StackFileListInfo.hpp
   ${COMPLEX_SOURCE_DIR}/Core/Parameters/utils/FilePathGenerator.hpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.hpp
@@ -262,7 +261,6 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.cpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterList.cpp
   
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/utils/StackFileListInfo.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.cpp

@@ -12,12 +12,26 @@
 
 namespace complex
 {
-class COMPLEX_EXPORT StackFileListInfoParameter : public ValueParameter
+class COMPLEX_EXPORT GeneratedFileListParameter : public ValueParameter
 {
 public:
-  using ValueType = complex::StackFileListInfo;
+  /**
+   * @brief This struct holds all of the data necessary to generate a list of file paths.
+   */
+  using ValueType = struct s_value_type
+  {
+    int32_t m_StartIndex = 0;
+    int32_t m_EndIndex = 0;
+    int32_t m_IncrementIndex = 1;
+    int32_t m_PaddingDigits = 3;
+    uint32_t m_Ordering = 0; //< 0=LowToHigh, 1=HighToLow
+    std::string m_InputPath;
+    std::string m_FilePrefix;
+    std::string m_FileSuffix;
+    std::string m_FileExtension;
+  };
 
-  StackFileListInfoParameter() = delete;
+  GeneratedFileListParameter() = delete;
   /**
    *
    * @param name
@@ -25,15 +39,15 @@ public:
    * @param helpText
    * @param defaultValue
    */
-  StackFileListInfoParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  GeneratedFileListParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
 
-  ~StackFileListInfoParameter() override = default;
+  ~GeneratedFileListParameter() override = default;
 
-  StackFileListInfoParameter(const StackFileListInfoParameter&) = delete;
-  StackFileListInfoParameter(StackFileListInfoParameter&&) noexcept = delete;
+  GeneratedFileListParameter(const GeneratedFileListParameter&) = delete;
+  GeneratedFileListParameter(GeneratedFileListParameter&&) noexcept = delete;
 
-  StackFileListInfoParameter& operator=(const StackFileListInfoParameter&) = delete;
-  StackFileListInfoParameter& operator=(StackFileListInfoParameter&&) noexcept = delete;
+  GeneratedFileListParameter& operator=(const GeneratedFileListParameter&) = delete;
+  GeneratedFileListParameter& operator=(GeneratedFileListParameter&&) noexcept = delete;
 
   /**
    * @brief
@@ -83,4 +97,4 @@ private:
 };
 } // namespace complex
 
-COMPLEX_DEF_PARAMETER_TRAITS(complex::StackFileListInfoParameter, "aac15aa6-b367-508e-bf73-94ab6be0058b");
+COMPLEX_DEF_PARAMETER_TRAITS(complex::GeneratedFileListParameter, "aac15aa6-b367-508e-bf73-94ab6be0058b");
