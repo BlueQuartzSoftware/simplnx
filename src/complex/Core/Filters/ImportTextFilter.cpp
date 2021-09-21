@@ -141,10 +141,10 @@ IFilter::UniquePointer ImportTextFilter::clone() const
 
 Result<OutputActions> ImportTextFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  auto numericType = args.value<NumericType>(k_ScalarTypeKey.c_str());
-  auto arrayPath = args.value<DataPath>(k_DataArrayKey.c_str());
-  auto nTuples = args.value<u64>(k_NTuplesKey.c_str());
-  auto nComp = args.value<u64>(k_NCompKey.c_str());
+  auto numericType = args.value<NumericType>(k_ScalarTypeKey.view());
+  auto arrayPath = args.value<DataPath>(k_DataArrayKey.view());
+  auto nTuples = args.value<u64>(k_NTuplesKey.view());
+  auto nComp = args.value<u64>(k_NCompKey.view());
   auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{nTuples}, nComp, arrayPath);
 
   OutputActions actions;
@@ -155,12 +155,12 @@ Result<OutputActions> ImportTextFilter::preflightImpl(const DataStructure& data,
 
 Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  auto inputFilePath = args.value<fs::path>(k_InputFileKey.c_str());
-  auto numericType = args.value<NumericType>(k_ScalarTypeKey.c_str());
-  auto components = args.value<u64>(k_NCompKey.c_str());
-  auto skipLines = args.value<u64>(k_NSkipLinesKey.c_str());
-  auto choiceIndex = args.value<u64>(k_DelimiterChoiceKey.c_str());
-  auto path = args.value<DataPath>(k_DataArrayKey.c_str());
+  auto inputFilePath = args.value<fs::path>(k_InputFileKey.view());
+  auto numericType = args.value<NumericType>(k_ScalarTypeKey.view());
+  auto components = args.value<u64>(k_NCompKey.view());
+  auto skipLines = args.value<u64>(k_NSkipLinesKey.view());
+  auto choiceIndex = args.value<u64>(k_DelimiterChoiceKey.view());
+  auto path = args.value<DataPath>(k_DataArrayKey.view());
 
   char delimiter = IndexToDelimiter(choiceIndex);
 
