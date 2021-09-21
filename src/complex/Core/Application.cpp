@@ -27,12 +27,12 @@ std::filesystem::path findCurrentPath()
 {
 #if defined(__linux__)
   std::vector<char> buffer(PATH_MAX + 1);
-  ssize_t bytesWritten = readlink("/proc/self/exe", buffer.data(), buffer.size());
+  ssize_t bytesWritten = readlink("/proc/self/exe", buffer.data(), buffer.getSize());
   if(bytesWritten < 0)
   {
     throw std::runtime_error("Failed to get executable path");
   }
-  if(bytesWritten >= buffer.size())
+  if(bytesWritten >= buffer.getSize())
   {
     throw std::runtime_error("Failed to get executable path. Path too long for buffer.");
   }
@@ -52,8 +52,8 @@ std::filesystem::path findCurrentPath()
   return std::filesystem::path(buffer.data());
 #elif defined(__APPLE__)
   std::vector<char> buffer(1024 + 1);
-  uint32_t size = static_cast<uint32_t>(buffer.size());
-  int result = _NSGetExecutablePath(buffer.data(), &size);
+  uint32_t getSize = static_cast<uint32_t>(buffer.getSize());
+  int result = _NSGetExecutablePath(buffer.data(), &getSize);
   if(result != 0)
   {
     throw std::runtime_error("Failed to get executable path. Path too long buffer.");
@@ -71,17 +71,17 @@ Application::Application()
 : m_FilterList(new FilterList())
 , m_DataReader(new H5DataReader())
 {
-  initialize();
+  assignInstance();
 }
 
 Application::Application(int argc, char** argv)
 : m_FilterList(new FilterList())
 , m_DataReader(new H5DataReader())
 {
-  initialize();
+  assignInstance();
 }
 
-void Application::initialize()
+void Application::assignInstance()
 {
   s_Instance = this;
   m_CurrentPath = findCurrentPath();

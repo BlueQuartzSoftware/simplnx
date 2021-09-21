@@ -249,7 +249,7 @@ public:
   virtual size_t getTupleCount() const = 0;
 
   /**
-   * @brief Returns the tuple size.
+   * @brief Returns the tuple getSize.
    * @return size_t
    */
   virtual size_t getTupleSize() const = 0;

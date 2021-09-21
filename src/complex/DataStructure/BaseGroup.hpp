@@ -14,9 +14,16 @@ namespace complex
 /**
  * @class BaseGroup
  * @brief The BaseGroup class is the base class for all DataObject containers
- * in the DataStructure. Child classes should override
- * 'bool canInsert(const DataObject*) const' to determine which DataObjects
- * can be added to the group and which cannot.
+ * in the DataStructure. This is not an abstract class as all core functionality
+ * is provided by this class, but for type-checking purposes, this cannot not be
+ * the specified type when creating objects directly. Use DataGroup when a normal
+ * group of DataObjects is desired.
+ *
+ * Child classes should override 'bool canInsert(const DataObject*) const'
+ * to determine which DataObjects can be added to the group and which cannot.
+ * By default, an object cannot be added if another object with the same name
+ * already exists in the group. Additional rules can be added in derived
+ * classes.
  */
 class COMPLEX_EXPORT BaseGroup : public DataObject
 {
@@ -25,25 +32,31 @@ public:
   using ConstIterator = typename DataMap::ConstIterator;
 
   /**
-   * @brief Copy constructor
+   * @brief Copy constructor creates a BaseGroup as a shallow copy of the
+   * provided group.
    * @param other
    */
   BaseGroup(const BaseGroup& other);
 
   /**
-   * @brief Move constructor
+   * @brief Move constructor creates a BaseGroup using the existing values of
+   * the provided BaseGroup.
    * @param other
-   * @return
    */
   BaseGroup(BaseGroup&& other) noexcept;
 
+  /**
+   * @brief Destroys the BaseGroup and removes it from the list of it's
+   * children's known parents. If a child no longer has any parents, the
+   * DataObject is destroyed.
+   */
   virtual ~BaseGroup();
 
   /**
    * @brief Returns the number of DataObjects in the group.
    * @return size_t
    */
-  size_t size() const;
+  size_t getSize() const;
 
   /**
    * @brief Returns the underlying DataMap by value.
@@ -61,9 +74,11 @@ public:
   bool contains(const std::string& name) const;
 
   /**
-   * @brief Returns true if the specified DataObject is found among the container's
-   * children. Returns false otherwise. BaseGroups found among the container's
-   * children are not expanded during the operation.
+   * @brief Returns true if the specified DataObject is found among the
+   * container's children. Returns false otherwise.
+   *
+   * BaseGroups found among the container's children are not expanded during
+   * the operation.
    * @param obj
    * @return bool
    */
@@ -72,6 +87,9 @@ public:
   /**
    * Returns a pointer to the DataObject child with the specified name. Returns
    * nullptr if no child exists with the specified name exists.
+   *
+   * BaseGroups found among the container's children are not expanded during
+   * the operation.
    * @param name
    * @return DataObject*
    */
@@ -80,30 +98,39 @@ public:
   /**
    * Returns a pointer to the DataObject child with the specified name. Returns
    * nullptr if no child exists with the specified name exists.
+   *
+   * BaseGroups found among the container's children are not expanded during
+   * the operation.
    * @param name
    * @return DataObject*
    */
   const DataObject* operator[](const std::string& name) const;
 
   /**
-   * @brief Returns an iterator to the child with the specified name. If no such child is
-   * found, this function returns end().
+   * @brief Returns an iterator to the child with the specified name. If no
+   * such child is found, this function returns end().
+   *
+   * BaseGroups found among the container's children are not expanded during
+   * the operation.
    * @param name
-   * @return iterator<DataObject *>
+   * @return Iterator
    */
   Iterator find(const std::string& name);
 
   /**
-   * @brief Returns an iterator to the child with the specified name. If no such child is
-   * found, this function returns end().
+   * @brief Returns a ConstIterator to the child with the specified name. If no
+   * such child is found, this function returns end().
+   *
+   * BaseGroups found among the container's children are not expanded during
+   * the operation.
    * @param name
-   * @return iterator<DataObject *>
+   * @return ConstIterator
    */
   ConstIterator find(const std::string& name) const;
 
   /**
    * @brief Attempts to insert the specified DataObject into the container. If the
-   * DataObject passes *canInsert(obj: weak_ptr<DataObject>): bool*, the DataObject
+   * DataObject passes 'canInsert(obj: weak_ptr<DataObject>): bool', the DataObject
    * will be inserted into the container and the method returns true. Otherwise,
    * returns false.
    * @param obj
@@ -112,8 +139,11 @@ public:
   bool insert(const std::weak_ptr<DataObject>& obj);
 
   /**
-   * Attempts to remove the specified DataObject from the container. Returns true if
-   * it succeeded. Returns false otherwise.
+   * Attempts to remove the specified DataObject from the container. Returns
+   * true if it succeeded. Returns false otherwise.
+   *
+   * BaseGroups found among the container's children are not expanded during
+   * the operation.
    * @param obj
    * @return bool
    */
@@ -122,6 +152,9 @@ public:
   /**
    * Attempts to remove a DataObject with the specified name from the container.
    * Returns true if it succeeded. Returns false otherwise.
+   *
+   * BaseGroups found among the container's children are not expanded during
+   * the operation.
    * @param name
    * @return bool
    */
@@ -129,6 +162,9 @@ public:
 
   /**
    * @brief Returns an iterator to the beginning of the container.
+   *
+   * BaseGroups found among the container's children are not expanded during
+   * the use of the returned iterator.
    * @return Iterator
    */
   Iterator begin();
@@ -140,14 +176,17 @@ public:
   Iterator end();
 
   /**
-   * @brief Returns an iterator to the beginning of the container.
-   * @return Iterator
+   * @brief Returns a const iterator to the beginning of the container.
+   *
+   * BaseGroups found among the container's children are not expanded during
+   * the use of the returned iterator.
+   * @return ConstIterator
    */
   ConstIterator begin() const;
 
   /**
-   * @brief Returns an iterator to the end of the container.
-   * @return Iterator
+   * @brief Returns a const iterator to the end of the container.
+   * @return ConstIterator
    */
   ConstIterator end() const;
 
@@ -160,18 +199,22 @@ protected:
   BaseGroup(DataStructure& ds, const std::string& name);
 
   /**
-   * @brief Checks if the provided DataObject can be added to the container. This is a
-   * virtual method that is overwritten by derived classes to specify what can or
-   * cannot be added to the container. Returns true if the DataObject can be added to
-   * the container. Otherwise, returns false.
+   * @brief Checks if the provided DataObject can be added to the container.
+   * This is a virtual method so that derived classes can modify what can or
+   * cannot be added to the container. Returns true if the DataObject can be
+   * added to the container. Otherwise, returns false.
+   *
+   * By default, a DataObject cannot be added to the BaseContainer if an object
+   * with that name is already in the container. No BaseGroup children are
+   * expanded during this operation.
    * @param obj
    * @return bool
    */
   virtual bool canInsert(const DataObject* obj) const;
 
   /**
-   * @brief Sets a new DataStructure for the BaseGroup. Updates the DataMap and its
-   * contained DataObjects as well.
+   * @brief Sets a new DataStructure for the BaseGroup. Updates the DataMap
+   * and its contained DataObjects as well.
    * @param ds
    */
   void setDataStructure(DataStructure* ds) override;

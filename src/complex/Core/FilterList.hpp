@@ -27,20 +27,23 @@ class COMPLEX_EXPORT FilterList
 {
 public:
   /**
-   * Empty Constructor
+   * Constructs the FilterList and registers core filters.
    */
   FilterList();
 
+  /**
+   * @brief Default destructor.
+   */
   ~FilterList();
 
   /**
-   * @brief Returns a set of FilterHandles for each of the filters.
+   * @brief Returns a set of FilterHandles pointing to each of the known filters.
    * @return std::unordered_set<FilterHandle>
    */
   const std::unordered_set<FilterHandle>& getFilterHandles() const;
 
   /**
-   * @brief Searches the FilterHandles for the text in the filter and plugin
+   * @brief Searches the FilterHandles for the text within the filter and plugin
    * names. Returns a vector of the FilterHandles that contain the specified text.
    * @param text
    * @return std::vector<FilterHandle>
@@ -48,8 +51,8 @@ public:
   std::vector<FilterHandle> search(const std::string& text) const;
 
   /**
-   * @brief Attempts to create an IFilter specified by the given
-   * FilterHandle. Returns a pointer to the created filter if one was created.
+   * @brief Attempts to create an IFilter specified by the given FilterHandle.
+   * Returns a unique pointer to the created filter if one was created.
    * Returns nullptr otherwise.
    * @param handle
    * @return IFilter*
@@ -59,6 +62,9 @@ public:
   /**
    * @brief Returns the AbstractPlugin pointer corresponding to the specified
    * FilterHandle. Returns nullptr if the plugin could not be found.
+   * 
+   * The plugin is owned by the FilterList and will be cleaned up when the
+   * complex::Application is destroyed.
    * @param handle
    * @return AbstractPlugin*
    */
@@ -89,6 +95,9 @@ public:
   /**
    * @brief Returns a pointer to the plugin with the specified ID. Returns
    * nullptr if no plugin with the given ID is found.
+   * 
+   * This plugin is owned by the FilterList and will be cleaned up when the
+   * complex::Application closes.
    * @param id
    * @return AbstractPlugin*
    */

@@ -92,7 +92,7 @@ bool COMPLEX_EXPORT datasetExists(hid_t locationID, const std::string& datasetNa
  * @param datasetName The name of the dataset
  * @param dims A std::vector that will hold the sizes of the dimensions
  * @param typeClass The H5 class type
- * @param typeSize THe H5 size of the data
+ * @param typeSize THe H5 getSize of the data
  * @return Negative value is Failure. Zero or Positive is success;
  */
 herr_t COMPLEX_EXPORT getDatasetInfo(hid_t locationID, const std::string& datasetName, std::vector<hsize_t>& dims, H5T_class_t& classType, size_t& sizeType);

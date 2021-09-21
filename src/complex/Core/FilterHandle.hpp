@@ -59,10 +59,25 @@ public:
    */
   FilterHandle(FilterHandle&& rhs) noexcept;
 
+  /**
+   * @brief Copy assignment operator assigns the name and IDs from the
+   * provided FilterHandle.
+   * @param rhs
+   * @return FilterHandle&
+   */
   FilterHandle& operator=(const FilterHandle& rhs);
 
+  /**
+   * @brief Move assignment operator moves the name and IDs from the provided
+   * FilterHandle.
+   * @param rhs
+   * @return FilterHandle&
+   */
   FilterHandle& operator=(FilterHandle&& rhs) noexcept;
 
+  /**
+   * @brief Default destructor.
+   */
   ~FilterHandle() noexcept;
 
   /**
@@ -108,6 +123,13 @@ private:
  */
 bool COMPLEX_EXPORT operator==(const FilterHandle& lhs, const FilterHandle& rhs) noexcept;
 
+/**
+ * @brief The FilterHandle inequality operator checks that the filter name,
+ * filter ID, and plugin ID are not identical between the two FilterHandles.
+ * @param lhs
+ * @param rhs
+ * @return bool
+ */
 bool COMPLEX_EXPORT operator!=(const FilterHandle& lhs, const FilterHandle& rhs) noexcept;
 } // namespace complex
 
@@ -116,6 +138,11 @@ namespace std
 template <>
 struct hash<complex::FilterHandle>
 {
+  /**
+   * @brief Hash operator for placing in a collection that requires hashing values.
+   * @param value
+   * @return std::size_t
+   */
   std::size_t operator()(const complex::FilterHandle& value) const noexcept
   {
     std::hash<complex::FilterHandle::FilterIdType> hasher;

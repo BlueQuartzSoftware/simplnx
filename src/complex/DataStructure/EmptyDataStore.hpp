@@ -9,7 +9,7 @@ namespace complex
 /**
  * @class EmptyDataStore
  * @brief The EmptyDataStore class serves as a placeholder IDataStore for use
- * in preflight where data is not available but the number and size of tuples
+ * in preflight where data is not available but the number and getSize of tuples
  * is known.
  * @tparam T
  */
@@ -22,7 +22,7 @@ public:
   using const_reference = typename IDataStore<T>::const_reference;
 
   /**
-   * @brief Constructs an empty data store with a tuple size and count of 0.
+   * @brief Constructs an empty data store with a tuple getSize and count of 0.
    */
   EmptyDataStore()
   : m_TupleSize(0)
@@ -73,7 +73,7 @@ public:
   }
 
   /**
-   * @brief Returns the target tuple size.
+   * @brief Returns the target tuple getSize.
    * @return size_t
    */
   size_t getTupleSize() const override
@@ -83,7 +83,7 @@ public:
 
   /**
    * @brief Throws an exception because this should never be called. The
-   * EmptyDataStore class contains no data other than its target size.
+   * EmptyDataStore class contains no data other than its target getSize.
    * @param tupleCount
    */
   void resizeTuples(size_t tupleCount) override
@@ -93,7 +93,7 @@ public:
 
   /**
    * @brief Throws an exception because this should never be called. The
-   * EmptyDataStore class contains no data other than its target size.
+   * EmptyDataStore class contains no data other than its target getSize.
    * @param index
    * @return value_type
    */
@@ -104,7 +104,7 @@ public:
 
   /**
    * @brief Throws an exception because this should never be called. The
-   * EmptyDataStore class contains no data other than its target size.
+   * EmptyDataStore class contains no data other than its target getSize.
    * @param index
    * @param value
    */
@@ -115,7 +115,7 @@ public:
 
   /**
    * @brief Throws an exception because this should never be called. The
-   * EmptyDataStore class contains no data other than its target size.
+   * EmptyDataStore class contains no data other than its target getSize.
    * @param index
    * @return const_reference
    */
@@ -126,7 +126,7 @@ public:
 
   /**
    * @brief Throws an exception because this should never be called. The
-   * EmptyDataStore class contains no data other than its target size.
+   * EmptyDataStore class contains no data other than its target getSize.
    * @param  index
    * @return const_reference
    */
@@ -137,7 +137,7 @@ public:
 
   /**
    * @brief Throws an exception because this should never be called. The
-   * EmptyDataStore class contains no data other than its target size.
+   * EmptyDataStore class contains no data other than its target getSize.
    * @param  index
    * @return reference
    */

@@ -169,7 +169,7 @@ public:
   bool executeFrom(const index_type& index);
 
   /**
-   * @brief Returns the size of the pipeline segment.
+   * @brief Returns the getSize of the pipeline segment.
    * @return size_t
    */
   size_t size() const;
@@ -185,7 +185,7 @@ public:
   /**
    * @brief Returns a pointer to the pipeline node at the given index.
    * Returns nullptr if the specified index is greater than or equal to the
-   * size of the pipeline.
+   * getSize of the pipeline.
    * @param index
    * @return const IPipelineNode*
    */
@@ -194,7 +194,7 @@ public:
   /**
    * @brief Returns a const pointer to the pipeline node at the given index.
    * Returns nullptr if the specified index is greater than or equal to the
-   * size of the pipeline.
+   * getSize of the pipeline.
    * @param index
    * @return const IPipelineNode*
    */

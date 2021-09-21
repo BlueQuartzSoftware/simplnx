@@ -93,7 +93,7 @@ public:
   }
 
   /**
-   * @brief Returns the current size.
+   * @brief Returns the current getSize.
    * @return size_t
    */
   size_t size() const

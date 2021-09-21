@@ -10,31 +10,35 @@ namespace complex
  * @class DataGroup
  * @brief The DataGroup class is an instantiable implementation of BaseGroup.
  * The DataGroup class does not impose restrictions on which types of
- * DataObject that can be stored.
+ * DataObject can be inserted.
  */
 class COMPLEX_EXPORT DataGroup : public BaseGroup
 {
 public:
   /**
-   * @brief This is a static function that will create a new DataGroup object, insert it
-   * into the DataStructure and return the pointer. While the raw pointer is returned the
-   * DataStructure takes ownership of the object and will delete the object when needed.
+   * @brief Attempts to construct and insert a DataGroup into the DataStructure.
+   * If a parentId is provided, then the DataGroup is created with the
+   * corresponding BaseGroup as its parent. Otherwise, the DataStucture will be
+   * used as the parent object. In either case, the DataStructure will take
+   * ownership of the DataGroup.
    *
-   * @param ds The DataStructure object to insert the newly created DataGroup into
-   * @param name  The name of the DataGroup
-   * @param parentId [Optional] The id of the parent to the newly constructed DataGroup, if there is one.
-   * @return Raw pointer to the newly constructed DataGroup.
+   * Returns a pointer to the DataGroup if the process succeeds. Returns
+   * nullptr otherwise.
+   * @param ds
+   * @param name
+   * @param parentId = {}
+   * @return DataGroup*
    */
   static DataGroup* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief Copy constructor
+   * @brief Constructs a shallow copy of the DataGroup.
    * @param other
    */
   DataGroup(const DataGroup& other);
 
   /**
-   * @brief Move constructor
+   * @brief Constructs a DataGroup and moves values from the specified target.
    * @param other
    */
   DataGroup(DataGroup&& other) noexcept;
@@ -50,7 +54,9 @@ public:
 
   /**
    * @brief Creates and returns a shallow copy of the DataGroup. The caller is
-   * responsible for deleting the returned pointer when it is no longer needed.
+   * responsible for deleting the returned pointer when it is no longer needed
+   * as a copy cannot be added to the DataStructure anywhere the original
+   * exists without changing its name.
    * @return DataObject*
    */
   DataObject* shallowCopy() override;
@@ -68,14 +74,6 @@ public:
    * @return H5::Error
    */
   H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType parentId) override;
-
-  /**
-   * @brief Writes the DataObject to the target HDF5 group.
-   * @param parentId
-   * @param groupId
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const override;
 
 protected:
   /**
@@ -95,6 +93,12 @@ protected:
    */
   bool canInsert(const DataObject* obj) const override;
 
-private:
+  /**
+   * @brief Writes the DataObject to the target HDF5 group.
+   * @param parentId
+   * @param groupId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const override;
 };
 } // namespace complex

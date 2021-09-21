@@ -29,22 +29,26 @@ public:
   using ConstIterator = typename MapType::const_iterator;
 
   /**
-   * @brief Default constructor
+   * @brief Constructs an empty DataMap.
    */
   DataMap();
 
   /**
-   * @brief Copy constructor
+   * @brief Creates a copy of the specified DataMap.
    * @param other
    */
   DataMap(const DataMap& other);
 
   /**
-   * @brief Move constructor
+   * @brief Constructs a new DataMap and moves the data from the target DataMap.
    * @param other
    */
   DataMap(DataMap&& other) noexcept;
 
+  /**
+   * @brief Destroys the DataMap, deleting the std::shared_ptrs that make up
+   * the map.
+   */
   ~DataMap();
 
   /**
@@ -57,7 +61,7 @@ public:
    * @brief Returns the number of items in the DataMap.
    * @return size_t
    */
-  size_t size() const;
+  size_t getSize() const;
 
   /**
    * @brief Attempts to insert the target DataObject into the map.
@@ -112,28 +116,32 @@ public:
   std::map<IdType, std::weak_ptr<DataObject>> getAllItems() const;
 
   /**
-   * @brief Returns the DataObject with the specified IdType.
+   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * Returns nullptr if no DataObject is found.
    * @param key
    * @return DataObject*
    */
   DataObject* operator[](IdType key);
 
   /**
-   * @brief Returns the DataObject with the specified IdType.
+   * @brief Returns a const pointer to the DataObject with the specified IdType.
+   * Returns nullptr if no DataObject is found.
    * @param key
    * @return const DataObject*
    */
   const DataObject* operator[](IdType key) const;
 
   /**
-   * @brief Returns the DataObject with the specified name.
+   * @brief Returns a pointer to the DataObject with the specified name.
+   * Returns nullptr if no DataObject is found.
    * @param name
    * @return DataObject*
    */
   DataObject* operator[](const std::string& name);
 
   /**
-   * @brief Returns the DataObject with the specified name.
+   * @brief Returns a const pointer to the DataObject with the specified name.
+   * Returns nullptr if no DataObject is found.
    * @param name
    * @return const DataObject*
    */
@@ -207,26 +215,26 @@ public:
   Iterator end();
 
   /**
-   * @brief Returns an iterator to the beginning of the DataMap.
+   * @brief Returns a const iterator to the beginning of the DataMap.
    * @return ConstIterator
    */
   ConstIterator begin() const;
 
   /**
-   * @brief Returns an iterator to the end of the DataMap.
+   * @brief Returns a const iterator to the end of the DataMap.
    * @return ConstIterator
    */
   ConstIterator end() const;
 
   /**
-   * @brief Copy assignment operator
+   * @brief Copies values from the specified DataMap.
    * @param rhs
    * @return DataMap&
    */
   DataMap& operator=(const DataMap& rhs);
 
   /**
-   * @brief Move assignment operator
+   * @brief Moves values from the specified DataMap.
    * @param rhs
    * @return DataMap&
    */

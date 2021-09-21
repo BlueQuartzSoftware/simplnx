@@ -405,7 +405,7 @@ herr_t complex::H5::Reader::Generic::getAttributeInfo(hid_t locationID, const st
       {
         /* Get the class. */
         typeClass = H5Tget_class(typeID);
-        /* Get the size. */
+        /* Get the getSize. */
         typeSize = H5Tget_size(typeID);
         hid_t dataspaceID = H5Aget_space(attributeID);
         if(dataspaceID >= 0)

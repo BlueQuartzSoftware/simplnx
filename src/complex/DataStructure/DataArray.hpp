@@ -9,7 +9,8 @@ namespace complex
  * @class DataArray
  * @brief The DataArray class is a type of DataObject that exists to store and
  * retrieve array data within the DataStructure. The DataArray is designed to
- * allow expandability into multiple sources of data, including out-of-core data.
+ * allow expandability into multiple sources of data, including out-of-core data,
+ * through the use of derived DataStore classes.
  */
 template <class T>
 class DataArray : public DataObject
@@ -23,6 +24,28 @@ public:
   using Iterator = typename IDataStore<T>::Iterator;
   using ConstIterator = typename IDataStore<T>::ConstIterator;
 
+  /**
+   * @brief Attempts to create a DataArray with the specified values and add
+   * it to the DataStructure. If a parentId is provided, then the DataArray
+   * is created with the target DataObject as its parent. Otherwise, the
+   * created DataArray is nested directly within the DataStructure.
+   *
+   * In either case, the DataArray is then owned by the DataStructure and will
+   * be cleaned up when the DataStructure is finished with it. As such, it is
+   * not recommended that the returned pointer be stored outside of the scope
+   * in which it is created. Use the object's ID or DataPath to retrieve the
+   * DataArray if it is needed after the program has left the current scope.
+   *
+   * Returns a pointer to the created DataArray if the process succeeds.
+   * Returns nullptr otherwise.
+   *
+   * The created DataArray takes ownership of the provided DataStore.
+   * @param ds
+   * @param name
+   * @param store
+   * @param parentId = {}
+   * @return DataArray<T>*
+   */
   static DataArray* Create(DataStructure& ds, const std::string& name, store_type* store, const std::optional<IdType>& parentId = {})
   {
     auto data = std::shared_ptr<DataArray>(new DataArray(ds, name, store));
@@ -34,7 +57,7 @@ public:
   }
 
   /**
-   * @brief Creates a copy of the specified tuple size, count, and smart
+   * @brief Creates a copy of the specified tuple getSize, count, and smart
    * pointer to the target DataStore. This copy is not added to the
    * DataStructure.
    * @param other
@@ -55,6 +78,9 @@ public:
   {
   }
 
+  /**
+   * @brief Destroys the DataArray and the contained DataStore.
+   */
   virtual ~DataArray() = default;
 
   /**
@@ -87,7 +113,7 @@ public:
   }
 
   /**
-   * @brief Returns the number of elements in the data array.
+   * @brief Returns the number of elements in the DataArray.
    * @return size_t
    */
   size_t getSize() const
@@ -105,7 +131,7 @@ public:
   }
 
   /**
-   * @brief Returns the tuple size.
+   * @brief Returns the tuple getSize.
    * @return size_t
    */
   size_t getTupleSize() const
@@ -114,10 +140,12 @@ public:
   }
 
   /**
-   * @brief Returns the value found at the specified index of the data array.
-   * Throws an exception if the DataStore has not been allocated. This can be
-   * used to edit the value found at the specified index.
-   * @param  index
+   * @brief Returns a reference to the value found at the specified index of
+   * the data array. This can be used to edit the value found at the specified
+   * index.
+   *
+   * Throws an exception if the DataStore has not been allocated.
+   * @param index
    * @return reference
    */
   reference operator[](size_t index)
@@ -131,9 +159,11 @@ public:
   }
 
   /**
-   * @brief Returns the value found at the specified index of the data array.
-   * Throws an exception if the DataStore has not been allocated. This cannot be
-   * used to edit the value found at the specified index.
+   * @brief Returns const reference to the value found at the specified index
+   * of the data array. This cannot be used to edit the value found at the
+   * specified index.
+   *
+   * Throws an exception if the DataStore has not been allocated.
    * @param index
    * @return const_reference
    */
@@ -148,9 +178,11 @@ public:
   }
 
   /**
-   * @brief Returns the value found at the specified index of the data array.
-   * Throws an exception if the DataStore has not been allocated. This cannot be
-   * used to edit the value found at the specified index.
+   * @brief Returns a const reference to the value found at the specified index
+   * of the data array. This cannot be used to edit the value found at the
+   * specified index.
+   *
+   * Throws an exception if the DataStore has not been allocated.
    * @param index
    * @return const_reference
    */
@@ -165,7 +197,8 @@ public:
   }
 
   /**
-   * @brief Returns a raw pointer to the DataStore for read-only access.
+   * @brief Returns a const pointer to the DataStore for read-only access.
+   * Returns nullptr if no DataStore is available.
    * @return DataStore<T>*
    */
   const store_type* getDataStore() const
@@ -186,7 +219,7 @@ public:
    * @brief Returns a std::weak_ptr for the stored DataStore.
    * @return std::weak_ptr<DataStore<T>>
    */
-  weak_store getDataStorePtr()
+  weak_store getDataStorePtr() const
   {
     return m_DataStore;
   }
@@ -216,9 +249,10 @@ public:
   }
 
   /**
-   * @brief Sets a new DataStore for the DataArray to handle. The existing DataStore
-   * is deleted if there are no other references. To save the existing DataStore
-   * before replacing it, call releaseDataStore() before setting the new DataStore.
+   * @brief Sets a new DataStore for the DataArray to handle. The existing
+   * DataStore is deleted if there are no other std::shared_ptr references.
+   * To save the existing DataStore before replacing it, call
+   * releaseDataStore() before setting the new DataStore.
    * @param store
    */
   void setDataStore(const weak_store& store)
@@ -232,6 +266,9 @@ public:
 
   /**
    * @brief Returns the first item in the array.
+   *
+   * This method requires the DataArray to have at least one value in the
+   * DataStore. Otherwise, this throws a runtime exception.
    * @return value_type
    */
   value_type front() const
@@ -241,6 +278,9 @@ public:
 
   /**
    * @brief Returns the last item in the array.
+   *
+   * This method requires the DataArray to have at least one value in the
+   * DataStore. Otherwise, this throws a runtime exception.
    * @return value_type
    */
   value_type back() const
@@ -249,7 +289,9 @@ public:
   }
 
   /**
-   * @brief Returns an Iterator to the begining of the data array.
+   * @brief Returns an iterator to the begining of the DataArray.
+   *
+   * This method will fail if no DataStore has been set.
    * @return Iterator
    */
   Iterator begin()
@@ -258,7 +300,9 @@ public:
   }
 
   /**
-   * @brief Returns an Iterator to the end of the data array.
+   * @brief Returns an iterator to the end of the DataArray.
+   *
+   * This method will fail if no DataStore has been set.
    * @return Iterator
    */
   Iterator end()
@@ -267,7 +311,9 @@ public:
   }
 
   /**
-   * @brief Returns an ConstIterator to the begining of the data array.
+   * @brief Returns a const iterator to the begining of the DataArray.
+   *
+   * This method will fail if no DataStore has been set.
    * @return ConstIterator
    */
   ConstIterator begin() const
@@ -276,7 +322,9 @@ public:
   }
 
   /**
-   * @brief Returns an ConstIterator to the end of the data array.
+   * @brief Returns a const iterator to the end of the DataArray.
+   *
+   * This method will fail if no DataStore has been set.
    * @return ConstIterator
    */
   ConstIterator end() const
@@ -285,7 +333,8 @@ public:
   }
 
   /**
-   * @brief Copy assignment operator
+   * @brief Copies the specified DataArray's std::shared_ptr<DataStore> into
+   * the current DataArray.
    * @param rhs
    * @return DataArray&
    */
@@ -296,7 +345,7 @@ public:
   }
 
   /**
-   * @brief Move assignment operator
+   * @brief Moves the specified DataArray's DataStore into the current DataArray.
    * @param rhs
    * @return DataArray&
    */
@@ -306,21 +355,12 @@ public:
     return *this;
   }
 
-  /**
-   * @brief Writes the DataArray to HDF5 using the provided group ID.
-   * @param parentId
-   * @param dataId
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType dataId) const override
-  {
-    return m_DataStore->writeHdf5(dataId);
-  }
-
 protected:
   /**
-   * @brief Constructs a DataArray with the specified tuple size, count, and
-   * constructs a DataStore with the provided default value.
+   * @brief Constructs a DataArray with the specified name and DataStore.
+   *
+   * The DataArray takes ownership of the DataStore. If none is provided,
+   * an EmptyDataStore is used instead.
    * @param ds
    * @param name
    * @param store
@@ -332,8 +372,10 @@ protected:
   }
 
   /**
-   * @brief Constructs a DataArray with the specified tuple size, count, and
-   * DataStore. The DataArray takes ownership of the DataStore.
+   * @brief Constructs a DataArray with the specified tuple getSize, count, and
+   * DataStore.
+   *
+   * The DataArray takes ownership of the DataStore.
    * @param ds
    * @param name
    * @param dataStore
@@ -342,6 +384,19 @@ protected:
   : DataObject(ds, name)
   {
     setDataStore(store);
+  }
+
+  /**
+   * @brief Writes the DataArray to HDF5 using the provided group ID.
+   *
+   * This method will fail if no DataStore has been set.
+   * @param parentId
+   * @param dataId
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType dataId) const override
+  {
+    return m_DataStore->writeHdf5(dataId);
   }
 
 private:

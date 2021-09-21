@@ -146,7 +146,7 @@ size_t VertexGeom::getNumberOfElements() const
 
 AbstractGeometry::StatusCode VertexGeom::findElementSizes()
 {
-  // Vertices are 0-dimensional (they have no size),
+  // Vertices are 0-dimensional (they have no getSize),
   // so simply splat 0 over the sizes array
   auto dataStore = new DataStore<float>(1, getNumberOfElements());
   dataStore->fill(0.0f);
