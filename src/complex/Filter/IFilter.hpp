@@ -25,6 +25,43 @@ class COMPLEX_EXPORT IFilter
 public:
   using UniquePointer = std::unique_ptr<IFilter>;
 
+  struct Message
+  {
+    enum class Type : u8
+    {
+      Info = 0,
+      Debug,
+      Warning,
+      Error
+    };
+
+    Type type = Type::Info;
+    std::string message;
+  };
+
+  struct MessageHandler
+  {
+    using Callback = std::function<void(const Message&)>;
+
+    void operator()(const Message& message) const
+    {
+      if(m_Callback)
+      {
+        m_Callback(message);
+      }
+    }
+    void operator()(const std::string& message) const
+    {
+      operator()(Message{Message::Type::Info, message});
+    }
+    void operator()(Message::Type type, const std::string& message) const
+    {
+      operator()(Message{type, message});
+    }
+
+    Callback m_Callback;
+  };
+
   virtual ~IFilter() noexcept;
 
   IFilter(const IFilter&) = delete;
@@ -67,19 +104,19 @@ public:
    * @brief
    * @param data
    * @param args
-   * @param messageHandler
+   * @param messageHandler = {}
    * @return
    */
-  Result<OutputActions> preflight(const DataStructure& data, const Arguments& args) const;
+  Result<OutputActions> preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
 
   /**
    * @brief
    * @param data
    * @param args
-   * @param messageHandler
+   * @param messageHandler = {}
    * @return
    */
-  Result<> execute(DataStructure& data, const Arguments& args) const;
+  Result<> execute(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
 
   /**
    * @brief
@@ -102,17 +139,19 @@ protected:
    * @brief
    * @param data
    * @param args
+   * @param messageHandler = {}
    * @return
    */
-  virtual Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args) const = 0;
+  virtual Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const = 0;
 
   /**
    * @brief
    * @param data
    * @param args
+   * @param messageHandler = {}
    * @return
    */
-  virtual Result<> executeImpl(DataStructure& data, const Arguments& args) const = 0;
+  virtual Result<> executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const = 0;
 };
 
 using FilterCreationFunc = IFilter::UniquePointer (*)();

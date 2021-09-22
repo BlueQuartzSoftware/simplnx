@@ -137,7 +137,7 @@ IFilter::UniquePointer ImportTextFilter::clone() const
   return std::make_unique<ImportTextFilter>();
 }
 
-Result<OutputActions> ImportTextFilter::preflightImpl(const DataStructure& data, const Arguments& args) const
+Result<OutputActions> ImportTextFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   auto numericType = args.value<NumericType>(k_ScalarTypeKey);
   auto arrayPath = args.value<DataPath>(k_DataArrayKey);
@@ -151,7 +151,7 @@ Result<OutputActions> ImportTextFilter::preflightImpl(const DataStructure& data,
   return {std::move(actions)};
 }
 
-Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& args) const
+Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   auto inputFilePath = args.value<fs::path>(k_InputFileKey);
   auto numericType = args.value<NumericType>(k_ScalarTypeKey);

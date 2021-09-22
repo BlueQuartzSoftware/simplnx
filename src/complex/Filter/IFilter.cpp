@@ -32,7 +32,7 @@ namespace complex
 {
 IFilter::~IFilter() noexcept = default;
 
-Result<OutputActions> IFilter::preflight(const DataStructure& data, const Arguments& args) const
+Result<OutputActions> IFilter::preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   Parameters params = parameters();
 
@@ -101,7 +101,7 @@ Result<OutputActions> IFilter::preflight(const DataStructure& data, const Argume
     return {nonstd::make_unexpected(std::move(errors)), std::move(warnings)};
   }
 
-  auto implResult = preflightImpl(data, args);
+  auto implResult = preflightImpl(data, args, messageHandler);
 
   for(auto&& warning : warnings)
   {
@@ -111,7 +111,7 @@ Result<OutputActions> IFilter::preflight(const DataStructure& data, const Argume
   return implResult;
 }
 
-Result<> IFilter::execute(DataStructure& data, const Arguments& args) const
+Result<> IFilter::execute(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   // determine required parameters
 
@@ -134,7 +134,7 @@ Result<> IFilter::execute(DataStructure& data, const Arguments& args) const
     }
   }
 
-  return executeImpl(data, args);
+  return executeImpl(data, args, messageHandler);
 }
 
 nlohmann::json IFilter::toJson(const Arguments& args) const
