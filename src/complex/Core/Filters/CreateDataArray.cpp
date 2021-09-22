@@ -6,7 +6,6 @@
 #include "complex/Core/Parameters/NumericTypeParameter.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 
-
 namespace complex
 {
 
