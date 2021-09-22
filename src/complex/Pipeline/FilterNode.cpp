@@ -2,6 +2,7 @@
 
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterList.hpp"
+#include "complex/Pipeline/Messaging/FilterPreflightMessage.hpp"
 
 using namespace complex;
 
@@ -63,6 +64,7 @@ bool FilterNode::preflight(DataStructure& data)
     m_Errors = result.errors();
 
     clearPreflightStructure();
+    notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
     return false;
   }
   else
@@ -71,6 +73,7 @@ bool FilterNode::preflight(DataStructure& data)
     m_Errors.clear();
 
     setPreflightStructure(data);
+    notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
     return true;
   }
 }

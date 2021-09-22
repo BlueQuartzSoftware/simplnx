@@ -221,6 +221,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Pipeline/IPipelineNode.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.hpp
 
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/FilterPreflightMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/IPipelineMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeAddedMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeRemovedMessage.hpp
@@ -320,6 +321,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Pipeline/IPipelineNode.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.cpp
 
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/FilterPreflightMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/IPipelineMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeAddedMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeRemovedMessage.cpp
