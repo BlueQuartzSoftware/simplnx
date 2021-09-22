@@ -1,6 +1,5 @@
 #pragma once
 
-#include "complex/Core/Parameters/utils/StackFileListInfo.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Filter/ValueParameter.hpp"
 #include "complex/complex_export.hpp"

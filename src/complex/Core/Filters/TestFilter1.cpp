@@ -3,7 +3,6 @@
 #include "complex/Core/Parameters/BoolParameter.hpp"
 #include "complex/Core/Parameters/GeneratedFileListParameter.hpp"
 #include "complex/Core/Parameters/NumberParameter.hpp"
-#include "complex/Core/Parameters/utils/StackFileListInfo.hpp"
 
 using namespace complex;
 
