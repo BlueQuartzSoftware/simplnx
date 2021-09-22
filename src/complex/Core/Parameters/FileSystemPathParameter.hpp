@@ -30,11 +30,11 @@ public:
    */
   using ValueType = struct s_value_type
   {
-    s_value_type(const std::filesystem::path& path, PathType pathType)
-    : m_Path(path)
-    , m_PathType(pathType){}
+//    s_value_type(const std::filesystem::path& path, PathType pathType)
+//    : m_Path(path)
+//    , m_PathType(pathType){}
     std::filesystem::path m_Path;
-    PathType m_PathType = {PathType::InputFile};
+    PathType m_PathType;
   };
 
   FileSystemPathParameter() = delete;
