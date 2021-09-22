@@ -20,8 +20,8 @@ public:
 
   // Declare the strings used as keys for the Arguments
   static inline constexpr const char k_NumericType_Key[] = "numeric_type";
-  static inline constexpr const char k_NumComps_Key[] = "n_comp";
-  static inline constexpr const char k_NumTuples_Key[] = "n_tuples";
+  static inline constexpr const char k_NumComps_Key[] = "component_count";
+  static inline constexpr const char k_NumTuples_Key[] = "tuple_count";
   static inline constexpr const char k_DataPath_Key[] = "output_data_array";
 
   /**

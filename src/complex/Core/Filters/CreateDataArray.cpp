@@ -1,13 +1,11 @@
 #include "CreateDataArray.hpp"
 
-// INSERT YOUR PARAMETER HEADERS
 #include "complex/Core/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Core/Parameters/ChoicesParameter.hpp"
 #include "complex/Core/Parameters/NumberParameter.hpp"
 #include "complex/Core/Parameters/NumericTypeParameter.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 
-#include <iostream>
 
 namespace complex
 {
