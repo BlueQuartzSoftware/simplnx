@@ -28,6 +28,18 @@ public:
    */
   PipelineNodeObserver();
 
+  /**
+   * @brief Copy constructor not implemented.
+   * @param other
+   */
+  PipelineNodeObserver(const PipelineNodeObserver& other) = delete;
+
+  /**
+   * @brief Move constructor not implemented.
+   * @param other
+   */
+  PipelineNodeObserver(PipelineNodeObserver&& other) = delete;
+
   virtual ~PipelineNodeObserver();
 
   /**
@@ -49,10 +61,10 @@ public:
   void startObservingNode(IPipelineNode* node);
 
   /**
-   * @brief Stop observing the specified pipeline node.
-   * @param node
+   * @brief Stop observing the current pipeline node.
+   * @param
    */
-  void stopObservingNode(IPipelineNode* node);
+  void stopObservingNode();
 
 protected:
   /**

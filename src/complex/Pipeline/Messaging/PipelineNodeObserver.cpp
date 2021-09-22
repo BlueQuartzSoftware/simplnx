@@ -12,10 +12,7 @@ PipelineNodeObserver::PipelineNodeObserver()
 
 PipelineNodeObserver::~PipelineNodeObserver()
 {
-  if(isObservingNode())
-  {
-    stopObservingNode(m_ObservedNode);
-  }
+  stopObservingNode();
 }
 
 IPipelineNode* PipelineNodeObserver::getObservedNode() const
@@ -36,23 +33,16 @@ void PipelineNodeObserver::startObservingNode(IPipelineNode* node)
   }
   if(isObservingNode())
   {
-    stopObservingNode(m_ObservedNode);
+    stopObservingNode();
     return;
   }
 
   m_Connection = node->getSignal().connect([this](IPipelineNode* node, const std::shared_ptr<IPipelineMessage>& msg) { this->onNotify(node, msg); });
   m_ObservedNode = node;
-  node->addObserver(this);
 }
 
-void PipelineNodeObserver::stopObservingNode(IPipelineNode* node)
+void PipelineNodeObserver::stopObservingNode()
 {
-  if(!isObservingNode() || m_ObservedNode != node)
-  {
-    return;
-  }
-
   m_Connection.disconnect();
   m_ObservedNode = nullptr;
-  node->removeObserver(this);
 }

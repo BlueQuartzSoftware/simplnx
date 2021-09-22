@@ -21,7 +21,7 @@ class COMPLEX_EXPORT IPipelineNode
 
 public:
   using IdType = Uuid;
-  using signal_type = nod::signal<void (IPipelineNode*, const std::shared_ptr<IPipelineMessage>&)>;
+  using SignalType = nod::signal<void (IPipelineNode*, const std::shared_ptr<IPipelineMessage>&)>;
 
   enum class NodeType
   {
@@ -134,9 +134,9 @@ public:
 
   /**
    * @brief Returns a reference to the signal used for messaging.
-   * @return PipelineNodeObserver::signal_type&
+   * @return SignalType&
    */
-  signal_type& getSignal();
+  SignalType& getSignal();
 
 protected:
   /**
@@ -150,18 +150,6 @@ protected:
    * @param msg
    */
   void notify(const std::shared_ptr<IPipelineMessage>& msg);
-
-  /**
-   * @brief Adds the specified observer to the list of known observers.
-   * @param obs
-   */
-  void addObserver(PipelineNodeObserver* obs);
-
-  /**
-   * @brief Removes the specified observer from the list of known observers.
-   * @param obs
-   */
-  void removeObserver(PipelineNodeObserver* obs);
 
   /**
    * @brief Default constructor
@@ -196,8 +184,7 @@ private:
   Pipeline* m_Parent;
   DataStructure m_DataStructure;
   DataStructure m_PreflightStructure;
-  std::vector<PipelineNodeObserver*> m_Observers;
   bool m_IsPreflighted = false;
-  signal_type m_Signal;
+  SignalType m_Signal;
 };
 } // namespace complex

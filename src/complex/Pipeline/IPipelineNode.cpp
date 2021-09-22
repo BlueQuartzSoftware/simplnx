@@ -122,21 +122,7 @@ void IPipelineNode::notify(const std::shared_ptr<IPipelineMessage>& msg)
   m_Signal(this, msg);
 }
 
-void IPipelineNode::addObserver(PipelineNodeObserver* obs)
-{
-  m_Observers.push_back(obs);
-}
-
-void IPipelineNode::removeObserver(PipelineNodeObserver* obs)
-{
-  if(std::find(m_Observers.begin(), m_Observers.end(), obs) == m_Observers.end())
-  {
-    return;
-  }
-  m_Observers.erase(std::remove(m_Observers.begin(), m_Observers.end(), obs));
-}
-
-IPipelineNode::signal_type& IPipelineNode::getSignal()
+IPipelineNode::SignalType& IPipelineNode::getSignal()
 {
   return m_Signal;
 }
