@@ -1,5 +1,6 @@
 #include "IPipelineNode.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 
 #include "complex/Pipeline/Messaging/NodeStatusMessage.hpp"
@@ -118,18 +119,10 @@ bool IPipelineNode::isPreflighted() const
 
 void IPipelineNode::notify(const std::shared_ptr<IPipelineMessage>& msg)
 {
-  for(auto obs : m_Observers)
-  {
-    obs->onNotify(this, msg);
-  }
+  m_Signal(this, msg);
 }
 
-void IPipelineNode::addObserver(PipelineNodeObserver* obs)
+IPipelineNode::SignalType& IPipelineNode::getSignal()
 {
-  m_Observers.push_back(obs);
-}
-
-void IPipelineNode::removeObserver(PipelineNodeObserver* obs)
-{
-  m_Observers.erase(std::remove(m_Observers.begin(), m_Observers.end(), obs));
+  return m_Signal;
 }

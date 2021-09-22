@@ -16,19 +16,51 @@
 
 namespace complex
 {
-class FilterMessage;
-class FilterObserver;
-
 /**
  * @class IFilter
  * @brief
  */
 class COMPLEX_EXPORT IFilter
 {
-  friend class FilterObserver;
-
 public:
   using UniquePointer = std::unique_ptr<IFilter>;
+
+  struct Message
+  {
+    enum class Type : u8
+    {
+      Info = 0,
+      Debug,
+      Warning,
+      Error
+    };
+
+    Type type = Type::Info;
+    std::string message;
+  };
+
+  struct MessageHandler
+  {
+    using Callback = std::function<void(const Message&)>;
+
+    void operator()(const Message& message) const
+    {
+      if(m_Callback)
+      {
+        m_Callback(message);
+      }
+    }
+    void operator()(const std::string& message) const
+    {
+      operator()(Message{Message::Type::Info, message});
+    }
+    void operator()(Message::Type type, const std::string& message) const
+    {
+      operator()(Message{type, message});
+    }
+
+    Callback m_Callback;
+  };
 
   virtual ~IFilter() noexcept;
 
@@ -72,19 +104,19 @@ public:
    * @brief
    * @param data
    * @param args
-   * @param messageHandler
+   * @param messageHandler = {}
    * @return
    */
-  Result<OutputActions> preflight(const DataStructure& data, const Arguments& args) const;
+  Result<OutputActions> preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
 
   /**
    * @brief
    * @param data
    * @param args
-   * @param messageHandler
+   * @param messageHandler = {}
    * @return
    */
-  Result<> execute(DataStructure& data, const Arguments& args) const;
+  Result<> execute(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
 
   /**
    * @brief
@@ -107,59 +139,19 @@ protected:
    * @brief
    * @param data
    * @param args
+   * @param messageHandler = {}
    * @return
    */
-  virtual Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args) const = 0;
+  virtual Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const = 0;
 
   /**
    * @brief
    * @param data
    * @param args
+   * @param messageHandler = {}
    * @return
    */
-  virtual Result<> executeImpl(DataStructure& data, const Arguments& args) const = 0;
-
-  /**
-   * @brief Notifies known observers of the provided message.
-   * @param msg
-   */
-  void notify(const std::shared_ptr<FilterMessage>& msg);
-
-  /**
-   * @brief Creates an info message from the provided string and notifies known
-   * observers to the created message.
-   * @param msg
-   */
-  void notifyInfo(const std::string& msg);
-
-  /**
-   * @brief Creates an error message from the provided string and notifies known
-   * observers to the created message.
-   * @param msg
-   */
-  void notifyError(const std::string& msg);
-
-  /**
-   * @brief Creates a warning message from the provided string and notifies known
-   * observers to the created message.
-   * @param msg
-   */
-  void notifyWarning(const std::string& msg);
-
-  /**
-   * @brief Adds the specified observer to the list of known observers.
-   * @param obs
-   */
-  void addObserver(FilterObserver* obs);
-
-  /**
-   * @brief Removes the specified observer from the list of known observers.
-   * @param obs
-   */
-  void removeObserver(FilterObserver* obs);
-
-private:
-  std::vector<FilterObserver*> m_Observers;
+  virtual Result<> executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const = 0;
 };
 
 using FilterCreationFunc = IFilter::UniquePointer (*)();

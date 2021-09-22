@@ -35,6 +35,18 @@ public:
    */
   Pipeline(const std::string& name = "Unnamed Pipeline");
 
+  /**
+   * @brief Copy constructor
+   * @param other
+   */
+  Pipeline(const Pipeline& other);
+
+  /**
+   * @brief Move constructor
+   * @param other
+   */
+  Pipeline(Pipeline&& other) noexcept;
+
   virtual ~Pipeline();
 
   /**
@@ -365,6 +377,9 @@ public:
    * @return const_iterator
    */
   const_iterator end() const;
+
+  Pipeline& operator=(const Pipeline& rhs) noexcept;
+  Pipeline& operator=(Pipeline&& rhs) noexcept;
 
 private:
   std::string m_Name;

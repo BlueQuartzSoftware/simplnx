@@ -53,17 +53,19 @@ protected:
    * @brief
    * @param data
    * @param args
+   * @param messageHandler = {}
    * @return
    */
-  Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args) const override;
+  Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const override;
 
   /**
    * @brief
    * @param data
    * @param args
+   * @param messageHandler = {}
    * @return
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& args) const override;
+  Result<> executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const override;
 };
 } // namespace complex
 

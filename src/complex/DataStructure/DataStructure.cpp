@@ -50,7 +50,6 @@ DataStructure::DataStructure(DataStructure&& ds) noexcept
 
 DataStructure::~DataStructure()
 {
-  m_Observers.clear();
   m_IsValid = false;
 }
 
@@ -378,27 +377,14 @@ bool DataStructure::removeParent(DataObject::IdType targetId, DataObject::IdType
   return parent->remove(targetPtr.get());
 }
 
+DataStructure::SignalType& DataStructure::getSignal()
+{
+  return m_Signal;
+}
+
 void DataStructure::notify(const std::shared_ptr<AbstractDataStructureMessage>& msg)
 {
-  for(auto observer : m_Observers)
-  {
-    observer->onNotify(this, msg);
-  }
-}
-
-std::set<AbstractDataStructureObserver*> DataStructure::getObservers() const
-{
-  return m_Observers;
-}
-
-void DataStructure::addObserver(AbstractDataStructureObserver* obs)
-{
-  m_Observers.insert(obs);
-}
-
-void DataStructure::removeObserver(AbstractDataStructureObserver* obs)
-{
-  m_Observers.erase(obs);
+  m_Signal(this, msg);
 }
 
 DataStructure& DataStructure::operator=(const DataStructure& rhs)
@@ -424,7 +410,6 @@ DataStructure& DataStructure::operator=(DataStructure&& rhs) noexcept
   m_DataObjects = std::move(rhs.m_DataObjects);
   m_RootGroup = std::move(rhs.m_RootGroup);
   m_IsValid = std::move(rhs.m_IsValid);
-  m_Observers = std::move(rhs.m_Observers);
   m_RootGroup.setDataStructure(this);
   return *this;
 }

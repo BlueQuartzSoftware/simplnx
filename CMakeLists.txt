@@ -217,14 +217,10 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Filter/Messaging/FilterMessage.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Messaging/FilterObserver.hpp
-
   ${COMPLEX_SOURCE_DIR}/Pipeline/FilterNode.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/IPipelineNode.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/FilterNodeMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/IPipelineMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeAddedMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeRemovedMessage.hpp
@@ -319,15 +315,11 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Output.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.cpp
-  
-  ${COMPLEX_SOURCE_DIR}/Filter/Messaging/FilterMessage.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Messaging/FilterObserver.cpp
 
   ${COMPLEX_SOURCE_DIR}/Pipeline/FilterNode.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/IPipelineNode.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/FilterNodeMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/IPipelineMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeAddedMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeRemovedMessage.cpp
@@ -391,6 +383,7 @@ target_include_directories(complex
   PUBLIC
     $<BUILD_INTERFACE:${COMPLEX_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${COMPLEX_GENERATED_DIR}>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/3rdparty/nod/include>
     $<INSTALL_INTERFACE:include>
 )
 

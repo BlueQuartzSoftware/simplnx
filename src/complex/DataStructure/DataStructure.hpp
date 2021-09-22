@@ -8,16 +8,16 @@
 #include <string>
 #include <vector>
 
+#include "nod/nod.hpp"
+
 #include "complex/DataStructure/DataMap.hpp"
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/LinkedPath.hpp"
-
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
 class AbstractDataStructureMessage;
-class AbstractDataStructureObserver;
 class DataGroup;
 class DataPath;
 
@@ -42,6 +42,7 @@ protected:
   bool finishAddingObject(const std::shared_ptr<DataObject>& obj, const std::optional<DataObject::IdType>& parent = {});
 
 public:
+  using SignalType = nod::signal<void(DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&)>;
   using Iterator = DataMap::Iterator;
   using ConstIterator = DataMap::ConstIterator;
 
@@ -224,24 +225,6 @@ public:
   bool removeParent(DataObject::IdType targetId, DataObject::IdType parent);
 
   /**
-   * @brief Returns a collection of the DataStructure observers.
-   * @return std::set<AbstractDataStructureObserver*>
-   */
-  std::set<AbstractDataStructureObserver*> getObservers() const;
-
-  /**
-   * @brief Adds an observer for broadcasting messages.
-   * @param obs
-   */
-  void addObserver(AbstractDataStructureObserver* obs);
-
-  /**
-   * @brief Removes an observer.
-   * @param obs
-   */
-  void removeObserver(AbstractDataStructureObserver* obs);
-
-  /**
    * @brief Returns an iterator for the the beginning of the top-level DataMap.
    * @return iterator
    */
@@ -264,6 +247,12 @@ public:
    * @return
    */
   ConstIterator end() const;
+
+  /**
+   * @brief Returns a reference the nod signal used to notify observers.
+   * @return SignalType&
+   */
+  SignalType& getSignal();
 
   /**
    * @brief Writes the DataStructure to the target HDF5 file or group.
@@ -330,9 +319,9 @@ private:
 
   ////////////
   // Variables
+  SignalType m_Signal;
   std::map<DataObject::IdType, std::weak_ptr<DataObject>> m_DataObjects;
   DataMap m_RootGroup;
-  std::set<AbstractDataStructureObserver*> m_Observers;
   bool m_IsValid = false;
 };
 } // namespace complex

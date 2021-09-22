@@ -15,7 +15,35 @@ Pipeline::Pipeline(const std::string& name)
 {
 }
 
+Pipeline::Pipeline(const Pipeline& other)
+: IPipelineNode()
+, m_Name(other.m_Name)
+, m_Collection(other.m_Collection)
+{
+}
+
+Pipeline::Pipeline(Pipeline&& other) noexcept
+: IPipelineNode()
+, m_Name(std::move(other.m_Name))
+, m_Collection(std::move(other.m_Collection))
+{
+}
+
 Pipeline::~Pipeline() = default;
+
+Pipeline& Pipeline::operator=(const Pipeline& rhs) noexcept
+{
+  m_Name = rhs.m_Name;
+  m_Collection = rhs.m_Collection;
+  return *this;
+}
+
+Pipeline& Pipeline::operator=(Pipeline&& rhs) noexcept
+{
+  m_Name = std::move(rhs.m_Name);
+  m_Collection = std::move(rhs.m_Collection);
+  return *this;
+}
 
 IPipelineNode::NodeType Pipeline::getType() const
 {
