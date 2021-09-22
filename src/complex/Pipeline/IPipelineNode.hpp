@@ -13,12 +13,9 @@ namespace complex
 {
 class IPipelineMessage;
 class Pipeline;
-class PipelineNodeObserver;
 
 class COMPLEX_EXPORT IPipelineNode
 {
-  friend class PipelineNodeObserver;
-
 public:
   using IdType = Uuid;
   using SignalType = nod::signal<void (IPipelineNode*, const std::shared_ptr<IPipelineMessage>&)>;

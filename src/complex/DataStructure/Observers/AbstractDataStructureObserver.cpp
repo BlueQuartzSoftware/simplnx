@@ -25,13 +25,13 @@ bool AbstractDataStructureObserver::isObservingStructure() const
 
 void AbstractDataStructureObserver::startObservingStructure(DataStructure* ds)
 {
-  if(m_ObservedStructure != nullptr)
+  if(ds == nullptr)
   {
     return;
   }
-  else if(ds == nullptr)
+  else if(isObservingStructure())
   {
-    return;
+    stopObservingStructure();
   }
 
   m_ObservedStructure = ds;

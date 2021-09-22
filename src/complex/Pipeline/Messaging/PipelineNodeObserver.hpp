@@ -62,7 +62,6 @@ public:
 
   /**
    * @brief Stop observing the current pipeline node.
-   * @param
    */
   void stopObservingNode();
 

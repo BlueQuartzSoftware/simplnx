@@ -34,7 +34,6 @@ void PipelineNodeObserver::startObservingNode(IPipelineNode* node)
   if(isObservingNode())
   {
     stopObservingNode();
-    return;
   }
 
   m_Connection = node->getSignal().connect([this](IPipelineNode* node, const std::shared_ptr<IPipelineMessage>& msg) { this->onNotify(node, msg); });

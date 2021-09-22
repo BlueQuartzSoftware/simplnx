@@ -22,8 +22,6 @@ namespace complex
  */
 class COMPLEX_EXPORT IFilter
 {
-  friend class FilterObserver;
-
 public:
   using UniquePointer = std::unique_ptr<IFilter>;
 

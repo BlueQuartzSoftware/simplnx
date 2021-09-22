@@ -18,7 +18,6 @@
 namespace complex
 {
 class AbstractDataStructureMessage;
-class AbstractDataStructureObserver;
 class DataGroup;
 class DataPath;
 
