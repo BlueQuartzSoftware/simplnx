@@ -81,7 +81,7 @@ Result<std::any> GeneratedFileListParameter::fromJson(const nlohmann::json& json
      json[k_IncrementIndex].is_number_float() && json[k_InputPath].is_string() && json[k_FilePrefix].is_string() && json[k_FileSuffix].is_string() && json[k_FileExtension].is_string())
   {
     value.m_PaddingDigits = static_cast<int32_t>(json[k_PaddingDigits].get<int32_t>());
-    value.m_Ordering = static_cast<uint32_t>(json[k_Ordering].get<int32_t>());
+    value.m_Ordering = static_cast<Ordering>(json[k_Ordering].get<uint32_t>());
     value.m_IncrementIndex = static_cast<int32_t>(json[k_IncrementIndex].get<int32_t>());
     value.m_InputPath = json[k_InputPath].get<std::string>();
     value.m_FilePrefix = json[k_FilePrefix].get<std::string>();
@@ -115,13 +115,14 @@ Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
   {
     return {nonstd::make_unexpected(std::vector<Error>{{-1, "StartIndex must be greater than EndIndex"}})};
   }
-  if(value.m_Ordering < 0 || value.m_Ordering > 1)
+  if(value.m_Ordering != Ordering::LowToHigh && value.m_Ordering != Ordering::HighToLow)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, "Ordering must be ZERO (0) or ONE (1)"}})};
+    return {nonstd::make_unexpected(std::vector<Error>{{-1, "Ordering must be ZERO (0: Low To High) or ONE (1: High To Low)"}})};
   }
   // Generate the file lsit
-  std::vector<std::string> fileList = FilePathGenerator::GenerateFileList(value.m_StartIndex, value.m_EndIndex, value.m_IncrementIndex, true, (value.m_Ordering == 0), value.m_InputPath,
-                                                                          value.m_FilePrefix, value.m_FileSuffix, value.m_FileExtension, value.m_PaddingDigits);
+  std::vector<std::string> fileList =
+      FilePathGenerator::GenerateFileList(value.m_StartIndex, value.m_EndIndex, value.m_IncrementIndex, true, (value.m_Ordering == complex::GeneratedFileListParameter::Ordering::LowToHigh),
+                                          value.m_InputPath, value.m_FilePrefix, value.m_FileSuffix, value.m_FileExtension, value.m_PaddingDigits);
   // Validate that they all exist
   for(auto& currentFilePath : fileList)
   {

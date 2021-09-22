@@ -1,3 +1,19 @@
+
+# --------------------------------------------------------------------------
+macro(ConvertPathToHeaderCompatible INPUT)
+    if(WIN32)
+        STRING(REPLACE "\\" "\\\\" ${INPUT} ${INPUT} )
+        STRING(REPLACE "/" "\\\\" ${INPUT} ${INPUT}  )
+    endif()
+endmacro()
+set(complex_SOURCE_DIR_NORM ${complex_SOURCE_DIR})
+ConvertPathToHeaderCompatible(${complex_SOURCE_DIR_NORM})
+
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/complex_test_dirs.h.in
+                ${complex_BINARY_DIR}/complex_test_dirs.h @ONLY )
+
+
 find_package(Catch2 CONFIG REQUIRED)
 
 include(Catch)
@@ -6,6 +22,7 @@ add_subdirectory(Plugin)
 
 add_executable(complex_test
   MACOSX_BUNDLE
+  ${complex_BINARY_DIR}/complex_test_dirs.h
   complex_test_main.cpp
   ArgumentsTest.cpp
   DataStructTest.cpp
@@ -47,6 +64,8 @@ target_compile_options(complex_test
   PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
 )
+
+target_include_directories(complex_test PRIVATE ${complex_BINARY_DIR})
 
 # add_custom_command(
 #   TARGET complex_test POST_BUILD

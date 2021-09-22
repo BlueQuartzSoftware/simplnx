@@ -1,0 +1,13 @@
+#pragma once
+
+#include <string>
+
+namespace complex
+{
+
+namespace unit_test
+{
+  constexpr const char k_ComplexSourceDir[] = "@complex_SOURCE_DIR_NORM@";
+}
+
+}
