@@ -24,7 +24,6 @@ public:
   static inline constexpr const char k_NumTuples_Key[] = "n_tuples";
   static inline constexpr const char k_DataPath_Key[] = "output_data_array";
 
-
   /**
    * @brief
    * @return

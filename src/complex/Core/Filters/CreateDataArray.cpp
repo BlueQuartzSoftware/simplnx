@@ -9,26 +9,23 @@
 
 #include <iostream>
 
-
-
 namespace complex
 {
 
 namespace
 {
-  template <class T>
-  DataArray<T>& ArrayFromPath(DataStructure& data, const DataPath& path)
+template <class T>
+DataArray<T>& ArrayFromPath(DataStructure& data, const DataPath& path)
+{
+  DataObject* object = data.getData(path);
+  DataArray<T>* dataArray = dynamic_cast<DataArray<T>*>(object);
+  if(dataArray == nullptr)
   {
-    DataObject* object = data.getData(path);
-    DataArray<T>* dataArray = dynamic_cast<DataArray<T>*>(object);
-    if(dataArray == nullptr)
-    {
-      throw std::runtime_error("Can't obtain DataArray");
-    }
-    return *dataArray;
+    throw std::runtime_error("Can't obtain DataArray");
   }
+  return *dataArray;
 }
-
+} // namespace
 
 std::string CreateDataArray::name() const
 {
@@ -66,7 +63,6 @@ Result<OutputActions> CreateDataArray::preflightImpl(const DataStructure& data, 
   auto components = args.value<u64>(k_NumComps_Key);
   auto numTuples = args.value<u64>(k_NumTuples_Key);
   auto dataArrayPath = args.value<DataPath>(k_DataPath_Key);
-
 
   // This will allocate
   auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<size_t>{numTuples}, components, dataArrayPath);
