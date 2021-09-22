@@ -2,6 +2,7 @@
 
 #include "complex/Core/Application.hpp"
 #include "complex/Core/Filters/ImportTextFilter.hpp"
+#include "complex/Core/Parameters/FileSystemPathParameter.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/IFilter.hpp"
 
@@ -77,7 +78,10 @@ TEST_CASE("RunCoreFilter")
     DataStructure ds;
     Arguments args;
     DataPath dataPath({"foo"});
-    args.insert("input_file", std::make_any<fs::path>(k_FileName));
+
+    complex::FileSystemPathParameter::ValueType vt(fs::path(k_FileName), complex::FileSystemPathParameter::PathType::InputFile);
+
+    args.insert("input_file", std::any(vt));
     args.insert("scalar_type", std::make_any<NumericType>(NumericType::i32));
     args.insert("n_tuples", std::make_any<u64>(k_NLines));
     args.insert("n_comp", std::make_any<u64>(k_NComp));

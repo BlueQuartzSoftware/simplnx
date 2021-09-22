@@ -11,12 +11,12 @@
 namespace complex
 {
 
-struct FileSystemPathInfo
-{
-  std::filesystem::path m_Path;
-  using EnumType = uint32_t;
 
-  enum class PathType : EnumType
+class COMPLEX_EXPORT FileSystemPathParameter : public ValueParameter
+{
+public:
+
+  enum class PathType : uint32_t
   {
     InputFile = 0,  //!<
     InputPath = 1,  //!<
@@ -24,13 +24,18 @@ struct FileSystemPathInfo
     OutputPath = 3, //!<
     Unknown = 4     //!<
   };
-  PathType m_PathType = {PathType::InputFile};
-};
 
-class COMPLEX_EXPORT FileSystemPathParameter : public ValueParameter
-{
-public:
-  using ValueType = FileSystemPathInfo;
+  /**
+   * @brief This
+   */
+  using ValueType = struct s_value_type
+  {
+    s_value_type(const std::filesystem::path& path, PathType pathType)
+    : m_Path(path)
+    , m_PathType(pathType){}
+    std::filesystem::path m_Path;
+    PathType m_PathType = {PathType::InputFile};
+  };
 
   FileSystemPathParameter() = delete;
   FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
@@ -41,6 +46,7 @@ public:
 
   FileSystemPathParameter& operator=(const FileSystemPathParameter&) = delete;
   FileSystemPathParameter& operator=(FileSystemPathParameter&&) noexcept = delete;
+
 
   /**
    * @brief
@@ -99,7 +105,7 @@ public:
   [[nodiscard]] Result<> validatePath(const ValueType& path) const;
 
 private:
-  ValueType m_DefaultValue = {};
+  ValueType m_DefaultValue;
 };
 } // namespace complex
 

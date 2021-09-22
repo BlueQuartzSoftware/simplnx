@@ -121,7 +121,7 @@ std::string ImportTextFilter::humanName() const
 Parameters ImportTextFilter::parameters() const
 {
   Parameters params;
-  complex::FileSystemPathInfo fspi = {.m_Path = "<default files to read goes here>", .m_PathType = FileSystemPathInfo::PathType::InputFile};
+  complex::FileSystemPathParameter::ValueType fspi = {fs::path("<default files to read goes here>"), complex::FileSystemPathParameter::PathType::InputFile};
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFileKey, "Input File", "File to read from", fspi));
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarTypeKey, "Scalar Type", "Type to interpret data as", NumericType::i8));
   params.insert(std::make_unique<UInt64Parameter>(k_NTuplesKey, "Number of Tuples", "Number of tuples in resulting array (i.e. number of lines to read)", 3));
