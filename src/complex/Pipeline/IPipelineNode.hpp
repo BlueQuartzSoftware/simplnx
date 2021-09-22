@@ -18,7 +18,7 @@ class COMPLEX_EXPORT IPipelineNode
 {
 public:
   using IdType = Uuid;
-  using SignalType = nod::signal<void (IPipelineNode*, const std::shared_ptr<IPipelineMessage>&)>;
+  using SignalType = nod::signal<void(IPipelineNode*, const std::shared_ptr<IPipelineMessage>&)>;
 
   enum class NodeType
   {
