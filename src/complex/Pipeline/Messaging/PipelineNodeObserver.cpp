@@ -10,36 +10,38 @@ PipelineNodeObserver::PipelineNodeObserver()
 {
 }
 
-PipelineNodeObserver::~PipelineNodeObserver() = default;
-
-std::vector<IPipelineNode*> PipelineNodeObserver::getObservedNodes() const
+PipelineNodeObserver::~PipelineNodeObserver()
 {
-  return m_ObservedNodes;
+  stopObservingNode();
 }
 
-bool PipelineNodeObserver::isObservingNode(IPipelineNode* node) const
+IPipelineNode* PipelineNodeObserver::getObservedNode() const
 {
-  return std::find(m_ObservedNodes.begin(), m_ObservedNodes.end(), node) != m_ObservedNodes.end();
+  return m_ObservedNode;
+}
+
+bool PipelineNodeObserver::isObservingNode() const
+{
+  return m_ObservedNode != nullptr;
 }
 
 void PipelineNodeObserver::startObservingNode(IPipelineNode* node)
 {
-  if(isObservingNode(node))
+  if(node == nullptr)
   {
     return;
   }
+  if(isObservingNode())
+  {
+    stopObservingNode();
+  }
 
-  m_ObservedNodes.push_back(node);
-  node->addObserver(this);
+  m_Connection = node->getSignal().connect([this](IPipelineNode* node, const std::shared_ptr<IPipelineMessage>& msg) { this->onNotify(node, msg); });
+  m_ObservedNode = node;
 }
 
-void PipelineNodeObserver::stopObservingNode(IPipelineNode* node)
+void PipelineNodeObserver::stopObservingNode()
 {
-  if(!isObservingNode(node))
-  {
-    return;
-  }
-
-  m_ObservedNodes.erase(std::remove(m_ObservedNodes.begin(), m_ObservedNodes.end(), node));
-  node->removeObserver(this);
+  m_Connection.disconnect();
+  m_ObservedNode = nullptr;
 }

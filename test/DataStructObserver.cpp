@@ -14,7 +14,7 @@ DataStructObserver::DataStructObserver(DataStructure& dataStruct)
 : AbstractDataStructureObserver()
 , m_DataStructure(dataStruct)
 {
-  dataStruct.addObserver(this);
+  startObservingStructure(&dataStruct);
 }
 
 DataStructObserver::~DataStructObserver() = default;

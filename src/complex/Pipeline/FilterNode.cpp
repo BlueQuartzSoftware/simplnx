@@ -2,7 +2,6 @@
 
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterList.hpp"
-#include "complex/Pipeline/Messaging/FilterNodeMessage.hpp"
 
 using namespace complex;
 
@@ -20,7 +19,6 @@ FilterNode::FilterNode(IFilter::UniquePointer&& filter)
 : IPipelineNode()
 , m_Filter(std::move(filter))
 {
-  startObservingFilter(m_Filter.get());
 }
 
 FilterNode::~FilterNode() = default;
@@ -58,70 +56,54 @@ void FilterNode::setArguments(const Arguments& args)
 
 bool FilterNode::preflight(DataStructure& data)
 {
-  clearMsgs();
-  m_Filter->preflight(data, getArguments());
-  auto errors = getErrors();
-  if(errors.size() == 0)
+  auto result = m_Filter->preflight(data, getArguments());
+  if(!result.valid())
   {
-    setPreflightStructure(data);
-    return true;
+    m_Warnings = result.warnings();
+    m_Errors = result.errors();
+
+    clearPreflightStructure();
+    return false;
   }
   else
   {
-    clearPreflightStructure();
-    return false;
+    m_Warnings = result.warnings();
+    m_Errors.clear();
+
+    setPreflightStructure(data);
+    return true;
   }
 }
 
 bool FilterNode::execute(DataStructure& data)
 {
-  clearMsgs();
-  m_Filter->execute(data, getArguments());
+  auto results = m_Filter->execute(data, getArguments());
+  if(!results.valid())
+  {
+    m_Warnings = results.warnings();
+    m_Errors = results.errors();
 
-  auto errors = getErrors();
-  if(errors.size() == 0)
-  {
-    setDataStructure(data);
-    setStatus(Status::Completed);
-    return true;
-  }
-  else
-  {
     clearPreflightStructure();
     markDirty();
     return false;
   }
-}
-
-void FilterNode::clearMsgs()
-{
-  m_ErrorMsgs.clear();
-  m_WarningMsgs.clear();
-}
-
-FilterNode::Messages FilterNode::getWarnings() const
-{
-  return m_WarningMsgs;
-}
-
-FilterNode::Messages FilterNode::getErrors() const
-{
-  return m_ErrorMsgs;
-}
-
-void FilterNode::onNotify(IFilter* filter, const std::shared_ptr<FilterMessage>& msg)
-{
-  switch(msg->getType())
+  else
   {
-  case FilterMessage::Type::Error:
-    m_ErrorMsgs.push_back(msg);
-    break;
-  case FilterMessage::Type::Warning:
-    m_WarningMsgs.push_back(msg);
-    break;
-  default:
-    break;
-  }
+    m_Warnings = results.warnings();
+    m_Errors.clear();
 
-  notify(std::make_shared<FilterNodeMessage>(this, msg));
+    setDataStructure(data);
+    setStatus(Status::Completed);
+    return true;
+  }
+}
+
+std::vector<complex::Warning> FilterNode::getWarnings() const
+{
+  return m_Warnings;
+}
+
+std::vector<complex::Error> FilterNode::getErrors() const
+{
+  return m_Errors;
 }

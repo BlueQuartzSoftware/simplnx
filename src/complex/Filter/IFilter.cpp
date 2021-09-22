@@ -7,8 +7,6 @@
 #include <nlohmann/json.hpp>
 
 #include "complex/Filter/DataParameter.hpp"
-#include "complex/Filter/Messaging/FilterMessage.hpp"
-#include "complex/Filter/Messaging/FilterObserver.hpp"
 #include "complex/Filter/ValueParameter.hpp"
 
 namespace
@@ -32,15 +30,9 @@ void moveResult(complex::Result<T>& result, std::vector<complex::Error>& errors,
 
 namespace complex
 {
-IFilter::~IFilter() noexcept
-{
-  for(auto obs : m_Observers)
-  {
-    obs->stopObservingFilter(this);
-  }
-}
+IFilter::~IFilter() noexcept = default;
 
-Result<OutputActions> IFilter::preflight(const DataStructure& data, const Arguments& args) const
+Result<OutputActions> IFilter::preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   Parameters params = parameters();
 
@@ -109,7 +101,7 @@ Result<OutputActions> IFilter::preflight(const DataStructure& data, const Argume
     return {nonstd::make_unexpected(std::move(errors)), std::move(warnings)};
   }
 
-  auto implResult = preflightImpl(data, args);
+  auto implResult = preflightImpl(data, args, messageHandler);
 
   for(auto&& warning : warnings)
   {
@@ -119,7 +111,7 @@ Result<OutputActions> IFilter::preflight(const DataStructure& data, const Argume
   return implResult;
 }
 
-Result<> IFilter::execute(DataStructure& data, const Arguments& args) const
+Result<> IFilter::execute(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   // determine required parameters
 
@@ -142,7 +134,7 @@ Result<> IFilter::execute(DataStructure& data, const Arguments& args) const
     }
   }
 
-  return executeImpl(data, args);
+  return executeImpl(data, args, messageHandler);
 }
 
 nlohmann::json IFilter::toJson(const Arguments& args) const
@@ -182,38 +174,4 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
     return {nonstd::make_unexpected(std::move(errors))};
   }
 }
-
-void IFilter::notify(const std::shared_ptr<FilterMessage>& msg)
-{
-  for(auto obs : m_Observers)
-  {
-    obs->onNotify(this, std::shared_ptr<FilterMessage>(msg));
-  }
-}
-
-void IFilter::notifyInfo(const std::string& msg)
-{
-  notify(std::make_shared<FilterMessage>(FilterMessage::Type::Info, msg));
-}
-
-void IFilter::notifyError(const std::string& msg)
-{
-  notify(std::make_shared<FilterMessage>(FilterMessage::Type::Error, msg));
-}
-
-void IFilter::notifyWarning(const std::string& msg)
-{
-  notify(std::make_shared<FilterMessage>(FilterMessage::Type::Warning, msg));
-}
-
-void IFilter::addObserver(FilterObserver* obs)
-{
-  m_Observers.push_back(obs);
-}
-
-void IFilter::removeObserver(FilterObserver* obs)
-{
-  m_Observers.erase(std::remove(m_Observers.begin(), m_Observers.end(), obs));
-}
-
 } // namespace complex

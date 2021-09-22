@@ -3,6 +3,8 @@
 #include <memory>
 #include <vector>
 
+#include "nod/nod.hpp"
+
 #include "complex/Common/Uuid.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/complex_export.hpp"
@@ -11,14 +13,12 @@ namespace complex
 {
 class IPipelineMessage;
 class Pipeline;
-class PipelineNodeObserver;
 
 class COMPLEX_EXPORT IPipelineNode
 {
-  friend class PipelineNodeObserver;
-
 public:
   using IdType = Uuid;
+  using SignalType = nod::signal<void(IPipelineNode*, const std::shared_ptr<IPipelineMessage>&)>;
 
   enum class NodeType
   {
@@ -129,6 +129,12 @@ public:
    */
   bool isPreflighted() const;
 
+  /**
+   * @brief Returns a reference to the signal used for messaging.
+   * @return SignalType&
+   */
+  SignalType& getSignal();
+
 protected:
   /**
    * @brief Sets the current node status.
@@ -141,18 +147,6 @@ protected:
    * @param msg
    */
   void notify(const std::shared_ptr<IPipelineMessage>& msg);
-
-  /**
-   * @brief Adds the specified observer to the list of known observers.
-   * @param obs
-   */
-  void addObserver(PipelineNodeObserver* obs);
-
-  /**
-   * @brief Removes the specified observer from the list of known observers.
-   * @param obs
-   */
-  void removeObserver(PipelineNodeObserver* obs);
 
   /**
    * @brief Default constructor
@@ -187,7 +181,7 @@ private:
   Pipeline* m_Parent;
   DataStructure m_DataStructure;
   DataStructure m_PreflightStructure;
-  std::vector<PipelineNodeObserver*> m_Observers;
   bool m_IsPreflighted = false;
+  SignalType m_Signal;
 };
 } // namespace complex
