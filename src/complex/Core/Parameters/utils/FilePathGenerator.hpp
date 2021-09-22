@@ -76,7 +76,6 @@ std::vector<std::string> GenerateFileList(int32_t start, int32_t end, int32_t in
   return fileList;
 }
 
-
 } // namespace FilePathGenerator
 
 } // namespace complex
