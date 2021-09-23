@@ -1,6 +1,5 @@
 #include "DataArrayFactory.hpp"
 
-
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
@@ -10,7 +9,6 @@
 #include <numeric>
 
 using namespace complex;
-
 
 DataArrayFactory::DataArrayFactory()
 : IH5DataFactory()

@@ -4,7 +4,6 @@
 #include <optional>
 #include <string>
 
-
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"

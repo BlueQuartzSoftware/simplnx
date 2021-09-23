@@ -1,10 +1,10 @@
 #pragma once
 
+#include <iostream>
+#include <numeric>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <iostream>
-#include <numeric>
 
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
@@ -241,7 +241,6 @@ inline std::string getObjectPath(hid_t locationID)
   return objectPath;
 }
 
-
 /**
  * @brief Writes the data of a pointer to an HDF5 file
  * @param locationID The hdf5 object id of the parent
@@ -317,7 +316,6 @@ inline herr_t writePointerDataset(hid_t locationID, const std::string& datasetNa
   }
   return returnError;
 }
-
 
 /**
  * @brief Writes an Attribute to an HDF5 Object
@@ -435,7 +433,6 @@ inline herr_t writeVectorAttribute(hid_t locationID, const std::string& objectNa
 {
   return writePointerAttribute(locationID, objectName, attributeName, static_cast<int32_t>(dims.size()), dims.data(), data.data());
 }
-
 
 /**
  * @brief Returns the information about an attribute.
@@ -579,7 +576,7 @@ inline herr_t readVectorAttribute(hid_t locationID, const std::string& objectNam
       size_t typeSize;
       std::vector<hsize_t> dims;
       error = getAttributeInfo(locationID, objectName, attributeName, dims, typeClass, typeSize, typeID);
-      hsize_t numElements  = std::accumulate(dims.cbegin(), dims.cend(), static_cast<hsize_t>(1), std::multiplies<>());
+      hsize_t numElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<hsize_t>(1), std::multiplies<>());
       // std::cout << "    Vector Attribute has " << numElements << " elements." << std::endl;
       data.resize(numElements);
       error = H5Aread(attributeID, dataType, data.data());
@@ -608,7 +605,6 @@ inline herr_t readVectorAttribute(hid_t locationID, const std::string& objectNam
   }
   return returnError;
 }
-
 
 /**
  * @brief Reads data from the HDF5 File into a preallocated array.
@@ -664,7 +660,6 @@ inline herr_t readPointerDataset(hid_t locationID, const std::string& datasetNam
   }
   return returnError;
 }
-
 
 /**
  * @brief Reads data from the HDF5 File into an std::vector<T> object. If the dataset

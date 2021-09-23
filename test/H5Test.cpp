@@ -1,4 +1,5 @@
 
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
@@ -7,7 +8,6 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Montage/GridMontage.hpp"
 #include "complex/DataStructure/ScalarData.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
@@ -16,7 +16,6 @@
 #include <iostream>
 #include <string>
 #include <type_traits>
-
 
 using namespace complex;
 namespace fs = std::filesystem;
@@ -157,9 +156,9 @@ DataStructure getTestDataStructure()
   return ds;
 }
 
-template<typename T>
-DataArray<T>* createTestDataArray(const std::string& name, DataStructure& dataGraph, typename DataStore<T>::ShapeType tupleShape,
-                                  typename DataStore<T>::ShapeType componentShape,  DataObject::IdType parentId)
+template <typename T>
+DataArray<T>* createTestDataArray(const std::string& name, DataStructure& dataGraph, typename DataStore<T>::ShapeType tupleShape, typename DataStore<T>::ShapeType componentShape,
+                                  DataObject::IdType parentId)
 {
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
@@ -176,7 +175,6 @@ DataStructure createDataStructure()
   DataGroup* group = complex::DataGroup::Create(dataGraph, "Small IN100");
   DataGroup* scanData = complex::DataGroup::Create(dataGraph, "EBSD Scan Data", group->getId());
 
-
   // Create an Image Geometry grid for the Scan Data
   ImageGeom* imageGeom = ImageGeom::Create(dataGraph, "Small IN100 Grid", scanData->getId());
   imageGeom->setSpacing({0.25f, 0.25f, 0.25f});
@@ -190,23 +188,22 @@ DataStructure createDataStructure()
   size_t numComponents = 1;
   std::vector<size_t> tupleShape = {imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]};
 
-  FloatArray* ci_data = createTestDataArray<float>( "Confidence Index", dataGraph, tupleShape, {numComponents}, scanData->getId() );
-  Int32Array* feature_ids_data = createTestDataArray<int32_t>( "FeatureIds", dataGraph, tupleShape, {numComponents}, scanData->getId() );
-  FloatArray* iq_data = createTestDataArray<float>( "Image Quality", dataGraph, tupleShape, {numComponents}, scanData->getId() );
-  Int32Array* phases_data = createTestDataArray<int32_t>( "Phases", dataGraph, tupleShape, {numComponents}, scanData->getId() );
+  FloatArray* ci_data = createTestDataArray<float>("Confidence Index", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Int32Array* feature_ids_data = createTestDataArray<int32_t>("FeatureIds", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  FloatArray* iq_data = createTestDataArray<float>("Image Quality", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Int32Array* phases_data = createTestDataArray<int32_t>("Phases", dataGraph, tupleShape, {numComponents}, scanData->getId());
 
   numComponents = 3;
-  UInt8Array* ipf_color_data = createTestDataArray<uint8_t>( "IPF Colors", dataGraph, tupleShape, {numComponents}, scanData->getId() );
+  UInt8Array* ipf_color_data = createTestDataArray<uint8_t>("IPF Colors", dataGraph, tupleShape, {numComponents}, scanData->getId());
 
   // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
   DataGroup* phase_group = complex::DataGroup::Create(dataGraph, "Phase Data", group->getId());
   numComponents = 1;
   size_t numTuples = 2;
-  Int32Array* laue_data = createTestDataArray<int32_t>( "Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId() );
+  Int32Array* laue_data = createTestDataArray<int32_t>("Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId());
 
   return dataGraph;
 }
-
 
 TEST_CASE("complex IO")
 {

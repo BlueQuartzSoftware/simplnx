@@ -263,7 +263,7 @@ void QuadGeom::deleteElementNeighbors()
 
 AbstractGeometry::StatusCode QuadGeom::findElementCentroids()
 {
-  auto dataStore = new DataStore<float32>({getNumberOfQuads()},{3});
+  auto dataStore = new DataStore<float32>({getNumberOfQuads()}, {3});
   auto quadCentroids = DataArray<float32>::Create(*getDataStructure(), "Quad Centroids", dataStore, getId());
   GeometryHelpers::Topology::FindElementCentroids(getQuads(), getVertices(), quadCentroids);
   if(quadCentroids == nullptr)

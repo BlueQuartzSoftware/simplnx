@@ -14,7 +14,7 @@ namespace
 constexpr const char k_H5_DIMENSIONS[] = "_DIMENSIONS";
 constexpr const char k_H5_ORIGIN[] = "_ORIGIN";
 constexpr const char k_H5_SPACING[] = "_SPACING";
-}
+} // namespace
 
 ImageGeom::ImageGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometryGrid(ds, name)
@@ -138,7 +138,7 @@ AbstractGeometry::StatusCode ImageGeom::findElementSizes()
   {
     return -1;
   }
-  auto dataStore = new DataStore<float32>({getNumberOfElements()},{1});
+  auto dataStore = new DataStore<float32>({getNumberOfElements()}, {1});
   auto voxelSizes = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", dataStore, getId());
   voxelSizes->getDataStore()->fill(res[0] * res[1] * res[2]);
   m_VoxelSizesId = voxelSizes->getId();
@@ -501,7 +501,6 @@ void ImageGeom::setElementSizes(const Float32Array* elementSizes)
   m_VoxelSizesId = elementSizes->getId();
 }
 
-
 H5::ErrorType ImageGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
 {
   std::vector<size_t> volDims;
@@ -536,7 +535,7 @@ H5::ErrorType ImageGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId)
   std::cout << "Writing ImageGeometry to HDF5 File" << std::endl;
   herr_t err = 0;
 
-  SizeVec3  volDims = getDimensions();
+  SizeVec3 volDims = getDimensions();
   FloatVec3 spacing = getSpacing();
   FloatVec3 origin = getOrigin();
 
@@ -548,12 +547,12 @@ H5::ErrorType ImageGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId)
   {
     return err;
   }
-  err =  H5::Support::writePointerDataset(groupId, k_H5_ORIGIN, rank, dims, origin.data());
+  err = H5::Support::writePointerDataset(groupId, k_H5_ORIGIN, rank, dims, origin.data());
   if(err < 0)
   {
     return err;
   }
-  err =  H5::Support::writePointerDataset(groupId, k_H5_SPACING, rank, dims, spacing.data());
+  err = H5::Support::writePointerDataset(groupId, k_H5_SPACING, rank, dims, spacing.data());
   if(err < 0)
   {
     return err;

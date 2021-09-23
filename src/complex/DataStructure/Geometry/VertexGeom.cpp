@@ -148,7 +148,7 @@ AbstractGeometry::StatusCode VertexGeom::findElementSizes()
 {
   // Vertices are 0-dimensional (they have no getSize),
   // so simply splat 0 over the sizes array
-  auto dataStore = new DataStore<float32>({getNumberOfElements()},{1});
+  auto dataStore = new DataStore<float32>({getNumberOfElements()}, {1});
   dataStore->fill(0.0f);
 
   Float32Array* vertexSizes = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", dataStore, getId());
