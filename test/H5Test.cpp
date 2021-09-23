@@ -14,7 +14,6 @@
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/DataStructure/Montage/GridMontage.hpp"
 #include "complex/DataStructure/ScalarData.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 #include "complex/Utilities/Parsing/Text/CsvParser.hpp"

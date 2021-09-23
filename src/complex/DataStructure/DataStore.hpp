@@ -143,24 +143,24 @@ public:
     return m_ComponentShape;
   }
 
-//  /**
-//   * @brief Resizes the DataStore to handle the specified number of tuples.
-//   * @param numTuples
-//   */
-//  void resizeTuples(size_t numTuples) override
-//  {
-//    auto oldSize = this->getSize();
-//    m_TupleShape = numTuples;
-//    auto newSize = this->getSize();
-//
-//    auto data = new value_type[newSize];
-//    for(size_t i = 0; i < newSize && i < oldSize; i++)
-//    {
-//      data[i] = m_Data[i];
-//    }
-//
-//    m_Data.reset(data);
-//  }
+  //  /**
+  //   * @brief Resizes the DataStore to handle the specified number of tuples.
+  //   * @param numTuples
+  //   */
+  //  void resizeTuples(size_t numTuples) override
+  //  {
+  //    auto oldSize = this->getSize();
+  //    m_TupleShape = numTuples;
+  //    auto newSize = this->getSize();
+  //
+  //    auto data = new value_type[newSize];
+  //    for(size_t i = 0; i < newSize && i < oldSize; i++)
+  //    {
+  //      data[i] = m_Data[i];
+  //    }
+  //
+  //    m_Data.reset(data);
+  //  }
 
   /**
    * @brief Returns the dimensions of the Tuples
@@ -329,9 +329,8 @@ public:
       h5dims.push_back(static_cast<hsize_t>(value));
     }
     herr_t err = complex::H5::Support::writePointerDataset(dataId, k_DataStore, rank, h5dims.data(), m_Data.get());
-    if (err < 0)
+    if(err < 0)
     {
-
     }
 
     err = complex::H5::Support::writeVectorAttribute(dataId, k_DataStore, k_TupleShape, {m_TupleShape.size()}, m_TupleShape);
@@ -380,12 +379,16 @@ public:
     typename DataStore<T>::ShapeType tupleShape;
     typename DataStore<T>::ShapeType componentShape;
 
-    herr_t  err = H5::Support::readVectorAttribute(dataId, ".", H5::Constants::DataStore::TupleShape, tupleShape);
-    if (err < 0){}
+    herr_t err = H5::Support::readVectorAttribute(dataId, ".", H5::Constants::DataStore::TupleShape, tupleShape);
+    if(err < 0)
+    {
+    }
     size_t numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
 
     err = H5::Support::readVectorAttribute(dataId, ".", H5::Constants::DataStore::ComponentShape, componentShape);
-    if (err < 0){}
+    if(err < 0)
+    {
+    }
     size_t numComponents = std::accumulate(componentShape.cbegin(), componentShape.cend(), static_cast<size_t>(1), std::multiplies<>());
 
     auto dataStore = new complex::DataStore<T>(tupleShape, componentShape);

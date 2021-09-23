@@ -81,7 +81,6 @@ public:
     return 0;
   }
 
-
   /**
    * @brief Throws an exception because this should never be called. The
    * EmptyDataStore class contains no data other than its target size.
