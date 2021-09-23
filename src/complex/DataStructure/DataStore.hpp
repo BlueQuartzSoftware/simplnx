@@ -44,6 +44,7 @@ public:
     reshapeTuples(m_TupleShape);
   }
 
+
   /**
    * @brief Constructs a DataStore with the specified tupleSize and tupleCount.
    * @param tupleShape The dimensions of the tuples
@@ -105,10 +106,19 @@ public:
   }
 
   /**
-   * @brief Returns the pointer to the allocated data
+   * @brief Returns the pointer to the allocated data. Const version
    * @return
    */
-  T* data() const
+  const T* data() const
+  {
+    return m_Data.get();
+  }
+
+  /**
+   * @brief Returns the pointer to the allocated data. Non-const version
+   * @return
+   */
+  T* data()
   {
     return m_Data.get();
   }
@@ -122,12 +132,20 @@ public:
     return std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>());
   }
 
-  ShapeType getTupleShape() const
+  /**
+   * @brief Returns the dimensions of the Tuples
+   * @return
+   */
+  const ShapeType& getTupleShape() const
   {
     return m_TupleShape;
   }
 
-  ShapeType getComponentShape() const
+  /**
+   * @brief Returns the dimensions of the Components
+   * @return
+   */
+  const ShapeType& getComponentShape() const
   {
     return m_ComponentShape;
   }
