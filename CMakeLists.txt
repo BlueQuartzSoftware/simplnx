@@ -200,6 +200,8 @@ set(COMPLEX_HDRS
   
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/StringUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/AbstractMontage.hpp

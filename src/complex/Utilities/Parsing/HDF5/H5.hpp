@@ -15,6 +15,8 @@
 #define H5SUPPORT_MUTEX_LOCK()
 #endif
 
+#include <string>
+
 namespace complex
 {
 namespace H5

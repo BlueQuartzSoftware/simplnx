@@ -532,7 +532,6 @@ H5::ErrorType ImageGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
 
 H5::ErrorType ImageGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
 {
-  std::cout << "Writing ImageGeometry to HDF5 File" << std::endl;
   herr_t err = 0;
 
   SizeVec3 volDims = getDimensions();

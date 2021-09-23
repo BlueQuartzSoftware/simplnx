@@ -11,17 +11,10 @@
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 
+
+#include "GeometryTestUtilities.hpp"
+
 using namespace complex;
-
-template <typename T>
-T* createGeom(DataStructure& ds)
-{
-  auto geom = T::Create(ds, "Geom");
-  T* output = dynamic_cast<T*>(geom);
-  REQUIRE(output != nullptr);
-  return output;
-}
-
 const AbstractGeometry::SharedVertexList* createVertexList(AbstractGeometry* geom)
 {
   auto ds = geom->getDataStructure();

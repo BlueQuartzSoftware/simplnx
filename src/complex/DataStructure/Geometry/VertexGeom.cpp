@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "complex/DataStructure/DataStore.hpp"
+#include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
@@ -17,6 +18,7 @@ VertexGeom::VertexGeom(DataStructure& ds, const std::string& name)
 VertexGeom::VertexGeom(DataStructure& ds, const std::string& name, usize numVertices, bool allocate)
 : AbstractGeometry(ds, name)
 {
+
 }
 
 VertexGeom::VertexGeom(DataStructure& ds, const std::string& name, const SharedVertexList* vertices)
@@ -72,16 +74,33 @@ std::string VertexGeom::getGeometryTypeAsString() const
 
 void VertexGeom::initializeWithZeros()
 {
+  AbstractGeometry::SharedVertexList* vertices = getVertices();
+  if(nullptr == vertices)
+  {
+    return;
+  }
+  std::fill(vertices->getDataStore()->begin(), vertices->getDataStore()->end(), 0);
 }
 
 void VertexGeom::resizeVertexList(usize newNumVertices)
 {
-  getVertices()->getDataStore()->reshapeTuples({newNumVertices});
+  AbstractGeometry::SharedVertexList* vertices = getVertices();
+  if(nullptr == vertices)
+  {
+    DataStore<float>* dataStore = new DataStore<float>({newNumVertices}, {3});
+    DataStructure* ds = getDataStructure();
+    vertices = AbstractGeometry::SharedVertexList::Create(*ds, "Vertices", dataStore);
+    setVertices(vertices);
+  }
+  else
+  {
+    vertices->getDataStore()->reshapeTuples({newNumVertices});
+  }
 }
 
 void VertexGeom::setVertices(const SharedVertexList* vertices)
 {
-  if(!vertices)
+  if(nullptr == vertices)
   {
     m_VertexListId.reset();
     return;
@@ -102,7 +121,7 @@ const AbstractGeometry::SharedVertexList* VertexGeom::getVertices() const
 Point3D<float32> VertexGeom::getCoords(usize vertId) const
 {
   auto vertices = getVertices();
-  if(!vertices)
+  if(nullptr == vertices)
   {
     return {};
   }
@@ -118,7 +137,7 @@ Point3D<float32> VertexGeom::getCoords(usize vertId) const
 void VertexGeom::setCoords(usize vertId, const Point3D<float32>& coords)
 {
   auto vertices = getVertices();
-  if(!vertices)
+  if(nullptr == vertices)
   {
     return;
   }
@@ -132,7 +151,7 @@ void VertexGeom::setCoords(usize vertId, const Point3D<float32>& coords)
 usize VertexGeom::getNumberOfVertices() const
 {
   auto vertices = getVertices();
-  if(!vertices)
+  if(nullptr == vertices)
   {
     return 0;
   }
@@ -285,5 +304,20 @@ H5::ErrorType VertexGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
 
 H5::ErrorType VertexGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
 {
+  H5::ErrorType err = 0;
+  if(m_VertexListId.has_value())
+  {
+    err = H5::Support::writeScalarDataset(groupId, "VertexListId", m_VertexListId.value());
+    if(err < 0)
+    {
+    }
+  }
+  if(m_VertexSizesId.has_value())
+  {
+    err = H5::Support::writeScalarDataset(groupId, "VertexSizesId", m_VertexSizesId.value());
+    if(err < 0)
+    {
+    }
+  }
   return getDataMap().writeH5Group(groupId);
 }

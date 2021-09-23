@@ -3,6 +3,7 @@
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
@@ -10,6 +11,18 @@
 #include "complex/DataStructure/ScalarData.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
+#include "complex/Utilities/Parsing/Text/CsvParser.hpp"
+#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
+#include "complex/DataStructure/Geometry/VertexGeom.hpp"
+#include "complex/DataStructure/Geometry/EdgeGeom.hpp"
+#include "complex/DataStructure/Geometry/HexahedralGeom.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/Geometry/QuadGeom.hpp"
+
+#include "GeometryTestUtilities.hpp"
+
+// This file is generated into the binary directory
+#include "complex_test_dirs.h"
 
 #include <catch2/catch.hpp>
 
@@ -205,7 +218,8 @@ DataStructure createDataStructure()
   return dataGraph;
 }
 
-TEST_CASE("complex IO")
+
+TEST_CASE("Image Geometry IO")
 {
   Application app;
 
@@ -216,7 +230,7 @@ TEST_CASE("complex IO")
     REQUIRE(fs::create_directories(dataDir));
   }
 
-  fs::path filePath = getDataDir(app) / "complex_IO.h5";
+  fs::path filePath = getDataDir(app) / "image_geometry_io.h5";
 
   std::string filePathString = filePath.string();
 
@@ -224,7 +238,109 @@ TEST_CASE("complex IO")
   try
   {
     DataStructure ds = createDataStructure();
-    std::cout << "Writing HDF5 File: " << filePathString << std::endl;
+    auto fileId = H5Fcreate(filePathString.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    REQUIRE(fileId > 0);
+
+    herr_t err;
+    err = ds.writeHdf5(fileId);
+    REQUIRE(err <= 0);
+
+    err = H5Fclose(fileId);
+    REQUIRE(err <= 0);
+  } catch(const std::exception& e)
+  {
+    FAIL(e.what());
+  }
+
+  // Read HDF5 file
+  try
+  {
+    auto fileId = H5Fopen(filePathString.c_str(), H5P_DEFAULT, H5P_DEFAULT);
+    REQUIRE(fileId > 0);
+
+    herr_t err;
+    auto ds = DataStructure::ReadFromHdf5(fileId, err);
+    REQUIRE(err <= 0);
+
+    err = H5Fclose(fileId);
+    REQUIRE(err <= 0);
+  } catch(const std::exception& e)
+  {
+    FAIL(e.what());
+  }
+}
+
+
+
+//------------------------------------------------------------------------------
+DataStructure createNodeBasedGeometries()
+{
+  DataStructure dataGraph;
+  DataGroup* group = complex::DataGroup::Create(dataGraph, "AM LPBF Experiment");
+  DataGroup* scanData = complex::DataGroup::Create(dataGraph, "Laser Scan Data", group->getId());
+
+  std::string inputFile= fmt::format("{}/test/Data/VertexCoordinates.csv", complex::unit_test::k_ComplexSourceDir);
+  std::vector<float> csvVerts = complex::CsvParser::ParseVertices(inputFile, ",", true);
+
+
+  auto vertexGeom = VertexGeom::Create(dataGraph, "Vertex Geom", scanData->getId());
+  vertexGeom->resizeVertexList(csvVerts.size() / 3);
+  AbstractGeometry::SharedVertexList* vertices = vertexGeom->getVertices();
+
+  std::copy_n(csvVerts.begin(), csvVerts.size(), vertices->getDataStore()->begin());
+
+#if 0
+  // Create an Image Geometry grid for the Scan Data
+  ImageGeom* imageGeom = ImageGeom::Create(dataGraph, "Small IN100 Grid", scanData->getId());
+  imageGeom->setSpacing({0.25f, 0.25f, 0.25f});
+  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  complex::SizeVec3 imageGeomDims = {100, 100, 100};
+  imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
+
+  std::cout << "Creating Data Structure" << std::endl;
+  // Create some DataArrays; The DataStructure keeps a shared_ptr<> to the DataArray so DO NOT put
+  // it into another shared_ptr<>
+  size_t numComponents = 1;
+  std::vector<size_t> tupleShape = {imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]};
+
+  FloatArray* ci_data = createTestDataArray<float>("Confidence Index", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Int32Array* feature_ids_data = createTestDataArray<int32_t>("FeatureIds", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  FloatArray* iq_data = createTestDataArray<float>("Image Quality", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Int32Array* phases_data = createTestDataArray<int32_t>("Phases", dataGraph, tupleShape, {numComponents}, scanData->getId());
+
+  numComponents = 3;
+  UInt8Array* ipf_color_data = createTestDataArray<uint8_t>("IPF Colors", dataGraph, tupleShape, {numComponents}, scanData->getId());
+
+  // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
+  DataGroup* phase_group = complex::DataGroup::Create(dataGraph, "Phase Data", group->getId());
+  numComponents = 1;
+  size_t numTuples = 2;
+  Int32Array* laue_data = createTestDataArray<int32_t>("Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId());
+
+#endif
+
+  return dataGraph;
+}
+
+TEST_CASE("Node Based Geometry IO")
+{
+  Application app;
+
+  fs::path dataDir = getDataDir(app);
+
+  if(!fs::exists(dataDir))
+  {
+    REQUIRE(fs::create_directories(dataDir));
+  }
+
+  fs::path filePath = getDataDir(app) / "node_geometry_io.h5";
+
+  std::string filePathString = filePath.string();
+
+  // Write HDF5 file
+  try
+  {
+    DataStructure ds = createNodeBasedGeometries();
     auto fileId = H5Fcreate(filePathString.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     REQUIRE(fileId > 0);
 
