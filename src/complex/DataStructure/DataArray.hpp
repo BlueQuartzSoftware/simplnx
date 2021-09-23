@@ -221,14 +221,14 @@ public:
     return m_DataStore;
   }
 
-//  /**
-//   * @brief Returns true if the DataStore has already been allocated. Returns false otherwise.
-//   * @return bool
-//   */
-//  bool isAllocated() const
-//  {
-//    return m_DataStore != nullptr;
-//  }
+  //  /**
+  //   * @brief Returns true if the DataStore has already been allocated. Returns false otherwise.
+  //   * @return bool
+  //   */
+  //  bool isAllocated() const
+  //  {
+  //    return m_DataStore != nullptr;
+  //  }
 
   /**
    * @brief Sets a new DataStore for the DataArray to handle. The existing DataStore

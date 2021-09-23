@@ -228,7 +228,7 @@ TEST_CASE("DataStoreTest")
 
   const size_t numComponents = 3;
   const size_t numTuples = 10;
-  DataStore<int32_t> store( {numTuples}, {numComponents});
+  DataStore<int32_t> store({numTuples}, {numComponents});
 
   REQUIRE(store.getNumberOfTuples() == numTuples);
   REQUIRE(store.getNumberOfComponents() == numComponents);

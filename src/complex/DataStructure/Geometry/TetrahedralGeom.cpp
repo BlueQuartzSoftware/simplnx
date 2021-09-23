@@ -239,7 +239,7 @@ size_t TetrahedralGeom::getNumberOfElements() const
 
 AbstractGeometry::StatusCode TetrahedralGeom::findElementSizes()
 {
-  auto dataStore = new DataStore<float>( {getNumberOfTets()}, {1});
+  auto dataStore = new DataStore<float>({getNumberOfTets()}, {1});
   FloatArray* tetSizes = DataArray<float>::Create(*getDataStructure(), "Tet Volumes", dataStore, getId());
   GeometryHelpers::Topology::FindTetVolumes(getTetrahedra(), getVertices(), tetSizes);
   if(tetSizes == nullptr)

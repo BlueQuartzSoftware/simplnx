@@ -156,7 +156,7 @@ void HexahedralGeom::getVertCoordsAtHex(size_t hexId, complex::Point3D<float>& v
 
 size_t HexahedralGeom::getNumberOfHexas() const
 {
-  const auto *hexList = dynamic_cast<const SharedHexList*>(getDataStructure()->getData(m_HexListId));
+  const auto* hexList = dynamic_cast<const SharedHexList*>(getDataStructure()->getData(m_HexListId));
   if(nullptr == hexList)
   {
     return 0;
@@ -166,12 +166,12 @@ size_t HexahedralGeom::getNumberOfHexas() const
 
 void HexahedralGeom::initializeWithZeros()
 {
-  auto *vertices = getVertices();
+  auto* vertices = getVertices();
   if(vertices != nullptr)
   {
     vertices->getDataStore()->fill(0.0);
   }
-  auto *hexas = getHexahedrals();
+  auto* hexas = getHexahedrals();
   if(hexas != nullptr)
   {
     hexas->getDataStore()->fill(0.0);
@@ -180,7 +180,7 @@ void HexahedralGeom::initializeWithZeros()
 
 size_t HexahedralGeom::getNumberOfElements() const
 {
-  const auto *elements = dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_HexSizesId));
+  const auto* elements = dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_HexSizesId));
   if(nullptr == elements)
   {
     return 0;
@@ -190,7 +190,7 @@ size_t HexahedralGeom::getNumberOfElements() const
 
 AbstractGeometry::StatusCode HexahedralGeom::findElementSizes()
 {
-  auto *dataStore = new DataStore<float>( {getNumberOfHexas()},{1});
+  auto* dataStore = new DataStore<float>({getNumberOfHexas()}, {1});
   FloatArray* hexSizes = DataArray<float>::Create(*getDataStructure(), "Hex Volumes", dataStore, getId());
   m_HexSizesId = hexSizes->getId();
   GeometryHelpers::Topology::FindHexVolumes<MeshIndexType>(getHexahedrals(), getVertices(), hexSizes);
@@ -272,7 +272,7 @@ void HexahedralGeom::deleteElementNeighbors()
 
 AbstractGeometry::StatusCode HexahedralGeom::findElementCentroids()
 {
-  auto dataStore = new DataStore<float>( {getNumberOfHexas()},{3});
+  auto dataStore = new DataStore<float>({getNumberOfHexas()}, {3});
   auto hexCentroids = DataArray<float>::Create(*getDataStructure(), "Hex Centroids", dataStore, getId());
   m_HexCentroidsId = hexCentroids->getId();
   GeometryHelpers::Topology::FindElementCentroids<size_t>(getHexahedrals(), getVertices(), hexCentroids);

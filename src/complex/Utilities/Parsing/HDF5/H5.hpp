@@ -3,9 +3,8 @@
 #include <cstdint>
 
 #define H5_USE_110_API
-#include <hdf5.h>
 #include <H5Opublic.h>
-
+#include <hdf5.h>
 
 #ifdef H5Support_USE_MUTEX
 #include <mutex>
@@ -15,7 +14,6 @@
 #else
 #define H5SUPPORT_MUTEX_LOCK()
 #endif
-
 
 namespace complex
 {
