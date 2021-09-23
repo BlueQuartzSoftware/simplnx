@@ -193,7 +193,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findElementSizes()
   auto* dataStore = new DataStore<float32>({getNumberOfHexas()}, {1});
   FloatArray* hexSizes = DataArray<float32>::Create(*getDataStructure(), "Hex Volumes", dataStore, getId());
   m_HexSizesId = hexSizes->getId();
-  GeometryHelpers::Topology::FindHexVolumes<MeshIndexType>(getHexahedrals(), getVertices(), hexSizes);
+  GeometryHelpers::Topology::FindHexVolumes<uint64_t>(getHexahedrals(), getVertices(), hexSizes);
   if(getElementSizes() == nullptr)
   {
     m_HexSizesId.reset();
@@ -215,7 +215,7 @@ void HexahedralGeom::deleteElementSizes()
 
 AbstractGeometry::StatusCode HexahedralGeom::findElementsContainingVert()
 {
-  auto hexasControllingVert = ElementDynamicList::Create(*getDataStructure(), "Hex Containing Vertices", getId());
+  auto hexasControllingVert = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Hex Containing Vertices", getId());
   m_HexasContainingVertId = hexasControllingVert->getId();
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getHexahedrals(), hexasControllingVert, getNumberOfVertices());
   if(getElementsContainingVert() == nullptr)
