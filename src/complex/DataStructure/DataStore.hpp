@@ -269,8 +269,9 @@ public:
    */
   H5::ErrorType writeHdf5(H5::IdType dataId) const override
   {
-    std::cout << "Writing DataStore to: " << complex::H5::Support::getObjectPath(dataId) << std::endl;
     hsize_t rank = m_TupleShape.size() + m_ComponentShape.size();
+    //Consolodate the Tuple and Component Dims into a single array which is used
+    // to write the entire data array to HDF5
     std::vector<hsize_t> h5dims;
     for(const auto& value : m_TupleShape)
     {
@@ -283,6 +284,7 @@ public:
     herr_t err = complex::H5::Support::writePointerDataset(dataId, k_DataStore, rank, h5dims.data(), m_Data.get());
     if(err < 0)
     {
+      return err;
     }
 
     err = complex::H5::Support::writeVectorAttribute(dataId, k_DataStore, k_TupleShape, {m_TupleShape.size()}, m_TupleShape);

@@ -734,6 +734,150 @@ inline herr_t readVectorDataset(hid_t locationID, const std::string& datasetName
   return returnError;
 }
 
+/**
+ * @brief Creates a Dataset with the given name at the location defined by locationID.
+ * This version of writeDataset should be used with a single scalar value. If you
+ * need to write an array of values, use the form that takes an std::vector<>
+ *
+ * @param locationID The Parent location to store the data
+ * @param datasetName The name of the dataset
+ * @param value The value to write to the HDF5 dataset
+ * @return Standard HDF5 error conditions
+ */
+template <typename T>
+inline herr_t writeScalarDataset(hid_t locationID, const std::string& datasetName, const T& value)
+{
+  H5SUPPORT_MUTEX_LOCK()
+
+  herr_t error = -1;
+  hid_t datasetID = -1;
+  hid_t dataspaceID = -1;
+  herr_t returnError = 0;
+  hsize_t dims = 1;
+  hid_t rank = 1;
+  hid_t dataType = HDFTypeForPrimitive<T>();
+  if(dataType == -1)
+  {
+    return -1;
+  }
+  // Create the DataSpace
+  dataspaceID = H5Screate_simple(static_cast<int>(rank), &(dims), nullptr);
+  if(dataspaceID < 0)
+  {
+    return static_cast<herr_t>(dataspaceID);
+  }
+  // Create the Dataset
+  datasetID = H5Dcreate(locationID, datasetName.c_str(), dataType, dataspaceID, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  if(datasetID >= 0)
+  {
+    error = H5Dwrite(datasetID, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, &value);
+    if(error < 0)
+    {
+      std::cout << "Error Writing Data" << std::endl;
+      returnError = error;
+    }
+    error = H5Dclose(datasetID);
+    if(error < 0)
+    {
+      std::cout << "Error Closing Dataset." << std::endl;
+      returnError = error;
+    }
+  }
+  else
+  {
+    returnError = static_cast<herr_t>(datasetID);
+  }
+  /* Terminate access to the data space. */
+  error = H5Sclose(dataspaceID);
+  if(error < 0)
+  {
+    std::cout << "Error Closing Dataspace" << std::endl;
+    returnError = error;
+  }
+  return returnError;
+}
+
+/**
+ * @brief Writes a std::string as a HDF Dataset.
+ * @param locationID The Parent location to write the dataset
+ * @param datasetName The Name to use for the dataset
+ * @param data The actual data to write as a null terminated string
+ * @return Standard HDF5 error conditions
+ */
+inline herr_t writeStringDataset(hid_t locationID, const std::string& datasetName, const std::string& data)
+{
+  H5SUPPORT_MUTEX_LOCK()
+
+  hid_t datasetID = -1;
+  hid_t dataspaceID = -1;
+  hid_t typeID = -1;
+  size_t size = 0;
+  herr_t error = -1;
+  herr_t returnError = 0;
+
+  /* create a string data type */
+  if((typeID = H5Tcopy(H5T_C_S1)) >= 0)
+  {
+    size = data.size() + 1;
+    if(H5Tset_size(typeID, size) >= 0)
+    {
+      if(H5Tset_strpad(typeID, H5T_STR_NULLTERM) >= 0)
+      {
+        /* Create the data space for the dataset. */
+        if((dataspaceID = H5Screate(H5S_SCALAR)) >= 0)
+        {
+          /* Create or open the dataset. */
+          HDF_ERROR_HANDLER_OFF
+          datasetID = H5Dopen(locationID, datasetName.c_str(), H5P_DEFAULT);
+          HDF_ERROR_HANDLER_ON
+          if(datasetID < 0) // dataset does not exist so create it
+          {
+            datasetID = H5Dcreate(locationID, datasetName.c_str(), typeID, dataspaceID, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+          }
+
+          if(datasetID >= 0)
+          {
+            if(!data.empty())
+            {
+              error = H5Dwrite(datasetID, typeID, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.c_str());
+              if(error < 0)
+              {
+                std::cout << "Error Writing String Data" << std::endl;
+                returnError = error;
+              }
+            }
+          }
+          else
+          {
+            // returnError = datasetID;
+            returnError = 0;
+          }
+          CloseH5D(datasetID, error, returnError, datasetName);
+          //          error = H5Dclose(datasetID);
+          //          if (error < 0) {
+          //            std::cout << "Error Closing Dataset." << std::endl;
+          //            returnError = error;
+          //          }
+        }
+        CloseH5S(dataspaceID, error, returnError);
+        //        error = H5Sclose(dataspaceID);
+        //        if ( error < 0) {
+        //          std::cout << "Error closing Dataspace." << std::endl;
+        //          returnError = error;
+        //        }
+      }
+    }
+    CloseH5T(typeID, error, returnError);
+    //    error = H5Tclose(typeID);
+    //    if (error < 0 ) {
+    //     std::cout << "Error closing DataType" << std::endl;
+    //     returnError = error;
+    //    }
+  }
+  return returnError;
+}
+
+
 } // namespace Support
 } // namespace H5
 } // namespace complex
