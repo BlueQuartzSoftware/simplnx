@@ -193,7 +193,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findElementSizes()
   auto *dataStore = new DataStore<float32>( {getNumberOfHexas()},{1});
   Float32Array* hexSizes = DataArray<float32>::Create(*getDataStructure(), "Hex Volumes", dataStore, getId());
   m_HexSizesId = hexSizes->getId();
-  GeometryHelpers::Topology::FindHexVolumes<uint64>(getHexahedrals(), getVertices(), hexSizes);
+  GeometryHelpers::Topology::FindHexVolumes<MeshIndexType>(getHexahedrals(), getVertices(), hexSizes);
   if(getElementSizes() == nullptr)
   {
     m_HexSizesId.reset();
@@ -215,7 +215,7 @@ void HexahedralGeom::deleteElementSizes()
 
 AbstractGeometry::StatusCode HexahedralGeom::findElementsContainingVert()
 {
-  auto hexasControllingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Hex Containing Vertices", getId());
+  auto hexasControllingVert = ElementDynamicList::Create(*getDataStructure(), "Hex Containing Vertices", getId());
   m_HexasContainingVertId = hexasControllingVert->getId();
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getHexahedrals(), hexasControllingVert, getNumberOfVertices());
   if(getElementsContainingVert() == nullptr)
@@ -248,7 +248,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findElementNeighbors()
       return err;
     }
   }
-  auto hexNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Hex Neighbors", getId());
+  auto hexNeighbors = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Hex Neighbors", getId());
   m_HexNeighborsId = hexNeighbors->getId();
   err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getHexahedrals(), getElementsContainingVert(), hexNeighbors, AbstractGeometry::Type::Hexahedral);
   if(getElementNeighbors() == nullptr)
@@ -275,7 +275,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findElementCentroids()
   auto dataStore = new DataStore<float32>( {getNumberOfHexas()},{3});
   auto hexCentroids = DataArray<float32>::Create(*getDataStructure(), "Hex Centroids", dataStore, getId());
   m_HexCentroidsId = hexCentroids->getId();
-  GeometryHelpers::Topology::FindElementCentroids<uint64>(getHexahedrals(), getVertices(), hexCentroids);
+  GeometryHelpers::Topology::FindElementCentroids<uint64_t>(getHexahedrals(), getVertices(), hexCentroids);
   if(getElementCentroids() == nullptr)
   {
     m_HexCentroidsId.reset();
@@ -360,7 +360,7 @@ complex::TooltipGenerator HexahedralGeom::getTooltipGenerator() const
 AbstractGeometry::StatusCode HexahedralGeom::findEdges()
 {
   auto edgeList = createSharedEdgeList(0);
-  GeometryHelpers::Connectivity::FindHexEdges<uint64>(getHexahedrals(), edgeList);
+  GeometryHelpers::Connectivity::FindHexEdges<uint64_t>(getHexahedrals(), edgeList);
   if(getEdges() == nullptr)
   {
     setEdges(nullptr);
@@ -373,7 +373,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findEdges()
 AbstractGeometry::StatusCode HexahedralGeom::findFaces()
 {
   auto quadList = createSharedQuadList(0);
-  GeometryHelpers::Connectivity::FindHexFaces<uint64>(getHexahedrals(), quadList);
+  GeometryHelpers::Connectivity::FindHexFaces<uint64_t>(getHexahedrals(), quadList);
   if(quadList == nullptr)
   {
     setQuads(nullptr);
@@ -387,7 +387,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findUnsharedEdges()
 {
   auto dataStore = new DataStore<MeshIndexType>({0}, {2});
   DataArray<MeshIndexType>* unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", dataStore, getId());
-  GeometryHelpers::Connectivity::FindUnsharedHexEdges<uint64>(getHexahedrals(), unsharedEdgeList);
+  GeometryHelpers::Connectivity::FindUnsharedHexEdges<uint64_t>(getHexahedrals(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
     setUnsharedEdges(nullptr);
@@ -401,7 +401,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findUnsharedFaces()
 {
   auto dataStore = new DataStore<MeshIndexType>({0}, {4});
   auto unsharedQuadList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", dataStore, getId());
-  GeometryHelpers::Connectivity::FindUnsharedHexFaces<uint64>(getHexahedrals(), unsharedQuadList);
+  GeometryHelpers::Connectivity::FindUnsharedHexFaces<uint64_t>(getHexahedrals(), unsharedQuadList);
   if(unsharedQuadList == nullptr)
   {
     setUnsharedFaces(nullptr);
