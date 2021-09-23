@@ -4,6 +4,7 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
+#include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
@@ -18,6 +19,7 @@ VertexGeom::VertexGeom(DataStructure& ds, const std::string& name)
 VertexGeom::VertexGeom(DataStructure& ds, const std::string& name, usize numVertices, bool allocate)
 : AbstractGeometry(ds, name)
 {
+
 }
 
 VertexGeom::VertexGeom(DataStructure& ds, const std::string& name, const SharedVertexList* vertices)
