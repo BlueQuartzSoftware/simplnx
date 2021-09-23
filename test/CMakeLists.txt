@@ -1,17 +1,8 @@
 
-# --------------------------------------------------------------------------
-macro(ConvertPathToHeaderCompatible INPUT)
-    if(WIN32)
-        STRING(REPLACE "\\" "\\\\" ${INPUT} ${INPUT} )
-        STRING(REPLACE "/" "\\\\" ${INPUT} ${INPUT}  )
-    endif()
-endmacro()
-set(complex_SOURCE_DIR_NORM ${complex_SOURCE_DIR})
-ConvertPathToHeaderCompatible(${complex_SOURCE_DIR_NORM})
-
+file(TO_CMAKE_PATH "${complex_SOURCE_DIR}" complex_SOURCE_DIR_NORM)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/complex_test_dirs.h.in
-                ${complex_BINARY_DIR}/complex_test_dirs.h @ONLY )
+                ${COMPLEX_GENERATED_HEADER_DIR}/unit_test/complex_test_dirs.h @ONLY )
 
 
 find_package(Catch2 CONFIG REQUIRED)
@@ -65,7 +56,7 @@ target_compile_options(complex_test
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
 )
 
-target_include_directories(complex_test PRIVATE ${complex_BINARY_DIR})
+target_include_directories(complex_test PRIVATE ${COMPLEX_GENERATED_DIR})
 
 # add_custom_command(
 #   TARGET complex_test POST_BUILD

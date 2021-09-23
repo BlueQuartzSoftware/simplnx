@@ -35,46 +35,7 @@ namespace FilePathGenerator
  * @return
  */
 std::vector<std::string> GenerateFileList(int32_t start, int32_t end, int32_t increment, bool& hasMissingFiles, bool stackLowToHigh, const std::string& inputPath, const std::string& filePrefix,
-                                          const std::string& fileSuffix, const std::string& fileExtension, int32_t paddingDigits)
-{
-  std::vector<std::string> fileList;
-
-  if(!fs::exists(inputPath))
-  {
-    return fileList;
-  }
-  int32_t index = 0;
-
-  std::stringstream fmt_string_stream;
-
-  fmt_string_stream << "{}/{}{:0" << paddingDigits << "d}{}{}";
-
-  bool missingFiles = false;
-  for(int32_t i = 0; i < (end - start) + 1; i = i + increment)
-  {
-    if(stackLowToHigh)
-    {
-      index = start + i;
-    }
-    else
-    {
-      index = end - i;
-    }
-
-    std::string filePath = fmt::format(fmt_string_stream.str(), inputPath, filePrefix, index, fileSuffix, fileExtension);
-
-    if(!fs::exists(filePath))
-    {
-      missingFiles = true;
-    }
-
-    fileList.push_back(filePath);
-  }
-
-  hasMissingFiles = missingFiles;
-
-  return fileList;
-}
+                                          const std::string& fileSuffix, const std::string& fileExtension, int32_t paddingDigits);
 
 } // namespace FilePathGenerator
 

@@ -86,10 +86,6 @@ TEST_CASE("RunCoreFilter")
     args.insert("delimiter_choice", std::make_any<u64>(0));
     args.insert("output_data_array", std::make_any<DataPath>(dataPath));
 
-    GeneratedFileListParameter::ValueType vt;
-    vt.m_StartIndex = 0;
-    args.insert("something", std::any(GeneratedFileListParameter::ValueType(vt)));
-
     // auto callback = [](const IFilter::Message& message) { fmt::print("{}: {}\n", message.type, message.message); };
     // Result<> result = filter.execute(ds, args, IFilter::MessageHandler{callback});
     Result<> result = filter.execute(ds, args);

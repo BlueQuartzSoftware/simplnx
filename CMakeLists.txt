@@ -260,7 +260,8 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Core/Application.cpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.cpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterList.cpp
-  
+
+  ${COMPLEX_SOURCE_DIR}/Core/Parameters/utils/FilePathGenerator.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.cpp

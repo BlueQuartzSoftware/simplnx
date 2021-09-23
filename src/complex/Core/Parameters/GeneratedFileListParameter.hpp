@@ -17,23 +17,22 @@ public:
   enum class Ordering : uint32_t
   {
     LowToHigh = 0,
-    HighToLow = 1,
-    Unknown = 2
+    HighToLow = 1
   };
   /**
    * @brief This struct holds all of the data necessary to generate a list of file paths.
    */
-  using ValueType = struct s_value_type
+  struct ValueType
   {
-    int32_t m_StartIndex = 0;
-    int32_t m_EndIndex = 0;
-    int32_t m_IncrementIndex = 1;
-    int32_t m_PaddingDigits = 3;
-    Ordering m_Ordering = Ordering::LowToHigh;
-    std::string m_InputPath;
-    std::string m_FilePrefix;
-    std::string m_FileSuffix;
-    std::string m_FileExtension;
+    int32_t StartIndex = 0;
+    int32_t EndIndex = 0;
+    int32_t IncrementIndex = 1;
+    uint32_t PaddingDigits = 3;
+    Ordering Ordering = Ordering::LowToHigh;
+    std::string InputPath;
+    std::string FilePrefix;
+    std::string FileSuffix;
+    std::string FileExtension;
   };
 
   GeneratedFileListParameter() = delete;
