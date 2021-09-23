@@ -1,15 +1,16 @@
 #include "DataArrayFactory.hpp"
 
+
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
 
-#include <complex/DataStructure/DataStore.hpp>
 #include <memory>
 #include <numeric>
 
 using namespace complex;
+
 
 DataArrayFactory::DataArrayFactory()
 : IH5DataFactory()
@@ -97,6 +98,8 @@ H5::ErrorType DataArrayFactory::readDataStructureDataset(DataStructure& ds, H5::
 
   if(err >= 0)
   {
+    hid_t dataStoreId = H5Dopen(targetId, "DataStore", H5P_DEFAULT);
+    readDims(dataStoreId, tupleCount, tupleSize);
 
     if(H5Tequal(typeId, H5T_NATIVE_FLOAT) > 0)
     {

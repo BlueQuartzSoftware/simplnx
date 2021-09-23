@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <iostream>
+#include <numeric>
 
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"

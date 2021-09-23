@@ -501,6 +501,7 @@ void ImageGeom::setElementSizes(const Float32Array* elementSizes)
   m_VoxelSizesId = elementSizes->getId();
 }
 
+
 H5::ErrorType ImageGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
 {
   std::vector<size_t> volDims;

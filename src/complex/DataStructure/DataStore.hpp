@@ -28,6 +28,10 @@ public:
   using const_reference = typename IDataStore<T>::const_reference;
   using ShapeType = typename std::vector<size_t>;
 
+  static constexpr const char k_DataStore[] = "DataStore";
+  static constexpr const char k_TupleShape[] = "TupleShape";
+  static constexpr const char k_ComponentShape[] = "ComponentShape";
+
   /**
    * @brief Creates a new DataStore with a single tuple dimensions of 'numTuples' and
    * a single component dimension of {1}
@@ -128,6 +132,35 @@ public:
   {
     return std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>());
   }
+
+  ShapeType getTupleShape() const
+  {
+    return m_TupleShape;
+  }
+
+  ShapeType getComponentShape() const
+  {
+    return m_ComponentShape;
+  }
+
+//  /**
+//   * @brief Resizes the DataStore to handle the specified number of tuples.
+//   * @param numTuples
+//   */
+//  void resizeTuples(size_t numTuples) override
+//  {
+//    auto oldSize = this->getSize();
+//    m_TupleShape = numTuples;
+//    auto newSize = this->getSize();
+//
+//    auto data = new value_type[newSize];
+//    for(size_t i = 0; i < newSize && i < oldSize; i++)
+//    {
+//      data[i] = m_Data[i];
+//    }
+//
+//    m_Data.reset(data);
+//  }
 
   /**
    * @brief Returns the dimensions of the Tuples
@@ -284,9 +317,8 @@ public:
    */
   H5::ErrorType writeHdf5(H5::IdType dataId, const std::string& name, DataObject::IdType objectId) const override
   {
+    std::cout << "Writing DataStore to: " << complex::H5::Support::getObjectPath(dataId) << std::endl;
     hsize_t rank = m_TupleShape.size() + m_ComponentShape.size();
-    // Consolodate the Tuple and Component Dims into a single array which is used
-    // to write the entire data array to HDF5
     std::vector<hsize_t> h5dims;
     for(const auto& value : m_TupleShape)
     {
@@ -296,19 +328,40 @@ public:
     {
       h5dims.push_back(static_cast<hsize_t>(value));
     }
-    herr_t err = complex::H5::Support::WritePointerDataset(dataId, name, rank, h5dims.data(), m_Data.get());
+    herr_t err = complex::H5::Support::writePointerDataset(dataId, k_DataStore, rank, h5dims.data(), m_Data.get());
+    if (err < 0)
+    {
+
+    }
+
+    err = complex::H5::Support::writeVectorAttribute(dataId, k_DataStore, k_TupleShape, {m_TupleShape.size()}, m_TupleShape);
+
+    err = complex::H5::Support::writeVectorAttribute(dataId, k_DataStore, k_ComponentShape, {m_ComponentShape.size()}, m_ComponentShape);
+
+#if 0
+    int32_t rank = 1;
+
+    hsize_t dataSize = getNumberOfComponents() * getNumberOfTuples();
+
+    hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
+    hid_t dataspaceId = H5Screate_simple(rank, &dataSize, nullptr);
+
+
+
+
+    auto err = H5::Writer::Generic::writeScalarAttribute(dataId, ".", complex::H5::Constants::DataStore::NumberOfTuples, m_TupleShape);
     if(err < 0)
     {
       return err;
     }
-    // Write the attributes to the dataset
-    err = complex::H5::Support::WriteVectorAttribute(dataId, name, complex::H5::k_TupleShapeTag.str(), {m_TupleShape.size()}, m_TupleShape);
+    err = H5::Writer::Generic::writeScalarAttribute(dataId, ".", H5::Constants::DataStore::NumberOfComponents, m_ComponentShape);
     if(err < 0)
     {
       return err;
     }
-    err = complex::H5::Support::WriteVectorAttribute(dataId, name, complex::H5::k_ComponentShapeTag.str(), {m_ComponentShape.size()}, m_ComponentShape);
-    if(err < 0)
+    hid_t storeId = H5Dcreate1(dataId, k_DataStore, dataType, dataspaceId, H5P_DEFAULT);
+    err = H5Dwrite(storeId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, m_Data.get());
+    if(H5Dclose(storeId) < 0)
     {
       return err;
     }
@@ -318,12 +371,7 @@ public:
     {
       return err;
     }
-    err = complex::H5::Support::WriteStringAttribute(dataId, name, complex::H5::k_ObjectTypeTag.str(), complex::H5::k_DataArrayTag.str());
-    if(err < 0)
-    {
-      return err;
-    }
-
+#endif
     return err;
   }
 
@@ -331,25 +379,21 @@ public:
   {
     typename DataStore<T>::ShapeType tupleShape;
     typename DataStore<T>::ShapeType componentShape;
-    //
-    herr_t err = H5::Support::ReadVectorAttribute(parentId, datasetName, complex::H5::k_TupleShapeTag.str(), tupleShape);
-    if(err < 0)
-    {
-    }
+
+    herr_t  err = H5::Support::readVectorAttribute(dataId, ".", H5::Constants::DataStore::TupleShape, tupleShape);
+    if (err < 0){}
     size_t numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
-    //
-    err = H5::Support::ReadVectorAttribute(parentId, datasetName, complex::H5::k_ComponentShapeTag.str(), componentShape);
-    if(err < 0)
-    {
-    }
+
+    err = H5::Support::readVectorAttribute(dataId, ".", H5::Constants::DataStore::ComponentShape, componentShape);
+    if (err < 0){}
     size_t numComponents = std::accumulate(componentShape.cbegin(), componentShape.cend(), static_cast<size_t>(1), std::multiplies<>());
-    //
+
     auto dataStore = new complex::DataStore<T>(tupleShape, componentShape);
-    err = H5::Support::ReadPointerDataset(parentId, datasetName, dataStore->data());
+    err = H5::Support::readPointerDataset(dataId, k_DataStore, dataStore->data());
     if(err < 0)
     {
+      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}", H5::Support::getObjectPath(dataId)));
       delete dataStore;
-      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(parentId), datasetName));
       return nullptr;
     }
 
