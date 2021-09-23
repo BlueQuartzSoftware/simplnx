@@ -34,22 +34,13 @@ public:
     InputFile = 0,  //!<
     InputPath = 1,  //!<
     OutputFile = 2, //!<
-    OutputPath = 3, //!<
-    Unknown = 4     //!<
+    OutputPath = 3
   };
 
-  /**
-   * @brief This struct is used to store the actual file system path and indicate to
-   * consumers of this FilterParameter what kind of dialog should be displayed.
-   */
-  using ValueType = struct s_value_type
-  {
-    std::filesystem::path m_Path;
-    PathType m_PathType;
-  };
+  using ValueType = std::filesystem::path;
 
   FileSystemPathParameter() = delete;
-  FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, PathType pathType);
   ~FileSystemPathParameter() override = default;
 
   FileSystemPathParameter(const FileSystemPathParameter&) = delete;
@@ -116,6 +107,7 @@ public:
 
 private:
   ValueType m_DefaultValue;
+  PathType m_PathType;
 };
 } // namespace complex
 

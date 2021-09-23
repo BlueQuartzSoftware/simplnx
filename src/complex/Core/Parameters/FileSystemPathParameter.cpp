@@ -12,10 +12,8 @@ constexpr const char k_PathKey[] = "path";
 constexpr const char k_TypeKey[] = "type";
 
 //-----------------------------------------------------------------------------
-complex::Result<> validateInputFile(const complex::FileSystemPathParameter::ValueType& value)
+complex::Result<> ValidateInputFile(const complex::FileSystemPathParameter::ValueType& path)
 {
-  const std::filesystem::path& path = value.m_Path;
-
   if(!fs::exists(path))
   {
     return {nonstd::make_unexpected(std::vector<complex::Error>{{-1, fmt::format("Path \"{}\" does not exist", path.string())}})};
@@ -29,10 +27,8 @@ complex::Result<> validateInputFile(const complex::FileSystemPathParameter::Valu
 }
 
 //-----------------------------------------------------------------------------
-complex::Result<> validateInputPath(const complex::FileSystemPathParameter::ValueType& value)
+complex::Result<> ValidateInputPath(const complex::FileSystemPathParameter::ValueType& path)
 {
-  const std::filesystem::path& path = value.m_Path;
-
   if(!fs::exists(path))
   {
     return {nonstd::make_unexpected(std::vector<complex::Error>{{-1, fmt::format("Path \"{}\" does not exist", path.string())}})};
@@ -45,9 +41,8 @@ complex::Result<> validateInputPath(const complex::FileSystemPathParameter::Valu
 }
 
 //-----------------------------------------------------------------------------
-complex::Result<> validateOutputFile(const complex::FileSystemPathParameter::ValueType& value)
+complex::Result<> ValidateOutputFile(const complex::FileSystemPathParameter::ValueType& path)
 {
-  const std::filesystem::path& path = value.m_Path;
   if(!fs::exists(path))
   {
     return {nonstd::make_unexpected(std::vector<complex::Error>{{-1, fmt::format("Path \"{}\" does not exist. It will be created during execution.", path.string())}})};
@@ -56,9 +51,8 @@ complex::Result<> validateOutputFile(const complex::FileSystemPathParameter::Val
 }
 
 //-----------------------------------------------------------------------------
-complex::Result<> validateOutputPath(const complex::FileSystemPathParameter::ValueType& value)
+complex::Result<> ValidateOutputPath(const complex::FileSystemPathParameter::ValueType& path)
 {
-  const std::filesystem::path& path = value.m_Path;
   if(!fs::exists(path))
   {
     return {nonstd::make_unexpected(std::vector<complex::Error>{{-1, fmt::format("Path \"{}\" does not exist. It will be created during execution.", path.string())}})};
@@ -71,9 +65,10 @@ complex::Result<> validateOutputPath(const complex::FileSystemPathParameter::Val
 namespace complex
 {
 //-----------------------------------------------------------------------------
-FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, PathType pathType)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
+, m_PathType(pathType)
 {
 }
 
@@ -92,10 +87,9 @@ IParameter::AcceptedTypes FileSystemPathParameter::acceptedTypes() const
 //-----------------------------------------------------------------------------
 nlohmann::json FileSystemPathParameter::toJson(const std::any& value) const
 {
-  ValueType fileSystemPathInfo = std::any_cast<ValueType>(value);
+  ValueType path = std::any_cast<ValueType>(value);
   nlohmann::json json;
-  json[::k_PathKey] = fileSystemPathInfo.m_Path.string();
-  json[::k_TypeKey] = fileSystemPathInfo.m_PathType;
+  json[::k_PathKey] = path.string();
   return json;
 }
 
@@ -120,7 +114,7 @@ Result<std::any> FileSystemPathParameter::fromJson(const nlohmann::json& json) c
 //-----------------------------------------------------------------------------
 IParameter::UniquePointer FileSystemPathParameter::clone() const
 {
-  return std::make_unique<FileSystemPathParameter>(name(), humanName(), helpText(), m_DefaultValue);
+  return std::make_unique<FileSystemPathParameter>(name(), humanName(), helpText(), m_DefaultValue, m_PathType);
 }
 
 //-----------------------------------------------------------------------------
@@ -143,27 +137,24 @@ Result<> FileSystemPathParameter::validate(const std::any& value) const
 }
 
 //-----------------------------------------------------------------------------
-Result<> FileSystemPathParameter::validatePath(const ValueType& value) const
+Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
 {
-  const std::filesystem::path& path = value.m_Path;
   // No matter the type, there must be something in the 'path'
   if(path.empty())
   {
     return {nonstd::make_unexpected(std::vector<Error>{{-1, "Path must not be empty"}})};
   }
 
-  switch(value.m_PathType)
+  switch(m_PathType)
   {
   case complex::FileSystemPathParameter::PathType::InputFile:
-    return validateInputFile(value);
+    return ValidateInputFile(path);
   case complex::FileSystemPathParameter::PathType::InputPath:
-    return validateInputPath(value);
+    return ValidateInputPath(path);
   case complex::FileSystemPathParameter::PathType::OutputFile:
-    return validateOutputFile(value);
+    return ValidateOutputFile(path);
   case complex::FileSystemPathParameter::PathType::OutputPath:
-    return validateOutputPath(value);
-  case complex::FileSystemPathParameter::PathType::Unknown:
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, "PathType is Unknown"}})};
+    return ValidateOutputPath(path);
   }
 
   return {};
