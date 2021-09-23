@@ -66,7 +66,6 @@ complex::Result<> validateOutputPath(const complex::FileSystemPathParameter::Val
   return {};
 }
 
-
 } // namespace
 
 namespace complex

@@ -10,12 +10,25 @@
 
 namespace complex
 {
-
-
+/**
+ * @brief This FilterParameter can represent an input or output file or folder on the
+ * local file system. If your filter needs to gather a single input/output path, where
+ * path can be a file or folder, this is the FilterParameter to use. The data is
+ * held in the ValueType which is a type alias for a Struct
+ *
+ * @code
+    using ValueType = struct s_value_type
+    {
+      std::filesystem::path m_Path;
+      PathType m_PathType;
+    };
+ * @endcode
+ *
+ * Where PathType is an Enumeration inside of the FileSystemPathParameter
+ */
 class COMPLEX_EXPORT FileSystemPathParameter : public ValueParameter
 {
 public:
-
   enum class PathType : uint32_t
   {
     InputFile = 0,  //!<
@@ -26,13 +39,11 @@ public:
   };
 
   /**
-   * @brief This
+   * @brief This struct is used to store the actual file system path and indicate to
+   * consumers of this FilterParameter what kind of dialog should be displayed.
    */
   using ValueType = struct s_value_type
   {
-//    s_value_type(const std::filesystem::path& path, PathType pathType)
-//    : m_Path(path)
-//    , m_PathType(pathType){}
     std::filesystem::path m_Path;
     PathType m_PathType;
   };
@@ -46,7 +57,6 @@ public:
 
   FileSystemPathParameter& operator=(const FileSystemPathParameter&) = delete;
   FileSystemPathParameter& operator=(FileSystemPathParameter&&) noexcept = delete;
-
 
   /**
    * @brief
