@@ -82,7 +82,7 @@ std::string TetrahedralGeom::getGeometryTypeAsString() const
 
 void TetrahedralGeom::resizeTriList(usize numTris)
 {
-  getTriangles()->getDataStore()->resizeTuples(numTris);
+  getTriangles()->getDataStore()->reshapeTuples({numTris});
 }
 
 void TetrahedralGeom::setTriangles(const SharedTriList* triangles)
@@ -135,17 +135,17 @@ void TetrahedralGeom::getVertsAtTri(usize triId, usize verts[3]) const
 
 usize TetrahedralGeom::getNumberOfTris() const
 {
-  return getTriangles()->getTupleCount();
+  return getTriangles()->getNumberOfTuples();
 }
 
 void TetrahedralGeom::resizeTetList(usize numTets)
 {
-  getTriangles()->getDataStore()->resizeTuples(numTets);
+  getTriangles()->getDataStore()->reshapeTuples({numTets});
 }
 
 void TetrahedralGeom::setTetrahedra(const SharedTetList* tets)
 {
-  if(!tets)
+  if(tets != nullptr)
   {
     m_TetListId.reset();
     return;
@@ -165,8 +165,8 @@ const AbstractGeometry::SharedTetList* TetrahedralGeom::getTetrahedra() const
 
 void TetrahedralGeom::setVertsAtTet(usize tetId, usize verts[4])
 {
-  auto tets = getTetrahedra();
-  if(!tets)
+  auto* tets = getTetrahedra();
+  if(nullptr == tets)
   {
     return;
   }
@@ -215,7 +215,7 @@ usize TetrahedralGeom::getNumberOfTets() const
   {
     return 0;
   }
-  return tets->getTupleCount();
+  return tets->getNumberOfTuples();
 }
 
 void TetrahedralGeom::initializeWithZeros()
@@ -239,8 +239,8 @@ usize TetrahedralGeom::getNumberOfElements() const
 
 AbstractGeometry::StatusCode TetrahedralGeom::findElementSizes()
 {
-  auto dataStore = new DataStore<float32>(1, getNumberOfTets());
-  Float32Array* tetSizes = DataArray<float32>::Create(*getDataStructure(), "Tet Volumes", dataStore, getId());
+  auto dataStore = new DataStore<float32>( {getNumberOfTets()}, {1});
+  FloatArray* tetSizes = DataArray<float32>::Create(*getDataStructure(), "Tet Volumes", dataStore, getId());
   GeometryHelpers::Topology::FindTetVolumes(getTetrahedra(), getVertices(), tetSizes);
   if(tetSizes == nullptr)
   {
@@ -321,8 +321,8 @@ void TetrahedralGeom::deleteElementNeighbors()
 
 AbstractGeometry::StatusCode TetrahedralGeom::findElementCentroids()
 {
-  auto dataStore = new DataStore<float32>(3, getNumberOfTets());
-  DataArray<float32>* tetCentroids = DataArray<float32>::Create(*getDataStructure(), "Tet Centroids", dataStore, getId());
+  auto dataStore = new DataStore<float32>({getNumberOfTets()}, {3});
+  DataArray<float>* tetCentroids = DataArray<float32>::Create(*getDataStructure(), "Tet Centroids", dataStore, getId());
   GeometryHelpers::Topology::FindElementCentroids(getTetrahedra(), getVertices(), tetCentroids);
   if(tetCentroids == nullptr)
   {
@@ -418,7 +418,7 @@ AbstractGeometry::StatusCode TetrahedralGeom::findFaces()
 
 AbstractGeometry::StatusCode TetrahedralGeom::findUnsharedEdges()
 {
-  auto dataStore = new DataStore<MeshIndexType>(2, 0);
+  auto dataStore = new DataStore<MeshIndexType>({0}, {2});
   auto unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", dataStore, getId());
   GeometryHelpers::Connectivity::FindUnsharedTetEdges(getTetrahedra(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
@@ -432,7 +432,7 @@ AbstractGeometry::StatusCode TetrahedralGeom::findUnsharedEdges()
 
 AbstractGeometry::StatusCode TetrahedralGeom::findUnsharedFaces()
 {
-  auto dataStore = new DataStore<MeshIndexType>(3, 0);
+  auto dataStore = new DataStore<MeshIndexType>({0}, {3});
   auto unsharedTriList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Face List", dataStore, getId());
   GeometryHelpers::Connectivity::FindUnsharedTetFaces(getTetrahedra(), unsharedTriList);
   if(unsharedTriList == nullptr)

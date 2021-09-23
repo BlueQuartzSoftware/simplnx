@@ -12,8 +12,9 @@
 #include "complex/DataStructure/Factory/TetrahedralGeomFactory.hpp"
 #include "complex/DataStructure/Factory/TriangleGeomFactory.hpp"
 #include "complex/DataStructure/Factory/VertexGeomFactory.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/IH5DataFactory.hpp"
+
 
 using namespace complex;
 

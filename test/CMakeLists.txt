@@ -26,6 +26,7 @@ add_executable(complex_test MACOSX_BUNDLE
   PipelineTest.cpp
   PluginTest.cpp
   FilePathGeneratorTest.cpp
+  DataArrayTest.cpp
   ParametersTest.cpp
 )
 

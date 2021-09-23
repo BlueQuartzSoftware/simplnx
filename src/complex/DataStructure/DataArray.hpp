@@ -84,8 +84,8 @@ public:
   ~DataArray() override = default;
 
   /**
-   * @brief Returns a shallow copy of the DataArray without copying data
-   * store's contents.
+   * @brief Returns a shallow copy of the DataArray without copying data. THE CALLING CODE
+   * MUST DISPOSE OF THE RETURNED OBJECT.
    * @return DataObject*
    */
   DataObject* shallowCopy() override
@@ -118,25 +118,25 @@ public:
    */
   usize getSize() const
   {
-    return getTupleCount() * getNumComponents();
+    return getNumberOfTuples() * getNumberOfComponents();
   }
 
   /**
    * @brief Returns the number of tuples in the DataArray.
    * @return usize
    */
-  usize getTupleCount() const
+  size_t getNumberOfTuples() const
   {
-    return m_DataStore->getTupleCount();
+    return m_DataStore->getNumberOfTuples();
   }
 
   /**
    * @brief Returns the tuple getSize.
    * @return usize
    */
-  usize getNumComponents() const
+  size_t getNumberOfComponents() const
   {
-    return m_DataStore->getNumComponents();
+    return m_DataStore->getNumberOfComponents();
   }
 
   /**
@@ -224,14 +224,14 @@ public:
     return m_DataStore;
   }
 
-  /**
-   * @brief Returns true if the DataStore has already been allocated. Returns false otherwise.
-   * @return bool
-   */
-  bool isAllocated() const
-  {
-    return m_DataStore != nullptr;
-  }
+//  /**
+//   * @brief Returns true if the DataStore has already been allocated. Returns false otherwise.
+//   * @return bool
+//   */
+//  bool isAllocated() const
+//  {
+//    return m_DataStore != nullptr;
+//  }
 
   /**
    * @brief Sets a new DataStore for the DataArray to handle. The existing DataStore
@@ -349,7 +349,7 @@ public:
    * @param rhs
    * @return DataArray&
    */
-  DataArray& operator=(DataArray&& rhs)
+  DataArray& operator=(DataArray&& rhs) noexcept
   {
     m_DataStore = std::move(rhs.m_DataStore);
     return *this;

@@ -130,7 +130,7 @@ usize RectGridGeom::getNumberOfElements() const
 
 AbstractGeometry::StatusCode RectGridGeom::findElementSizes()
 {
-  auto sizes = new DataStore<float32>(1, getNumberOfElements());
+  auto sizes = new DataStore<float32>({getNumberOfElements()}, {1});
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
   auto zBnds = getZBounds();

@@ -9,6 +9,13 @@
 
 using namespace complex;
 
+namespace
+{
+constexpr const char k_H5_DIMENSIONS[] = "_DIMENSIONS";
+constexpr const char k_H5_ORIGIN[] = "_ORIGIN";
+constexpr const char k_H5_SPACING[] = "_SPACING";
+}
+
 ImageGeom::ImageGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometryGrid(ds, name)
 {
@@ -131,7 +138,7 @@ AbstractGeometry::StatusCode ImageGeom::findElementSizes()
   {
     return -1;
   }
-  auto dataStore = new DataStore<float32>(1, getNumberOfElements());
+  auto dataStore = new DataStore<float32>({getNumberOfElements()},{1});
   auto voxelSizes = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", dataStore, getId());
   voxelSizes->getDataStore()->fill(res[0] * res[1] * res[2]);
   m_VoxelSizesId = voxelSizes->getId();
@@ -494,12 +501,63 @@ void ImageGeom::setElementSizes(const Float32Array* elementSizes)
   m_VoxelSizesId = elementSizes->getId();
 }
 
+
 H5::ErrorType ImageGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
 {
-  return getDataMap().readH5Group(*getDataStructure(), targetId);
+  std::vector<size_t> volDims;
+  std::vector<float> spacing;
+  std::vector<float> origin;
+
+  int err = H5::Support::readVectorDataset(targetId, k_H5_DIMENSIONS, volDims);
+  if(err < 0)
+  {
+    return err;
+  }
+  err = H5::Support::readVectorDataset(targetId, k_H5_SPACING, spacing);
+  if(err < 0)
+  {
+    return err;
+  }
+  err = H5::Support::readVectorDataset(targetId, k_H5_ORIGIN, origin);
+  if(err < 0)
+  {
+    return err;
+  }
+
+  setDimensions(volDims);
+  setSpacing(spacing);
+  setOrigin(origin);
+
+  return err;
 }
 
 H5::ErrorType ImageGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
 {
-  return getDataMap().writeH5Group(groupId);
+  std::cout << "Writing ImageGeometry to HDF5 File" << std::endl;
+  herr_t err = 0;
+
+  SizeVec3  volDims = getDimensions();
+  FloatVec3 spacing = getSpacing();
+  FloatVec3 origin = getOrigin();
+
+  int32_t rank = 1;
+  hsize_t dims[1] = {3};
+
+  err = H5::Support::writePointerDataset(groupId, k_H5_DIMENSIONS, rank, dims, volDims.data());
+  if(err < 0)
+  {
+    return err;
+  }
+  err =  H5::Support::writePointerDataset(groupId, k_H5_ORIGIN, rank, dims, origin.data());
+  if(err < 0)
+  {
+    return err;
+  }
+  err =  H5::Support::writePointerDataset(groupId, k_H5_SPACING, rank, dims, spacing.data());
+  if(err < 0)
+  {
+    return err;
+  }
+
+  return err;
 }

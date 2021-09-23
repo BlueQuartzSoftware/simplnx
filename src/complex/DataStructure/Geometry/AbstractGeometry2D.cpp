@@ -28,7 +28,7 @@ AbstractGeometry2D::~AbstractGeometry2D() = default;
 
 void AbstractGeometry2D::resizeVertexList(usize numVertices)
 {
-  getVertices()->getDataStore()->resizeTuples(numVertices);
+  getVertices()->getDataStore()->reshapeTuples({numVertices});
 }
 
 void AbstractGeometry2D::setVertices(const SharedVertexList* vertices)
@@ -70,7 +70,7 @@ usize AbstractGeometry2D::getNumberOfEdges() const
   {
     return 0;
   }
-  return edges->getTupleCount();
+  return edges->getNumberOfTuples();
 }
 
 void AbstractGeometry2D::setVertsAtEdge(usize edgeId, const usize verts[2])

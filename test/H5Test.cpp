@@ -1,10 +1,3 @@
-#include <catch2/catch.hpp>
-
-#include <iostream>
-#include <string>
-#include <type_traits>
-
-#include <hdf5.h>
 
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataArray.hpp"
@@ -14,10 +7,16 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Montage/GridMontage.hpp"
 #include "complex/DataStructure/ScalarData.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
-#define H5_USE_110_API
+#include <catch2/catch.hpp>
+
+#include <iostream>
+#include <string>
+#include <type_traits>
+
 
 using namespace complex;
 namespace fs = std::filesystem;
@@ -151,12 +150,63 @@ DataStructure getTestDataStructure()
   auto scalar = ScalarData<int32>::Create(ds, "Scalar", 7, geom->getId());
   REQUIRE(scalar != nullptr);
 
-  auto dataStore = new DataStore<uint8>(3, 2);
+  auto dataStore = new DataStore<uint8>({2}, {3});
   auto dataArray = DataArray<uint8>::Create(ds, "DataArray", dataStore, geom->getId());
   REQUIRE(dataArray != nullptr);
 
   return ds;
 }
+
+template<typename T>
+DataArray<T>* createTestDataArray(const std::string& name, DataStructure& dataGraph, typename DataStore<T>::ShapeType tupleShape,
+                                  typename DataStore<T>::ShapeType componentShape,  DataObject::IdType parentId)
+{
+  using DataStoreType = DataStore<T>;
+  using ArrayType = DataArray<T>;
+
+  DataStoreType* data_store = new DataStoreType(tupleShape, componentShape);
+  ArrayType* dataArray = ArrayType::Create(dataGraph, name, data_store, parentId);
+
+  return dataArray;
+}
+
+DataStructure createDataStructure()
+{
+  DataStructure dataGraph;
+  DataGroup* group = complex::DataGroup::Create(dataGraph, "Small IN100");
+  DataGroup* scanData = complex::DataGroup::Create(dataGraph, "EBSD Scan Data", group->getId());
+
+
+  // Create an Image Geometry grid for the Scan Data
+  ImageGeom* imageGeom = ImageGeom::Create(dataGraph, "Small IN100 Grid", scanData->getId());
+  imageGeom->setSpacing({0.25f, 0.25f, 0.25f});
+  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  complex::SizeVec3 imageGeomDims = {100, 100, 100};
+  imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
+
+  std::cout << "Creating Data Structure" << std::endl;
+  // Create some DataArrays; The DataStructure keeps a shared_ptr<> to the DataArray so DO NOT put
+  // it into another shared_ptr<>
+  size_t numComponents = 1;
+  std::vector<size_t> tupleShape = {imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]};
+
+  FloatArray* ci_data = createTestDataArray<float>( "Confidence Index", dataGraph, tupleShape, {numComponents}, scanData->getId() );
+  Int32Array* feature_ids_data = createTestDataArray<int32_t>( "FeatureIds", dataGraph, tupleShape, {numComponents}, scanData->getId() );
+  FloatArray* iq_data = createTestDataArray<float>( "Image Quality", dataGraph, tupleShape, {numComponents}, scanData->getId() );
+  Int32Array* phases_data = createTestDataArray<int32_t>( "Phases", dataGraph, tupleShape, {numComponents}, scanData->getId() );
+
+  numComponents = 3;
+  UInt8Array* ipf_color_data = createTestDataArray<uint8_t>( "IPF Colors", dataGraph, tupleShape, {numComponents}, scanData->getId() );
+
+  // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
+  DataGroup* phase_group = complex::DataGroup::Create(dataGraph, "Phase Data", group->getId());
+  numComponents = 1;
+  size_t numTuples = 2;
+  Int32Array* laue_data = createTestDataArray<int32_t>( "Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId() );
+
+  return dataGraph;
+}
+
 
 TEST_CASE("complex IO")
 {
@@ -169,14 +219,15 @@ TEST_CASE("complex IO")
     REQUIRE(fs::create_directories(dataDir));
   }
 
-  fs::path filePath = getComplexH5File(app);
+  fs::path filePath = getDataDir(app) / "complex_IO.h5";
 
   std::string filePathString = filePath.string();
 
   // Write HDF5 file
   try
   {
-    DataStructure ds = getTestDataStructure();
+    DataStructure ds = createDataStructure();
+    std::cout << "Writing HDF5 File: " << filePathString << std::endl;
     auto fileId = H5Fcreate(filePathString.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     REQUIRE(fileId > 0);
 

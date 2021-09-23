@@ -78,7 +78,7 @@ std::string HexahedralGeom::getGeometryTypeAsString() const
 
 void HexahedralGeom::resizeHexList(usize numHexas)
 {
-  getHexahedrals()->getDataStore()->resizeTuples(numHexas);
+  getHexahedrals()->getDataStore()->reshapeTuples({numHexas});
 }
 
 void HexahedralGeom::setHexahedra(const SharedHexList* hexas)
@@ -156,23 +156,23 @@ void HexahedralGeom::getVertCoordsAtHex(usize hexId, complex::Point3D<float32>& 
 
 usize HexahedralGeom::getNumberOfHexas() const
 {
-  auto hexList = dynamic_cast<const SharedHexList*>(getDataStructure()->getData(m_HexListId));
-  if(!hexList)
+  const auto *hexList = dynamic_cast<const SharedHexList*>(getDataStructure()->getData(m_HexListId));
+  if(nullptr == hexList)
   {
     return 0;
   }
-  return hexList->getTupleCount();
+  return hexList->getNumberOfTuples();
 }
 
 void HexahedralGeom::initializeWithZeros()
 {
-  auto vertices = getVertices();
-  if(vertices)
+  auto *vertices = getVertices();
+  if(vertices != nullptr)
   {
     vertices->getDataStore()->fill(0.0);
   }
-  auto hexas = getHexahedrals();
-  if(hexas)
+  auto *hexas = getHexahedrals();
+  if(hexas != nullptr)
   {
     hexas->getDataStore()->fill(0.0);
   }
@@ -180,17 +180,17 @@ void HexahedralGeom::initializeWithZeros()
 
 usize HexahedralGeom::getNumberOfElements() const
 {
-  auto elements = dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_HexSizesId));
-  if(!elements)
+  const auto *elements = dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_HexSizesId));
+  if(nullptr == elements)
   {
     return 0;
   }
-  return elements->getTupleCount();
+  return elements->getNumberOfTuples();
 }
 
 AbstractGeometry::StatusCode HexahedralGeom::findElementSizes()
 {
-  auto dataStore = new DataStore<float32>(1, getNumberOfHexas());
+  auto *dataStore = new DataStore<float32>( {getNumberOfHexas()},{1});
   Float32Array* hexSizes = DataArray<float32>::Create(*getDataStructure(), "Hex Volumes", dataStore, getId());
   m_HexSizesId = hexSizes->getId();
   GeometryHelpers::Topology::FindHexVolumes<uint64>(getHexahedrals(), getVertices(), hexSizes);
@@ -272,7 +272,7 @@ void HexahedralGeom::deleteElementNeighbors()
 
 AbstractGeometry::StatusCode HexahedralGeom::findElementCentroids()
 {
-  auto dataStore = new DataStore<float32>(3, getNumberOfHexas());
+  auto dataStore = new DataStore<float32>( {getNumberOfHexas()},{3});
   auto hexCentroids = DataArray<float32>::Create(*getDataStructure(), "Hex Centroids", dataStore, getId());
   m_HexCentroidsId = hexCentroids->getId();
   GeometryHelpers::Topology::FindElementCentroids<uint64>(getHexahedrals(), getVertices(), hexCentroids);
@@ -385,7 +385,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findFaces()
 
 AbstractGeometry::StatusCode HexahedralGeom::findUnsharedEdges()
 {
-  auto dataStore = new DataStore<MeshIndexType>(2, 0);
+  auto dataStore = new DataStore<MeshIndexType>({0}, {2});
   DataArray<MeshIndexType>* unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", dataStore, getId());
   GeometryHelpers::Connectivity::FindUnsharedHexEdges<uint64>(getHexahedrals(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
@@ -399,7 +399,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findUnsharedEdges()
 
 AbstractGeometry::StatusCode HexahedralGeom::findUnsharedFaces()
 {
-  auto dataStore = new DataStore<MeshIndexType>(4, 0);
+  auto dataStore = new DataStore<MeshIndexType>({0}, {4});
   auto unsharedQuadList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", dataStore, getId());
   GeometryHelpers::Connectivity::FindUnsharedHexFaces<uint64>(getHexahedrals(), unsharedQuadList);
   if(unsharedQuadList == nullptr)
@@ -413,7 +413,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findUnsharedFaces()
 
 void HexahedralGeom::resizeQuadList(usize numQuads)
 {
-  getQuads()->getDataStore()->resizeTuples(numQuads);
+  getQuads()->getDataStore()->reshapeTuples({numQuads});
 }
 
 void HexahedralGeom::setQuads(const SharedQuadList* quads)
@@ -439,7 +439,7 @@ void HexahedralGeom::setVertsAtQuad(usize quadId, usize verts[4])
     return;
   }
 
-  auto numQuads = quads->getTupleCount();
+  auto numQuads = quads->getNumberOfTuples();
   if(quadId >= numQuads)
   {
     return;

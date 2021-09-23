@@ -4,9 +4,6 @@
 #include <optional>
 #include <string>
 
-#define H5_USE_110_API
-
-#include <hdf5.h>
 
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataStructure.hpp"

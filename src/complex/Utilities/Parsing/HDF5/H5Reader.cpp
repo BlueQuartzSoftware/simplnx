@@ -1,11 +1,5 @@
 #include "H5Reader.hpp"
 
-#include <memory>
-#include <numeric>
-
-#include <H5Apublic.h>
-#include <hdf5.h>
-
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
@@ -18,6 +12,14 @@
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
+
+#include <H5Apublic.h>
+#include <hdf5.h>
+
+#include <fmt/core.h>
+
+#include <memory>
+#include <numeric>
 
 using namespace complex;
 
@@ -474,21 +476,37 @@ std::string H5::Reader::Generic::getName(H5::IdType id)
   return nameStr;
 }
 
+/**
+ * @brief
+ * @tparam T
+ * @param ds
+ * @param name
+ * @param parentId
+ * @param daId
+ * @param tDims
+ * @param cDims
+ */
 template <typename T>
 void createLegacyDataArray(complex::DataStructure& ds, const std::string& name, complex::DataObject::IdType parentId, hid_t daId, usize tDims, usize cDims)
 {
-  auto buffer = std::make_unique<T[]>(tDims * cDims);
+  auto dataStore = new complex::DataStore<T>({tDims}, {cDims});
   hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
-  auto err = H5Dread(daId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer.get());
+  auto err = H5Dread(daId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, dataStore->data());
   if(err < 0)
   {
-    throw std::runtime_error("");
+    throw std::runtime_error(fmt::format("Error reading HDF5 Data set {}", complex::H5::Support::getObjectPath(daId)));
   }
 
-  auto dataStore = new complex::DataStore<T>(cDims, tDims, std::move(buffer));
+  // Insert the DataArray into the DataStructure
   auto dataArray = DataArray<T>::Create(ds, name, dataStore, parentId);
 }
 
+/**
+ * @brief
+ * @param daId
+ * @param tDims
+ * @param cDims
+ */
 void readLegacyDataArrayDims(hid_t daId, usize& tDims, usize& cDims)
 {
   hid_t compType = H5::Support::HDFTypeForPrimitive<int64>();

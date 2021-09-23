@@ -1,19 +1,15 @@
 #pragma once
 
+
+#include "complex/DataStructure/DataStructure.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+#include "complex/complex_export.hpp"
+
 #include <iostream>
 #include <mutex>
 #include <string>
 #include <vector>
-
-#define H5_USE_110_API
-#include <H5Opublic.h>
-#include <hdf5.h>
-
-#include "H5.hpp"
-
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
