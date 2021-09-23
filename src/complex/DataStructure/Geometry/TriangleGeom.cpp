@@ -352,8 +352,8 @@ size_t TriangleGeom::getNumberOfVertices() const
 
 AbstractGeometry::StatusCode TriangleGeom::findEdges()
 {
-  auto dataStore = new DataStore<size_t>({0}, {2});
-  DataArray<size_t>* edgeList = DataArray<size_t>::Create(*getDataStructure(), "Edge List", dataStore, getId());
+  auto dataStore = new DataStore<uint64_t>({0}, {2});
+  DataArray<uint64_t>* edgeList = DataArray<uint64_t>::Create(*getDataStructure(), "Edge List", dataStore, getId());
   GeometryHelpers::Connectivity::Find2DElementEdges(getTriangles(), edgeList);
   if(edgeList == nullptr)
   {
