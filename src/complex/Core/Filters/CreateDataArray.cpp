@@ -54,7 +54,7 @@ IFilter::UniquePointer CreateDataArray::clone() const
   return std::make_unique<CreateDataArray>();
 }
 
-Result<OutputActions> CreateDataArray::preflightImpl(const DataStructure& data, const Arguments& args) const
+Result<OutputActions> CreateDataArray::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   auto numericType = args.value<NumericType>(k_NumericType_Key);
   auto components = args.value<u64>(k_NumComps_Key);
@@ -70,7 +70,7 @@ Result<OutputActions> CreateDataArray::preflightImpl(const DataStructure& data, 
   return {std::move(actions)};
 }
 
-Result<> CreateDataArray::executeImpl(DataStructure& data, const Arguments& args) const
+Result<> CreateDataArray::executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   auto numericType = args.value<NumericType>(k_NumericType_Key);
   auto components = args.value<u64>(k_NumComps_Key);
