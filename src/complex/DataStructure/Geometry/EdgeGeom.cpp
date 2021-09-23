@@ -81,7 +81,7 @@ void EdgeGeom::resizeVertexList(size_t newNumVertices)
   {
     return;
   }
-  getVertices()->getDataStore()->resizeTuples(newNumVertices);
+  getVertices()->getDataStore()->reshapeTuples({newNumVertices});
 }
 
 void EdgeGeom::setVertices(const SharedVertexList* vertices)
@@ -140,7 +140,7 @@ size_t EdgeGeom::getNumberOfVertices() const
   {
     return 0;
   }
-  return vertices->getTupleCount();
+  return vertices->getNumberOfTuples();
 }
 
 void EdgeGeom::resizeEdgeList(size_t newNumEdges)
@@ -150,7 +150,7 @@ void EdgeGeom::resizeEdgeList(size_t newNumEdges)
   {
     return;
   }
-  edges->getDataStore()->resizeTuples(newNumEdges);
+  edges->getDataStore()->reshapeTuples({newNumEdges});
 }
 
 void EdgeGeom::setEdges(const SharedEdgeList* edges)
@@ -181,7 +181,7 @@ void EdgeGeom::setVertsAtEdge(size_t edgeId, size_t verts[2])
     return;
   }
 
-  auto numEdges = edges->getTupleCount();
+  auto numEdges = edges->getNumberOfTuples();
   if(edgeId >= numEdges)
   {
     return;
@@ -201,7 +201,7 @@ void EdgeGeom::getVertsAtEdge(size_t edgeId, size_t verts[2])
     return;
   }
 
-  auto numEdges = edges->getTupleCount();
+  auto numEdges = edges->getNumberOfTuples();
   if(edgeId >= numEdges)
   {
     return;
@@ -221,7 +221,7 @@ void EdgeGeom::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float>& vert1
     return;
   }
 
-  auto numEdges = edges->getTupleCount();
+  auto numEdges = edges->getNumberOfTuples();
   if(edgeId >= numEdges)
   {
     return;
@@ -247,7 +247,7 @@ size_t EdgeGeom::getNumberOfEdges() const
   {
     return 0;
   }
-  return edges->getTupleCount();
+  return edges->getNumberOfTuples();
 }
 
 void EdgeGeom::initializeWithZeros()
@@ -271,12 +271,12 @@ size_t EdgeGeom::getNumberOfElements() const
   {
     return 0;
   }
-  return edges->getTupleCount();
+  return edges->getNumberOfTuples();
 }
 
 AbstractGeometry::StatusCode EdgeGeom::findElementSizes()
 {
-  auto dataStore = new DataStore<float>(1, getNumberOfElements());
+  auto dataStore = new DataStore<float>(getNumberOfElements());
   auto sizes = DataArray<float>::Create(*getDataStructure(), "Edge Lengths", dataStore, getId());
   m_EdgeSizesId = sizes->getId();
 
@@ -377,7 +377,7 @@ void EdgeGeom::deleteElementNeighbors()
 
 AbstractGeometry::StatusCode EdgeGeom::findElementCentroids()
 {
-  auto dataStore = new DataStore<float>(3, getNumberOfElements());
+  auto dataStore = new DataStore<float>({getNumberOfElements()}, {3});
   FloatArray* edgeCentroids = DataArray<float>::Create(*getDataStructure(), "Edge Centroids", dataStore, getId());
   GeometryHelpers::Topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroids);
   if(getElementCentroids() == nullptr)

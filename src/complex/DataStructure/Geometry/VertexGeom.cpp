@@ -76,7 +76,7 @@ void VertexGeom::initializeWithZeros()
 
 void VertexGeom::resizeVertexList(size_t newNumVertices)
 {
-  getVertices()->getDataStore()->resizeTuples(newNumVertices);
+  getVertices()->getDataStore()->reshapeTuples({newNumVertices});
 }
 
 void VertexGeom::setVertices(const SharedVertexList* vertices)
@@ -148,7 +148,7 @@ AbstractGeometry::StatusCode VertexGeom::findElementSizes()
 {
   // Vertices are 0-dimensional (they have no getSize),
   // so simply splat 0 over the sizes array
-  auto dataStore = new DataStore<float>(1, getNumberOfElements());
+  auto dataStore = new DataStore<float>({getNumberOfElements()},{1});
   dataStore->fill(0.0f);
 
   FloatArray* vertexSizes = DataArray<float>::Create(*getDataStructure(), "Voxel Sizes", dataStore, getId());

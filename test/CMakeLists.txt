@@ -26,6 +26,7 @@ add_executable(complex_test MACOSX_BUNDLE
   PipelineTest.cpp
   PluginTest.cpp
   FilePathGeneratorTest.cpp
+  DataArrayTest.cpp
 )
 
 target_link_libraries(complex_test
@@ -46,7 +47,7 @@ set_target_properties(complex_test
     MACOSX_BUNDLE_BUNDLE_NAME "Complex Tests"
     MACOSX_BUNDLE_BUNDLE_VERSION "0.1"
     MACOSX_BUNDLE_SHORT_VERSION_STRING "0.1"
-    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/cmake/MacOSXBundleInfo.plist.in
+    MACOSX_BUNDLE_INFO_PLIST ${complex_SOURCE_DIR}/cmake/MacOSXBundleInfo.plist.in
 )
 
 target_compile_options(complex_test

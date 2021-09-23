@@ -9,8 +9,8 @@ namespace complex
 {
 namespace H5::Constants::DataStore
 {
-static const std::string TupleCount = "TupleCount";
-static const std::string NumComponents = "NumComponents";
+static const std::string TupleShape = "TupleShape";
+static const std::string ComponentShape = "ComponentShape";
 } // namespace H5::Constants::DataStore
 
 /**
@@ -254,13 +254,13 @@ public:
    * @brief Returns the number of tuples in the DataStore.
    * @return size_t
    */
-  virtual size_t getTupleCount() const = 0;
+  virtual size_t getNumberOfTuples() const = 0;
 
   /**
-   * @brief Returns the number of components.
+   * @brief Returns the number of components
    * @return size_t
    */
-  virtual size_t getNumComponents() const = 0;
+  virtual size_t getNumberOfComponents() const = 0;
 
   /**
    * @brief Returns the number of values stored within the DataStore.
@@ -268,14 +268,14 @@ public:
    */
   size_t getSize() const
   {
-    return getTupleCount() * getNumComponents();
+    return getNumberOfTuples() * getNumberOfComponents();
   }
 
   /**
    * @brief Resizes the DataStore to handle the specified number of tuples.
    * @param numTuples
    */
-  virtual void resizeTuples(size_t numTuples) = 0;
+  virtual void reshapeTuples(const std::vector<size_t>& tupleShape) = 0;
 
   /**
    * @brief Returns the value found at the specified index of the DataStore.

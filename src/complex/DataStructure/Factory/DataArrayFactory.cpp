@@ -1,19 +1,16 @@
 #include "DataArrayFactory.hpp"
 
-#include <memory>
-#include <numeric>
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
+
+#include <memory>
+#include <numeric>
 
 using namespace complex;
 
-namespace Constants
-{
-inline const std::string CompDims = H5::Constants::DataStore::NumComponents;
-inline const std::string TupleDims = H5::Constants::DataStore::TupleCount;
-} // namespace Constants
 
 DataArrayFactory::DataArrayFactory()
 : IH5DataFactory()
@@ -27,26 +24,59 @@ std::string DataArrayFactory::getDataTypeName() const
   return "DataArray";
 }
 
-void readDims(H5::IdType daId, uint64_t& tupleCount, uint64_t& tupleSize)
+void readDims(H5::IdType daId, uint64_t& numTuples, uint64_t& numComponents)
 {
-  H5::Reader::Generic::readScalarAttribute(daId, ".", H5::Constants::DataStore::TupleCount, tupleCount);
-  H5::Reader::Generic::readScalarAttribute(daId, ".", H5::Constants::DataStore::NumComponents, tupleSize);
-}
+  std::vector<size_t> tupleShape;
+  std::vector<size_t> componentShape;
 
-template <typename T>
-DataStore<T>* createDataStore(H5::IdType dataStoreId, uint64_t tupleCount, uint64_t tupleSize, H5::ErrorType& err)
-{
-  auto buffer = std::make_unique<T[]>(tupleCount * tupleSize);
-  hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
-  err = H5Dread(dataStoreId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer.get());
+  herr_t err = H5::Support::readVectorAttribute(daId, ".", H5::Constants::DataStore::TupleShape, tupleShape);
   if(err < 0)
   {
-    throw std::runtime_error("DataArrayFactory: Error reading HDF5 DataStore");
+    throw std::runtime_error(fmt::format("Error reading '{}' Attribute from DataSet: {}", H5::Constants::DataStore::TupleShape, H5::Support::getObjectPath(daId)));
   }
+  numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
 
-  return new DataStore<T>(tupleSize, tupleCount, std::move(buffer));
+  err = H5::Support::readVectorAttribute(daId, ".", H5::Constants::DataStore::ComponentShape, componentShape);
+  if(err < 0)
+  {
+    throw std::runtime_error(fmt::format("Error reading '{}' Attribute from DataSet: {}", H5::Constants::DataStore::ComponentShape, H5::Support::getObjectPath(daId)));
+  }
+  numComponents = std::accumulate(componentShape.cbegin(), componentShape.cend(), static_cast<size_t>(1), std::multiplies<>());
 }
 
+/**
+ *
+ * @tparam T
+ * @param dataStoreId
+ * @param numTuples
+ * @param numComponents
+ * @param err
+ * @return
+ */
+template <typename T>
+DataStore<T>* createDataStore(H5::IdType dataStoreId, uint64_t numTuples, uint64_t numComponents, H5::ErrorType& err)
+{
+  using DataStoreType = DataStore<T>;
+  DataStoreType* dataStore = new DataStoreType({numTuples}, {numComponents});
+
+  hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
+  err = H5Dread(dataStoreId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, dataStore->data());
+  if(err < 0)
+  {
+    throw std::runtime_error(H5::Support::getObjectPath(dataStoreId));
+  }
+
+  return dataStore;
+}
+
+/**
+ *
+ * @param ds
+ * @param targetId
+ * @param groupId
+ * @param parentId
+ * @return
+ */
 H5::ErrorType DataArrayFactory::createFromHdf5(DataStructure& ds, H5::IdType targetId, H5::IdType groupId, const std::optional<DataObject::IdType>& parentId)
 {
   H5::ErrorType err = 0;
@@ -54,11 +84,11 @@ H5::ErrorType DataArrayFactory::createFromHdf5(DataStructure& ds, H5::IdType tar
 
   uint64_t tupleCount;
   uint64_t tupleSize;
-  readDims(targetId, tupleCount, tupleSize);
 
   if(err >= 0)
   {
     hid_t dataStoreId = H5Dopen(targetId, "DataStore", H5P_DEFAULT);
+    readDims(dataStoreId, tupleCount, tupleSize);
 
     hid_t dataTypeId = H5Dget_type(dataStoreId);
     if(dataTypeId < 0)

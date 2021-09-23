@@ -1,8 +1,9 @@
 #pragma once
 
-#include <stdexcept>
-
 #include "complex/DataStructure/IDataStore.hpp"
+
+#include <stdexcept>
+#include <vector>
 
 namespace complex
 {
@@ -20,13 +21,12 @@ public:
   using value_type = typename IDataStore<T>::value_type;
   using reference = typename IDataStore<T>::reference;
   using const_reference = typename IDataStore<T>::const_reference;
+  using ShapeType = typename std::vector<size_t>;
 
   /**
    * @brief Constructs an empty data store with a tuple getSize and count of 0.
    */
   EmptyDataStore()
-  : m_NumComponents(0)
-  , m_TupleCount(0)
   {
   }
 
@@ -35,9 +35,9 @@ public:
    * @param tupleSize
    * @param tupleCount
    */
-  EmptyDataStore(size_t tupleSize, size_t tupleCount)
-  : m_NumComponents(tupleSize)
-  , m_TupleCount(tupleCount)
+  EmptyDataStore(const ShapeType& tupleShape, const ShapeType& componentShape)
+  : m_ComponentShape(componentShape)
+  , m_TupleShape(tupleShape)
   {
   }
 
@@ -46,8 +46,8 @@ public:
    * @param other
    */
   EmptyDataStore(const EmptyDataStore& other)
-  : m_TupleCount(other.m_TupleCount)
-  , m_NumComponents(other.m_NumComponents)
+  : m_TupleShape(other.m_TupleShape)
+  , m_ComponentShape(other.m_ComponentShape)
   {
   }
 
@@ -56,37 +56,38 @@ public:
    * @param other
    */
   EmptyDataStore(EmptyDataStore&& other) noexcept
-  : m_TupleCount(std::move(other.m_TupleCount))
-  , m_NumComponents(std::move(other.m_NumComponents))
+  : m_TupleShape(std::move(other.m_TupleShape))
+  , m_ComponentShape(std::move(other.m_ComponentShape))
   {
   }
 
   virtual ~EmptyDataStore() = default;
 
   /**
-   * @brief Returns the number of tuples that should be in the data store.
+   * @brief Returns the number of tuples in the DataStore.
    * @return size_t
    */
-  size_t getTupleCount() const override
+  size_t getNumberOfTuples() const override
   {
-    return m_TupleCount;
+    return 0;
   }
 
   /**
-   * @brief Returns the target tuple getSize.
+   * @brief Returns the number of elements in each Tuple.
    * @return size_t
    */
-  size_t getNumComponents() const override
+  size_t getNumberOfComponents() const override
   {
-    return m_NumComponents;
+    return 0;
   }
+
 
   /**
    * @brief Throws an exception because this should never be called. The
-   * EmptyDataStore class contains no data other than its target getSize.
-   * @param tupleCount
+   * EmptyDataStore class contains no data other than its target size.
+   * @param tupleShape
    */
-  void resizeTuples(size_t tupleCount) override
+  void reshapeTuples(const ShapeType& tupleShape) override
   {
     throw std::runtime_error("");
   }
@@ -167,7 +168,12 @@ public:
   }
 
 private:
+<<<<<<< HEAD
   size_t m_NumComponents;
   size_t m_TupleCount;
+=======
+  ShapeType m_ComponentShape;
+  ShapeType m_TupleShape;
+>>>>>>> 64ab861 (refactor DatArray and DataStore to use std::vector<size_t> for Tuple and Comp dimensions)
 };
 } // namespace complex

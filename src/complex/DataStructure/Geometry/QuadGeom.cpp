@@ -78,7 +78,7 @@ std::string QuadGeom::getGeometryTypeAsString() const
 
 void QuadGeom::resizeQuadList(size_t numQuads)
 {
-  getQuads()->getDataStore()->resizeTuples(numQuads);
+  getQuads()->getDataStore()->reshapeTuples({numQuads});
 }
 
 void QuadGeom::setQuads(const SharedQuadList* quads)
@@ -171,7 +171,7 @@ size_t QuadGeom::getNumberOfQuads() const
   {
     return 0;
   }
-  return quads->getTupleCount();
+  return quads->getNumberOfTuples();
 }
 
 size_t QuadGeom::getNumberOfElements() const
@@ -181,7 +181,7 @@ size_t QuadGeom::getNumberOfElements() const
 
 AbstractGeometry::StatusCode QuadGeom::findElementSizes()
 {
-  auto dataStore = new DataStore<float>(1, getNumberOfQuads());
+  auto dataStore = new DataStore<float>(getNumberOfQuads());
   FloatArray* quadSizes = DataArray<float>::Create(*getDataStructure(), "Quad Areas", dataStore, getId());
   GeometryHelpers::Topology::Find2DElementAreas(getQuads(), getVertices(), quadSizes);
   if(quadSizes == nullptr)
@@ -263,7 +263,7 @@ void QuadGeom::deleteElementNeighbors()
 
 AbstractGeometry::StatusCode QuadGeom::findElementCentroids()
 {
-  auto dataStore = new DataStore<float>(3, getNumberOfQuads());
+  auto dataStore = new DataStore<float>({getNumberOfQuads()},{3});
   auto quadCentroids = DataArray<float>::Create(*getDataStructure(), "Quad Centroids", dataStore, getId());
   GeometryHelpers::Topology::FindElementCentroids(getQuads(), getVertices(), quadCentroids);
   if(quadCentroids == nullptr)
@@ -358,12 +358,12 @@ size_t QuadGeom::getNumberOfVertices() const
   {
     return 0;
   }
-  return vertices->getTupleCount();
+  return vertices->getNumberOfTuples();
 }
 
 void QuadGeom::resizeEdgeList(size_t numEdges)
 {
-  getEdges()->getDataStore()->resizeTuples(numEdges);
+  getEdges()->getDataStore()->reshapeTuples({numEdges});
 }
 
 void QuadGeom::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2) const
@@ -403,7 +403,7 @@ AbstractGeometry::StatusCode QuadGeom::findEdges()
 
 AbstractGeometry::StatusCode QuadGeom::findUnsharedEdges()
 {
-  auto dataStore = new DataStore<MeshIndexType>(2, 0);
+  auto dataStore = new DataStore<MeshIndexType>({0}, {2});
   auto unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", dataStore, getId());
   GeometryHelpers::Connectivity::Find2DUnsharedEdges(getQuads(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)

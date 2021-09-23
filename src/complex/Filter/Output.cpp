@@ -10,16 +10,25 @@ using namespace complex;
 
 namespace
 {
+/**
+ * @brief Creates a new DataStore object. IT IS THE RESPONSIBILITY OF THE CALLER
+ * TO DISPOSE OF THIS POINTER USING 'delete'
+ * @tparam T
+ * @param numComponents
+ * @param numTuples
+ * @param mode
+ * @return
+ */
 template <class T>
-IDataStore<T>* CreateDataStore(usize tupleSize, usize tupleCount, IDataAction::Mode mode)
+IDataStore<T>* CreateDataStore(usize numComponents, usize numTuples, IDataAction::Mode mode)
 {
   switch(mode)
   {
   case IDataAction::Mode::Preflight: {
-    return new EmptyDataStore<T>(tupleSize, tupleCount);
+    return new EmptyDataStore<T>({numTuples}, {numComponents});
   }
   case IDataAction::Mode::Execute: {
-    return new DataStore<T>(tupleSize, tupleCount);
+    return new DataStore<T>({numTuples}, {numComponents});
   }
   default: {
     throw std::runtime_error("Invalid mode");

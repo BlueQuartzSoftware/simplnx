@@ -3,6 +3,19 @@
 #include <cstdint>
 
 #define H5_USE_110_API
+#include <hdf5.h>
+#include <H5Opublic.h>
+
+
+#ifdef H5Support_USE_MUTEX
+#include <mutex>
+#define H5SUPPORT_MUTEX_LOCK()                                                                                                                                                                         \
+  std::mutex mutex;                                                                                                                                                                                    \
+  std::lock_guard<std::mutex> lock(mutex);
+#else
+#define H5SUPPORT_MUTEX_LOCK()
+#endif
+
 
 namespace complex
 {

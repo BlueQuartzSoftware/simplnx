@@ -79,7 +79,7 @@ std::string TriangleGeom::getGeometryTypeAsString() const
 
 void TriangleGeom::resizeTriList(size_t newNumTris)
 {
-  getTriangles()->getDataStore()->resizeTuples(newNumTris);
+  getTriangles()->getDataStore()->reshapeTuples({newNumTris});
 }
 
 void TriangleGeom::setTriangles(const SharedTriList* triangles)
@@ -152,7 +152,7 @@ size_t TriangleGeom::getNumberOfTris() const
   {
     return 0;
   }
-  return tris->getTupleCount();
+  return tris->getNumberOfTuples();
 }
 
 void TriangleGeom::initializeWithZeros()
@@ -163,12 +163,12 @@ void TriangleGeom::initializeWithZeros()
 
 size_t TriangleGeom::getNumberOfElements() const
 {
-  return getTriangles()->getTupleCount();
+  return getTriangles()->getNumberOfTuples();
 }
 
 AbstractGeometry::StatusCode TriangleGeom::findElementSizes()
 {
-  auto dataStore = new DataStore<float>(1, getNumberOfTris());
+  auto dataStore = new DataStore<float>({getNumberOfTris()}, {1});
   FloatArray* triangleSizes = DataArray<float>::Create(*getDataStructure(), "Triangle Areas", dataStore, getId());
   GeometryHelpers::Topology::Find2DElementAreas(getTriangles(), getVertices(), triangleSizes);
   if(triangleSizes == nullptr)
@@ -250,7 +250,7 @@ void TriangleGeom::deleteElementNeighbors()
 
 AbstractGeometry::StatusCode TriangleGeom::findElementCentroids()
 {
-  auto dataStore = new DataStore<float>(3, getNumberOfTris());
+  auto dataStore = new DataStore<float>({getNumberOfTris()}, {3});
   auto triangleCentroids = DataArray<float>::Create(*getDataStructure(), "Triangle Centroids", dataStore, getId());
   GeometryHelpers::Topology::FindElementCentroids(getTriangles(), getVertices(), triangleCentroids);
   if(triangleCentroids == nullptr)
@@ -347,12 +347,12 @@ size_t TriangleGeom::getNumberOfVertices() const
   {
     return 0;
   }
-  return vertices->getTupleCount();
+  return vertices->getNumberOfTuples();
 }
 
 AbstractGeometry::StatusCode TriangleGeom::findEdges()
 {
-  auto dataStore = new DataStore<uint64_t>(2, 0);
+  auto dataStore = new DataStore<uint64_t>({0}, {2});
   DataArray<uint64_t>* edgeList = DataArray<uint64_t>::Create(*getDataStructure(), "Edge List", dataStore, getId());
   GeometryHelpers::Connectivity::Find2DElementEdges(getTriangles(), edgeList);
   if(edgeList == nullptr)
@@ -366,7 +366,7 @@ AbstractGeometry::StatusCode TriangleGeom::findEdges()
 
 void TriangleGeom::resizeEdgeList(size_t newNumEdges)
 {
-  getEdges()->getDataStore()->resizeTuples(newNumEdges);
+  getEdges()->getDataStore()->reshapeTuples({newNumEdges});
 }
 
 void TriangleGeom::getVertCoordsAtEdge(size_t edgeId, Point3D<float>& vert1, Point3D<float>& vert2) const
@@ -387,7 +387,7 @@ void TriangleGeom::getVertCoordsAtEdge(size_t edgeId, Point3D<float>& vert1, Poi
 
 AbstractGeometry::StatusCode TriangleGeom::findUnsharedEdges()
 {
-  auto dataStore = new DataStore<MeshIndexType>(2, 0);
+  auto dataStore = new DataStore<MeshIndexType>({0}, {2});
   auto unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", dataStore, getId());
   GeometryHelpers::Connectivity::Find2DUnsharedEdges(getTriangles(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)

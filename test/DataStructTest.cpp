@@ -225,13 +225,14 @@ TEST_CASE("DataStructureCopyTest")
 
 TEST_CASE("DataStoreTest")
 {
-  const size_t tupleSize = 3;
-  const size_t tupleCount = 10;
-  DataStore<int32_t> store(tupleSize, tupleCount);
 
-  REQUIRE(store.getTupleCount() == tupleCount);
-  REQUIRE(store.getNumComponents() == tupleSize);
-  REQUIRE(store.getSize() == (tupleSize * tupleCount));
+  const size_t numComponents = 3;
+  const size_t numTuples = 10;
+  DataStore<int32_t> store( {numTuples}, {numComponents});
+
+  REQUIRE(store.getNumberOfTuples() == numTuples);
+  REQUIRE(store.getNumberOfComponents() == numComponents);
+  REQUIRE(store.getSize() == (numComponents * numTuples));
 
   // subscript operator
   {
@@ -272,14 +273,14 @@ TEST_CASE("DataArrayTest")
 {
   DataStructure dataStr;
 
-  auto store = new DataStore<int32_t>(2, 2);
+  auto store = new DataStore<int32_t>({2}, {2});
   auto dataArr = DataArray<int32_t>::Create(dataStr, "array", store);
 
   SECTION("test size")
   {
     REQUIRE(dataArr->getSize() == store->getSize());
-    REQUIRE(dataArr->getTupleCount() == store->getTupleCount());
-    REQUIRE(dataArr->getNumComponents() == store->getNumComponents());
+    REQUIRE(dataArr->getNumberOfComponents() == store->getNumberOfComponents());
+    REQUIRE(dataArr->getNumberOfTuples() == store->getNumberOfTuples());
   }
 
   SECTION("test reading / writing to memory")
