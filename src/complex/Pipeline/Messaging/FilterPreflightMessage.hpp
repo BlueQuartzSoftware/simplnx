@@ -16,7 +16,7 @@ class FilterNode;
  * finishes preflighting. It contains vectors of both the resulting warnings
  * and errors.
  */
-class FilterPreflightMessage : public IPipelineMessage
+class COMPLEX_EXPORT FilterPreflightMessage : public IPipelineMessage
 {
 public:
   /**
