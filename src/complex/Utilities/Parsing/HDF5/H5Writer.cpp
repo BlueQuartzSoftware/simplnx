@@ -15,7 +15,7 @@ H5::ErrorType H5::Writer::Generic::writeStringAttribute(H5::IdType locationID, c
   if(returnError >= 0)
   {
     /* Open the object */
-    hid_t objectID = Support::openId(locationID, objectName, objectInfo.type);
+    hid_t objectID = Support::OpenId(locationID, objectName, objectInfo.type);
     if(objectID >= 0)
     {
       /* Create the attribute */
@@ -81,7 +81,7 @@ H5::ErrorType H5::Writer::Generic::writeStringAttribute(H5::IdType locationID, c
         // returnError = attributeType;
       }
       /* Close the object */
-      herr_t error = Support::closeId(objectID, objectInfo.type);
+      herr_t error = Support::CloseId(objectID, objectInfo.type);
       if(error < 0)
       {
         std::cout << "Error Closing Object Id" << std::endl;

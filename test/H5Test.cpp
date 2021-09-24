@@ -21,7 +21,7 @@
 #include "GeometryTestUtilities.hpp"
 
 // This file is generated into the binary directory
-#include "complex_test_dirs.h"
+#include "complex/unit_test/complex_test_dirs.h"
 
 #include <catch2/catch.hpp>
 
@@ -257,7 +257,7 @@ TEST_CASE("Image Geometry IO")
     REQUIRE(fileId > 0);
 
     herr_t err;
-    auto ds = DataStructure::ReadFromHdf5(fileId, err);
+    auto ds = DataStructure::readFromHdf5(fileId, err);
     REQUIRE(err <= 0);
 
     err = H5Fclose(fileId);
@@ -375,7 +375,7 @@ TEST_CASE("Node Based Geometry IO")
   //    REQUIRE(fileId > 0);
   //
   //    herr_t err;
-  //    auto ds = DataStructure::ReadFromHdf5(fileId, err);
+  //    auto ds = DataStructure::readFromHdf5(fileId, err);
   //    REQUIRE(err <= 0);
   //
   //    err = H5Fclose(fileId);

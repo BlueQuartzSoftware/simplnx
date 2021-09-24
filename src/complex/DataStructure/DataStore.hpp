@@ -322,7 +322,7 @@ public:
     {
       return err;
     }
-    err = complex::H5::Support::writeStringAttribute(dataId, name, H5::Constants::DataObject::ObjectTypeTag, k_DataArrayTypeName);
+    err = complex::H5::Support::writeStringAttribute(dataId, name, complex::Constants::k_ObjectTypeTag, k_DataArrayTypeName);
     if(err < 0)
     {
       return err;

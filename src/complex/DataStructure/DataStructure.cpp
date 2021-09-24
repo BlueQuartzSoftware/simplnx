@@ -14,11 +14,6 @@
 
 using namespace complex;
 
-namespace Constants
-{
-inline const std::string DataStructureTag = "DataStructure";
-}
-
 DataStructure::DataStructure()
 : m_IsValid(true)
 {
@@ -29,12 +24,12 @@ DataStructure::DataStructure(const DataStructure& ds)
 , m_RootGroup(ds.m_RootGroup)
 , m_IsValid(ds.m_IsValid)
 {
-  std::map<DataObject::IdType, std::shared_ptr<DataObject>> m_CopyData;
+  std::map<DataObject::IdType, std::shared_ptr<DataObject>> mCopyData;
   for(auto& dataPair : m_DataObjects)
   {
     auto id = dataPair.first;
     auto copy = std::shared_ptr<DataObject>(dataPair.second.lock()->shallowCopy());
-    m_CopyData[id] = copy;
+    mCopyData[id] = copy;
     m_DataObjects[id] = copy;
   }
   m_RootGroup.setDataStructure(this);
@@ -393,12 +388,12 @@ DataStructure& DataStructure::operator=(const DataStructure& rhs)
   m_RootGroup = rhs.m_RootGroup;
   m_IsValid = rhs.m_IsValid;
 
-  std::map<DataObject::IdType, std::shared_ptr<DataObject>> m_CopyData;
+  std::map<DataObject::IdType, std::shared_ptr<DataObject>> mCopyData;
   for(auto& dataPair : m_DataObjects)
   {
     auto id = dataPair.first;
     auto copy = std::shared_ptr<DataObject>(dataPair.second.lock()->shallowCopy());
-    m_CopyData[id] = copy;
+    mCopyData[id] = copy;
     m_DataObjects[id] = copy;
   }
   m_RootGroup.setDataStructure(this);
@@ -416,21 +411,21 @@ DataStructure& DataStructure::operator=(DataStructure&& rhs) noexcept
 
 void readDataObject(DataStructure& ds, H5::IdType objId, const std::string& name)
 {
-  const std::string ObjectTypeTag = "ObjectType";
+  
 }
 
 H5::ErrorType DataStructure::writeHdf5(H5::IdType fileId) const
 {
-  auto dsId = H5Gcreate(fileId, Constants::DataStructureTag.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  auto dsId = H5Gcreate(fileId, Constants::k_DataStructureTag.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5::ErrorType err = m_RootGroup.writeH5Group(dsId);
   H5Gclose(dsId);
   return err;
 }
 
-DataStructure DataStructure::ReadFromHdf5(H5::IdType fileId, H5::ErrorType& err)
+DataStructure DataStructure::readFromHdf5(H5::IdType fileId, H5::ErrorType& err)
 {
   DataStructure ds;
-  hid_t dsId = H5Gopen(fileId, Constants::DataStructureTag.c_str(), H5P_DEFAULT);
+  hid_t dsId = H5Gopen(fileId, Constants::k_DataStructureTag.c_str(), H5P_DEFAULT);
   err = ds.m_RootGroup.readH5Group(ds, dsId);
   H5Gclose(dsId);
   return ds;

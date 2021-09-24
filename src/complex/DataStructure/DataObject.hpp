@@ -19,10 +19,6 @@ class BaseGroup;
 class DataPath;
 class DataStructure;
 
-namespace H5::Constants::DataObject
-{
-extern const std::string ObjectTypeTag;
-}
 
 /**
  * @class DataObject

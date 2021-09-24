@@ -17,8 +17,8 @@
 
 #define HDF_ERROR_HANDLER_ON H5Eset_auto(H5E_DEFAULT, _oldHDF_error_func, _oldHDF_error_client_data);
 
-#define CloseH5A(attributeID, error, returnError)                                                                                                                                                      \
-  error = H5Aclose(attributeID);                                                                                                                                                                       \
+#define CloseH5A(attributeId, error, returnError)                                                                                                                                                      \
+  error = H5Aclose(attributeId);                                                                                                                                                                       \
   if(error < 0)                                                                                                                                                                                        \
   {                                                                                                                                                                                                    \
     std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): "                                                                                                                                      \
@@ -26,8 +26,8 @@
     returnError = error;                                                                                                                                                                               \
   }
 
-#define CloseH5S(dataspaceID, error, returnError)                                                                                                                                                      \
-  error = H5Sclose(dataspaceID);                                                                                                                                                                       \
+#define CloseH5S(dataspaceId, error, returnError)                                                                                                                                                      \
+  error = H5Sclose(dataspaceId);                                                                                                                                                                       \
   if(error < 0)                                                                                                                                                                                        \
   {                                                                                                                                                                                                    \
     std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): "                                                                                                                                      \
@@ -35,8 +35,8 @@
     returnError = error;                                                                                                                                                                               \
   }
 
-#define CloseH5T(typeID, error, returnError)                                                                                                                                                           \
-  error = H5Tclose(typeID);                                                                                                                                                                            \
+#define CloseH5T(typeId, error, returnError)                                                                                                                                                           \
+  error = H5Tclose(typeId);                                                                                                                                                                            \
   if(error < 0)                                                                                                                                                                                        \
   {                                                                                                                                                                                                    \
     std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): "                                                                                                                                      \
@@ -44,12 +44,12 @@
     returnError = error;                                                                                                                                                                               \
   }
 
-#define CloseH5D(datasetID, error, returnError, datasetName)                                                                                                                                           \
-  error = H5Dclose(datasetID);                                                                                                                                                                         \
+#define CloseH5D(datasetId, error, returnError, datasetName)                                                                                                                                           \
+  error = H5Dclose(datasetId);                                                                                                                                                                         \
   if(error < 0)                                                                                                                                                                                        \
   {                                                                                                                                                                                                    \
     std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): "                                                                                                                                      \
-              << "Error Closing Dataset: " << datasetName << " datasetID=" << datasetID << " retError=" << returnError << std::endl;                                                                   \
+              << "Error Closing Dataset: " << datasetName << " datasetId=" << datasetId << " retError=" << returnError << std::endl;                                                                   \
     returnError = error;                                                                                                                                                                               \
   }
 
@@ -61,43 +61,43 @@ namespace Support
 {
 /**
  * @brief Opens an object for H5 operations
- * @param locationID The parent object that holds the true object we want to open
+ * @param locationId The parent object that holds the true object we want to open
  * @param objectName The string name of the object
  * @param objectType The HDF5_TYPE of object
  * @return Standard H5 Error Conditions
  */
-hid_t COMPLEX_EXPORT openId(hid_t locationID, const std::string& objectName, H5O_type_t objectType);
+hid_t COMPLEX_EXPORT OpenId(hid_t locationId, const std::string& objectName, H5O_type_t objectType);
 
 /**
  * @brief Opens an H5 Object
- * @param objectID The Object id
+ * @param objectId The Object id
  * @param objectType Basic Object Type
  * @return Standard H5 Error Conditions
  */
-herr_t COMPLEX_EXPORT closeId(hid_t objectID, int32_t objectType);
+herr_t COMPLEX_EXPORT CloseId(hid_t objectId, int32_t objectType);
 
 /**
  * @brief Finds a Data set given a data set name
- * @param locationID The location to search
+ * @param locationId The location to search
  * @param datasetName The dataset to search for
  * @return Standard H5 Error condition. Negative=DataSet
  */
-bool COMPLEX_EXPORT datasetExists(hid_t locationID, const std::string& datasetName);
+bool COMPLEX_EXPORT DatasetExists(hid_t locationId, const std::string& datasetName);
 
 /**
  * @brief Returns if a given hdf5 object is a group
- * @param objectID The hdf5 object that contains an object with name objectName
+ * @param objectId The hdf5 object that contains an object with name objectName
  * @param objectName The name of the object to check
  * @return True if the given hdf5 object id is a group
  */
-inline bool isGroup(hid_t nodeID, const std::string& objectName)
+inline bool IsGroup(hid_t nodeId, const std::string& objectName)
 {
   H5SUPPORT_MUTEX_LOCK()
 
   bool isGroup = true;
   herr_t error = -1;
   H5O_info_t objectInfo{};
-  error = H5Oget_info_by_name(nodeID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  error = H5Oget_info_by_name(nodeId, objectName.c_str(), &objectInfo, H5P_DEFAULT);
   if(error < 0)
   {
     std::cout << "Error in methd H5Gget_objinfo" << std::endl;
@@ -123,24 +123,24 @@ inline bool isGroup(hid_t nodeID, const std::string& objectName)
 /**
  * @brief Get the information about a dataset.
  *
- * @param locationID The parent location of the Dataset
+ * @param locationId The parent location of the Dataset
  * @param datasetName The name of the dataset
  * @param dims A std::vector that will hold the sizes of the dimensions
  * @param typeClass The H5 class type
  * @param typeSize THe H5 getSize of the data
  * @return Negative value is Failure. Zero or Positive is success;
  */
-herr_t COMPLEX_EXPORT getDatasetInfo(hid_t locationID, const std::string& datasetName, std::vector<hsize_t>& dims, H5T_class_t& classType, size_t& sizeType);
+herr_t COMPLEX_EXPORT getDatasetInfo(hid_t locationId, const std::string& datasetName, std::vector<hsize_t>& dims, H5T_class_t& classType, size_t& sizeType);
 
-herr_t COMPLEX_EXPORT find_attr(hid_t /*locationID*/, const char* name, const H5A_info_t* /*info*/, void* op_data);
+herr_t COMPLEX_EXPORT find_attr(hid_t /*locationId*/, const char* name, const H5A_info_t* /*info*/, void* opData);
 
 /**
- * @brief Inquires if an attribute named attributeName exists attached to the object locationID.
- * @param locationID The location to search
+ * @brief Inquires if an attribute named attributeName exists attached to the object locationId.
+ * @param locationId The location to search
  * @param attributeName The attribute to search for
  * @return Standard H5 Error condition
  */
-herr_t COMPLEX_EXPORT findAttribute(hid_t locationID, const std::string& attributeName);
+herr_t COMPLEX_EXPORT findAttribute(hid_t locationId, const std::string& attributeName);
 
 /**
  * @brief Returns the HDF Type for a given primitive value.
@@ -226,46 +226,46 @@ std::string COMPLEX_EXPORT HDFClassTypeAsStr(hid_t classType);
 /**
  * @brief Returns the H5T value for a given dataset.
  *
- * Returns the type of data stored in the dataset. You MUST use H5Tclose(typeID)
+ * Returns the type of data stored in the dataset. You MUST use H5Tclose(typeId)
  * on the returned value or resource leaks will occur.
- * @param locationID A Valid H5 file or group id.
+ * @param locationId A Valid H5 file or group id.
  * @param datasetName Path to the dataset
  * @return
  */
-hid_t COMPLEX_EXPORT getDatasetType(hid_t locationID, const std::string& datasetName);
+hid_t COMPLEX_EXPORT getDatasetType(hid_t locationId, const std::string& datasetName);
 #endif
 
 /**
  * @brief Reads a dataset of multiple strings into a std::vector<std::string>
- * @param locationID
+ * @param locationId
  * @param datasetName
  * @param data
  * @return
  */
-herr_t COMPLEX_EXPORT readVectorOfStringDataset(hid_t locationID, const std::string& datasetName, std::vector<std::string>& data);
+herr_t COMPLEX_EXPORT readVectorOfStringDataset(hid_t locationId, const std::string& datasetName, std::vector<std::string>& data);
 
 /**
  * @brief Reads a string dataset into the supplied string. Any data currently in the 'data' variable
  * is cleared first before the new data is read into the string.
- * @param locationID The parent group that holds the data object to read
+ * @param locationId The parent group that holds the data object to read
  * @param datasetName The name of the dataset.
  * @param data The std::string to hold the data
  * @return Standard HDF error condition
  */
-herr_t COMPLEX_EXPORT readStringDataset(hid_t locationID, const std::string& datasetName, std::string& data);
+herr_t COMPLEX_EXPORT readStringDataset(hid_t locationId, const std::string& datasetName, std::string& data);
 
 /**
  * @brief Returns the path to an object
- * @param objectID The HDF5 id of the object
- * @return  The path to the object relative to the objectID
+ * @param objectId The HDF5 id of the object
+ * @return  The path to the object relative to the objectId
  */
-inline std::string getObjectPath(hid_t locationID)
+inline std::string getObjectPath(hid_t locationId)
 {
   H5SUPPORT_MUTEX_LOCK()
 
-  size_t nameSize = 1 + H5Iget_name(locationID, nullptr, 0);
+  size_t nameSize = 1 + H5Iget_name(locationId, nullptr, 0);
   std::vector<char> objectName(nameSize, 0);
-  H5Iget_name(locationID, objectName.data(), nameSize);
+  H5Iget_name(locationId, objectName.data(), nameSize);
   std::string objectPath(objectName.data());
 
   if((objectPath != "/") && (objectPath.at(0) == '/'))
@@ -278,7 +278,7 @@ inline std::string getObjectPath(hid_t locationID)
 
 /**
  * @brief Writes the data of a pointer to an HDF5 file
- * @param locationID The hdf5 object id of the parent
+ * @param locationId The hdf5 object id of the parent
  * @param datasetName The name of the dataset to write to. This can be a name of Path
  * @param rank The number of dimensions
  * @param dims The sizes of each dimension
@@ -286,13 +286,13 @@ inline std::string getObjectPath(hid_t locationID)
  * @return Standard hdf5 error condition.
  */
 template <typename T>
-inline herr_t writePointerDataset(hid_t locationID, const std::string& datasetName, int32_t rank, const hsize_t* dims, const T* data)
+inline herr_t writePointerDataset(hid_t locationId, const std::string& datasetName, int32_t rank, const hsize_t* dims, const T* data)
 {
   H5SUPPORT_MUTEX_LOCK()
 
   herr_t error = -1;
-  hid_t datasetID = -1;
-  hid_t dataspaceID = -1;
+  hid_t datasetId = -1;
+  hid_t dataspaceId = -1;
   herr_t returnError = 0;
 
   if(nullptr == data)
@@ -305,17 +305,17 @@ inline herr_t writePointerDataset(hid_t locationID, const std::string& datasetNa
     return -1;
   }
   // Create the DataSpace
-  dataspaceID = H5Screate_simple(rank, dims, nullptr);
-  if(dataspaceID < 0)
+  dataspaceId = H5Screate_simple(rank, dims, nullptr);
+  if(dataspaceId < 0)
   {
-    return static_cast<herr_t>(dataspaceID);
+    return static_cast<herr_t>(dataspaceId);
   }
   // Create the Dataset
   // This will fail if datasetName contains a "/"!
-  datasetID = H5Dcreate(locationID, datasetName.c_str(), dataType, dataspaceID, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  if(datasetID >= 0)
+  datasetId = H5Dcreate(locationId, datasetName.c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  if(datasetId >= 0)
   {
-    error = H5Dwrite(datasetID, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+    error = H5Dwrite(datasetId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
     if(error < 0)
     {
       std::cout << "Error Writing Data '" << datasetName << "'" << std::endl;
@@ -331,7 +331,7 @@ inline herr_t writePointerDataset(hid_t locationID, const std::string& datasetNa
       std::cout << "    Total Bytes to Write =  " << (sizeof(T) * totalSize) << std::endl;
       returnError = error;
     }
-    error = H5Dclose(datasetID);
+    error = H5Dclose(datasetId);
     if(error < 0)
     {
       std::cout << "Error Closing Dataset." << std::endl;
@@ -340,10 +340,10 @@ inline herr_t writePointerDataset(hid_t locationID, const std::string& datasetNa
   }
   else
   {
-    returnError = static_cast<herr_t>(datasetID);
+    returnError = static_cast<herr_t>(datasetId);
   }
   /* Terminate access to the data space. */
-  error = H5Sclose(dataspaceID);
+  error = H5Sclose(dataspaceId);
   if(error < 0)
   {
     std::cout << "Error Closing Dataspace" << std::endl;
@@ -354,7 +354,7 @@ inline herr_t writePointerDataset(hid_t locationID, const std::string& datasetNa
 
 /**
  * @brief Writes an Attribute to an HDF5 Object
- * @param locationID The Parent Location of the HDFobject that is getting the attribute
+ * @param locationId The Parent Location of the HDFobject that is getting the attribute
  * @param objectName The Name of Object to write the attribute into.
  * @param attributeName The Name of the Attribute
  * @param rank The number of dimensions in the attribute data
@@ -363,11 +363,11 @@ inline herr_t writePointerDataset(hid_t locationID, const std::string& datasetNa
  * @return Standard HDF Error Condition
  */
 template <typename T>
-inline herr_t writePointerAttribute(hid_t locationID, const std::string& objectName, const std::string& attributeName, int32_t rank, const hsize_t* dims, const T* data)
+inline herr_t writePointerAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, int32_t rank, const hsize_t* dims, const T* data)
 {
   H5SUPPORT_MUTEX_LOCK()
 
-  hid_t objectID, dataspaceID, attributeID;
+  hid_t objectId, dataspaceId, attributeId;
   herr_t hasAttribute;
   H5O_info_t objectInfo;
   herr_t error = 0;
@@ -380,29 +380,29 @@ inline herr_t writePointerAttribute(hid_t locationID, const std::string& objectN
   }
 
   /* Get the type of object */
-  if(H5Oget_info_by_name(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT) < 0)
+  if(H5Oget_info_by_name(locationId, objectName.c_str(), &objectInfo, H5P_DEFAULT) < 0)
   {
-    std::cout << "Error getting object info at locationID (" << locationID << ") with object name (" << objectName << ")" << std::endl;
+    std::cout << "Error getting object info at locationId (" << locationId << ") with object name (" << objectName << ")" << std::endl;
     return -1;
   }
   /* Open the object */
-  objectID = openId(locationID, objectName, objectInfo.type);
-  if(objectID < 0)
+  objectId = OpenId(locationId, objectName, objectInfo.type);
+  if(objectId < 0)
   {
     std::cout << "Error opening Object for Attribute operations." << std::endl;
     return -1;
   }
 
-  dataspaceID = H5Screate_simple(rank, dims, nullptr);
-  if(dataspaceID >= 0)
+  dataspaceId = H5Screate_simple(rank, dims, nullptr);
+  if(dataspaceId >= 0)
   {
     /* Verify if the attribute already exists */
-    hasAttribute = findAttribute(objectID, attributeName);
+    hasAttribute = findAttribute(objectId, attributeName);
 
     /* The attribute already exists, delete it */
     if(hasAttribute == 1)
     {
-      error = H5Adelete(objectID, attributeName.c_str());
+      error = H5Adelete(objectId, attributeName.c_str());
       if(error < 0)
       {
         std::cout << "Error Deleting Existing Attribute" << std::endl;
@@ -413,11 +413,11 @@ inline herr_t writePointerAttribute(hid_t locationID, const std::string& objectN
     if(error >= 0)
     {
       /* Create the attribute. */
-      attributeID = H5Acreate(objectID, attributeName.c_str(), dataType, dataspaceID, H5P_DEFAULT, H5P_DEFAULT);
-      if(attributeID >= 0)
+      attributeId = H5Acreate(objectId, attributeName.c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
+      if(attributeId >= 0)
       {
         /* Write the attribute data. */
-        error = H5Awrite(attributeID, dataType, data);
+        error = H5Awrite(attributeId, dataType, data);
         if(error < 0)
         {
           std::cout << "Error Writing Attribute" << std::endl;
@@ -425,7 +425,7 @@ inline herr_t writePointerAttribute(hid_t locationID, const std::string& objectN
         }
       }
       /* Close the attribute. */
-      error = H5Aclose(attributeID);
+      error = H5Aclose(attributeId);
       if(error < 0)
       {
         std::cout << "Error Closing Attribute" << std::endl;
@@ -433,7 +433,7 @@ inline herr_t writePointerAttribute(hid_t locationID, const std::string& objectN
       }
     }
     /* Close the dataspace. */
-    error = H5Sclose(dataspaceID);
+    error = H5Sclose(dataspaceId);
     if(error < 0)
     {
       std::cout << "Error Closing Dataspace" << std::endl;
@@ -442,10 +442,10 @@ inline herr_t writePointerAttribute(hid_t locationID, const std::string& objectN
   }
   else
   {
-    returnError = static_cast<herr_t>(dataspaceID);
+    returnError = static_cast<herr_t>(dataspaceId);
   }
   /* Close the object */
-  error = closeId(objectID, objectInfo.type);
+  error = CloseId(objectId, objectInfo.type);
   if(error < 0)
   {
     std::cout << "Error Closing HDF5 Object ID" << std::endl;
@@ -456,7 +456,7 @@ inline herr_t writePointerAttribute(hid_t locationID, const std::string& objectN
 
 /**
  * @brief Writes an Attribute to an HDF5 Object
- * @param locationID The Parent Location of the HDFobject that is getting the attribute
+ * @param locationId The Parent Location of the HDFobject that is getting the attribute
  * @param objectName The Name of Object to write the attribute into.
  * @param attributeName The Name of the Attribute
  * @param dims The Dimensions of the data set
@@ -464,61 +464,61 @@ inline herr_t writePointerAttribute(hid_t locationID, const std::string& objectN
  * @return Standard HDF Error Condition
  */
 template <typename T>
-inline herr_t writeVectorAttribute(hid_t locationID, const std::string& objectName, const std::string& attributeName, const std::vector<hsize_t>& dims, const std::vector<T>& data)
+inline herr_t writeVectorAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, const std::vector<hsize_t>& dims, const std::vector<T>& data)
 {
-  return writePointerAttribute(locationID, objectName, attributeName, static_cast<int32_t>(dims.size()), dims.data(), data.data());
+  return writePointerAttribute(locationId, objectName, attributeName, static_cast<int32_t>(dims.size()), dims.data(), data.data());
 }
 
 /**
  * @brief Returns the information about an attribute.
- * You must close the typeID argument or resource leaks will occur. Use
- *  H5Tclose(typeID); after your call to this method if you do not need the id for
+ * You must close the typeId argument or resource leaks will occur. Use
+ *  H5Tclose(typeId); after your call to this method if you do not need the id for
  *   anything.
- * @param locationID The parent location of the Dataset
+ * @param locationId The parent location of the Dataset
  * @param objectName The name of the dataset
  * @param attributeName The name of the attribute
  * @param dims A std::vector that will hold the sizes of the dimensions
  * @param typeClass The HDF5 class type
  * @param typeSize THe HDF5 size of the data
- * @param typeID The Attribute ID - which needs to be closed after you are finished with the data
+ * @param typeId The Attribute ID - which needs to be closed after you are finished with the data
  * @return
  */
-inline herr_t getAttributeInfo(hid_t locationID, const std::string& objectName, const std::string& attributeName, std::vector<hsize_t>& dims, H5T_class_t& typeClass, size_t& typeSize, hid_t& typeID)
+inline herr_t getAttributeInfo(hid_t locationId, const std::string& objectName, const std::string& attributeName, std::vector<hsize_t>& dims, H5T_class_t& typeClass, size_t& typeSize, hid_t& typeId)
 {
   H5SUPPORT_MUTEX_LOCK()
 
   /* identifiers */
-  hid_t objectID;
+  hid_t objectId;
   H5O_info_t objectInfo{};
-  hid_t attributeID;
+  hid_t attributeId;
   herr_t error = 0;
   herr_t returnError = 0;
-  hid_t dataspaceID;
+  hid_t dataspaceId;
   hid_t rank = -1;
 
-  error = H5Oget_info_by_name(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  error = H5Oget_info_by_name(locationId, objectName.c_str(), &objectInfo, H5P_DEFAULT);
   if(error < 0)
   {
     return error;
   }
 
   /* Open the object */
-  objectID = openId(locationID, objectName, objectInfo.type);
-  if(objectID >= 0)
+  objectId = OpenId(locationId, objectName, objectInfo.type);
+  if(objectId >= 0)
   {
-    attributeID = H5Aopen_by_name(locationID, objectName.c_str(), attributeName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
-    if(attributeID >= 0)
+    attributeId = H5Aopen_by_name(locationId, objectName.c_str(), attributeName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
+    if(attributeId >= 0)
     {
       /* Get an identifier for the datatype. */
-      typeID = H5Aget_type(attributeID);
-      if(typeID > 0)
+      typeId = H5Aget_type(attributeId);
+      if(typeId > 0)
       {
         /* Get the class. */
-        typeClass = H5Tget_class(typeID);
+        typeClass = H5Tget_class(typeId);
         /* Get the size. */
-        typeSize = H5Tget_size(typeID);
-        dataspaceID = H5Aget_space(attributeID);
-        if(dataspaceID >= 0)
+        typeSize = H5Tget_size(typeId);
+        dataspaceId = H5Aget_space(attributeId);
+        if(dataspaceId >= 0)
         {
           if(typeClass == H5T_STRING)
           {
@@ -528,10 +528,10 @@ inline herr_t getAttributeInfo(hid_t locationID, const std::string& objectName, 
           }
           else
           {
-            rank = H5Sget_simple_extent_ndims(dataspaceID);
-            std::vector<hsize_t> _dims(rank, 0);
+            rank = H5Sget_simple_extent_ndims(dataspaceId);
+            std::vector<hsize_t> hdims(rank, 0);
             /* Get dimensions */
-            error = H5Sget_simple_extent_dims(dataspaceID, _dims.data(), nullptr);
+            error = H5Sget_simple_extent_dims(dataspaceId, hdims.data(), nullptr);
             if(error < 0)
             {
               std::cout << "Error Getting Attribute dims" << std::endl;
@@ -540,20 +540,20 @@ inline herr_t getAttributeInfo(hid_t locationID, const std::string& objectName, 
             // Copy the dimensions into the dims vector
             dims.clear(); // Erase everything in the Vector
             dims.resize(rank);
-            std::copy(_dims.cbegin(), _dims.cend(), dims.begin());
+            std::copy(hdims.cbegin(), hdims.cend(), dims.begin());
           }
-          CloseH5S(dataspaceID, error, returnError);
-          dataspaceID = 0;
+          CloseH5S(dataspaceId, error, returnError)
+          dataspaceId = 0;
         }
       }
-      CloseH5A(attributeID, error, returnError);
-      attributeID = 0;
+      CloseH5A(attributeId, error, returnError)
+      attributeId = 0;
     }
     else
     {
       returnError = -1;
     }
-    error = closeId(objectID, objectInfo.type);
+    error = CloseId(objectId, objectInfo.type);
     if(error < 0)
     {
       std::cout << "Error Closing Object ID" << std::endl;
@@ -569,24 +569,24 @@ inline herr_t getAttributeInfo(hid_t locationID, const std::string& objectName, 
  * Use this method if you already know the datatype of the attribute. If you do
  * not know this already then use another form of this method.
  *
- * @param locationID The Parent object that holds the object to which you want to read an attribute
+ * @param locationId The Parent object that holds the object to which you want to read an attribute
  * @param objectName The name of the object to which the attribute is to be read
  * @param attributeName The name of the Attribute to read
  * @param data The memory to store the data
  * @return Standard HDF Error condition
  */
 template <typename T>
-inline herr_t readVectorAttribute(hid_t locationID, const std::string& objectName, const std::string& attributeName, std::vector<T>& data)
+inline herr_t readVectorAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, std::vector<T>& data)
 {
   H5SUPPORT_MUTEX_LOCK()
 
   /* identifiers */
-  hid_t objectID;
+  hid_t objectId;
   H5O_info_t objectInfo;
   herr_t error = 0;
   herr_t returnError = 0;
-  hid_t attributeID;
-  hid_t typeID;
+  hid_t attributeId;
+  hid_t typeId;
   hid_t dataType = HDFTypeForPrimitive<T>();
   if(dataType == -1)
   {
@@ -594,33 +594,33 @@ inline herr_t readVectorAttribute(hid_t locationID, const std::string& objectNam
   }
   // std::cout << "   Reading Vector Attribute at Path '" << objectName << "' with Key: '" << attributeName << "'" << std::endl;
   /* Get the type of object */
-  error = H5Oget_info_by_name(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  error = H5Oget_info_by_name(locationId, objectName.c_str(), &objectInfo, H5P_DEFAULT);
   if(error < 0)
   {
     return error;
   }
   /* Open the object */
-  objectID = openId(locationID, objectName, objectInfo.type);
-  if(objectID >= 0)
+  objectId = OpenId(locationId, objectName, objectInfo.type);
+  if(objectId >= 0)
   {
-    attributeID = H5Aopen_by_name(locationID, objectName.c_str(), attributeName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
-    if(attributeID >= 0)
+    attributeId = H5Aopen_by_name(locationId, objectName.c_str(), attributeName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
+    if(attributeId >= 0)
     {
       // Need to allocate the array size
       H5T_class_t typeClass;
       size_t typeSize;
       std::vector<hsize_t> dims;
-      error = getAttributeInfo(locationID, objectName, attributeName, dims, typeClass, typeSize, typeID);
+      error = getAttributeInfo(locationId, objectName, attributeName, dims, typeClass, typeSize, typeId);
       hsize_t numElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<hsize_t>(1), std::multiplies<>());
       // std::cout << "    Vector Attribute has " << numElements << " elements." << std::endl;
       data.resize(numElements);
-      error = H5Aread(attributeID, dataType, data.data());
+      error = H5Aread(attributeId, dataType, data.data());
       if(error < 0)
       {
         std::cout << "Error Reading Attribute." << error << std::endl;
         returnError = error;
       }
-      error = H5Aclose(attributeID);
+      error = H5Aclose(attributeId);
       if(error < 0)
       {
         std::cout << "Error Closing Attribute" << std::endl;
@@ -629,9 +629,9 @@ inline herr_t readVectorAttribute(hid_t locationID, const std::string& objectNam
     }
     else
     {
-      returnError = static_cast<herr_t>(attributeID);
+      returnError = static_cast<herr_t>(attributeId);
     }
-    error = closeId(objectID, objectInfo.type);
+    error = CloseId(objectId, objectInfo.type);
     if(error < 0)
     {
       std::cout << "Error Closing Object" << std::endl;
@@ -643,17 +643,17 @@ inline herr_t readVectorAttribute(hid_t locationID, const std::string& objectNam
 
 /**
  * @brief Reads data from the HDF5 File into a preallocated array.
- * @param locationID The parent location that contains the dataset to read
+ * @param locationId The parent location that contains the dataset to read
  * @param datasetName The name of the dataset to read
  * @param data A Pointer to the PreAllocated Array of Data
  * @return Standard HDF error condition
  */
 template <typename T>
-inline herr_t readPointerDataset(hid_t locationID, const std::string& datasetName, T* data)
+inline herr_t readPointerDataset(hid_t locationId, const std::string& datasetName, T* data)
 {
   H5SUPPORT_MUTEX_LOCK()
 
-  hid_t datasetID;
+  hid_t datasetId;
   herr_t error = 0;
   herr_t returnError = 0;
   hid_t dataType = HDFTypeForPrimitive<T>();
@@ -662,9 +662,9 @@ inline herr_t readPointerDataset(hid_t locationID, const std::string& datasetNam
     std::cout << "dataType was not supported." << std::endl;
     return -10;
   }
-  if(locationID < 0)
+  if(locationId < 0)
   {
-    std::cout << "locationID was Negative: This is not allowed." << std::endl;
+    std::cout << "locationId was Negative: This is not allowed." << std::endl;
     return -2;
   }
   if(nullptr == data)
@@ -672,21 +672,21 @@ inline herr_t readPointerDataset(hid_t locationID, const std::string& datasetNam
     std::cout << "The Pointer to hold the data is nullptr. This is NOT allowed." << std::endl;
     return -3;
   }
-  datasetID = H5Dopen(locationID, datasetName.c_str(), H5P_DEFAULT);
-  if(datasetID < 0)
+  datasetId = H5Dopen(locationId, datasetName.c_str(), H5P_DEFAULT);
+  if(datasetId < 0)
   {
-    std::cout << " Error opening Dataset: " << datasetID << std::endl;
+    std::cout << " Error opening Dataset: " << datasetId << std::endl;
     return -1;
   }
-  if(datasetID >= 0)
+  if(datasetId >= 0)
   {
-    error = H5Dread(datasetID, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+    error = H5Dread(datasetId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
     if(error < 0)
     {
       std::cout << "Error Reading Data." << std::endl;
       returnError = error;
     }
-    error = H5Dclose(datasetID);
+    error = H5Dclose(datasetId);
     if(error < 0)
     {
       std::cout << "Error Closing Dataset id" << std::endl;
@@ -700,7 +700,7 @@ inline herr_t readPointerDataset(hid_t locationID, const std::string& datasetNam
  * @brief Reads data from the HDF5 File into an std::vector<T> object. If the dataset
  * is very large this can be an expensive method to use. It is here for convenience
  * using STL with hdf5.
- * @param locationID The parent location that contains the dataset to read
+ * @param locationId The parent location that contains the dataset to read
  * @param datasetName The name of the dataset to read
  * @param data A std::vector<T>. Note the vector WILL be resized to fit the data.
  * The best idea is to just allocate the vector but not to size it. The method
@@ -708,11 +708,11 @@ inline herr_t readPointerDataset(hid_t locationID, const std::string& datasetNam
  * @return Standard HDF error condition
  */
 template <typename T>
-inline herr_t readVectorDataset(hid_t locationID, const std::string& datasetName, std::vector<T>& data)
+inline herr_t readVectorDataset(hid_t locationId, const std::string& datasetName, std::vector<T>& data)
 {
   H5SUPPORT_MUTEX_LOCK()
 
-  hid_t datasetID;
+  hid_t datasetId;
   herr_t error = 0;
   herr_t returnError = 0;
   hid_t spaceId;
@@ -721,15 +721,15 @@ inline herr_t readVectorDataset(hid_t locationID, const std::string& datasetName
   {
     return -1;
   }
-  datasetID = H5Dopen(locationID, datasetName.c_str(), H5P_DEFAULT);
-  if(datasetID < 0)
+  datasetId = H5Dopen(locationId, datasetName.c_str(), H5P_DEFAULT);
+  if(datasetId < 0)
   {
-    std::cout << "H5Lite.h::readVectorDataset(" << __LINE__ << ") Error opening Dataset at locationID (" << locationID << ") with object name (" << datasetName << ")" << std::endl;
+    std::cout << "H5Lite.h::readVectorDataset(" << __LINE__ << ") Error opening Dataset at locationId (" << locationId << ") with object name (" << datasetName << ")" << std::endl;
     return -1;
   }
-  if(datasetID >= 0)
+  if(datasetId >= 0)
   {
-    spaceId = H5Dget_space(datasetID);
+    spaceId = H5Dget_space(datasetId);
     if(spaceId > 0)
     {
       int32_t rank = H5Sget_simple_extent_ndims(spaceId);
@@ -741,7 +741,7 @@ inline herr_t readVectorDataset(hid_t locationID, const std::string& datasetName
         // std::cout << "NumElements: " << numElements << std::endl;
         // Resize the vector
         data.resize(numElements);
-        error = H5Dread(datasetID, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.data());
+        error = H5Dread(datasetId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.data());
         if(error < 0)
         {
           std::cout << "Error Reading Data.'" << datasetName << "'" << std::endl;
@@ -760,7 +760,7 @@ inline herr_t readVectorDataset(hid_t locationID, const std::string& datasetName
       std::cout << "Error Opening SpaceID" << std::endl;
       returnError = static_cast<herr_t>(spaceId);
     }
-    error = H5Dclose(datasetID);
+    error = H5Dclose(datasetId);
     if(error < 0)
     {
       std::cout << "Error Closing Dataset" << std::endl;
@@ -771,23 +771,23 @@ inline herr_t readVectorDataset(hid_t locationID, const std::string& datasetName
 }
 
 /**
- * @brief Creates a Dataset with the given name at the location defined by locationID.
+ * @brief Creates a Dataset with the given name at the location defined by locationId.
  * This version of writeDataset should be used with a single scalar value. If you
  * need to write an array of values, use the form that takes an std::vector<>
  *
- * @param locationID The Parent location to store the data
+ * @param locationId The Parent location to store the data
  * @param datasetName The name of the dataset
  * @param value The value to write to the HDF5 dataset
  * @return Standard HDF5 error conditions
  */
 template <typename T>
-inline herr_t writeScalarDataset(hid_t locationID, const std::string& datasetName, const T& value)
+inline herr_t writeScalarDataset(hid_t locationId, const std::string& datasetName, const T& value)
 {
   H5SUPPORT_MUTEX_LOCK()
 
   herr_t error = -1;
-  hid_t datasetID = -1;
-  hid_t dataspaceID = -1;
+  hid_t datasetId = -1;
+  hid_t dataspaceId = -1;
   herr_t returnError = 0;
   hsize_t dims = 1;
   hid_t rank = 1;
@@ -797,22 +797,22 @@ inline herr_t writeScalarDataset(hid_t locationID, const std::string& datasetNam
     return -1;
   }
   // Create the DataSpace
-  dataspaceID = H5Screate_simple(static_cast<int>(rank), &(dims), nullptr);
-  if(dataspaceID < 0)
+  dataspaceId = H5Screate_simple(static_cast<int>(rank), &(dims), nullptr);
+  if(dataspaceId < 0)
   {
-    return static_cast<herr_t>(dataspaceID);
+    return static_cast<herr_t>(dataspaceId);
   }
   // Create the Dataset
-  datasetID = H5Dcreate(locationID, datasetName.c_str(), dataType, dataspaceID, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  if(datasetID >= 0)
+  datasetId = H5Dcreate(locationId, datasetName.c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  if(datasetId >= 0)
   {
-    error = H5Dwrite(datasetID, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, &value);
+    error = H5Dwrite(datasetId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, &value);
     if(error < 0)
     {
       std::cout << "Error Writing Data" << std::endl;
       returnError = error;
     }
-    error = H5Dclose(datasetID);
+    error = H5Dclose(datasetId);
     if(error < 0)
     {
       std::cout << "Error Closing Dataset." << std::endl;
@@ -821,10 +821,10 @@ inline herr_t writeScalarDataset(hid_t locationID, const std::string& datasetNam
   }
   else
   {
-    returnError = static_cast<herr_t>(datasetID);
+    returnError = static_cast<herr_t>(datasetId);
   }
   /* Terminate access to the data space. */
-  error = H5Sclose(dataspaceID);
+  error = H5Sclose(dataspaceId);
   if(error < 0)
   {
     std::cout << "Error Closing Dataspace" << std::endl;
@@ -835,47 +835,47 @@ inline herr_t writeScalarDataset(hid_t locationID, const std::string& datasetNam
 
 /**
  * @brief Writes a std::string as a HDF Dataset.
- * @param locationID The Parent location to write the dataset
+ * @param locationId The Parent location to write the dataset
  * @param datasetName The Name to use for the dataset
  * @param data The actual data to write as a null terminated string
  * @return Standard HDF5 error conditions
  */
-inline herr_t writeStringDataset(hid_t locationID, const std::string& datasetName, const std::string& data)
+inline herr_t writeStringDataset(hid_t locationId, const std::string& datasetName, const std::string& data)
 {
   H5SUPPORT_MUTEX_LOCK()
 
-  hid_t datasetID = -1;
-  hid_t dataspaceID = -1;
-  hid_t typeID = -1;
+  hid_t datasetId = -1;
+  hid_t dataspaceId = -1;
+  hid_t typeId = -1;
   size_t size = 0;
   herr_t error = -1;
   herr_t returnError = 0;
 
   /* create a string data type */
-  if((typeID = H5Tcopy(H5T_C_S1)) >= 0)
+  if((typeId = H5Tcopy(H5T_C_S1)) >= 0)
   {
     size = data.size() + 1;
-    if(H5Tset_size(typeID, size) >= 0)
+    if(H5Tset_size(typeId, size) >= 0)
     {
-      if(H5Tset_strpad(typeID, H5T_STR_NULLTERM) >= 0)
+      if(H5Tset_strpad(typeId, H5T_STR_NULLTERM) >= 0)
       {
         /* Create the data space for the dataset. */
-        if((dataspaceID = H5Screate(H5S_SCALAR)) >= 0)
+        if((dataspaceId = H5Screate(H5S_SCALAR)) >= 0)
         {
           /* Create or open the dataset. */
           HDF_ERROR_HANDLER_OFF
-          datasetID = H5Dopen(locationID, datasetName.c_str(), H5P_DEFAULT);
+          datasetId = H5Dopen(locationId, datasetName.c_str(), H5P_DEFAULT);
           HDF_ERROR_HANDLER_ON
-          if(datasetID < 0) // dataset does not exist so create it
+          if(datasetId < 0) // dataset does not exist so create it
           {
-            datasetID = H5Dcreate(locationID, datasetName.c_str(), typeID, dataspaceID, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+            datasetId = H5Dcreate(locationId, datasetName.c_str(), typeId, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
           }
 
-          if(datasetID >= 0)
+          if(datasetId >= 0)
           {
             if(!data.empty())
             {
-              error = H5Dwrite(datasetID, typeID, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.c_str());
+              error = H5Dwrite(datasetId, typeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.c_str());
               if(error < 0)
               {
                 std::cout << "Error Writing String Data" << std::endl;
@@ -885,26 +885,26 @@ inline herr_t writeStringDataset(hid_t locationID, const std::string& datasetNam
           }
           else
           {
-            // returnError = datasetID;
+            // returnError = datasetId;
             returnError = 0;
           }
-          CloseH5D(datasetID, error, returnError, datasetName);
-          //          error = H5Dclose(datasetID);
+          CloseH5D(datasetId, error, returnError, datasetName)
+          //          error = H5Dclose(datasetId);
           //          if (error < 0) {
           //            std::cout << "Error Closing Dataset." << std::endl;
           //            returnError = error;
           //          }
         }
-        CloseH5S(dataspaceID, error, returnError);
-        //        error = H5Sclose(dataspaceID);
+        CloseH5S(dataspaceId, error, returnError)
+        //        error = H5Sclose(dataspaceId);
         //        if ( error < 0) {
         //          std::cout << "Error closing Dataspace." << std::endl;
         //          returnError = error;
         //        }
       }
     }
-    CloseH5T(typeID, error, returnError);
-    //    error = H5Tclose(typeID);
+    CloseH5T(typeId, error, returnError)
+    //    error = H5Tclose(typeId);
     //    if (error < 0 ) {
     //     std::cout << "Error closing DataType" << std::endl;
     //     returnError = error;
@@ -917,18 +917,18 @@ inline herr_t writeStringDataset(hid_t locationID, const std::string& datasetNam
  * @brief Writes an attribute to the given object. This method is designed with
  * a Template parameter that represents a primitive value. If you need to write
  * an array, please use the other over loaded method that takes a vector.
- * @param locationID The location to look for objectName
+ * @param locationId The location to look for objectName
  * @param objectName The Object to write the attribute to
  * @param attributeName The  name of the attribute
  * @param data The data to be written as the attribute
  * @return Standard HDF error condition
  */
 template <typename T>
-inline herr_t writeScalarAttribute(hid_t locationID, const std::string& objectName, const std::string& attributeName, T data)
+inline herr_t writeScalarAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, T data)
 {
   H5SUPPORT_MUTEX_LOCK()
 
-  hid_t objectID, dataspaceID, attributeID;
+  hid_t objectId, dataspaceId, attributeId;
   herr_t hasAttribute;
   H5O_info_t objectInfo;
   herr_t error = 0;
@@ -941,31 +941,31 @@ inline herr_t writeScalarAttribute(hid_t locationID, const std::string& objectNa
     return -1;
   }
   /* Get the type of object */
-  error = H5Oget_info_by_name(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  error = H5Oget_info_by_name(locationId, objectName.c_str(), &objectInfo, H5P_DEFAULT);
   if(error < 0)
   {
-    std::cout << "Error getting object info at locationID (" << locationID << ") with object name (" << objectName << ")" << std::endl;
+    std::cout << "Error getting object info at locationId (" << locationId << ") with object name (" << objectName << ")" << std::endl;
     return error;
   }
   /* Open the object */
-  objectID = openId(locationID, objectName, objectInfo.type);
-  if(objectID < 0)
+  objectId = OpenId(locationId, objectName, objectInfo.type);
+  if(objectId < 0)
   {
     std::cout << "Error opening Object for Attribute operations." << std::endl;
-    return static_cast<herr_t>(objectID);
+    return static_cast<herr_t>(objectId);
   }
 
   /* Create the data space for the attribute. */
-  dataspaceID = H5Screate_simple(rank, &dims, nullptr);
-  if(dataspaceID >= 0)
+  dataspaceId = H5Screate_simple(rank, &dims, nullptr);
+  if(dataspaceId >= 0)
   {
     /* Verify if the attribute already exists */
-    hasAttribute = findAttribute(objectID, attributeName);
+    hasAttribute = findAttribute(objectId, attributeName);
 
     /* The attribute already exists, delete it */
     if(hasAttribute == 1)
     {
-      error = H5Adelete(objectID, attributeName.c_str());
+      error = H5Adelete(objectId, attributeName.c_str());
       if(error < 0)
       {
         std::cout << "Error Deleting Existing Attribute" << std::endl;
@@ -976,11 +976,11 @@ inline herr_t writeScalarAttribute(hid_t locationID, const std::string& objectNa
     if(error >= 0)
     {
       /* Create the attribute. */
-      attributeID = H5Acreate(objectID, attributeName.c_str(), dataType, dataspaceID, H5P_DEFAULT, H5P_DEFAULT);
-      if(attributeID >= 0)
+      attributeId = H5Acreate(objectId, attributeName.c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
+      if(attributeId >= 0)
       {
         /* Write the attribute data. */
-        error = H5Awrite(attributeID, dataType, &data);
+        error = H5Awrite(attributeId, dataType, &data);
         if(error < 0)
         {
           std::cout << "Error Writing Attribute" << std::endl;
@@ -988,7 +988,7 @@ inline herr_t writeScalarAttribute(hid_t locationID, const std::string& objectNa
         }
       }
       /* Close the attribute. */
-      error = H5Aclose(attributeID);
+      error = H5Aclose(attributeId);
       if(error < 0)
       {
         std::cout << "Error Closing Attribute" << std::endl;
@@ -996,7 +996,7 @@ inline herr_t writeScalarAttribute(hid_t locationID, const std::string& objectNa
       }
     }
     /* Close the dataspace. */
-    error = H5Sclose(dataspaceID);
+    error = H5Sclose(dataspaceId);
     if(error < 0)
     {
       std::cout << "Error Closing Dataspace" << std::endl;
@@ -1005,11 +1005,11 @@ inline herr_t writeScalarAttribute(hid_t locationID, const std::string& objectNa
   }
   else
   {
-    returnError = static_cast<herr_t>(dataspaceID);
+    returnError = static_cast<herr_t>(dataspaceId);
   }
 
   /* Close the object */
-  error = closeId(objectID, objectInfo.type);
+  error = CloseId(objectId, objectInfo.type);
   if(error < 0)
   {
     std::cout << "Error Closing HDF5 Object ID" << std::endl;
@@ -1020,21 +1020,21 @@ inline herr_t writeScalarAttribute(hid_t locationID, const std::string& objectNa
 
 /**
  * @brief Writes a null terminated string as an attribute
- * @param locationID The location to look for objectName
+ * @param locationId The location to look for objectName
  * @param objectName The Object to write the attribute to
  * @param attributeName The name of the Attribute
  * @param size The number of characters  in the string
  * @param data pointer to a const char array
  * @return Standard HDF error conditions
  */
-inline herr_t writeStringAttribute(hid_t locationID, const std::string& objectName, const std::string& attributeName, hsize_t size, const char* data)
+inline herr_t writeStringAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, hsize_t size, const char* data)
 {
   H5SUPPORT_MUTEX_LOCK()
 
   hid_t attributeType;
   hid_t attributeSpaceID;
-  hid_t attributeID;
-  hid_t objectID;
+  hid_t attributeId;
+  hid_t objectId;
   int32_t hasAttribute;
   H5O_info_t objectInfo{};
   size_t attributeSize;
@@ -1042,12 +1042,12 @@ inline herr_t writeStringAttribute(hid_t locationID, const std::string& objectNa
   herr_t returnError = 0;
 
   /* Get the type of object */
-  returnError = H5Oget_info_by_name(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  returnError = H5Oget_info_by_name(locationId, objectName.c_str(), &objectInfo, H5P_DEFAULT);
   if(returnError >= 0)
   {
     /* Open the object */
-    objectID = openId(locationID, objectName, objectInfo.type);
-    if(objectID >= 0)
+    objectId = OpenId(locationId, objectName, objectInfo.type);
+    if(objectId >= 0)
     {
       /* Create the attribute */
       attributeType = H5Tcopy(H5T_C_S1);
@@ -1074,11 +1074,11 @@ inline herr_t writeStringAttribute(hid_t locationID, const std::string& objectNa
             if(attributeSpaceID >= 0)
             {
               /* Verify if the attribute already exists */
-              hasAttribute = findAttribute(objectID, attributeName);
+              hasAttribute = findAttribute(objectId, attributeName);
               /* The attribute already exists, delete it */
               if(hasAttribute == 1)
               {
-                error = H5Adelete(objectID, attributeName.c_str());
+                error = H5Adelete(objectId, attributeName.c_str());
                 if(error < 0)
                 {
                   std::cout << "Error Deleting Attribute '" << attributeName << "' from Object '" << objectName << "'" << std::endl;
@@ -1088,10 +1088,10 @@ inline herr_t writeStringAttribute(hid_t locationID, const std::string& objectNa
               if(error >= 0)
               {
                 /* Create and write the attribute */
-                attributeID = H5Acreate(objectID, attributeName.c_str(), attributeType, attributeSpaceID, H5P_DEFAULT, H5P_DEFAULT);
-                if(attributeID >= 0)
+                attributeId = H5Acreate(objectId, attributeName.c_str(), attributeType, attributeSpaceID, H5P_DEFAULT, H5P_DEFAULT);
+                if(attributeId >= 0)
                 {
-                  error = H5Awrite(attributeID, attributeType, data);
+                  error = H5Awrite(attributeId, attributeType, data);
                   if(error < 0)
                   {
                     std::cout << "Error Writing String attribute." << std::endl;
@@ -1099,20 +1099,20 @@ inline herr_t writeStringAttribute(hid_t locationID, const std::string& objectNa
                     returnError = error;
                   }
                 }
-                CloseH5A(attributeID, error, returnError);
+                CloseH5A(attributeId, error, returnError)
               }
-              CloseH5S(attributeSpaceID, error, returnError);
+              CloseH5S(attributeSpaceID, error, returnError)
             }
           }
         }
-        CloseH5T(attributeType, error, returnError);
+        CloseH5T(attributeType, error, returnError)
       }
       else
       {
         // returnError = attributeType;
       }
       /* Close the object */
-      error = closeId(objectID, objectInfo.type);
+      error = CloseId(objectId, objectInfo.type);
       if(error < 0)
       {
         std::cout << "Error Closing Object Id" << std::endl;
@@ -1125,46 +1125,46 @@ inline herr_t writeStringAttribute(hid_t locationID, const std::string& objectNa
 
 /**
  * @brief Writes a string as a null terminated attribute.
- * @param locationID The location to look for objectName
+ * @param locationId The location to look for objectName
  * @param objectName The Object to write the attribute to
  * @param attributeName The name of the Attribute
  * @param data The string to write as the attribute
  * @return Standard HDF error conditions
  */
-inline herr_t writeStringAttribute(hid_t locationID, const std::string& objectName, const std::string& attributeName, const std::string& data)
+inline herr_t writeStringAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, const std::string& data)
 {
-  return writeStringAttribute(locationID, objectName, attributeName, data.size() + 1, data.data());
+  return writeStringAttribute(locationId, objectName, attributeName, data.size() + 1, data.data());
 }
 
 /**
  * @brief Returns the H5T value for a given dataset.
  *
- * Returns the type of data stored in the dataset. You MUST use H5Tclose(typeID)
+ * Returns the type of data stored in the dataset. You MUST use H5Tclose(typeId)
  * on the returned value or resource leaks will occur.
- * @param locationID A Valid HDF5 file or group id.
+ * @param locationId A Valid HDF5 file or group id.
  * @param datasetName Path to the dataset
  * @return
  */
-inline hid_t getDatasetType(hid_t locationID, const std::string& datasetName)
+inline hid_t getDatasetType(hid_t locationId, const std::string& datasetName)
 {
   H5SUPPORT_MUTEX_LOCK()
 
   herr_t error = 0;
   herr_t returnError = 0;
-  hid_t datasetID = -1;
+  hid_t datasetId = -1;
   /* Open the dataset. */
-  if((datasetID = H5Dopen(locationID, datasetName.c_str(), H5P_DEFAULT)) < 0)
+  if((datasetId = H5Dopen(locationId, datasetName.c_str(), H5P_DEFAULT)) < 0)
   {
     return -1;
   }
   /* Get an identifier for the datatype. */
-  hid_t typeID = H5Dget_type(datasetID);
-  CloseH5D(datasetID, error, returnError, datasetName);
+  hid_t typeId = H5Dget_type(datasetId);
+  CloseH5D(datasetId, error, returnError, datasetName)
   if(returnError < 0)
   {
     return static_cast<hid_t>(returnError);
   }
-  return typeID;
+  return typeId;
 }
 
 } // namespace Support

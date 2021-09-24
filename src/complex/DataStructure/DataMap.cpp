@@ -9,10 +9,7 @@
 
 using namespace complex;
 
-DataMap::DataMap()
-{
-}
-
+DataMap::DataMap() = default;
 DataMap::DataMap(const DataMap& other)
 : m_Map(other.m_Map)
 {
@@ -281,9 +278,9 @@ H5::ErrorType DataMap::readH5Group(DataStructure& ds, H5::IdType h5GroupId, cons
     const std::string name = H5::Reader::Generic::getNameAtIdx(h5GroupId, i);
 
     std::string typeName;
-    H5::Reader::Generic::readStringAttribute(h5GroupId, name, H5::Constants::DataObject::ObjectTypeTag, typeName);
+    H5::Reader::Generic::readStringAttribute(h5GroupId, name, complex::Constants::k_ObjectTypeTag, typeName);
     hid_t h5ObjectId = -1;
-    if(H5::Support::isGroup(h5GroupId, name))
+    if(H5::Support::IsGroup(h5GroupId, name))
     {
       h5ObjectId = H5Gopen(h5GroupId, name.c_str(), H5P_DEFAULT);
 

@@ -327,7 +327,7 @@ complex::H5::ErrorType complex::H5::Reader::Generic::readStringAttribute(H5::IdT
   }
 
   /* Open the object */
-  hid_t objectID = Support::openId(locationID, objectName, objectInfo.type);
+  hid_t objectID = Support::OpenId(locationID, objectName, objectInfo.type);
   if(objectID >= 0)
   {
     hid_t attributeID = H5Aopen_by_name(locationID, objectName.c_str(), attributeName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
@@ -370,7 +370,7 @@ complex::H5::ErrorType complex::H5::Reader::Generic::readStringAttribute(H5::IdT
     {
       // returnError = attributeID;
     }
-    error = Support::closeId(objectID, objectInfo.type);
+    error = Support::CloseId(objectID, objectInfo.type);
     if(error < 0)
     {
       std::cout << "Error Closing Object ID" << std::endl;
@@ -394,7 +394,7 @@ herr_t complex::H5::Reader::Generic::getAttributeInfo(hid_t locationID, const st
   }
 
   /* Open the object */
-  hid_t objectID = Support::openId(locationID, objectName, objectInfo.type);
+  hid_t objectID = Support::OpenId(locationID, objectName, objectInfo.type);
   if(objectID >= 0)
   {
     hid_t attributeID = H5Aopen_by_name(locationID, objectName.c_str(), attributeName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
@@ -444,7 +444,7 @@ herr_t complex::H5::Reader::Generic::getAttributeInfo(hid_t locationID, const st
     {
       returnError = -1;
     }
-    error = Support::closeId(objectID, objectInfo.type);
+    error = Support::CloseId(objectID, objectInfo.type);
     if(error < 0)
     {
       std::cout << "Error Closing Object ID" << std::endl;
@@ -844,7 +844,7 @@ complex::DataStructure H5::Reader::DataStructure::readFile(const std::string& fi
     }
     else
     {
-      ds = std::move(complex::DataStructure::ReadFromHdf5(fileId, err));
+      ds = std::move(complex::DataStructure::readFromHdf5(fileId, err));
     }
   }
 

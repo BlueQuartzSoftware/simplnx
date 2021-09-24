@@ -6,15 +6,20 @@
 #include "complex/Pipeline/Pipeline.hpp"
 #include "complex/Pipeline/PipelineFilter.hpp"
 
-using namespace complex;
+namespace complex
+{
 
 namespace Constants
 {
-const FilterHandle ImportTextHandle(*Uuid::FromString("25f7df3e-ca3e-4634-adda-732c0e56efd4"), Uuid());
-const FilterHandle filterHandle1(*Uuid::FromString("dd92896b-26ec-4419-b905-567e93e8f39d"), Uuid());
-const FilterHandle filterHandle2(*Uuid::FromString("1307bbbc-112d-4aaa-941f-58253787b17e"), Uuid());
-const FilterHandle badHandle(Uuid{}, Uuid{});
+const FilterHandle k_ImportTextHandle(*Uuid::FromString("25f7df3e-ca3e-4634-adda-732c0e56efd4"), Uuid());
+const FilterHandle k_FilterHandle1(*Uuid::FromString("dd92896b-26ec-4419-b905-567e93e8f39d"), Uuid());
+const FilterHandle k_FilterHandle2(*Uuid::FromString("1307bbbc-112d-4aaa-941f-58253787b17e"), Uuid());
+const FilterHandle k_BadHandle(Uuid{}, Uuid{});
 } // namespace Constants
+
+}
+
+using namespace complex;
 
 TEST_CASE("Execute Pipeline")
 {
@@ -23,21 +28,21 @@ TEST_CASE("Execute Pipeline")
 
   Pipeline pipeline;
   REQUIRE(pipeline.execute());
-  REQUIRE(pipeline.push_front(Constants::filterHandle1));
+  REQUIRE(pipeline.push_front(Constants::k_FilterHandle1));
   REQUIRE(pipeline.execute());
-  REQUIRE(!pipeline.push_back(Constants::badHandle));
+  REQUIRE(!pipeline.push_back(Constants::k_BadHandle));
 }
 
 TEST_CASE("Complex Pipeline")
 {
   Application app;
 
-  FilterHandle handle = Constants::filterHandle1;
+  FilterHandle handle = Constants::k_FilterHandle1;
 
   Pipeline pipeline;
   PipelineFilter* node = PipelineFilter::Create(handle);
   REQUIRE(node != nullptr);
-  REQUIRE(node->getParameters().size() > 0);
+  REQUIRE(node->getParameters().empty() == false);
   REQUIRE(pipeline.push_back(node));
 
   auto segment2 = new Pipeline();
@@ -45,16 +50,16 @@ TEST_CASE("Complex Pipeline")
   REQUIRE(pipeline.push_back(segment2));
 }
 
-Pipeline createPipeline()
+Pipeline CreatePipeline()
 {
   Pipeline pipeline;
-  auto node = PipelineFilter::Create(Constants::filterHandle1);
+  auto node = PipelineFilter::Create(Constants::k_FilterHandle1);
   pipeline.push_back(node);
-  pipeline.push_back(Constants::filterHandle2);
+  pipeline.push_back(Constants::k_FilterHandle2);
 
   // Add additional segment to the main pipeline
   auto segment = new Pipeline();
-  segment->push_back(Constants::ImportTextHandle);
+  segment->push_back(Constants::k_ImportTextHandle);
   pipeline.push_back(segment);
 
   // Set Filter1
