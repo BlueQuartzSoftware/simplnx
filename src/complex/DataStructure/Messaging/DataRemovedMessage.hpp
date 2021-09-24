@@ -33,13 +33,13 @@ public:
   DataRemovedMessage(const DataStructure* ds, DataObject::IdType id, const std::string& name);
 
   /**
-   * @brief Copy constructor
+   * @brief Creates a copy of the target DataRemovedMessage.
    * @param other
    */
   DataRemovedMessage(const DataRemovedMessage& other);
 
   /**
-   * @brief Move constructor
+   * @brief Creates a new DataRemovedMessage and moves values from the target.
    * @param other
    */
   DataRemovedMessage(DataRemovedMessage&& other) noexcept;
@@ -53,7 +53,7 @@ public:
   MessageType getMsgType() const override;
 
   /**
-   * @brief Returns the removed DataObject's ID
+   * @brief Returns the removed DataObject's ID.
    * @return IdType
    */
   DataObject::IdType getId() const;

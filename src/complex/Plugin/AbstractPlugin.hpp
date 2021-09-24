@@ -57,11 +57,11 @@ public:
   /**
    * @brief Create's an IFilter with the specified ID. If the plugin
    * does not contain a filter with the specified ID, this function returns
-   * nullptr.
-   * @param id
+   * nullptr. Otherwise, this returns a std::unique_ptr to the created IFilter.
+   * @param filterId
    * @return IFilter::UniquePointer
    */
-  IFilter::UniquePointer createFilter(FilterHandle::FilterIdType id) const;
+  IFilter::UniquePointer createFilter(FilterHandle::FilterIdType filterId) const;
 
   /**
    * @brief Returns a set of FilterHandles pointing to each of the filters
@@ -85,7 +85,8 @@ public:
 
 protected:
   /**
-   * @brief AbstractPlugin constructor. Takes an ID, name, and description.
+   * @brief Constructs a new AbstractPlugin. Takes an ID, name, description,
+   * and vendor.
    * @param id
    * @param name
    * @param description

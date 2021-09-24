@@ -49,7 +49,7 @@ QuadGeom::~QuadGeom() = default;
 QuadGeom* QuadGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<QuadGeom>(new QuadGeom(ds, name));
-  if(!AddObjectToDS(ds, data, parentId))
+  if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
   }

@@ -47,7 +47,8 @@ public:
 
   /**
    * @brief Destroys the DataMap, deleting the std::shared_ptrs that make up
-   * the map.
+   * the map. If the map had the last reference to a DataObject, that object
+   * is destroyed.
    */
   ~DataMap();
 
@@ -177,6 +178,8 @@ public:
 
   /**
    * @brief Searches the DataMap for the target IdType.
+   * 
+   * Children are not expanded in this calculation.
    * @param id
    * @return ConstIterator
    */
@@ -184,6 +187,8 @@ public:
 
   /**
    * @brief Searches the DataMap for the target name.
+   * 
+   * Children are not expanded in this calculation.
    * @param id
    * @return Iterator
    */
@@ -191,6 +196,8 @@ public:
 
   /**
    * @brief Searches the DataMap for the target name.
+   * 
+   * Children are not expanded in this calculation.
    * @param id
    * @return ConstIterator
    */
@@ -204,6 +211,8 @@ public:
 
   /**
    * @brief Returns an iterator to the beginning of the DataMap.
+   * 
+   * Children are not expanded in this calculation.
    * @return Iterator
    */
   Iterator begin();
@@ -216,6 +225,8 @@ public:
 
   /**
    * @brief Returns a const iterator to the beginning of the DataMap.
+   * 
+   * Children are not expanded in this calculation.
    * @return ConstIterator
    */
   ConstIterator begin() const;

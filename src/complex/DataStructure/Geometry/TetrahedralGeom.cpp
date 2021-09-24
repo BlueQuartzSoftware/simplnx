@@ -53,7 +53,7 @@ TetrahedralGeom::~TetrahedralGeom() = default;
 TetrahedralGeom* TetrahedralGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<TetrahedralGeom>(new TetrahedralGeom(ds, name));
-  if(!AddObjectToDS(ds, data, parentId))
+  if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
   }

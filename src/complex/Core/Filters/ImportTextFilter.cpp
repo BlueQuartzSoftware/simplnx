@@ -49,7 +49,7 @@ Result<> ReadFile(const fs::path& inputPath, DataArray<T>& data, u64 skipLines, 
   inputFile.imbue(std::locale(std::locale(), new DelimiterType(delimiter)));
 
   usize numTuples = data.getTupleCount();
-  usize scalarNumComp = data.getTupleSize();
+  usize scalarNumComp = data.getNumComponents();
 
   usize totalSize = numTuples * scalarNumComp;
   T value = {};

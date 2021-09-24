@@ -1,4 +1,4 @@
-#include "FilterNode.hpp"
+#include "PipelineFilter.hpp"
 
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterList.hpp"
@@ -6,56 +6,56 @@
 
 using namespace complex;
 
-FilterNode* FilterNode::Create(const FilterHandle& handle)
+PipelineFilter* PipelineFilter::Create(const FilterHandle& handle)
 {
   auto filter = Application::Instance()->getFilterList()->createFilter(handle);
   if(filter == nullptr)
   {
     return nullptr;
   }
-  return new FilterNode(std::move(filter));
+  return new PipelineFilter(std::move(filter));
 }
 
-FilterNode::FilterNode(IFilter::UniquePointer&& filter)
-: IPipelineNode()
+PipelineFilter::PipelineFilter(IFilter::UniquePointer&& filter)
+: AbstractPipelineNode()
 , m_Filter(std::move(filter))
 {
 }
 
-FilterNode::~FilterNode() = default;
+PipelineFilter::~PipelineFilter() = default;
 
-IPipelineNode::NodeType FilterNode::getType() const
+AbstractPipelineNode::NodeType PipelineFilter::getType() const
 {
   return NodeType::Filter;
 }
 
-std::string FilterNode::getName()
+std::string PipelineFilter::getName()
 {
   return m_Filter->humanName();
 }
 
-IFilter* FilterNode::getFilter() const
+IFilter* PipelineFilter::getFilter() const
 {
   return m_Filter.get();
 }
 
-Parameters FilterNode::getParameters() const
+Parameters PipelineFilter::getParameters() const
 {
   return m_Filter->parameters();
 }
 
-Arguments FilterNode::getArguments() const
+Arguments PipelineFilter::getArguments() const
 {
   return m_Arguments;
 }
 
-void FilterNode::setArguments(const Arguments& args)
+void PipelineFilter::setArguments(const Arguments& args)
 {
   m_Arguments = args;
   markDirty();
 }
 
-bool FilterNode::preflight(DataStructure& data)
+bool PipelineFilter::preflight(DataStructure& data)
 {
   auto result = m_Filter->preflight(data, getArguments());
   if(!result.valid())
@@ -78,7 +78,7 @@ bool FilterNode::preflight(DataStructure& data)
   }
 }
 
-bool FilterNode::execute(DataStructure& data)
+bool PipelineFilter::execute(DataStructure& data)
 {
   auto results = m_Filter->execute(data, getArguments());
   if(!results.valid())
@@ -101,12 +101,12 @@ bool FilterNode::execute(DataStructure& data)
   }
 }
 
-std::vector<complex::Warning> FilterNode::getWarnings() const
+std::vector<complex::Warning> PipelineFilter::getWarnings() const
 {
   return m_Warnings;
 }
 
-std::vector<complex::Error> FilterNode::getErrors() const
+std::vector<complex::Error> PipelineFilter::getErrors() const
 {
   return m_Errors;
 }

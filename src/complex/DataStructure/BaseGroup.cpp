@@ -35,7 +35,7 @@ const DataMap& BaseGroup::getDataMap() const
 
 size_t BaseGroup::getSize() const
 {
-  return m_DataMap.size();
+  return m_DataMap.getSize();
 }
 
 DataMap& BaseGroup::getDataMap()

@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "complex/Pipeline/Messaging/IPipelineMessage.hpp"
+#include "complex/Pipeline/Messaging/AbstractPipelineMessage.hpp"
 
 namespace complex
 {
@@ -10,13 +10,16 @@ class Pipeline;
 
 /**
  * @class RenamedMessage
- * @brief
+ * @brief The RenamedMessage class exists to notify Pipeline observers that a
+ * target Pipeline has had its name changed, what it was changed from, and what
+ * it was changed to.
  */
-class COMPLEX_EXPORT RenamedMessage : public IPipelineMessage
+class COMPLEX_EXPORT RenamedMessage : public AbstractPipelineMessage
 {
 public:
   /**
-   * @brief Constructs a new pipeline message notifying that the specified node was renamed, what the new name is, and what it was changed from.
+   * @brief Constructs a new pipeline message notifying that the specified
+   * Pipeline was renamed, what the new name is, and what it was changed from.
    * @param node
    * @param newName
    * @param oldName
@@ -26,16 +29,16 @@ public:
   virtual ~RenamedMessage();
 
   /**
-   * @brief Returns the node's new name.
+   * @brief Returns the Pipeline's new name.
    * @return std::string
    */
   std::string getNewName() const;
 
   /**
-   * @brief Returns the node's old name.
+   * @brief Returns the Pipeline's old name.
    * @return std::string
    */
-  std::string getOldName() const;
+  std::string getPreviousName() const;
 
 private:
   std::string m_NewName;

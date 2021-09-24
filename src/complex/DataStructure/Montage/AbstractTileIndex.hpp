@@ -10,31 +10,32 @@ class AbstractMontage;
 
 /**
  * @class AbstractTileIndex
- * @brief
+ * @brief The AbstractTileIndex class serves as a base class for all montage
+ * tile index classes. Each type of AbstractMontage should have its own derived
+ * type of AbstractTileIndex as well.
  */
 class COMPLEX_EXPORT AbstractTileIndex
 {
 public:
   /**
-   * @brief
+   * @brief Constructs an invalid tile index.
    */
   AbstractTileIndex();
 
   /**
-   * @brief
+   * @brief Constructs a new AbstractTileIndex and copies values from the
+   * specified tile index.
    * @param other
    */
   AbstractTileIndex(const AbstractTileIndex& other);
 
   /**
-   * @brief
+   * @brief Constructs a new AbstractTileIndex and moves values from the
+   * specified tile index.
    * @param other
    */
   AbstractTileIndex(AbstractTileIndex&& other) noexcept;
 
-  /**
-   * Empty Destructor
-   */
   virtual ~AbstractTileIndex();
 
   /**
@@ -65,7 +66,7 @@ public:
 
 protected:
   /**
-   * @brief Constructor taking
+   * @brief Constructor taking a pointer to the target AbstractMontage.
    * @param montage
    */
   AbstractTileIndex(const AbstractMontage* montage);

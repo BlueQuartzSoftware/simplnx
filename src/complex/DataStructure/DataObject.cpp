@@ -53,7 +53,7 @@ DataObject::~DataObject()
   getDataStructure()->dataDeleted(getId(), getName());
 }
 
-bool DataObject::AddObjectToDS(DataStructure& ds, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId)
+bool DataObject::AttemptToAddObject(DataStructure& ds, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId)
 {
   return ds.finishAddingObject(data, parentId);
 }

@@ -3,42 +3,43 @@
 #include "nod/nod.hpp"
 
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Pipeline/IPipelineNode.hpp"
+#include "complex/Pipeline/AbstractPipelineNode.hpp"
 
 namespace complex
 {
 class FilterHandle;
 
 /**
- * @class FilterNode
- * @brief The FilterNode class is a pipeline node specialized for wrapping an
+ * @class PipelineFilter
+ * @brief The PipelineFilter class is a pipeline node specialized for wrapping an
  * IFilter object. The node keeps track of the resulting DataStructure as well
  * as error and warning messages.
  */
-class COMPLEX_EXPORT FilterNode : public IPipelineNode
+class COMPLEX_EXPORT PipelineFilter : public AbstractPipelineNode
 {
 public:
   using WarningsChangedSignal = nod::signal<void(std::vector<complex::Warning>)>;
   using ErrorsChangedSignal = nod::signal<void(std::vector<complex::Error>)>;
 
   /**
-   * @brief Attempts to construct a FilterNode based on the specified
+   * @brief Attempts to construct a PipelineFilter based on the specified
    * FilterHandle. Returns nullptr if the corresponding filter could not be
-   * created.
+   * created. Otherwise, this method returns a pointer to the created
+   * PipelineFilter.
    * @param handle
-   * @return FilterNode*
+   * @return PipelineFilter*
    */
-  static FilterNode* Create(const FilterHandle& handle);
+  static PipelineFilter* Create(const FilterHandle& handle);
 
   /**
-   * @brief Constructs a FilterNode with the specified filter.
+   * @brief Constructs a PipelineFilter with the specified filter.
    *
-   * The unique_ptr is moved to the FilterNode.
+   * The PipelineFilter takes ownership of the std::unique_ptr<IFilter>.
    * @param filter
    */
-  FilterNode(IFilter::UniquePointer&& filter);
+  PipelineFilter(IFilter::UniquePointer&& filter);
 
-  virtual ~FilterNode();
+  virtual ~PipelineFilter();
 
   /**
    * @brief Returns the node type for quick type checking.

@@ -49,7 +49,7 @@ public:
   static DataArray* Create(DataStructure& ds, const std::string& name, store_type* store, const std::optional<IdType>& parentId = {})
   {
     auto data = std::shared_ptr<DataArray>(new DataArray(ds, name, store));
-    if(!AddObjectToDS(ds, data, parentId))
+    if(!AttemptToAddObject(ds, data, parentId))
     {
       return nullptr;
     }
@@ -118,7 +118,7 @@ public:
    */
   size_t getSize() const
   {
-    return getTupleCount() * getTupleSize();
+    return getTupleCount() * getNumComponents();
   }
 
   /**
@@ -134,9 +134,9 @@ public:
    * @brief Returns the tuple getSize.
    * @return size_t
    */
-  size_t getTupleSize() const
+  size_t getNumComponents() const
   {
-    return m_DataStore->getTupleSize();
+    return m_DataStore->getNumComponents();
   }
 
   /**

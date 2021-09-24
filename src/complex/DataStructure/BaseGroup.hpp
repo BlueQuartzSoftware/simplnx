@@ -54,6 +54,9 @@ public:
 
   /**
    * @brief Returns the number of DataObjects in the group.
+   * 
+   * BaseGroups found among the container's children are not expanded during
+   * the operation.
    * @return size_t
    */
   size_t getSize() const;

@@ -32,7 +32,8 @@ public:
   static DataGroup* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief Constructs a shallow copy of the DataGroup.
+   * @brief Constructs a shallow copy of the DataGroup. This copy is not added
+   * to the DataStructure by default.
    * @param other
    */
   DataGroup(const DataGroup& other);

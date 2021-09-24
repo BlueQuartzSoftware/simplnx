@@ -25,7 +25,7 @@ public:
    * @brief Constructs an empty data store with a tuple getSize and count of 0.
    */
   EmptyDataStore()
-  : m_TupleSize(0)
+  : m_NumComponents(0)
   , m_TupleCount(0)
   {
   }
@@ -36,7 +36,7 @@ public:
    * @param tupleCount
    */
   EmptyDataStore(size_t tupleSize, size_t tupleCount)
-  : m_TupleSize(tupleSize)
+  : m_NumComponents(tupleSize)
   , m_TupleCount(tupleCount)
   {
   }
@@ -47,7 +47,7 @@ public:
    */
   EmptyDataStore(const EmptyDataStore& other)
   : m_TupleCount(other.m_TupleCount)
-  , m_TupleSize(other.m_TupleSize)
+  , m_NumComponents(other.m_NumComponents)
   {
   }
 
@@ -57,7 +57,7 @@ public:
    */
   EmptyDataStore(EmptyDataStore&& other) noexcept
   : m_TupleCount(std::move(other.m_TupleCount))
-  , m_TupleSize(std::move(other.m_TupleSize))
+  , m_NumComponents(std::move(other.m_NumComponents))
   {
   }
 
@@ -76,9 +76,9 @@ public:
    * @brief Returns the target tuple getSize.
    * @return size_t
    */
-  size_t getTupleSize() const override
+  size_t getNumComponents() const override
   {
-    return m_TupleSize;
+    return m_NumComponents;
   }
 
   /**
@@ -167,7 +167,7 @@ public:
   }
 
 private:
-  size_t m_TupleSize;
+  size_t m_NumComponents;
   size_t m_TupleCount;
 };
 } // namespace complex

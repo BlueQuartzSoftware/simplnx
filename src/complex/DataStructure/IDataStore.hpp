@@ -10,9 +10,17 @@ namespace complex
 namespace H5::Constants::DataStore
 {
 static const std::string TupleCount = "TupleCount";
-static const std::string TupleSize = "TupleSize";
+static const std::string NumComponents = "NumComponents";
 } // namespace H5::Constants::DataStore
 
+/**
+ * @class IDataStore
+ * @brief The IDataStore class serves as an interface class for the
+ * various types of data stores used in DataArrays. The basic API and iterators
+ * are defined but the specifics relating to how data is stored are implemented
+ * in subclasses.
+ * @tparam T
+ */
 template <typename T>
 class IDataStore
 {
@@ -249,10 +257,10 @@ public:
   virtual size_t getTupleCount() const = 0;
 
   /**
-   * @brief Returns the tuple getSize.
+   * @brief Returns the number of components.
    * @return size_t
    */
-  virtual size_t getTupleSize() const = 0;
+  virtual size_t getNumComponents() const = 0;
 
   /**
    * @brief Returns the number of values stored within the DataStore.
@@ -260,7 +268,7 @@ public:
    */
   size_t getSize() const
   {
-    return getTupleCount() * getTupleSize();
+    return getTupleCount() * getNumComponents();
   }
 
   /**
