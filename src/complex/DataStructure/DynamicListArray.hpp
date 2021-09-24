@@ -19,7 +19,7 @@ public:
 
   struct ElementList
   {
-    T numcells;
+    T numCells;
     K* cells;
   };
 
@@ -122,7 +122,7 @@ public:
     // Figure out how many entries, and for each entry, how many cells
     for(size_t pointId = 0; pointId < m_Size; pointId++)
     {
-      linkCounts[pointId] = this->m_Array[pointId].numcells;
+      linkCounts[pointId] = this->m_Array[pointId].numCells;
     }
     // Allocate all that in the copy
     copy->allocateLists(linkCounts);
@@ -178,13 +178,13 @@ public:
     {
       return false;
     }
-    if(m_Array[pointId].cells != nullptr && m_Array[pointId].numcells > 0)
+    if(m_Array[pointId].cells != nullptr && m_Array[pointId].numCells > 0)
     {
       delete[] this->m_Array[pointId].cells;
       m_Array[pointId].cells = nullptr;
-      m_Array[pointId].numcells = 0;
+      m_Array[pointId].numCells = 0;
     }
-    m_Array[pointId].numcells = numCells;
+    m_Array[pointId].numCells = numCells;
     // If numCells is huge then there could be problems with this
     this->m_Array[pointId].cells = new K[numCells];
     std::memcpy(m_Array[pointId].cells, data, sizeof(K) * numCells);
@@ -199,19 +199,19 @@ public:
    */
   bool setElementList(size_t pointId, ElementList& list)
   {
-    T nCells = list.numcells;
+    T nCells = list.numCells;
     K* data = list.cells;
     if(pointId >= m_Size)
     {
       return false;
     }
-    if(m_Array[pointId].cells != nullptr && m_Array[pointId].numcells > 0)
+    if(m_Array[pointId].cells != nullptr && m_Array[pointId].numCells > 0)
     {
       delete[] this->m_Array[pointId].cells;
       m_Array[pointId].cells = nullptr;
-      m_Array[pointId].numcells = 0;
+      m_Array[pointId].numCells = 0;
     }
-    m_Array[pointId].numcells = nCells;
+    m_Array[pointId].numCells = nCells;
     // If numCells is huge then there could be problems with this
     this->m_Array[pointId].cells = new K[nCells];
     std::memcpy(m_Array[pointId].cells, data, sizeof(K) * nCells);
@@ -225,7 +225,7 @@ public:
    */
   T getNumberOfElements(size_t pointId) const
   {
-    return this->m_Array[pointId].numcells;
+    return this->m_Array[pointId].numCells;
   }
 
   /**
@@ -250,16 +250,16 @@ public:
     uint8_t* bufPtr = &(buffer.front());
 
     // Walk the array and allocate all the array links to Zero and nullptr
-    T* numcells = nullptr;
+    T* numCells = nullptr;
     // int32_t* cells = nullptr;
     for(size_t i = 0; i < numElements; ++i)
     {
-      numcells = reinterpret_cast<T*>(bufPtr + offset);
-      this->m_Array[i].numcells = *numcells; // Set the number of cells in this link
+      numCells = reinterpret_cast<T*>(bufPtr + offset);
+      this->m_Array[i].numCells = *numCells; // Set the number of cells in this link
       offset += 2;
-      this->m_Array[i].cells = new K[(*numcells)];                                   // Allocate a new chunk of memory to store the list
-      std::memcpy(this->m_Array[i].cells, bufPtr + offset, (*numcells) * sizeof(K)); // Copy from the buffer into the new list memory
-      offset += (*numcells) * sizeof(K);                                             // Increment the offset
+      this->m_Array[i].cells = new K[(*numCells)];                                   // Allocate a new chunk of memory to store the list
+      std::memcpy(this->m_Array[i].cells, bufPtr + offset, (*numCells) * sizeof(K)); // Copy from the buffer into the new list memory
+      offset += (*numCells) * sizeof(K);                                             // Increment the offset
     }
   }
 
@@ -273,10 +273,10 @@ public:
     allocate(linkCounts.size());
     for(typename std::vector<T>::size_type i = 0; i < linkCounts.size(); i++)
     {
-      this->m_Array[i].numcells = linkCounts[i];
+      this->m_Array[i].numCells = linkCounts[i];
       if(linkCounts[i] > 0)
       {
-        this->m_Array[i].cells = new K[this->m_Array[i].numcells];
+        this->m_Array[i].cells = new K[this->m_Array[i].numCells];
       }
     }
   }
