@@ -52,8 +52,8 @@ std::filesystem::path findCurrentPath()
   return std::filesystem::path(buffer.data());
 #elif defined(__APPLE__)
   std::vector<char> buffer(1024 + 1);
-  uint32_t getSize = static_cast<uint32_t>(buffer.getSize());
-  int result = _NSGetExecutablePath(buffer.data(), &getSize);
+  uint32_t getSize = static_cast<uint32_t>(buffer.size());
+  int result = _NSGetExecutablePath(buffer.data(), &size);
   if(result != 0)
   {
     throw std::runtime_error("Failed to get executable path. Path too long buffer.");

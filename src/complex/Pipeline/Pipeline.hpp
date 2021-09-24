@@ -16,7 +16,7 @@ class FilterHandle;
  * @brief The Pipeline class is a type of AbstractPipelineNode that contains a
  * list of AbstractPipelineNodes in a specific order that can be chained
  * together and executed as a single entity.
- * 
+ *
  * As a subclass of AbstractPipelineNode, Pipelines can be nested within other
  * Pipelines.
  */
