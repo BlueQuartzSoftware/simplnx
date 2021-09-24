@@ -13,7 +13,7 @@ add_subdirectory(Plugin)
 
 add_executable(complex_test
   MACOSX_BUNDLE
-  ${complex_BINARY_DIR}/complex_test_dirs.h
+  ${COMPLEX_GENERATED_HEADER_DIR}/unit_test/complex_test_dirs.h
   complex_test_main.cpp
   ArgumentsTest.cpp
   DataStructTest.cpp
