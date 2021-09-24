@@ -126,4 +126,22 @@ Result<> convertResult(Result<T>&& result)
   voidResult.warnings() = std::move(result.warnings());
   return voidResult;
 }
+
+/**
+ * @brief Convenience function to generate a standard error Result Object
+ *
+ * A Typical invocation would be:
+ * @code
+ *     return complex::MakeErrorResult<std::any>(-1, fmt::format("{}JSON Data does not contain an entry with a key of \"{}\"", prefix, name()));
+ * #endcode
+ * @tparam T
+ * @param errorCode Error Value. Typically negative number
+ * @param message The Error message that is paired with the code
+ * @return Result Object
+ */
+template <typename T>
+Result<T> MakeErrorResult(int32_t errorCode, const std::string& message)
+{
+  return {nonstd::make_unexpected(std::vector<Error>{{errorCode, message}})};
+}
 } // namespace complex
