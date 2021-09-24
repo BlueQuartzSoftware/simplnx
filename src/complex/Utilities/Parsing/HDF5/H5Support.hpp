@@ -878,7 +878,6 @@ inline herr_t writeStringDataset(hid_t locationID, const std::string& datasetNam
   return returnError;
 }
 
-
 } // namespace Support
 } // namespace H5
 } // namespace complex

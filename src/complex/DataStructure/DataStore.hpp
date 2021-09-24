@@ -45,7 +45,6 @@ public:
     reshapeTuples(m_TupleShape);
   }
 
-
   /**
    * @brief Constructs a DataStore with the specified tupleSize and tupleCount.
    * @param tupleShape The dimensions of the tuples
@@ -78,7 +77,7 @@ public:
   : m_TupleShape(other.m_TupleShape)
   , m_ComponentShape(other.m_ComponentShape)
   {
-    const usize count = getNumberOfTuples() * getNumberOfComponents() ;
+    const usize count = getNumberOfTuples() * getNumberOfComponents();
     for(usize i = 0; i < count; i++)
     {
       m_Data[i] = other.m_Data[i];
@@ -290,7 +289,7 @@ public:
   H5::ErrorType writeHdf5(H5::IdType dataId) const override
   {
     hsize_t rank = m_TupleShape.size() + m_ComponentShape.size();
-    //Consolodate the Tuple and Component Dims into a single array which is used
+    // Consolodate the Tuple and Component Dims into a single array which is used
     // to write the entire data array to HDF5
     std::vector<hsize_t> h5dims;
     for(const auto& value : m_TupleShape)

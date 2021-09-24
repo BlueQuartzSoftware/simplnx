@@ -1,18 +1,13 @@
 #pragma once
 
-
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
-#include "complex/DataStructure/DataStore.hpp"
-
 
 #include <catch2/catch.hpp>
 
-
-
 namespace complex
 {
-
 
 template <typename T>
 T* createGeom(DataStructure& ds)
@@ -50,5 +45,4 @@ static const AbstractGeometry::SharedFaceList* createFaceList(AbstractGeometry* 
   return dynamic_cast<const AbstractGeometry::SharedFaceList*>(dataArr);
 }
 
-
-}
+} // namespace complex
