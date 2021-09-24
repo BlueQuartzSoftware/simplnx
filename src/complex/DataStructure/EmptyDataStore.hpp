@@ -167,12 +167,7 @@ public:
   }
 
 private:
-<<<<<<< HEAD
-  size_t m_NumComponents;
-  size_t m_TupleCount;
-=======
   ShapeType m_ComponentShape;
   ShapeType m_TupleShape;
->>>>>>> 64ab861 (refactor DatArray and DataStore to use std::vector<size_t> for Tuple and Comp dimensions)
 };
 } // namespace complex
