@@ -11,19 +11,25 @@ class GridTileIndex;
 
 /**
  * @class GridMontage
- * @brief
+ * @brief The GridMontage class is a type of montage where geometries are laid
+ * out in a three dimensional grid.
  */
 class COMPLEX_EXPORT GridMontage : virtual public AbstractMontage
 {
 public:
-  friend class DataStructure;
-
   using Iterator = void;
   using DimensionsType = SizeVec3;
   using TileIdType = GridTileIndex;
 
   /**
-   * @brief
+   * @brief Attempts to create a new GridMontage and insert it into the
+   * DataStructure. If the parentId is provided, then the created montage will
+   * be nested under the target DataObject. Otherwise, the montage will be
+   * placed directly under the DataStructure.
+   *
+   * If the created montage cannot be placed under the target parent, then this
+   * method returns nullptr. Otherwise, this method returns a pointer to the
+   * created montage.
    * @param ds
    * @param name
    * @param parentId = {}
@@ -32,36 +38,38 @@ public:
   static GridMontage* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
+   * @brief Creates a copy of the specified GridMontage but does not add it to
+   * the DataStructure. It is up to the caller to delete the created montage.
    * @param other
    */
   GridMontage(const GridMontage& other);
 
   /**
-   * @brief
+   * @brief Creates a new GridMontage and moves values from the specified
+   * montage.
    * @param other
    */
   GridMontage(GridMontage&& other) noexcept;
 
-  /**
-   * Empty Destructor
-   */
   virtual ~GridMontage();
 
   /**
-   * @brief Returns typename of the DataObject as a std::string.
+   * @brief Returns the typename of the DataObject as a std::string.
    * @return std::string
    */
   std::string getTypeName() const override;
 
   /**
-   * @brief Returns a shallow copy of the current DataObject.
+   * @brief Returns a shallow copy of the current DataObject but does not add
+   * it to the DataStructure. It is up to the caller to delete the returned
+   * value.
    * @return DataObject*
    */
   DataObject* shallowCopy() override;
 
   /**
-   * @brief Returns a deep copy of hte current DataObject.
+   * @brief Returns a deep copy of the current DataObject but does not add it
+   * to the DataStructure. It is up to the caller to delete the returned value.
    * @return DataObject*
    */
   DataObject* deepCopy() override;
@@ -79,7 +87,7 @@ public:
   size_t getColumnCount() const;
 
   /**
-   * @brief Returns the depth of the montage in number of items.
+   * @brief Returns the number of items deep are in the montage.
    * @return size_t
    */
   size_t getDepth() const;

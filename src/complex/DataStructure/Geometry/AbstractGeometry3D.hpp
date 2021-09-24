@@ -35,7 +35,7 @@ public:
   void resizeVertexList(size_t newNumVertices);
 
   /**
-   * @brief setVertices
+   * @brief Sets the SharedVertexList.
    * @param vertices
    */
   void setVertices(const SharedVertexList* vertices);

@@ -69,7 +69,7 @@ public:
   void initializeWithZeros() override;
 
   /**
-   * @brief Resizes the vertex list to the target size.
+   * @brief Resizes the vertex list to the target getSize.
    * @param newNumVertices
    */
   void resizeVertexList(size_t newNumVertices);

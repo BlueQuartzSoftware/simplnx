@@ -12,14 +12,15 @@ public:
   virtual ~DataGroupFactory();
 
   /**
-   * @brief Returns the name of the DataObject subclass that the factory is designed for.
+   * @brief Returns the name of the DataObject subclass that the factory is
+   * designed for.
    * @return std::string
    */
   std::string getDataTypeName() const override;
 
   /**
-   * @brief Creates and adds an HexahedralGeom to the provided DataStructure from
-   * the target HDF5 ID.
+   * @brief Creates and adds an HexahedralGeom to the provided DataStructure
+   * from the target HDF5 ID.
    * @param ds DataStructure to add the created geometry to.
    * @param targetId ID for the target HDF5 object.
    * @param groupId ID for the parent HDF5 group.

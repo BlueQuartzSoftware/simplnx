@@ -31,7 +31,7 @@ public:
    * @param tupleCount
    */
   DataStore(size_t tupleSize, size_t tupleCount)
-  : m_TupleSize(tupleSize)
+  : m_NumComponents(tupleSize)
   , m_TupleCount(tupleCount)
   , m_Data(std::make_unique<value_type[]>(tupleSize * tupleCount))
   {
@@ -44,7 +44,7 @@ public:
    * @param data
    */
   DataStore(size_t tupleSize, size_t tupleCount, std::unique_ptr<value_type[]>&& data)
-  : m_TupleSize(tupleSize)
+  : m_NumComponents(tupleSize)
   , m_TupleCount(tupleCount)
   , m_Data(std::move(data))
   {
@@ -56,10 +56,10 @@ public:
    */
   DataStore(const DataStore& other)
   : m_TupleCount(other.m_TupleCount)
-  , m_TupleSize(other.m_TupleSize)
-  , m_Data(std::make_unique<value_type[]>(m_TupleCount * m_TupleSize))
+  , m_NumComponents(other.m_NumComponents)
+  , m_Data(std::make_unique<value_type[]>(m_TupleCount * m_NumComponents))
   {
-    const size_t count = m_TupleCount * m_TupleSize;
+    const size_t count = m_TupleCount * m_NumComponents;
     for(size_t i = 0; i < count; i++)
     {
       m_Data[i] = other.m_Data[i];
@@ -72,7 +72,7 @@ public:
    */
   DataStore(DataStore&& other) noexcept
   : m_TupleCount(std::move(other.m_TupleCount))
-  , m_TupleSize(std::move(other.m_TupleSize))
+  , m_NumComponents(std::move(other.m_NumComponents))
   , m_Data(std::move(other.m_Data))
   {
   }
@@ -92,9 +92,9 @@ public:
    * @brief Returns the number of elements in each Tuple.
    * @return size_t
    */
-  size_t getTupleSize() const override
+  size_t getNumComponents() const override
   {
-    return m_TupleSize;
+    return m_NumComponents;
   }
 
   /**
@@ -200,7 +200,7 @@ public:
   {
     int32_t rank = 1;
 
-    hsize_t dataSize = m_TupleSize * m_TupleCount;
+    hsize_t dataSize = m_NumComponents * m_TupleCount;
 
     hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
     hid_t dataspaceId = H5Screate_simple(rank, &dataSize, nullptr);
@@ -209,7 +209,7 @@ public:
     {
       throw std::runtime_error("Error writing DataStore tuple count");
     }
-    err = H5::Writer::Generic::writeScalarAttribute(dataId, ".", H5::Constants::DataStore::TupleSize, m_TupleSize);
+    err = H5::Writer::Generic::writeScalarAttribute(dataId, ".", H5::Constants::DataStore::NumComponents, m_NumComponents);
     if(err < 0)
     {
       throw std::runtime_error("Error writing DataStore tuple size");
@@ -233,7 +233,7 @@ public:
     uint64_t tDims;
     uint64_t cDims;
     H5::Reader::Generic::readScalarAttribute(dataId, ".", H5::Constants::DataStore::TupleCount, tDims);
-    H5::Reader::Generic::readScalarAttribute(dataId, ".", H5::Constants::DataStore::TupleSize, cDims);
+    H5::Reader::Generic::readScalarAttribute(dataId, ".", H5::Constants::DataStore::NumComponents, cDims);
 
     auto buffer = new T[tDims * cDims];
     try
@@ -265,7 +265,7 @@ public:
   }
 
 private:
-  uint64_t m_TupleSize;
+  uint64_t m_NumComponents;
   uint64_t m_TupleCount;
   std::unique_ptr<value_type[]> m_Data;
 };

@@ -171,10 +171,19 @@ protected:
   DataObject(DataStructure& ds, std::string name);
 
   /**
-   * @brief Attempts to add the specified
+   * @brief Attempts to add the specified DataObject to the target DataStructure.
+   * If a parentId is provided, then the DataObject will be added as a child to
+   * the target DataObject. Otherwise, the DataObject will be added directly
+   * under the DataStructure. If the DataObject is added successfully, the
+   * target parent will take ownership of the added DataObject.
+   *
+   * Returns true if the operation succeeds. Returns false otherwise.
+   * @param ds
+   * @param data
+   * @param parentId
    * @return bool
    */
-  static bool AddObjectToDS(DataStructure& ds, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId);
+  static bool AttemptToAddObject(DataStructure& ds, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId);
 
   /**
    * @brief Marks the specified BaseGroup as a parent.

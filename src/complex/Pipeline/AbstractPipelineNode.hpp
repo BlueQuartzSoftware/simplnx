@@ -5,27 +5,37 @@
 
 #include "nod/nod.hpp"
 
-#include "complex/Common/Uuid.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
-class IPipelineMessage;
+class AbstractPipelineMessage;
 class Pipeline;
 
-class COMPLEX_EXPORT IPipelineNode
+/**
+ * @class AbstractPipelineNode
+ * @brief The AbstractPipelineNode class serves as the abstract base class for
+ * all items that can be contained within a pipeline. Shared API is declared
+ * for implementation in derived classes.
+ */
+class COMPLEX_EXPORT AbstractPipelineNode
 {
 public:
-  using IdType = Uuid;
-  using SignalType = nod::signal<void(IPipelineNode*, const std::shared_ptr<IPipelineMessage>&)>;
+  using SignalType = nod::signal<void(AbstractPipelineNode*, const std::shared_ptr<AbstractPipelineMessage>&)>;
 
+  /**
+   * @brief Specific types of pipeline node for quick type checking.
+   */
   enum class NodeType
   {
     Pipeline,
     Filter
   };
 
+  /**
+   * @brief Specific states of pipeline and filter execution.
+   */
   enum class Status
   {
     Dirty = 0,
@@ -33,7 +43,7 @@ public:
     Completed
   };
 
-  virtual ~IPipelineNode();
+  virtual ~AbstractPipelineNode();
 
   /**
    * @brief Returns the node type for quick type checking.
@@ -42,28 +52,23 @@ public:
   virtual NodeType getType() const = 0;
 
   /**
-   * @brief Returns the pipeline node's ID.
-   * @return IdType
-   */
-  IdType getId() const;
-
-  /**
-   * @brief Returns the PipelineNode's name.
+   * @brief Returns the pipeline node's name.
    * @return std::string
    */
   virtual std::string getName() = 0;
 
   /**
-   * @brief Returns the parent node.
+   * @brief Returns a pointer to the parent Pipeline. Returns nullptr if no
+   * parent could be found.
    * @return Pipeline*
    */
-  Pipeline* getParentNode() const;
+  Pipeline* getParentPipeline() const;
 
   /**
-   * @brief Sets a new parent node.
+   * @brief Sets the parent Pipeline pointer.
    * @param parent
    */
-  void setParentNode(Pipeline* parent);
+  void setParentPipeline(Pipeline* parent);
 
   /**
    * @brief Attempts to preflight the node using the provided DataStructure.
@@ -99,13 +104,13 @@ public:
   Status getStatus() const;
 
   /**
-   * @brief Returns the DataStructure
+   * @brief Returns a const reference to the executed DataStructure.
    * @return const DataStructure&
    */
   const DataStructure& getDataStructure() const;
 
   /**
-   * @brief Returns the DataStructure resulting from Preflight.
+   * @brief Returns a const reference to the preflight DataStructure.
    * @return const DataStructure&
    */
   const DataStructure& getPreflightStructure() const;
@@ -146,12 +151,14 @@ protected:
    * @brief Notifies known observers of the provided message.
    * @param msg
    */
-  void notify(const std::shared_ptr<IPipelineMessage>& msg);
+  void notify(const std::shared_ptr<AbstractPipelineMessage>& msg);
 
   /**
-   * @brief Default constructor
+   * @brief Constructs a new AbstractPipelineNode. If no parent pipeline is specified,
+   * then the node is created without one.
+   * @param parent = nullptr
    */
-  IPipelineNode(Pipeline* parent = nullptr);
+  AbstractPipelineNode(Pipeline* parent = nullptr);
 
   /**
    * @brief Updates the stored DataStructure. This should only be called from
@@ -168,15 +175,6 @@ protected:
   void setPreflightStructure(const DataStructure& ds);
 
 private:
-  /**
-   * @brief Creates and returns a new pipeline node ID.
-   * @return IdType
-   */
-  static IdType CreateId();
-
-  ////////////
-  // Variables
-  IdType m_Id;
   Status m_Status = Status::Dirty;
   Pipeline* m_Parent;
   DataStructure m_DataStructure;

@@ -2,7 +2,7 @@
 
 #include <cstddef>
 
-#include "IPipelineMessage.hpp"
+#include "AbstractPipelineMessage.hpp"
 
 namespace complex
 {
@@ -10,13 +10,16 @@ class Pipeline;
 
 /**
  * @class NodeRemovedMessage
- * @brief
+ * @brief The NodeRemovedMessage class exists to notify Pipeline observers
+ * that a target AbstractPipelineNode was removed from a pipeline at the
+ * specified index.
  */
-class COMPLEX_EXPORT NodeRemovedMessage : public IPipelineMessage
+class COMPLEX_EXPORT NodeRemovedMessage : public AbstractPipelineMessage
 {
 public:
   /**
-   * @brief
+   * @brief Constructs a NodeRemovedMessage specifying the index of the
+   * removed node from a target Pipeline.
    * @param pipeline
    * @param index
    */

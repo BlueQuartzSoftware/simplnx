@@ -45,7 +45,7 @@ const DataObject* DataRenamedMessage::getData() const
   return getDataStructure()->getData(m_Id);
 }
 
-std::string DataRenamedMessage::getOldName() const
+std::string DataRenamedMessage::getPreviousName() const
 {
   return m_OldName;
 }

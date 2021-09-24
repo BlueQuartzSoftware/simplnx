@@ -5,7 +5,7 @@
 using namespace complex;
 
 NodeRemovedMessage::NodeRemovedMessage(Pipeline* pipeline, size_t index)
-: IPipelineMessage(pipeline)
+: AbstractPipelineMessage(pipeline)
 , m_Index(index)
 {
 }

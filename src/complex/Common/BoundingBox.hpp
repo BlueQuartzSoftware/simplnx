@@ -11,7 +11,7 @@ namespace complex
  * @class BoundingBox
  * @brief The BoundingBox class is designed to describe a box in 3D space
  * within which all points of interest are contained. This is primarily
- * used to describe the size of a geometry but is also used by GeometryMath
+ * used to describe the getSize of a geometry but is also used by GeometryMath
  * for calculations checking for points in a given region. As the BoundingBox
  * class operates along X, Y, and Z axis, no rotation information is available.
  */

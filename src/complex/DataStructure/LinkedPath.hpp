@@ -22,18 +22,18 @@ public:
   friend class DataStructure;
 
   /**
-   * @brief Constructs an empty LinkedPath.
+   * @brief Constructs an empty LinkedPath. Empty paths are not valid.
    */
   LinkedPath();
 
   /**
-   * @brief Copy constructor
+   * @brief Creates a copy of the target LinkedPath.
    * @param rhs
    */
   LinkedPath(const LinkedPath& rhs);
 
   /**
-   * @brief Move constructor
+   * @brief Creates a new LinkedPath and moves values from the target path.
    * @param rhs
    */
   LinkedPath(LinkedPath&& rhs) noexcept;
@@ -41,8 +41,10 @@ public:
   virtual ~LinkedPath();
 
   /**
-   * @brief Checks if the path is valid. Returns false if the path is empty or
-   * any DataObjects along the path cannot be found. Returns true otherwise.
+   * @brief Checks if the path is valid.
+   *
+   * Returns false if the path is empty or any DataObjects along the path
+   * cannot be found. Returns true otherwise.
    * @return bool
    */
   bool isValid() const;
@@ -70,13 +72,15 @@ public:
    * @brief Returns the DataObject ID at the specified position in the path.
    * This method does not perform bounds checking.
    * @param index
-   * @return
+   * @return DataObject::IdType
    */
   DataObject::IdType operator[](size_t index) const;
 
   /**
-   * @brief Returns the ID for the target DataObject. Throws an exception if
-   * the path is empty.
+   * @brief Returns the ID for the target DataObject.
+   *
+   * Throws an exception if the path is empty. Otherwise, this will operate
+   * even if the path is otherwise invalid.
    * @return DataObject::IdType
    */
   DataObject::IdType getId() const;
@@ -122,7 +126,7 @@ public:
    * between DataObject names. If no divider is provided, " / " is used instead.
    *
    * Names are provided using getNameAt(size_t).
-   * @param div
+   * @param div = " / "
    * @return std::string
    */
   std::string toString(const std::string& div = " / ") const;
@@ -144,14 +148,14 @@ public:
   /**
    * @brief Checks inequality with the specified LinkedPath.
    * @param rhs
-   * @return
+   * @return bool
    */
   bool operator!=(const LinkedPath& rhs) const;
 
   /**
    * @brief Checks inequality with the specified DataPath.
    * @param rhs
-   * @return
+   * @return bool
    */
   bool operator!=(const DataPath& rhs) const;
 

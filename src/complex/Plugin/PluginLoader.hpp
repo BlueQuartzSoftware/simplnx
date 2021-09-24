@@ -22,7 +22,7 @@ public:
    * @brief Constructs a PluginLoader targetting the specified path.
    * The plugin is loaded upon construction and unloaded when the object is
    * destroyed.
-   * @param path = ""
+   * @param path
    */
   PluginLoader(const std::filesystem::path& path);
 

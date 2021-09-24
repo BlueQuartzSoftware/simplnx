@@ -156,37 +156,25 @@ public:
   void setTimeValue(float value);
 
   /**
-   * @brief
+   * @brief Returns true if time series are enabled. Returns false otherwise.
    * @return bool
    */
   bool getTimeSeriesEnabled() const;
 
   /**
-   * @brief
+   * @brief Sets whether or not time series are enabled.
    * @param value
    */
   void setTimeSeriesEnabled(bool value);
 
   /**
-   * @brief
-   * @return ITransformContainer*
-   */
-  // ITransformContainer* getTransformContainer() const;
-
-  /**
-   * @brief
-   * @param container
-   */
-  // void setTransformContainer(const ITransformContainer* container);
-
-  /**
-   * @brief
+   * @brief Returns the length units used by the geometry.
    * @return LengthUnit
    */
   LengthUnit getUnits() const;
 
   /**
-   * @brief
+   * @brief Sets the length units used by the geometry.
    * @param units
    */
   void setUnits(LengthUnit units);

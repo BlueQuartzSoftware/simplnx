@@ -31,7 +31,7 @@ void FindElementsContainingVert(const DataArray<K>* elemList, DynamicListArray<T
 
   auto& elems = *elemList;
   const size_t numElems = elemList->getTupleCount();
-  const size_t numVertsPerElem = elemList->getTupleSize();
+  const size_t numVertsPerElem = elemList->getNumComponents();
 
   // Allocate the basic structures
   std::vector<T> linkCount(numVerts, 0);
@@ -84,7 +84,7 @@ ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListAr
   auto parentId = dynamicList->getParents().front()->getId();
   auto& elems = *elemList;
   const size_t numElems = elemList->getTupleCount();
-  const size_t numVertsPerElem = elemList->getTupleSize();
+  const size_t numVertsPerElem = elemList->getNumComponents();
   size_t numSharedVerts = 0;
   std::vector<T> linkCount(numElems, 0);
   ErrorCode err = 0;
@@ -213,7 +213,7 @@ template <typename T>
 void FindTetEdges(const DataArray<T>* tetList, DataArray<T>* edgeList)
 {
   const size_t numElems = tetList->getTupleCount();
-  const size_t numVertsPerTet = tetList->getTupleSize();
+  const size_t numVertsPerTet = tetList->getNumComponents();
   auto& tets = *tetList;
 
   std::pair<T, T> edge;
@@ -261,7 +261,7 @@ template <typename T>
 void FindHexEdges(const DataArray<T>* hexList, DataArray<T>* edge_List)
 {
   const size_t numElems = hexList->getTupleCount();
-  const size_t numVertsPerHex = hexList->getTupleSize();
+  const size_t numVertsPerHex = hexList->getNumComponents();
 
   auto& hexas = *hexList;
 
@@ -321,7 +321,7 @@ void FindTetFaces(const DataArray<T>* tetList, DataArray<T>* faceList)
 {
   auto& tets = *tetList;
   const size_t numElems = tetList->getTupleCount();
-  const size_t numVertsPerTet = tetList->getTupleSize();
+  const size_t numVertsPerTet = tetList->getNumComponents();
 
   std::tuple<T, T, T> face;
   std::set<std::tuple<T, T, T>> faceSet;
@@ -368,7 +368,7 @@ void FindHexFaces(const DataArray<T>* hexList, DataArray<T>* faceList)
 {
   auto& hexas = *hexList;
   const size_t numElems = hexList->getTupleCount();
-  const size_t numVertsPerHex = hexList->getTupleSize();
+  const size_t numVertsPerHex = hexList->getNumComponents();
 
   std::tuple<T, T, T, T> face;
   std::set<std::tuple<T, T, T, T>> faceSet;
@@ -419,7 +419,7 @@ void FindUnsharedTetEdges(const DataArray<T>* tetList, DataArray<T>* edgeList)
 {
   auto& tets = *tetList;
   const size_t numElems = tetList->getTupleCount();
-  const size_t numVertsPerTet = tetList->getTupleSize();
+  const size_t numVertsPerTet = tetList->getNumComponents();
 
   std::pair<T, T> edge;
   std::map<std::pair<T, T>, T> edgeMap;
@@ -480,7 +480,7 @@ template <typename T>
 void FindUnsharedHexEdges(const DataArray<T>* hexList, DataArray<T>* edge_List)
 {
   const size_t numElems = hexList->getTupleCount();
-  const size_t numVertsPerHex = hexList->getTupleSize();
+  const size_t numVertsPerHex = hexList->getNumComponents();
   auto& hexas = *hexList;
 
   std::pair<T, T> edge;
@@ -551,7 +551,7 @@ template <typename T>
 void FindUnsharedTetFaces(const DataArray<T>* tetList, DataArray<T>* faceList)
 {
   const size_t numElems = tetList->getTupleCount();
-  const size_t numVertsPerTet = tetList->getTupleSize();
+  const size_t numVertsPerTet = tetList->getNumComponents();
   auto& tets = *tetList;
 
   std::tuple<T, T, T> face;
@@ -613,7 +613,7 @@ void FindUnsharedHexFaces(const DataArray<T>* hexList, DataArray<T>* faceList)
 {
   auto& hexas = *hexList;
   const size_t numElems = hexList->getTupleCount();
-  const size_t numVertsPerHex = hexList->getTupleSize();
+  const size_t numVertsPerHex = hexList->getNumComponents();
 
   std::tuple<T, T, T, T> face;
   std::map<std::tuple<T, T, T, T>, T> faceMap;
@@ -677,7 +677,7 @@ template <typename T>
 void Find2DElementEdges(const DataArray<T>* elemList, DataArray<T>* edgeList)
 {
   const size_t numElems = elemList->getTupleCount();
-  const size_t numVertsPerElem = elemList->getTupleSize();
+  const size_t numVertsPerElem = elemList->getNumComponents();
   auto& elems = *elemList;
   T v0 = 0;
   T v1 = 0;
@@ -746,7 +746,7 @@ void Find2DUnsharedEdges(const DataArray<T>* elemList, DataArray<T>* edgeList)
 {
   auto& elems = *elemList;
   const size_t numElems = elemList->getTupleCount();
-  const size_t numVertsPerElem = elemList->getTupleSize();
+  const size_t numVertsPerElem = elemList->getNumComponents();
   T v0 = 0;
   T v1 = 0;
 
@@ -831,7 +831,7 @@ void FindElementCentroids(const DataArray<T>* elemList, const FloatArray* vertic
 {
   auto& elems = *elemList;
   const size_t numElems = elemList->getTupleCount();
-  const size_t numVertsPerElem = elemList->getTupleSize();
+  const size_t numVertsPerElem = elemList->getNumComponents();
   size_t numDims = 3;
   auto& elementCentroids = *centroids;
   auto& vertex = *vertices;
@@ -864,7 +864,7 @@ void FindTetVolumes(const DataArray<T>* tetList, const FloatArray* vertices, Flo
 {
   auto& tets = *tetList;
   const size_t numTets = tetList->getTupleCount();
-  const size_t numVertsPerTet = tetList->getTupleSize();
+  const size_t numVertsPerTet = tetList->getNumComponents();
   auto& vertex = *vertices;
   auto& volumePtr = *volumes;
 
@@ -895,7 +895,7 @@ template <typename T>
 void FindHexVolumes(const DataArray<T>* hexList, const FloatArray* vertices, FloatArray* volumes)
 {
   const size_t numHexas = hexList->getTupleCount();
-  const size_t numElementsPerHex = hexList->getTupleSize();
+  const size_t numElementsPerHex = hexList->getNumComponents();
   auto& vertex = *vertices;
   auto& volumePtr = *volumes;
   auto& hexas = *hexList;
@@ -971,7 +971,7 @@ void Find2DElementAreas(const DataArray<T>* elemList, const FloatArray* vertices
 
   auto& elems = *elemList;
   const size_t numElems = elemList->getTupleCount();
-  const size_t numVertsPerElem = static_cast<int64_t>(elemList->getTupleSize());
+  const size_t numVertsPerElem = static_cast<int64_t>(elemList->getNumComponents());
   if(numVertsPerElem < 3)
   {
     return;

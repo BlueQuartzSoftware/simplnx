@@ -19,21 +19,27 @@ public:
 
   struct ElementList
   {
-    T ncells;
+    T numCells;
     K* cells;
   };
 
   /**
-   * @brief
+   * @brief Attempts to create a new DynamicListArray and insert it into the
+   * DataStructure. If a parentId is provided, the created DynamicListArray
+   * will be nested under the target DataObject. Otherwise, it will be placed
+   * directly under the DataStructure.
+   *
+   * Returns a pointer to the created DynamicListArray if the operation succeeded.
+   * Returns nullptr otherwise.
    * @param ds
    * @param name
-   * @param parentId
+   * @param parentId = {}
    * @return DynamicListArray*
    */
   static DynamicListArray* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
   {
     auto data = std::shared_ptr<DynamicListArray>(new DynamicListArray(ds, name));
-    if(!AddObjectToDS(ds, data, parentId))
+    if(!AttemptToAddObject(ds, data, parentId))
     {
       return nullptr;
     }
@@ -42,7 +48,8 @@ public:
 
   /**
    * @brief Creates a copy of the specified DynamicListArray. This copy is not
-   * added to the DataStructure.
+   * added to the DataStructure. The caller is responsible for deleting the
+   * DynamicListArray.
    * @param other
    */
   DynamicListArray(const DynamicListArray& other)
@@ -53,7 +60,8 @@ public:
   }
 
   /**
-   * @brief Move constructor
+   * @brief Creates a new DynamicListArray and moves values from the target
+   * object. The caller is responsible for deleting the created DynamicListArray.
    * @param other
    */
   DynamicListArray(DynamicListArray&& other)
@@ -84,7 +92,7 @@ public:
   }
 
   /**
-   * @brief Returns typename of the DataObject as a std::string.
+   * @brief Returns the typename of the DataObject as a std::string.
    * @return std::string
    */
   std::string getTypeName() const override
@@ -93,7 +101,7 @@ public:
   }
 
   /**
-   * @brief Returns the current size.
+   * @brief Returns the current array size.
    * @return size_t
    */
   size_t size() const
@@ -102,23 +110,19 @@ public:
   }
 
   /**
-   * @brief deepCopy
+   * @brief Creates a copy of the object. The caller is responsible for
+   * deleting the returned value.
    * @return DataObject*
    */
   DataObject* deepCopy() override
   {
     DynamicListArray* copy = new DynamicListArray(*this);
     std::vector<T> linkCounts(m_Size, 0);
-    // if(forceNoAllocate)
-    //{
-    //  copy->allocateLists(linkCounts);
-    //  return copy;
-    //}
 
     // Figure out how many entries, and for each entry, how many cells
-    for(size_t ptId = 0; ptId < m_Size; ptId++)
+    for(size_t pointId = 0; pointId < m_Size; pointId++)
     {
-      linkCounts[ptId] = this->m_Array[ptId].ncells;
+      linkCounts[pointId] = this->m_Array[pointId].numCells;
     }
     // Allocate all that in the copy
     copy->allocateLists(linkCounts);
@@ -132,7 +136,7 @@ public:
   }
 
   /**
-   * @brief Returns a shallow copy of the DataObject.
+   * @brief The DynamicListArray cannot be shallow copied.
    * @return DataObject*
    */
   DataObject* shallowCopy() override
@@ -142,120 +146,120 @@ public:
 
   /**
    * @brief insertCellReference
-   * @param ptId
+   * @param pointId
    * @param pos
    * @param cellId
    */
-  inline void insertCellReference(size_t ptId, size_t pos, size_t cellId)
+  inline void insertCellReference(size_t pointId, size_t pos, size_t cellId)
   {
-    this->m_Array[ptId].cells[pos] = cellId;
+    this->m_Array[pointId].cells[pos] = cellId;
   }
 
   /**
    * @brief Get a link structure given a point id.
-   * @param ptId
-   * @return
+   * @param pointId
+   * @return ElementList&
    */
-  ElementList& getElementList(size_t ptId) const
+  ElementList& getElementList(size_t pointId) const
   {
-    return this->m_Array[ptId];
+    return this->m_Array[pointId];
   }
 
   /**
    * @brief setElementList
-   * @param ptId
-   * @param nCells
+   * @param pointId
+   * @param numCells
    * @param data
-   * @return
+   * @return bool
    */
-  bool setElementList(size_t ptId, T nCells, K* data)
+  bool setElementList(size_t pointId, T numCells, K* data)
   {
-    if(ptId >= m_Size)
+    if(pointId >= m_Size)
     {
       return false;
     }
-    if(m_Array[ptId].cells != nullptr && m_Array[ptId].ncells > 0)
+    if(m_Array[pointId].cells != nullptr && m_Array[pointId].numCells > 0)
     {
-      delete[] this->m_Array[ptId].cells;
-      m_Array[ptId].cells = nullptr;
-      m_Array[ptId].ncells = 0;
+      delete[] this->m_Array[pointId].cells;
+      m_Array[pointId].cells = nullptr;
+      m_Array[pointId].numCells = 0;
     }
-    m_Array[ptId].ncells = nCells;
-    // If nCells is huge then there could be problems with this
-    this->m_Array[ptId].cells = new K[nCells];
-    std::memcpy(m_Array[ptId].cells, data, sizeof(K) * nCells);
+    m_Array[pointId].numCells = numCells;
+    // If numCells is huge then there could be problems with this
+    this->m_Array[pointId].cells = new K[numCells];
+    std::memcpy(m_Array[pointId].cells, data, sizeof(K) * numCells);
     return true;
   }
 
   /**
    * @brief setElementList
-   * @param ptId
+   * @param pointId
    * @param list
-   * @return
+   * @return bool
    */
-  bool setElementList(size_t ptId, ElementList& list)
+  bool setElementList(size_t pointId, ElementList& list)
   {
-    T nCells = list.ncells;
+    T nCells = list.numCells;
     K* data = list.cells;
-    if(ptId >= m_Size)
+    if(pointId >= m_Size)
     {
       return false;
     }
-    if(m_Array[ptId].cells != nullptr && m_Array[ptId].ncells > 0)
+    if(m_Array[pointId].cells != nullptr && m_Array[pointId].numCells > 0)
     {
-      delete[] this->m_Array[ptId].cells;
-      m_Array[ptId].cells = nullptr;
-      m_Array[ptId].ncells = 0;
+      delete[] this->m_Array[pointId].cells;
+      m_Array[pointId].cells = nullptr;
+      m_Array[pointId].numCells = 0;
     }
-    m_Array[ptId].ncells = nCells;
-    // If nCells is huge then there could be problems with this
-    this->m_Array[ptId].cells = new K[nCells];
-    std::memcpy(m_Array[ptId].cells, data, sizeof(K) * nCells);
+    m_Array[pointId].numCells = nCells;
+    // If numCells is huge then there could be problems with this
+    this->m_Array[pointId].cells = new K[nCells];
+    std::memcpy(m_Array[pointId].cells, data, sizeof(K) * nCells);
     return true;
   }
 
   /**
-   * @brief Get the number of cells using the point specified by ptId.
-   * @param ptId
-   * @return
+   * @brief Get the number of cells using the point specified by pointId.
+   * @param pointId
+   * @return T
    */
-  T getNumberOfElements(size_t ptId) const
+  T getNumberOfElements(size_t pointId) const
   {
-    return this->m_Array[ptId].ncells;
+    return this->m_Array[pointId].numCells;
   }
 
   /**
    * @brief Return a list of cell ids using the point.
-   * @param ptId
-   * @return
+   * @param pointId
+   * @return K*
    */
-  K* getElementListPointer(size_t ptId) const
+  K* getElementListPointer(size_t pointId) const
   {
-    return this->m_Array[ptId].cells;
+    return this->m_Array[pointId].cells;
   }
 
   /**
    * @brief deserializeLinks
    * @param buffer
-   * @param nElements
+   * @param numElements
    */
-  void deserializeLinks(std::vector<uint8_t>& buffer, size_t nElements)
+  void deserializeLinks(std::vector<uint8_t>& buffer, size_t numElements)
   {
     size_t offset = 0;
-    allocate(nElements); // Allocate all the links with 0 and nullptr;
+    allocate(numElements); // Allocate all the links with 0 and nullptr;
     uint8_t* bufPtr = &(buffer.front());
 
     // Walk the array and allocate all the array links to Zero and nullptr
-    T* ncells = nullptr;
+    T* numCells = nullptr;
     // int32_t* cells = nullptr;
-    for(size_t i = 0; i < nElements; ++i)
+    for(size_t i = 0; i < numElements; ++i)
     {
-      ncells = reinterpret_cast<T*>(bufPtr + offset);
-      this->m_Array[i].ncells = *ncells; // Set the number of cells in this link
+      numCells = reinterpret_cast<T*>(bufPtr + offset);
+      this->m_Array[i].numCells = *numCells; // Set the number of cells in this link
       offset += 2;
-      this->m_Array[i].cells = new K[(*ncells)];                                   // Allocate a new chunk of memory to store the list
-      std::memcpy(this->m_Array[i].cells, bufPtr + offset, (*ncells) * sizeof(K)); // Copy from the buffer into the new list memory
-      offset += (*ncells) * sizeof(K);                                             // Increment the offset
+      this->m_Array[i].cells = new K[(*numCells)];                                   // Allocate a new chunk of memory to store the list
+      std::memcpy(this->m_Array[i].cells, bufPtr + offset, (*numCells) * sizeof(K)); // Copy from the buffer into the new list memory
+      offset += (*numCells) * sizeof(K);                                             // Increment the offset
     }
   }
 
@@ -269,10 +273,10 @@ public:
     allocate(linkCounts.size());
     for(typename std::vector<T>::size_type i = 0; i < linkCounts.size(); i++)
     {
-      this->m_Array[i].ncells = linkCounts[i];
+      this->m_Array[i].numCells = linkCounts[i];
       if(linkCounts[i] > 0)
       {
-        this->m_Array[i].cells = new K[this->m_Array[i].ncells];
+        this->m_Array[i].cells = new K[this->m_Array[i].numCells];
       }
     }
   }
@@ -291,7 +295,7 @@ protected:
   //----------------------------------------------------------------------------
   // This will allocate memory to hold all the NeighborList structures where each
   // structure is initialized to Zero Entries and a nullptr Pointer
-  void allocate(size_t sz)
+  void allocate(size_t size)
   {
     static typename DynamicListArray<T, K>::ElementList linkInit = {0, nullptr};
 
@@ -309,12 +313,12 @@ protected:
       delete[] this->m_Array;
     }
 
-    this->m_Size = sz;
+    this->m_Size = size;
     // Allocate a whole new set of structures
-    this->m_Array = new typename DynamicListArray<T, K>::ElementList[sz];
+    this->m_Array = new typename DynamicListArray<T, K>::ElementList[size];
 
     // Initialize each structure to have 0 entries and nullptr pointer.
-    for(size_t i = 0; i < sz; i++)
+    for(size_t i = 0; i < size; i++)
     {
       this->m_Array[i] = linkInit;
     }
