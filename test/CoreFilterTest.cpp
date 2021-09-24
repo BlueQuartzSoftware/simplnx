@@ -88,6 +88,7 @@ TEST_CASE("RunCoreFilter")
     args.insert("n_skip_lines", std::make_any<u64>(k_NSkipLines));
     args.insert("delimiter_choice", std::make_any<u64>(0));
     args.insert("output_data_array", std::make_any<DataPath>(dataPath));
+
     // auto callback = [](const IFilter::Message& message) { fmt::print("{}: {}\n", message.type, message.message); };
     // Result<> result = filter.execute(ds, args, IFilter::MessageHandler{callback});
     Result<> result = filter.execute(ds, args);
