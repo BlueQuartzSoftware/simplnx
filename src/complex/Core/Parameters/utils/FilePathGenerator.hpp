@@ -34,7 +34,7 @@ namespace FilePathGenerator
  * @param paddingDigits the number of padding digits to use when generating the integer index value
  * @return
  */
-std::vector<std::string> GenerateFileList(int32_t start, int32_t end, int32_t increment, bool& hasMissingFiles, bool stackLowToHigh, const std::string& inputPath, const std::string& filePrefix,
+COMPLEX_EXPORT std::vector<std::string> GenerateFileList(int32_t start, int32_t end, int32_t increment, bool& hasMissingFiles, bool stackLowToHigh, const std::string& inputPath, const std::string& filePrefix,
                                           const std::string& fileSuffix, const std::string& fileExtension, int32_t paddingDigits);
 
 } // namespace FilePathGenerator
