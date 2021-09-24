@@ -9,7 +9,7 @@ namespace complex
 /**
  * @class EmptyDataStore
  * @brief The EmptyDataStore class serves as a placeholder IDataStore for use
- * in preflight where data is not available but the number and size of tuples
+ * in preflight where data is not available but the number and getSize of tuples
  * is known.
  * @tparam T
  */
@@ -22,10 +22,10 @@ public:
   using const_reference = typename IDataStore<T>::const_reference;
 
   /**
-   * @brief Constructs an empty data store with a tuple size and count of 0.
+   * @brief Constructs an empty data store with a tuple getSize and count of 0.
    */
   EmptyDataStore()
-  : m_TupleSize(0)
+  : m_NumComponents(0)
   , m_TupleCount(0)
   {
   }
@@ -36,7 +36,7 @@ public:
    * @param tupleCount
    */
   EmptyDataStore(size_t tupleSize, size_t tupleCount)
-  : m_TupleSize(tupleSize)
+  : m_NumComponents(tupleSize)
   , m_TupleCount(tupleCount)
   {
   }
@@ -47,7 +47,7 @@ public:
    */
   EmptyDataStore(const EmptyDataStore& other)
   : m_TupleCount(other.m_TupleCount)
-  , m_TupleSize(other.m_TupleSize)
+  , m_NumComponents(other.m_NumComponents)
   {
   }
 
@@ -57,7 +57,7 @@ public:
    */
   EmptyDataStore(EmptyDataStore&& other) noexcept
   : m_TupleCount(std::move(other.m_TupleCount))
-  , m_TupleSize(std::move(other.m_TupleSize))
+  , m_NumComponents(std::move(other.m_NumComponents))
   {
   }
 
@@ -73,17 +73,17 @@ public:
   }
 
   /**
-   * @brief Returns the target tuple size.
+   * @brief Returns the target tuple getSize.
    * @return size_t
    */
-  size_t getTupleSize() const override
+  size_t getNumComponents() const override
   {
-    return m_TupleSize;
+    return m_NumComponents;
   }
 
   /**
    * @brief Throws an exception because this should never be called. The
-   * EmptyDataStore class contains no data other than its target size.
+   * EmptyDataStore class contains no data other than its target getSize.
    * @param tupleCount
    */
   void resizeTuples(size_t tupleCount) override
@@ -93,7 +93,7 @@ public:
 
   /**
    * @brief Throws an exception because this should never be called. The
-   * EmptyDataStore class contains no data other than its target size.
+   * EmptyDataStore class contains no data other than its target getSize.
    * @param index
    * @return value_type
    */
@@ -104,7 +104,7 @@ public:
 
   /**
    * @brief Throws an exception because this should never be called. The
-   * EmptyDataStore class contains no data other than its target size.
+   * EmptyDataStore class contains no data other than its target getSize.
    * @param index
    * @param value
    */
@@ -115,7 +115,7 @@ public:
 
   /**
    * @brief Throws an exception because this should never be called. The
-   * EmptyDataStore class contains no data other than its target size.
+   * EmptyDataStore class contains no data other than its target getSize.
    * @param index
    * @return const_reference
    */
@@ -126,7 +126,7 @@ public:
 
   /**
    * @brief Throws an exception because this should never be called. The
-   * EmptyDataStore class contains no data other than its target size.
+   * EmptyDataStore class contains no data other than its target getSize.
    * @param  index
    * @return const_reference
    */
@@ -137,7 +137,7 @@ public:
 
   /**
    * @brief Throws an exception because this should never be called. The
-   * EmptyDataStore class contains no data other than its target size.
+   * EmptyDataStore class contains no data other than its target getSize.
    * @param  index
    * @return reference
    */
@@ -167,7 +167,7 @@ public:
   }
 
 private:
-  size_t m_TupleSize;
+  size_t m_NumComponents;
   size_t m_TupleCount;
 };
 } // namespace complex

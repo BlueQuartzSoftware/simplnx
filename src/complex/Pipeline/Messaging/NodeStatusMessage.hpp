@@ -1,37 +1,37 @@
 #pragma once
 
-#include "complex/Pipeline/IPipelineNode.hpp"
-#include "complex/Pipeline/Messaging/IPipelineMessage.hpp"
+#include "complex/Pipeline/AbstractPipelineNode.hpp"
+#include "complex/Pipeline/Messaging/AbstractPipelineMessage.hpp"
 
 namespace complex
 {
-class FilterNode;
+class PipelineFilter;
 class IFilter;
 
 /**
  * @class NodeStatusMessage
- * @brief The NodeStatusMessage class is used to notify observers that the
- * IPipelineNode's Status has been changed.
+ * @brief The NodeStatusMessage class is used to notify observers that a
+ * AbstractPipelineNode's Status has been changed.
  */
-class COMPLEX_EXPORT NodeStatusMessage : public IPipelineMessage
+class COMPLEX_EXPORT NodeStatusMessage : public AbstractPipelineMessage
 {
 public:
   /**
-   * @brief Constructs a new NodeStatusMessage.
+   * @brief Constructs a new NodeStatusMessage specifying the node and its Status.
    * @param node
    * @param status
    */
-  NodeStatusMessage(IPipelineNode* node, IPipelineNode::Status status);
+  NodeStatusMessage(AbstractPipelineNode* node, AbstractPipelineNode::Status status);
 
   virtual ~NodeStatusMessage();
 
   /**
-   * @brief Returns the updated IPipelineNode::Status.
-   * @return IPipelineNode::Status
+   * @brief Returns the updated AbstractPipelineNode::Status.
+   * @return AbstractPipelineNode::Status
    */
-  IPipelineNode::Status getStatus() const;
+  AbstractPipelineNode::Status getStatus() const;
 
 private:
-  IPipelineNode::Status m_Status;
+  AbstractPipelineNode::Status m_Status;
 };
 } // namespace complex

@@ -80,7 +80,7 @@ herr_t complex::H5::Support::getDatasetInfo(hid_t locationID, const std::string&
   {
     /* Get the class. */
     classType = H5Tget_class(typeID);
-    /* Get the size. */
+    /* Get the getSize. */
     sizeType = H5Tget_size(typeID);
     /* Release the datatype. */
     error = H5Tclose(typeID);

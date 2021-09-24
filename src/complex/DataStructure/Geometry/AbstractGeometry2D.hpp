@@ -19,83 +19,90 @@ public:
   virtual ~AbstractGeometry2D();
 
   /**
-   * @brief
+   * @brief Resizes the vertex list with the new number of vertices.
    * @param newNumVertices
    */
   void resizeVertexList(size_t newNumVertices);
 
   /**
-   * @brief
+   * @brief Sets a new SharedVertexList, replacing any previous list.
    * @param vertices
    */
   void setVertices(const SharedVertexList* vertices);
 
   /**
-   * @brief
+   * @brief Returns a pointer to the SharedVertexList. Returns nullptr if none
+   * are available.
    * @return SharedVertexList*
    */
   SharedVertexList* getVertices();
 
   /**
-   * @brief
+   * @brief Returns a const pointer to the SharedVertexList. Returns nullptr
+   * if none are available.
    * @return const SharedVertexList*
    */
   const SharedVertexList* getVertices() const;
 
   /**
-   * @brief
+   * @brief Returns the Point3D<float> coordinate for the specified vertex ID.
    * @param vertId
-   * @return
+   * @return Point3D<float>
    */
   virtual Point3D<float> getCoords(size_t vertId) const = 0;
 
   /**
-   * @brief
+   * @brief Sets the coordinates for the specified vertex ID.
    * @param vertId
    * @param coords
    */
   virtual void setCoords(size_t vertId, const Point3D<float>& coords) = 0;
 
   /**
-   * @brief
+   * @brief Returns the number of vertices in the geometry.
    * @return size_t
    */
   virtual size_t getNumberOfVertices() const = 0;
 
   /**
-   * @brief
+   * @brief Resizes the edge list to match the specified number of edges.
    * @param newNumEdges
    */
   virtual void resizeEdgeList(size_t newNumEdges) = 0;
 
   /**
-   * @brief
+   * @brief Returns a pointer to the SharedEdgeList. Returns nullptr if no
+   * edge list could be found.
    * @return SharedEdgeList*
    */
   SharedEdgeList* getEdges();
 
   /**
-   * @brief
+   * @brief Returns a const pointer to the SharedEdgeList. Returns nullptr if
+   * no edge list could be found.
    * @return const SharedEdgeList*
    */
   const SharedEdgeList* getEdges() const;
 
   /**
-   * @brief
+   * @brief Sets the vertex IDs making up the specified edge. This method does
+   * nothing if the edge list could not be found.
    * @param edgeId
    * @param verts
    */
   void setVertsAtEdge(size_t edgeId, const size_t verts[2]);
 
   /**
-   * @brief
+   * @brief Returns the vertices that make up the specified edge by reference.
+   * This method does nothing if the edge list could not be found.
    * @param edgeId
    * @param verts
    */
   void getVertsAtEdge(size_t edgeId, size_t verts[2]) const;
 
   /**
-   * @brief
+   * @brief Returns the vertex coordinates for a specified edge by reference.
+   * This method does nothing if the edge list could not be found.
    * @param edgeId
    * @param vert1
    * @param vert2
@@ -103,7 +110,8 @@ public:
   virtual void getVertCoordsAtEdge(size_t edgeId, Point3D<float>& vert1, Point3D<float>& vert2) const = 0;
 
   /**
-   * @brief
+   * @brief Returns the number of edges in the geometry. Returns 0 if no edge
+   * list could be found.
    * @return size_t
    */
   size_t getNumberOfEdges() const;
@@ -115,7 +123,7 @@ public:
   virtual StatusCode findEdges() = 0;
 
   /**
-   * @brief
+   * @brief Deletes the shared edge list and removes it from the DataStructure.
    */
   void deleteEdges();
 
@@ -126,24 +134,26 @@ public:
   virtual StatusCode findUnsharedEdges() = 0;
 
   /**
-   * @brief
+   * @brief Returns a const pointer to the unshared edge list. Returns nullptr
+   * if no unshared edge list could be found.
    * @return const SharedEdgeList*
    */
   const SharedEdgeList* getUnsharedEdges() const;
 
   /**
-   * @brief
+   * @brief Deletes the unshared edge list and removes it from the DataStructure.
    */
   void deleteUnsharedEdges();
 
   /**
-   * @brief
+   * @brief Sets the shared edge list, replacing any existing shared edge list.
    * @param edges
    */
   void setEdges(const SharedEdgeList* edges);
 
   /**
-   * @brief
+   * @brief Sets the unshared edge list, replacing any existing unshared edge
+   * list.
    * @param bEdgeList
    */
   void setUnsharedEdges(const SharedEdgeList* bEdgeList);

@@ -10,7 +10,9 @@ class GridMontage;
 
 /**
  * @class GridTileIndex
- * @brief
+ * @brief The GridTileIndex class is the corresponding tile index for
+ * GridMontages. An index corresponds to a single 3D tile position in the
+ * montage.
  */
 class COMPLEX_EXPORT GridTileIndex : public AbstractTileIndex
 {
@@ -18,60 +20,72 @@ public:
   friend class GridMontage;
 
   /**
-   * @brief Empty Constructor
+   * @brief Creates an invalid GridTileIndex.
    */
   GridTileIndex();
 
   /**
-   * @brief Copy constructor
+   * @brief Creates a copy of the specified GridTileIndex.
+   * @param other
    */
   GridTileIndex(const GridTileIndex& other);
 
   /**
-   * @brief Move constructor
+   * @brief Creates a new GridTileIndex and moves values from the specified
+   * GridTileIndex.
    */
   GridTileIndex(GridTileIndex&& other) noexcept;
 
   virtual ~GridTileIndex();
 
   /**
+   * @brief Returns the index's row position.
    * @return size_t
    */
   size_t getRow() const;
 
   /**
+   * @brief Returns the index's column position.
    * @return size_t
    */
   size_t getCol() const;
 
   /**
+   * @brief Returns the index's depth position.
    * @return size_t
    */
   size_t getDepth() const;
 
   /**
+   * @brief Returns the index's 3D tile position.
    * @return SizeVec3Type
    */
   SizeVec3 getTilePos() const;
 
   /**
+   * @brief Returns a const pointer to the target geometry.
    * @return AbstractGeometry*
    */
   const AbstractGeometry* getGeometry() const override;
 
   /**
+   * @brief Returns a TooltipGenerator containing information for generating an
+   * HTML tooltip based on current values.
    * @return TooltipGenerator
    */
   TooltipGenerator getToolTipGenerator() const override;
 
   /**
+   * @brief Returns true if the index is valid. Returns false otherwise.
+   * A valid index has both a target GridMontage and 3D position.
    * @return bool
    */
   bool isValid() const override;
 
 protected:
   /**
-   * @brief
+   * @brief Creates a new GridTileIndex for the target GridMontage and 3D tile
+   * position.
    * @param montage
    * @param pos
    */

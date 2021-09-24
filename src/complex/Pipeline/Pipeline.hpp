@@ -4,7 +4,7 @@
 
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Pipeline/IPipelineNode.hpp"
+#include "complex/Pipeline/AbstractPipelineNode.hpp"
 #include "complex/Pipeline/Messaging/PipelineNodeObserver.hpp"
 
 namespace complex
@@ -13,14 +13,16 @@ class FilterHandle;
 
 /**
  * @class Pipeline
- * @brief The Pipeline class is a type of IPipelineNode that contains a list of
- * IPipelineNodes in a specific order that can be chained together and executed as
- * a single entity.
- * As a subclass of IPipelineNode, Pipelines can be nested within other Pipelines.
+ * @brief The Pipeline class is a type of AbstractPipelineNode that contains a
+ * list of AbstractPipelineNodes in a specific order that can be chained
+ * together and executed as a single entity.
+ *
+ * As a subclass of AbstractPipelineNode, Pipelines can be nested within other
+ * Pipelines.
  */
-class COMPLEX_EXPORT Pipeline : public IPipelineNode
+class COMPLEX_EXPORT Pipeline : public AbstractPipelineNode
 {
-  using node_type = std::shared_ptr<IPipelineNode>;
+  using node_type = std::shared_ptr<AbstractPipelineNode>;
   using collection_type = std::vector<node_type>;
 
 public:
@@ -31,18 +33,18 @@ public:
   /**
    * @brief Constructs a pipeline with the specified name. If no name is
    * provided, a default name of "Unnamed Pipeline" will be used.
-   * @param name
+   * @param name = "Unnamed Pipeline"
    */
   Pipeline(const std::string& name = "Unnamed Pipeline");
 
   /**
-   * @brief Copy constructor
+   * @brief Creates a copy of the specified Pipeline.
    * @param other
    */
   Pipeline(const Pipeline& other);
 
   /**
-   * @brief Move constructor
+   * @brief Creates a new Pipeline and moves values from the specified Pipeline.
    * @param other
    */
   Pipeline(Pipeline&& other) noexcept;
@@ -56,7 +58,7 @@ public:
   NodeType getType() const override;
 
   /**
-   * @brief Returns the pipeline's current name.
+   * @brief Returns the pipeline's name.
    * @return std::string
    */
   std::string getName() override;
@@ -169,7 +171,7 @@ public:
   bool executeFrom(const index_type& index);
 
   /**
-   * @brief Returns the size of the pipeline segment.
+   * @brief Returns the getSize of the pipeline segment.
    * @return size_t
    */
   size_t size() const;
@@ -178,27 +180,27 @@ public:
    * @brief Returns a pointer to the pipeline node at the given index.
    * This function does not include bounds checking.
    * @param index
-   * @return IPipelineNode*
+   * @return AbstractPipelineNode*
    */
-  IPipelineNode* operator[](index_type index);
+  AbstractPipelineNode* operator[](index_type index);
 
   /**
    * @brief Returns a pointer to the pipeline node at the given index.
    * Returns nullptr if the specified index is greater than or equal to the
-   * size of the pipeline.
+   * getSize of the pipeline.
    * @param index
-   * @return const IPipelineNode*
+   * @return const AbstractPipelineNode*
    */
-  IPipelineNode* at(index_type index);
+  AbstractPipelineNode* at(index_type index);
 
   /**
    * @brief Returns a const pointer to the pipeline node at the given index.
    * Returns nullptr if the specified index is greater than or equal to the
-   * size of the pipeline.
+   * getSize of the pipeline.
    * @param index
-   * @return const IPipelineNode*
+   * @return const AbstractPipelineNode*
    */
-  const IPipelineNode* at(index_type index) const;
+  const AbstractPipelineNode* at(index_type index) const;
 
   /**
    * @brief Inserts the provided pipeline node at the specified index. Returns
@@ -207,11 +209,11 @@ public:
    * @param node
    * @return bool
    */
-  bool insertAt(index_type index, IPipelineNode* node);
+  bool insertAt(index_type index, AbstractPipelineNode* node);
 
   /**
-   * @brief Inserts the provided filter at the specified index. Returns true if
-   * the process succeeds. Returns false otherwise.
+   * @brief Moves and inserts the provided filter at the specified index.
+   * Returns true if the process succeeds. Returns false otherwise.
    *
    * This will always fail if the provided filter is null.
    * @param index
@@ -233,12 +235,12 @@ public:
    * @brief Inserts a pipeline node at the specified iterator position. Returns
    * true if the process succeeds. Returns false otherwise.
    *
-   * This will always fail if the provided IPipelineNode is null.
+   * This will always fail if the provided AbstractPipelineNode is null.
    * @param pos
    * @param ptr
    * @return bool
    */
-  bool insertAt(iterator pos, const std::shared_ptr<IPipelineNode>& ptr);
+  bool insertAt(iterator pos, const std::shared_ptr<AbstractPipelineNode>& ptr);
 
   /**
    * @brief Removes the specified pipeline node from the pipeline segment.
@@ -246,7 +248,7 @@ public:
    * @param node
    * @return bool
    */
-  bool remove(IPipelineNode* node);
+  bool remove(AbstractPipelineNode* node);
 
   /**
    * @brief Removes the pipeline node specified by the provided iterator.
@@ -283,7 +285,7 @@ public:
    * @param node
    * @return bool
    */
-  bool contains(IPipelineNode* node) const;
+  bool contains(AbstractPipelineNode* node) const;
 
   /**
    * @brief Returns true if the pipeline segment contains the specified filter.
@@ -298,7 +300,7 @@ public:
    * segment.
    * @param node
    */
-  bool push_front(IPipelineNode* node);
+  bool push_front(AbstractPipelineNode* node);
 
   /**
    * @brief Inserts a pipeline node at the front of the pipeline segment based
@@ -311,7 +313,7 @@ public:
    * @brief Inserts the specified pipeline node at the end of the pipeline segment.
    * @param node
    */
-  bool push_back(IPipelineNode* node);
+  bool push_back(AbstractPipelineNode* node);
 
   /**
    * @brief Inserts a pipeline node at the back of the pipeline segment based
@@ -321,30 +323,12 @@ public:
   bool push_back(const FilterHandle& handle);
 
   /**
-   * @brief Returns an iterator to the pipeline node with the specified ID.
-   * Returns an iterator to the end of the pipeline segment if the node is not
-   * found.
-   * @param id
-   * @return iterator
-   */
-  iterator find(const IdType& id);
-
-  /**
-   * @brief Returns a const_iterator to the pipeline node with the specified ID.
-   * Returns a const_iterator to the end of the pipeline segment if the node is
-   * not found.
-   * @param id
-   * @return const_iterator
-   */
-  const_iterator find(const IdType& id) const;
-
-  /**
    * @brief Returns an iterator to the pipeline node. Returns an iterator to
    * the end of the pipeline segment if the node is not found
    * @param node
    * @return iterator
    */
-  iterator find(IPipelineNode* node);
+  iterator find(AbstractPipelineNode* node);
 
   /**
    * @brief Returns a const_iterator to the pipeline node. Returns a
@@ -352,7 +336,7 @@ public:
    * @param node
    * @return const_iterator
    */
-  const_iterator find(IPipelineNode* node) const;
+  const_iterator find(AbstractPipelineNode* node) const;
 
   /**
    * @brief Returns an iterator to the beginning of the collection.
@@ -378,7 +362,18 @@ public:
    */
   const_iterator end() const;
 
+  /**
+   * @brief Copies the target Pipeline.
+   * @param rhs
+   * @return Pipeline&
+   */
   Pipeline& operator=(const Pipeline& rhs) noexcept;
+
+  /**
+   * @brief Moves values from the target Pipeline.
+   * @param rhs
+   * @return Pipeline&
+   */
   Pipeline& operator=(Pipeline&& rhs) noexcept;
 
 private:

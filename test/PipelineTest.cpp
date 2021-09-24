@@ -3,8 +3,8 @@
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterHandle.hpp"
 #include "complex/Filter/Arguments.hpp"
-#include "complex/Pipeline/FilterNode.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
+#include "complex/Pipeline/PipelineFilter.hpp"
 
 using namespace complex;
 
@@ -35,7 +35,7 @@ TEST_CASE("Complex Pipeline")
   FilterHandle handle = Constants::filterHandle1;
 
   Pipeline pipeline;
-  FilterNode* node = FilterNode::Create(handle);
+  PipelineFilter* node = PipelineFilter::Create(handle);
   REQUIRE(node != nullptr);
   REQUIRE(node->getParameters().size() > 0);
   REQUIRE(pipeline.push_back(node));
@@ -48,7 +48,7 @@ TEST_CASE("Complex Pipeline")
 Pipeline createPipeline()
 {
   Pipeline pipeline;
-  auto node = FilterNode::Create(Constants::filterHandle1);
+  auto node = PipelineFilter::Create(Constants::filterHandle1);
   pipeline.push_back(node);
   pipeline.push_back(Constants::filterHandle2);
 
@@ -67,7 +67,7 @@ Pipeline createPipeline()
   }
   // Set Filter2
   {
-    auto node2 = dynamic_cast<FilterNode*>(pipeline[1]);
+    auto node2 = dynamic_cast<PipelineFilter*>(pipeline[1]);
     auto parameters = node2->getParameters();
     Arguments args;
     args.insert("param1", 5);

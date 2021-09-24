@@ -1,12 +1,12 @@
 #include "FilterPreflightMessage.hpp"
 
 #include "complex/Filter/Output.hpp"
-#include "complex/Pipeline/FilterNode.hpp"
+#include "complex/Pipeline/PipelineFilter.hpp"
 
 using namespace complex;
 
-FilterPreflightMessage::FilterPreflightMessage(FilterNode* filterNode, const std::vector<complex::Warning>& warnings, const std::vector<complex::Error>& errors)
-: IPipelineMessage(filterNode)
+FilterPreflightMessage::FilterPreflightMessage(PipelineFilter* filterNode, const std::vector<complex::Warning>& warnings, const std::vector<complex::Error>& errors)
+: AbstractPipelineMessage(filterNode)
 , m_Warnings(warnings)
 , m_Errors(errors)
 {
@@ -14,7 +14,7 @@ FilterPreflightMessage::FilterPreflightMessage(FilterNode* filterNode, const std
 
 FilterPreflightMessage::~FilterPreflightMessage() = default;
 
-complex::FilterNode* FilterPreflightMessage::getFilterNode() const
+complex::PipelineFilter* FilterPreflightMessage::getFilterNode() const
 {
   return m_FilteNode;
 }

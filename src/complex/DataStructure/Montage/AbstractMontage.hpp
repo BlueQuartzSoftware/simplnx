@@ -25,13 +25,16 @@ public:
   using BoundsType = void;
 
   /**
-   * @brief
+   * @brief Creates a copy of the target AbstractMontage but does not add it to
+   * DataStructure. The caller is responsible for deleting the constructed
+   * montage.
    * @param other
    */
   AbstractMontage(const AbstractMontage& other);
 
   /**
-   * @brief
+   * @brief Create an AbstractMontage and moves values from the specified
+   * AbstractMontage.
    * @param other
    */
   AbstractMontage(AbstractMontage&& other) noexcept;
@@ -69,32 +72,33 @@ public:
   virtual TooltipGenerator getTooltipGenerator() const = 0;
 
   /**
-   * @brief Returns a pointer to the geometry at the specified tile index. Returns nullptr
-   * if no geometry was found.
+   * @brief Returns a pointer to the geometry at the specified tile index.
+   * Returns nullptr if no geometry was found.
    * @param index
    * @return AbstractGeometry*
    */
   virtual AbstractGeometry* getGeometry(const AbstractTileIndex* index) = 0;
 
   /**
-   * @brief Returns a pointer to the geometry at the specified tile index. Returns nullptr
-   * if no geometry was found.
+   * @brief Returns a pointer to the geometry at the specified tile index.
+   * Returns nullptr if no geometry was found.
    * @param index
    * @return const AbstractGeometry*
    */
   virtual const AbstractGeometry* getGeometry(const AbstractTileIndex* index) const = 0;
 
   /**
-   * @brief Returns the tile index for the specified geometry. This is a pure virtual method
-   * to be implemented in derived classes. Returns nullptr if the geometry is not
-   * part of the montage.
+   * @brief Returns the tile index for the specified geometry. This is a pure
+   * virtual method to be implemented in derived classes. Returns nullptr if
+   * the geometry is not part of the montage.
    * @param geom
    * @return std::shared_ptr<AbstractTileIndex>
    */
   virtual std::shared_ptr<AbstractTileIndex> getTileIndex(AbstractGeometry* geom) const = 0;
 
   /**
-   * @brief
+   * @brief Sets the geometry for the target tile index. The implementation is
+   * dependent on the derived class.
    * @param index
    * @param geom
    */
@@ -126,19 +130,19 @@ public:
 
 protected:
   /**
-   * @brief
+   * @brief Constructs a new Abstract montage for the target DataStructure
+   * using the provided name.
    * @param ds
    * @param name
    */
   AbstractMontage(DataStructure& ds, const std::string& name);
 
   /**
-   * @brief Checks if the specified DataObject can be added to the montage. Returns true if
-   * the object can be added. Returns false otherwise.
+   * @brief Checks if the specified DataObject can be added to the montage.
+   * Returns true if the object can be added. Returns false otherwise.
 
-   * This is an override of the
-   * method in BaseGroup to ensure that only geometries are added directly to a
-   * montage.
+   * This is an override of the method in BaseGroup to ensure that only
+   * geometries are added directly to a montage.
    * @param obj
    * @return bool
    */

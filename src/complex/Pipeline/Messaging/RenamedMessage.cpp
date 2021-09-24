@@ -5,7 +5,7 @@
 using namespace complex;
 
 RenamedMessage::RenamedMessage(Pipeline* pipeline, const std::string& newName, const std::string& oldName)
-: IPipelineMessage(pipeline)
+: AbstractPipelineMessage(pipeline)
 , m_NewName(newName)
 , m_OldName(oldName)
 {
@@ -18,7 +18,7 @@ std::string RenamedMessage::getNewName() const
   return m_NewName;
 }
 
-std::string RenamedMessage::getOldName() const
+std::string RenamedMessage::getPreviousName() const
 {
   return m_OldName;
 }

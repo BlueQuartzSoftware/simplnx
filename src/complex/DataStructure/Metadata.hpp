@@ -31,13 +31,13 @@ public:
   Metadata();
 
   /**
-   * @brief Copy constructor
+   * @brief Creates a copy of the specified Metadata.
    * @param other
    */
   Metadata(const Metadata& other);
 
   /**
-   * @brief Move constructor
+   * @brief Creates a new Metadata object and moves values from the target.
    * @param other
    */
   Metadata(Metadata&& other) noexcept;
@@ -60,7 +60,8 @@ public:
   void setData(const KeyType& key, const ValueType& value);
 
   /**
-   * @brief Removes the data with the specified key.
+   * @brief Clears the metadata with the specified key. Does nothing if the key
+   * has no data assigned to it.
    * @param key
    */
   void remove(const KeyType& key);
@@ -103,20 +104,19 @@ public:
   ConstIterator end() const;
 
   /**
-   * @brief Copy assignment operator.
+   * @brief Copies data from the specified Metadata.
    * @param rhs
    * @return Metadata&
    */
   Metadata& operator=(const Metadata& rhs);
 
   /**
-   * @brief Move assignment operator.
+   * @brief Moves data from the specified Metadata.
    * @param rhs
    * @return Metadata&
    */
   Metadata& operator=(Metadata&& rhs) noexcept;
 
-protected:
 private:
   std::map<KeyType, ValueType> m_Map;
 };

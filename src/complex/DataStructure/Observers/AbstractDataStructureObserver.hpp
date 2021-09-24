@@ -27,17 +27,21 @@ public:
   AbstractDataStructureObserver();
 
   /**
-   * @brief Copy constructor
+   * @brief Copy constructor not defined.
    * @param other
    */
   AbstractDataStructureObserver(const AbstractDataStructureObserver& other) = delete;
 
   /**
-   * @brief Move constructor
+   * @brief Move constructor not defined.
    * @param other
    */
   AbstractDataStructureObserver(AbstractDataStructureObserver&& other) noexcept = delete;
 
+  /**
+   * @brief Stops observing the current DataStructure, if there is one, and
+   * closes the connection.
+   */
   virtual ~AbstractDataStructureObserver();
 
   /**
@@ -55,13 +59,15 @@ public:
 
   /**
    * @brief Starts observing the specified DataStructure.
-   * Only one DataStructure can be observed at a time.
+   * Only one DataStructure can be observed at a time. This method replaces the
+   * existing target, if there is one, with the new target.
    * @param ds
    */
   void startObservingStructure(DataStructure* ds);
 
   /**
-   * @brief Stops observing the current DataStructure.
+   * @brief Stops observing the current DataStructure and resets the observed
+   * DataStructure pointer.
    */
   void stopObservingStructure();
 

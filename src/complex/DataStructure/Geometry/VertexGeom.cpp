@@ -43,7 +43,7 @@ VertexGeom::~VertexGeom() = default;
 VertexGeom* VertexGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<VertexGeom>(new VertexGeom(ds, name));
-  if(!AddObjectToDS(ds, data, parentId))
+  if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
   }
@@ -146,7 +146,7 @@ size_t VertexGeom::getNumberOfElements() const
 
 AbstractGeometry::StatusCode VertexGeom::findElementSizes()
 {
-  // Vertices are 0-dimensional (they have no size),
+  // Vertices are 0-dimensional (they have no getSize),
   // so simply splat 0 over the sizes array
   auto dataStore = new DataStore<float>(1, getNumberOfElements());
   dataStore->fill(0.0f);

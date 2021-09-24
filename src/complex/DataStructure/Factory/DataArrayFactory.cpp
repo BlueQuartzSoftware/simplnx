@@ -11,7 +11,7 @@ using namespace complex;
 
 namespace Constants
 {
-inline const std::string CompDims = H5::Constants::DataStore::TupleSize;
+inline const std::string CompDims = H5::Constants::DataStore::NumComponents;
 inline const std::string TupleDims = H5::Constants::DataStore::TupleCount;
 } // namespace Constants
 
@@ -30,7 +30,7 @@ std::string DataArrayFactory::getDataTypeName() const
 void readDims(H5::IdType daId, uint64_t& tupleCount, uint64_t& tupleSize)
 {
   H5::Reader::Generic::readScalarAttribute(daId, ".", H5::Constants::DataStore::TupleCount, tupleCount);
-  H5::Reader::Generic::readScalarAttribute(daId, ".", H5::Constants::DataStore::TupleSize, tupleSize);
+  H5::Reader::Generic::readScalarAttribute(daId, ".", H5::Constants::DataStore::NumComponents, tupleSize);
 }
 
 template <typename T>

@@ -21,7 +21,13 @@ public:
   using value_type = T;
 
   /**
-   * @brief
+   * @brief Attempts to create a ScalarData with the specified default value
+   * and insert it into the DataStructure. If a parent ID is provided, the
+   * ScalarData will be inserted under the target parent. Otherwise, the
+   * ScalarData will be nested directly under the DataStructure.
+   *
+   * If the ScalarData cannot be created, this method returns nullptr.
+   * Otherwise, a pointer to the created ScalarData will be returned.
    * @param ds
    * @param name
    * @param defaultValue
@@ -31,7 +37,7 @@ public:
   static ScalarData* Create(DataStructure& ds, const std::string& name, value_type defaultValue, const std::optional<IdType>& parentId = {})
   {
     auto data = std::shared_ptr<ScalarData>(new ScalarData(ds, name, defaultValue));
-    if(!AddObjectToDS(ds, data, parentId))
+    if(!AttemptToAddObject(ds, data, parentId))
     {
       return nullptr;
     }
@@ -39,7 +45,8 @@ public:
   }
 
   /**
-   * @brief Copy constructor
+   * @brief Creates a copy of the ScalarData that is not added to the
+   * DataStructure. It is up to the caller to delete the returned object.
    * @param other
    */
   ScalarData(const ScalarData& other)
@@ -49,7 +56,9 @@ public:
   }
 
   /**
-   * @brief Move constructor
+   * @brief Creates a new ScalarData and moves values data from the target.
+   * The returned ScalarData is not added to the DataStructure, and it is up
+   * to the caller to delete it.
    * @param other
    */
   ScalarData(ScalarData&& other) noexcept
@@ -70,7 +79,9 @@ public:
   }
 
   /**
-   * @brief Returns a shallow copy of the ScalarData.
+   * @brief Returns a shallow copy of the ScalarData. The created ScalarData
+   * is not added to the DataStructure, and it is up to the caller to delete
+   * it.
    * @return DataObject*
    */
   DataObject* shallowCopy() override
@@ -79,7 +90,8 @@ public:
   }
 
   /**
-   * @brief Returns a deep copy of the ScalarData.
+   * @brief Returns a deep copy of the ScalarData. This copy is not added to
+   * the DataStructure, and it is up to the caller to delete it.
    * @return DataObject*
    */
   DataObject* deepCopy() override
@@ -106,7 +118,7 @@ public:
   }
 
   /**
-   * @brief Assignment operator
+   * @brief Assigns a new scalar value.
    * @param data
    * @return ScalarData&
    */
@@ -117,7 +129,7 @@ public:
   }
 
   /**
-   * @brief Copy assignment operator
+   * @brief Copies the value from another ScalarData.
    * @param rhs
    * @return ScalarData&
    */
@@ -128,9 +140,9 @@ public:
   }
 
   /**
-   * @brief Move assignment operator
+   * @brief Moves the value from another ScalarData.
    * @param rhs
-   * @return
+   * @return ScalarData&
    */
   ScalarData& operator=(ScalarData&& rhs) noexcept
   {
@@ -139,7 +151,8 @@ public:
   }
 
   /**
-   * @brief Equality operator
+   * @brief Checks for value equality. Returns true if the values match.
+   * Returns false otherwise.
    * @param rhs
    * @return bool
    */
@@ -149,7 +162,8 @@ public:
   }
 
   /**
-   * @brief Inequality operator
+   * @brief Checks for value inequality. Returns true if the values do not
+   * match. Returns false otherwise.
    * @param rhs
    * @return bool
    */

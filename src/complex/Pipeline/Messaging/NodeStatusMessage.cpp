@@ -1,18 +1,18 @@
 #include "NodeStatusMessage.hpp"
 
-#include "complex/Pipeline/FilterNode.hpp"
+#include "complex/Pipeline/PipelineFilter.hpp"
 
 using namespace complex;
 
-NodeStatusMessage::NodeStatusMessage(IPipelineNode* node, IPipelineNode::Status status)
-: IPipelineMessage(node)
+NodeStatusMessage::NodeStatusMessage(AbstractPipelineNode* node, AbstractPipelineNode::Status status)
+: AbstractPipelineMessage(node)
 , m_Status(status)
 {
 }
 
 NodeStatusMessage::~NodeStatusMessage() = default;
 
-IPipelineNode::Status NodeStatusMessage::getStatus() const
+AbstractPipelineNode::Status NodeStatusMessage::getStatus() const
 {
   return m_Status;
 }

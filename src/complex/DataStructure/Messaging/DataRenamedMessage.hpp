@@ -8,7 +8,6 @@
 
 namespace complex
 {
-
 /**
  * @class DataRenamedMessage
  * @brief The DataRenamedMessage class is a DataStructure message class used
@@ -21,22 +20,23 @@ public:
   static const MessageType MsgType = 3;
 
   /**
-   * @brief Constructs a DataRenamedMessage specifying which DataObject was renamed, its old name, and new name.
+   * @brief Constructs a DataRenamedMessage specifying which DataObject was
+   * renamed, its old name, and new name.
    * @param ds
-   * @param id
-   * @param oldName
+   * @param dataId
+   * @param prevName
    * @param newName
    */
-  DataRenamedMessage(const DataStructure* ds, DataObject::IdType id, const std::string& oldName, const std::string& newName);
+  DataRenamedMessage(const DataStructure* ds, DataObject::IdType dataId, const std::string& prevName, const std::string& newName);
 
   /**
-   * @brief Copy constructor
+   * @brief Creates a copy of the target DataRenamedMessage.
    * @param other
    */
   DataRenamedMessage(const DataRenamedMessage& other);
 
   /**
-   * @brief Move constructor
+   * @brief Creates a new DataRenamedMessage and moves values from the target.
    * @param other
    */
   DataRenamedMessage(DataRenamedMessage&& other) noexcept;
@@ -44,36 +44,35 @@ public:
   virtual ~DataRenamedMessage();
 
   /**
-   * @brief Returns the AbsractDataStructureMessage type.
+   * @brief Returns the AbstractDataStructureMessage type.
    * @return MessageType
    */
   MessageType getMsgType() const override;
 
   /**
-   * @brief Returns the renamed object's ID
+   * @brief Returns the renamed object's ID.
    * @return IdType
    */
   DataObject::IdType getDataId() const;
 
   /**
-   * @brief Returns a read-only pointer to the renamed DataObject.
+   * @brief Returns a const pointer to the renamed DataObject.
    * @return DataObject*
    */
   const DataObject* getData() const;
 
   /**
-   * @brief Returns the previous DataObject name.
+   * @brief Returns the DataObject's previous name.
    * @return std::string
    */
-  std::string getOldName() const;
+  std::string getPreviousName() const;
 
   /**
-   * @brief Returns the new DataObject name.
+   * @brief Returns the DataObject's new name.
    * @return std::string
    */
   std::string getNewName() const;
 
-protected:
 private:
   DataObject::IdType m_Id;
   std::string m_OldName;

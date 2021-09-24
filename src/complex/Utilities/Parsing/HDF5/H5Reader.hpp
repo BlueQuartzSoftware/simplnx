@@ -126,7 +126,7 @@ inline H5::ErrorType readScalarAttribute(H5::IdType locationID, const std::strin
  * @param attributeName The name of the attribute
  * @param dims A std::vector that will hold the sizes of the dimensions
  * @param typeClass The H5 class type
- * @param typeSize THe H5 size of the data
+ * @param typeSize THe H5 getSize of the data
  * @param typeID The Attribute ID - which needs to be closed after you are finished with the data
  * @return
  */
@@ -169,7 +169,7 @@ herr_t readVectorAttribute(hid_t locationID, const std::string& objectName, cons
     hid_t attributeID = H5Aopen_by_name(locationID, objectName.c_str(), attributeName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
     if(attributeID >= 0)
     {
-      // Need to allocate the array size
+      // Need to allocate the array getSize
       H5T_class_t typeClass;
       size_t typeSize = 0;
       std::vector<hsize_t> dims;

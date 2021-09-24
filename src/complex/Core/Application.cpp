@@ -71,17 +71,17 @@ Application::Application()
 : m_FilterList(new FilterList())
 , m_DataReader(new H5DataReader())
 {
-  initialize();
+  assignInstance();
 }
 
 Application::Application(int argc, char** argv)
 : m_FilterList(new FilterList())
 , m_DataReader(new H5DataReader())
 {
-  initialize();
+  assignInstance();
 }
 
-void Application::initialize()
+void Application::assignInstance()
 {
   s_Instance = this;
   m_CurrentPath = findCurrentPath();

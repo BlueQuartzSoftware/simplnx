@@ -3,27 +3,27 @@
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterHandle.hpp"
 #include "complex/Core/FilterList.hpp"
-#include "complex/Pipeline/FilterNode.hpp"
 #include "complex/Pipeline/Messaging/NodeAddedMessage.hpp"
 #include "complex/Pipeline/Messaging/NodeRemovedMessage.hpp"
+#include "complex/Pipeline/PipelineFilter.hpp"
 
 using namespace complex;
 
 Pipeline::Pipeline(const std::string& name)
-: IPipelineNode()
+: AbstractPipelineNode()
 , m_Name(name)
 {
 }
 
 Pipeline::Pipeline(const Pipeline& other)
-: IPipelineNode()
+: AbstractPipelineNode()
 , m_Name(other.m_Name)
 , m_Collection(other.m_Collection)
 {
 }
 
 Pipeline::Pipeline(Pipeline&& other) noexcept
-: IPipelineNode()
+: AbstractPipelineNode()
 , m_Name(std::move(other.m_Name))
 , m_Collection(std::move(other.m_Collection))
 {
@@ -45,7 +45,7 @@ Pipeline& Pipeline::operator=(Pipeline&& rhs) noexcept
   return *this;
 }
 
-IPipelineNode::NodeType Pipeline::getType() const
+AbstractPipelineNode::NodeType Pipeline::getType() const
 {
   return NodeType::Pipeline;
 }
@@ -180,22 +180,12 @@ size_t Pipeline::size() const
   return m_Collection.size();
 }
 
-IPipelineNode* Pipeline::operator[](index_type index)
+AbstractPipelineNode* Pipeline::operator[](index_type index)
 {
   return m_Collection[index].get();
 }
 
-IPipelineNode* Pipeline::at(index_type index)
-{
-  if(index >= size())
-  {
-    return nullptr;
-  }
-
-  return m_Collection[index].get();
-}
-
-const IPipelineNode* Pipeline::at(index_type index) const
+AbstractPipelineNode* Pipeline::at(index_type index)
 {
   if(index >= size())
   {
@@ -205,13 +195,23 @@ const IPipelineNode* Pipeline::at(index_type index) const
   return m_Collection[index].get();
 }
 
-bool Pipeline::insertAt(index_type index, IPipelineNode* node)
+const AbstractPipelineNode* Pipeline::at(index_type index) const
+{
+  if(index >= size())
+  {
+    return nullptr;
+  }
+
+  return m_Collection[index].get();
+}
+
+bool Pipeline::insertAt(index_type index, AbstractPipelineNode* node)
 {
   if(index > size())
   {
     return false;
   }
-  auto ptr = std::shared_ptr<IPipelineNode>(node);
+  auto ptr = std::shared_ptr<AbstractPipelineNode>(node);
   return insertAt(begin() + index, ptr);
 }
 
@@ -222,7 +222,7 @@ bool Pipeline::insertAt(index_type index, IFilter::UniquePointer&& filter)
     return false;
   }
 
-  return insertAt(index, new FilterNode(std::move(filter)));
+  return insertAt(index, new PipelineFilter(std::move(filter)));
 }
 
 bool Pipeline::insertAt(index_type index, const FilterHandle& handle)
@@ -232,7 +232,7 @@ bool Pipeline::insertAt(index_type index, const FilterHandle& handle)
   return insertAt(index, std::move(filter));
 }
 
-bool Pipeline::insertAt(iterator pos, const std::shared_ptr<IPipelineNode>& ptr)
+bool Pipeline::insertAt(iterator pos, const std::shared_ptr<AbstractPipelineNode>& ptr)
 {
   if(ptr == nullptr)
   {
@@ -244,13 +244,13 @@ bool Pipeline::insertAt(iterator pos, const std::shared_ptr<IPipelineNode>& ptr)
   {
     index = size();
   }
-  ptr->setParentNode(this);
+  ptr->setParentPipeline(this);
   m_Collection.insert(pos, ptr);
   notify(std::make_shared<NodeAddedMessage>(this, ptr.get(), index));
   return true;
 }
 
-bool Pipeline::remove(IPipelineNode* node)
+bool Pipeline::remove(AbstractPipelineNode* node)
 {
   auto iter = find(node);
   return remove(iter);
@@ -265,7 +265,7 @@ bool Pipeline::remove(iterator iter)
 
   index_type index = iter - begin();
   auto node = iter->get();
-  node->setParentNode(nullptr);
+  node->setParentPipeline(nullptr);
   m_Collection.erase(iter);
   notify(std::make_shared<NodeRemovedMessage>(this, index));
   return true;
@@ -280,7 +280,7 @@ bool Pipeline::remove(const_iterator iter)
 
   index_type index = iter - begin();
   auto node = iter->get();
-  node->setParentNode(nullptr);
+  node->setParentPipeline(nullptr);
   m_Collection.erase(iter);
   notify(std::make_shared<NodeRemovedMessage>(this, index));
   return true;
@@ -304,7 +304,7 @@ void Pipeline::clear()
   }
 }
 
-bool Pipeline::contains(IPipelineNode* node) const
+bool Pipeline::contains(AbstractPipelineNode* node) const
 {
   return find(node) != end();
 }
@@ -313,7 +313,7 @@ bool Pipeline::contains(IFilter* filter) const
 {
   for(auto node : *this)
   {
-    auto filterNode = dynamic_cast<FilterNode*>(node.get());
+    auto filterNode = dynamic_cast<PipelineFilter*>(node.get());
     if(filterNode == nullptr)
     {
       continue;
@@ -326,52 +326,42 @@ bool Pipeline::contains(IFilter* filter) const
   return false;
 }
 
-bool Pipeline::push_front(IPipelineNode* node)
+bool Pipeline::push_front(AbstractPipelineNode* node)
 {
   if(node == nullptr)
   {
     return false;
   }
-  return insertAt(begin(), std::shared_ptr<IPipelineNode>(node));
+  return insertAt(begin(), std::shared_ptr<AbstractPipelineNode>(node));
 }
 
 bool Pipeline::push_front(const FilterHandle& handle)
 {
-  return push_front(FilterNode::Create(handle));
+  return push_front(PipelineFilter::Create(handle));
 }
 
-bool Pipeline::push_back(IPipelineNode* node)
+bool Pipeline::push_back(AbstractPipelineNode* node)
 {
   if(node == nullptr)
   {
     return false;
   }
-  return insertAt(end(), std::shared_ptr<IPipelineNode>(node));
+  return insertAt(end(), std::shared_ptr<AbstractPipelineNode>(node));
 }
 
 bool Pipeline::push_back(const FilterHandle& handle)
 {
-  return push_back(FilterNode::Create(handle));
+  return push_back(PipelineFilter::Create(handle));
 }
 
-Pipeline::iterator Pipeline::find(const IdType& id)
+Pipeline::iterator Pipeline::find(AbstractPipelineNode* targetNode)
 {
-  return std::find_if(begin(), end(), [=](const std::shared_ptr<IPipelineNode>& node) { return node->getId() == id; });
+  return std::find_if(begin(), end(), [=](const std::shared_ptr<AbstractPipelineNode>& node) { return node.get() == targetNode; });
 }
 
-Pipeline::const_iterator Pipeline::find(const IdType& id) const
+Pipeline::const_iterator Pipeline::find(AbstractPipelineNode* targetNode) const
 {
-  return std::find_if(begin(), end(), [=](const std::shared_ptr<IPipelineNode>& node) { return node->getId() == id; });
-}
-
-Pipeline::iterator Pipeline::find(IPipelineNode* targetNode)
-{
-  return std::find_if(begin(), end(), [=](const std::shared_ptr<IPipelineNode>& node) { return node.get() == targetNode; });
-}
-
-Pipeline::const_iterator Pipeline::find(IPipelineNode* targetNode) const
-{
-  return std::find_if(begin(), end(), [=](const std::shared_ptr<IPipelineNode>& node) { return node.get() == targetNode; });
+  return std::find_if(begin(), end(), [=](const std::shared_ptr<AbstractPipelineNode>& node) { return node.get() == targetNode; });
 }
 
 Pipeline::iterator Pipeline::begin()

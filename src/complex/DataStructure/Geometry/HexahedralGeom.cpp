@@ -49,7 +49,7 @@ HexahedralGeom::~HexahedralGeom() = default;
 HexahedralGeom* HexahedralGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(ds, name));
-  if(!AddObjectToDS(ds, data, parentId))
+  if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
   }

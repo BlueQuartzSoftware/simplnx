@@ -10,18 +10,17 @@
 
 namespace complex
 {
-class IPipelineMessage;
-class IPipelineNode;
+class AbstractPipelineMessage;
+class AbstractPipelineNode;
 
 /**
  * @class PipelineNodeObserver
  * @brief The PipelineNodeObserver class provides API and base functionality
- * for derived classes to listen for messages emitted by target IPipelineNodes.
+ * for derived classes to listen for messages emitted by target
+ * AbstractPipelineNodes.
  */
 class COMPLEX_EXPORT PipelineNodeObserver
 {
-  friend class IPipelineNode;
-
 public:
   /**
    * @brief Constructs a new PipelineNodeObserver.
@@ -43,25 +42,29 @@ public:
   virtual ~PipelineNodeObserver();
 
   /**
-   * @brief Returns a collection of observed pipeline nodes.
-   * @return IPipelineNode*
+   * @brief Returns a pointer to the observed pipeline node. Returns nullptr
+   * if no node is being observed.
+   * @return AbstractPipelineNode*
    */
-  IPipelineNode* getObservedNode() const;
+  AbstractPipelineNode* getObservedNode() const;
 
   /**
-   * @brief Returns true an IPipelineNode is being observed. Returns false otherwise.
+   * @brief Returns true an AbstractPipelineNode is being observed. Returns
+   * false otherwise.
    * @return bool
    */
   bool isObservingNode() const;
 
   /**
-   * @brief Start observing the specified pipeline node.
+   * @brief Start observing the specified pipeline node. If a node is currently
+   * being observed, this method replaces the previous observed node.
    * @param node
    */
-  void startObservingNode(IPipelineNode* node);
+  void startObservingNode(AbstractPipelineNode* node);
 
   /**
-   * @brief Stop observing the current pipeline node.
+   * @brief Stop observing the current pipeline node and clears the observed
+   * pointer.
    */
   void stopObservingNode();
 
@@ -71,10 +74,10 @@ protected:
    * @param node
    * @param msg
    */
-  virtual void onNotify(IPipelineNode* node, const std::shared_ptr<IPipelineMessage>& msg) = 0;
+  virtual void onNotify(AbstractPipelineNode* node, const std::shared_ptr<AbstractPipelineMessage>& msg) = 0;
 
 private:
-  IPipelineNode* m_ObservedNode = nullptr;
+  AbstractPipelineNode* m_ObservedNode = nullptr;
   nod::connection m_Connection;
 };
 } // namespace complex

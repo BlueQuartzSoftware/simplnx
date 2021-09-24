@@ -230,7 +230,7 @@ TEST_CASE("DataStoreTest")
   DataStore<int32_t> store(tupleSize, tupleCount);
 
   REQUIRE(store.getTupleCount() == tupleCount);
-  REQUIRE(store.getTupleSize() == tupleSize);
+  REQUIRE(store.getNumComponents() == tupleSize);
   REQUIRE(store.getSize() == (tupleSize * tupleCount));
 
   // subscript operator
@@ -279,7 +279,7 @@ TEST_CASE("DataArrayTest")
   {
     REQUIRE(dataArr->getSize() == store->getSize());
     REQUIRE(dataArr->getTupleCount() == store->getTupleCount());
-    REQUIRE(dataArr->getTupleSize() == store->getTupleSize());
+    REQUIRE(dataArr->getNumComponents() == store->getNumComponents());
   }
 
   SECTION("test reading / writing to memory")

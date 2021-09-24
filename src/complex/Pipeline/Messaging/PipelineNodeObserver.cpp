@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "complex/Pipeline/IPipelineNode.hpp"
+#include "complex/Pipeline/AbstractPipelineNode.hpp"
 
 using namespace complex;
 
@@ -15,7 +15,7 @@ PipelineNodeObserver::~PipelineNodeObserver()
   stopObservingNode();
 }
 
-IPipelineNode* PipelineNodeObserver::getObservedNode() const
+AbstractPipelineNode* PipelineNodeObserver::getObservedNode() const
 {
   return m_ObservedNode;
 }
@@ -25,7 +25,7 @@ bool PipelineNodeObserver::isObservingNode() const
   return m_ObservedNode != nullptr;
 }
 
-void PipelineNodeObserver::startObservingNode(IPipelineNode* node)
+void PipelineNodeObserver::startObservingNode(AbstractPipelineNode* node)
 {
   if(node == nullptr)
   {
@@ -36,7 +36,7 @@ void PipelineNodeObserver::startObservingNode(IPipelineNode* node)
     stopObservingNode();
   }
 
-  m_Connection = node->getSignal().connect([this](IPipelineNode* node, const std::shared_ptr<IPipelineMessage>& msg) { this->onNotify(node, msg); });
+  m_Connection = node->getSignal().connect([this](AbstractPipelineNode* node, const std::shared_ptr<AbstractPipelineMessage>& msg) { this->onNotify(node, msg); });
   m_ObservedNode = node;
 }
 
