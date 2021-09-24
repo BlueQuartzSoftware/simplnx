@@ -25,7 +25,7 @@ public:
    * and insert it into the DataStructure. If a parent ID is provided, the
    * ScalarData will be inserted under the target parent. Otherwise, the
    * ScalarData will be nested directly under the DataStructure.
-   * 
+   *
    * If the ScalarData cannot be created, this method returns nullptr.
    * Otherwise, a pointer to the created ScalarData will be returned.
    * @param ds

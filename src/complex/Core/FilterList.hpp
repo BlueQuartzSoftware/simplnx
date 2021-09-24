@@ -62,7 +62,7 @@ public:
   /**
    * @brief Returns the AbstractPlugin pointer corresponding to the specified
    * FilterHandle. Returns nullptr if the plugin could not be found.
-   * 
+   *
    * The plugin is owned by the FilterList and will be cleaned up when the
    * complex::Application is destroyed.
    * @param handle
@@ -95,7 +95,7 @@ public:
   /**
    * @brief Returns a pointer to the plugin with the specified ID. Returns
    * nullptr if no plugin with the given ID is found.
-   * 
+   *
    * This plugin is owned by the FilterList and will be cleaned up when the
    * complex::Application closes.
    * @param id

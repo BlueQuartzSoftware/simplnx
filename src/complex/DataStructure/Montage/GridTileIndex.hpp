@@ -69,8 +69,8 @@ public:
   const AbstractGeometry* getGeometry() const override;
 
   /**
-  * @brief Returns a TooltipGenerator containing information for generating an
-  * HTML tooltip based on current values.
+   * @brief Returns a TooltipGenerator containing information for generating an
+   * HTML tooltip based on current values.
    * @return TooltipGenerator
    */
   TooltipGenerator getToolTipGenerator() const override;

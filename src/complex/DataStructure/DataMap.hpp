@@ -178,7 +178,7 @@ public:
 
   /**
    * @brief Searches the DataMap for the target IdType.
-   * 
+   *
    * Children are not expanded in this calculation.
    * @param id
    * @return ConstIterator
@@ -187,7 +187,7 @@ public:
 
   /**
    * @brief Searches the DataMap for the target name.
-   * 
+   *
    * Children are not expanded in this calculation.
    * @param id
    * @return Iterator
@@ -196,7 +196,7 @@ public:
 
   /**
    * @brief Searches the DataMap for the target name.
-   * 
+   *
    * Children are not expanded in this calculation.
    * @param id
    * @return ConstIterator
@@ -211,7 +211,7 @@ public:
 
   /**
    * @brief Returns an iterator to the beginning of the DataMap.
-   * 
+   *
    * Children are not expanded in this calculation.
    * @return Iterator
    */
@@ -225,7 +225,7 @@ public:
 
   /**
    * @brief Returns a const iterator to the beginning of the DataMap.
-   * 
+   *
    * Children are not expanded in this calculation.
    * @return ConstIterator
    */

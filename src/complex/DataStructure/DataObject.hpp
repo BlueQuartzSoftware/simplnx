@@ -176,7 +176,7 @@ protected:
    * the target DataObject. Otherwise, the DataObject will be added directly
    * under the DataStructure. If the DataObject is added successfully, the
    * target parent will take ownership of the added DataObject.
-   * 
+   *
    * Returns true if the operation succeeds. Returns false otherwise.
    * @param ds
    * @param data
