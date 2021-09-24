@@ -1,7 +1,5 @@
 #include "DataObject.hpp"
 
-#include <hdf5.h>
-
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Metadata.hpp"
@@ -156,12 +154,25 @@ H5::IdType DataObject::getH5Id() const
 H5::ErrorType DataObject::writeHdf5(H5::IdType parentId) const
 {
   const std::string typeName = getTypeName();
-  hid_t groupId = H5Gcreate(parentId, getName().c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  auto err = H5::Writer::Generic::writeStringAttribute(parentId, getName(), H5::Constants::DataObject::ObjectTypeTag, typeName);
-  if(err >= 0)
+  hid_t groupId = -1;
+  herr_t err = 0;
+  if(typeName != "DataArray")
   {
-    err = writeHdf5_impl(parentId, groupId);
+    groupId = H5Gcreate(parentId, getName().c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    err = H5::Writer::Generic::writeStringAttribute(parentId, getName(), H5::Constants::DataObject::ObjectTypeTag, typeName);
+    if(err < 0)
+    {
+      H5Gclose(groupId);
+      return err;
+    }
   }
-  H5Gclose(groupId);
+
+  err = writeHdf5_impl(parentId, groupId);
+
+  if(typeName != "DataArray")
+  {
+    H5Gclose(groupId);
+  }
+
   return err;
 }

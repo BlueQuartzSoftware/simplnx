@@ -1,16 +1,17 @@
 #pragma once
 
+#include "complex/DataStructure/DataObject.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
+
 #include <algorithm>
 #include <iterator>
-
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 
 namespace complex
 {
 namespace H5::Constants::DataStore
 {
-static const std::string TupleShape = "TupleShape";
-static const std::string ComponentShape = "ComponentShape";
+// static const std::string TupleShape = "TupleShape";
+// static const std::string ComponentShape = "ComponentShape";
 } // namespace H5::Constants::DataStore
 
 /**
@@ -371,9 +372,10 @@ public:
    * @brief Writes the data store to HDF5. Returns the HDF5 error code should
    * one be encountered. Otherwise, returns 0.
    * @param dataId
+   * @param name
    * @return H5::ErrorType
    */
-  virtual H5::ErrorType writeHdf5(H5::IdType dataId) const = 0;
+  virtual H5::ErrorType writeHdf5(H5::IdType dataId, const std::string& name, DataObject::IdType) const = 0;
 
 protected:
   /**

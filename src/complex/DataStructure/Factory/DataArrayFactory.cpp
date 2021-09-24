@@ -5,6 +5,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
 
+#include <complex/DataStructure/DataStore.hpp>
 #include <memory>
 #include <numeric>
 
@@ -27,17 +28,17 @@ void readDims(H5::IdType daId, uint64& numTuples, uint64& numComponents)
   std::vector<size_t> tupleShape;
   std::vector<size_t> componentShape;
 
-  herr_t err = H5::Support::readVectorAttribute(daId, ".", H5::Constants::DataStore::TupleShape, tupleShape);
+  herr_t err = H5::Support::readVectorAttribute(daId, ".", complex::DataStore<size_t>::k_TupleShape, tupleShape);
   if(err < 0)
   {
-    throw std::runtime_error(fmt::format("Error reading '{}' Attribute from DataSet: {}", H5::Constants::DataStore::TupleShape, H5::Support::getObjectPath(daId)));
+    throw std::runtime_error(fmt::format("Error reading '{}' Attribute from DataSet: {}", complex::DataStore<size_t>::k_TupleShape, H5::Support::getObjectPath(daId)));
   }
   numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
 
-  err = H5::Support::readVectorAttribute(daId, ".", H5::Constants::DataStore::ComponentShape, componentShape);
+  err = H5::Support::readVectorAttribute(daId, ".", complex::DataStore<size_t>::k_ComponentShape, componentShape);
   if(err < 0)
   {
-    throw std::runtime_error(fmt::format("Error reading '{}' Attribute from DataSet: {}", H5::Constants::DataStore::ComponentShape, H5::Support::getObjectPath(daId)));
+    throw std::runtime_error(fmt::format("Error reading '{}' Attribute from DataSet: {}", complex::DataStore<size_t>::k_ComponentShape, H5::Support::getObjectPath(daId)));
   }
   numComponents = std::accumulate(componentShape.cbegin(), componentShape.cend(), static_cast<size_t>(1), std::multiplies<>());
 }
@@ -67,6 +68,11 @@ DataStore<T>* createDataStore(H5::IdType dataStoreId, uint64 numTuples, uint64 n
   return dataStore;
 }
 
+H5::ErrorType DataArrayFactory::readDataStructureGroup(DataStructure& ds, H5::IdType targetId, H5::IdType groupId, const std::optional<DataObject::IdType>& parentId)
+{
+  return -1;
+}
+
 /**
  *
  * @param ds
@@ -75,82 +81,79 @@ DataStore<T>* createDataStore(H5::IdType dataStoreId, uint64 numTuples, uint64 n
  * @param parentId
  * @return
  */
-H5::ErrorType DataArrayFactory::createFromHdf5(DataStructure& ds, H5::IdType targetId, H5::IdType groupId, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType DataArrayFactory::readDataStructureDataset(DataStructure& ds, H5::IdType h5LocationId, const std::string& h5DatasetName, const std::optional<DataObject::IdType>& parentId)
 {
   H5::ErrorType err = 0;
-  std::string name = getObjName(targetId);
+  hid_t typeId = H5::Support::getDatasetType(h5LocationId, h5DatasetName);
+  if(typeId < 0)
+  {
+    return -1;
+  }
+  std::vector<hsize_t> dims;
+  H5T_class_t attr_type;
+  size_t attr_size;
 
-  uint64 tupleCount;
-  uint64 tupleSize;
+  H5::Support::getDatasetInfo(h5LocationId, h5DatasetName, dims, attr_type, attr_size);
 
   if(err >= 0)
   {
-    hid_t dataStoreId = H5Dopen(targetId, "DataStore", H5P_DEFAULT);
-    readDims(dataStoreId, tupleCount, tupleSize);
 
-    hid_t dataTypeId = H5Dget_type(dataStoreId);
-    if(dataTypeId < 0)
+    if(H5Tequal(typeId, H5T_NATIVE_FLOAT) > 0)
     {
-      throw std::runtime_error("DataArrayFactory: Cannot determine DataArray type when reading from HDF5.");
+      auto* dataStore = DataStore<float32>::readHdf5(h5LocationId, h5DatasetName);
+      DataArray<float32>::Create(ds, h5DatasetName, dataStore, parentId);
     }
-
-    if(H5Tequal(dataTypeId, H5T_NATIVE_FLOAT) > 0)
+    else if(H5Tequal(typeId, H5T_NATIVE_DOUBLE) > 0)
     {
-      auto dataStore = createDataStore<float32>(dataStoreId, tupleCount, tupleSize, err);
-      DataArray<float32>::Create(ds, name, dataStore, parentId);
+      auto* dataStore = DataStore<float64>::readHdf5(h5LocationId, h5DatasetName);
+      DataArray<float64>::Create(ds, h5DatasetName, dataStore, parentId);
     }
-    else if(H5Tequal(dataTypeId, H5T_NATIVE_DOUBLE) > 0)
+    else if(H5Tequal(typeId, H5T_NATIVE_INT8) > 0)
     {
-      auto dataStore = createDataStore<float64>(dataStoreId, tupleCount, tupleSize, err);
-      DataArray<float64>::Create(ds, name, dataStore, parentId);
+      auto* dataStore = DataStore<int8>::readHdf5(h5LocationId, h5DatasetName);
+      DataArray<int8>::Create(ds, h5DatasetName, dataStore, parentId);
     }
-    else if(H5Tequal(dataTypeId, H5T_NATIVE_INT8) > 0)
+    else if(H5Tequal(typeId, H5T_NATIVE_INT16) > 0)
     {
-      auto dataStore = createDataStore<int8>(dataStoreId, tupleCount, tupleSize, err);
-      DataArray<int8>::Create(ds, name, dataStore, parentId);
+      auto* dataStore = DataStore<int16>::readHdf5(h5LocationId, h5DatasetName);
+      DataArray<int16>::Create(ds, h5DatasetName, dataStore, parentId);
     }
-    else if(H5Tequal(dataTypeId, H5T_NATIVE_INT16) > 0)
+    else if(H5Tequal(typeId, H5T_NATIVE_INT32) > 0)
     {
-      auto dataStore = createDataStore<int16>(dataStoreId, tupleCount, tupleSize, err);
-      DataArray<int16>::Create(ds, name, dataStore, parentId);
+      auto* dataStore = DataStore<int32>::readHdf5(h5LocationId, h5DatasetName);
+      DataArray<int32>::Create(ds, h5DatasetName, dataStore, parentId);
     }
-    else if(H5Tequal(dataTypeId, H5T_NATIVE_INT32) > 0)
+    else if(H5Tequal(typeId, H5T_NATIVE_INT64) > 0)
     {
-      auto dataStore = createDataStore<int32>(dataStoreId, tupleCount, tupleSize, err);
-      DataArray<int32>::Create(ds, name, dataStore, parentId);
+      auto* dataStore = DataStore<int64>::readHdf5(h5LocationId, h5DatasetName);
+      DataArray<int64>::Create(ds, h5DatasetName, dataStore, parentId);
     }
-    else if(H5Tequal(dataTypeId, H5T_NATIVE_INT64) > 0)
+    else if(H5Tequal(typeId, H5T_NATIVE_UINT8) > 0)
     {
-      auto dataStore = createDataStore<int64>(dataStoreId, tupleCount, tupleSize, err);
-      DataArray<int64>::Create(ds, name, dataStore, parentId);
+      auto* dataStore = DataStore<uint8>::readHdf5(h5LocationId, h5DatasetName);
+      DataArray<uint8>::Create(ds, h5DatasetName, dataStore, parentId);
     }
-    else if(H5Tequal(dataTypeId, H5T_NATIVE_UINT8) > 0)
+    else if(H5Tequal(typeId, H5T_NATIVE_UINT16) > 0)
     {
-      auto dataStore = createDataStore<uint8>(dataStoreId, tupleCount, tupleSize, err);
-      DataArray<uint8>::Create(ds, name, dataStore, parentId);
+      auto* dataStore = DataStore<uint16>::readHdf5(h5LocationId, h5DatasetName);
+      DataArray<uint16>::Create(ds, h5DatasetName, dataStore, parentId);
     }
-    else if(H5Tequal(dataTypeId, H5T_NATIVE_UINT16) > 0)
+    else if(H5Tequal(typeId, H5T_NATIVE_UINT32) > 0)
     {
-      auto dataStore = createDataStore<uint16>(dataStoreId, tupleCount, tupleSize, err);
-      DataArray<uint16>::Create(ds, name, dataStore, parentId);
+      auto* dataStore = DataStore<uint32>::readHdf5(h5LocationId, h5DatasetName);
+      DataArray<uint32>::Create(ds, h5DatasetName, dataStore, parentId);
     }
-    else if(H5Tequal(dataTypeId, H5T_NATIVE_UINT32) > 0)
+    else if(H5Tequal(typeId, H5T_NATIVE_UINT64) > 0)
     {
-      auto dataStore = createDataStore<uint32>(dataStoreId, tupleCount, tupleSize, err);
-      DataArray<uint32>::Create(ds, name, dataStore, parentId);
-    }
-    else if(H5Tequal(dataTypeId, H5T_NATIVE_UINT64) > 0)
-    {
-      auto dataStore = createDataStore<uint64>(dataStoreId, tupleCount, tupleSize, err);
-      DataArray<uint64>::Create(ds, name, dataStore, parentId);
+      auto* dataStore = DataStore<uint64>::readHdf5(h5LocationId, h5DatasetName);
+      DataArray<uint64>::Create(ds, h5DatasetName, dataStore, parentId);
     }
     else
     {
       err = -777;
     }
 
-    H5Tclose(dataTypeId);
-    H5Dclose(dataStoreId);
+    H5Tclose(typeId);
   }
   return err;
 }

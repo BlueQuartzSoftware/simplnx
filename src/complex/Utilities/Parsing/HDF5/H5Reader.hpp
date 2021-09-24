@@ -1,14 +1,14 @@
 #pragma once
 
-#include <numeric>
-#include <optional>
-#include <string>
-
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "complex/complex_export.hpp"
+
+#include <numeric>
+#include <optional>
+#include <string>
 
 namespace complex
 {

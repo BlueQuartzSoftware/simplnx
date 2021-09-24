@@ -86,6 +86,42 @@ herr_t COMPLEX_EXPORT closeId(hid_t objectID, int32 objectType);
 bool COMPLEX_EXPORT datasetExists(hid_t locationID, const std::string& datasetName);
 
 /**
+ * @brief Returns if a given hdf5 object is a group
+ * @param objectID The hdf5 object that contains an object with name objectName
+ * @param objectName The name of the object to check
+ * @return True if the given hdf5 object id is a group
+ */
+inline bool isGroup(hid_t nodeID, const std::string& objectName)
+{
+  H5SUPPORT_MUTEX_LOCK()
+
+  bool isGroup = true;
+  herr_t error = -1;
+  H5O_info_t objectInfo{};
+  error = H5Oget_info_by_name(nodeID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  if(error < 0)
+  {
+    std::cout << "Error in methd H5Gget_objinfo" << std::endl;
+    return false;
+  }
+  switch(objectInfo.type)
+  {
+  case H5O_TYPE_GROUP:
+    isGroup = true;
+    break;
+  case H5O_TYPE_DATASET:
+    isGroup = false;
+    break;
+  case H5O_TYPE_NAMED_DATATYPE:
+    isGroup = false;
+    break;
+  default:
+    isGroup = false;
+  }
+  return isGroup;
+}
+
+/**
  * @brief Get the information about a dataset.
  *
  * @param locationID The parent location of the Dataset
@@ -876,6 +912,260 @@ inline herr_t writeStringDataset(hid_t locationID, const std::string& datasetNam
     //    }
   }
   return returnError;
+}
+
+/**
+ * @brief Writes an attribute to the given object. This method is designed with
+ * a Template parameter that represents a primitive value. If you need to write
+ * an array, please use the other over loaded method that takes a vector.
+ * @param locationID The location to look for objectName
+ * @param objectName The Object to write the attribute to
+ * @param attributeName The  name of the attribute
+ * @param data The data to be written as the attribute
+ * @return Standard HDF error condition
+ */
+template <typename T>
+inline herr_t writeScalarAttribute(hid_t locationID, const std::string& objectName, const std::string& attributeName, T data)
+{
+  H5SUPPORT_MUTEX_LOCK()
+
+  hid_t objectID, dataspaceID, attributeID;
+  herr_t hasAttribute;
+  H5O_info_t objectInfo;
+  herr_t error = 0;
+  herr_t returnError = 0;
+  hsize_t dims = 1;
+  int32_t rank = 1;
+  hid_t dataType = HDFTypeForPrimitive<T>();
+  if(dataType == -1)
+  {
+    return -1;
+  }
+  /* Get the type of object */
+  error = H5Oget_info_by_name(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  if(error < 0)
+  {
+    std::cout << "Error getting object info at locationID (" << locationID << ") with object name (" << objectName << ")" << std::endl;
+    return error;
+  }
+  /* Open the object */
+  objectID = openId(locationID, objectName, objectInfo.type);
+  if(objectID < 0)
+  {
+    std::cout << "Error opening Object for Attribute operations." << std::endl;
+    return static_cast<herr_t>(objectID);
+  }
+
+  /* Create the data space for the attribute. */
+  dataspaceID = H5Screate_simple(rank, &dims, nullptr);
+  if(dataspaceID >= 0)
+  {
+    /* Verify if the attribute already exists */
+    hasAttribute = findAttribute(objectID, attributeName);
+
+    /* The attribute already exists, delete it */
+    if(hasAttribute == 1)
+    {
+      error = H5Adelete(objectID, attributeName.c_str());
+      if(error < 0)
+      {
+        std::cout << "Error Deleting Existing Attribute" << std::endl;
+        returnError = error;
+      }
+    }
+
+    if(error >= 0)
+    {
+      /* Create the attribute. */
+      attributeID = H5Acreate(objectID, attributeName.c_str(), dataType, dataspaceID, H5P_DEFAULT, H5P_DEFAULT);
+      if(attributeID >= 0)
+      {
+        /* Write the attribute data. */
+        error = H5Awrite(attributeID, dataType, &data);
+        if(error < 0)
+        {
+          std::cout << "Error Writing Attribute" << std::endl;
+          returnError = error;
+        }
+      }
+      /* Close the attribute. */
+      error = H5Aclose(attributeID);
+      if(error < 0)
+      {
+        std::cout << "Error Closing Attribute" << std::endl;
+        returnError = error;
+      }
+    }
+    /* Close the dataspace. */
+    error = H5Sclose(dataspaceID);
+    if(error < 0)
+    {
+      std::cout << "Error Closing Dataspace" << std::endl;
+      returnError = error;
+    }
+  }
+  else
+  {
+    returnError = static_cast<herr_t>(dataspaceID);
+  }
+
+  /* Close the object */
+  error = closeId(objectID, objectInfo.type);
+  if(error < 0)
+  {
+    std::cout << "Error Closing HDF5 Object ID" << std::endl;
+    returnError = error;
+  }
+  return returnError;
+}
+
+/**
+ * @brief Writes a null terminated string as an attribute
+ * @param locationID The location to look for objectName
+ * @param objectName The Object to write the attribute to
+ * @param attributeName The name of the Attribute
+ * @param size The number of characters  in the string
+ * @param data pointer to a const char array
+ * @return Standard HDF error conditions
+ */
+inline herr_t writeStringAttribute(hid_t locationID, const std::string& objectName, const std::string& attributeName, hsize_t size, const char* data)
+{
+  H5SUPPORT_MUTEX_LOCK()
+
+  hid_t attributeType;
+  hid_t attributeSpaceID;
+  hid_t attributeID;
+  hid_t objectID;
+  int32_t hasAttribute;
+  H5O_info_t objectInfo{};
+  size_t attributeSize;
+  herr_t error = 0;
+  herr_t returnError = 0;
+
+  /* Get the type of object */
+  returnError = H5Oget_info_by_name(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  if(returnError >= 0)
+  {
+    /* Open the object */
+    objectID = openId(locationID, objectName, objectInfo.type);
+    if(objectID >= 0)
+    {
+      /* Create the attribute */
+      attributeType = H5Tcopy(H5T_C_S1);
+      if(attributeType >= 0)
+      {
+        attributeSize = size; /* extra null term */
+        error = H5Tset_size(attributeType, attributeSize);
+        if(error < 0)
+        {
+          std::cout << "Error Setting H5T Size" << std::endl;
+          returnError = error;
+        }
+        if(error >= 0)
+        {
+          error = H5Tset_strpad(attributeType, H5T_STR_NULLTERM);
+          if(error < 0)
+          {
+            std::cout << "Error adding a null terminator." << std::endl;
+            returnError = error;
+          }
+          if(error >= 0)
+          {
+            attributeSpaceID = H5Screate(H5S_SCALAR);
+            if(attributeSpaceID >= 0)
+            {
+              /* Verify if the attribute already exists */
+              hasAttribute = findAttribute(objectID, attributeName);
+              /* The attribute already exists, delete it */
+              if(hasAttribute == 1)
+              {
+                error = H5Adelete(objectID, attributeName.c_str());
+                if(error < 0)
+                {
+                  std::cout << "Error Deleting Attribute '" << attributeName << "' from Object '" << objectName << "'" << std::endl;
+                  returnError = error;
+                }
+              }
+              if(error >= 0)
+              {
+                /* Create and write the attribute */
+                attributeID = H5Acreate(objectID, attributeName.c_str(), attributeType, attributeSpaceID, H5P_DEFAULT, H5P_DEFAULT);
+                if(attributeID >= 0)
+                {
+                  error = H5Awrite(attributeID, attributeType, data);
+                  if(error < 0)
+                  {
+                    std::cout << "Error Writing String attribute." << std::endl;
+
+                    returnError = error;
+                  }
+                }
+                CloseH5A(attributeID, error, returnError);
+              }
+              CloseH5S(attributeSpaceID, error, returnError);
+            }
+          }
+        }
+        CloseH5T(attributeType, error, returnError);
+      }
+      else
+      {
+        // returnError = attributeType;
+      }
+      /* Close the object */
+      error = closeId(objectID, objectInfo.type);
+      if(error < 0)
+      {
+        std::cout << "Error Closing Object Id" << std::endl;
+        returnError = error;
+      }
+    }
+  }
+  return returnError;
+}
+
+/**
+ * @brief Writes a string as a null terminated attribute.
+ * @param locationID The location to look for objectName
+ * @param objectName The Object to write the attribute to
+ * @param attributeName The name of the Attribute
+ * @param data The string to write as the attribute
+ * @return Standard HDF error conditions
+ */
+inline herr_t writeStringAttribute(hid_t locationID, const std::string& objectName, const std::string& attributeName, const std::string& data)
+{
+  return writeStringAttribute(locationID, objectName, attributeName, data.size() + 1, data.data());
+}
+
+/**
+ * @brief Returns the H5T value for a given dataset.
+ *
+ * Returns the type of data stored in the dataset. You MUST use H5Tclose(typeID)
+ * on the returned value or resource leaks will occur.
+ * @param locationID A Valid HDF5 file or group id.
+ * @param datasetName Path to the dataset
+ * @return
+ */
+inline hid_t getDatasetType(hid_t locationID, const std::string& datasetName)
+{
+  H5SUPPORT_MUTEX_LOCK()
+
+  herr_t error = 0;
+  herr_t returnError = 0;
+  hid_t datasetID = -1;
+  /* Open the dataset. */
+  if((datasetID = H5Dopen(locationID, datasetName.c_str(), H5P_DEFAULT)) < 0)
+  {
+    return -1;
+  }
+  /* Get an identifier for the datatype. */
+  hid_t typeID = H5Dget_type(datasetID);
+  CloseH5D(datasetID, error, returnError, datasetName);
+  if(returnError < 0)
+  {
+    return static_cast<hid_t>(returnError);
+  }
+  return typeID;
 }
 
 } // namespace Support

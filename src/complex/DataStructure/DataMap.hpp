@@ -254,10 +254,10 @@ public:
   /**
    * @brief Fills the DataMap with values taken from the specified HDF5 group ID.
    * @param ds Top-level DataStructure
-   * @param groupId
+   * @param h5GroupId
    * @return H5::ErrorType
    */
-  H5::ErrorType readH5Group(DataStructure& ds, H5::IdType groupId, const std::optional<IdType>& parent = {});
+  H5::ErrorType readH5Group(DataStructure& ds, H5::IdType h5GroupId, const std::optional<IdType>& dsParentId = {});
 
   /**
    * @brief Writes the DataMap and its DataObjects to the target HDF5 group.

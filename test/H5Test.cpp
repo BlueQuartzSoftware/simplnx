@@ -262,6 +262,24 @@ TEST_CASE("Image Geometry IO")
 
     err = H5Fclose(fileId);
     REQUIRE(err <= 0);
+
+    filePath = getDataDir(app) / "image_geometry_io_2.h5";
+
+    try
+    {
+      fileId = H5Fcreate(filePath.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+      REQUIRE(fileId > 0);
+
+      err = ds.writeHdf5(fileId);
+      REQUIRE(err <= 0);
+
+      err = H5Fclose(fileId);
+      REQUIRE(err <= 0);
+    } catch(const std::exception& e)
+    {
+      FAIL(e.what());
+    }
+
   } catch(const std::exception& e)
   {
     FAIL(e.what());
@@ -351,19 +369,19 @@ TEST_CASE("Node Based Geometry IO")
   }
 
   // Read HDF5 file
-//  try
-//  {
-//    auto fileId = H5Fopen(filePathString.c_str(), H5P_DEFAULT, H5P_DEFAULT);
-//    REQUIRE(fileId > 0);
-//
-//    herr_t err;
-//    auto ds = DataStructure::ReadFromHdf5(fileId, err);
-//    REQUIRE(err <= 0);
-//
-//    err = H5Fclose(fileId);
-//    REQUIRE(err <= 0);
-//  } catch(const std::exception& e)
-//  {
-//    FAIL(e.what());
-//  }
+  //  try
+  //  {
+  //    auto fileId = H5Fopen(filePathString.c_str(), H5P_DEFAULT, H5P_DEFAULT);
+  //    REQUIRE(fileId > 0);
+  //
+  //    herr_t err;
+  //    auto ds = DataStructure::ReadFromHdf5(fileId, err);
+  //    REQUIRE(err <= 0);
+  //
+  //    err = H5Fclose(fileId);
+  //    REQUIRE(err <= 0);
+  //  } catch(const std::exception& e)
+  //  {
+  //    FAIL(e.what());
+  //  }
 }
