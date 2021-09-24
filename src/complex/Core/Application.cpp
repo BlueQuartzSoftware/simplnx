@@ -27,12 +27,12 @@ std::filesystem::path findCurrentPath()
 {
 #if defined(__linux__)
   std::vector<char> buffer(PATH_MAX + 1);
-  ssize_t bytesWritten = readlink("/proc/self/exe", buffer.data(), buffer.getSize());
+  ssize_t bytesWritten = readlink("/proc/self/exe", buffer.data(), buffer.size());
   if(bytesWritten < 0)
   {
     throw std::runtime_error("Failed to get executable path");
   }
-  if(bytesWritten >= buffer.getSize())
+  if(bytesWritten >= buffer.size())
   {
     throw std::runtime_error("Failed to get executable path. Path too long for buffer.");
   }
@@ -52,7 +52,7 @@ std::filesystem::path findCurrentPath()
   return std::filesystem::path(buffer.data());
 #elif defined(__APPLE__)
   std::vector<char> buffer(1024 + 1);
-  uint32_t getSize = static_cast<uint32_t>(buffer.size());
+  uint32_t size = static_cast<uint32_t>(buffer.size());
   int result = _NSGetExecutablePath(buffer.data(), &size);
   if(result != 0)
   {
