@@ -12,20 +12,20 @@ TEST_CASE("FilePathGenerator")
 {
 
   complex::GeneratedFileListParameter::ValueType value;
-  value.StartIndex = 1;
-  value.EndIndex = 2;
-  value.IncrementIndex = 1;
-  value.PaddingDigits = 1;
-  value.FilePrefix = "TestFilter";
-  value.FileSuffix = "";
-  value.FileExtension = ".cpp";
-  value.InputPath = fmt::format("{}/src/complex/Core/Filters/", complex::unit_test::k_ComplexSourceDir);
-  value.Ordering = complex::GeneratedFileListParameter::Ordering::LowToHigh;
+  value.startIndex = 1;
+  value.endIndex = 2;
+  value.incrementIndex = 1;
+  value.paddingDigits = 1;
+  value.filePrefix = "TestFilter";
+  value.fileSuffix = "";
+  value.fileExtension = ".cpp";
+  value.inputPath = fmt::format("{}/src/complex/Core/Filters/", complex::unit_test::k_ComplexSourceDir);
+  value.ordering = complex::GeneratedFileListParameter::Ordering::LowToHigh;
 
   bool missingFiles = false;
   // Generate the file list but do *NOT* validate the paths. this is a test after all
   std::vector<std::string> fileList =
-      complex::FilePathGenerator::GenerateFileList(value.StartIndex, value.EndIndex, value.IncrementIndex, missingFiles, (value.Ordering == complex::GeneratedFileListParameter::Ordering::LowToHigh),
-                                                   value.InputPath, value.FilePrefix, value.FileSuffix, value.FileExtension, value.PaddingDigits);
+      complex::FilePathGenerator::GenerateFileList(value.startIndex, value.endIndex, value.incrementIndex, missingFiles, (value.ordering == complex::GeneratedFileListParameter::Ordering::LowToHigh),
+                                                   value.inputPath, value.filePrefix, value.fileSuffix, value.fileExtension, value.paddingDigits);
   REQUIRE(fileList.size() == 2);
 }

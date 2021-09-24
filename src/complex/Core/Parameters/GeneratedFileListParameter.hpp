@@ -24,15 +24,15 @@ public:
    */
   struct ValueType
   {
-    int32_t StartIndex = 0;
-    int32_t EndIndex = 0;
-    int32_t IncrementIndex = 1;
-    uint32_t PaddingDigits = 3;
-    Ordering Ordering = Ordering::LowToHigh;
-    std::string InputPath;
-    std::string FilePrefix;
-    std::string FileSuffix;
-    std::string FileExtension;
+    int32_t startIndex = 0;
+    int32_t endIndex = 0;
+    int32_t incrementIndex = 1;
+    uint32_t paddingDigits = 3;
+    Ordering ordering = Ordering::LowToHigh;
+    std::string inputPath;
+    std::string filePrefix;
+    std::string fileSuffix;
+    std::string fileExtension;
   };
 
   GeneratedFileListParameter() = delete;
