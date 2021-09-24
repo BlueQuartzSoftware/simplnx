@@ -32,7 +32,7 @@ H5::ErrorType readH5Scalar(DataStructure& ds, H5::IdType attrId, const std::stri
   return err;
 }
 
-H5::ErrorType ScalarDataFactory::createFromHdf5(DataStructure& ds, H5::IdType targetId, H5::IdType groupId, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType ScalarDataFactory::readDataStructureGroup(DataStructure& ds, H5::IdType targetId, H5::IdType groupId, const std::optional<DataObject::IdType>& parentId)
 {
   std::string name = H5::Reader::Generic::getName(targetId);
   auto valueId = H5Aopen(targetId, "Value", H5P_DEFAULT);
@@ -80,4 +80,10 @@ H5::ErrorType ScalarDataFactory::createFromHdf5(DataStructure& ds, H5::IdType ta
   H5Tclose(typeId);
   H5Aclose(valueId);
   return 0;
+}
+
+//------------------------------------------------------------------------------
+H5::ErrorType ScalarDataFactory::readDataStructureDataset(DataStructure& ds, H5::IdType h5LocationId, const std::string& h5DatasetName, const std::optional<DataObject::IdType>& parentId)
+{
+  return -1;
 }

@@ -28,7 +28,9 @@ public:
    * create the generated DataObject under.
    * @return H5::ErrorType
    */
-  virtual H5::ErrorType createFromHdf5(DataStructure& ds, H5::IdType targetId, H5::IdType groupId, const std::optional<DataObject::IdType>& parentId = {}) = 0;
+  virtual H5::ErrorType readDataStructureGroup(DataStructure& ds, H5::IdType targetId, H5::IdType groupId, const std::optional<DataObject::IdType>& parentId = {}) = 0;
+
+  virtual H5::ErrorType readDataStructureDataset(DataStructure& ds, H5::IdType h5LocationId, const std::string& h5DatasetName, const std::optional<DataObject::IdType>& parentId = {}) = 0;
 
   // Copy and move constuctors / operators deleted
   IH5DataFactory(const IH5DataFactory& other) = delete;

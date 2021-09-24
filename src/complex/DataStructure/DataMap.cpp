@@ -4,6 +4,7 @@
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "complex/Utilities/Parsing/HDF5/IH5DataFactory.hpp"
 
 using namespace complex;
@@ -269,27 +270,39 @@ DataMap& DataMap::operator=(DataMap&& rhs) noexcept
   return *this;
 }
 
-H5::ErrorType DataMap::readH5Group(DataStructure& ds, H5::IdType groupId, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType DataMap::readH5Group(DataStructure& ds, H5::IdType h5GroupId, const std::optional<DataObject::IdType>& dsParentId)
 {
-  const std::string ObjectTypeTag = H5::Constants::DataObject::ObjectTypeTag;
-
+  const std::string currentPath = H5::Support::getObjectPath(h5GroupId);
+  std::cout << "reading hdf5 object '" << currentPath << "'" << std::endl;
   hsize_t count;
-  H5Gget_num_objs(groupId, &count);
+  H5Gget_num_objs(h5GroupId, &count);
   for(hsize_t i = 0; i < count; i++)
   {
-    const std::string name = H5::Reader::Generic::getNameAtIdx(groupId, i);
-    hid_t objId = H5Gopen(groupId, name.c_str(), H5P_DEFAULT);
+    const std::string name = H5::Reader::Generic::getNameAtIdx(h5GroupId, i);
+
     std::string typeName;
-    H5::Reader::Generic::readStringAttribute(groupId, name, ObjectTypeTag, typeName);
-    // H5::Reader::Generic::readStringAttribute(objId, ObjectTypeTag, ObjectTypeTag, typeName);
-
-    IH5DataFactory* factory = Application::Instance()->getDataStructureReader()->getFactory(typeName);
-    if(factory->createFromHdf5(ds, objId, groupId, parentId) < 0)
+    H5::Reader::Generic::readStringAttribute(h5GroupId, name, H5::Constants::DataObject::ObjectTypeTag, typeName);
+    hid_t h5ObjectId = -1;
+    if(H5::Support::isGroup(h5GroupId, name))
     {
-      throw std::runtime_error("Error reading DataMap from HDF5");
-    }
+      h5ObjectId = H5Gopen(h5GroupId, name.c_str(), H5P_DEFAULT);
 
-    H5Gclose(objId);
+      IH5DataFactory* factory = Application::Instance()->getDataStructureReader()->getFactory(typeName);
+      if(factory->readDataStructureGroup(ds, h5ObjectId, h5GroupId, dsParentId) < 0)
+      {
+        throw std::runtime_error("Error reading DataMap from HDF5");
+      }
+
+      H5Gclose(h5ObjectId);
+    }
+    else
+    {
+      IH5DataFactory* factory = Application::Instance()->getDataStructureReader()->getFactory(typeName);
+      if(factory->readDataStructureDataset(ds, h5GroupId, name, dsParentId) < 0)
+      {
+        throw std::runtime_error("Error reading DataMap from HDF5");
+      }
+    }
   }
   return 0;
 }

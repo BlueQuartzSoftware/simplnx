@@ -161,7 +161,7 @@ public:
    * @param dataId
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::IdType dataId) const override
+  H5::ErrorType writeHdf5(H5::IdType dataId, const std::string& name, DataObject::IdType) const override
   {
     throw std::runtime_error("");
   }

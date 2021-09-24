@@ -393,7 +393,7 @@ protected:
    */
   H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType dataId) const override
   {
-    return m_DataStore->writeHdf5(dataId);
+    return m_DataStore->writeHdf5(parentId, getName(), getId());
   }
 
 private:
