@@ -100,16 +100,16 @@ set(CoreFilters
   TestFilter2
 )
 
-set(    CoreParameters
-        ArrayCreationParameter
-        BoolParameter
-        ChoicesParameter
-        InputFileParameter
-        NumberParameter
-        NumericTypeParameter
-        StringParameter
-        VectorParameter
-        GeneratedFileListParameter
+set(CoreParameters
+  ArrayCreationParameter
+  BoolParameter
+  ChoicesParameter
+  FileSystemPathParameter
+  GeneratedFileListParameter
+  NumberParameter
+  NumericTypeParameter
+  StringParameter
+  VectorParameter
 )
 
 # Generate core filter import header
