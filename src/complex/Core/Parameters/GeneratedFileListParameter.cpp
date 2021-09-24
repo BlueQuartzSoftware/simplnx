@@ -65,40 +65,62 @@ nlohmann::json GeneratedFileListParameter::toJson(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<std::any> GeneratedFileListParameter::fromJson(const nlohmann::json& json) const
 {
-  const std::string key = name();
-  if(!json.contains(key))
+  const std::string prefix("FilterParameter 'GeneratedFileListParameter' Error: ");
+
+  if(!json.contains(name()))
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("JSON does not contain key \"{}\"", key)}})};
+    return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}JSON Data does not contain an entry with a key of \"{}\"", prefix, name()));
   }
-  auto jsonValue = json.at(key);
+  auto jsonValue = json.at(name());
   if(!jsonValue.is_object())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("JSON value for key \"{}\" is not a string", key)}})};
+    return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Value_Not_Object,
+                                              fmt::format("{}}The JSON data entry for key \"{}\" is not in the form of a JSON Object.", prefix, name()));
   }
 
   uint32_t ordering_check = json[k_Ordering].get<uint32_t>();
   if(ordering_check != static_cast<uint32_t>(Ordering::LowToHigh) && ordering_check != static_cast<uint32_t>(Ordering::HighToLow))
   {
-    return {
-        nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("JSON value for key \"{}\" was not a valid Ordering Value. [{}|{}] allowed.", key, Ordering::LowToHigh, Ordering::HighToLow)}})};
+    return complex::MakeErrorResult<std::any>(
+        complex::FilterParameter::Constants::k_Json_Value_Not_Enumeration,
+        fmt::format("{}JSON value for key \"{}\" was not a valid Ordering Value. [{}|{}] allowed.", prefix, k_Ordering, Ordering::LowToHigh, Ordering::HighToLow));
   }
 
-  // Make Jared happy, use loops.
+  if(!json[k_PaddingDigits].is_number_unsigned())
+  {
+    return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Value_Not_Unsigned,
+                                              fmt::format("{}JSON value for key \"{}\" is not an unsigned int", prefix, k_PaddingDigits));
+  }
+
+  std::vector<std::string> keys = {k_StartIndex, k_EndIndex, k_PaddingDigits, k_Ordering, k_IncrementIndex};
+  for(const auto& key : keys)
+  {
+    if(!json[key].is_number_integer())
+    {
+      return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Value_Not_Integer, fmt::format("{}JSON value for key \"{}\" is not an integer", prefix, key));
+    }
+  }
+
+  keys = {k_InputPath, k_FilePrefix, k_FileSuffix, k_FileExtension};
+  for(const auto& key : keys)
+  {
+    if(!json[key].is_string())
+    {
+      return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key \"{}\" is not a string", prefix, key));
+    }
+  }
 
   ValueType value;
-  if(json[k_StartIndex].is_number_integer() && json[k_EndIndex].is_number_integer() && json[k_PaddingDigits].is_number_integer() && json[k_Ordering].is_number_integer() &&
-     json[k_IncrementIndex].is_number_integer() && json[k_InputPath].is_string() && json[k_FilePrefix].is_string() && json[k_FileSuffix].is_string() && json[k_FileExtension].is_string())
-  {
-    value.PaddingDigits = static_cast<int32_t>(json[k_PaddingDigits].get<int32_t>());
-    value.Ordering = static_cast<Ordering>(json[k_Ordering].get<uint32_t>());
-    value.IncrementIndex = static_cast<int32_t>(json[k_IncrementIndex].get<int32_t>());
-    value.InputPath = json[k_InputPath].get<std::string>();
-    value.FilePrefix = json[k_FilePrefix].get<std::string>();
-    value.FileSuffix = json[k_FileSuffix].get<std::string>();
-    value.FileExtension = json[k_FileExtension].get<std::string>();
-    value.StartIndex = static_cast<int32_t>(json[k_StartIndex].get<int32_t>());
-    value.EndIndex = static_cast<int32_t>(json[k_EndIndex].get<int32_t>());
-  }
+
+  value.PaddingDigits = static_cast<int32_t>(json[k_PaddingDigits].get<int32_t>());
+  value.Ordering = static_cast<Ordering>(json[k_Ordering].get<uint32_t>());
+  value.IncrementIndex = static_cast<int32_t>(json[k_IncrementIndex].get<int32_t>());
+  value.InputPath = json[k_InputPath].get<std::string>();
+  value.FilePrefix = json[k_FilePrefix].get<std::string>();
+  value.FileSuffix = json[k_FileSuffix].get<std::string>();
+  value.FileExtension = json[k_FileExtension].get<std::string>();
+  value.StartIndex = static_cast<int32_t>(json[k_StartIndex].get<int32_t>());
+  value.EndIndex = static_cast<int32_t>(json[k_EndIndex].get<int32_t>());
 
   return {value};
 }
