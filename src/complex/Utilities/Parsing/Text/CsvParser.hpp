@@ -3,12 +3,11 @@
 
 #include "complex/Utilities/StringUtilities.hpp"
 
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
 #include <vector>
-#include <fstream>
-
 
 namespace complex
 {
@@ -66,5 +65,5 @@ std::vector<float> ParseVertices(const std::string& inputFile, const std::string
 
   return data;
 }
-}
-}
+} // namespace CsvParser
+} // namespace complex

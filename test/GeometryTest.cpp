@@ -11,11 +11,9 @@
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 
-
 #include "GeometryTestUtilities.hpp"
 
 using namespace complex;
-
 
 ////////////////////////////////////
 // Begin generic geometry testing //
