@@ -48,7 +48,7 @@ H5::ErrorType writeScalarAttribute(H5::IdType locationID, const std::string& obj
     return error;
   }
   /* Open the object */
-  objectID = Support::openId(locationID, objectName, objectInfo.type);
+  objectID = Support::OpenId(locationID, objectName, objectInfo.type);
   if(objectID < 0)
   {
     std::cout << "Error opening Object for Attribute operations." << std::endl;
@@ -109,7 +109,7 @@ H5::ErrorType writeScalarAttribute(H5::IdType locationID, const std::string& obj
   }
 
   /* Close the object */
-  error = Support::closeId(objectID, objectInfo.type);
+  error = Support::CloseId(objectID, objectInfo.type);
   if(error < 0)
   {
     std::cout << "Error Closing HDF5 Object ID" << std::endl;
@@ -161,7 +161,7 @@ H5::ErrorType writePointerAttribute(H5::IdType locationID, const std::string& ob
     return -1;
   }
   /* Open the object */
-  objectID = Support::openId(locationID, objectName, objectInfo.type);
+  objectID = Support::OpenId(locationID, objectName, objectInfo.type);
   if(objectID < 0)
   {
     std::cout << "Error opening Object for Attribute operations." << std::endl;
@@ -220,7 +220,7 @@ H5::ErrorType writePointerAttribute(H5::IdType locationID, const std::string& ob
     returnError = static_cast<herr_t>(dataspaceID);
   }
   /* Close the object */
-  error = Support::closeId(objectID, objectInfo.type);
+  error = Support::CloseId(objectID, objectInfo.type);
   if(error < 0)
   {
     std::cout << "Error Closing HDF5 Object ID" << std::endl;

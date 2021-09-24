@@ -3,7 +3,7 @@
 #include <cstring>
 #include <iostream>
 
-namespace complex
+hid_t complex::H5::Support::OpenId(hid_t locationId, const std::string& objectName, H5O_type_t objectType)
 {
 hid_t H5::Support::openId(hid_t locationID, const std::string& objectName, H5O_type_t objectType)
 {
@@ -13,14 +13,14 @@ hid_t H5::Support::openId(hid_t locationID, const std::string& objectName, H5O_t
   {
   case H5O_TYPE_DATASET:
     /* Open the dataset. */
-    if((objectID = H5Dopen(locationID, objectName.c_str(), H5P_DEFAULT)) < 0)
+    if((objectID = H5Dopen(locationId, objectName.c_str(), H5P_DEFAULT)) < 0)
     {
       return -1;
     }
     break;
   case H5O_TYPE_GROUP:
     /* Open the group. */
-    if((objectID = H5Gopen(locationID, objectName.c_str(), H5P_DEFAULT)) < 0)
+    if((objectID = H5Gopen(locationId, objectName.c_str(), H5P_DEFAULT)) < 0)
     {
       return -1;
     }
@@ -32,18 +32,18 @@ hid_t H5::Support::openId(hid_t locationID, const std::string& objectName, H5O_t
   return objectID;
 }
 
-herr_t H5::Support::closeId(hid_t objectID, int32 objectType)
+herr_t complex::H5::Support::CloseId(hid_t objectId, int32_t objectType)
 {
   switch(objectType)
   {
   case H5O_TYPE_DATASET:
-    if(H5Dclose(objectID) < 0)
+    if(H5Dclose(objectId) < 0)
     {
       return -1;
     }
     break;
   case H5O_TYPE_GROUP:
-    if(H5Gclose(objectID) < 0)
+    if(H5Gclose(objectId) < 0)
     {
       return -1;
     }
@@ -55,11 +55,11 @@ herr_t H5::Support::closeId(hid_t objectID, int32 objectType)
   return 1;
 }
 
-bool H5::Support::datasetExists(hid_t locationID, const std::string& datasetName)
+bool complex::H5::Support::DatasetExists(hid_t locationId, const std::string& datasetName)
 {
   H5O_info1_t objectInfo{};
   HDF_ERROR_HANDLER_OFF
-  herr_t error = H5Oget_info_by_name1(locationID, datasetName.c_str(), &objectInfo, H5P_DEFAULT);
+  herr_t error = H5Oget_info_by_name1(locationId, datasetName.c_str(), &objectInfo, H5P_DEFAULT);
   HDF_ERROR_HANDLER_ON
   return error >= 0;
 }
@@ -358,4 +358,3 @@ herr_t H5::Support::readStringDataset(hid_t locationID, const std::string& datas
   CloseH5T(typeID, error, returnError);
   return returnError;
 }
-} // namespace complex

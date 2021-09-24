@@ -79,7 +79,7 @@ inline H5::ErrorType readScalarAttribute(H5::IdType locationID, const std::strin
     return error;
   }
   /* Open the object */
-  hid_t objectID = Support::openId(locationID, objectName, objectInfo.type);
+  hid_t objectID = Support::OpenId(locationID, objectName, objectInfo.type);
   if(objectID >= 0)
   {
     hid_t attributeID = H5Aopen_by_name(locationID, objectName.c_str(), attributeName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
@@ -102,7 +102,7 @@ inline H5::ErrorType readScalarAttribute(H5::IdType locationID, const std::strin
     {
       returnError = static_cast<herr_t>(attributeID);
     }
-    error = Support::closeId(objectID, objectInfo.type);
+    error = Support::CloseId(objectID, objectInfo.type);
     if(error < 0)
     {
       std::cout << "Error Closing Object" << std::endl;
@@ -159,7 +159,7 @@ herr_t readVectorAttribute(hid_t locationID, const std::string& objectName, cons
     return error;
   }
   /* Open the object */
-  hid_t objectID = Support::openId(locationID, objectName, objectInfo.type);
+  hid_t objectID = Support::OpenId(locationID, objectName, objectInfo.type);
   if(objectID >= 0)
   {
     hid_t attributeID = H5Aopen_by_name(locationID, objectName.c_str(), attributeName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
@@ -191,7 +191,7 @@ herr_t readVectorAttribute(hid_t locationID, const std::string& objectName, cons
     {
       returnError = static_cast<herr_t>(attributeID);
     }
-    error = Support::closeId(objectID, objectInfo.type);
+    error = Support::CloseId(objectID, objectInfo.type);
     if(error < 0)
     {
       std::cout << "Error Closing Object" << std::endl;

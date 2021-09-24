@@ -22,6 +22,11 @@ class AbstractDataStructureMessage;
 class DataGroup;
 class DataPath;
 
+namespace Constants {
+inline const std::string k_ObjectTypeTag = "ObjectType";
+inline const std::string k_DataStructureTag = "DataStructure";
+
+}
 /**
  * @class DataStructure
  * @brief The DataStructure class is both the control center and origin of the
@@ -275,7 +280,7 @@ public:
    * @param fileId
    * @return H5::ErrorType
    */
-  static DataStructure ReadFromHdf5(H5::IdType fileId, H5::ErrorType& err);
+  static DataStructure readFromHdf5(H5::IdType fileId, H5::ErrorType& err);
 
   /**
    * @brief Copy assignment operator. The copied DataStructure's observers are not retained.
