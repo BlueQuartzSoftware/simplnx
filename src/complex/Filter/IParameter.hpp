@@ -18,6 +18,21 @@
 
 namespace complex
 {
+
+namespace FilterParameter::Constants
+{
+/**
+ * @brief These constants can be used as standard error codes when parsing JSON
+ */
+constexpr const int32_t k_Json_Missing_Entry = -100;
+constexpr const int32_t k_Json_Value_Not_Object = -101;
+constexpr const int32_t k_Json_Value_Not_String = -102;
+constexpr const int32_t k_Json_Value_Not_Integer = -103;
+constexpr const int32_t k_Json_Value_Not_Unsigned = -104;
+constexpr const int32_t k_Json_Value_Not_Enumeration = -105;
+
+} // namespace FilterParameter::Constants
+
 /**
  * @brief IParameter
  */
