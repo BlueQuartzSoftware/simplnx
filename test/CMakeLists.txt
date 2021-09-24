@@ -57,12 +57,8 @@ target_compile_options(complex_test
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
 )
 
-<<<<<<< HEAD
 target_include_directories(complex_test PRIVATE ${COMPLEX_GENERATED_DIR})
-=======
-target_include_directories(complex_test PRIVATE ${complex_BINARY_DIR})
 
->>>>>>> 3eb9b14 (Started implementing a unit test for the node based geometries.)
 
 
 catch_discover_tests(complex_test)
