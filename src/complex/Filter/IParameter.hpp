@@ -43,7 +43,7 @@ public:
   using AcceptedTypes = std::vector<std::type_index>;
   using UniquePointer = std::unique_ptr<IParameter>;
 
-  enum class Type : u8
+  enum class Type : uint8
   {
     Value = 0,
     Data

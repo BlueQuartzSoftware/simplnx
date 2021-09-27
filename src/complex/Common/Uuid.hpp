@@ -19,17 +19,17 @@ namespace detail
 {
   if(ch >= '0' && ch <= '9')
   {
-    u8 value = ch - '0';
+    uint8 value = ch - '0';
     return std::byte{value};
   }
   if(ch >= 'a' && ch <= 'f')
   {
-    u8 value = 10 + ch - 'a';
+    uint8 value = 10 + ch - 'a';
     return std::byte{value};
   }
   if(ch >= 'A' && ch <= 'F')
   {
-    u8 value = 10 + ch - 'A';
+    uint8 value = 10 + ch - 'A';
     return std::byte{value};
   }
   return std::byte{0};
@@ -165,39 +165,39 @@ struct COMPLEX_EXPORT Uuid
     return uuid;
   }
 
-  [[nodiscard]] inline constexpr u32 time_low() const noexcept
+  [[nodiscard]] inline constexpr uint32 time_low() const noexcept
   {
-    return bit_cast_int<u32, endian::big>(data.data());
+    return bit_cast_int<uint32, endian::big>(data.data());
   }
 
-  [[nodiscard]] inline constexpr u16 time_mid() const noexcept
+  [[nodiscard]] inline constexpr uint16 time_mid() const noexcept
   {
-    return bit_cast_int<u16, endian::big>(data.data() + 4);
+    return bit_cast_int<uint16, endian::big>(data.data() + 4);
   }
 
-  [[nodiscard]] inline constexpr u16 time_hi_version() const noexcept
+  [[nodiscard]] inline constexpr uint16 time_hi_version() const noexcept
   {
-    return bit_cast_int<u16, endian::big>(data.data() + 6);
+    return bit_cast_int<uint16, endian::big>(data.data() + 6);
   }
 
-  [[nodiscard]] inline constexpr u16 clock_seq_hi_and_res_clock_seq_low() const noexcept
+  [[nodiscard]] inline constexpr uint16 clock_seq_hi_and_res_clock_seq_low() const noexcept
   {
-    return bit_cast_int<u16, endian::big>(data.data() + 8);
+    return bit_cast_int<uint16, endian::big>(data.data() + 8);
   }
 
-  [[nodiscard]] inline constexpr u8 clock_seq_hi_variant() const noexcept
+  [[nodiscard]] inline constexpr uint8 clock_seq_hi_variant() const noexcept
   {
-    return bit_cast_int<u8, endian::big>(data.data() + 8);
+    return bit_cast_int<uint8, endian::big>(data.data() + 8);
   }
 
-  [[nodiscard]] inline constexpr u8 clock_seq_low() const noexcept
+  [[nodiscard]] inline constexpr uint8 clock_seq_low() const noexcept
   {
-    return bit_cast_int<u8, endian::big>(data.data() + 9);
+    return bit_cast_int<uint8, endian::big>(data.data() + 9);
   }
 
-  [[nodiscard]] inline constexpr u64 node() const noexcept
+  [[nodiscard]] inline constexpr uint64 node() const noexcept
   {
-    return bit_cast_int<u64, endian::big, 6>(data.data() + 10);
+    return bit_cast_int<uint64, endian::big, 6>(data.data() + 10);
   }
 
   [[nodiscard]] inline std::string str() const

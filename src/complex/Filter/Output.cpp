@@ -28,7 +28,7 @@ IDataStore<T>* CreateDataStore(usize tupleSize, usize tupleCount, IDataAction::M
 }
 
 template <class T>
-Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& dims, u64 nComp, const DataPath& path, IDataAction::Mode mode)
+Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& dims, uint64 nComp, const DataPath& path, IDataAction::Mode mode)
 {
   auto parentPath = path.getParent();
 
@@ -49,7 +49,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& dim
 
   std::string name = path[last];
 
-  u64 nTuples = std::accumulate(dims.cbegin(), dims.cend(), static_cast<u64>(0));
+  uint64 nTuples = std::accumulate(dims.cbegin(), dims.cend(), static_cast<uint64>(0));
 
   auto* store = CreateDataStore<T>(nComp, nTuples, mode);
   auto dataArray = DataArray<T>::Create(dataStructure, name, store, id);
@@ -64,7 +64,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& dim
 
 namespace complex
 {
-CreateArrayAction::CreateArrayAction(NumericType type, const std::vector<usize>& dims, u64 nComp, const DataPath& path)
+CreateArrayAction::CreateArrayAction(NumericType type, const std::vector<usize>& dims, uint64 nComp, const DataPath& path)
 : m_Type(type)
 , m_Dims(dims)
 , m_NComp(nComp)
@@ -78,35 +78,35 @@ Result<> CreateArrayAction::apply(DataStructure& dataStructure, Mode mode) const
 {
   switch(m_Type)
   {
-  case NumericType::i8: {
-    return CreateArray<i8>(dataStructure, m_Dims, m_NComp, m_Path, mode);
+  case NumericType::int8: {
+    return CreateArray<int8>(dataStructure, m_Dims, m_NComp, m_Path, mode);
   }
-  case NumericType::u8: {
-    return CreateArray<u8>(dataStructure, m_Dims, m_NComp, m_Path, mode);
+  case NumericType::uint8: {
+    return CreateArray<uint8>(dataStructure, m_Dims, m_NComp, m_Path, mode);
   }
-  case NumericType::i16: {
-    return CreateArray<i16>(dataStructure, m_Dims, m_NComp, m_Path, mode);
+  case NumericType::int16: {
+    return CreateArray<int16>(dataStructure, m_Dims, m_NComp, m_Path, mode);
   }
-  case NumericType::u16: {
-    return CreateArray<u16>(dataStructure, m_Dims, m_NComp, m_Path, mode);
+  case NumericType::uint16: {
+    return CreateArray<uint16>(dataStructure, m_Dims, m_NComp, m_Path, mode);
   }
-  case NumericType::i32: {
-    return CreateArray<i32>(dataStructure, m_Dims, m_NComp, m_Path, mode);
+  case NumericType::int32: {
+    return CreateArray<int32>(dataStructure, m_Dims, m_NComp, m_Path, mode);
   }
-  case NumericType::u32: {
-    return CreateArray<u32>(dataStructure, m_Dims, m_NComp, m_Path, mode);
+  case NumericType::uint32: {
+    return CreateArray<uint32>(dataStructure, m_Dims, m_NComp, m_Path, mode);
   }
-  case NumericType::i64: {
-    return CreateArray<i64>(dataStructure, m_Dims, m_NComp, m_Path, mode);
+  case NumericType::int64: {
+    return CreateArray<int64>(dataStructure, m_Dims, m_NComp, m_Path, mode);
   }
-  case NumericType::u64: {
-    return CreateArray<u64>(dataStructure, m_Dims, m_NComp, m_Path, mode);
+  case NumericType::uint64: {
+    return CreateArray<uint64>(dataStructure, m_Dims, m_NComp, m_Path, mode);
   }
-  case NumericType::f32: {
-    return CreateArray<f32>(dataStructure, m_Dims, m_NComp, m_Path, mode);
+  case NumericType::float32: {
+    return CreateArray<float32>(dataStructure, m_Dims, m_NComp, m_Path, mode);
   }
-  case NumericType::f64: {
-    return CreateArray<f64>(dataStructure, m_Dims, m_NComp, m_Path, mode);
+  case NumericType::float64: {
+    return CreateArray<float64>(dataStructure, m_Dims, m_NComp, m_Path, mode);
   }
   default:
     throw std::runtime_error("Invalid type");
@@ -123,7 +123,7 @@ std::vector<usize> CreateArrayAction::dims() const
   return m_Dims;
 }
 
-u64 CreateArrayAction::numComponents() const
+uint64 CreateArrayAction::numComponents() const
 {
   return m_NComp;
 }

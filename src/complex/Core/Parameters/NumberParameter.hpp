@@ -81,35 +81,35 @@ private:
   ValueType m_DefaultValue = {};
 };
 
-extern template class NumberParameter<i8>;
-extern template class NumberParameter<u8>;
+extern template class NumberParameter<int8>;
+extern template class NumberParameter<uint8>;
 
-extern template class NumberParameter<i16>;
-extern template class NumberParameter<u16>;
+extern template class NumberParameter<int16>;
+extern template class NumberParameter<uint16>;
 
-extern template class NumberParameter<i32>;
-extern template class NumberParameter<u32>;
+extern template class NumberParameter<int32>;
+extern template class NumberParameter<uint32>;
 
-extern template class NumberParameter<i64>;
-extern template class NumberParameter<u64>;
+extern template class NumberParameter<int64>;
+extern template class NumberParameter<uint64>;
 
-extern template class NumberParameter<f32>;
-extern template class NumberParameter<f64>;
+extern template class NumberParameter<float32>;
+extern template class NumberParameter<float64>;
 
-using Int8Parameter = NumberParameter<i8>;
-using UInt8Parameter = NumberParameter<u8>;
+using Int8Parameter = NumberParameter<int8>;
+using UInt8Parameter = NumberParameter<uint8>;
 
-using Int16Parameter = NumberParameter<i16>;
-using UInt16Parameter = NumberParameter<u16>;
+using Int16Parameter = NumberParameter<int16>;
+using UInt16Parameter = NumberParameter<uint16>;
 
-using Int32Parameter = NumberParameter<i32>;
-using UInt32Parameter = NumberParameter<u32>;
+using Int32Parameter = NumberParameter<int32>;
+using UInt32Parameter = NumberParameter<uint32>;
 
-using Int64Parameter = NumberParameter<i64>;
-using UInt64Parameter = NumberParameter<u64>;
+using Int64Parameter = NumberParameter<int64>;
+using UInt64Parameter = NumberParameter<uint64>;
 
-using Float32Parameter = NumberParameter<f32>;
-using Float64Parameter = NumberParameter<f64>;
+using Float32Parameter = NumberParameter<float32>;
+using Float64Parameter = NumberParameter<float64>;
 } // namespace complex
 
 COMPLEX_DEF_PARAMETER_TRAITS(complex::Int8Parameter, "cae73834-68f8-4235-b010-8bea87d8ff7a");

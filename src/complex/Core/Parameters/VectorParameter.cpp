@@ -134,18 +134,18 @@ Result<> VectorParameter<T>::validateVector(const ValueType& value) const
   return {};
 }
 
-template class COMPLEX_TEMPLATE_EXPORT VectorParameter<i8>;
-template class COMPLEX_TEMPLATE_EXPORT VectorParameter<u8>;
+template class COMPLEX_TEMPLATE_EXPORT VectorParameter<int8>;
+template class COMPLEX_TEMPLATE_EXPORT VectorParameter<uint8>;
 
-template class COMPLEX_TEMPLATE_EXPORT VectorParameter<i16>;
-template class COMPLEX_TEMPLATE_EXPORT VectorParameter<u16>;
+template class COMPLEX_TEMPLATE_EXPORT VectorParameter<int16>;
+template class COMPLEX_TEMPLATE_EXPORT VectorParameter<uint16>;
 
-template class COMPLEX_TEMPLATE_EXPORT VectorParameter<i32>;
-template class COMPLEX_TEMPLATE_EXPORT VectorParameter<u32>;
+template class COMPLEX_TEMPLATE_EXPORT VectorParameter<int32>;
+template class COMPLEX_TEMPLATE_EXPORT VectorParameter<uint32>;
 
-template class COMPLEX_TEMPLATE_EXPORT VectorParameter<i64>;
-template class COMPLEX_TEMPLATE_EXPORT VectorParameter<u64>;
+template class COMPLEX_TEMPLATE_EXPORT VectorParameter<int64>;
+template class COMPLEX_TEMPLATE_EXPORT VectorParameter<uint64>;
 
-template class COMPLEX_TEMPLATE_EXPORT VectorParameter<f32>;
-template class COMPLEX_TEMPLATE_EXPORT VectorParameter<f64>;
+template class COMPLEX_TEMPLATE_EXPORT VectorParameter<float32>;
+template class COMPLEX_TEMPLATE_EXPORT VectorParameter<float64>;
 } // namespace complex

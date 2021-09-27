@@ -118,35 +118,35 @@ private:
   NamesType m_Names;
 };
 
-extern template class VectorParameter<i8>;
-extern template class VectorParameter<u8>;
+extern template class VectorParameter<int8>;
+extern template class VectorParameter<uint8>;
 
-extern template class VectorParameter<i16>;
-extern template class VectorParameter<u16>;
+extern template class VectorParameter<int16>;
+extern template class VectorParameter<uint16>;
 
-extern template class VectorParameter<i32>;
-extern template class VectorParameter<u32>;
+extern template class VectorParameter<int32>;
+extern template class VectorParameter<uint32>;
 
-extern template class VectorParameter<i64>;
-extern template class VectorParameter<u64>;
+extern template class VectorParameter<int64>;
+extern template class VectorParameter<uint64>;
 
-extern template class VectorParameter<f32>;
-extern template class VectorParameter<f64>;
+extern template class VectorParameter<float32>;
+extern template class VectorParameter<float64>;
 
-using VectorInt8Parameter = VectorParameter<i8>;
-using VectorUInt8Parameter = VectorParameter<u8>;
+using VectorInt8Parameter = VectorParameter<int8>;
+using VectorUInt8Parameter = VectorParameter<uint8>;
 
-using VectorInt16Parameter = VectorParameter<i16>;
-using VectorUInt16Parameter = VectorParameter<u16>;
+using VectorInt16Parameter = VectorParameter<int16>;
+using VectorUInt16Parameter = VectorParameter<uint16>;
 
-using VectorInt32Parameter = VectorParameter<i32>;
-using VectorUInt32Parameter = VectorParameter<u32>;
+using VectorInt32Parameter = VectorParameter<int32>;
+using VectorUInt32Parameter = VectorParameter<uint32>;
 
-using VectorInt64Parameter = VectorParameter<i64>;
-using VectorUInt64Parameter = VectorParameter<u64>;
+using VectorInt64Parameter = VectorParameter<int64>;
+using VectorUInt64Parameter = VectorParameter<uint64>;
 
-using VectorFloat32Parameter = VectorParameter<f32>;
-using VectorFloat64Parameter = VectorParameter<f64>;
+using VectorFloat32Parameter = VectorParameter<float32>;
+using VectorFloat64Parameter = VectorParameter<float64>;
 } // namespace complex
 
 COMPLEX_DEF_PARAMETER_TRAITS(complex::VectorInt8Parameter, "9f5f9683-e492-4a79-8378-79d727b2356a");
