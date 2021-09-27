@@ -11,12 +11,20 @@
 
 namespace complex
 {
+/**
+ * @brief Error is a simple struct of a error code and message.
+ * It is meant for general purpose error reporting.
+ */
 struct COMPLEX_EXPORT Error
 {
   i32 code = 0;
   std::string message;
 };
 
+/**
+ * @brief Warning is a simple struct of a warning code and message.
+ * It is meant for general purpose warning reporting.
+ */
 struct COMPLEX_EXPORT Warning
 {
   i32 code = 0;
@@ -28,11 +36,19 @@ namespace detail
 template <class T>
 struct ResultBase
 {
+  /**
+   * @brief Returns a reference to the contained value if valid. Otherwise throws.
+   * @return T&
+   */
   [[nodiscard]] T& value()
   {
     return m_Expected.value();
   }
 
+  /**
+   * @brief Returns a const reference to the contained value if valid. Otherwise throws.
+   * @return const T&
+   */
   [[nodiscard]] const T& value() const
   {
     return m_Expected.value();
@@ -115,6 +131,12 @@ struct Result : public detail::ResultBaseT<T>
   std::vector<Warning> m_Warnings;
 };
 
+/**
+ * @brief Converts a Result<T> to a Result<> moving the errors and warnings while discarding the value.
+ * @tparam T
+ * @param result
+ * @return Result<>
+ */
 template <class T>
 Result<> convertResult(Result<T>&& result)
 {

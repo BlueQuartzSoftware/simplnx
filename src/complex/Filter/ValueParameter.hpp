@@ -5,6 +5,9 @@
 
 namespace complex
 {
+/**
+ * @brief ValueParameter provides an interface for parameters that deal with value types (e.g. integer, string, etc.).
+ */
 class COMPLEX_EXPORT ValueParameter : public AbstractParameter
 {
 public:
@@ -16,8 +19,17 @@ public:
   ValueParameter& operator=(const ValueParameter&) = delete;
   ValueParameter& operator=(ValueParameter&&) noexcept = delete;
 
+  /**
+   * @brief Returns whether the parameter is a ValueParameter or DataParameter.
+   * @return
+   */
   [[nodiscard]] Type type() const final;
 
+  /**
+   * @brief Validates the given value. Returns warnings/errors.
+   * @param value
+   * @return
+   */
   [[nodiscard]] virtual Result<> validate(const std::any& value) const = 0;
 
 protected:

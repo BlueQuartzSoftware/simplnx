@@ -4,6 +4,9 @@
 
 namespace complex
 {
+/**
+ * @brief AbstractParameter stores name, human name, and help text for classes that want to inherit from IParameter.
+ */
 class COMPLEX_EXPORT AbstractParameter : public IParameter
 {
 public:
@@ -15,10 +18,22 @@ public:
   AbstractParameter& operator=(const AbstractParameter& other) = delete;
   AbstractParameter& operator=(AbstractParameter&&) noexcept = delete;
 
+  /**
+   * @brief Returns the user defined name.
+   * @return
+   */
   [[nodiscard]] std::string name() const final;
 
+  /**
+   * @brief Returns the user defined human readable name.
+   * @return
+   */
   [[nodiscard]] std::string humanName() const final;
 
+  /**
+   * @brief Returns the user defined help text.
+   * @return
+   */
   [[nodiscard]] std::string helpText() const final;
 
 protected:

@@ -34,7 +34,8 @@ constexpr const int32_t k_Json_Value_Not_Enumeration = -105;
 } // namespace FilterParameter::Constants
 
 /**
- * @brief IParameter
+ * @brief IParameter provides an interface for filter parameters including metadata (e.g. name, uuid, etc.)
+ * and how it interacts with its inputs. May be either a ValueParameter or a DataParameter.
  */
 class COMPLEX_EXPORT IParameter
 {
@@ -57,67 +58,71 @@ public:
   IParameter& operator=(IParameter&&) noexcept = delete;
 
   /**
-   * @brief
+   * @brief Returns the parameter's uuid.
    * @return
    */
   [[nodiscard]] virtual Uuid uuid() const = 0;
 
   /**
-   * @brief
+   * @brief Returns the user defined name.
    * @return
    */
   [[nodiscard]] virtual std::string name() const = 0;
 
   /**
-   * @brief
+   * @brief Returns the user defined human readable name.
    * @return
    */
   [[nodiscard]] virtual std::string humanName() const = 0;
 
   /**
-   * @brief
+   * @brief Returns the user defined help text.
    * @return
    */
   [[nodiscard]] virtual std::string helpText() const = 0;
 
   /**
-   * @brief
+   * @brief Returns the user defined default value.
    * @return
    */
   [[nodiscard]] virtual std::any defaultValue() const = 0;
 
   /**
-   * @brief
+   * @brief Returns whether the parameter is a ValueParameter or DataParameter.
    * @return
    */
   [[nodiscard]] virtual Type type() const = 0;
 
   /**
-   * @brief
+   * @brief Returns a list of accpeted input types.
    * @return
    */
   [[nodiscard]] virtual AcceptedTypes acceptedTypes() const = 0;
 
   /**
-   * @brief
+   * @brief Converts the given value to JSON.
+   * Throws if value is not an accepted type.
    * @param value
    */
   [[nodiscard]] virtual nlohmann::json toJson(const std::any& value) const = 0;
 
   /**
-   * @brief
+   * @brief Converts the given JSON to a std::any containing the appropriate input type.
+   * Returns any warnings/errors.
    * @return
    */
   [[nodiscard]] virtual Result<std::any> fromJson(const nlohmann::json& json) const = 0;
 
   /**
-   * @brief
+   * @brief Creates a copy of the parameter.
    * @return
    */
   [[nodiscard]] virtual UniquePointer clone() const = 0;
 
   /**
-   * @brief
+   * @brief Constructs an input value from the given arguments.
+   * By default, accesses a singular value by key and returns that.
+   * May be overriden by subclasses that depend on other parameters.
    * @return
    */
   [[nodiscard]] virtual std::any construct(const Arguments& args) const;

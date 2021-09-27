@@ -9,9 +9,15 @@
 
 namespace complex
 {
+/**
+ * @brief IDataAction is the interface for declaratively stating what changes to be made to a DataStructure.
+ * Can then be applied in preflight or execute mode to actually make those changes.
+ */
 class IDataAction
 {
 public:
+  using UniquePointer = std::unique_ptr<IDataAction>;
+
   enum class Mode : u8
   {
     Preflight = 0,
@@ -26,7 +32,8 @@ public:
   IDataAction& operator=(IDataAction&&) noexcept = delete;
 
   /**
-   * @brief
+   * @brief Applies this action's change to the given DataStructure in the given mode.
+   * Returns any warnings/errors. On error, DataStructure is not guaranteed to be consistent.
    * @param dataStructure
    * @return
    */
@@ -36,6 +43,9 @@ protected:
   IDataAction() = default;
 };
 
+/**
+ * @brief Action for creating DataArrays in a DataStructure
+ */
 class CreateArrayAction : public IDataAction
 {
 public:
@@ -51,26 +61,27 @@ public:
   CreateArrayAction& operator=(CreateArrayAction&&) noexcept = delete;
 
   /**
-   * @brief
+   * @brief Applies this action's change to the given DataStructure in the given mode.
+   * Returns any warnings/errors. On error, DataStructure is not guaranteed to be consistent.
    * @param dataStructure
    * @return
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
   /**
-   * @brief
+   * @brief Returns the NumericType of the DataArray to be created.
    * @return
    */
   [[nodiscard]] NumericType type() const;
 
   /**
-   * @brief
+   * @brief Returns the dimensions of the DataArray to be created.
    * @return
    */
   [[nodiscard]] std::vector<usize> dims() const;
 
   /**
-   * @brief
+   * @brief Returns the path of the DataArray to be created.
    * @return
    */
   [[nodiscard]] DataPath path() const;
@@ -82,8 +93,11 @@ private:
   DataPath m_Path;
 };
 
+/**
+ * @brief Container for IDataActions
+ */
 struct OutputActions
 {
-  std::vector<std::unique_ptr<IDataAction>> actions;
+  std::vector<IDataAction::UniquePointer> actions;
 };
 } // namespace complex

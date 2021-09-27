@@ -10,6 +10,9 @@
 
 namespace complex
 {
+/**
+ * @brief Parameters stores a map of strings to IParameter.
+ */
 class COMPLEX_EXPORT Parameters
 {
 public:
@@ -22,20 +25,39 @@ public:
   Parameters& operator=(const Parameters& rhs);
   Parameters& operator=(Parameters&&) noexcept = default;
 
+  /**
+   * @brief Returns true if contains a parameter with the given name.
+   * @param name
+   * @return
+   */
   bool contains(const std::string& name) const
   {
     return m_Params.count(name) > 0;
   }
 
+  /**
+   * @brief Returns the size of the collection.
+   * @return
+   */
   usize size() const
   {
     return m_Params.size();
   }
 
+  /**
+   * @brief Returns true if empty, otherwise false.
+   * @return
+   */
   bool empty() const
   {
     return m_Params.empty();
   }
+
+  /**
+   * @brief Inserts the given parameter.
+   * @param parameter
+   */
+  void insert(IParameter::UniquePointer parameter);
 
   auto begin()
   {
@@ -56,8 +78,6 @@ public:
   {
     return m_Params.end();
   }
-
-  void insert(std::unique_ptr<IParameter> parameter);
 
 private:
   std::map<std::string, std::unique_ptr<IParameter>> m_Params;

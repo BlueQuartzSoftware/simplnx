@@ -18,7 +18,8 @@ namespace complex
 {
 /**
  * @class IFilter
- * @brief
+ * @brief IFilter is the interface for filters providing access to both metadata (e.g. name, uuid, etc.)
+ * and the algorithm itself (i.e. preflight/execute).
  */
 class COMPLEX_EXPORT IFilter
 {
@@ -71,62 +72,65 @@ public:
   IFilter& operator=(IFilter&&) noexcept = delete;
 
   /**
-   * @brief
+   * @brief Returns the name of the filter.
    * @return
    */
   [[nodiscard]] virtual std::string name() const = 0;
 
   /**
-   * @brief
+   * @brief Returns the uuid of the filter.
    * @return
    */
   [[nodiscard]] virtual Uuid uuid() const = 0;
 
   /**
-   * @brief
+   * @brief Returns the human readable name of the filter.
    * @return
    */
   [[nodiscard]] virtual std::string humanName() const = 0;
 
   /**
-   * @brief
+   * @brief Returns the parameters of the filter (i.e. its inputs)
    * @return
    */
   [[nodiscard]] virtual Parameters parameters() const = 0;
 
   /**
-   * @brief
+   * @brief Returns a copy of the filter.
    * @return
    */
   [[nodiscard]] virtual UniquePointer clone() const = 0;
 
   /**
-   * @brief
+   * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
+   * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.
+   * Some parts of the actions may not be completely filled out if all the required information is not available at preflight time.
    * @param data
    * @param args
-   * @param messageHandler = {}
+   * @param messageHandler
    * @return
    */
   Result<OutputActions> preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
 
   /**
-   * @brief
+   * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
+   * On failure, there is no guarentee that the DataStructure is in a correct state.
    * @param data
    * @param args
-   * @param messageHandler = {}
+   * @param messageHandler
    * @return
    */
   Result<> execute(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
 
   /**
-   * @brief
+   * @brief Converts the given arguments to a JSON representation using the filter's parameters.
    * @param args
    * @return
    */
   [[nodiscard]] nlohmann::json toJson(const Arguments& args) const;
 
   /**
-   * @brief
+   * @brief Converts JSON to arguments based on the filter's parameters.
    * @param json
    * @return
    */
@@ -136,19 +140,21 @@ protected:
   IFilter() = default;
 
   /**
-   * @brief
+   * @brief Classes that implement IFilter must provide this function for preflight.
+   * Runs after the filter runs the checks in its parameters.
    * @param data
    * @param args
-   * @param messageHandler = {}
+   * @param messageHandler
    * @return
    */
   virtual Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const = 0;
 
   /**
-   * @brief
+   * @brief Classes that implement IFilter must provide this function for execute.
+   * Runs after the filter applies the OutputActions from preflight.
    * @param data
    * @param args
-   * @param messageHandler = {}
+   * @param messageHandler
    * @return
    */
   virtual Result<> executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const = 0;
