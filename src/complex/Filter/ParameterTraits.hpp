@@ -6,6 +6,10 @@
 
 namespace complex
 {
+/**
+ * @brief Specializations of ParameterTraits provide name and uuid for T
+ * @tparam T
+ */
 template <class T, class = std::enable_if_t<std::is_base_of_v<IParameter, T>>>
 struct ParameterTraits
 {
