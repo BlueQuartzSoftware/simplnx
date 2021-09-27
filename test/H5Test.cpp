@@ -40,28 +40,28 @@ namespace
 {
 namespace Constants
 {
-const fs::path DataDir = "test/data";
-const fs::path LegacyFilepath = "SmallN100.dream3d";
-const fs::path ComplexH5File = "new.h5";
+const fs::path k_DataDir = "test/data";
+const fs::path k_LegacyFilepath = "SmallN100.dream3d";
+const fs::path k_ComplexH5File = "new.h5";
 } // namespace Constants
 
-fs::path getDataDir(const Application& app)
+fs::path GetDataDir(const Application& app)
 {
 #if __APPLE__
-  return app.getCurrentDir().parent_path().parent_path().parent_path() / Constants::DataDir;
+  return app.getCurrentDir().parent_path().parent_path().parent_path() / Constants::k_DataDir;
 #else
-  return app.getCurrentDir() / Constants::DataDir;
+  return app.getCurrentDir() / Constants::k_DataDir;
 #endif
 }
 
-fs::path getLegacyFilepath(const Application& app)
+fs::path GetLegacyFilepath(const Application& app)
 {
-  return getDataDir(app) / Constants::LegacyFilepath;
+  return GetDataDir(app) / Constants::k_LegacyFilepath;
 }
 
-fs::path getComplexH5File(const Application& app)
+fs::path GetComplexH5File(const Application& app)
 {
-  return getDataDir(app) / Constants::ComplexH5File;
+  return GetDataDir(app) / Constants::k_ComplexH5File;
 }
 
 bool equalsf(const FloatVec3& lhs, const FloatVec3& rhs)
@@ -146,7 +146,7 @@ TEST_CASE("Read Legacy DREAM.3D Data")
 #endif
 }
 
-DataStructure getTestDataStructure()
+DataStructure GetTestDataStructure()
 {
   DataStructure ds;
   auto group = DataGroup::Create(ds, "Group");
@@ -169,7 +169,7 @@ DataStructure getTestDataStructure()
 }
 
 template <typename T>
-DataArray<T>* createTestDataArray(const std::string& name, DataStructure& dataGraph, typename DataStore<T>::ShapeType tupleShape, typename DataStore<T>::ShapeType componentShape,
+DataArray<T>* CreateTestDataArray(const std::string& name, DataStructure& dataGraph, typename DataStore<T>::ShapeType tupleShape, typename DataStore<T>::ShapeType componentShape,
                                   DataObject::IdType parentId)
 {
   using DataStoreType = DataStore<T>;
@@ -181,7 +181,7 @@ DataArray<T>* createTestDataArray(const std::string& name, DataStructure& dataGr
   return dataArray;
 }
 
-DataStructure createDataStructure()
+DataStructure CreateDataStructure()
 {
   DataStructure dataGraph;
   DataGroup* group = complex::DataGroup::Create(dataGraph, "Small IN100");
@@ -199,19 +199,19 @@ DataStructure createDataStructure()
   size_t numComponents = 1;
   std::vector<size_t> tupleShape = {imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]};
 
-  FloatArrayType* ci_data = createTestDataArray<float>("Confidence Index", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  Int32ArrayType* feature_ids_data = createTestDataArray<int32_t>("FeatureIds", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  FloatArrayType* iq_data = createTestDataArray<float>("Image Quality", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  Int32ArrayType* phases_data = createTestDataArray<int32_t>("Phases", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  FloatArrayType* ci_data = CreateTestDataArray<float>("Confidence Index", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Int32ArrayType* feature_ids_data = CreateTestDataArray<int32_t>("FeatureIds", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  FloatArrayType* iq_data = CreateTestDataArray<float>("Image Quality", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Int32ArrayType* phases_data = CreateTestDataArray<int32_t>("Phases", dataGraph, tupleShape, {numComponents}, scanData->getId());
 
   numComponents = 3;
-  UInt8ArrayType* ipf_color_data = createTestDataArray<uint8_t>("IPF Colors", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  UInt8ArrayType* ipf_color_data = CreateTestDataArray<uint8_t>("IPF Colors", dataGraph, tupleShape, {numComponents}, scanData->getId());
 
   // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
   DataGroup* phase_group = complex::DataGroup::Create(dataGraph, "Phase Data", group->getId());
   numComponents = 1;
   size_t numTuples = 2;
-  Int32ArrayType* laue_data = createTestDataArray<int32_t>("Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId());
+  Int32ArrayType* laue_data = CreateTestDataArray<int32_t>("Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId());
 
   return dataGraph;
 }
@@ -220,21 +220,21 @@ TEST_CASE("Image Geometry IO")
 {
   Application app;
 
-  fs::path dataDir = getDataDir(app);
+  fs::path dataDir = GetDataDir(app);
 
   if(!fs::exists(dataDir))
   {
     REQUIRE(fs::create_directories(dataDir));
   }
 
-  fs::path filePath = getDataDir(app) / "image_geometry_io.h5";
+  fs::path filePath = GetDataDir(app) / "image_geometry_io.h5";
 
   std::string filePathString = filePath.string();
 
   // Write HDF5 file
   try
   {
-    DataStructure ds = createDataStructure();
+    DataStructure ds = CreateDataStructure();
     auto fileId = H5Fcreate(filePathString.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     REQUIRE(fileId > 0);
 
@@ -262,7 +262,7 @@ TEST_CASE("Image Geometry IO")
     err = H5Fclose(fileId);
     REQUIRE(err <= 0);
 
-    filePath = getDataDir(app) / "image_geometry_io_2.h5";
+    filePath = GetDataDir(app) / "image_geometry_io_2.h5";
 
     try
     {
@@ -286,49 +286,26 @@ TEST_CASE("Image Geometry IO")
 }
 
 //------------------------------------------------------------------------------
-DataStructure createNodeBasedGeometries()
+DataStructure CreateNodeBasedGeometries()
 {
   DataStructure dataGraph;
   DataGroup* group = complex::DataGroup::Create(dataGraph, "AM LPBF Experiment");
-  DataGroup* scanData = complex::DataGroup::Create(dataGraph, "Laser Scan Data", group->getId());
+  DataGroup* scanData = complex::DataGroup::Create(dataGraph, "Melt Pool Data", group->getId());
 
+  // Read the vertices into a vector and then copy that into a VertexGeometry
   std::string inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", complex::unit_test::k_ComplexSourceDir.c_str());
   std::vector<float> csvVerts = complex::CsvParser::ParseVertices(inputFile, ",", true);
-
-  auto vertexGeom = VertexGeom::Create(dataGraph, "Vertex Geom", scanData->getId());
+  auto vertexGeom = VertexGeom::Create(dataGraph, "[Geometry] Vertex", scanData->getId());
   vertexGeom->resizeVertexList(csvVerts.size() / 3);
   AbstractGeometry::SharedVertexList* vertices = vertexGeom->getVertices();
-
   std::copy_n(csvVerts.begin(), csvVerts.size(), vertices->getDataStore()->begin());
 
-#if 0
-  // Create an Image Geometry grid for the Scan Data
-  ImageGeom* imageGeom = ImageGeom::Create(dataGraph, "Small IN100 Grid", scanData->getId());
-  imageGeom->setSpacing({0.25f, 0.25f, 0.25f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
-  complex::SizeVec3 imageGeomDims = {100, 100, 100};
-  imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
-
-  // Create some DataArrays; The DataStructure keeps a shared_ptr<> to the DataArray so DO NOT put
-  // it into another shared_ptr<>
+  // Now create some "Cell" data for the Vertex Geometry
+  std::vector<size_t> tupleShape = {vertexGeom->getNumberOfVertices()};
   size_t numComponents = 1;
-  std::vector<size_t> tupleShape = {imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]};
-
-  FloatArrayType* ci_data = createTestDataArray<float>("Confidence Index", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  Int32ArrayType* feature_ids_data = createTestDataArray<int32_t>("FeatureIds", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  FloatArrayType* iq_data = createTestDataArray<float>("Image Quality", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  Int32ArrayType* phases_data = createTestDataArray<int32_t>("Phases", dataGraph, tupleShape, {numComponents}, scanData->getId());
-
-  numComponents = 3;
-  UInt8ArrayType* ipf_color_data = createTestDataArray<uint8_t>("IPF Colors", dataGraph, tupleShape, {numComponents}, scanData->getId());
-
-  // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
-  DataGroup* phase_group = complex::DataGroup::Create(dataGraph, "Phase Data", group->getId());
-  numComponents = 1;
-  size_t numTuples = 2;
-  Int32ArrayType* laue_data = createTestDataArray<int32_t>("Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId());
-
-#endif
+  Int16ArrayType* ci_data = CreateTestDataArray<int16_t>("Area", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  FloatArrayType* power_data = CreateTestDataArray<float>("Power", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  UInt8ArrayType* laserTTL_data = CreateTestDataArray<uint8_t>("LaserTTL", dataGraph, tupleShape, {numComponents}, scanData->getId());
 
   return dataGraph;
 }
@@ -337,21 +314,21 @@ TEST_CASE("Node Based Geometry IO")
 {
   Application app;
 
-  fs::path dataDir = getDataDir(app);
+  fs::path dataDir = GetDataDir(app);
 
   if(!fs::exists(dataDir))
   {
     REQUIRE(fs::create_directories(dataDir));
   }
 
-  fs::path filePath = getDataDir(app) / "node_geometry_io.h5";
+  fs::path filePath = GetDataDir(app) / "node_geometry_io.h5";
 
   std::string filePathString = filePath.string();
 
   // Write HDF5 file
   try
   {
-    DataStructure ds = createNodeBasedGeometries();
+    DataStructure ds = CreateNodeBasedGeometries();
     auto fileId = H5Fcreate(filePathString.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     REQUIRE(fileId > 0);
 

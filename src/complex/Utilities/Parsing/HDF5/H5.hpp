@@ -37,5 +37,9 @@ static constexpr StringLiteral k_DataArrayTag = "DataArray";
 static constexpr StringLiteral k_ObjectTypeTag = "ObjectType";
 static constexpr StringLiteral k_DataStructureTag = "DataStructure";
 
+static constexpr StringLiteral k_VertexListIdTag = "VertexListId";
+static constexpr StringLiteral k_SharedVertexListTag = "SharedVertexList";
+static constexpr StringLiteral k_VertexSizesIdTag = "VertexSizesId";
+
 } // namespace H5
 } // namespace complex
