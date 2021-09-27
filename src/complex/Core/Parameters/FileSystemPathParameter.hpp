@@ -80,13 +80,7 @@ public:
   [[nodiscard]] ValueType defaultPath() const;
 
   /**
-   * @brief sets the type of path that the parameter holds. File or Directory
-   * @param pathType
-   */
-  void setPathType(PathType pathType);
-
-  /**
-   * @brief Returns the type of Path that the parameter represents. File or Directory.
+   * @brief Returns the type of Path that the parameter represents. File or directory and input or output.
    * @return
    */
   [[nodiscard]] PathType getPathType() const;
