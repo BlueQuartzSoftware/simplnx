@@ -8,7 +8,7 @@
 
 namespace
 {
-std::optional<complex::NumericType> NumericTypefromString(std::string_view string)
+constexpr std::optional<complex::NumericType> NumericTypefromString(std::string_view string) noexcept
 {
   if(string == "i8")
   {
@@ -20,11 +20,11 @@ std::optional<complex::NumericType> NumericTypefromString(std::string_view strin
   }
   if(string == "i16")
   {
-    return complex::NumericType::i8;
+    return complex::NumericType::i16;
   }
   if(string == "u16")
   {
-    return complex::NumericType::u8;
+    return complex::NumericType::u16;
   }
   if(string == "i32")
   {
