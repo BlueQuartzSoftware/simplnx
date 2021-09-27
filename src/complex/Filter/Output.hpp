@@ -81,6 +81,12 @@ public:
   [[nodiscard]] std::vector<usize> dims() const;
 
   /**
+   * @brief Returns the number of components of the DataArray to be created.
+   * @return
+   */
+  [[nodiscard]] u64 numComponents() const;
+
+  /**
    * @brief Returns the path of the DataArray to be created.
    * @return
    */
