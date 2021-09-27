@@ -194,7 +194,6 @@ DataStructure createDataStructure()
   complex::SizeVec3 imageGeomDims = {100, 100, 100};
   imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
 
-  std::cout << "Creating Data Structure" << std::endl;
   // Create some DataArrays; The DataStructure keeps a shared_ptr<> to the DataArray so DO NOT put
   // it into another shared_ptr<>
   size_t numComponents = 1;
@@ -310,7 +309,6 @@ DataStructure createNodeBasedGeometries()
   complex::SizeVec3 imageGeomDims = {100, 100, 100};
   imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
 
-  std::cout << "Creating Data Structure" << std::endl;
   // Create some DataArrays; The DataStructure keeps a shared_ptr<> to the DataArray so DO NOT put
   // it into another shared_ptr<>
   size_t numComponents = 1;
