@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Common/StringLiteral.hpp"
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 #include "complex/complex_export.hpp"
@@ -18,11 +19,11 @@ public:
   CreateDataArray& operator=(const CreateDataArray&) = delete;
   CreateDataArray& operator=(CreateDataArray&&) noexcept = delete;
 
-  // Declare the strings used as keys for the Arguments
-  static inline constexpr const char k_NumericType_Key[] = "numeric_type";
-  static inline constexpr const char k_NumComps_Key[] = "component_count";
-  static inline constexpr const char k_NumTuples_Key[] = "tuple_count";
-  static inline constexpr const char k_DataPath_Key[] = "output_data_array";
+  // Parameter Keys
+  static inline constexpr StringLiteral k_NumericType_Key = "numeric_type";
+  static inline constexpr StringLiteral k_NumComps_Key = "component_count";
+  static inline constexpr StringLiteral k_NumTuples_Key = "tuple_count";
+  static inline constexpr StringLiteral k_DataPath_Key = "output_data_array";
 
   /**
    * @brief

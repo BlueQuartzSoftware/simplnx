@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include "complex/Common/StringLiteral.hpp"
 #include "complex/Core/Application.hpp"
 #include "complex/Core/Filters/ImportTextFilter.hpp"
 #include "complex/Core/Parameters/FileSystemPathParameter.hpp"
@@ -58,12 +59,12 @@ TEST_CASE("Create Core Filter")
 
 TEST_CASE("RunCoreFilter")
 {
-  static constexpr const char* k_FileName = "ascii_data.txt";
+  static const fs::path k_FileName = "ascii_data.txt";
   static constexpr u64 k_NLines = 25;
 
   SECTION("Create ASCII File")
   {
-    std::ofstream file(k_FileName);
+    std::ofstream file(k_FileName.c_str());
     for(i32 i = 0; i < k_NLines; i++)
     {
       file << i << "," << i + 1 << "," << i + 2 << "\n";
