@@ -2,16 +2,18 @@
 
 #include "complex/Core/Parameters/utils/FilePathGenerator.hpp"
 
+#include <filesystem>
+#include <type_traits>
+
 #include <fmt/core.h>
+
+#include <nlohmann/json.hpp>
 
 namespace fs = std::filesystem;
 
 namespace complex
 {
-
-//-----------------------------------------------------------------------------
-// Define Constants here
-namespace GeneratedFileListParameterConstants
+namespace
 {
 constexpr const char k_StartIndex[] = "startIndex";
 constexpr const char k_EndIndex[] = "endIndex";
@@ -22,9 +24,7 @@ constexpr const char k_InputPath[] = "inputPath";
 constexpr const char k_FilePrefix[] = "filePrefix";
 constexpr const char k_FileSuffix[] = "fileSuffix";
 constexpr const char k_FileExtension[] = "fileExtension";
-} // namespace GeneratedFileListParameterConstants
-
-using namespace GeneratedFileListParameterConstants;
+} // namespace
 
 //-----------------------------------------------------------------------------
 GeneratedFileListParameter::GeneratedFileListParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
@@ -50,11 +50,11 @@ nlohmann::json GeneratedFileListParameter::toJson(const std::any& value) const
 {
   auto data = std::any_cast<ValueType>(value);
   nlohmann::json json;
-  json[k_StartIndex] = static_cast<int32_t>(data.startIndex);
-  json[k_EndIndex] = static_cast<int32_t>(data.endIndex);
-  json[k_PaddingDigits] = static_cast<int32_t>(data.paddingDigits);
-  json[k_Ordering] = static_cast<int32_t>(data.ordering);
-  json[k_IncrementIndex] = static_cast<int32_t>(data.incrementIndex);
+  json[k_StartIndex] = data.startIndex;
+  json[k_EndIndex] = data.endIndex;
+  json[k_PaddingDigits] = data.paddingDigits;
+  json[k_Ordering] = static_cast<std::underlying_type_t<Ordering>>(data.ordering);
+  json[k_IncrementIndex] = data.incrementIndex;
   json[k_InputPath] = data.inputPath;
   json[k_FilePrefix] = data.filePrefix;
   json[k_FileSuffix] = data.fileSuffix;
@@ -112,15 +112,15 @@ Result<std::any> GeneratedFileListParameter::fromJson(const nlohmann::json& json
 
   ValueType value;
 
-  value.paddingDigits = static_cast<int32_t>(json[k_PaddingDigits].get<int32_t>());
+  value.paddingDigits = json[k_PaddingDigits].get<int32_t>();
   value.ordering = static_cast<Ordering>(json[k_Ordering].get<uint32_t>());
-  value.incrementIndex = static_cast<int32_t>(json[k_IncrementIndex].get<int32_t>());
+  value.incrementIndex = json[k_IncrementIndex].get<int32_t>();
   value.inputPath = json[k_InputPath].get<std::string>();
   value.filePrefix = json[k_FilePrefix].get<std::string>();
   value.fileSuffix = json[k_FileSuffix].get<std::string>();
   value.fileExtension = json[k_FileExtension].get<std::string>();
-  value.startIndex = static_cast<int32_t>(json[k_StartIndex].get<int32_t>());
-  value.endIndex = static_cast<int32_t>(json[k_EndIndex].get<int32_t>());
+  value.startIndex = json[k_StartIndex].get<int32_t>();
+  value.endIndex = json[k_EndIndex].get<int32_t>();
 
   return {value};
 }
@@ -140,7 +140,7 @@ std::any GeneratedFileListParameter::defaultValue() const
 //-----------------------------------------------------------------------------
 Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
 {
-  Result<> results;
+  Result<> result;
 
   auto value = std::any_cast<ValueType>(valueRef);
   if(value.startIndex < value.endIndex)
@@ -161,10 +161,9 @@ Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
   {
     if(!fs::exists(currentFilePath))
     {
-      results.errors().push_back({-2, fmt::format("FILE DOES NOT EXIST:{}", currentFilePath)});
+      result.errors().push_back({-2, fmt::format("FILE DOES NOT EXIST:{}", currentFilePath)});
     }
   }
-  return results;
+  return result;
 }
-
 } // namespace complex

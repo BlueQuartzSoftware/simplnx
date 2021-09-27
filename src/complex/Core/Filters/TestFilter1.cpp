@@ -35,8 +35,7 @@ Parameters TestFilter1::parameters() const
   Parameters params;
   params.insert(std::make_unique<Float32Parameter>(k_Param1, "Parameter 1", "The 1st parameter", 0.1234f));
   params.insert(std::make_unique<BoolParameter>(k_Param2, "Parameter 2", "The 2nd parameter", false));
-  GeneratedFileListParameter::ValueType defaultFileListData;
-  params.insert(std::make_unique<GeneratedFileListParameter>(k_Param3, "Input File List", "Data needed to generate the input file list", defaultFileListData));
+  params.insert(std::make_unique<GeneratedFileListParameter>(k_Param3, "Input File List", "Data needed to generate the input file list", GeneratedFileListParameter::ValueType{}));
   return params;
 }
 

@@ -132,8 +132,8 @@ Result<> convertResult(Result<T>&& result)
  *
  * A Typical invocation would be:
  * @code
- *     return complex::MakeErrorResult<std::any>(-1, fmt::format("{}JSON Data does not contain an entry with a key of \"{}\"", prefix, name()));
- * #endcode
+ *     return complex::MakeErrorResult<std::any>(-1, fmt::format("{} JSON Data does not contain an entry with a key of \"{}\"", prefix, name()));
+ * @endcode
  * @tparam T
  * @param errorCode Error Value. Typically negative number
  * @param message The Error message that is paired with the code

@@ -121,8 +121,8 @@ std::string ImportTextFilter::humanName() const
 Parameters ImportTextFilter::parameters() const
 {
   Parameters params;
-  complex::FileSystemPathParameter::ValueType fspi("<default files to read goes here>");
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFileKey, "Input File", "File to read from", fspi, FileSystemPathParameter::PathType::InputFile));
+  params.insert(
+      std::make_unique<FileSystemPathParameter>(k_InputFileKey, "Input File", "File to read from", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarTypeKey, "Scalar Type", "Type to interpret data as", NumericType::i8));
   params.insert(std::make_unique<UInt64Parameter>(k_NTuplesKey, "Number of Tuples", "Number of tuples in resulting array (i.e. number of lines to read)", 3));
   params.insert(std::make_unique<UInt64Parameter>(k_NCompKey, "Number of Components", "Number of columns", 3));
@@ -154,7 +154,7 @@ Result<OutputActions> ImportTextFilter::preflightImpl(const DataStructure& data,
 
 Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  auto inputFilePath = args.value<FileSystemPathParameter::ValueType>(k_InputFileKey);
+  auto inputFilePath = args.value<fs::path>(k_InputFileKey);
   auto numericType = args.value<NumericType>(k_ScalarTypeKey);
   auto components = args.value<u64>(k_NCompKey);
   auto skipLines = args.value<u64>(k_NSkipLinesKey);

@@ -1,23 +1,16 @@
-
-
 #include "FilePathGenerator.hpp"
 
-#include <fmt/core.h>
-
 #include <filesystem>
-#include <sstream>
 #include <string>
+
+#include <fmt/core.h>
 
 namespace fs = std::filesystem;
 
 namespace complex
 {
-
 namespace FilePathGenerator
 {
-
-// -----------------------------------------------------------------------------
-
 // -----------------------------------------------------------------------------
 std::vector<std::string> GenerateFileList(int32_t start, int32_t end, int32_t increment, bool& hasMissingFiles, bool stackLowToHigh, const std::string& inputPath, const std::string& filePrefix,
                                           const std::string& fileSuffix, const std::string& fileExtension, int32_t paddingDigits)
@@ -33,7 +26,7 @@ std::vector<std::string> GenerateFileList(int32_t start, int32_t end, int32_t in
   std::string format_string = fmt::format("{{}}/{{}}{{:0{}d}}{{}}{{}}", paddingDigits);
 
   bool missingFiles = false;
-  for(int32_t i = 0; i < (end - start) + 1; i = i + increment)
+  for(int32_t i = 0; i < (end - start) + 1; i += increment)
   {
     if(stackLowToHigh)
     {

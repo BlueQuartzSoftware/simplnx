@@ -79,9 +79,7 @@ TEST_CASE("RunCoreFilter")
     Arguments args;
     DataPath dataPath({"foo"});
 
-    FileSystemPathParameter::ValueType vt = fs::path(k_FileName);
-
-    args.insert("input_file", std::any(FileSystemPathParameter::ValueType(vt)));
+    args.insert("input_file", std::make_any<fs::path>(k_FileName));
     args.insert("scalar_type", std::make_any<NumericType>(NumericType::i32));
     args.insert("n_tuples", std::make_any<u64>(k_NLines));
     args.insert("n_comp", std::make_any<u64>(k_NComp));

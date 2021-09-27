@@ -9,7 +9,6 @@ namespace fs = std::filesystem;
 namespace
 {
 constexpr const char k_PathKey[] = "path";
-constexpr const char k_TypeKey[] = "type";
 
 //-----------------------------------------------------------------------------
 complex::Result<> ValidateInputFile(const complex::FileSystemPathParameter::ValueType& path)
@@ -139,7 +138,6 @@ Result<> FileSystemPathParameter::validate(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
 {
-  // No matter the type, there must be something in the 'path'
   if(path.empty())
   {
     return {nonstd::make_unexpected(std::vector<Error>{{-1, "Path must not be empty"}})};

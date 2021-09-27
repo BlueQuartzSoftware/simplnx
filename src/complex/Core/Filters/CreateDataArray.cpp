@@ -61,7 +61,6 @@ Result<OutputActions> CreateDataArray::preflightImpl(const DataStructure& data, 
   auto numTuples = args.value<u64>(k_NumTuples_Key);
   auto dataArrayPath = args.value<DataPath>(k_DataPath_Key);
 
-  // This will allocate
   auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<size_t>{numTuples}, components, dataArrayPath);
 
   OutputActions actions;
