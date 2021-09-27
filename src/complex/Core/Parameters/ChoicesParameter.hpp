@@ -13,7 +13,7 @@ class COMPLEX_EXPORT ChoicesParameter : public ValueParameter
 {
 public:
   using Choices = std::vector<std::string>;
-  using ValueType = u64;
+  using ValueType = uint64;
 
   ChoicesParameter() = delete;
   ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const Choices& choices);

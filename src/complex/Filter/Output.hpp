@@ -18,7 +18,7 @@ class IDataAction
 public:
   using UniquePointer = std::unique_ptr<IDataAction>;
 
-  enum class Mode : u8
+  enum class Mode : uint8
   {
     Preflight = 0,
     Execute
@@ -51,7 +51,7 @@ class CreateArrayAction : public IDataAction
 public:
   CreateArrayAction() = delete;
 
-  CreateArrayAction(NumericType type, const std::vector<usize>& dims, u64 nComp, const DataPath& path);
+  CreateArrayAction(NumericType type, const std::vector<usize>& dims, uint64 nComp, const DataPath& path);
 
   ~CreateArrayAction() noexcept override;
 
@@ -84,7 +84,7 @@ public:
    * @brief Returns the number of components of the DataArray to be created.
    * @return
    */
-  [[nodiscard]] u64 numComponents() const;
+  [[nodiscard]] uint64 numComponents() const;
 
   /**
    * @brief Returns the path of the DataArray to be created.
@@ -95,7 +95,7 @@ public:
 private:
   NumericType m_Type;
   std::vector<usize> m_Dims;
-  u64 m_NComp;
+  uint64 m_NComp;
   DataPath m_Path;
 };
 

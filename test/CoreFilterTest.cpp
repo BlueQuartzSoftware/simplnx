@@ -60,20 +60,20 @@ TEST_CASE("Create Core Filter")
 TEST_CASE("RunCoreFilter")
 {
   static const fs::path k_FileName = "ascii_data.txt";
-  static constexpr u64 k_NLines = 25;
+  static constexpr uint64 k_NLines = 25;
 
   SECTION("Create ASCII File")
   {
     std::ofstream file(k_FileName.c_str());
-    for(i32 i = 0; i < k_NLines; i++)
+    for(int32 i = 0; i < k_NLines; i++)
     {
       file << i << "," << i + 1 << "," << i + 2 << "\n";
     }
   }
   SECTION("Run ImportTextFilter")
   {
-    static constexpr u64 k_NComp = 3;
-    static constexpr u64 k_NSkipLines = 0;
+    static constexpr uint64 k_NComp = 3;
+    static constexpr uint64 k_NSkipLines = 0;
 
     ImportTextFilter filter;
     DataStructure ds;
@@ -81,11 +81,11 @@ TEST_CASE("RunCoreFilter")
     DataPath dataPath({"foo"});
 
     args.insert("input_file", std::make_any<fs::path>(k_FileName));
-    args.insert("scalar_type", std::make_any<NumericType>(NumericType::i32));
-    args.insert("n_tuples", std::make_any<u64>(k_NLines));
-    args.insert("n_comp", std::make_any<u64>(k_NComp));
-    args.insert("n_skip_lines", std::make_any<u64>(k_NSkipLines));
-    args.insert("delimiter_choice", std::make_any<u64>(0));
+    args.insert("scalar_type", std::make_any<NumericType>(NumericType::int32));
+    args.insert("n_tuples", std::make_any<uint64>(k_NLines));
+    args.insert("n_comp", std::make_any<uint64>(k_NComp));
+    args.insert("n_skip_lines", std::make_any<uint64>(k_NSkipLines));
+    args.insert("delimiter_choice", std::make_any<uint64>(0));
     args.insert("output_data_array", std::make_any<DataPath>(dataPath));
 
     // auto callback = [](const IFilter::Message& message) { fmt::print("{}: {}\n", message.type, message.message); };
@@ -108,10 +108,10 @@ TEST_CASE("RunCoreFilter")
     CAPTURE(result.warnings());
     // CAPTURE(errors);
     REQUIRE(result.valid());
-    const auto* dataArrayPtr = dynamic_cast<DataArray<i32>*>(ds.getData(dataPath));
+    const auto* dataArrayPtr = dynamic_cast<DataArray<int32>*>(ds.getData(dataPath));
     REQUIRE(dataArrayPtr != nullptr);
     const auto& dataArray = *dataArrayPtr;
-    for(i32 i = k_NSkipLines; i < k_NLines; i++)
+    for(int32 i = k_NSkipLines; i < k_NLines; i++)
     {
       usize index = (i - k_NSkipLines) * k_NComp;
       REQUIRE(dataArray[index] == i);

@@ -10,45 +10,45 @@ namespace
 {
 constexpr std::optional<complex::NumericType> NumericTypefromString(std::string_view string) noexcept
 {
-  if(string == "i8")
+  if(string == "int8")
   {
-    return complex::NumericType::i8;
+    return complex::NumericType::int8;
   }
-  if(string == "u8")
+  if(string == "uint8")
   {
-    return complex::NumericType::u8;
+    return complex::NumericType::uint8;
   }
-  if(string == "i16")
+  if(string == "int16")
   {
-    return complex::NumericType::i16;
+    return complex::NumericType::int16;
   }
-  if(string == "u16")
+  if(string == "uint16")
   {
-    return complex::NumericType::u16;
+    return complex::NumericType::uint16;
   }
-  if(string == "i32")
+  if(string == "int32")
   {
-    return complex::NumericType::i32;
+    return complex::NumericType::int32;
   }
-  if(string == "u32")
+  if(string == "uint32")
   {
-    return complex::NumericType::u32;
+    return complex::NumericType::uint32;
   }
-  if(string == "i64")
+  if(string == "int64")
   {
-    return complex::NumericType::i64;
+    return complex::NumericType::int64;
   }
-  if(string == "u64")
+  if(string == "uint64")
   {
-    return complex::NumericType::u64;
+    return complex::NumericType::uint64;
   }
-  if(string == "f32")
+  if(string == "float32")
   {
-    return complex::NumericType::f32;
+    return complex::NumericType::float32;
   }
-  if(string == "f64")
+  if(string == "float64")
   {
-    return complex::NumericType::f64;
+    return complex::NumericType::float64;
   }
 
   return {};

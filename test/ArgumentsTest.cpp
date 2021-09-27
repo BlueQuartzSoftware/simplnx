@@ -14,11 +14,11 @@ TEST_CASE("ArgumentsTest")
 
   SECTION("insert and retrieve primitive")
   {
-    static constexpr i32 k_FooValue = 42;
+    static constexpr int32 k_FooValue = 42;
 
     args.insert(k_FooKey.str(), k_FooValue);
 
-    auto value = args.value<i32>(k_FooKey.view());
+    auto value = args.value<int32>(k_FooKey.view());
 
     REQUIRE(value == k_FooValue);
   }
@@ -44,11 +44,11 @@ TEST_CASE("ArgumentsTest")
   }
   SECTION("ref test")
   {
-    i32 value = 42;
+    int32 value = 42;
 
     args.insert(k_FooKey.str(), std::ref(value));
 
-    auto& valueRefWrapper = args.ref<i32>(k_FooKey.view());
+    auto& valueRefWrapper = args.ref<int32>(k_FooKey.view());
 
     REQUIRE(&value == &valueRefWrapper);
     REQUIRE(value == valueRefWrapper);
@@ -59,18 +59,18 @@ TEST_CASE("ArgumentsTest")
   }
   SECTION("const ref test")
   {
-    i32 value = 42;
+    int32 value = 42;
 
     args.insert(k_FooKey.str(), std::cref(value));
 
-    const auto& valueRefWrapper = args.ref<const i32>(k_FooKey.view());
+    const auto& valueRefWrapper = args.ref<const int32>(k_FooKey.view());
 
     REQUIRE(&value == &valueRefWrapper);
     REQUIRE(value == valueRefWrapper);
   }
   SECTION("contains test")
   {
-    static constexpr i32 k_Value = 42;
+    static constexpr int32 k_Value = 42;
 
     args.insert(k_FooKey.str(), k_Value);
 

@@ -28,7 +28,7 @@ public:
 
   struct Message
   {
-    enum class Type : u8
+    enum class Type : uint8
     {
       Info = 0,
       Debug,

@@ -17,7 +17,7 @@ namespace complex
  */
 struct COMPLEX_EXPORT Error
 {
-  i32 code = 0;
+  int32 code = 0;
   std::string message;
 };
 
@@ -27,7 +27,7 @@ struct COMPLEX_EXPORT Error
  */
 struct COMPLEX_EXPORT Warning
 {
-  i32 code = 0;
+  int32 code = 0;
   std::string message;
 };
 

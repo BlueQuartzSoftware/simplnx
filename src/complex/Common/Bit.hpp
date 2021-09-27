@@ -17,7 +17,7 @@
 
 namespace complex
 {
-enum class endian : u8
+enum class endian : uint8
 {
   little = 0,
   big = 1,
@@ -28,19 +28,19 @@ template <class T>
 [[nodiscard]] inline constexpr T byteswap(T value) noexcept
 {
   static_assert(std::is_integral_v<T>);
-  if constexpr(sizeof(T) == sizeof(u8))
+  if constexpr(sizeof(T) == sizeof(uint8))
   {
     return value;
   }
-  else if constexpr(sizeof(T) == sizeof(u16))
+  else if constexpr(sizeof(T) == sizeof(uint16))
   {
     return ((value >> 8) & 0xFFu) | ((value & 0xFFu) << 8);
   }
-  else if constexpr(sizeof(T) == sizeof(u32))
+  else if constexpr(sizeof(T) == sizeof(uint32))
   {
     return ((value & 0x000000FFu) << 24) | ((value & 0x00FF0000u) >> 8) | ((value & 0x0000FF00u) << 8) | ((value & 0xFF000000u) >> 24);
   }
-  else if constexpr(sizeof(T) == sizeof(u64))
+  else if constexpr(sizeof(T) == sizeof(uint64))
   {
     return (((value & 0xFF00000000000000ull) >> 56) | ((value & 0x00FF000000000000ull) >> 40) | ((value & 0x0000FF0000000000ull) >> 24) | ((value & 0x000000FF00000000ull) >> 8) |
             ((value & 0x00000000FF000000ull) << 8) | ((value & 0x0000000000FF0000ull) << 24) | ((value & 0x000000000000FF00ull) << 40) | ((value & 0x00000000000000FFull) << 56));

@@ -12,13 +12,13 @@ namespace complex
 class COMPLEX_EXPORT DataParameter : public AbstractParameter
 {
 public:
-  enum class Category : u8
+  enum class Category : uint8
   {
     Required = 0,
     Created
   };
 
-  enum class Mutability : u8
+  enum class Mutability : uint8
   {
     Const = 0,
     Mutable
