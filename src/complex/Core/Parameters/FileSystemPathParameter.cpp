@@ -6,55 +6,57 @@
 
 namespace fs = std::filesystem;
 
+using namespace complex;
+
 namespace
 {
 constexpr const char k_PathKey[] = "path";
 
 //-----------------------------------------------------------------------------
-complex::Result<> ValidateInputFile(const complex::FileSystemPathParameter::ValueType& path)
+Result<> ValidateInputFile(const FileSystemPathParameter::ValueType& path)
 {
   if(!fs::exists(path))
   {
-    return {nonstd::make_unexpected(std::vector<complex::Error>{{-1, fmt::format("Path \"{}\" does not exist", path.string())}})};
+    return MakeErrorResult(-2, fmt::format("Path \"{}\" does not exist", path.string()));
   }
 
   if(!fs::is_regular_file(path))
   {
-    return {nonstd::make_unexpected(std::vector<complex::Error>{{-1, fmt::format("Path \"{}\" is not a file", path.string())}})};
+    return MakeErrorResult(-3, fmt::format("Path \"{}\" is not a file", path.string()));
   }
   return {};
 }
 
 //-----------------------------------------------------------------------------
-complex::Result<> ValidateInputPath(const complex::FileSystemPathParameter::ValueType& path)
+Result<> ValidateInputDir(const FileSystemPathParameter::ValueType& path)
 {
   if(!fs::exists(path))
   {
-    return {nonstd::make_unexpected(std::vector<complex::Error>{{-1, fmt::format("Path \"{}\" does not exist", path.string())}})};
+    return MakeErrorResult(-4, fmt::format("Path \"{}\" does not exist", path.string()));
   }
-  if(fs::is_regular_file(path))
+  if(!fs::is_directory(path))
   {
-    return {nonstd::make_unexpected(std::vector<complex::Error>{{-1, fmt::format("Path \"{}\" is not a file", path.string())}})};
-  }
-  return {};
-}
-
-//-----------------------------------------------------------------------------
-complex::Result<> ValidateOutputFile(const complex::FileSystemPathParameter::ValueType& path)
-{
-  if(!fs::exists(path))
-  {
-    return {nonstd::make_unexpected(std::vector<complex::Error>{{-1, fmt::format("Path \"{}\" does not exist. It will be created during execution.", path.string())}})};
+    return MakeErrorResult(-5, fmt::format("Path \"{}\" is not a file", path.string()));
   }
   return {};
 }
 
 //-----------------------------------------------------------------------------
-complex::Result<> ValidateOutputPath(const complex::FileSystemPathParameter::ValueType& path)
+Result<> ValidateOutputFile(const FileSystemPathParameter::ValueType& path)
 {
   if(!fs::exists(path))
   {
-    return {nonstd::make_unexpected(std::vector<complex::Error>{{-1, fmt::format("Path \"{}\" does not exist. It will be created during execution.", path.string())}})};
+    return MakeWarningVoidResult(-6, fmt::format("Path \"{}\" does not exist. It will be created during execution.", path.string()));
+  }
+  return {};
+}
+
+//-----------------------------------------------------------------------------
+Result<> ValidateOutputDir(const FileSystemPathParameter::ValueType& path)
+{
+  if(!fs::exists(path))
+  {
+    return MakeWarningVoidResult(-7, fmt::format("Path \"{}\" does not exist. It will be created during execution.", path.string()));
   }
   return {};
 }
@@ -88,7 +90,7 @@ nlohmann::json FileSystemPathParameter::toJson(const std::any& value) const
 {
   ValueType path = std::any_cast<ValueType>(value);
   nlohmann::json json;
-  json[::k_PathKey] = path.string();
+  json[k_PathKey] = path.string();
   return json;
 }
 
@@ -147,12 +149,12 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
   {
   case complex::FileSystemPathParameter::PathType::InputFile:
     return ValidateInputFile(path);
-  case complex::FileSystemPathParameter::PathType::InputPath:
-    return ValidateInputPath(path);
+  case complex::FileSystemPathParameter::PathType::InputDir:
+    return ValidateInputDir(path);
   case complex::FileSystemPathParameter::PathType::OutputFile:
     return ValidateOutputFile(path);
-  case complex::FileSystemPathParameter::PathType::OutputPath:
-    return ValidateOutputPath(path);
+  case complex::FileSystemPathParameter::PathType::OutputDir:
+    return ValidateOutputDir(path);
   }
 
   return {};
