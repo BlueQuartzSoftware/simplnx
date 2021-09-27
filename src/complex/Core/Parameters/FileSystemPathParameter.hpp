@@ -20,9 +20,9 @@ public:
   enum class PathType : uint32_t
   {
     InputFile = 0,
-    InputPath = 1,
+    InputDir = 1,
     OutputFile = 2,
-    OutputPath = 3
+    OutputDir = 3
   };
 
   using ValueType = std::filesystem::path;
