@@ -4,9 +4,6 @@
 #include "complex/Filter/ValueParameter.hpp"
 #include "complex/complex_export.hpp"
 
-#include <nlohmann/json.hpp>
-
-#include <filesystem>
 #include <string>
 
 namespace complex
@@ -19,6 +16,7 @@ public:
     LowToHigh = 0,
     HighToLow = 1
   };
+
   /**
    * @brief This struct holds all of the data necessary to generate a list of file paths.
    */
@@ -36,13 +34,7 @@ public:
   };
 
   GeneratedFileListParameter() = delete;
-  /**
-   *
-   * @param name
-   * @param humanName
-   * @param helpText
-   * @param defaultValue
-   */
+
   GeneratedFileListParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
 
   ~GeneratedFileListParameter() override = default;

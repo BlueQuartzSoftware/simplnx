@@ -2,23 +2,14 @@
 
 #include "complex/complex_export.hpp"
 
-#include <array>
 #include <cstdint>
-#include <filesystem>
-#include <sstream>
 #include <string>
 #include <vector>
 
-#include <fmt/core.h>
-
-namespace fs = std::filesystem;
-
 namespace complex
 {
-
 namespace FilePathGenerator
 {
-
 /**
  * @brief generateFileList This method will generate a file list in the correct order of the files that should
  * be imported int32_to an h5ebsd file
@@ -36,7 +27,5 @@ namespace FilePathGenerator
  */
 COMPLEX_EXPORT std::vector<std::string> GenerateFileList(int32_t start, int32_t end, int32_t increment, bool& hasMissingFiles, bool stackLowToHigh, const std::string& inputPath,
                                                          const std::string& filePrefix, const std::string& fileSuffix, const std::string& fileExtension, int32_t paddingDigits);
-
 } // namespace FilePathGenerator
-
 } // namespace complex

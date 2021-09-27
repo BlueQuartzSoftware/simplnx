@@ -4,9 +4,7 @@
 #include "complex/Filter/ValueParameter.hpp"
 #include "complex/complex_export.hpp"
 
-#include <cstdint>
 #include <filesystem>
-#include <string>
 
 namespace complex
 {
@@ -14,26 +12,16 @@ namespace complex
  * @brief This FilterParameter can represent an input or output file or folder on the
  * local file system. If your filter needs to gather a single input/output path, where
  * path can be a file or folder, this is the FilterParameter to use. The data is
- * held in the ValueType which is a type alias for a Struct
- *
- * @code
-    using ValueType = struct s_value_type
-    {
-      std::filesystem::path m_Path;
-      PathType m_PathType;
-    };
- * @endcode
- *
- * Where PathType is an Enumeration inside of the FileSystemPathParameter
+ * held in a std::filesystem::path.
  */
 class COMPLEX_EXPORT FileSystemPathParameter : public ValueParameter
 {
 public:
   enum class PathType : uint32_t
   {
-    InputFile = 0,  //!<
-    InputPath = 1,  //!<
-    OutputFile = 2, //!<
+    InputFile = 0,
+    InputPath = 1,
+    OutputFile = 2,
     OutputPath = 3
   };
 
