@@ -157,7 +157,7 @@ H5::ErrorType DataObject::writeHdf5(H5::IdType parentId) const
   if(typeName != "DataArray")
   {
     groupId = H5Gcreate(parentId, getName().c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    err = H5::Writer::Generic::writeStringAttribute(parentId, getName(), complex::Constants::k_ObjectTypeTag, typeName);
+    err = H5::Writer::Generic::writeStringAttribute(parentId, getName(), complex::H5::k_ObjectTypeTag.str(), typeName);
     if(err < 0)
     {
       H5Gclose(groupId);

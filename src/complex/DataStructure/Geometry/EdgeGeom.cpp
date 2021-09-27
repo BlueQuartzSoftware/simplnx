@@ -297,9 +297,9 @@ AbstractGeometry::StatusCode EdgeGeom::findElementSizes()
   return 1;
 }
 
-const FloatArray* EdgeGeom::getElementSizes() const
+const FloatArrayType* EdgeGeom::getElementSizes() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_EdgeSizesId));
+  return dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_EdgeSizesId));
 }
 
 void EdgeGeom::deleteElementSizes()
@@ -378,7 +378,7 @@ void EdgeGeom::deleteElementNeighbors()
 AbstractGeometry::StatusCode EdgeGeom::findElementCentroids()
 {
   auto dataStore = new DataStore<float>({getNumberOfElements()}, {3});
-  FloatArray* edgeCentroids = DataArray<float>::Create(*getDataStructure(), "Edge Centroids", dataStore, getId());
+  FloatArrayType* edgeCentroids = DataArray<float>::Create(*getDataStructure(), "Edge Centroids", dataStore, getId());
   GeometryHelpers::Topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroids);
   if(getElementCentroids() == nullptr)
   {
@@ -387,13 +387,13 @@ AbstractGeometry::StatusCode EdgeGeom::findElementCentroids()
   return 1;
 }
 
-const FloatArray* EdgeGeom::getElementCentroids() const
+const FloatArrayType* EdgeGeom::getElementCentroids() const
 {
   if(!m_EdgeCentroidsId)
   {
     return nullptr;
   }
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_EdgeCentroidsId.value()));
+  return dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_EdgeCentroidsId.value()));
 }
 
 void EdgeGeom::deleteElementCentroids()
@@ -419,7 +419,7 @@ void EdgeGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, double
   shape[1] = 1.0;
 }
 
-void EdgeGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
+void EdgeGeom::findDerivatives(DoubleArrayType* field, DoubleArrayType* derivatives, Observable* observable) const
 {
   throw std::runtime_error("");
 }
@@ -460,7 +460,7 @@ void EdgeGeom::setElementNeighbors(const ElementDynamicList* elementNeighbors)
   m_EdgeNeighborsId = elementNeighbors->getId();
 }
 
-void EdgeGeom::setElementCentroids(const FloatArray* elementCentroids)
+void EdgeGeom::setElementCentroids(const FloatArrayType* elementCentroids)
 {
   deleteElementCentroids();
   if(!elementCentroids)
@@ -470,7 +470,7 @@ void EdgeGeom::setElementCentroids(const FloatArray* elementCentroids)
   m_EdgeCentroidsId = elementCentroids->getId();
 }
 
-void EdgeGeom::setElementSizes(const FloatArray* elementSizes)
+void EdgeGeom::setElementSizes(const FloatArrayType* elementSizes)
 {
   deleteElementSizes();
   if(!elementSizes)

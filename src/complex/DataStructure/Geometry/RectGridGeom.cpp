@@ -67,7 +67,7 @@ std::string RectGridGeom::getGeometryTypeAsString() const
   return "RectGridGeom";
 }
 
-void RectGridGeom::setBounds(const FloatArray* xBounds, const FloatArray* yBounds, const FloatArray* zBounds)
+void RectGridGeom::setBounds(const FloatArrayType* xBounds, const FloatArrayType* yBounds, const FloatArrayType* zBounds)
 {
   if(!xBounds)
   {
@@ -97,19 +97,19 @@ void RectGridGeom::setBounds(const FloatArray* xBounds, const FloatArray* yBound
   }
 }
 
-const FloatArray* RectGridGeom::getXBounds() const
+const FloatArrayType* RectGridGeom::getXBounds() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_xBoundsId));
+  return dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_xBoundsId));
 }
 
-const FloatArray* RectGridGeom::getYBounds() const
+const FloatArrayType* RectGridGeom::getYBounds() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_yBoundsId));
+  return dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_yBoundsId));
 }
 
-const FloatArray* RectGridGeom::getZBounds() const
+const FloatArrayType* RectGridGeom::getZBounds() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_zBoundsId));
+  return dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_zBoundsId));
 }
 
 void RectGridGeom::initializeWithZeros()
@@ -158,7 +158,7 @@ AbstractGeometry::StatusCode RectGridGeom::findElementSizes()
     }
   }
 
-  FloatArray* sizeArray = DataArray<float>::Create(*getDataStructure(), "Voxel Sizes", sizes, getId());
+  FloatArrayType* sizeArray = DataArray<float>::Create(*getDataStructure(), "Voxel Sizes", sizes, getId());
   if(!sizeArray)
   {
     delete sizes;
@@ -170,9 +170,9 @@ AbstractGeometry::StatusCode RectGridGeom::findElementSizes()
   return 1;
 }
 
-const FloatArray* RectGridGeom::getElementSizes() const
+const FloatArrayType* RectGridGeom::getElementSizes() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_VoxelSizesId));
+  return dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_VoxelSizesId));
 }
 
 void RectGridGeom::deleteElementSizes()
@@ -214,7 +214,7 @@ AbstractGeometry::StatusCode RectGridGeom::findElementCentroids()
   return -1;
 }
 
-const FloatArray* RectGridGeom::getElementCentroids() const
+const FloatArrayType* RectGridGeom::getElementCentroids() const
 {
   return nullptr;
 }
@@ -269,7 +269,7 @@ void RectGridGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, do
   shape[23] = pCoords[0] * pCoords[1];
 }
 
-void RectGridGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
+void RectGridGeom::findDerivatives(DoubleArrayType* field, DoubleArrayType* derivatives, Observable* observable) const
 {
   throw std::runtime_error("");
 }
@@ -326,9 +326,9 @@ size_t RectGridGeom::getNumZPoints() const
 
 complex::Point3D<float> RectGridGeom::getPlaneCoordsf(size_t idx[3]) const
 {
-  const FloatArray* xBnds = getXBounds();
-  const FloatArray* yBnds = getYBounds();
-  const FloatArray* zBnds = getZBounds();
+  const FloatArrayType* xBnds = getXBounds();
+  const FloatArrayType* yBnds = getYBounds();
+  const FloatArrayType* zBnds = getZBounds();
 
   Point3D<float> coords;
   coords[0] = (*xBnds)[idx[0]];
@@ -570,11 +570,11 @@ void RectGridGeom::setElementNeighbors(const ElementDynamicList* elementsNeighbo
 {
 }
 
-void RectGridGeom::setElementCentroids(const FloatArray* elementCentroids)
+void RectGridGeom::setElementCentroids(const FloatArrayType* elementCentroids)
 {
 }
 
-void RectGridGeom::setElementSizes(const FloatArray* elementSizes)
+void RectGridGeom::setElementSizes(const FloatArrayType* elementSizes)
 {
   if(!elementSizes)
   {

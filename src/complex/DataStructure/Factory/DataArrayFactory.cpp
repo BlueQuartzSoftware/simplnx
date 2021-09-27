@@ -28,17 +28,17 @@ void readDims(H5::IdType daId, uint64_t& numTuples, uint64_t& numComponents)
   std::vector<size_t> tupleShape;
   std::vector<size_t> componentShape;
 
-  herr_t err = H5::Support::ReadVectorAttribute(daId, ".", complex::DataStore<size_t>::k_TupleShape, tupleShape);
+  herr_t err = H5::Support::ReadVectorAttribute(daId, ".", complex::H5::k_TupleShapeTag.str(), tupleShape);
   if(err < 0)
   {
-    throw std::runtime_error(fmt::format("Error reading '{}' Attribute from DataSet: {}", complex::DataStore<size_t>::k_TupleShape, H5::Support::GetObjectPath(daId)));
+    throw std::runtime_error(fmt::format("Error reading '{}' Attribute from DataSet: {}", complex::H5::k_TupleShapeTag.str(), H5::Support::GetObjectPath(daId)));
   }
   numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
 
-  err = H5::Support::ReadVectorAttribute(daId, ".", complex::DataStore<size_t>::k_ComponentShape, componentShape);
+  err = H5::Support::ReadVectorAttribute(daId, ".", complex::H5::k_ComponentShapeTag.str(), componentShape);
   if(err < 0)
   {
-    throw std::runtime_error(fmt::format("Error reading '{}' Attribute from DataSet: {}", complex::DataStore<size_t>::k_ComponentShape, H5::Support::GetObjectPath(daId)));
+    throw std::runtime_error(fmt::format("Error reading '{}' Attribute from DataSet: {}", complex::H5::k_ComponentShapeTag.str(), H5::Support::GetObjectPath(daId)));
   }
   numComponents = std::accumulate(componentShape.cbegin(), componentShape.cend(), static_cast<size_t>(1), std::multiplies<>());
 }

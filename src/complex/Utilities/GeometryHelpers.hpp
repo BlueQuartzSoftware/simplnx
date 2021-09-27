@@ -827,7 +827,7 @@ namespace Topology
  * @param centroids
  */
 template <typename T>
-void FindElementCentroids(const DataArray<T>* elemList, const FloatArray* vertices, FloatArray* centroids)
+void FindElementCentroids(const DataArray<T>* elemList, const FloatArrayType* vertices, FloatArrayType* centroids)
 {
   auto& elems = *elemList;
   const size_t numElems = elemList->getNumberOfTuples();
@@ -860,7 +860,7 @@ void FindElementCentroids(const DataArray<T>* elemList, const FloatArray* vertic
  * @param volumes
  */
 template <typename T>
-void FindTetVolumes(const DataArray<T>* tetList, const FloatArray* vertices, FloatArray* volumes)
+void FindTetVolumes(const DataArray<T>* tetList, const FloatArrayType* vertices, FloatArrayType* volumes)
 {
   auto& tets = *tetList;
   const size_t numTets = tetList->getNumberOfTuples();
@@ -892,7 +892,7 @@ void FindTetVolumes(const DataArray<T>* tetList, const FloatArray* vertices, Flo
  * @param volumes
  */
 template <typename T>
-void FindHexVolumes(const DataArray<T>* hexList, const FloatArray* vertices, FloatArray* volumes)
+void FindHexVolumes(const DataArray<T>* hexList, const FloatArrayType* vertices, FloatArrayType* volumes)
 {
   const size_t numHexas = hexList->getNumberOfTuples();
   const size_t numElementsPerHex = hexList->getNumberOfComponents();
@@ -964,7 +964,7 @@ void FindHexVolumes(const DataArray<T>* hexList, const FloatArray* vertices, Flo
  * @param areas
  */
 template <typename T>
-void Find2DElementAreas(const DataArray<T>* elemList, const FloatArray* vertices, FloatArray* areas)
+void Find2DElementAreas(const DataArray<T>* elemList, const FloatArrayType* vertices, FloatArrayType* areas)
 {
   float nx, ny, nz;
   int32_t projection;

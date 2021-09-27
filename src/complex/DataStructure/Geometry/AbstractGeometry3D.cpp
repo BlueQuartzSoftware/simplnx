@@ -81,7 +81,7 @@ const AbstractGeometry::SharedVertexList* AbstractGeometry3D::getVertices() cons
 
 void AbstractGeometry3D::setCoords(size_t vertId, const complex::Point3D<float>& coords)
 {
-  auto vertices = dynamic_cast<FloatArray*>(getDataStructure()->getData(m_VertexListId));
+  auto vertices = dynamic_cast<FloatArrayType*>(getDataStructure()->getData(m_VertexListId));
   if(!vertices)
   {
     return;
@@ -96,7 +96,7 @@ void AbstractGeometry3D::setCoords(size_t vertId, const complex::Point3D<float>&
 
 complex::Point3D<float> AbstractGeometry3D::getCoords(size_t vertId) const
 {
-  auto vertices = dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_VertexListId));
+  auto vertices = dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_VertexListId));
   if(!vertices)
   {
     return Point3D<float>();
@@ -111,7 +111,7 @@ complex::Point3D<float> AbstractGeometry3D::getCoords(size_t vertId) const
 
 size_t AbstractGeometry3D::getNumberOfVertices() const
 {
-  auto vertices = dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_VertexListId));
+  auto vertices = dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_VertexListId));
   if(!vertices)
   {
     return 0;

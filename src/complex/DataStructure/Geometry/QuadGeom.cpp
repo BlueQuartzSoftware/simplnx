@@ -182,7 +182,7 @@ size_t QuadGeom::getNumberOfElements() const
 AbstractGeometry::StatusCode QuadGeom::findElementSizes()
 {
   auto dataStore = new DataStore<float>(getNumberOfQuads());
-  FloatArray* quadSizes = DataArray<float>::Create(*getDataStructure(), "Quad Areas", dataStore, getId());
+  FloatArrayType* quadSizes = DataArray<float>::Create(*getDataStructure(), "Quad Areas", dataStore, getId());
   GeometryHelpers::Topology::Find2DElementAreas(getQuads(), getVertices(), quadSizes);
   if(quadSizes == nullptr)
   {
@@ -193,9 +193,9 @@ AbstractGeometry::StatusCode QuadGeom::findElementSizes()
   return 1;
 }
 
-const FloatArray* QuadGeom::getElementSizes() const
+const FloatArrayType* QuadGeom::getElementSizes() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_QuadSizesId));
+  return dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_QuadSizesId));
 }
 
 void QuadGeom::deleteElementSizes()
@@ -275,9 +275,9 @@ AbstractGeometry::StatusCode QuadGeom::findElementCentroids()
   return 1;
 }
 
-const FloatArray* QuadGeom::getElementCentroids() const
+const FloatArrayType* QuadGeom::getElementCentroids() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_QuadCentroidsId));
+  return dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_QuadCentroidsId));
 }
 
 void QuadGeom::deleteElementCentroids()
@@ -309,7 +309,7 @@ void QuadGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, double
   shape[7] = rm;
 }
 
-void QuadGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
+void QuadGeom::findDerivatives(DoubleArrayType* field, DoubleArrayType* derivatives, Observable* observable) const
 {
   throw std::runtime_error("");
 }
@@ -440,7 +440,7 @@ void QuadGeom::setElementNeighbors(const ElementDynamicList* elementNeighbors)
   m_QuadNeighborsId = elementNeighbors->getId();
 }
 
-void QuadGeom::setElementCentroids(const FloatArray* elementCentroids)
+void QuadGeom::setElementCentroids(const FloatArrayType* elementCentroids)
 {
   if(!elementCentroids)
   {
@@ -450,7 +450,7 @@ void QuadGeom::setElementCentroids(const FloatArray* elementCentroids)
   m_QuadCentroidsId = elementCentroids->getId();
 }
 
-void QuadGeom::setElementSizes(const FloatArray* elementSizes)
+void QuadGeom::setElementSizes(const FloatArrayType* elementSizes)
 {
   if(!elementSizes)
   {

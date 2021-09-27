@@ -169,7 +169,7 @@ size_t TriangleGeom::getNumberOfElements() const
 AbstractGeometry::StatusCode TriangleGeom::findElementSizes()
 {
   auto dataStore = new DataStore<float>({getNumberOfTris()}, {1});
-  FloatArray* triangleSizes = DataArray<float>::Create(*getDataStructure(), "Triangle Areas", dataStore, getId());
+  FloatArrayType* triangleSizes = DataArray<float>::Create(*getDataStructure(), "Triangle Areas", dataStore, getId());
   GeometryHelpers::Topology::Find2DElementAreas(getTriangles(), getVertices(), triangleSizes);
   if(triangleSizes == nullptr)
   {
@@ -180,9 +180,9 @@ AbstractGeometry::StatusCode TriangleGeom::findElementSizes()
   return 1;
 }
 
-const FloatArray* TriangleGeom::getElementSizes() const
+const FloatArrayType* TriangleGeom::getElementSizes() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_TriangleSizesId));
+  return dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_TriangleSizesId));
 }
 
 void TriangleGeom::deleteElementSizes()
@@ -262,9 +262,9 @@ AbstractGeometry::StatusCode TriangleGeom::findElementCentroids()
   return 1;
 }
 
-const FloatArray* TriangleGeom::getElementCentroids() const
+const FloatArrayType* TriangleGeom::getElementCentroids() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_TriangleCentroidsId));
+  return dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_TriangleCentroidsId));
 }
 
 void TriangleGeom::deleteElementCentroids()
@@ -293,7 +293,7 @@ void TriangleGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, do
   shape[5] = 1.0;
 }
 
-void TriangleGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
+void TriangleGeom::findDerivatives(DoubleArrayType* field, DoubleArrayType* derivatives, Observable* observable) const
 {
   throw std::runtime_error("");
 }
@@ -424,7 +424,7 @@ void TriangleGeom::setElementNeighbors(const ElementDynamicList* elementNeighbor
   m_TriangleNeighborsId = elementNeighbors->getId();
 }
 
-void TriangleGeom::setElementCentroids(const FloatArray* elementCentroids)
+void TriangleGeom::setElementCentroids(const FloatArrayType* elementCentroids)
 {
   if(!elementCentroids)
   {
@@ -434,7 +434,7 @@ void TriangleGeom::setElementCentroids(const FloatArray* elementCentroids)
   m_TriangleCentroidsId = elementCentroids->getId();
 }
 
-void TriangleGeom::setElementSizes(const FloatArray* elementSizes)
+void TriangleGeom::setElementSizes(const FloatArrayType* elementSizes)
 {
   if(!elementSizes)
   {

@@ -199,19 +199,19 @@ DataStructure createDataStructure()
   size_t numComponents = 1;
   std::vector<size_t> tupleShape = {imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]};
 
-  FloatArray* ci_data = createTestDataArray<float>("Confidence Index", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  Int32Array* feature_ids_data = createTestDataArray<int32_t>("FeatureIds", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  FloatArray* iq_data = createTestDataArray<float>("Image Quality", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  Int32Array* phases_data = createTestDataArray<int32_t>("Phases", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  FloatArrayType* ci_data = createTestDataArray<float>("Confidence Index", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Int32ArrayType* feature_ids_data = createTestDataArray<int32_t>("FeatureIds", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  FloatArrayType* iq_data = createTestDataArray<float>("Image Quality", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Int32ArrayType* phases_data = createTestDataArray<int32_t>("Phases", dataGraph, tupleShape, {numComponents}, scanData->getId());
 
   numComponents = 3;
-  UInt8Array* ipf_color_data = createTestDataArray<uint8_t>("IPF Colors", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  UInt8ArrayType* ipf_color_data = createTestDataArray<uint8_t>("IPF Colors", dataGraph, tupleShape, {numComponents}, scanData->getId());
 
   // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
   DataGroup* phase_group = complex::DataGroup::Create(dataGraph, "Phase Data", group->getId());
   numComponents = 1;
   size_t numTuples = 2;
-  Int32Array* laue_data = createTestDataArray<int32_t>("Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId());
+  Int32ArrayType* laue_data = createTestDataArray<int32_t>("Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId());
 
   return dataGraph;
 }
@@ -292,7 +292,7 @@ DataStructure createNodeBasedGeometries()
   DataGroup* group = complex::DataGroup::Create(dataGraph, "AM LPBF Experiment");
   DataGroup* scanData = complex::DataGroup::Create(dataGraph, "Laser Scan Data", group->getId());
 
-  std::string inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", complex::unit_test::k_ComplexSourceDir);
+  std::string inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", complex::unit_test::k_ComplexSourceDir.c_str());
   std::vector<float> csvVerts = complex::CsvParser::ParseVertices(inputFile, ",", true);
 
   auto vertexGeom = VertexGeom::Create(dataGraph, "Vertex Geom", scanData->getId());
@@ -314,19 +314,19 @@ DataStructure createNodeBasedGeometries()
   size_t numComponents = 1;
   std::vector<size_t> tupleShape = {imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]};
 
-  FloatArray* ci_data = createTestDataArray<float>("Confidence Index", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  Int32Array* feature_ids_data = createTestDataArray<int32_t>("FeatureIds", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  FloatArray* iq_data = createTestDataArray<float>("Image Quality", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  Int32Array* phases_data = createTestDataArray<int32_t>("Phases", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  FloatArrayType* ci_data = createTestDataArray<float>("Confidence Index", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Int32ArrayType* feature_ids_data = createTestDataArray<int32_t>("FeatureIds", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  FloatArrayType* iq_data = createTestDataArray<float>("Image Quality", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Int32ArrayType* phases_data = createTestDataArray<int32_t>("Phases", dataGraph, tupleShape, {numComponents}, scanData->getId());
 
   numComponents = 3;
-  UInt8Array* ipf_color_data = createTestDataArray<uint8_t>("IPF Colors", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  UInt8ArrayType* ipf_color_data = createTestDataArray<uint8_t>("IPF Colors", dataGraph, tupleShape, {numComponents}, scanData->getId());
 
   // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
   DataGroup* phase_group = complex::DataGroup::Create(dataGraph, "Phase Data", group->getId());
   numComponents = 1;
   size_t numTuples = 2;
-  Int32Array* laue_data = createTestDataArray<int32_t>("Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId());
+  Int32ArrayType* laue_data = createTestDataArray<int32_t>("Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId());
 
 #endif
 

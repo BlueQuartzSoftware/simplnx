@@ -240,7 +240,7 @@ size_t TetrahedralGeom::getNumberOfElements() const
 AbstractGeometry::StatusCode TetrahedralGeom::findElementSizes()
 {
   auto dataStore = new DataStore<float>({getNumberOfTets()}, {1});
-  FloatArray* tetSizes = DataArray<float>::Create(*getDataStructure(), "Tet Volumes", dataStore, getId());
+  FloatArrayType* tetSizes = DataArray<float>::Create(*getDataStructure(), "Tet Volumes", dataStore, getId());
   GeometryHelpers::Topology::FindTetVolumes(getTetrahedra(), getVertices(), tetSizes);
   if(tetSizes == nullptr)
   {
@@ -251,9 +251,9 @@ AbstractGeometry::StatusCode TetrahedralGeom::findElementSizes()
   return 1;
 }
 
-const FloatArray* TetrahedralGeom::getElementSizes() const
+const FloatArrayType* TetrahedralGeom::getElementSizes() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_TetSizesId));
+  return dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_TetSizesId));
 }
 
 void TetrahedralGeom::deleteElementSizes()
@@ -333,9 +333,9 @@ AbstractGeometry::StatusCode TetrahedralGeom::findElementCentroids()
   return 1;
 }
 
-const FloatArray* TetrahedralGeom::getElementCentroids() const
+const FloatArrayType* TetrahedralGeom::getElementCentroids() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_TetCentroidsId));
+  return dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_TetCentroidsId));
 }
 
 void TetrahedralGeom::deleteElementCentroids()
@@ -372,7 +372,7 @@ void TetrahedralGeom::getShapeFunctions(const complex::Point3D<double>& pCoords,
   shape[11] = 1.0;
 }
 
-void TetrahedralGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
+void TetrahedralGeom::findDerivatives(DoubleArrayType* field, DoubleArrayType* derivatives, Observable* observable) const
 {
   throw std::runtime_error("");
 }
@@ -444,7 +444,7 @@ AbstractGeometry::StatusCode TetrahedralGeom::findUnsharedFaces()
   return 1;
 }
 
-void TetrahedralGeom::setElementSizes(const FloatArray* elementSizes)
+void TetrahedralGeom::setElementSizes(const FloatArrayType* elementSizes)
 {
   if(!elementSizes)
   {
@@ -479,7 +479,7 @@ void TetrahedralGeom::setElementNeighbors(const ElementDynamicList* elementNeigh
   m_TetNeighborsId = elementNeighbors->getId();
 }
 
-void TetrahedralGeom::setElementCentroids(const FloatArray* elementCentroids)
+void TetrahedralGeom::setElementCentroids(const FloatArrayType* elementCentroids)
 {
   if(!elementCentroids)
   {

@@ -277,7 +277,7 @@ H5::ErrorType DataMap::readH5Group(DataStructure& ds, H5::IdType h5GroupId, cons
     const std::string name = H5::Reader::Generic::getNameAtIdx(h5GroupId, i);
 
     std::string typeName;
-    H5::Reader::Generic::readStringAttribute(h5GroupId, name, complex::Constants::k_ObjectTypeTag, typeName);
+    H5::Reader::Generic::readStringAttribute(h5GroupId, name, complex::H5::k_ObjectTypeTag.str(), typeName);
     hid_t h5ObjectId = -1;
     if(H5::Support::IsGroup(h5GroupId, name))
     {

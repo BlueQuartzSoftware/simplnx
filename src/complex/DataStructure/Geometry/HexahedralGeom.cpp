@@ -180,7 +180,7 @@ void HexahedralGeom::initializeWithZeros()
 
 size_t HexahedralGeom::getNumberOfElements() const
 {
-  const auto* elements = dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_HexSizesId));
+  const auto* elements = dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_HexSizesId));
   if(nullptr == elements)
   {
     return 0;
@@ -191,7 +191,7 @@ size_t HexahedralGeom::getNumberOfElements() const
 AbstractGeometry::StatusCode HexahedralGeom::findElementSizes()
 {
   auto* dataStore = new DataStore<float>({getNumberOfHexas()}, {1});
-  FloatArray* hexSizes = DataArray<float>::Create(*getDataStructure(), "Hex Volumes", dataStore, getId());
+  FloatArrayType* hexSizes = DataArray<float>::Create(*getDataStructure(), "Hex Volumes", dataStore, getId());
   m_HexSizesId = hexSizes->getId();
   GeometryHelpers::Topology::FindHexVolumes<uint64_t>(getHexahedrals(), getVertices(), hexSizes);
   if(getElementSizes() == nullptr)
@@ -202,9 +202,9 @@ AbstractGeometry::StatusCode HexahedralGeom::findElementSizes()
   return 1;
 }
 
-const FloatArray* HexahedralGeom::getElementSizes() const
+const FloatArrayType* HexahedralGeom::getElementSizes() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_HexSizesId));
+  return dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_HexSizesId));
 }
 
 void HexahedralGeom::deleteElementSizes()
@@ -284,9 +284,9 @@ AbstractGeometry::StatusCode HexahedralGeom::findElementCentroids()
   return 1;
 }
 
-const FloatArray* HexahedralGeom::getElementCentroids() const
+const FloatArrayType* HexahedralGeom::getElementCentroids() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_HexCentroidsId));
+  return dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_HexCentroidsId));
 }
 
 void HexahedralGeom::deleteElementCentroids()
@@ -341,7 +341,7 @@ void HexahedralGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, 
   shape[23] = rm * pCoords[1];
 }
 
-void HexahedralGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
+void HexahedralGeom::findDerivatives(DoubleArrayType* field, DoubleArrayType* derivatives, Observable* observable) const
 {
   throw std::runtime_error("");
 }
@@ -518,7 +518,7 @@ void HexahedralGeom::setElementNeighbors(const ElementDynamicList* elementNeighb
   m_HexNeighborsId = elementNeighbors->getId();
 }
 
-void HexahedralGeom::setElementCentroids(const FloatArray* elementCentroids)
+void HexahedralGeom::setElementCentroids(const FloatArrayType* elementCentroids)
 {
   if(!elementCentroids)
   {
@@ -528,7 +528,7 @@ void HexahedralGeom::setElementCentroids(const FloatArray* elementCentroids)
   m_HexCentroidsId = elementCentroids->getId();
 }
 
-void HexahedralGeom::setElementSizes(const FloatArray* elementSizes)
+void HexahedralGeom::setElementSizes(const FloatArrayType* elementSizes)
 {
   if(!elementSizes)
   {

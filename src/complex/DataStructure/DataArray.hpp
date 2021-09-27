@@ -416,21 +416,21 @@ private:
 // extern template class DataArray<double>;
 
 // Declare aliases
-using CharArray = DataArray<char>;
-using UCharArray = DataArray<unsigned char>;
+using CharArrayType = DataArray<char>;
+using UCharArrayType = DataArray<unsigned char>;
 
-using UInt8Array = DataArray<uint8_t>;
-using UInt16Array = DataArray<uint16_t>;
-using UInt32Array = DataArray<uint32_t>;
-using UInt64Array = DataArray<uint64_t>;
+using UInt8ArrayType = DataArray<uint8_t>;
+using UInt16ArrayType = DataArray<uint16_t>;
+using UInt32ArrayType = DataArray<uint32_t>;
+using UInt64ArrayType = DataArray<uint64_t>;
 
-using Int8Array = DataArray<int8_t>;
-using Int16Array = DataArray<int16_t>;
-using Int32Array = DataArray<int32_t>;
-using Int64Array = DataArray<int64_t>;
-using SizeArray = DataArray<size_t>;
+using Int8ArrayType = DataArray<int8_t>;
+using Int16ArrayType = DataArray<int16_t>;
+using Int32ArrayType = DataArray<int32_t>;
+using Int64ArrayType = DataArray<int64_t>;
+using SizeArrayType = DataArray<size_t>;
 
-using FloatArray = DataArray<float>;
-using DoubleArray = DataArray<double>;
-using VectorOfFloatArray = std::vector<std::shared_ptr<FloatArray>>;
+using FloatArrayType = DataArray<float>;
+using DoubleArrayType = DataArray<double>;
+using VectorOfFloatArray = std::vector<std::shared_ptr<FloatArrayType>>;
 } // namespace complex

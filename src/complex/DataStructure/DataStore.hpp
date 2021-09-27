@@ -28,12 +28,6 @@ public:
   using const_reference = typename IDataStore<T>::const_reference;
   using ShapeType = typename std::vector<size_t>;
 
-  static constexpr const char k_DataStore[] = "DataStore";
-  static constexpr const char k_TupleShape[] = "TupleShape";
-  static constexpr const char k_ComponentShape[] = "ComponentShape";
-  static constexpr const char k_DataObjectId[] = "DataObjectId";
-  static constexpr const char k_DataArrayTypeName[] = "DataArray";
-
   /**
    * @brief Creates a new DataStore with a single tuple dimensions of 'numTuples' and
    * a single component dimension of {1}
@@ -306,23 +300,23 @@ public:
       return err;
     }
     // Write the attributes to the dataset
-    err = complex::H5::Support::WriteVectorAttribute(dataId, name, k_TupleShape, {m_TupleShape.size()}, m_TupleShape);
+    err = complex::H5::Support::WriteVectorAttribute(dataId, name, complex::H5::k_TupleShapeTag.str(), {m_TupleShape.size()}, m_TupleShape);
     if(err < 0)
     {
       return err;
     }
-    err = complex::H5::Support::WriteVectorAttribute(dataId, name, k_ComponentShape, {m_ComponentShape.size()}, m_ComponentShape);
+    err = complex::H5::Support::WriteVectorAttribute(dataId, name, complex::H5::k_ComponentShapeTag.str(), {m_ComponentShape.size()}, m_ComponentShape);
     if(err < 0)
     {
       return err;
     }
 
-    err = complex::H5::Support::WriteScalarAttribute(dataId, name, k_DataObjectId, objectId);
+    err = complex::H5::Support::WriteScalarAttribute(dataId, name, complex::H5::k_DataObjectIdTag.str(), objectId);
     if(err < 0)
     {
       return err;
     }
-    err = complex::H5::Support::WriteStringAttribute(dataId, name, complex::Constants::k_ObjectTypeTag, k_DataArrayTypeName);
+    err = complex::H5::Support::WriteStringAttribute(dataId, name, complex::H5::k_ObjectTypeTag.str(), complex::H5::k_DataArrayTag.str());
     if(err < 0)
     {
       return err;
@@ -336,13 +330,13 @@ public:
     typename DataStore<T>::ShapeType tupleShape;
     typename DataStore<T>::ShapeType componentShape;
     //
-    herr_t err = H5::Support::ReadVectorAttribute(parentId, datasetName, k_TupleShape, tupleShape);
+    herr_t err = H5::Support::ReadVectorAttribute(parentId, datasetName, complex::H5::k_TupleShapeTag.str(), tupleShape);
     if(err < 0)
     {
     }
     size_t numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
     //
-    err = H5::Support::ReadVectorAttribute(parentId, datasetName, k_ComponentShape, componentShape);
+    err = H5::Support::ReadVectorAttribute(parentId, datasetName, complex::H5::k_ComponentShapeTag.str(), componentShape);
     if(err < 0)
     {
     }

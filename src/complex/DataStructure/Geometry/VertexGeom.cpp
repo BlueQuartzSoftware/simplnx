@@ -169,14 +169,14 @@ AbstractGeometry::StatusCode VertexGeom::findElementSizes()
   auto dataStore = new DataStore<float>({getNumberOfElements()}, {1});
   dataStore->fill(0.0f);
 
-  FloatArray* vertexSizes = DataArray<float>::Create(*getDataStructure(), "Voxel Sizes", dataStore, getId());
+  FloatArrayType* vertexSizes = DataArray<float>::Create(*getDataStructure(), "Voxel Sizes", dataStore, getId());
   m_VertexSizesId = vertexSizes->getId();
   return 1;
 }
 
-const FloatArray* VertexGeom::getElementSizes() const
+const FloatArrayType* VertexGeom::getElementSizes() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_VertexSizesId));
+  return dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_VertexSizesId));
 }
 
 void VertexGeom::deleteElementSizes()
@@ -218,7 +218,7 @@ AbstractGeometry::StatusCode VertexGeom::findElementCentroids()
   return -1;
 }
 
-const FloatArray* VertexGeom::getElementCentroids() const
+const FloatArrayType* VertexGeom::getElementCentroids() const
 {
   return nullptr;
 }
@@ -241,7 +241,7 @@ void VertexGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, doub
   shape[2] = 0.0;
 }
 
-void VertexGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
+void VertexGeom::findDerivatives(DoubleArrayType* field, DoubleArrayType* derivatives, Observable* observable) const
 {
   // The exterior derivative of a point source is zero,
   // so simply splat 0 over the derivatives array
@@ -282,11 +282,11 @@ void VertexGeom::setElementNeighbors(const ElementDynamicList* elementNeighbors)
 {
 }
 
-void VertexGeom::setElementCentroids(const FloatArray* elementCentroids)
+void VertexGeom::setElementCentroids(const FloatArrayType* elementCentroids)
 {
 }
 
-void VertexGeom::setElementSizes(const FloatArray* elementSizes)
+void VertexGeom::setElementSizes(const FloatArrayType* elementSizes)
 {
   if(!elementSizes)
   {

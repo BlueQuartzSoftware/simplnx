@@ -145,9 +145,9 @@ AbstractGeometry::StatusCode ImageGeom::findElementSizes()
   return 1;
 }
 
-const FloatArray* ImageGeom::getElementSizes() const
+const FloatArrayType* ImageGeom::getElementSizes() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_VoxelSizesId));
+  return dynamic_cast<const FloatArrayType*>(getDataStructure()->getData(m_VoxelSizesId));
 }
 
 void ImageGeom::deleteElementSizes()
@@ -189,7 +189,7 @@ AbstractGeometry::StatusCode ImageGeom::findElementCentroids()
   return -1;
 }
 
-const FloatArray* ImageGeom::getElementCentroids() const
+const FloatArrayType* ImageGeom::getElementCentroids() const
 {
   return nullptr;
 }
@@ -244,7 +244,7 @@ void ImageGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, doubl
   shape[23] = pCoords[0] * pCoords[1];
 }
 
-void ImageGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
+void ImageGeom::findDerivatives(DoubleArrayType* field, DoubleArrayType* derivatives, Observable* observable) const
 {
   throw std::runtime_error("");
 }
@@ -486,12 +486,12 @@ void ImageGeom::setElementNeighbors(const ElementDynamicList* elementsNeighbors)
   (void)elementsNeighbors;
 }
 
-void ImageGeom::setElementCentroids(const FloatArray* elementCentroids)
+void ImageGeom::setElementCentroids(const FloatArrayType* elementCentroids)
 {
   (void)elementCentroids;
 }
 
-void ImageGeom::setElementSizes(const FloatArray* elementSizes)
+void ImageGeom::setElementSizes(const FloatArrayType* elementSizes)
 {
   if(!elementSizes)
   {

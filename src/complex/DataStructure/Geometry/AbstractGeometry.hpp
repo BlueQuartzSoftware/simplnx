@@ -113,7 +113,7 @@ public:
 
   using MeshIndexType = uint64_t;
   using MeshIndexArrayType = DataArray<MeshIndexType>;
-  using SharedVertexList = FloatArray;
+  using SharedVertexList = FloatArrayType;
   using SharedEdgeList = MeshIndexArrayType;
   using SharedFaceList = MeshIndexArrayType;
   using SharedTriList = MeshIndexArrayType;
@@ -227,9 +227,9 @@ public:
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const FloatArrayType*
    */
-  virtual const FloatArray* getElementSizes() const = 0;
+  virtual const FloatArrayType* getElementSizes() const = 0;
 
   /**
    * @brief
@@ -244,9 +244,9 @@ public:
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const FloatArrayType*
    */
-  virtual const FloatArray* getElementCentroids() const = 0;
+  virtual const FloatArrayType* getElementCentroids() const = 0;
 
   /**
    * @brief
@@ -272,7 +272,7 @@ public:
    * @param derivatives
    * @param observable
    */
-  virtual void findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const = 0;
+  virtual void findDerivatives(DoubleArrayType* field, DoubleArrayType* derivatives, Observable* observable) const = 0;
 
   /**
    * @brief
@@ -352,13 +352,13 @@ protected:
    * @brief
    * @param elementCentroids
    */
-  virtual void setElementCentroids(const FloatArray* elementCentroids) = 0;
+  virtual void setElementCentroids(const FloatArrayType* elementCentroids) = 0;
 
   /**
    * @brief
    * @param elementSizes
    */
-  virtual void setElementSizes(const FloatArray* elementSizes) = 0;
+  virtual void setElementSizes(const FloatArrayType* elementSizes) = 0;
 
   /**
    * @brief

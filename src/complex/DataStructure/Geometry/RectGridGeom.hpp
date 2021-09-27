@@ -69,25 +69,25 @@ public:
    * @param yBounds
    * @param zBounds
    */
-  void setBounds(const FloatArray* xBounds, const FloatArray* yBounds, const FloatArray* zBounds);
+  void setBounds(const FloatArrayType* xBounds, const FloatArrayType* yBounds, const FloatArrayType* zBounds);
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const FloatArrayType*
    */
-  const FloatArray* getXBounds() const;
+  const FloatArrayType* getXBounds() const;
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const FloatArrayType*
    */
-  const FloatArray* getYBounds() const;
+  const FloatArrayType* getYBounds() const;
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const FloatArrayType*
    */
-  const FloatArray* getZBounds() const;
+  const FloatArrayType* getZBounds() const;
 
   /**
    * @brief
@@ -108,9 +108,9 @@ public:
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const FloatArrayType*
    */
-  const FloatArray* getElementSizes() const override;
+  const FloatArrayType* getElementSizes() const override;
 
   /**
    * @brief
@@ -159,9 +159,9 @@ public:
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const FloatArrayType*
    */
-  const FloatArray* getElementCentroids() const override;
+  const FloatArrayType* getElementCentroids() const override;
 
   /**
    * @brief
@@ -187,7 +187,7 @@ public:
    * @param derivatives
    * @param observable
    */
-  void findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable = nullptr) const override;
+  void findDerivatives(DoubleArrayType* field, DoubleArrayType* derivatives, Observable* observable = nullptr) const override;
 
   /**
    * @brief
@@ -395,13 +395,13 @@ protected:
    * @brief
    * @param elementCentroids
    */
-  void setElementCentroids(const FloatArray* elementCentroids) override;
+  void setElementCentroids(const FloatArrayType* elementCentroids) override;
 
   /**
    * @brief
    * @param elementSizes
    */
-  void setElementSizes(const FloatArray* elementSizes) override;
+  void setElementSizes(const FloatArrayType* elementSizes) override;
 
 private:
   std::optional<DataObject::IdType> m_xBoundsId;
