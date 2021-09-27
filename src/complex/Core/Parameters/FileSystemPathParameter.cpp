@@ -1,5 +1,7 @@
 #include "FileSystemPathParameter.hpp"
 
+#include "complex/Common/StringLiteral.hpp"
+
 #include <fmt/core.h>
 
 #include <nlohmann/json.hpp>
@@ -10,7 +12,7 @@ using namespace complex;
 
 namespace
 {
-constexpr const char k_PathKey[] = "path";
+constexpr StringLiteral k_PathKey = "path";
 
 //-----------------------------------------------------------------------------
 Result<> ValidateInputFile(const FileSystemPathParameter::ValueType& path)
@@ -90,7 +92,7 @@ nlohmann::json FileSystemPathParameter::toJson(const std::any& value) const
 {
   ValueType path = std::any_cast<ValueType>(value);
   nlohmann::json json;
-  json[k_PathKey] = path.string();
+  json[k_PathKey.c_str()] = path.string();
   return json;
 }
 

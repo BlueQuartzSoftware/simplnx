@@ -19,7 +19,7 @@ TEST_CASE("FilePathGenerator")
   value.filePrefix = "TestFilter";
   value.fileSuffix = "";
   value.fileExtension = ".cpp";
-  value.inputPath = fmt::format("{}/src/complex/Core/Filters/", unit_test::k_ComplexSourceDir);
+  value.inputPath = fmt::format("{}/src/complex/Core/Filters/", unit_test::k_ComplexSourceDir.view());
   value.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
 
   bool missingFiles = false;
