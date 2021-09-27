@@ -90,7 +90,7 @@ Result<std::any> GeneratedFileListParameter::fromJson(const nlohmann::json& json
   if(!json[k_PaddingDigits.c_str()].is_number_unsigned())
   {
     return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Value_Not_Unsigned,
-                                              fmt::format("{}JSON value for key \"{}\" is not an unsigned int", prefix, k_PaddingDigits.c_str()));
+                                              fmt::format("{}JSON value for key \"{}\" is not an unsigned int", prefix, k_PaddingDigits.view()));
   }
 
   std::vector<const char*> keys = {k_StartIndex.c_str(), k_EndIndex.c_str(), k_PaddingDigits.c_str(), k_Ordering.c_str(), k_IncrementIndex.c_str()};
