@@ -132,6 +132,16 @@ typename FileSystemPathParameter::ValueType FileSystemPathParameter::defaultPath
   return m_DefaultValue;
 }
 
+void FileSystemPathParameter::setPathType(FileSystemPathParameter::PathType pathType)
+{
+  m_PathType = pathType;
+}
+
+FileSystemPathParameter::PathType FileSystemPathParameter::getPathType() const
+{
+  return m_PathType;
+}
+
 //-----------------------------------------------------------------------------
 Result<> FileSystemPathParameter::validate(const std::any& value) const
 {
