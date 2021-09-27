@@ -21,7 +21,7 @@ template <typename T>
 H5::ErrorType readH5Scalar(DataStructure& ds, H5::IdType attrId, const std::string& name, const std::optional<DataObject::IdType>& parentId)
 {
   T buffer = 0;
-  hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
+  hid_t dataType = H5::Support::HdfTypeForPrimitive<T>();
   H5::ErrorType err = H5Aread(attrId, dataType, &buffer);
   if(err < 0)
   {

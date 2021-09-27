@@ -35,7 +35,7 @@ H5::ErrorType writeScalarAttribute(H5::IdType locationID, const std::string& obj
   herr_t returnError = 0;
   hsize_t dims = 1;
   int32 rank = 1;
-  hid_t dataType = Support::HDFTypeForPrimitive<T>();
+  hid_t dataType = Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     return -1;
@@ -60,7 +60,7 @@ H5::ErrorType writeScalarAttribute(H5::IdType locationID, const std::string& obj
   if(dataspaceID >= 0)
   {
     /* Verify if the attribute already exists */
-    herr_t hasAttribute = Support::findAttribute(objectID, attributeName);
+    herr_t hasAttribute = Support::FindAttribute(objectID, attributeName);
 
     /* The attribute already exists, delete it */
     if(hasAttribute == 1)
@@ -147,7 +147,7 @@ H5::ErrorType writePointerAttribute(H5::IdType locationID, const std::string& ob
   H5O_info1_t objectInfo;
   herr_t error = 0;
   herr_t returnError = 0;
-  hid_t dataType = Support::HDFTypeForPrimitive<T>();
+  hid_t dataType = Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     std::cout << "dataType was unknown" << std::endl;
@@ -172,7 +172,7 @@ H5::ErrorType writePointerAttribute(H5::IdType locationID, const std::string& ob
   if(dataspaceID >= 0)
   {
     /* Verify if the attribute already exists */
-    hasAttribute = Support::findAttribute(objectID, attributeName);
+    hasAttribute = Support::FindAttribute(objectID, attributeName);
 
     /* The attribute already exists, delete it */
     if(hasAttribute == 1)

@@ -17,7 +17,7 @@ const FilterHandle k_FilterHandle2(*Uuid::FromString("1307bbbc-112d-4aaa-941f-58
 const FilterHandle k_BadHandle(Uuid{}, Uuid{});
 } // namespace Constants
 
-}
+} // namespace complex
 
 using namespace complex;
 

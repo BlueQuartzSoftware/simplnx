@@ -43,7 +43,7 @@ H5::ErrorType H5::Writer::Generic::writeStringAttribute(H5::IdType locationID, c
             if(attributeSpaceID >= 0)
             {
               /* Verify if the attribute already exists */
-              int32 hasAttribute = Support::findAttribute(objectID, attributeName);
+              int32 hasAttribute = Support::FindAttribute(objectID, attributeName);
               /* The attribute already exists, delete it */
               if(hasAttribute == 1)
               {
@@ -68,13 +68,13 @@ H5::ErrorType H5::Writer::Generic::writeStringAttribute(H5::IdType locationID, c
                     returnError = error;
                   }
                 }
-                CloseH5A(attributeID, error, returnError);
+                H5S_CLOSE_H5_ATTRIBUTE(attributeID, error, returnError);
               }
-              CloseH5S(attributeSpaceID, error, returnError);
+              H5S_CLOSE_H5_DATASPACE(attributeSpaceID, error, returnError);
             }
           }
         }
-        CloseH5T(attributeType, error, returnError);
+        H5S_CLOSE_H5_TYPE(attributeType, error, returnError);
       }
       else
       {

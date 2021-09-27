@@ -507,17 +507,17 @@ H5::ErrorType ImageGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
   std::vector<float> spacing;
   std::vector<float> origin;
 
-  int err = H5::Support::readVectorDataset(targetId, k_H5_DIMENSIONS, volDims);
+  int err = H5::Support::ReadVectorDataset(targetId, k_H5_DIMENSIONS, volDims);
   if(err < 0)
   {
     return err;
   }
-  err = H5::Support::readVectorDataset(targetId, k_H5_SPACING, spacing);
+  err = H5::Support::ReadVectorDataset(targetId, k_H5_SPACING, spacing);
   if(err < 0)
   {
     return err;
   }
-  err = H5::Support::readVectorDataset(targetId, k_H5_ORIGIN, origin);
+  err = H5::Support::ReadVectorDataset(targetId, k_H5_ORIGIN, origin);
   if(err < 0)
   {
     return err;
@@ -541,17 +541,17 @@ H5::ErrorType ImageGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId)
   int32_t rank = 1;
   hsize_t dims[1] = {3};
 
-  err = H5::Support::writePointerDataset(groupId, k_H5_DIMENSIONS, rank, dims, volDims.data());
+  err = H5::Support::WritePointerDataset(groupId, k_H5_DIMENSIONS, rank, dims, volDims.data());
   if(err < 0)
   {
     return err;
   }
-  err = H5::Support::writePointerDataset(groupId, k_H5_ORIGIN, rank, dims, origin.data());
+  err = H5::Support::WritePointerDataset(groupId, k_H5_ORIGIN, rank, dims, origin.data());
   if(err < 0)
   {
     return err;
   }
-  err = H5::Support::writePointerDataset(groupId, k_H5_SPACING, rank, dims, spacing.data());
+  err = H5::Support::WritePointerDataset(groupId, k_H5_SPACING, rank, dims, spacing.data());
   if(err < 0)
   {
     return err;

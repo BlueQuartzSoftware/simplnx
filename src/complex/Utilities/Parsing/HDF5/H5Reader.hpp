@@ -66,7 +66,7 @@ inline H5::ErrorType readScalarAttribute(H5::IdType locationID, const std::strin
 {
   H5O_info1_t objectInfo;
   herr_t returnError = 0;
-  hid_t dataType = Support::HDFTypeForPrimitive<T>();
+  hid_t dataType = Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     return -1;
@@ -145,7 +145,7 @@ template <typename T>
 herr_t readVectorAttribute(hid_t locationID, const std::string& objectName, const std::string& attributeName, std::vector<T>& data)
 {
   herr_t returnError = 0;
-  hid_t dataType = Support::HDFTypeForPrimitive<T>();
+  hid_t dataType = Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     return -1;

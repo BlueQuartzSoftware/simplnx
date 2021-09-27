@@ -453,7 +453,6 @@ DataStructure& DataStructure::operator=(DataStructure&& rhs) noexcept
 
 void readDataObject(DataStructure& ds, H5::IdType objId, const std::string& name)
 {
-  
 }
 
 H5::ErrorType DataStructure::writeHdf5(H5::IdType fileId) const

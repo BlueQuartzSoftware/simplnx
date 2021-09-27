@@ -19,7 +19,6 @@ class BaseGroup;
 class DataPath;
 class DataStructure;
 
-
 /**
  * @class DataObject
  * @brief The DataObject class is the base class for all items stored in the
