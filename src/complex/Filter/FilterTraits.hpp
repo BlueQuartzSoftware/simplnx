@@ -2,6 +2,7 @@
 
 #include <type_traits>
 
+#include "complex/Common/StringLiteral.hpp"
 #include "complex/Filter/IFilter.hpp"
 
 namespace complex
@@ -20,7 +21,7 @@ struct FilterTraits
   template <>                                                                                                                                                                                          \
   struct complex::FilterTraits<type>                                                                                                                                                                   \
   {                                                                                                                                                                                                    \
-    static inline constexpr const char* name = nameString;                                                                                                                                             \
+    static inline constexpr complex::StringLiteral name = nameString;                                                                                                                                  \
     static inline constexpr complex::Uuid uuid = *complex::Uuid::FromString(uuidString);                                                                                                               \
   }
 

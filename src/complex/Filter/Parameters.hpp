@@ -3,6 +3,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <string_view>
 
 #include "complex/Common/Types.hpp"
 #include "complex/Filter/IParameter.hpp"
@@ -30,7 +31,7 @@ public:
    * @param name
    * @return
    */
-  bool contains(const std::string& name) const
+  bool contains(std::string_view name) const
   {
     return m_Params.count(name) > 0;
   }
@@ -80,6 +81,6 @@ public:
   }
 
 private:
-  std::map<std::string, std::unique_ptr<IParameter>> m_Params;
+  std::map<std::string, std::unique_ptr<IParameter>, std::less<>> m_Params;
 };
 } // namespace complex

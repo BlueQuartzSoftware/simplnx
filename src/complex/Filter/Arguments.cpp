@@ -1,20 +1,29 @@
 #include "Arguments.hpp"
 
+#include <stdexcept>
+
+#include <fmt/core.h>
+
 namespace complex
 {
-void Arguments::insert(const std::string& key, const std::any& value)
+void Arguments::insert(std::string key, const std::any& value)
 {
-  m_Args.insert({key, value});
+  m_Args.insert({std::move(key), value});
 }
 
-void Arguments::insert(const std::string& key, std::any&& value)
+void Arguments::insert(std::string key, std::any&& value)
 {
-  m_Args.insert({key, value});
+  m_Args.insert({std::move(key), value});
 }
 
-const std::any& Arguments::at(const std::string& key) const
+const std::any& Arguments::at(std::string_view key) const
 {
-  return m_Args.at(key);
+  auto iter = m_Args.find(key);
+  if(iter == m_Args.cend())
+  {
+    throw std::out_of_range(fmt::format("Key \"{}\" does not exist in Arguments", key));
+  }
+  return iter->second;
 }
 
 usize Arguments::size() const
@@ -27,7 +36,7 @@ bool Arguments::empty() const
   return m_Args.empty();
 }
 
-bool Arguments::contains(const std::string& key) const
+bool Arguments::contains(std::string_view key) const
 {
   return m_Args.count(key) > 0;
 }

@@ -4,6 +4,7 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <type_traits>
 
 #include "complex/Common/Types.hpp"
@@ -31,21 +32,21 @@ public:
    * @param key
    * @param value
    */
-  void insert(const std::string& key, const std::any& value);
+  void insert(std::string key, const std::any& value);
 
   /**
    * @brief Insert the given key value pair.
    * @param key
    * @param value
    */
-  void insert(const std::string& key, std::any&& value);
+  void insert(std::string key, std::any&& value);
 
   /**
    * @brief Returns a const reference to the value at the given key.
    * @param key
    * @return
    */
-  [[nodiscard]] const std::any& at(const std::string& key) const;
+  [[nodiscard]] const std::any& at(std::string_view key) const;
 
   /**
    * @brief Returns a const reference to the value at the given key cast to T.
@@ -55,9 +56,9 @@ public:
    * @return
    */
   template <class T>
-  [[nodiscard]] const T& valueRef(const std::string& key) const
+  [[nodiscard]] const T& valueRef(std::string_view key) const
   {
-    const T* value = std::any_cast<T>(&m_Args.at(key));
+    const T* value = std::any_cast<T>(&at(key));
     if(value == nullptr)
     {
       throw std::bad_any_cast();
@@ -73,9 +74,9 @@ public:
    * @return
    */
   template <class T>
-  [[nodiscard]] T value(const std::string& key) const
+  [[nodiscard]] T value(std::string_view key) const
   {
-    return std::any_cast<T>(m_Args.at(key));
+    return std::any_cast<T>(at(key));
   }
 
   /**
@@ -86,9 +87,9 @@ public:
    * @return
    */
   template <class T>
-  [[nodiscard]] T& ref(const std::string& key) const
+  [[nodiscard]] T& ref(std::string_view key) const
   {
-    return std::any_cast<std::reference_wrapper<T>>(m_Args.at(key)).get();
+    return std::any_cast<std::reference_wrapper<T>>(at(key)).get();
   }
 
   /**
@@ -108,7 +109,7 @@ public:
    * @param key
    * @return
    */
-  [[nodiscard]] bool contains(const std::string& key) const;
+  [[nodiscard]] bool contains(std::string_view key) const;
 
   [[nodiscard]] auto begin()
   {
@@ -131,6 +132,6 @@ public:
   }
 
 private:
-  std::map<std::string, std::any> m_Args;
+  std::map<std::string, std::any, std::less<>> m_Args;
 };
 } // namespace complex

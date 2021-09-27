@@ -2,7 +2,7 @@
 
 namespace
 {
-void cloneParams(const std::map<std::string, std::unique_ptr<complex::IParameter>>& inputParams, std::map<std::string, std::unique_ptr<complex::IParameter>>& outputParams)
+void cloneParams(const std::map<std::string, std::unique_ptr<complex::IParameter>, std::less<>>& inputParams, std::map<std::string, std::unique_ptr<complex::IParameter>, std::less<>>& outputParams)
 {
   for(const auto& [key, value] : inputParams)
   {
