@@ -17,7 +17,7 @@
 
 #define HDF_ERROR_HANDLER_ON H5Eset_auto(H5E_DEFAULT, _oldHDF_error_func, _oldHDF_error_client_data);
 
-#define CloseH5A(attributeId, error, returnError)                                                                                                                                                      \
+#define H5S_CLOSE_H5_ATTRIBUTE(attributeId, error, returnError)                                                                                                                                        \
   error = H5Aclose(attributeId);                                                                                                                                                                       \
   if(error < 0)                                                                                                                                                                                        \
   {                                                                                                                                                                                                    \
@@ -26,7 +26,7 @@
     returnError = error;                                                                                                                                                                               \
   }
 
-#define CloseH5S(dataspaceId, error, returnError)                                                                                                                                                      \
+#define H5S_CLOSE_H5_DATASPACE(dataspaceId, error, returnError)                                                                                                                                        \
   error = H5Sclose(dataspaceId);                                                                                                                                                                       \
   if(error < 0)                                                                                                                                                                                        \
   {                                                                                                                                                                                                    \
@@ -35,7 +35,7 @@
     returnError = error;                                                                                                                                                                               \
   }
 
-#define CloseH5T(typeId, error, returnError)                                                                                                                                                           \
+#define H5S_CLOSE_H5_TYPE(typeId, error, returnError)                                                                                                                                                  \
   error = H5Tclose(typeId);                                                                                                                                                                            \
   if(error < 0)                                                                                                                                                                                        \
   {                                                                                                                                                                                                    \
@@ -44,7 +44,7 @@
     returnError = error;                                                                                                                                                                               \
   }
 
-#define CloseH5D(datasetId, error, returnError, datasetName)                                                                                                                                           \
+#define H5_CLOSE_H5_DATASET(datasetId, error, returnError, datasetName)                                                                                                                                \
   error = H5Dclose(datasetId);                                                                                                                                                                         \
   if(error < 0)                                                                                                                                                                                        \
   {                                                                                                                                                                                                    \
@@ -130,9 +130,9 @@ inline bool IsGroup(hid_t nodeId, const std::string& objectName)
  * @param typeSize THe H5 getSize of the data
  * @return Negative value is Failure. Zero or Positive is success;
  */
-herr_t COMPLEX_EXPORT getDatasetInfo(hid_t locationId, const std::string& datasetName, std::vector<hsize_t>& dims, H5T_class_t& classType, size_t& sizeType);
+herr_t COMPLEX_EXPORT GetDatasetInfo(hid_t locationId, const std::string& datasetName, std::vector<hsize_t>& dims, H5T_class_t& classType, size_t& sizeType);
 
-herr_t COMPLEX_EXPORT find_attr(hid_t /*locationId*/, const char* name, const H5A_info_t* /*info*/, void* opData);
+herr_t COMPLEX_EXPORT FindAttr(hid_t /*locationId*/, const char* name, const H5A_info_t* /*info*/, void* opData);
 
 /**
  * @brief Inquires if an attribute named attributeName exists attached to the object locationId.
@@ -140,14 +140,14 @@ herr_t COMPLEX_EXPORT find_attr(hid_t /*locationId*/, const char* name, const H5
  * @param attributeName The attribute to search for
  * @return Standard H5 Error condition
  */
-herr_t COMPLEX_EXPORT findAttribute(hid_t locationId, const std::string& attributeName);
+herr_t COMPLEX_EXPORT FindAttribute(hid_t locationId, const std::string& attributeName);
 
 /**
  * @brief Returns the HDF Type for a given primitive value.
  * @return The H5 native type for the value
  */
 template <typename T>
-inline hid_t COMPLEX_EXPORT HDFTypeForPrimitive()
+inline hid_t COMPLEX_EXPORT HdfTypeForPrimitive()
 {
   if constexpr(std::is_same_v<T, float>)
   {
@@ -210,7 +210,7 @@ inline hid_t COMPLEX_EXPORT HDFTypeForPrimitive()
   }
   else
   {
-    throw std::runtime_error("HDFTypeForPrimitive does not support this type");
+    throw std::runtime_error("HdfTypeForPrimitive does not support this type");
     return -1;
   }
 }
@@ -220,7 +220,7 @@ inline hid_t COMPLEX_EXPORT HDFTypeForPrimitive()
  * @param classType
  * @return std::string
  */
-std::string COMPLEX_EXPORT HDFClassTypeAsStr(hid_t classType);
+std::string COMPLEX_EXPORT HdfClassTypeAsStr(hid_t classType);
 
 #if 0
 /**
@@ -242,7 +242,7 @@ hid_t COMPLEX_EXPORT getDatasetType(hid_t locationId, const std::string& dataset
  * @param data
  * @return
  */
-herr_t COMPLEX_EXPORT readVectorOfStringDataset(hid_t locationId, const std::string& datasetName, std::vector<std::string>& data);
+herr_t COMPLEX_EXPORT ReadVectorOfStringDataset(hid_t locationId, const std::string& datasetName, std::vector<std::string>& data);
 
 /**
  * @brief Reads a string dataset into the supplied string. Any data currently in the 'data' variable
@@ -252,14 +252,14 @@ herr_t COMPLEX_EXPORT readVectorOfStringDataset(hid_t locationId, const std::str
  * @param data The std::string to hold the data
  * @return Standard HDF error condition
  */
-herr_t COMPLEX_EXPORT readStringDataset(hid_t locationId, const std::string& datasetName, std::string& data);
+herr_t COMPLEX_EXPORT ReadStringDataset(hid_t locationId, const std::string& datasetName, std::string& data);
 
 /**
  * @brief Returns the path to an object
  * @param objectId The HDF5 id of the object
  * @return  The path to the object relative to the objectId
  */
-inline std::string getObjectPath(hid_t locationId)
+inline std::string GetObjectPath(hid_t locationId)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -286,7 +286,7 @@ inline std::string getObjectPath(hid_t locationId)
  * @return Standard hdf5 error condition.
  */
 template <typename T>
-inline herr_t writePointerDataset(hid_t locationId, const std::string& datasetName, int32_t rank, const hsize_t* dims, const T* data)
+inline herr_t WritePointerDataset(hid_t locationId, const std::string& datasetName, int32_t rank, const hsize_t* dims, const T* data)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -299,7 +299,7 @@ inline herr_t writePointerDataset(hid_t locationId, const std::string& datasetNa
   {
     return -2;
   }
-  hid_t dataType = HDFTypeForPrimitive<T>();
+  hid_t dataType = HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     return -1;
@@ -363,7 +363,7 @@ inline herr_t writePointerDataset(hid_t locationId, const std::string& datasetNa
  * @return Standard HDF Error Condition
  */
 template <typename T>
-inline herr_t writePointerAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, int32_t rank, const hsize_t* dims, const T* data)
+inline herr_t WritePointerAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, int32_t rank, const hsize_t* dims, const T* data)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -372,7 +372,7 @@ inline herr_t writePointerAttribute(hid_t locationId, const std::string& objectN
   H5O_info_t objectInfo;
   herr_t error = 0;
   herr_t returnError = 0;
-  hid_t dataType = HDFTypeForPrimitive<T>();
+  hid_t dataType = HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     std::cout << "dataType was unknown" << std::endl;
@@ -397,7 +397,7 @@ inline herr_t writePointerAttribute(hid_t locationId, const std::string& objectN
   if(dataspaceId >= 0)
   {
     /* Verify if the attribute already exists */
-    hasAttribute = findAttribute(objectId, attributeName);
+    hasAttribute = FindAttribute(objectId, attributeName);
 
     /* The attribute already exists, delete it */
     if(hasAttribute == 1)
@@ -464,9 +464,9 @@ inline herr_t writePointerAttribute(hid_t locationId, const std::string& objectN
  * @return Standard HDF Error Condition
  */
 template <typename T>
-inline herr_t writeVectorAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, const std::vector<hsize_t>& dims, const std::vector<T>& data)
+inline herr_t WriteVectorAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, const std::vector<hsize_t>& dims, const std::vector<T>& data)
 {
-  return writePointerAttribute(locationId, objectName, attributeName, static_cast<int32_t>(dims.size()), dims.data(), data.data());
+  return WritePointerAttribute(locationId, objectName, attributeName, static_cast<int32_t>(dims.size()), dims.data(), data.data());
 }
 
 /**
@@ -483,7 +483,7 @@ inline herr_t writeVectorAttribute(hid_t locationId, const std::string& objectNa
  * @param typeId The Attribute ID - which needs to be closed after you are finished with the data
  * @return
  */
-inline herr_t getAttributeInfo(hid_t locationId, const std::string& objectName, const std::string& attributeName, std::vector<hsize_t>& dims, H5T_class_t& typeClass, size_t& typeSize, hid_t& typeId)
+inline herr_t GetAttributeInfo(hid_t locationId, const std::string& objectName, const std::string& attributeName, std::vector<hsize_t>& dims, H5T_class_t& typeClass, size_t& typeSize, hid_t& typeId)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -542,11 +542,11 @@ inline herr_t getAttributeInfo(hid_t locationId, const std::string& objectName, 
             dims.resize(rank);
             std::copy(hdims.cbegin(), hdims.cend(), dims.begin());
           }
-          CloseH5S(dataspaceId, error, returnError)
+          H5S_CLOSE_H5_DATASPACE(dataspaceId, error, returnError);
           dataspaceId = 0;
         }
       }
-      CloseH5A(attributeId, error, returnError)
+      H5S_CLOSE_H5_ATTRIBUTE(attributeId, error, returnError);
       attributeId = 0;
     }
     else
@@ -576,7 +576,7 @@ inline herr_t getAttributeInfo(hid_t locationId, const std::string& objectName, 
  * @return Standard HDF Error condition
  */
 template <typename T>
-inline herr_t readVectorAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, std::vector<T>& data)
+inline herr_t ReadVectorAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, std::vector<T>& data)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -587,7 +587,7 @@ inline herr_t readVectorAttribute(hid_t locationId, const std::string& objectNam
   herr_t returnError = 0;
   hid_t attributeId;
   hid_t typeId;
-  hid_t dataType = HDFTypeForPrimitive<T>();
+  hid_t dataType = HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     return -1;
@@ -610,7 +610,7 @@ inline herr_t readVectorAttribute(hid_t locationId, const std::string& objectNam
       H5T_class_t typeClass;
       size_t typeSize;
       std::vector<hsize_t> dims;
-      error = getAttributeInfo(locationId, objectName, attributeName, dims, typeClass, typeSize, typeId);
+      error = GetAttributeInfo(locationId, objectName, attributeName, dims, typeClass, typeSize, typeId);
       hsize_t numElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<hsize_t>(1), std::multiplies<>());
       // std::cout << "    Vector Attribute has " << numElements << " elements." << std::endl;
       data.resize(numElements);
@@ -649,14 +649,14 @@ inline herr_t readVectorAttribute(hid_t locationId, const std::string& objectNam
  * @return Standard HDF error condition
  */
 template <typename T>
-inline herr_t readPointerDataset(hid_t locationId, const std::string& datasetName, T* data)
+inline herr_t ReadPointerDataset(hid_t locationId, const std::string& datasetName, T* data)
 {
   H5SUPPORT_MUTEX_LOCK()
 
   hid_t datasetId;
   herr_t error = 0;
   herr_t returnError = 0;
-  hid_t dataType = HDFTypeForPrimitive<T>();
+  hid_t dataType = HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     std::cout << "dataType was not supported." << std::endl;
@@ -708,7 +708,7 @@ inline herr_t readPointerDataset(hid_t locationId, const std::string& datasetNam
  * @return Standard HDF error condition
  */
 template <typename T>
-inline herr_t readVectorDataset(hid_t locationId, const std::string& datasetName, std::vector<T>& data)
+inline herr_t ReadVectorDataset(hid_t locationId, const std::string& datasetName, std::vector<T>& data)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -716,7 +716,7 @@ inline herr_t readVectorDataset(hid_t locationId, const std::string& datasetName
   herr_t error = 0;
   herr_t returnError = 0;
   hid_t spaceId;
-  hid_t dataType = HDFTypeForPrimitive<T>();
+  hid_t dataType = HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     return -1;
@@ -724,7 +724,7 @@ inline herr_t readVectorDataset(hid_t locationId, const std::string& datasetName
   datasetId = H5Dopen(locationId, datasetName.c_str(), H5P_DEFAULT);
   if(datasetId < 0)
   {
-    std::cout << "H5Lite.h::readVectorDataset(" << __LINE__ << ") Error opening Dataset at locationId (" << locationId << ") with object name (" << datasetName << ")" << std::endl;
+    std::cout << "H5Lite.h::ReadVectorDataset(" << __LINE__ << ") Error opening Dataset at locationId (" << locationId << ") with object name (" << datasetName << ")" << std::endl;
     return -1;
   }
   if(datasetId >= 0)
@@ -781,7 +781,7 @@ inline herr_t readVectorDataset(hid_t locationId, const std::string& datasetName
  * @return Standard HDF5 error conditions
  */
 template <typename T>
-inline herr_t writeScalarDataset(hid_t locationId, const std::string& datasetName, const T& value)
+inline herr_t WriteScalarDataset(hid_t locationId, const std::string& datasetName, const T& value)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -791,7 +791,7 @@ inline herr_t writeScalarDataset(hid_t locationId, const std::string& datasetNam
   herr_t returnError = 0;
   hsize_t dims = 1;
   hid_t rank = 1;
-  hid_t dataType = HDFTypeForPrimitive<T>();
+  hid_t dataType = HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     return -1;
@@ -840,7 +840,7 @@ inline herr_t writeScalarDataset(hid_t locationId, const std::string& datasetNam
  * @param data The actual data to write as a null terminated string
  * @return Standard HDF5 error conditions
  */
-inline herr_t writeStringDataset(hid_t locationId, const std::string& datasetName, const std::string& data)
+inline herr_t WriteStringDataset(hid_t locationId, const std::string& datasetName, const std::string& data)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -888,14 +888,14 @@ inline herr_t writeStringDataset(hid_t locationId, const std::string& datasetNam
             // returnError = datasetId;
             returnError = 0;
           }
-          CloseH5D(datasetId, error, returnError, datasetName)
+          H5_CLOSE_H5_DATASET(datasetId, error, returnError, datasetName)
           //          error = H5Dclose(datasetId);
           //          if (error < 0) {
           //            std::cout << "Error Closing Dataset." << std::endl;
           //            returnError = error;
           //          }
         }
-        CloseH5S(dataspaceId, error, returnError)
+        H5S_CLOSE_H5_DATASPACE(dataspaceId, error, returnError)
         //        error = H5Sclose(dataspaceId);
         //        if ( error < 0) {
         //          std::cout << "Error closing Dataspace." << std::endl;
@@ -903,7 +903,7 @@ inline herr_t writeStringDataset(hid_t locationId, const std::string& datasetNam
         //        }
       }
     }
-    CloseH5T(typeId, error, returnError)
+    H5S_CLOSE_H5_TYPE(typeId, error, returnError)
     //    error = H5Tclose(typeId);
     //    if (error < 0 ) {
     //     std::cout << "Error closing DataType" << std::endl;
@@ -924,7 +924,7 @@ inline herr_t writeStringDataset(hid_t locationId, const std::string& datasetNam
  * @return Standard HDF error condition
  */
 template <typename T>
-inline herr_t writeScalarAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, T data)
+inline herr_t WriteScalarAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, T data)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -935,7 +935,7 @@ inline herr_t writeScalarAttribute(hid_t locationId, const std::string& objectNa
   herr_t returnError = 0;
   hsize_t dims = 1;
   int32_t rank = 1;
-  hid_t dataType = HDFTypeForPrimitive<T>();
+  hid_t dataType = HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     return -1;
@@ -960,7 +960,7 @@ inline herr_t writeScalarAttribute(hid_t locationId, const std::string& objectNa
   if(dataspaceId >= 0)
   {
     /* Verify if the attribute already exists */
-    hasAttribute = findAttribute(objectId, attributeName);
+    hasAttribute = FindAttribute(objectId, attributeName);
 
     /* The attribute already exists, delete it */
     if(hasAttribute == 1)
@@ -1027,12 +1027,12 @@ inline herr_t writeScalarAttribute(hid_t locationId, const std::string& objectNa
  * @param data pointer to a const char array
  * @return Standard HDF error conditions
  */
-inline herr_t writeStringAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, hsize_t size, const char* data)
+inline herr_t WriteStringAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, hsize_t size, const char* data)
 {
   H5SUPPORT_MUTEX_LOCK()
 
   hid_t attributeType;
-  hid_t attributeSpaceID;
+  hid_t attributeSpaceId;
   hid_t attributeId;
   hid_t objectId;
   int32_t hasAttribute;
@@ -1070,11 +1070,11 @@ inline herr_t writeStringAttribute(hid_t locationId, const std::string& objectNa
           }
           if(error >= 0)
           {
-            attributeSpaceID = H5Screate(H5S_SCALAR);
-            if(attributeSpaceID >= 0)
+            attributeSpaceId = H5Screate(H5S_SCALAR);
+            if(attributeSpaceId >= 0)
             {
               /* Verify if the attribute already exists */
-              hasAttribute = findAttribute(objectId, attributeName);
+              hasAttribute = FindAttribute(objectId, attributeName);
               /* The attribute already exists, delete it */
               if(hasAttribute == 1)
               {
@@ -1088,7 +1088,7 @@ inline herr_t writeStringAttribute(hid_t locationId, const std::string& objectNa
               if(error >= 0)
               {
                 /* Create and write the attribute */
-                attributeId = H5Acreate(objectId, attributeName.c_str(), attributeType, attributeSpaceID, H5P_DEFAULT, H5P_DEFAULT);
+                attributeId = H5Acreate(objectId, attributeName.c_str(), attributeType, attributeSpaceId, H5P_DEFAULT, H5P_DEFAULT);
                 if(attributeId >= 0)
                 {
                   error = H5Awrite(attributeId, attributeType, data);
@@ -1099,13 +1099,13 @@ inline herr_t writeStringAttribute(hid_t locationId, const std::string& objectNa
                     returnError = error;
                   }
                 }
-                CloseH5A(attributeId, error, returnError)
+                H5S_CLOSE_H5_ATTRIBUTE(attributeId, error, returnError)
               }
-              CloseH5S(attributeSpaceID, error, returnError)
+              H5S_CLOSE_H5_DATASPACE(attributeSpaceId, error, returnError)
             }
           }
         }
-        CloseH5T(attributeType, error, returnError)
+        H5S_CLOSE_H5_TYPE(attributeType, error, returnError)
       }
       else
       {
@@ -1131,9 +1131,9 @@ inline herr_t writeStringAttribute(hid_t locationId, const std::string& objectNa
  * @param data The string to write as the attribute
  * @return Standard HDF error conditions
  */
-inline herr_t writeStringAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, const std::string& data)
+inline herr_t WriteStringAttribute(hid_t locationId, const std::string& objectName, const std::string& attributeName, const std::string& data)
 {
-  return writeStringAttribute(locationId, objectName, attributeName, data.size() + 1, data.data());
+  return WriteStringAttribute(locationId, objectName, attributeName, data.size() + 1, data.data());
 }
 
 /**
@@ -1145,7 +1145,7 @@ inline herr_t writeStringAttribute(hid_t locationId, const std::string& objectNa
  * @param datasetName Path to the dataset
  * @return
  */
-inline hid_t getDatasetType(hid_t locationId, const std::string& datasetName)
+inline hid_t GetDatasetType(hid_t locationId, const std::string& datasetName)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -1159,7 +1159,7 @@ inline hid_t getDatasetType(hid_t locationId, const std::string& datasetName)
   }
   /* Get an identifier for the datatype. */
   hid_t typeId = H5Dget_type(datasetId);
-  CloseH5D(datasetId, error, returnError, datasetName)
+  H5_CLOSE_H5_DATASET(datasetId, error, returnError, datasetName);
   if(returnError < 0)
   {
     return static_cast<hid_t>(returnError);

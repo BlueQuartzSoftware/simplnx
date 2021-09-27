@@ -269,7 +269,7 @@ DataMap& DataMap::operator=(DataMap&& rhs) noexcept
 
 H5::ErrorType DataMap::readH5Group(DataStructure& ds, H5::IdType h5GroupId, const std::optional<DataObject::IdType>& dsParentId)
 {
-  const std::string currentPath = H5::Support::getObjectPath(h5GroupId);
+  const std::string currentPath = H5::Support::GetObjectPath(h5GroupId);
   std::cout << "reading hdf5 object '" << currentPath << "'" << std::endl;
   hsize_t count;
   H5Gget_num_objs(h5GroupId, &count);

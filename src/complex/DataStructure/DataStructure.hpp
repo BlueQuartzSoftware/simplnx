@@ -21,11 +21,12 @@ class AbstractDataStructureMessage;
 class DataGroup;
 class DataPath;
 
-namespace Constants {
+namespace Constants
+{
 inline const std::string k_ObjectTypeTag = "ObjectType";
 inline const std::string k_DataStructureTag = "DataStructure";
 
-}
+} // namespace Constants
 /**
  * @class DataStructure
  * @brief The DataStructure class is both the control center and origin of the

@@ -306,14 +306,14 @@ H5::ErrorType VertexGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId
   H5::ErrorType err = 0;
   if(m_VertexListId.has_value())
   {
-    err = H5::Support::writeScalarDataset(groupId, "VertexListId", m_VertexListId.value());
+    err = H5::Support::WriteScalarDataset(groupId, "VertexListId", m_VertexListId.value());
     if(err < 0)
     {
     }
   }
   if(m_VertexSizesId.has_value())
   {
-    err = H5::Support::writeScalarDataset(groupId, "VertexSizesId", m_VertexSizesId.value());
+    err = H5::Support::WriteScalarDataset(groupId, "VertexSizesId", m_VertexSizesId.value());
     if(err < 0)
     {
     }
