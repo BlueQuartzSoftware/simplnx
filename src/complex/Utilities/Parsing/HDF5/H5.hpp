@@ -1,6 +1,7 @@
 #pragma once
 
 #include "complex/Common/Types.hpp"
+#include "complex/Common/StringLiteral.hpp"
 
 #define H5_USE_110_API
 #include <H5Opublic.h>
@@ -15,6 +16,7 @@
 #define H5SUPPORT_MUTEX_LOCK()
 #endif
 
+#include <cstdint>
 #include <string>
 
 namespace complex
@@ -25,8 +27,16 @@ using IdType = int64;
 using ErrorType = int32;
 using SizeType = unsigned long long;
 
-inline const std::string DataTypeTag = "DataType";
-inline const std::string CompDims = "ComponentDimensions";
-inline const std::string TupleDims = "TupleDimensions";
+static constexpr StringLiteral k_DataTypeTag = "DataType";
+
+static constexpr StringLiteral k_DataStoreTag = "DataStore";
+static constexpr StringLiteral k_TupleShapeTag = "TupleShape";
+static constexpr StringLiteral k_ComponentShapeTag = "ComponentShape";
+static constexpr StringLiteral k_DataObjectIdTag = "DataObjectId";
+static constexpr StringLiteral k_DataArrayTag = "DataArray";
+
+static constexpr StringLiteral k_ObjectTypeTag = "ObjectType";
+static constexpr StringLiteral k_DataStructureTag = "DataStructure";
+
 } // namespace H5
 } // namespace complex

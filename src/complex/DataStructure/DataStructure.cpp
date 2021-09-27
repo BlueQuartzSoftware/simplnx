@@ -457,7 +457,7 @@ void readDataObject(DataStructure& ds, H5::IdType objId, const std::string& name
 
 H5::ErrorType DataStructure::writeHdf5(H5::IdType fileId) const
 {
-  auto dsId = H5Gcreate(fileId, Constants::k_DataStructureTag.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  auto dsId = H5Gcreate(fileId, complex::H5::k_DataStructureTag.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5::ErrorType err = m_RootGroup.writeH5Group(dsId);
   H5Gclose(dsId);
   return err;
@@ -466,7 +466,7 @@ H5::ErrorType DataStructure::writeHdf5(H5::IdType fileId) const
 DataStructure DataStructure::readFromHdf5(H5::IdType fileId, H5::ErrorType& err)
 {
   DataStructure ds;
-  hid_t dsId = H5Gopen(fileId, Constants::k_DataStructureTag.c_str(), H5P_DEFAULT);
+  hid_t dsId = H5Gopen(fileId, complex::H5::k_DataStructureTag.c_str(), H5P_DEFAULT);
   err = ds.m_RootGroup.readH5Group(ds, dsId);
   H5Gclose(dsId);
   return ds;
