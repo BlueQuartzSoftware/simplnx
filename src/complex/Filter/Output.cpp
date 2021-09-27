@@ -123,6 +123,11 @@ std::vector<usize> CreateArrayAction::dims() const
   return m_Dims;
 }
 
+u64 CreateArrayAction::numComponents() const
+{
+  return m_NComp;
+}
+
 DataPath CreateArrayAction::path() const
 {
   return m_Path;
