@@ -40,7 +40,7 @@ public:
    * @brief The IdType alias serves as an ID type for DataObjects within their
    * respective DataStructure.
    */
-  using IdType = uint64_t;
+  using IdType = uint64;
 
   /**
    * @brief The ParentCollectionType alias describes the format by which parent

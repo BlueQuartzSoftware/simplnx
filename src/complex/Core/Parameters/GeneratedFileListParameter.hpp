@@ -11,7 +11,7 @@ namespace complex
 class COMPLEX_EXPORT GeneratedFileListParameter : public ValueParameter
 {
 public:
-  enum class Ordering : uint32_t
+  enum class Ordering : uint32
   {
     LowToHigh = 0,
     HighToLow = 1
@@ -22,10 +22,10 @@ public:
    */
   struct ValueType
   {
-    int32_t startIndex = 0;
-    int32_t endIndex = 0;
-    int32_t incrementIndex = 1;
-    uint32_t paddingDigits = 3;
+    int32 startIndex = 0;
+    int32 endIndex = 0;
+    int32 incrementIndex = 1;
+    uint32 paddingDigits = 3;
     Ordering ordering = Ordering::LowToHigh;
     std::string inputPath;
     std::string filePrefix;

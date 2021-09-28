@@ -18,7 +18,7 @@ class Observable;
  * @brief The InfoStringFormat enum specifies which format should be used when
  * generating the geometries information string.
  */
-enum class InfoStringFormat : uint8_t
+enum class InfoStringFormat : uint8
 {
   HtmlFormat = 0,
   MarkDown = 1,
@@ -37,8 +37,8 @@ class COMPLEX_EXPORT AbstractGeometry : public BaseGroup
 public:
   friend class DataStructure;
 
-  using EnumType = uint32_t;
-  using StatusCode = int32_t;
+  using EnumType = uint32;
+  using StatusCode = int32;
 
   /**
    * @brief The VtkCellType enum specifies a type of VTK geometry the geometry
@@ -111,16 +111,16 @@ public:
     Unknown = 101U
   };
 
-  using MeshIndexType = uint64_t;
+  using MeshIndexType = uint64;
   using MeshIndexArrayType = DataArray<MeshIndexType>;
-  using SharedVertexList = FloatArray;
+  using SharedVertexList = Float32Array;
   using SharedEdgeList = MeshIndexArrayType;
   using SharedFaceList = MeshIndexArrayType;
   using SharedTriList = MeshIndexArrayType;
   using SharedQuadList = MeshIndexArrayType;
   using SharedTetList = MeshIndexArrayType;
   using SharedHexList = MeshIndexArrayType;
-  using ElementDynamicList = DynamicListArray<uint16_t, MeshIndexType>;
+  using ElementDynamicList = DynamicListArray<uint16, MeshIndexType>;
 
   /**
    * @brief
@@ -147,13 +147,13 @@ public:
    * @brief
    * @return float
    */
-  float getTimeValue() const;
+  float32 getTimeValue() const;
 
   /**
    * @brief
    * @param value
    */
-  void setTimeValue(float value);
+  void setTimeValue(float32 value);
 
   /**
    * @brief Returns true if time series are enabled. Returns false otherwise.
@@ -227,9 +227,9 @@ public:
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const Float32Array*
    */
-  virtual const FloatArray* getElementSizes() const = 0;
+  virtual const Float32Array* getElementSizes() const = 0;
 
   /**
    * @brief
@@ -244,9 +244,9 @@ public:
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const Float32Array*
    */
-  virtual const FloatArray* getElementCentroids() const = 0;
+  virtual const Float32Array* getElementCentroids() const = 0;
 
   /**
    * @brief
@@ -255,16 +255,16 @@ public:
 
   /**
    * @brief
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  virtual complex::Point3D<double> getParametricCenter() const = 0;
+  virtual complex::Point3D<float64> getParametricCenter() const = 0;
 
   /**
    * @brief
    * @param pCoords
    * @param shape
    */
-  virtual void getShapeFunctions(const complex::Point3D<double>& pCoords, double* shape) const = 0;
+  virtual void getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const = 0;
 
   /**
    * @brief
@@ -272,7 +272,7 @@ public:
    * @param derivatives
    * @param observable
    */
-  virtual void findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const = 0;
+  virtual void findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const = 0;
 
   /**
    * @brief
@@ -295,33 +295,33 @@ public:
 
   /**
    * @brief
-   * @return uint32_t
+   * @return uint32
    */
-  virtual uint32_t getXdmfGridType() const = 0;
+  virtual uint32 getXdmfGridType() const = 0;
 
   /**
    * @brief
-   * @return uint32_t
+   * @return uint32
    */
-  uint32_t getUnitDimensionality() const;
-
-  /**
-   * @brief
-   * @param value
-   */
-  void setUnitDimensionality(uint32_t value);
-
-  /**
-   * @brief
-   * @return uint32_t
-   */
-  uint32_t getSpatialDimensionality() const;
+  uint32 getUnitDimensionality() const;
 
   /**
    * @brief
    * @param value
    */
-  void setSpatialDimensionality(uint32_t value);
+  void setUnitDimensionality(uint32 value);
+
+  /**
+   * @brief
+   * @return uint32
+   */
+  uint32 getSpatialDimensionality() const;
+
+  /**
+   * @brief
+   * @param value
+   */
+  void setSpatialDimensionality(uint32 value);
 
   /**
    * @brief
@@ -352,13 +352,13 @@ protected:
    * @brief
    * @param elementCentroids
    */
-  virtual void setElementCentroids(const FloatArray* elementCentroids) = 0;
+  virtual void setElementCentroids(const Float32Array* elementCentroids) = 0;
 
   /**
    * @brief
    * @param elementSizes
    */
-  virtual void setElementSizes(const FloatArray* elementSizes) = 0;
+  virtual void setElementSizes(const Float32Array* elementSizes) = 0;
 
   /**
    * @brief
@@ -377,8 +377,8 @@ protected:
 private:
   LengthUnit m_Units = LengthUnit::Meter;
   bool m_IsTimeSeriesEnabled = false;
-  float m_TimeValue = 0.0f;
-  uint32_t m_UnitDimensionality = 3;
-  uint32_t m_SpacialDimensionality = 3;
+  float32 m_TimeValue = 0.0f;
+  uint32 m_UnitDimensionality = 3;
+  uint32 m_SpacialDimensionality = 3;
 };
 } // namespace complex

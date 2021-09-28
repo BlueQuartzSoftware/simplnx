@@ -1,8 +1,8 @@
 #pragma once
 
+#include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
 
-#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -12,7 +12,7 @@ namespace FilePathGenerator
 {
 /**
  * @brief generateFileList This method will generate a file list in the correct order of the files that should
- * be imported int32_to an h5ebsd file
+ * be imported to an h5ebsd file
  * @param start Z Slice Start
  * @param end S Slice End
  * @param increment How much to increment each item
@@ -25,7 +25,7 @@ namespace FilePathGenerator
  * @param paddingDigits the number of padding digits to use when generating the integer index value
  * @return
  */
-COMPLEX_EXPORT std::vector<std::string> GenerateFileList(int32_t start, int32_t end, int32_t increment, bool& hasMissingFiles, bool stackLowToHigh, const std::string& inputPath,
-                                                         const std::string& filePrefix, const std::string& fileSuffix, const std::string& fileExtension, int32_t paddingDigits);
+COMPLEX_EXPORT std::vector<std::string> GenerateFileList(int32 start, int32 end, int32 increment, bool& hasMissingFiles, bool stackLowToHigh, const std::string& inputPath,
+                                                         const std::string& filePrefix, const std::string& fileSuffix, const std::string& fileExtension, int32 paddingDigits);
 } // namespace FilePathGenerator
 } // namespace complex

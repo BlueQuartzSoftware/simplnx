@@ -37,7 +37,7 @@ public:
   public:
     using iterator_category = std::random_access_iterator_tag;
     using value_type = T;
-    using difference_type = int64_t;
+    using difference_type = int64;
     using pointer = T*;
     using reference = T&;
 
@@ -143,7 +143,7 @@ public:
   public:
     using iterator_category = std::random_access_iterator_tag;
     using value_type = T;
-    using difference_type = int64_t;
+    using difference_type = int64;
     using pointer = const T*;
     using reference = const T&;
 

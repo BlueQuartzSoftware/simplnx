@@ -94,7 +94,7 @@ public:
    * @param y
    * @param z
    */
-  void setSpacing(float x, float y, float z);
+  void setSpacing(float32 x, float32 y, float32 z);
 
   /**
    * @brief
@@ -114,19 +114,19 @@ public:
    * @param y
    * @param z
    */
-  void setOrigin(float x, float y, float z);
+  void setOrigin(float32 x, float32 y, float32 z);
 
   /**
    * @brief
-   * @return BoundingBox<float>
+   * @return BoundingBox<float32>
    */
-  BoundingBox<float> getBoundingBoxf() const;
+  BoundingBox<float32> getBoundingBoxf() const;
 
   /**
    * @brief
-   * @return BoundingBox<double>
+   * @return BoundingBox<float64>
    */
-  BoundingBox<double> getBoundingBox() const;
+  BoundingBox<float64> getBoundingBox() const;
 
   /**
    * @brief
@@ -147,9 +147,9 @@ public:
 
   /**
    * @brief
-   * @return std::shared_ptr<FloatArray>
+   * @return std::shared_ptr<Float32Array>
    */
-  const FloatArray* getElementSizes() const override;
+  const Float32Array* getElementSizes() const override;
 
   /**
    * @brief
@@ -198,9 +198,9 @@ public:
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const Float32Array*
    */
-  const FloatArray* getElementCentroids() const override;
+  const Float32Array* getElementCentroids() const override;
 
   /**
    * @brief
@@ -209,16 +209,16 @@ public:
 
   /**
    * @brief
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  complex::Point3D<double> getParametricCenter() const override;
+  complex::Point3D<float64> getParametricCenter() const override;
 
   /**
    * @brief
    * @param pCoords
    * @param shape
    */
-  void getShapeFunctions(const complex::Point3D<double>& pCoords, double* shape) const override;
+  void getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const override;
 
   /**
    * @brief
@@ -226,7 +226,7 @@ public:
    * @param derivatives
    * @param observable
    */
-  void findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const override;
+  void findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const override;
 
   /**
    * @brief
@@ -267,94 +267,94 @@ public:
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float>
+   * @return complex::Point3D<float32>
    */
-  complex::Point3D<float> getPlaneCoordsf(size_t idx[3]) const override;
+  complex::Point3D<float32> getPlaneCoordsf(size_t idx[3]) const override;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<float>
+   * @return complex::Point3D<float32>
    */
-  complex::Point3D<float> getPlaneCoordsf(size_t x, size_t y, size_t z) const override;
+  complex::Point3D<float32> getPlaneCoordsf(size_t x, size_t y, size_t z) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float>
+   * @return complex::Point3D<float32>
    */
-  complex::Point3D<float> getPlaneCoordsf(size_t idx) const override;
+  complex::Point3D<float32> getPlaneCoordsf(size_t idx) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  complex::Point3D<double> getPlaneCoords(size_t idx[3]) const override;
+  complex::Point3D<float64> getPlaneCoords(size_t idx[3]) const override;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  complex::Point3D<double> getPlaneCoords(size_t x, size_t y, size_t z) const override;
+  complex::Point3D<float64> getPlaneCoords(size_t x, size_t y, size_t z) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  complex::Point3D<double> getPlaneCoords(size_t idx) const override;
+  complex::Point3D<float64> getPlaneCoords(size_t idx) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float>
+   * @return complex::Point3D<float32>
    */
-  complex::Point3D<float> getCoordsf(size_t idx[3]) const override;
+  complex::Point3D<float32> getCoordsf(size_t idx[3]) const override;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<float>
+   * @return complex::Point3D<float32>
    */
-  complex::Point3D<float> getCoordsf(size_t x, size_t y, size_t z) const override;
+  complex::Point3D<float32> getCoordsf(size_t x, size_t y, size_t z) const override;
 
   /**
    * @brief
    * @param idx
-   * @return Point3D<float>
+   * @return Point3D<float32>
    */
-  complex::Point3D<float> getCoordsf(size_t idx) const override;
+  complex::Point3D<float32> getCoordsf(size_t idx) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  complex::Point3D<double> getCoords(size_t idx[3]) const override;
+  complex::Point3D<float64> getCoords(size_t idx[3]) const override;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  complex::Point3D<double> getCoords(size_t x, size_t y, size_t z) const override;
+  complex::Point3D<float64> getCoords(size_t x, size_t y, size_t z) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  complex::Point3D<double> getCoords(size_t idx) const override;
+  complex::Point3D<float64> getCoords(size_t idx) const override;
 
   /**
    * @brief
@@ -363,7 +363,7 @@ public:
    * @param zCoord
    * @return size_t
    */
-  size_t getIndex(float xCoord, float yCoord, float zCoord) const override;
+  size_t getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const override;
 
   /**
    * @brief
@@ -372,7 +372,7 @@ public:
    * @param zCoord
    * @return size_t
    */
-  size_t getIndex(double xCoord, double yCoord, double zCoord) const override;
+  size_t getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const override;
 
   /**
    * @brief
@@ -380,13 +380,13 @@ public:
    * @param index
    * @return ErrorType
    */
-  ErrorType computeCellIndex(const complex::Point3D<float>& coords, SizeVec3& index) const;
+  ErrorType computeCellIndex(const complex::Point3D<float32>& coords, SizeVec3& index) const;
 
   /**
    * @brief
-   * @return uint32_t
+   * @return uint32
    */
-  uint32_t getXdmfGridType() const override;
+  uint32 getXdmfGridType() const override;
 
   /**
    * @brief Reads values from HDF5
@@ -423,7 +423,7 @@ protected:
    * @param preflight
    * @return StatusCode
    */
-  // StatusCode gatherMetaData(hid_t parentId, size_t volDims, float spacing, float origin, uint32_t spatialDims, const std::string& geomName, bool preflight);
+  // StatusCode gatherMetaData(hid_t parentId, size_t volDims, float32 spacing, float32 origin, uint32 spatialDims, const std::string& geomName, bool preflight);
 
   /**
    * @brief
@@ -441,13 +441,13 @@ protected:
    * @brief
    * @param elementCentroids
    */
-  void setElementCentroids(const FloatArray* elementCentroids) override;
+  void setElementCentroids(const Float32Array* elementCentroids) override;
 
   /**
    * @brief
    * @param elementSizes
    */
-  void setElementSizes(const FloatArray* elementSizes) override;
+  void setElementSizes(const Float32Array* elementSizes) override;
 
 private:
   std::optional<DataObject::IdType> m_VoxelSizesId;

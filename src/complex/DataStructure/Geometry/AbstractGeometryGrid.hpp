@@ -49,94 +49,94 @@ public:
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float>
+   * @return complex::Point3D<float32>
    */
-  virtual complex::Point3D<float> getPlaneCoordsf(size_t idx[3]) const = 0;
+  virtual complex::Point3D<float32> getPlaneCoordsf(size_t idx[3]) const = 0;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<float>
+   * @return complex::Point3D<float32>
    */
-  virtual complex::Point3D<float> getPlaneCoordsf(size_t x, size_t y, size_t z) const = 0;
+  virtual complex::Point3D<float32> getPlaneCoordsf(size_t x, size_t y, size_t z) const = 0;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float>
+   * @return complex::Point3D<float32>
    */
-  virtual complex::Point3D<float> getPlaneCoordsf(size_t idx) const = 0;
+  virtual complex::Point3D<float32> getPlaneCoordsf(size_t idx) const = 0;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  virtual complex::Point3D<double> getPlaneCoords(size_t idx[3]) const = 0;
+  virtual complex::Point3D<float64> getPlaneCoords(size_t idx[3]) const = 0;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  virtual complex::Point3D<double> getPlaneCoords(size_t x, size_t y, size_t z) const = 0;
+  virtual complex::Point3D<float64> getPlaneCoords(size_t x, size_t y, size_t z) const = 0;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  virtual complex::Point3D<double> getPlaneCoords(size_t idx) const = 0;
+  virtual complex::Point3D<float64> getPlaneCoords(size_t idx) const = 0;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float>
+   * @return complex::Point3D<float32>
    */
-  virtual complex::Point3D<float> getCoordsf(size_t idx[3]) const = 0;
+  virtual complex::Point3D<float32> getCoordsf(size_t idx[3]) const = 0;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @preturn complex::Point3D<float>
+   * @preturn complex::Point3D<float32>
    */
-  virtual complex::Point3D<float> getCoordsf(size_t x, size_t y, size_t z) const = 0;
+  virtual complex::Point3D<float32> getCoordsf(size_t x, size_t y, size_t z) const = 0;
 
   /**
    * @brief
    * @param idx
    * @return
    */
-  virtual complex::Point3D<float> getCoordsf(size_t idx) const = 0;
+  virtual complex::Point3D<float32> getCoordsf(size_t idx) const = 0;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  virtual complex::Point3D<double> getCoords(size_t idx[3]) const = 0;
+  virtual complex::Point3D<float64> getCoords(size_t idx[3]) const = 0;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  virtual complex::Point3D<double> getCoords(size_t x, size_t y, size_t z) const = 0;
+  virtual complex::Point3D<float64> getCoords(size_t x, size_t y, size_t z) const = 0;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  virtual complex::Point3D<double> getCoords(size_t idx) const = 0;
+  virtual complex::Point3D<float64> getCoords(size_t idx) const = 0;
 
   /**
    * @brief
@@ -145,7 +145,7 @@ public:
    * @param zCoord
    * @return size_t
    */
-  virtual size_t getIndex(float xCoord, float yCoord, float zCoord) const = 0;
+  virtual size_t getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const = 0;
 
   /**
    * @brief
@@ -154,7 +154,7 @@ public:
    * @param zCoord
    * @return size_t
    */
-  virtual size_t getIndex(double xCoord, double yCoord, double zCoord) const = 0;
+  virtual size_t getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const = 0;
 
 protected:
   /**

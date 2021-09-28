@@ -103,7 +103,7 @@ const AbstractGeometry::SharedVertexList* EdgeGeom::getVertices() const
   return dynamic_cast<const SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
 }
 
-void EdgeGeom::setCoords(size_t vertId, const complex::Point3D<float>& coords)
+void EdgeGeom::setCoords(size_t vertId, const complex::Point3D<float32>& coords)
 {
   auto vertices = getVertices();
   if(!vertices)
@@ -117,15 +117,15 @@ void EdgeGeom::setCoords(size_t vertId, const complex::Point3D<float>& coords)
   }
 }
 
-complex::Point3D<float> EdgeGeom::getCoords(size_t vertId) const
+complex::Point3D<float32> EdgeGeom::getCoords(size_t vertId) const
 {
   auto vertices = getVertices();
   if(!vertices)
   {
-    return Point3D<float>();
+    return Point3D<float32>();
   }
 
-  Point3D<float> coord;
+  Point3D<float32> coord;
   for(size_t i = 0; i < 3; i++)
   {
     coord[i] = (*vertices)[vertId * 3 + i];
@@ -213,7 +213,7 @@ void EdgeGeom::getVertsAtEdge(size_t edgeId, size_t verts[2])
   }
 }
 
-void EdgeGeom::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2) const
+void EdgeGeom::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const
 {
   auto edges = getEdges();
   if(!edges)
@@ -276,17 +276,17 @@ size_t EdgeGeom::getNumberOfElements() const
 
 AbstractGeometry::StatusCode EdgeGeom::findElementSizes()
 {
-  auto dataStore = new DataStore<float>(1, getNumberOfElements());
-  auto sizes = DataArray<float>::Create(*getDataStructure(), "Edge Lengths", dataStore, getId());
+  auto dataStore = new DataStore<float32>(1, getNumberOfElements());
+  auto sizes = DataArray<float32>::Create(*getDataStructure(), "Edge Lengths", dataStore, getId());
   m_EdgeSizesId = sizes->getId();
 
-  Point3D<float> vert0 = {0.0f, 0.0f, 0.0f};
-  Point3D<float> vert1 = {0.0f, 0.0f, 0.0f};
+  Point3D<float32> vert0 = {0.0f, 0.0f, 0.0f};
+  Point3D<float32> vert1 = {0.0f, 0.0f, 0.0f};
 
   for(size_t i = 0; i < getNumberOfEdges(); i++)
   {
     getVertCoordsAtEdge(i, vert0, vert1);
-    float length = 0.0f;
+    float32 length = 0.0f;
     for(size_t j = 0; j < 3; j++)
     {
       length += (vert0[j] - vert1[j]) * (vert0[j] - vert1[j]);
@@ -297,9 +297,9 @@ AbstractGeometry::StatusCode EdgeGeom::findElementSizes()
   return 1;
 }
 
-const FloatArray* EdgeGeom::getElementSizes() const
+const Float32Array* EdgeGeom::getElementSizes() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_EdgeSizesId));
+  return dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_EdgeSizesId));
 }
 
 void EdgeGeom::deleteElementSizes()
@@ -310,8 +310,8 @@ void EdgeGeom::deleteElementSizes()
 
 AbstractGeometry::StatusCode EdgeGeom::findElementsContainingVert()
 {
-  auto containsVert = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Edges Containing Vert", getId());
-  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16_t, MeshIndexType>(getEdges(), containsVert, getNumberOfVertices());
+  auto containsVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Edges Containing Vert", getId());
+  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getEdges(), containsVert, getNumberOfVertices());
   if(getElementsContainingVert() == nullptr)
   {
     return -1;
@@ -345,13 +345,13 @@ AbstractGeometry::StatusCode EdgeGeom::findElementNeighbors()
       return err;
     }
   }
-  auto edgeNeighbors = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Edge Neighbors", getId());
+  auto edgeNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Edge Neighbors", getId());
   if(edgeNeighbors == nullptr)
   {
     err = -1;
   }
   m_EdgeNeighborsId = edgeNeighbors->getId();
-  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16_t, MeshIndexType>(getEdges(), getElementsContainingVert(), edgeNeighbors, AbstractGeometry::Type::Edge);
+  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getEdges(), getElementsContainingVert(), edgeNeighbors, AbstractGeometry::Type::Edge);
   if(getElementNeighbors() == nullptr)
   {
     m_EdgeNeighborsId.reset();
@@ -377,8 +377,8 @@ void EdgeGeom::deleteElementNeighbors()
 
 AbstractGeometry::StatusCode EdgeGeom::findElementCentroids()
 {
-  auto dataStore = new DataStore<float>(3, getNumberOfElements());
-  FloatArray* edgeCentroids = DataArray<float>::Create(*getDataStructure(), "Edge Centroids", dataStore, getId());
+  auto dataStore = new DataStore<float32>(3, getNumberOfElements());
+  Float32Array* edgeCentroids = DataArray<float32>::Create(*getDataStructure(), "Edge Centroids", dataStore, getId());
   GeometryHelpers::Topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroids);
   if(getElementCentroids() == nullptr)
   {
@@ -387,13 +387,13 @@ AbstractGeometry::StatusCode EdgeGeom::findElementCentroids()
   return 1;
 }
 
-const FloatArray* EdgeGeom::getElementCentroids() const
+const Float32Array* EdgeGeom::getElementCentroids() const
 {
   if(!m_EdgeCentroidsId)
   {
     return nullptr;
   }
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_EdgeCentroidsId.value()));
+  return dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_EdgeCentroidsId.value()));
 }
 
 void EdgeGeom::deleteElementCentroids()
@@ -406,12 +406,12 @@ void EdgeGeom::deleteElementCentroids()
   m_EdgeCentroidsId.reset();
 }
 
-complex::Point3D<double> EdgeGeom::getParametricCenter() const
+complex::Point3D<float64> EdgeGeom::getParametricCenter() const
 {
   return {0.5, 0.0, 0.0};
 }
 
-void EdgeGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, double* shape) const
+void EdgeGeom::getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const
 {
   (void)pCoords;
 
@@ -419,7 +419,7 @@ void EdgeGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, double
   shape[1] = 1.0;
 }
 
-void EdgeGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
+void EdgeGeom::findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const
 {
   throw std::runtime_error("");
 }
@@ -435,7 +435,7 @@ complex::TooltipGenerator EdgeGeom::getTooltipGenerator() const
   return toolTipGen;
 }
 
-uint32_t EdgeGeom::getXdmfGridType() const
+uint32 EdgeGeom::getXdmfGridType() const
 {
   throw std::runtime_error("");
 }
@@ -460,7 +460,7 @@ void EdgeGeom::setElementNeighbors(const ElementDynamicList* elementNeighbors)
   m_EdgeNeighborsId = elementNeighbors->getId();
 }
 
-void EdgeGeom::setElementCentroids(const FloatArray* elementCentroids)
+void EdgeGeom::setElementCentroids(const Float32Array* elementCentroids)
 {
   deleteElementCentroids();
   if(!elementCentroids)
@@ -470,7 +470,7 @@ void EdgeGeom::setElementCentroids(const FloatArray* elementCentroids)
   m_EdgeCentroidsId = elementCentroids->getId();
 }
 
-void EdgeGeom::setElementSizes(const FloatArray* elementSizes)
+void EdgeGeom::setElementSizes(const Float32Array* elementSizes)
 {
   deleteElementSizes();
   if(!elementSizes)

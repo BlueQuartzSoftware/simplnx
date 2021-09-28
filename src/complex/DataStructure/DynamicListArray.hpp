@@ -243,15 +243,15 @@ public:
    * @param buffer
    * @param numElements
    */
-  void deserializeLinks(std::vector<uint8_t>& buffer, size_t numElements)
+  void deserializeLinks(std::vector<uint8>& buffer, size_t numElements)
   {
     size_t offset = 0;
     allocate(numElements); // Allocate all the links with 0 and nullptr;
-    uint8_t* bufPtr = &(buffer.front());
+    uint8* bufPtr = &(buffer.front());
 
     // Walk the array and allocate all the array links to Zero and nullptr
     T* numCells = nullptr;
-    // int32_t* cells = nullptr;
+    // int32* cells = nullptr;
     for(size_t i = 0; i < numElements; ++i)
     {
       numCells = reinterpret_cast<T*>(bufPtr + offset);
@@ -340,7 +340,7 @@ private:
   size_t m_Size = 0;
 };
 
-typedef DynamicListArray<int32_t, int32_t> Int32Int32DynamicListArray;
-typedef DynamicListArray<uint16_t, int64_t> UInt16Int64DynamicListArray;
-typedef DynamicListArray<int64_t, int64_t> Int64Int64DynamicListArray;
+typedef DynamicListArray<int32, int32> Int32Int32DynamicListArray;
+typedef DynamicListArray<uint16, int64> UInt16Int64DynamicListArray;
+typedef DynamicListArray<int64, int64> Int64Int64DynamicListArray;
 } // namespace complex

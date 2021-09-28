@@ -404,36 +404,35 @@ private:
 };
 
 // Declare extern templates
-// extern template class DataArray<uint8_t>;
-// extern template class DataArray<uint16_t>;
-// extern template class DataArray<uint32_t>;
-// extern template class DataArray<uint64_t>;
+// extern template class DataArray<uint8>;
+// extern template class DataArray<uint16>;
+// extern template class DataArray<uint32>;
+// extern template class DataArray<uint64>;
 
-// extern template class DataArray<int8_t>;
-// extern template class DataArray<int16_t>;
-// extern template class DataArray<int32_t>;
-// extern template class DataArray<int64_t>;
-// extern template class DataArray<size_t>;
+// extern template class DataArray<int8>;
+// extern template class DataArray<int16>;
+// extern template class DataArray<int32>;
+// extern template class DataArray<int64>;
+// extern template class DataArray<usize>;
 
-// extern template class DataArray<float>;
-// extern template class DataArray<double>;
+// extern template class DataArray<float32>;
+// extern template class DataArray<float64>;
 
 // Declare aliases
-using CharArray = DataArray<char>;
-using UCharArray = DataArray<unsigned char>;
+using UInt8Array = DataArray<uint8>;
+using UInt16Array = DataArray<uint16>;
+using UInt32Array = DataArray<uint32>;
+using UInt64Array = DataArray<uint64>;
 
-using UInt8Array = DataArray<uint8_t>;
-using UInt16Array = DataArray<uint16_t>;
-using UInt32Array = DataArray<uint32_t>;
-using UInt64Array = DataArray<uint64_t>;
+using Int8Array = DataArray<int8>;
+using Int16Array = DataArray<int16>;
+using Int32Array = DataArray<int32>;
+using Int64Array = DataArray<int64>;
 
-using Int8Array = DataArray<int8_t>;
-using Int16Array = DataArray<int16_t>;
-using Int32Array = DataArray<int32_t>;
-using Int64Array = DataArray<int64_t>;
-using SizeArray = DataArray<size_t>;
+using USizeArray = DataArray<usize>;
 
-using FloatArray = DataArray<float>;
-using DoubleArray = DataArray<double>;
-using VectorOfFloatArray = std::vector<std::shared_ptr<FloatArray>>;
+using Float32Array = DataArray<float32>;
+using Float64Array = DataArray<float64>;
+
+using VectorOfFloat32Array = std::vector<std::shared_ptr<Float32Array>>;
 } // namespace complex

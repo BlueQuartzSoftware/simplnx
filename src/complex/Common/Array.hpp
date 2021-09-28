@@ -1,8 +1,9 @@
 #pragma once
 
+#include "complex/Common/Types.hpp"
+
 #include <array>
 #include <cassert>
-#include <cstdint>
 #include <tuple>
 #include <vector>
 
@@ -439,9 +440,9 @@ public:
   }
 };
 
-using FloatVec2Type = Vec2<float>;
-using IntVec2Type = Vec2<int>;
-using SizeVec2 = Vec2<size_t>;
+using FloatVec2Type = Vec2<float32>;
+using IntVec2Type = Vec2<int32>;
+using SizeVec2 = Vec2<usize>;
 
 // -----------------------------------------------------------------------------
 template <typename T>
@@ -1184,18 +1185,18 @@ public:
   }
 };
 
-using FloatVec3 = Vec3<float>;
-using IntVec3 = Vec3<int>;
-using SizeVec3 = Vec3<size_t>;
+using FloatVec3 = Vec3<float32>;
+using IntVec3 = Vec3<int32>;
+using SizeVec3 = Vec3<usize>;
 
-using FloatVec4 = Vec4<float>;
-using IntVec4 = Vec4<int>;
-using SizeVec4 = Vec4<size_t>;
+using FloatVec4 = Vec4<float32>;
+using IntVec4 = Vec4<int32>;
+using SizeVec4 = Vec4<usize>;
 
-using FloatVec6 = Vec6<float>;
-using IntVec6 = Vec6<int32_t>;
+using FloatVec6 = Vec6<float32>;
+using IntVec6 = Vec6<int32>;
 
-using FloatVec7 = Vec7<float>;
-using IntVec7 = Vec7<int32_t>;
+using FloatVec7 = Vec7<float32>;
+using IntVec7 = Vec7<int32>;
 
 } // namespace complex

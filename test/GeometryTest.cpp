@@ -25,8 +25,8 @@ T* createGeom(DataStructure& ds)
 const AbstractGeometry::SharedVertexList* createVertexList(AbstractGeometry* geom)
 {
   auto ds = geom->getDataStructure();
-  auto dataStore = new DataStore<float>(3, 0);
-  auto dataArr = DataArray<float>::Create(*ds, "Vertices", dataStore, geom->getId());
+  auto dataStore = new DataStore<float32>(3, 0);
+  auto dataArr = DataArray<float32>::Create(*ds, "Vertices", dataStore, geom->getId());
   REQUIRE(dataArr != nullptr);
   return dynamic_cast<const AbstractGeometry::SharedVertexList*>(dataArr);
 }
@@ -34,8 +34,8 @@ const AbstractGeometry::SharedVertexList* createVertexList(AbstractGeometry* geo
 const AbstractGeometry::SharedEdgeList* createEdgeList(AbstractGeometry* geom)
 {
   auto ds = geom->getDataStructure();
-  auto dataStore = new DataStore<uint64_t>(2, 0);
-  auto dataArr = DataArray<uint64_t>::Create(*ds, "Edges", dataStore, geom->getId());
+  auto dataStore = new DataStore<uint64>(2, 0);
+  auto dataArr = DataArray<uint64>::Create(*ds, "Edges", dataStore, geom->getId());
   REQUIRE(dataArr != nullptr);
   return dynamic_cast<const AbstractGeometry::SharedEdgeList*>(dataArr);
 }
@@ -43,8 +43,8 @@ const AbstractGeometry::SharedEdgeList* createEdgeList(AbstractGeometry* geom)
 const AbstractGeometry::SharedFaceList* createFaceList(AbstractGeometry* geom)
 {
   auto ds = geom->getDataStructure();
-  auto dataStore = new DataStore<uint64_t>(4, 0);
-  auto dataArr = DataArray<uint64_t>::Create(*ds, "Faces", dataStore, geom->getId());
+  auto dataStore = new DataStore<uint64>(4, 0);
+  auto dataArr = DataArray<uint64>::Create(*ds, "Faces", dataStore, geom->getId());
   REQUIRE(dataArr != nullptr);
   return dynamic_cast<const AbstractGeometry::SharedFaceList*>(dataArr);
 }
@@ -71,17 +71,17 @@ void testAbstractGeometry(AbstractGeometry* geom)
     }
     SECTION("time value")
     {
-      const float timeValue = 6.4f;
+      const float32 timeValue = 6.4f;
       geom->setTimeValue(timeValue);
       REQUIRE(geom->getTimeValue() == timeValue);
     }
     SECTION("dimensionality")
     {
-      const uint32_t uDims = 20;
+      const uint32 uDims = 20;
       geom->setUnitDimensionality(uDims);
       REQUIRE(geom->getUnitDimensionality() == uDims);
 
-      const uint32_t sDims = 14;
+      const uint32 sDims = 14;
       geom->setSpatialDimensionality(sDims);
       REQUIRE(geom->getSpatialDimensionality() == sDims);
     }
@@ -98,7 +98,7 @@ void testGeom2D(AbstractGeometry2D* geom)
   SECTION("abstract geometry 2D")
   {
     const size_t vertId = 2;
-    const Point3D<float> coord = {0.5f, 0.0f, 2.0f};
+    const Point3D<float32> coord = {0.5f, 0.0f, 2.0f};
 
     // Vertices
     {
@@ -125,7 +125,7 @@ void testGeom2D(AbstractGeometry2D* geom)
       const size_t edgeId = 3;
       const size_t verts[2] = {vertId, vertId + 1};
       geom->setVertsAtEdge(edgeId, verts);
-      Point3D<float> vert1, vert2;
+      Point3D<float32> vert1, vert2;
       size_t vertsOut[2];
       geom->getVertsAtEdge(edgeId, vertsOut);
       for(size_t i = 0; i < 2; i++)
@@ -143,7 +143,7 @@ void testGeom3D(AbstractGeometry3D* geom)
   SECTION("abstract geometry 3D")
   {
     const size_t vertId = 2;
-    const Point3D<float> coord = {0.5f, 0.0f, 2.0f};
+    const Point3D<float32> coord = {0.5f, 0.0f, 2.0f};
 
     // vertices
     {
@@ -168,7 +168,7 @@ void testGeom3D(AbstractGeometry3D* geom)
       const size_t edgeId = 3;
       const size_t verts[2] = {vertId, vertId + 1};
       geom->setVertsAtEdge(edgeId, verts);
-      Point3D<float> vert1, vert2;
+      Point3D<float32> vert1, vert2;
       size_t vertsOut[2];
       geom->getVertsAtEdge(edgeId, vertsOut);
       for(size_t i = 0; i < 2; i++)

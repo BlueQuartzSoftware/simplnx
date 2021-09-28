@@ -152,7 +152,7 @@ public:
    * @param vert3
    * @param vert4
    */
-  void getVertCoordsAtTet(size_t tetId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2, complex::Point3D<float>& vert3, complex::Point3D<float>& vert4) const;
+  void getVertCoordsAtTet(size_t tetId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const;
 
   /**
    * @brief
@@ -179,9 +179,9 @@ public:
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const Float32Array*
    */
-  const FloatArray* getElementSizes() const override;
+  const Float32Array* getElementSizes() const override;
 
   /**
    * @brief
@@ -230,9 +230,9 @@ public:
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const Float32Array*
    */
-  const FloatArray* getElementCentroids() const override;
+  const Float32Array* getElementCentroids() const override;
 
   /**
    * @brief
@@ -243,14 +243,14 @@ public:
    * @brief
    * @param pCoords
    */
-  complex::Point3D<double> getParametricCenter() const override;
+  complex::Point3D<float64> getParametricCenter() const override;
 
   /**
    * @brief
    * @param pCoords
    * @param shape
    */
-  void getShapeFunctions(const complex::Point3D<double>& pCoords, double* shape) const override;
+  void getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const override;
 
   /**
    * @brief
@@ -258,7 +258,7 @@ public:
    * @param derivatives
    * @param observable
    */
-  void findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const override;
+  void findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const override;
 
   /**
    * @brief
@@ -294,13 +294,13 @@ public:
    * @brief
    * @param elementSizes
    */
-  void setElementSizes(const FloatArray* elementSizes) override;
+  void setElementSizes(const Float32Array* elementSizes) override;
 
   /**
    * @brief
-   * @return uint32_t
+   * @return uint32
    */
-  uint32_t getXdmfGridType() const override;
+  uint32 getXdmfGridType() const override;
 
   /**
    * @brief Reads values from HDF5
@@ -361,7 +361,7 @@ protected:
    * @brief
    * @param elementCentroids
    */
-  void setElementCentroids(const FloatArray* elementCentroids) override;
+  void setElementCentroids(const Float32Array* elementCentroids) override;
 
 private:
   std::optional<DataObject::IdType> m_TriListId;

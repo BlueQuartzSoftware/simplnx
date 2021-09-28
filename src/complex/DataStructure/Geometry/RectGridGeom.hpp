@@ -69,25 +69,25 @@ public:
    * @param yBounds
    * @param zBounds
    */
-  void setBounds(const FloatArray* xBounds, const FloatArray* yBounds, const FloatArray* zBounds);
+  void setBounds(const Float32Array* xBounds, const Float32Array* yBounds, const Float32Array* zBounds);
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const Float32Array*
    */
-  const FloatArray* getXBounds() const;
+  const Float32Array* getXBounds() const;
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const Float32Array*
    */
-  const FloatArray* getYBounds() const;
+  const Float32Array* getYBounds() const;
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const Float32Array*
    */
-  const FloatArray* getZBounds() const;
+  const Float32Array* getZBounds() const;
 
   /**
    * @brief
@@ -108,9 +108,9 @@ public:
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const Float32Array*
    */
-  const FloatArray* getElementSizes() const override;
+  const Float32Array* getElementSizes() const override;
 
   /**
    * @brief
@@ -159,9 +159,9 @@ public:
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const Float32Array*
    */
-  const FloatArray* getElementCentroids() const override;
+  const Float32Array* getElementCentroids() const override;
 
   /**
    * @brief
@@ -172,14 +172,14 @@ public:
    * @brief
    * @param pCoords
    */
-  complex::Point3D<double> getParametricCenter() const override;
+  complex::Point3D<float64> getParametricCenter() const override;
 
   /**
    * @brief
    * @param pCoords
    * @param shape
    */
-  void getShapeFunctions(const complex::Point3D<double>& pCoords, double* shape) const override;
+  void getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const override;
 
   /**
    * @brief
@@ -187,7 +187,7 @@ public:
    * @param derivatives
    * @param observable
    */
-  void findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable = nullptr) const override;
+  void findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable = nullptr) const override;
 
   /**
    * @brief
@@ -235,94 +235,94 @@ public:
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float>
+   * @return complex::Point3D<float32>
    */
-  complex::Point3D<float> getPlaneCoordsf(size_t idx[3]) const override;
+  complex::Point3D<float32> getPlaneCoordsf(size_t idx[3]) const override;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<float>
+   * @return complex::Point3D<float32>
    */
-  complex::Point3D<float> getPlaneCoordsf(size_t x, size_t y, size_t z) const override;
+  complex::Point3D<float32> getPlaneCoordsf(size_t x, size_t y, size_t z) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float>
+   * @return complex::Point3D<float32>
    */
-  complex::Point3D<float> getPlaneCoordsf(size_t idx) const override;
+  complex::Point3D<float32> getPlaneCoordsf(size_t idx) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  complex::Point3D<double> getPlaneCoords(size_t idx[3]) const override;
+  complex::Point3D<float64> getPlaneCoords(size_t idx[3]) const override;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  complex::Point3D<double> getPlaneCoords(size_t x, size_t y, size_t z) const override;
+  complex::Point3D<float64> getPlaneCoords(size_t x, size_t y, size_t z) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  complex::Point3D<double> getPlaneCoords(size_t idx) const override;
+  complex::Point3D<float64> getPlaneCoords(size_t idx) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float>
+   * @return complex::Point3D<float32>
    */
-  complex::Point3D<float> getCoordsf(size_t idx[3]) const override;
+  complex::Point3D<float32> getCoordsf(size_t idx[3]) const override;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<float>
+   * @return complex::Point3D<float32>
    */
-  complex::Point3D<float> getCoordsf(size_t x, size_t y, size_t z) const override;
+  complex::Point3D<float32> getCoordsf(size_t x, size_t y, size_t z) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float>
+   * @return complex::Point3D<float32>
    */
-  complex::Point3D<float> getCoordsf(size_t idx) const override;
+  complex::Point3D<float32> getCoordsf(size_t idx) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  complex::Point3D<double> getCoords(size_t idx[3]) const override;
+  complex::Point3D<float64> getCoords(size_t idx[3]) const override;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  complex::Point3D<double> getCoords(size_t x, size_t y, size_t z) const override;
+  complex::Point3D<float64> getCoords(size_t x, size_t y, size_t z) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  complex::Point3D<double> getCoords(size_t idx) const override;
+  complex::Point3D<float64> getCoords(size_t idx) const override;
 
   /**
    * @brief
@@ -330,7 +330,7 @@ public:
    * @param yCoord
    * @param zCoord
    */
-  size_t getIndex(float xCoord, float yCoord, float zCoord) const override;
+  size_t getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const override;
 
   /**
    * @brief
@@ -338,13 +338,13 @@ public:
    * @param yCoord
    * @param zCoord
    */
-  size_t getIndex(double xCoord, double yCoord, double zCoord) const override;
+  size_t getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const override;
 
   /**
    * @brief
-   * @return uint32_t
+   * @return uint32
    */
-  uint32_t getXdmfGridType() const override;
+  uint32 getXdmfGridType() const override;
 
   /**
    * @brief Reads values from HDF5
@@ -395,13 +395,13 @@ protected:
    * @brief
    * @param elementCentroids
    */
-  void setElementCentroids(const FloatArray* elementCentroids) override;
+  void setElementCentroids(const Float32Array* elementCentroids) override;
 
   /**
    * @brief
    * @param elementSizes
    */
-  void setElementSizes(const FloatArray* elementSizes) override;
+  void setElementSizes(const Float32Array* elementSizes) override;
 
 private:
   std::optional<DataObject::IdType> m_xBoundsId;

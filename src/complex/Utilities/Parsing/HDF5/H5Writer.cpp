@@ -43,7 +43,7 @@ H5::ErrorType H5::Writer::Generic::writeStringAttribute(H5::IdType locationID, c
             if(attributeSpaceID >= 0)
             {
               /* Verify if the attribute already exists */
-              int32_t hasAttribute = Support::findAttribute(objectID, attributeName);
+              int32 hasAttribute = Support::findAttribute(objectID, attributeName);
               /* The attribute already exists, delete it */
               if(hasAttribute == 1)
               {

@@ -39,43 +39,43 @@ H5::ErrorType ScalarDataFactory::createFromHdf5(DataStructure& ds, H5::IdType ta
   auto typeId = H5Aget_type(valueId);
   if(H5Tequal(typeId, H5T_NATIVE_FLOAT) > 0)
   {
-    return readH5Scalar<float>(ds, valueId, name, parentId);
+    return readH5Scalar<float32>(ds, valueId, name, parentId);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_DOUBLE) > 0)
   {
-    return readH5Scalar<double>(ds, valueId, name, parentId);
+    return readH5Scalar<float64>(ds, valueId, name, parentId);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT8) > 0)
   {
-    return readH5Scalar<int8_t>(ds, valueId, name, parentId);
+    return readH5Scalar<int8>(ds, valueId, name, parentId);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT16) > 0)
   {
-    return readH5Scalar<int16_t>(ds, valueId, name, parentId);
+    return readH5Scalar<int16>(ds, valueId, name, parentId);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT32) > 0)
   {
-    return readH5Scalar<int32_t>(ds, valueId, name, parentId);
+    return readH5Scalar<int32>(ds, valueId, name, parentId);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT64) > 0)
   {
-    return readH5Scalar<int64_t>(ds, valueId, name, parentId);
+    return readH5Scalar<int64>(ds, valueId, name, parentId);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT8) > 0)
   {
-    return readH5Scalar<uint8_t>(ds, valueId, name, parentId);
+    return readH5Scalar<uint8>(ds, valueId, name, parentId);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT16) > 0)
   {
-    return readH5Scalar<uint16_t>(ds, valueId, name, parentId);
+    return readH5Scalar<uint16>(ds, valueId, name, parentId);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT32) > 0)
   {
-    return readH5Scalar<uint32_t>(ds, valueId, name, parentId);
+    return readH5Scalar<uint32>(ds, valueId, name, parentId);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT64) > 0)
   {
-    return readH5Scalar<uint64_t>(ds, valueId, name, parentId);
+    return readH5Scalar<uint64>(ds, valueId, name, parentId);
   }
   H5Tclose(typeId);
   H5Aclose(valueId);

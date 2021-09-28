@@ -63,14 +63,14 @@ public:
    * @param vertId
    * @param coords
    */
-  void setCoords(size_t vertId, const complex::Point3D<float>& coords);
+  void setCoords(size_t vertId, const complex::Point3D<float32>& coords);
 
   /**
-   * @brief Returns the 3D coordinates of the specified vertex as a Point3D<float>.
+   * @brief Returns the 3D coordinates of the specified vertex as a Point3D<float32>.
    * @param vertId
-   * @return complex::Point3D<float>
+   * @return complex::Point3D<float32>
    */
-  complex::Point3D<float> getCoords(size_t vertId) const;
+  complex::Point3D<float32> getCoords(size_t vertId) const;
 
   /**
    * @brief Returns the number of vertices in the SharedVertexList.
@@ -121,7 +121,7 @@ public:
    * @param vert1
    * @param vert2
    */
-  void getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2) const;
+  void getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const;
 
   /**
    * @brief Returns the number of edges that make up the edge list.
@@ -170,7 +170,7 @@ public:
   /**
    * @brief Creates and assigns the unshared face list array for the current values.
    */
-  virtual int findUnsharedFaces() = 0;
+  virtual int32 findUnsharedFaces() = 0;
 
   /**
    * @brief Returns a pointer to the unshared face list array.

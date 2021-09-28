@@ -58,7 +58,7 @@ bool equalsf(const FloatVec3& lhs, const FloatVec3& rhs)
 {
   for(size_t i = 0; i < 3; i++)
   {
-    float diff = std::abs(lhs[i] - rhs[i]);
+    float32 diff = std::abs(lhs[i] - rhs[i]);
     if(diff >= 0.0001f)
     {
       return false;
@@ -148,11 +148,11 @@ DataStructure getTestDataStructure()
   auto geom = ImageGeom::Create(ds, "Geometry", montage->getId());
   REQUIRE(geom != nullptr);
 
-  auto scalar = ScalarData<int32_t>::Create(ds, "Scalar", 7, geom->getId());
+  auto scalar = ScalarData<int32>::Create(ds, "Scalar", 7, geom->getId());
   REQUIRE(scalar != nullptr);
 
-  auto dataStore = new DataStore<uint8_t>(3, 2);
-  auto dataArray = DataArray<uint8_t>::Create(ds, "DataArray", dataStore, geom->getId());
+  auto dataStore = new DataStore<uint8>(3, 2);
+  auto dataArray = DataArray<uint8>::Create(ds, "DataArray", dataStore, geom->getId());
   REQUIRE(dataArray != nullptr);
 
   return ds;

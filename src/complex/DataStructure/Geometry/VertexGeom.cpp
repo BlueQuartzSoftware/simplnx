@@ -99,7 +99,7 @@ const AbstractGeometry::SharedVertexList* VertexGeom::getVertices() const
   return dynamic_cast<const SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
 }
 
-Point3D<float> VertexGeom::getCoords(size_t vertId) const
+Point3D<float32> VertexGeom::getCoords(size_t vertId) const
 {
   auto vertices = getVertices();
   if(!vertices)
@@ -107,7 +107,7 @@ Point3D<float> VertexGeom::getCoords(size_t vertId) const
     return {};
   }
   const size_t offset = vertId * 3;
-  Point3D<float> coords;
+  Point3D<float32> coords;
   for(size_t i = 0; i < 3; i++)
   {
     coords[i] = (*vertices)[offset + i];
@@ -115,7 +115,7 @@ Point3D<float> VertexGeom::getCoords(size_t vertId) const
   return coords;
 }
 
-void VertexGeom::setCoords(size_t vertId, const Point3D<float>& coords)
+void VertexGeom::setCoords(size_t vertId, const Point3D<float32>& coords)
 {
   auto vertices = getVertices();
   if(!vertices)
@@ -148,17 +148,17 @@ AbstractGeometry::StatusCode VertexGeom::findElementSizes()
 {
   // Vertices are 0-dimensional (they have no getSize),
   // so simply splat 0 over the sizes array
-  auto dataStore = new DataStore<float>(1, getNumberOfElements());
+  auto dataStore = new DataStore<float32>(1, getNumberOfElements());
   dataStore->fill(0.0f);
 
-  FloatArray* vertexSizes = DataArray<float>::Create(*getDataStructure(), "Voxel Sizes", dataStore, getId());
+  Float32Array* vertexSizes = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", dataStore, getId());
   m_VertexSizesId = vertexSizes->getId();
   return 1;
 }
 
-const FloatArray* VertexGeom::getElementSizes() const
+const Float32Array* VertexGeom::getElementSizes() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_VertexSizesId));
+  return dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_VertexSizesId));
 }
 
 void VertexGeom::deleteElementSizes()
@@ -200,7 +200,7 @@ AbstractGeometry::StatusCode VertexGeom::findElementCentroids()
   return -1;
 }
 
-const FloatArray* VertexGeom::getElementCentroids() const
+const Float32Array* VertexGeom::getElementCentroids() const
 {
   return nullptr;
 }
@@ -209,12 +209,12 @@ void VertexGeom::deleteElementCentroids()
 {
 }
 
-complex::Point3D<double> VertexGeom::getParametricCenter() const
+complex::Point3D<float64> VertexGeom::getParametricCenter() const
 {
   return {0.0, 0.0, 0.0};
 }
 
-void VertexGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, double* shape) const
+void VertexGeom::getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const
 {
   (void)pCoords;
 
@@ -223,7 +223,7 @@ void VertexGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, doub
   shape[2] = 0.0;
 }
 
-void VertexGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
+void VertexGeom::findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const
 {
   // The exterior derivative of a point source is zero,
   // so simply splat 0 over the derivatives array
@@ -251,7 +251,7 @@ complex::TooltipGenerator VertexGeom::getTooltipGenerator() const
   return toolTipGen;
 }
 
-uint32_t VertexGeom::getXdmfGridType() const
+uint32 VertexGeom::getXdmfGridType() const
 {
   throw std::runtime_error("");
 }
@@ -264,11 +264,11 @@ void VertexGeom::setElementNeighbors(const ElementDynamicList* elementNeighbors)
 {
 }
 
-void VertexGeom::setElementCentroids(const FloatArray* elementCentroids)
+void VertexGeom::setElementCentroids(const Float32Array* elementCentroids)
 {
 }
 
-void VertexGeom::setElementSizes(const FloatArray* elementSizes)
+void VertexGeom::setElementSizes(const Float32Array* elementSizes)
 {
   if(!elementSizes)
   {

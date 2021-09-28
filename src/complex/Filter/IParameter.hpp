@@ -23,12 +23,12 @@ namespace complex
  */
 namespace FilterParameter::Constants
 {
-inline constexpr int32_t k_Json_Missing_Entry = -100;
-inline constexpr int32_t k_Json_Value_Not_Object = -101;
-inline constexpr int32_t k_Json_Value_Not_String = -102;
-inline constexpr int32_t k_Json_Value_Not_Integer = -103;
-inline constexpr int32_t k_Json_Value_Not_Unsigned = -104;
-inline constexpr int32_t k_Json_Value_Not_Enumeration = -105;
+inline constexpr int32 k_Json_Missing_Entry = -100;
+inline constexpr int32 k_Json_Value_Not_Object = -101;
+inline constexpr int32 k_Json_Value_Not_String = -102;
+inline constexpr int32 k_Json_Value_Not_Integer = -103;
+inline constexpr int32 k_Json_Value_Not_Unsigned = -104;
+inline constexpr int32 k_Json_Value_Not_Enumeration = -105;
 } // namespace FilterParameter::Constants
 
 /**

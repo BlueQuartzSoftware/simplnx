@@ -79,9 +79,9 @@ const AbstractGeometry::SharedVertexList* AbstractGeometry3D::getVertices() cons
   return dynamic_cast<const SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
 }
 
-void AbstractGeometry3D::setCoords(size_t vertId, const complex::Point3D<float>& coords)
+void AbstractGeometry3D::setCoords(size_t vertId, const complex::Point3D<float32>& coords)
 {
-  auto vertices = dynamic_cast<FloatArray*>(getDataStructure()->getData(m_VertexListId));
+  auto vertices = dynamic_cast<Float32Array*>(getDataStructure()->getData(m_VertexListId));
   if(!vertices)
   {
     return;
@@ -94,24 +94,24 @@ void AbstractGeometry3D::setCoords(size_t vertId, const complex::Point3D<float>&
   }
 }
 
-complex::Point3D<float> AbstractGeometry3D::getCoords(size_t vertId) const
+complex::Point3D<float32> AbstractGeometry3D::getCoords(size_t vertId) const
 {
-  auto vertices = dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_VertexListId));
+  auto vertices = dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_VertexListId));
   if(!vertices)
   {
-    return Point3D<float>();
+    return Point3D<float32>();
   }
 
   size_t index = vertId * 3;
   auto x = (*vertices)[index];
   auto y = (*vertices)[index + 1];
   auto z = (*vertices)[index + 2];
-  return Point3D<float>(x, y, z);
+  return Point3D<float32>(x, y, z);
 }
 
 size_t AbstractGeometry3D::getNumberOfVertices() const
 {
-  auto vertices = dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_VertexListId));
+  auto vertices = dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_VertexListId));
   if(!vertices)
   {
     return 0;
@@ -163,7 +163,7 @@ void AbstractGeometry3D::getVertsAtEdge(size_t edgeId, size_t verts[2]) const
   verts[1] = (*edges)[index + 1];
 }
 
-void AbstractGeometry3D::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2) const
+void AbstractGeometry3D::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const
 {
   auto edges = getEdges();
   if(!edges)

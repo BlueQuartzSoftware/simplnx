@@ -198,7 +198,7 @@ public:
    */
   H5::ErrorType writeHdf5(H5::IdType dataId) const override
   {
-    int32_t rank = 1;
+    int32 rank = 1;
 
     hsize_t dataSize = m_NumComponents * m_TupleCount;
 
@@ -230,8 +230,8 @@ public:
 
   static DataStore* readHdf5(H5::IdType dataId)
   {
-    uint64_t tDims;
-    uint64_t cDims;
+    uint64 tDims;
+    uint64 cDims;
     H5::Reader::Generic::readScalarAttribute(dataId, ".", H5::Constants::DataStore::TupleCount, tDims);
     H5::Reader::Generic::readScalarAttribute(dataId, ".", H5::Constants::DataStore::NumComponents, cDims);
 
@@ -265,27 +265,24 @@ public:
   }
 
 private:
-  uint64_t m_NumComponents;
-  uint64_t m_TupleCount;
+  uint64 m_NumComponents;
+  uint64 m_TupleCount;
   std::unique_ptr<value_type[]> m_Data;
 };
 
 // Declare aliases
-using CharDataStore = DataStore<char>;
-using UCharDataStore = DataStore<unsigned char>;
+using UInt8DataStore = DataStore<uint8>;
+using UInt16DataStore = DataStore<uint16>;
+using UInt32DataStore = DataStore<uint32>;
+using UInt64DataStore = DataStore<uint64>;
 
-using UInt8DataStore = DataStore<uint8_t>;
-using UInt16DataStore = DataStore<uint16_t>;
-using UInt32DataStore = DataStore<uint32_t>;
-using UInt64DataStore = DataStore<uint64_t>;
+using Int8DataStore = DataStore<int8>;
+using Int16DataStore = DataStore<int16>;
+using Int32DataStore = DataStore<int32>;
+using Int64DataStore = DataStore<int64>;
 
-using Int8DataStore = DataStore<int8_t>;
-using Int16DataStore = DataStore<int16_t>;
-using Int32DataStore = DataStore<int32_t>;
-using Int64DataStore = DataStore<int64_t>;
-using SizeDataStore = DataStore<size_t>;
+using USizeDataStore = DataStore<usize>;
 
-using FloatDataStore = DataStore<float>;
-using DoubleDataStore = DataStore<double>;
-
+using Float32DataStore = DataStore<float32>;
+using Float64DataStore = DataStore<float64>;
 } // namespace complex
