@@ -31,28 +31,19 @@ public:
    * @param name
    * @return
    */
-  bool contains(std::string_view name) const
-  {
-    return m_Params.count(name) > 0;
-  }
+  bool contains(std::string_view name) const;
 
   /**
    * @brief Returns the size of the collection.
    * @return
    */
-  usize size() const
-  {
-    return m_Params.size();
-  }
+  usize size() const;
 
   /**
    * @brief Returns true if empty, otherwise false.
    * @return
    */
-  bool empty() const
-  {
-    return m_Params.empty();
-  }
+  bool empty() const;
 
   /**
    * @brief Inserts the given parameter.

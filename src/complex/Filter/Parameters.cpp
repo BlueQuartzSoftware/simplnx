@@ -29,7 +29,22 @@ Parameters& Parameters::operator=(const Parameters& rhs)
   return *this;
 }
 
-void Parameters::insert(std::unique_ptr<IParameter> parameter)
+bool Parameters::contains(std::string_view name) const
+{
+  return m_Params.count(name) > 0;
+}
+
+usize Parameters::size() const
+{
+  return m_Params.size();
+}
+
+bool Parameters::empty() const
+{
+  return m_Params.empty();
+}
+
+void Parameters::insert(IParameter::UniquePointer parameter)
 {
   std::string name = parameter->name();
   m_Params.insert({std::move(name), std::move(parameter)});
