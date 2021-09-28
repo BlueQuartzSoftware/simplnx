@@ -167,8 +167,8 @@ public:
    * @param vert7
    * @param vert8
    */
-  void getVertCoordsAtHex(size_t hexId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4, complex::Point3D<float32>& vert5,
-                          complex::Point3D<float32>& vert6, complex::Point3D<float32>& vert7, complex::Point3D<float32>& vert8) const;
+  void getVertCoordsAtHex(size_t hexId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4,
+                          complex::Point3D<float32>& vert5, complex::Point3D<float32>& vert6, complex::Point3D<float32>& vert7, complex::Point3D<float32>& vert8) const;
 
   /**
    * @brief
