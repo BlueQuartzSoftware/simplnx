@@ -227,7 +227,7 @@ TEST_CASE("DataStoreTest")
 {
   const size_t tupleSize = 3;
   const size_t tupleCount = 10;
-  DataStore<int32_t> store(tupleSize, tupleCount);
+  DataStore<int32> store(tupleSize, tupleCount);
 
   REQUIRE(store.getTupleCount() == tupleCount);
   REQUIRE(store.getNumComponents() == tupleSize);
@@ -239,7 +239,7 @@ TEST_CASE("DataStoreTest")
     {
       store[i] = i + 1;
     }
-    int32_t x = 1;
+    int32 x = 1;
     for(size_t i = 0; i < store.getSize(); i++)
     {
       REQUIRE(store[i] == x++);
@@ -254,8 +254,8 @@ TEST_CASE("DataStoreTest")
   }
   // iterators
   {
-    const int32_t initVal = -30;
-    int32_t x = initVal;
+    const int32 initVal = -30;
+    int32 x = initVal;
     for(auto& value : store)
     {
       value = x++;
@@ -272,8 +272,8 @@ TEST_CASE("DataArrayTest")
 {
   DataStructure dataStr;
 
-  auto store = new DataStore<int32_t>(2, 2);
-  auto dataArr = DataArray<int32_t>::Create(dataStr, "array", store);
+  auto store = new DataStore<int32>(2, 2);
+  auto dataArr = DataArray<int32>::Create(dataStr, "array", store);
 
   SECTION("test size")
   {
@@ -290,7 +290,7 @@ TEST_CASE("DataArrayTest")
       {
         (*dataArr)[i] = i + 1;
       }
-      int32_t x = 1;
+      int32 x = 1;
       for(size_t i = 0; i < dataArr->getSize(); i++)
       {
         REQUIRE((*dataArr)[i] == x++);
@@ -298,8 +298,8 @@ TEST_CASE("DataArrayTest")
     }
     SECTION("test iterators")
     {
-      const int32_t initVal = -30;
-      int32_t x = initVal;
+      const int32 initVal = -30;
+      int32 x = initVal;
       for(auto& value : *dataArr)
       {
         value = x++;
@@ -316,8 +316,8 @@ TEST_CASE("DataArrayTest")
 TEST_CASE("ScalarDataTest")
 {
   DataStructure dataStr;
-  const int32_t value = 6;
-  auto scalar = ScalarData<int32_t>::Create(dataStr, "scalar", value);
+  const int32 value = 6;
+  auto scalar = ScalarData<int32>::Create(dataStr, "scalar", value);
 
   // get value
   REQUIRE(value == scalar->getValue());
@@ -325,11 +325,11 @@ TEST_CASE("ScalarDataTest")
   REQUIRE((*scalar) != (value + 1));
 
   // edit values
-  const int32_t newValue = 11;
+  const int32 newValue = 11;
   scalar->setValue(newValue);
   REQUIRE(newValue == scalar->getValue());
 
-  const int32_t newValue2 = 14;
+  const int32 newValue2 = 14;
   (*scalar) = newValue2;
   REQUIRE(scalar->getValue() == newValue2);
 }

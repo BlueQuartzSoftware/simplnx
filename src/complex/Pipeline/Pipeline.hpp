@@ -26,7 +26,7 @@ class COMPLEX_EXPORT Pipeline : public AbstractPipelineNode
   using collection_type = std::vector<node_type>;
 
 public:
-  using index_type = uint64_t;
+  using index_type = uint64;
   using iterator = collection_type::iterator;
   using const_iterator = collection_type::const_iterator;
 

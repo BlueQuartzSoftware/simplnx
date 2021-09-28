@@ -52,7 +52,7 @@ std::filesystem::path findCurrentPath()
   return std::filesystem::path(buffer.data());
 #elif defined(__APPLE__)
   std::vector<char> buffer(1024 + 1);
-  uint32_t size = static_cast<uint32_t>(buffer.size());
+  uint32 size = static_cast<uint32>(buffer.size());
   int result = _NSGetExecutablePath(buffer.data(), &size);
   if(result != 0)
   {
@@ -123,7 +123,7 @@ void Application::loadPlugins(const std::filesystem::path& pluginDir)
   }
 }
 
-// RestServer* Application::startRestServer(int32_t port)
+// RestServer* Application::startRestServer(int32 port)
 //{
 //  return nullptr;
 //}

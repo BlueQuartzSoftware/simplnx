@@ -39,7 +39,7 @@ H5::ErrorType writeScalarAttribute(H5::IdType locationID, const std::string& obj
   H5O_info1_t objectInfo;
   herr_t returnError = 0;
   hsize_t dims = 1;
-  int32_t rank = 1;
+  int32 rank = 1;
   hid_t dataType = Support::HDFTypeForPrimitive<T>();
   if(dataType == -1)
   {
@@ -145,7 +145,7 @@ H5::ErrorType COMPLEX_EXPORT writeStringAttribute(H5::IdType locationID, const s
  * @return
  */
 template <typename T>
-H5::ErrorType writePointerAttribute(H5::IdType locationID, const std::string& objectName, const std::string& attributeName, int32_t rank, const H5::SizeType* dims, const T* data)
+H5::ErrorType writePointerAttribute(H5::IdType locationID, const std::string& objectName, const std::string& attributeName, int32 rank, const H5::SizeType* dims, const T* data)
 {
   hid_t objectID, dataspaceID, attributeID;
   herr_t hasAttribute;

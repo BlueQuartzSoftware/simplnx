@@ -108,7 +108,7 @@ public:
    * @param vert2
    * @param vert3
    */
-  void getVertCoordsAtTri(size_t triId, Point3D<float>& vert1, Point3D<float>& vert2, Point3D<float>& vert3) const;
+  void getVertCoordsAtTri(size_t triId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3) const;
 
   /**
    * @brief
@@ -135,9 +135,9 @@ public:
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const Float32Array*
    */
-  const FloatArray* getElementSizes() const override;
+  const Float32Array* getElementSizes() const override;
 
   /**
    * @brief
@@ -186,9 +186,9 @@ public:
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const Float32Array*
    */
-  const FloatArray* getElementCentroids() const override;
+  const Float32Array* getElementCentroids() const override;
 
   /**
    * @brief
@@ -198,16 +198,16 @@ public:
   /**
    * @brief
    * @param pCoords
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  complex::Point3D<double> getParametricCenter() const override;
+  complex::Point3D<float64> getParametricCenter() const override;
 
   /**
    * @brief
    * @param pCoords
    * @param shape
    */
-  void getShapeFunctions(const complex::Point3D<double>& pCoords, double* shape) const override;
+  void getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const override;
 
   /**
    * @brief
@@ -215,7 +215,7 @@ public:
    * @param derivatives
    * @param observable
    */
-  void findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const override;
+  void findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const override;
 
   /**
    * @brief
@@ -228,13 +228,13 @@ public:
    * @param vertId
    * @param coords
    */
-  void setCoords(size_t vertId, const Point3D<float>& coords) override;
+  void setCoords(size_t vertId, const Point3D<float32>& coords) override;
 
   /**
    * @brief
    * @param vertId
    */
-  Point3D<float> getCoords(size_t vertId) const override;
+  Point3D<float32> getCoords(size_t vertId) const override;
 
   /**
    * @brief
@@ -260,7 +260,7 @@ public:
    * @param vert1
    * @param vert2
    */
-  void getVertCoordsAtEdge(size_t edgeId, Point3D<float>& vert1, Point3D<float>& vert2) const override;
+  void getVertCoordsAtEdge(size_t edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const override;
 
   /**
    * @brief
@@ -270,9 +270,9 @@ public:
 
   /**
    * @brief
-   * @return uint32_t
+   * @return uint32
    */
-  uint32_t getXdmfGridType() const override;
+  uint32 getXdmfGridType() const override;
 
   /**
    * @brief Reads values from HDF5
@@ -333,13 +333,13 @@ protected:
    * @brief
    * @param elementCentroids
    */
-  void setElementCentroids(const FloatArray* elementCentroids) override;
+  void setElementCentroids(const Float32Array* elementCentroids) override;
 
   /**
    * @brief
    * @param elementSizes
    */
-  void setElementSizes(const FloatArray* elementSizes) override;
+  void setElementSizes(const Float32Array* elementSizes) override;
 
 private:
   std::optional<DataObject::IdType> m_TriListId;

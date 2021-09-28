@@ -3,6 +3,7 @@
 #include <iostream>
 #include <tuple>
 
+#include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
@@ -12,7 +13,7 @@ namespace complex
  * color information. Values are stored as sequential unsigned char components
  * ranging from 0 to 255 describing red, green, blue, and alpha values.
  */
-using Rgba = uint32_t;
+using Rgba = uint32;
 
 /**
  * @brief The RgbColor namespace stores calculations on or for Rgba values.
@@ -25,40 +26,40 @@ namespace RgbColor
  * @brief RgbColor::Components are integer color values for a single color
  * component. Values range from 0 to 255.
  */
-using Component = uint8_t;
+using Component = uint8;
 
 /**
  * @brief Returns the integer representation of the red component.
  * @param rgb
- * @return uint8_t
+ * @return uint8
  */
 Component COMPLEX_EXPORT dRed(complex::Rgba rgb);
 
 /**
  * @brief Returns the integer representation of the green component.
  * @param rgb
- * @return uint8_t
+ * @return uint8
  */
 Component COMPLEX_EXPORT dGreen(complex::Rgba rgb);
 
 /**
  * @brief Returns the integrer representation of the blue component.
  * @param rgb
- * @return int23_t
+ * @return uint8
  */
 Component COMPLEX_EXPORT dBlue(complex::Rgba rgb);
 
 /**
  * @brief Returns the integer representation of the alpha component.
  * @param rgb
- * @return uint8_t
+ * @return uint8
  */
 Component COMPLEX_EXPORT dAlpha(complex::Rgba rgb);
 
 /**
  * @brief Returns the integer representation of the grayscale value.
  * @param rgb
- * @return uint8_t
+ * @return uint8
  */
 Component COMPLEX_EXPORT dGray(complex::Rgba rgb);
 
@@ -91,8 +92,8 @@ bool COMPLEX_EXPORT isEqual(complex::Rgba lhs, complex::Rgba rhs);
 /**
  * @brief Converts an Rgba value to a tuple of floats
  * @param rgb
- * @return tuple<float, float, float>
+ * @return tuple<float32, float32, float32>
  */
-std::tuple<float, float, float> COMPLEX_EXPORT fRgb(complex::Rgba rgb);
+std::tuple<float32, float32, float32> COMPLEX_EXPORT fRgb(complex::Rgba rgb);
 } // namespace RgbColor
 } // namespace complex

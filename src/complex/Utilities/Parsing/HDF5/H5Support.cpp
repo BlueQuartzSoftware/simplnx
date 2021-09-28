@@ -30,7 +30,7 @@ hid_t complex::H5::Support::openId(hid_t locationID, const std::string& objectNa
   return objectID;
 }
 
-herr_t complex::H5::Support::closeId(hid_t objectID, int32_t objectType)
+herr_t complex::H5::Support::closeId(hid_t objectID, int32 objectType)
 {
   switch(objectType)
   {
@@ -129,7 +129,7 @@ herr_t complex::H5::Support::find_attr(hid_t /*locationID*/, const char* name, c
   /* Define a default zero value for return. This will cause the iterator to continue if
    * the palette attribute is not found yet.
    */
-  int32_t returnError = 0;
+  int32 returnError = 0;
 
   char* attributeName = reinterpret_cast<char*>(op_data);
 
@@ -339,7 +339,7 @@ herr_t complex::H5::Support::readStringDataset(hid_t locationID, const std::stri
     else
     {
       hsize_t size = H5Dget_storage_size(datasetID);
-      std::vector<char> buffer(static_cast<size_t>(size + 1), 0x00); // Allocate and Zero and array
+      std::vector<char> buffer(static_cast<usize>(size + 1), 0x00); // Allocate and Zero and array
       error = H5Dread(datasetID, typeID, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer.data());
       if(error < 0)
       {

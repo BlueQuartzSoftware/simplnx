@@ -128,7 +128,7 @@ void QuadGeom::getVertsAtQuad(size_t quadId, size_t verts[4]) const
   }
 }
 
-void QuadGeom::getVertCoordsAtQuad(size_t quadId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2, complex::Point3D<float>& vert3, complex::Point3D<float>& vert4) const
+void QuadGeom::getVertCoordsAtQuad(size_t quadId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const
 {
   if(!getQuads())
   {
@@ -181,8 +181,8 @@ size_t QuadGeom::getNumberOfElements() const
 
 AbstractGeometry::StatusCode QuadGeom::findElementSizes()
 {
-  auto dataStore = new DataStore<float>(1, getNumberOfQuads());
-  FloatArray* quadSizes = DataArray<float>::Create(*getDataStructure(), "Quad Areas", dataStore, getId());
+  auto dataStore = new DataStore<float32>(1, getNumberOfQuads());
+  Float32Array* quadSizes = DataArray<float32>::Create(*getDataStructure(), "Quad Areas", dataStore, getId());
   GeometryHelpers::Topology::Find2DElementAreas(getQuads(), getVertices(), quadSizes);
   if(quadSizes == nullptr)
   {
@@ -193,9 +193,9 @@ AbstractGeometry::StatusCode QuadGeom::findElementSizes()
   return 1;
 }
 
-const FloatArray* QuadGeom::getElementSizes() const
+const Float32Array* QuadGeom::getElementSizes() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_QuadSizesId));
+  return dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_QuadSizesId));
 }
 
 void QuadGeom::deleteElementSizes()
@@ -206,8 +206,8 @@ void QuadGeom::deleteElementSizes()
 
 AbstractGeometry::StatusCode QuadGeom::findElementsContainingVert()
 {
-  auto quadsContainingVert = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Quads Containing Vert", getId());
-  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16_t, MeshIndexType>(getQuads(), quadsContainingVert, getNumberOfVertices());
+  auto quadsContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Quads Containing Vert", getId());
+  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getQuads(), quadsContainingVert, getNumberOfVertices());
   if(quadsContainingVert == nullptr)
   {
     m_QuadsContainingVertId.reset();
@@ -239,8 +239,8 @@ AbstractGeometry::StatusCode QuadGeom::findElementNeighbors()
       return err;
     }
   }
-  auto quadNeighbors = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Quad Neighbors", getId());
-  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16_t, MeshIndexType>(getQuads(), getElementsContainingVert(), quadNeighbors, AbstractGeometry::Type::Quad);
+  auto quadNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Quad Neighbors", getId());
+  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getQuads(), getElementsContainingVert(), quadNeighbors, AbstractGeometry::Type::Quad);
   if(quadNeighbors == nullptr)
   {
     m_QuadNeighborsId.reset();
@@ -263,8 +263,8 @@ void QuadGeom::deleteElementNeighbors()
 
 AbstractGeometry::StatusCode QuadGeom::findElementCentroids()
 {
-  auto dataStore = new DataStore<float>(3, getNumberOfQuads());
-  auto quadCentroids = DataArray<float>::Create(*getDataStructure(), "Quad Centroids", dataStore, getId());
+  auto dataStore = new DataStore<float32>(3, getNumberOfQuads());
+  auto quadCentroids = DataArray<float32>::Create(*getDataStructure(), "Quad Centroids", dataStore, getId());
   GeometryHelpers::Topology::FindElementCentroids(getQuads(), getVertices(), quadCentroids);
   if(quadCentroids == nullptr)
   {
@@ -275,9 +275,9 @@ AbstractGeometry::StatusCode QuadGeom::findElementCentroids()
   return 1;
 }
 
-const FloatArray* QuadGeom::getElementCentroids() const
+const Float32Array* QuadGeom::getElementCentroids() const
 {
-  return dynamic_cast<const FloatArray*>(getDataStructure()->getData(m_QuadCentroidsId));
+  return dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_QuadCentroidsId));
 }
 
 void QuadGeom::deleteElementCentroids()
@@ -286,15 +286,15 @@ void QuadGeom::deleteElementCentroids()
   m_QuadCentroidsId.reset();
 }
 
-complex::Point3D<double> QuadGeom::getParametricCenter() const
+complex::Point3D<float64> QuadGeom::getParametricCenter() const
 {
   return {0.5, 0.5, 0.0};
 }
 
-void QuadGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, double* shape) const
+void QuadGeom::getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const
 {
-  double rm = 0.0;
-  double sm = 0.0;
+  float64 rm = 0.0;
+  float64 sm = 0.0;
 
   rm = 1.0 - pCoords[0];
   sm = 1.0 - pCoords[1];
@@ -309,7 +309,7 @@ void QuadGeom::getShapeFunctions(const complex::Point3D<double>& pCoords, double
   shape[7] = rm;
 }
 
-void QuadGeom::findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const
+void QuadGeom::findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const
 {
   throw std::runtime_error("");
 }
@@ -326,7 +326,7 @@ complex::TooltipGenerator QuadGeom::getTooltipGenerator() const
   return toolTipGen;
 }
 
-void QuadGeom::setCoords(size_t vertId, const Point3D<float>& coord)
+void QuadGeom::setCoords(size_t vertId, const Point3D<float32>& coord)
 {
   auto verts = getVertices();
   if(!verts)
@@ -340,12 +340,12 @@ void QuadGeom::setCoords(size_t vertId, const Point3D<float>& coord)
   }
 }
 
-Point3D<float> QuadGeom::getCoords(size_t vertId) const
+Point3D<float32> QuadGeom::getCoords(size_t vertId) const
 {
   auto verts = getVertices();
   if(!verts)
   {
-    return Point3D<float>();
+    return Point3D<float32>();
   }
   size_t index = vertId * 4;
   return {verts->at(index), verts->at(index + 1), verts->at(index + 2)};
@@ -366,7 +366,7 @@ void QuadGeom::resizeEdgeList(size_t numEdges)
   getEdges()->getDataStore()->resizeTuples(numEdges);
 }
 
-void QuadGeom::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float>& vert1, complex::Point3D<float>& vert2) const
+void QuadGeom::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const
 {
   if(!getEdges())
   {
@@ -415,7 +415,7 @@ AbstractGeometry::StatusCode QuadGeom::findUnsharedEdges()
   return 1;
 }
 
-uint32_t QuadGeom::getXdmfGridType() const
+uint32 QuadGeom::getXdmfGridType() const
 {
   throw std::runtime_error("");
 }
@@ -440,7 +440,7 @@ void QuadGeom::setElementNeighbors(const ElementDynamicList* elementNeighbors)
   m_QuadNeighborsId = elementNeighbors->getId();
 }
 
-void QuadGeom::setElementCentroids(const FloatArray* elementCentroids)
+void QuadGeom::setElementCentroids(const Float32Array* elementCentroids)
 {
   if(!elementCentroids)
   {
@@ -450,7 +450,7 @@ void QuadGeom::setElementCentroids(const FloatArray* elementCentroids)
   m_QuadCentroidsId = elementCentroids->getId();
 }
 
-void QuadGeom::setElementSizes(const FloatArray* elementSizes)
+void QuadGeom::setElementSizes(const Float32Array* elementSizes)
 {
   if(!elementSizes)
   {

@@ -8,6 +8,7 @@
 #include "complex/Common/Point2D.hpp"
 #include "complex/Common/Point3D.hpp"
 #include "complex/Common/Ray.hpp"
+#include "complex/Common/Types.hpp"
 
 #include "complex/complex_export.hpp"
 
@@ -37,7 +38,7 @@ T CosThetaBetweenVectors(const complex::Point3D<T>& a, const complex::Point3D<T>
  * @param b
  * @return float
  */
-float COMPLEX_EXPORT AngleBetweenVectors(const complex::ZXZEuler& a, const complex::ZXZEuler& b);
+float32 COMPLEX_EXPORT AngleBetweenVectors(const complex::ZXZEuler& a, const complex::ZXZEuler& b);
 
 /**
  * @brief Returns the distance between two points.
@@ -95,9 +96,9 @@ T FindTetrahedronVolume(const complex::Point3D<T>& p0, const complex::Point3D<T>
  * of vertices.
  * @param vertices
  * @param numVerts
- * @return complex::ZXZEuler<float>
+ * @return complex::ZXZEuler<float32>
  */
-ZXZEuler COMPLEX_EXPORT FindPolygonNormal(const float* vertices, uint64_t numVerts);
+ZXZEuler COMPLEX_EXPORT FindPolygonNormal(const float* vertices, uint64 numVerts);
 
 /**
  * @brief Returns the normal vector for a plane defined by three points along
@@ -107,7 +108,7 @@ ZXZEuler COMPLEX_EXPORT FindPolygonNormal(const float* vertices, uint64_t numVer
  * @param p2
  * @return complex::ZXZEuler<T>
  */
-complex::ZXZEuler COMPLEX_EXPORT FindPlaneNormalVector(const complex::Point3D<float>& p0, const complex::Point3D<float>& p1, const complex::Point3D<float>& p2);
+complex::ZXZEuler COMPLEX_EXPORT FindPlaneNormalVector(const complex::Point3D<float32>& p0, const complex::Point3D<float32>& p1, const complex::Point3D<float32>& p2);
 
 /**
  * @brief Finds the coefficients and normal for a plane defined by three points
@@ -134,7 +135,7 @@ void FindPlaneCoefficients(const complex::Point3D<T>& p0, const complex::Point3D
  * @return float
  */
 template <typename T>
-float FindDistanceToTriangleCentroid(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& point)
+float32 FindDistanceToTriangleCentroid(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& point)
 {
   throw std::runtime_error("");
 }
@@ -149,7 +150,7 @@ float FindDistanceToTriangleCentroid(const complex::Point3D<T>& p0, const comple
  * @return float
  */
 template <typename T>
-float FindDistanceFromPlane(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& pos)
+float32 FindDistanceFromPlane(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& pos)
 {
   throw std::runtime_error("");
 }
@@ -178,7 +179,7 @@ bool IsPointInBox(const complex::Point3D<T>& point, const complex::BoundingBox<T
  */
 // template <typename T>
 // bool IsPointInPolyhedron(complex::TriangleGeom* faces, complex::Int32Int32DynamicListArray::ElementList* faceIds, complex::VertexGeom* vertices, const Point3D<T>& point,
-//                         const complex::BoundingBox<float>& bounds, float radius, float& distToBoundary)
+//                         const complex::BoundingBox<float32>& bounds, float32 radius, float& distToBoundary)
 //{
 // throw std::runtime_error("");
 //}
@@ -240,7 +241,7 @@ bool DoesRayIntersectBox(complex::Ray<T> ray, const complex::BoundingBox<T>& bou
  * @return bool
  */
 template <typename T>
-uint8_t FindRayIntersectionsWithSphere(const complex::Ray<T>& ray, const complex::Point3D<T>& origin, T radius, std::vector<Point3D<T>>& intersections)
+uint8 FindRayIntersectionsWithSphere(const complex::Ray<T>& ray, const complex::Point3D<T>& origin, T radius, std::vector<Point3D<T>>& intersections)
 {
   throw std::runtime_error("");
 }
@@ -260,24 +261,24 @@ T GetLengthOfRayInBox(const complex::Ray<T>& ray, const complex::BoundingBox<T>&
 /**
  * @brief Generates a random Ray with the specified length.
  * @param length
- * @return complex::Ray<float>
+ * @return complex::Ray<float32>
  */
-complex::Ray<float> COMPLEX_EXPORT GenerateRandomRay(float length);
+complex::Ray<float32> COMPLEX_EXPORT GenerateRandomRay(float32 length);
 
 /**
  * @brief Returns the BoundingBox around the specified vertices.
  * @param verts
- * @return complex::BoundingBox<float>
+ * @return complex::BoundingBox<float32>
  */
-complex::BoundingBox<float> COMPLEX_EXPORT FindBoundingBoxOfVertices(complex::VertexGeom* verts);
+complex::BoundingBox<float32> COMPLEX_EXPORT FindBoundingBoxOfVertices(complex::VertexGeom* verts);
 
 /**
  * @brief Returns the BoundingBox around the specified face.
  * @param faces
  * @param faceId
- * @return complex::BoundingBox<float>
+ * @return complex::BoundingBox<float32>
  */
-complex::BoundingBox<float> COMPLEX_EXPORT FindBoundingBoxOfFace(complex::TriangleGeom* faces, int32_t faceId);
+complex::BoundingBox<float32> COMPLEX_EXPORT FindBoundingBoxOfFace(complex::TriangleGeom* faces, int32 faceId);
 
 /**
  * @brief Returns the BoundingBox around the specified face manipulated by the
@@ -285,16 +286,16 @@ complex::BoundingBox<float> COMPLEX_EXPORT FindBoundingBoxOfFace(complex::Triang
  * @param faces
  * @param faceId
  * @param float[3][3]
- * @return complex::BoundingBox<float>
+ * @return complex::BoundingBox<float32>
  */
-complex::BoundingBox<float> COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex::TriangleGeom* faces, int32_t faceId, float g[3][3]);
+complex::BoundingBox<float32> COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex::TriangleGeom* faces, int32 faceId, float32 g[3][3]);
 
 /**
  * @param TriangleGeom* faces
  * @param Int32Int32DynamicListArray.ElementList faceIds
- * @return complex::BoundingBox<float>
+ * @return complex::BoundingBox<float32>
  */
-// complex::BoundingBox<float> FindBoundingBoxOfFaces(complex::TriangleGeom* faces, const Int32Int32DynamicListArray.ElementList& faceIds)
+// complex::BoundingBox<float32> FindBoundingBoxOfFaces(complex::TriangleGeom* faces, const Int32Int32DynamicListArray.ElementList& faceIds)
 //{
 //  throw std::runtime_error("");
 //}
@@ -304,10 +305,10 @@ complex::BoundingBox<float> COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex:
  * provided rotation matrix.
  * @param faces
  * @param faceIds
- * @param float g[3][3]
- * @return complex::BoundingBox<float>
+ * @param float32 g[3][3]
+ * @return complex::BoundingBox<float32>
  */
-// complex::BoundingBox<float> FindBoundingBoxOfRotatedFaces(TriangleGeom* faces, const Int32Int32DynamicListArray.ElementList& faceIds, float g[3][3])
+// complex::BoundingBox<float32> FindBoundingBoxOfRotatedFaces(TriangleGeom* faces, const Int32Int32DynamicListArray.ElementList& faceIds, float32 g[3][3])
 //{
 //  throw std::runtime_error("");
 //}
@@ -325,7 +326,7 @@ complex::BoundingBox<float> COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex:
  * @return char
  */
 template <typename T>
-uint8_t RayIntersectsTriangle(const Ray<T>& ray, const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, std::vector<Point3D<T>>& inter)
+uint8 RayIntersectsTriangle(const Ray<T>& ray, const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, std::vector<Point3D<T>>& inter)
 {
   throw std::runtime_error("");
 }

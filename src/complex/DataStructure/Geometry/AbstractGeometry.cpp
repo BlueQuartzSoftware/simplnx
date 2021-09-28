@@ -142,32 +142,32 @@ void AbstractGeometry::setTimeSeriesEnabled(bool value)
   m_IsTimeSeriesEnabled = value;
 }
 
-float AbstractGeometry::getTimeValue() const
+float32 AbstractGeometry::getTimeValue() const
 {
   return m_TimeValue;
 }
 
-void AbstractGeometry::setTimeValue(float value)
+void AbstractGeometry::setTimeValue(float32 value)
 {
   m_TimeValue = value;
 }
 
-uint32_t AbstractGeometry::getUnitDimensionality() const
+uint32 AbstractGeometry::getUnitDimensionality() const
 {
   return m_UnitDimensionality;
 }
 
-void AbstractGeometry::setUnitDimensionality(uint32_t value)
+void AbstractGeometry::setUnitDimensionality(uint32 value)
 {
   m_UnitDimensionality = value;
 }
 
-uint32_t AbstractGeometry::getSpatialDimensionality() const
+uint32 AbstractGeometry::getSpatialDimensionality() const
 {
   return m_SpacialDimensionality;
 }
 
-void AbstractGeometry::setSpatialDimensionality(uint32_t value)
+void AbstractGeometry::setSpatialDimensionality(uint32 value)
 {
   m_SpacialDimensionality = value;
 }

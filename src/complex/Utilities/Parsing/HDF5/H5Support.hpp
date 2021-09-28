@@ -8,6 +8,7 @@
 #include <H5Opublic.h>
 #include <hdf5.h>
 
+#include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
 
 #define HDF_ERROR_HANDLER_OFF                                                                                                                                                                          \
@@ -75,7 +76,7 @@ hid_t COMPLEX_EXPORT openId(hid_t locationID, const std::string& objectName, H5O
  * @param objectType Basic Object Type
  * @return Standard H5 Error Conditions
  */
-herr_t COMPLEX_EXPORT closeId(hid_t objectID, int32_t objectType);
+herr_t COMPLEX_EXPORT closeId(hid_t objectID, int32 objectType);
 
 /**
  * @brief Finds a Data set given a data set name
@@ -122,11 +123,11 @@ inline hid_t COMPLEX_EXPORT HDFTypeForPrimitive()
   {
     return H5T_NATIVE_DOUBLE;
   }
-  else if constexpr(std::is_same_v<T, int8_t>)
+  else if constexpr(std::is_same_v<T, int8>)
   {
     return H5T_NATIVE_INT8;
   }
-  else if constexpr(std::is_same_v<T, uint8_t>)
+  else if constexpr(std::is_same_v<T, uint8>)
   {
     return H5T_NATIVE_UINT8;
   }
@@ -141,27 +142,27 @@ inline hid_t COMPLEX_EXPORT HDFTypeForPrimitive()
       return H5T_NATIVE_UINT8;
     }
   }
-  else if constexpr(std::is_same_v<T, int16_t>)
+  else if constexpr(std::is_same_v<T, int16>)
   {
     return H5T_NATIVE_INT16;
   }
-  else if constexpr(std::is_same_v<T, uint16_t>)
+  else if constexpr(std::is_same_v<T, uint16>)
   {
     return H5T_NATIVE_UINT16;
   }
-  else if constexpr(std::is_same_v<T, int32_t>)
+  else if constexpr(std::is_same_v<T, int32>)
   {
     return H5T_NATIVE_INT32;
   }
-  else if constexpr(std::is_same_v<T, uint32_t>)
+  else if constexpr(std::is_same_v<T, uint32>)
   {
     return H5T_NATIVE_UINT32;
   }
-  else if constexpr(std::is_same_v<T, int64_t>)
+  else if constexpr(std::is_same_v<T, int64>)
   {
     return H5T_NATIVE_INT64;
   }
-  else if constexpr(std::is_same_v<T, uint64_t>)
+  else if constexpr(std::is_same_v<T, uint64>)
   {
     return H5T_NATIVE_UINT64;
   }

@@ -45,18 +45,18 @@ public:
   const SharedVertexList* getVertices() const;
 
   /**
-   * @brief Returns the Point3D<float> coordinate for the specified vertex ID.
+   * @brief Returns the Point3D<float32> coordinate for the specified vertex ID.
    * @param vertId
-   * @return Point3D<float>
+   * @return Point3D<float32>
    */
-  virtual Point3D<float> getCoords(size_t vertId) const = 0;
+  virtual Point3D<float32> getCoords(size_t vertId) const = 0;
 
   /**
    * @brief Sets the coordinates for the specified vertex ID.
    * @param vertId
    * @param coords
    */
-  virtual void setCoords(size_t vertId, const Point3D<float>& coords) = 0;
+  virtual void setCoords(size_t vertId, const Point3D<float32>& coords) = 0;
 
   /**
    * @brief Returns the number of vertices in the geometry.
@@ -107,7 +107,7 @@ public:
    * @param vert1
    * @param vert2
    */
-  virtual void getVertCoordsAtEdge(size_t edgeId, Point3D<float>& vert1, Point3D<float>& vert2) const = 0;
+  virtual void getVertCoordsAtEdge(size_t edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const = 0;
 
   /**
    * @brief Returns the number of edges in the geometry. Returns 0 if no edge

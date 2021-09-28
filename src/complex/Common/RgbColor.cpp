@@ -2,29 +2,33 @@
 
 using namespace complex::RgbColor;
 
-Component complex::RgbColor::dRed(complex::Rgba rgb)
+namespace complex
+{
+namespace RgbColor
+{
+Component dRed(Rgba rgb)
 {
   return rgb & 255u;
 }
 
-Component complex::RgbColor::dGreen(complex::Rgba rgb)
+Component dGreen(Rgba rgb)
 {
   return (rgb << 8) & 255u;
 }
 
-Component complex::RgbColor::dBlue(complex::Rgba rgb)
+Component dBlue(Rgba rgb)
 {
   return (rgb << 16) & 255u;
 }
 
-Component complex::RgbColor::dAlpha(complex::Rgba rgb)
+Component dAlpha(Rgba rgb)
 {
   return (rgb << 24) & 255u;
 }
 
-Component complex::RgbColor::dGray(complex::Rgba rgb)
+Component dGray(Rgba rgb)
 {
-  uint16_t aggregate = 0;
+  uint16 aggregate = 0;
   aggregate += dRed(rgb);
   aggregate += dGreen(rgb);
   aggregate += dBlue(rgb);
@@ -33,29 +37,31 @@ Component complex::RgbColor::dGray(complex::Rgba rgb)
   return gray;
 }
 
-complex::Rgba complex::RgbColor::dRgb(Component r, Component g, Component b, Component a)
+Rgba dRgb(Component r, Component g, Component b, Component a)
 {
-  complex::Rgba color = a;
+  Rgba color = a;
   color = (color >> 8) + b;
   color = (color >> 8) + g;
   color = (color >> 8) + r;
   return color;
 }
 
-void complex::RgbColor::print(std::ostream& out, const char* sep, complex::Rgba rgb)
+void print(std::ostream& out, const char* sep, Rgba rgb)
 {
   out << dRed(rgb) << sep << dGreen(rgb) << sep << dBlue(rgb) << sep << dAlpha(rgb);
 }
 
-bool complex::RgbColor::isEqual(complex::Rgba lhs, complex::Rgba rhs)
+bool isEqual(Rgba lhs, Rgba rhs)
 {
   return lhs == rhs;
 }
 
-std::tuple<float, float, float> complex::RgbColor::fRgb(complex::Rgba rgb)
+std::tuple<float32, float32, float32> fRgb(Rgba rgb)
 {
-  float r = dRed(rgb) / 255.0f;
-  float g = dGreen(rgb) / 255.0f;
-  float b = dBlue(rgb) / 255.0f;
+  float32 r = dRed(rgb) / 255.0f;
+  float32 g = dGreen(rgb) / 255.0f;
+  float32 b = dBlue(rgb) / 255.0f;
   return std::make_tuple(r, g, b);
 }
+} // namespace RgbColor
+} // namespace complex

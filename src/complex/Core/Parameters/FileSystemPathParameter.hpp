@@ -17,7 +17,7 @@ namespace complex
 class COMPLEX_EXPORT FileSystemPathParameter : public ValueParameter
 {
 public:
-  enum class PathType : uint32_t
+  enum class PathType : uint32
   {
     InputFile = 0,
     InputDir = 1,

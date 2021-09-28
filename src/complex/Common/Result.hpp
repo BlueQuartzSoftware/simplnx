@@ -162,7 +162,7 @@ Result<> convertResult(Result<T>&& result)
  * @return Result Object
  */
 template <class T = void>
-Result<T> MakeErrorResult(int32_t code, std::string message)
+Result<T> MakeErrorResult(int32 code, std::string message)
 {
   return {nonstd::make_unexpected(std::vector<Error>{{code, std::move(message)}})};
 }
@@ -173,7 +173,7 @@ Result<T> MakeErrorResult(int32_t code, std::string message)
  * @param message
  * @return
  */
-inline Result<> MakeWarningVoidResult(int32_t code, std::string message)
+inline Result<> MakeWarningVoidResult(int32 code, std::string message)
 {
   Result<> result;
   result.warnings().push_back(Warning{code, std::move(message)});

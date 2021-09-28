@@ -45,7 +45,7 @@ std::string COMPLEX_EXPORT getName(H5::IdType id);
  * @param cDims The Component Dimensions of the data array
  * @return H5::ErrorType
  */
-H5::ErrorType COMPLEX_EXPORT readRequiredAttributes(H5::IdType gid, const std::string& name, std::string& objType, int32_t& version, std::vector<size_t>& tDims, std::vector<size_t>& cDims);
+H5::ErrorType COMPLEX_EXPORT readRequiredAttributes(H5::IdType gid, const std::string& name, std::string& objType, int32& version, std::vector<usize>& tDims, std::vector<usize>& cDims);
 
 /**
  * @brief Reads a string attribute from an HDF object

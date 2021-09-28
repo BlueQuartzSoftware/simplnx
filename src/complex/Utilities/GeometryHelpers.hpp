@@ -11,7 +11,7 @@ namespace complex
 {
 namespace GeometryHelpers
 {
-using ErrorCode = int32_t;
+using ErrorCode = int32;
 
 namespace Connectivity
 {
@@ -75,7 +75,7 @@ void FindElementsContainingVert(const DataArray<K>* elemList, DynamicListArray<T
  * @param elemsContainingVert
  * @param dynamicList
  * @param geometryType
- * @return int32_t
+ * @return int32
  */
 template <typename T, typename K>
 ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListArray<T, K>* elemsContainingVert, DynamicListArray<T, K>* dynamicList, AbstractGeometry::Type geometryType)
@@ -129,8 +129,8 @@ ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListAr
   dynamicList->allocateLists(linkCount);
 
   // Allocate an array of bools that we use each iteration so that we don't put duplicates into the array
-  auto visitedDataStore = new DataStore<uint8_t>(1, numElems);
-  DataArray<uint8_t>* visitedPtr = DataArray<uint8_t>::Create(*dataStructure, "_INTERNAL_USE_ONLY_Visited", visitedDataStore, parentId);
+  auto visitedDataStore = new DataStore<uint8>(1, numElems);
+  DataArray<uint8>* visitedPtr = DataArray<uint8>::Create(*dataStructure, "_INTERNAL_USE_ONLY_Visited", visitedDataStore, parentId);
   visitedDataStore->fill(0);
   auto& visited = *visitedPtr;
 
@@ -192,7 +192,7 @@ ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListAr
       }
     }
     // Reset all the visited cell indexs back to false (zero)
-    for(int64_t k = 0; k < linkCount[t]; ++k)
+    for(int64 k = 0; k < linkCount[t]; ++k)
     {
       visited[loop_neighbors[k]] = false;
     }
@@ -827,7 +827,7 @@ namespace Topology
  * @param centroids
  */
 template <typename T>
-void FindElementCentroids(const DataArray<T>* elemList, const FloatArray* vertices, FloatArray* centroids)
+void FindElementCentroids(const DataArray<T>* elemList, const Float32Array* vertices, Float32Array* centroids)
 {
   auto& elems = *elemList;
   const size_t numElems = elemList->getTupleCount();
@@ -841,12 +841,12 @@ void FindElementCentroids(const DataArray<T>* elemList, const FloatArray* vertic
     for(size_t j = 0; j < numElems; j++)
     {
       size_t offset = j * numVertsPerElem;
-      float vertPos = 0.0;
+      float32 vertPos = 0.0;
       for(size_t k = 0; k < numVertsPerElem; k++)
       {
         vertPos += vertex[3 * elems[offset + k] + i];
       }
-      vertPos /= static_cast<float>(numVertsPerElem);
+      vertPos /= static_cast<float32>(numVertsPerElem);
       elementCentroids[numDims * j + i] = vertPos;
     }
   }
@@ -860,7 +860,7 @@ void FindElementCentroids(const DataArray<T>* elemList, const FloatArray* vertic
  * @param volumes
  */
 template <typename T>
-void FindTetVolumes(const DataArray<T>* tetList, const FloatArray* vertices, FloatArray* volumes)
+void FindTetVolumes(const DataArray<T>* tetList, const Float32Array* vertices, Float32Array* volumes)
 {
   auto& tets = *tetList;
   const size_t numTets = tetList->getTupleCount();
@@ -871,10 +871,10 @@ void FindTetVolumes(const DataArray<T>* tetList, const FloatArray* vertices, Flo
   for(size_t i = 0; i < numTets; i++)
   {
     const size_t offset = i * numVertsPerTet;
-    float vert0[3] = {vertex[3 * tets[offset + 0] + 0], vertex[3 * tets[offset + 0] + 1], vertex[3 * tets[offset + 0] + 2]};
-    float vert1[3] = {vertex[3 * tets[offset + 1] + 0], vertex[3 * tets[offset + 1] + 1], vertex[3 * tets[offset + 1] + 2]};
-    float vert2[3] = {vertex[3 * tets[offset + 2] + 0], vertex[3 * tets[offset + 2] + 1], vertex[3 * tets[offset + 2] + 2]};
-    float vert3[3] = {vertex[3 * tets[offset + 3] + 0], vertex[3 * tets[offset + 3] + 1], vertex[3 * tets[offset + 3] + 2]};
+    float32 vert0[3] = {vertex[3 * tets[offset + 0] + 0], vertex[3 * tets[offset + 0] + 1], vertex[3 * tets[offset + 0] + 2]};
+    float32 vert1[3] = {vertex[3 * tets[offset + 1] + 0], vertex[3 * tets[offset + 1] + 1], vertex[3 * tets[offset + 1] + 2]};
+    float32 vert2[3] = {vertex[3 * tets[offset + 2] + 0], vertex[3 * tets[offset + 2] + 1], vertex[3 * tets[offset + 2] + 2]};
+    float32 vert3[3] = {vertex[3 * tets[offset + 3] + 0], vertex[3 * tets[offset + 3] + 1], vertex[3 * tets[offset + 3] + 2]};
 
     Eigen::Matrix3f vertMatrix;
     vertMatrix << vert1[0] - vert0[0], vert2[0] - vert0[0], vert3[0] - vert0[0], vert1[1] - vert0[1], vert2[1] - vert0[1], vert3[1] - vert0[1], vert1[2] - vert0[2], vert2[2] - vert0[2],
@@ -892,7 +892,7 @@ void FindTetVolumes(const DataArray<T>* tetList, const FloatArray* vertices, Flo
  * @param volumes
  */
 template <typename T>
-void FindHexVolumes(const DataArray<T>* hexList, const FloatArray* vertices, FloatArray* volumes)
+void FindHexVolumes(const DataArray<T>* hexList, const Float32Array* vertices, Float32Array* volumes)
 {
   const size_t numHexas = hexList->getTupleCount();
   const size_t numElementsPerHex = hexList->getNumComponents();
@@ -903,7 +903,7 @@ void FindHexVolumes(const DataArray<T>* hexList, const FloatArray* vertices, Flo
   for(size_t i = 0; i < numHexas; i++)
   {
     // Subdivide each hexahedron into 5 tetrahedra & sum their volumes
-    std::vector<std::vector<uint64_t>> subTets(5, std::vector<uint64_t>(4, 0));
+    std::vector<std::vector<uint64>> subTets(5, std::vector<uint64>(4, 0));
     const size_t offset = i * numElementsPerHex;
 
     // First tetrahedron from hexahedron vertices (0, 1, 3, 4);
@@ -936,14 +936,14 @@ void FindHexVolumes(const DataArray<T>* hexList, const FloatArray* vertices, Flo
     subTets[4][2] = hexas[offset + 7];
     subTets[4][3] = hexas[offset + 4];
 
-    float volume = 0.0f;
+    float32 volume = 0.0f;
 
     for(auto&& tet : subTets)
     {
-      float vert0[3] = {vertex[3 * tet[0] + 0], vertex[3 * tet[0] + 1], vertex[3 * tet[0] + 2]};
-      float vert1[3] = {vertex[3 * tet[1] + 0], vertex[3 * tet[1] + 1], vertex[3 * tet[1] + 2]};
-      float vert2[3] = {vertex[3 * tet[2] + 0], vertex[3 * tet[2] + 1], vertex[3 * tet[2] + 2]};
-      float vert3[3] = {vertex[3 * tet[3] + 0], vertex[3 * tet[3] + 1], vertex[3 * tet[3] + 2]};
+      float32 vert0[3] = {vertex[3 * tet[0] + 0], vertex[3 * tet[0] + 1], vertex[3 * tet[0] + 2]};
+      float32 vert1[3] = {vertex[3 * tet[1] + 0], vertex[3 * tet[1] + 1], vertex[3 * tet[1] + 2]};
+      float32 vert2[3] = {vertex[3 * tet[2] + 0], vertex[3 * tet[2] + 1], vertex[3 * tet[2] + 2]};
+      float32 vert3[3] = {vertex[3 * tet[3] + 0], vertex[3 * tet[3] + 1], vertex[3 * tet[3] + 2]};
 
       Eigen::Matrix3f vertMatrix;
       vertMatrix << vert1[0] - vert0[0], vert2[0] - vert0[0], vert3[0] - vert0[0], vert1[1] - vert0[1], vert2[1] - vert0[1], vert3[1] - vert0[1], vert1[2] - vert0[2], vert2[2] - vert0[2],
@@ -964,31 +964,31 @@ void FindHexVolumes(const DataArray<T>* hexList, const FloatArray* vertices, Flo
  * @param areas
  */
 template <typename T>
-void Find2DElementAreas(const DataArray<T>* elemList, const FloatArray* vertices, FloatArray* areas)
+void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertices, Float32Array* areas)
 {
-  float nx, ny, nz;
-  int32_t projection;
+  float32 nx, ny, nz;
+  int32 projection;
 
   auto& elems = *elemList;
   const size_t numElems = elemList->getTupleCount();
-  const size_t numVertsPerElem = static_cast<int64_t>(elemList->getNumComponents());
+  const size_t numVertsPerElem = static_cast<int64>(elemList->getNumComponents());
   if(numVertsPerElem < 3)
   {
     return;
   }
   auto& elemAreas = *areas;
-  std::vector<float> coords(3 * numVertsPerElem, 0.0f);
+  std::vector<float32> coords(3 * numVertsPerElem, 0.0f);
 
   for(size_t i = 0; i < numElems; i++)
   {
-    float area = 0.0f;
+    float32 area = 0.0f;
     const size_t offset = i * numVertsPerElem;
 
     // Create a contiguous vertex coordinates list
     // This simplifies the pointer arithmetic a bit
     for(size_t j = 0; j < numVertsPerElem; j++)
     {
-      std::vector<float> point{vertices->at(3 * elems[offset + j]), vertices->at(3 * elems[offset + j] + 1), vertices->at(3 * elems[offset + j] + 2)};
+      std::vector<float32> point{vertices->at(3 * elems[offset + j]), vertices->at(3 * elems[offset + j] + 1), vertices->at(3 * elems[offset + j] + 2)};
       coords.insert(point.begin(), point.end(), coords.begin());
     }
 
@@ -1001,11 +1001,11 @@ void Find2DElementAreas(const DataArray<T>* elemList, const FloatArray* vertices
     nz = (normal[2] > 0.0 ? normal[2] : -normal[2]);
     projection = (nx > ny ? (nx > nz ? 0 : 2) : (ny > nz ? 1 : 2));
 
-    for(int64_t j = 0; j < numVertsPerElem; j++)
+    for(int64 j = 0; j < numVertsPerElem; j++)
     {
-      Point3D<float> vert0(coordinates + (3 * j));
-      Point3D<float> vert1(coordinates + (3 * ((j + 1) % numVertsPerElem)));
-      Point3D<float> vert2(coordinates + (3 * ((j + 2) % numVertsPerElem)));
+      Point3D<float32> vert0(coordinates + (3 * j));
+      Point3D<float32> vert1(coordinates + (3 * ((j + 1) % numVertsPerElem)));
+      Point3D<float32> vert2(coordinates + (3 * ((j + 2) % numVertsPerElem)));
 
       switch(projection)
       {

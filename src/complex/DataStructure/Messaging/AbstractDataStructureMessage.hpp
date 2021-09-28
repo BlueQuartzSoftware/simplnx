@@ -1,7 +1,6 @@
 #pragma once
 
-#include <cstdint>
-
+#include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
@@ -16,7 +15,7 @@ class DataStructure;
 class COMPLEX_EXPORT AbstractDataStructureMessage
 {
 public:
-  using MessageType = int32_t;
+  using MessageType = int32;
 
   /**
    * @brief Copy constructor

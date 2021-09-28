@@ -96,14 +96,14 @@ public:
    * @brief Gets the coordinates at the target vertex ID.
    * @param vertId
    */
-  Point3D<float> getCoords(size_t vertId) const;
+  Point3D<float32> getCoords(size_t vertId) const;
 
   /**
    * @brief Sets the coordinates for the specified vertex ID.
    * @param vertId
    * @param coords
    */
-  void setCoords(size_t vertId, const Point3D<float>& coords);
+  void setCoords(size_t vertId, const Point3D<float32>& coords);
 
   /**
    * @brief
@@ -125,9 +125,9 @@ public:
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const Float32Array*
    */
-  const FloatArray* getElementSizes() const override;
+  const Float32Array* getElementSizes() const override;
 
   /**
    * @brief
@@ -176,9 +176,9 @@ public:
 
   /**
    * @brief
-   * @return const FloatArray*
+   * @return const Float32Array*
    */
-  const FloatArray* getElementCentroids() const override;
+  const Float32Array* getElementCentroids() const override;
 
   /**
    * @brief
@@ -187,16 +187,16 @@ public:
 
   /**
    * @brief
-   * @return complex::Point3D<double>
+   * @return complex::Point3D<float64>
    */
-  complex::Point3D<double> getParametricCenter() const override;
+  complex::Point3D<float64> getParametricCenter() const override;
 
   /**
    * @brief
    * @param pCoords
    * @param shape
    */
-  void getShapeFunctions(const complex::Point3D<double>& pCoords, double* shape) const override;
+  void getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const override;
 
   /**
    * @brief
@@ -204,7 +204,7 @@ public:
    * @param derivatives
    * @param observable
    */
-  void findDerivatives(DoubleArray* field, DoubleArray* derivatives, Observable* observable) const override;
+  void findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const override;
 
   /**
    * @brief
@@ -221,9 +221,9 @@ public:
 
   /**
    * @brief
-   * @return uint32_t
+   * @return uint32
    */
-  uint32_t getXdmfGridType() const override;
+  uint32 getXdmfGridType() const override;
 
   /**
    * @brief Reads values from HDF5
@@ -282,13 +282,13 @@ protected:
    * @brief
    * @param elementCentroids
    */
-  void setElementCentroids(const FloatArray* elementCentroids) override;
+  void setElementCentroids(const Float32Array* elementCentroids) override;
 
   /**
    * @brief
    * @param elementSizes
    */
-  void setElementSizes(const FloatArray* elementSizes) override;
+  void setElementSizes(const Float32Array* elementSizes) override;
 
 private:
   std::optional<DataObject::IdType> m_VertexListId;

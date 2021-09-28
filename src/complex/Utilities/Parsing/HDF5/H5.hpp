@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include "complex/Common/Types.hpp"
 
 #define H5_USE_110_API
 
@@ -8,8 +8,8 @@ namespace complex
 {
 namespace H5
 {
-using IdType = int64_t;
-using ErrorType = int32_t;
+using IdType = int64;
+using ErrorType = int32;
 using SizeType = unsigned long long;
 
 inline const std::string DataTypeTag = "DataType";

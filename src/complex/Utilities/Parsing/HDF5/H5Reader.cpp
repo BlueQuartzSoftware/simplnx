@@ -35,7 +35,7 @@ inline const std::string PipelineName = "Pipeline";
 inline const std::string CompDims = "ComponentDimensions";
 inline const std::string TupleDims = "TupleDimensions";
 
-constexpr double Version = 7.0;
+constexpr float64 Version = 7.0;
 
 namespace Type
 {
@@ -255,7 +255,7 @@ herr_t complex::H5::Reader::Generic::readStringDataset(H5::IdType locationID, co
     else
     {
       hsize_t size = H5Dget_storage_size(datasetID);
-      std::vector<char> buffer(static_cast<size_t>(size + 1), 0x00); // Allocate and Zero and array
+      std::vector<char> buffer(static_cast<usize>(size + 1), 0x00); // Allocate and Zero and array
       error = H5Dread(datasetID, typeID, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer.data());
       if(error < 0)
       {
@@ -273,8 +273,8 @@ herr_t complex::H5::Reader::Generic::readStringDataset(H5::IdType locationID, co
   return returnError;
 }
 
-complex::H5::ErrorType complex::H5::Reader::Generic::readRequiredAttributes(H5::IdType gid, const std::string& name, std::string& objType, int32_t& version, std::vector<size_t>& tDims,
-                                                                            std::vector<size_t>& cDims)
+complex::H5::ErrorType complex::H5::Reader::Generic::readRequiredAttributes(H5::IdType gid, const std::string& name, std::string& objType, int32& version, std::vector<usize>& tDims,
+                                                                            std::vector<usize>& cDims)
 {
   H5::ErrorType err = 0;
   H5::ErrorType retErr = 0;
@@ -343,7 +343,7 @@ complex::H5::ErrorType complex::H5::Reader::Generic::readStringAttribute(H5::IdT
     if(attributeID >= 0)
     {
       hsize_t size = H5Aget_storage_size(attributeID);
-      attributeOutput.resize(static_cast<size_t>(size)); // Resize the vector to the proper length
+      attributeOutput.resize(static_cast<usize>(size)); // Resize the vector to the proper length
       hid_t attributeType = H5Aget_type(attributeID);
       if(attributeType >= 0)
       {
@@ -491,7 +491,7 @@ void createLegacyDataArray(complex::DataStructure& ds, const std::string& name, 
 
 void readLegacyDataArrayDims(hid_t daId, size_t& tDims, size_t& cDims)
 {
-  hid_t compType = H5::Support::HDFTypeForPrimitive<int64_t>();
+  hid_t compType = H5::Support::HDFTypeForPrimitive<int64>();
 
   {
     hid_t compId = H5Aopen(daId, Legacy::CompDims.c_str(), H5P_DEFAULT);
@@ -501,11 +501,11 @@ void readLegacyDataArrayDims(hid_t daId, size_t& tDims, size_t& cDims)
     }
 
     size_t compSize = H5Aget_storage_size(compId) / 8;
-    auto buffer = new int64_t[compSize];
+    auto buffer = new int64[compSize];
     H5Aread(compId, compType, buffer);
     H5Aclose(compId);
 
-    cDims = std::accumulate(buffer, buffer + compSize, static_cast<size_t>(0));
+    cDims = std::accumulate(buffer, buffer + compSize, static_cast<usize>(0));
     delete[] buffer;
   }
 
@@ -517,11 +517,11 @@ void readLegacyDataArrayDims(hid_t daId, size_t& tDims, size_t& cDims)
     }
 
     size_t tupleSize = H5Aget_storage_size(tupleId) / 8;
-    auto buffer = new int64_t[tupleSize];
+    auto buffer = new int64[tupleSize];
     H5Aread(tupleId, compType, buffer);
     H5Aclose(tupleId);
 
-    tDims = std::accumulate(buffer, buffer + tupleSize, static_cast<size_t>(0));
+    tDims = std::accumulate(buffer, buffer + tupleSize, static_cast<usize>(0));
     delete[] buffer;
   }
 }
@@ -537,43 +537,43 @@ void readLegacyDataArray(complex::DataStructure& ds, hid_t daId, const std::stri
 
   if(H5Tequal(typeId, H5T_NATIVE_FLOAT) > 0)
   {
-    createLegacyDataArray<float>(ds, name, parentId, daId, tDims, cDims);
+    createLegacyDataArray<float32>(ds, name, parentId, daId, tDims, cDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_DOUBLE) > 0)
   {
-    createLegacyDataArray<double>(ds, name, parentId, daId, tDims, cDims);
+    createLegacyDataArray<float64>(ds, name, parentId, daId, tDims, cDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT8) > 0)
   {
-    createLegacyDataArray<int8_t>(ds, name, parentId, daId, tDims, cDims);
+    createLegacyDataArray<int8>(ds, name, parentId, daId, tDims, cDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT16) > 0)
   {
-    createLegacyDataArray<int16_t>(ds, name, parentId, daId, tDims, cDims);
+    createLegacyDataArray<int16>(ds, name, parentId, daId, tDims, cDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT32) > 0)
   {
-    createLegacyDataArray<int32_t>(ds, name, parentId, daId, tDims, cDims);
+    createLegacyDataArray<int32>(ds, name, parentId, daId, tDims, cDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT64) > 0)
   {
-    createLegacyDataArray<int64_t>(ds, name, parentId, daId, tDims, cDims);
+    createLegacyDataArray<int64>(ds, name, parentId, daId, tDims, cDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT8) > 0)
   {
-    createLegacyDataArray<uint8_t>(ds, name, parentId, daId, tDims, cDims);
+    createLegacyDataArray<uint8>(ds, name, parentId, daId, tDims, cDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT16) > 0)
   {
-    createLegacyDataArray<uint16_t>(ds, name, parentId, daId, tDims, cDims);
+    createLegacyDataArray<uint16>(ds, name, parentId, daId, tDims, cDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT32) > 0)
   {
-    createLegacyDataArray<uint32_t>(ds, name, parentId, daId, tDims, cDims);
+    createLegacyDataArray<uint32>(ds, name, parentId, daId, tDims, cDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT64) > 0)
   {
-    createLegacyDataArray<uint64_t>(ds, name, parentId, daId, tDims, cDims);
+    createLegacyDataArray<uint64>(ds, name, parentId, daId, tDims, cDims);
   }
 
   H5Tclose(typeId);
@@ -599,10 +599,10 @@ void readLegacyAttributeMatrix(complex::DataStructure& ds, hid_t amId, const std
 
 void readGenericGeomDims(complex::AbstractGeometry* geom, hid_t geomId)
 {
-  int32_t sDims;
-  int32_t uDims;
+  int32 sDims;
+  int32 uDims;
 
-  hid_t dataType = H5::Support::HDFTypeForPrimitive<int32_t>();
+  hid_t dataType = H5::Support::HDFTypeForPrimitive<int32>();
   hid_t sDimId = H5Aopen(geomId, "SpatialDimensionality", H5P_DEFAULT);
   H5Aread(sDimId, dataType, &sDims);
   H5Aclose(sDimId);
@@ -676,8 +676,8 @@ DataObject* readLegacyImageGeom(complex::DataStructure& ds, hid_t geomId, const 
 
   // DIMENSIONS array
   {
-    hid_t dimsType = H5::Support::HDFTypeForPrimitive<int64_t>();
-    int64_t dims[3];
+    hid_t dimsType = H5::Support::HDFTypeForPrimitive<int64>();
+    int64 dims[3];
     hid_t dimsId = H5Dopen(geomId, "DIMENSIONS", H5P_DEFAULT);
     herr_t error = H5Dread(dimsId, dimsType, H5S_ALL, H5S_ALL, H5P_DEFAULT, dims);
     image->setDimensions(SizeVec3(dims[0], dims[1], dims[2]));
@@ -686,8 +686,8 @@ DataObject* readLegacyImageGeom(complex::DataStructure& ds, hid_t geomId, const 
 
   // ORIGIN array
   {
-    hid_t originType = H5::Support::HDFTypeForPrimitive<float>();
-    float origin[3];
+    hid_t originType = H5::Support::HDFTypeForPrimitive<float32>();
+    float32 origin[3];
     hid_t originId = H5Dopen(geomId, "ORIGIN", H5P_DEFAULT);
     herr_t error = H5Dread(originId, originType, H5S_ALL, H5S_ALL, H5P_DEFAULT, origin);
     image->setOrigin(FloatVec3(origin[0], origin[1], origin[2]));
@@ -696,8 +696,8 @@ DataObject* readLegacyImageGeom(complex::DataStructure& ds, hid_t geomId, const 
 
   // SPACING array
   {
-    hid_t sType = H5::Support::HDFTypeForPrimitive<float>();
-    float spacing[3];
+    hid_t sType = H5::Support::HDFTypeForPrimitive<float32>();
+    float32 spacing[3];
     hid_t spacingId = H5Dopen(geomId, "SPACING", H5P_DEFAULT);
     herr_t error = H5Dread(spacingId, sType, H5S_ALL, H5S_ALL, H5P_DEFAULT, spacing);
     image->setSpacing(FloatVec3(spacing[0], spacing[1], spacing[2]));
@@ -815,8 +815,8 @@ complex::DataStructure H5::Reader::DataStructure::readFile(const std::string& fi
 {
   hid_t fileId = H5Fopen(filepath.c_str(), H5P_DEFAULT, H5F_ACC_RDONLY);
 
-  double fileVersion;
-  herr_t err = Generic::readScalarAttribute<double>(fileId, ".", H5Reader::Constants::FileVersionTag.c_str(), fileVersion);
+  float64 fileVersion;
+  herr_t err = Generic::readScalarAttribute<float64>(fileId, ".", H5Reader::Constants::FileVersionTag.c_str(), fileVersion);
 
   complex::DataStructure ds;
   if(err >= 0)
