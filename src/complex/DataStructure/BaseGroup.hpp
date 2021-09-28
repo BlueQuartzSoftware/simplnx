@@ -57,9 +57,9 @@ public:
    *
    * BaseGroups found among the container's children are not expanded during
    * the operation.
-   * @return size_t
+   * @return usize
    */
-  size_t getSize() const;
+  usize getSize() const;
 
   /**
    * @brief Returns the underlying DataMap by value.

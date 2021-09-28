@@ -12,9 +12,9 @@ TEST_CASE("GridMontage")
   auto montage = GridMontage::Create(ds, "Grid");
   REQUIRE(montage != nullptr);
 
-  const size_t rowCount = 3;
-  const size_t colCount = 2;
-  const size_t depthCount = 1;
+  const usize rowCount = 3;
+  const usize colCount = 2;
+  const usize depthCount = 1;
   montage->resizeTileDims(rowCount, colCount, depthCount);
 
   REQUIRE(montage->getRowCount() == rowCount);

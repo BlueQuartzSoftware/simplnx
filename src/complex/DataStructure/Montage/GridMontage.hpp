@@ -76,21 +76,21 @@ public:
 
   /**
    * @brief Returns the number of rows in the montage.
-   * @return size_t
+   * @return usize
    */
-  size_t getRowCount() const;
+  usize getRowCount() const;
 
   /**
    * @brief Returns the number of columns in the montage.
-   * @return size_t
+   * @return usize
    */
-  size_t getColumnCount() const;
+  usize getColumnCount() const;
 
   /**
    * @brief Returns the number of items deep are in the montage.
-   * @return size_t
+   * @return usize
    */
-  size_t getDepth() const;
+  usize getDepth() const;
 
   /**
    * @brief Returns the 3D tile dimensions as a SizeVec3.
@@ -104,7 +104,7 @@ public:
    * @param col
    * @param depth
    */
-  void resizeTileDims(size_t row, size_t col, size_t depth);
+  void resizeTileDims(usize row, usize col, usize depth);
 
   /**
    * @brief Returns the GridTileIndex for the specified tile position. Returns
@@ -114,7 +114,7 @@ public:
    * @param depth
    * @return GridTileIndex
    */
-  GridTileIndex getTileIndex(size_t row, size_t col, size_t depth) const;
+  GridTileIndex getTileIndex(usize row, usize col, usize depth) const;
 
   /**
    * @brief Returns a GridTileIndex pointing at the specified 3D tile index.
@@ -235,38 +235,38 @@ protected:
    * @brief Returns the appropriate linear offset from the provided
    * GridTileIndex.
    * @param tileId
-   * @return size_t
+   * @return usize
    */
-  size_t getOffsetFromTileId(const TileIdType& tileId) const;
+  usize getOffsetFromTileId(const TileIdType& tileId) const;
 
   /**
    * @brief Returns the appropriate linear offset for the specified 3D tile
    * index. This is done by calling getOffsetFromTilePos using the current
    * dimensions.
    * @param tilePos
-   * @return size_t
+   * @return usize
    */
-  size_t getOffsetFromTilePos(const SizeVec3& tilePos) const;
+  usize getOffsetFromTilePos(const SizeVec3& tilePos) const;
 
   /**
    * @brief Returns the appropriate linear offset for the specified 3D tile
    * index and dimensions.
    * @param tilePos
    * @param dims
-   * @return size_t
+   * @return usize
    */
-  static size_t getOffsetFromTilePos(const SizeVec3& tilePos, const DimensionsType& dims);
+  static usize getOffsetFromTilePos(const SizeVec3& tilePos, const DimensionsType& dims);
 
   /**
    * @brief Returns the 3D tile position from the specified linear index.
    * @param offset
    * @return SizeVec3
    */
-  SizeVec3 getTilePosFromOffset(size_t offset) const;
+  SizeVec3 getTilePosFromOffset(usize offset) const;
 
 private:
-  size_t m_RowCount = 0;
-  size_t m_ColumnCount = 0;
-  size_t m_DepthCount = 0;
+  usize m_RowCount = 0;
+  usize m_ColumnCount = 0;
+  usize m_DepthCount = 0;
 };
 } // namespace complex

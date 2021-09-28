@@ -64,9 +64,9 @@ public:
 
   /**
    * @brief Returns the number of items in the path.
-   * @return size_t
+   * @return usize
    */
-  size_t getLength() const;
+  usize getLength() const;
 
   /**
    * @brief Returns the DataObject ID at the specified position in the path.
@@ -74,7 +74,7 @@ public:
    * @param index
    * @return DataObject::IdType
    */
-  DataObject::IdType operator[](size_t index) const;
+  DataObject::IdType operator[](usize index) const;
 
   /**
    * @brief Returns the ID for the target DataObject.
@@ -91,7 +91,7 @@ public:
    * @param index
    * @return DataObject::IdType
    */
-  DataObject::IdType getIdAt(size_t index) const;
+  DataObject::IdType getIdAt(usize index) const;
 
   /**
    * @brief Returns a pointer to the const DataObject targetted by the path.
@@ -104,7 +104,7 @@ public:
    * @param index
    * @return const DataObject*
    */
-  const DataObject* getDataAt(size_t index) const;
+  const DataObject* getDataAt(usize index) const;
 
   /**
    * @brief Returns the name of the target DataObject. Throws an exception if
@@ -119,13 +119,13 @@ public:
    * @param index
    * @return std::string
    */
-  std::string getNameAt(size_t index) const;
+  std::string getNameAt(usize index) const;
 
   /**
    * @brief Returns a string representation of the path using the provided divider
    * between DataObject names. If no divider is provided, " / " is used instead.
    *
-   * Names are provided using getNameAt(size_t).
+   * Names are provided using getNameAt(usize).
    * @param div = " / "
    * @return std::string
    */

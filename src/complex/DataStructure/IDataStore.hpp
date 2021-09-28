@@ -41,7 +41,7 @@ public:
     using pointer = T*;
     using reference = T&;
 
-    Iterator(IDataStore& dataStore, size_t index)
+    Iterator(IDataStore& dataStore, usize index)
     : m_DataStore(dataStore)
     , m_Index(index)
     {
@@ -53,22 +53,22 @@ public:
     }
     virtual ~Iterator() = default;
 
-    Iterator& operator+(size_t offset)
+    Iterator& operator+(usize offset)
     {
       m_Index += offset;
       return *this;
     }
-    Iterator& operator-(size_t offset)
+    Iterator& operator-(usize offset)
     {
       m_Index -= offset;
       return *this;
     }
-    Iterator& operator+=(size_t offset)
+    Iterator& operator+=(usize offset)
     {
       m_Index += offset;
       return *this;
     }
-    Iterator& operator-=(size_t offset)
+    Iterator& operator-=(usize offset)
     {
       m_Index -= offset;
       return *this;
@@ -136,7 +136,7 @@ public:
 
   private:
     IDataStore& m_DataStore;
-    size_t m_Index = 0;
+    usize m_Index = 0;
   };
   class ConstIterator
   {
@@ -147,7 +147,7 @@ public:
     using pointer = const T*;
     using reference = const T&;
 
-    ConstIterator(const IDataStore& dataStore, size_t index)
+    ConstIterator(const IDataStore& dataStore, usize index)
     : m_DataStore(dataStore)
     , m_Index(index)
     {
@@ -159,22 +159,22 @@ public:
     }
     virtual ~ConstIterator() = default;
 
-    ConstIterator& operator+(size_t offset)
+    ConstIterator& operator+(usize offset)
     {
       m_Index += offset;
       return *this;
     }
-    ConstIterator& operator-(size_t offset)
+    ConstIterator& operator-(usize offset)
     {
       m_Index -= offset;
       return *this;
     }
-    ConstIterator& operator+=(size_t offset)
+    ConstIterator& operator+=(usize offset)
     {
       m_Index += offset;
       return *this;
     }
-    ConstIterator& operator-=(size_t offset)
+    ConstIterator& operator-=(usize offset)
     {
       m_Index -= offset;
       return *this;
@@ -242,7 +242,7 @@ public:
 
   private:
     const IDataStore& m_DataStore;
-    size_t m_Index = 0;
+    usize m_Index = 0;
   };
   ///////////////////////////////
   // End std::iterator support //
@@ -252,21 +252,21 @@ public:
 
   /**
    * @brief Returns the number of tuples in the DataStore.
-   * @return size_t
+   * @return usize
    */
-  virtual size_t getTupleCount() const = 0;
+  virtual usize getTupleCount() const = 0;
 
   /**
    * @brief Returns the number of components.
-   * @return size_t
+   * @return usize
    */
-  virtual size_t getNumComponents() const = 0;
+  virtual usize getNumComponents() const = 0;
 
   /**
    * @brief Returns the number of values stored within the DataStore.
-   * @return size_t
+   * @return usize
    */
-  size_t getSize() const
+  usize getSize() const
   {
     return getTupleCount() * getNumComponents();
   }
@@ -275,7 +275,7 @@ public:
    * @brief Resizes the DataStore to handle the specified number of tuples.
    * @param numTuples
    */
-  virtual void resizeTuples(size_t numTuples) = 0;
+  virtual void resizeTuples(usize numTuples) = 0;
 
   /**
    * @brief Returns the value found at the specified index of the DataStore.
@@ -283,14 +283,14 @@ public:
    * @param index
    * @return T
    */
-  virtual value_type getValue(size_t index) const = 0;
+  virtual value_type getValue(usize index) const = 0;
 
   /**
    * @brief Sets the value stored at the specified index.
    * @param index
    * @param value
    */
-  virtual void setValue(size_t index, value_type value) = 0;
+  virtual void setValue(usize index, value_type value) = 0;
 
   /**
    * @brief Returns the value found at the specified index of the DataStore.
@@ -298,7 +298,7 @@ public:
    * @param index
    * @return const_reference
    */
-  virtual const_reference operator[](size_t index) const = 0;
+  virtual const_reference operator[](usize index) const = 0;
 
   /**
    * @brief Returns the value found at the specified index of the DataStore.
@@ -306,7 +306,7 @@ public:
    * @param index
    * @return const_reference
    */
-  virtual const_reference at(size_t index) const = 0;
+  virtual const_reference at(usize index) const = 0;
 
   /**
    * @brief Returns the value found at the specified index of the DataStore.
@@ -314,7 +314,7 @@ public:
    * @param  index
    * @return T&
    */
-  virtual reference operator[](size_t index) = 0;
+  virtual reference operator[](usize index) = 0;
 
   /**
    * @brief Returns a deep copy of the data store and all its data.

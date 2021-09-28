@@ -130,7 +130,7 @@ inline H5::ErrorType readScalarAttribute(H5::IdType locationID, const std::strin
  * @param typeID The Attribute ID - which needs to be closed after you are finished with the data
  * @return
  */
-herr_t COMPLEX_EXPORT getAttributeInfo(hid_t locationID, const std::string& objectName, const std::string& attributeName, std::vector<hsize_t>& dims, H5T_class_t& typeClass, size_t& typeSize,
+herr_t COMPLEX_EXPORT getAttributeInfo(hid_t locationID, const std::string& objectName, const std::string& attributeName, std::vector<hsize_t>& dims, H5T_class_t& typeClass, usize& typeSize,
                                        hid_t& typeID);
 
 /**
@@ -171,7 +171,7 @@ herr_t readVectorAttribute(hid_t locationID, const std::string& objectName, cons
     {
       // Need to allocate the array getSize
       H5T_class_t typeClass;
-      size_t typeSize = 0;
+      usize typeSize = 0;
       std::vector<hsize_t> dims;
       hid_t typeID = 0;
       error = Generic::getAttributeInfo(locationID, objectName, attributeName, dims, typeClass, typeSize, typeID);

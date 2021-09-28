@@ -105,7 +105,7 @@ complex::H5::ErrorType readIteratorDataset(hid_t locationID, const std::string& 
   }
 
   // Apply values to dataStore
-  size_t index = 0;
+  usize index = 0;
   for(auto value : *dataStore)
   {
     value = buffer[index++];
@@ -124,7 +124,7 @@ complex::H5::ErrorType readIteratorDataset(hid_t locationID, const std::string& 
  * @return DataStore<T>*
  */
 template <typename T>
-complex::DataStore<T>* readH5Dataset(hid_t locId, const std::string& datasetName, size_t tupleCount, size_t compCount)
+complex::DataStore<T>* readH5Dataset(hid_t locId, const std::string& datasetName, usize tupleCount, usize compCount)
 {
   auto dataStore = new DataStore<T>(tupleCount, compCount);
 
@@ -198,7 +198,7 @@ herr_t complex::H5::Reader::Generic::readVectorOfStringDataset(H5::IdType locati
      * copy the data into the vector of strings
      */
     data.resize(dims[0]);
-    for(size_t i = 0; i < dims[0]; i++)
+    for(usize i = 0; i < dims[0]; i++)
     {
       data[i] = std::string(rData[i]);
     }
@@ -381,7 +381,7 @@ complex::H5::ErrorType complex::H5::Reader::Generic::readStringAttribute(H5::IdT
 }
 
 herr_t complex::H5::Reader::Generic::getAttributeInfo(hid_t locationID, const std::string& objectName, const std::string& attributeName, std::vector<hsize_t>& dims, H5T_class_t& typeClass,
-                                                      size_t& typeSize, hid_t& typeID)
+                                                      usize& typeSize, hid_t& typeID)
 {
   H5O_info_t objectInfo{};
   herr_t returnError = 0;
@@ -458,7 +458,7 @@ herr_t complex::H5::Reader::Generic::getAttributeInfo(hid_t locationID, const st
 //////////////////////////
 std::string H5::Reader::Generic::getNameAtIdx(H5::IdType id, H5::SizeType idx)
 {
-  constexpr size_t size = 120;
+  constexpr usize size = 120;
   char name[size];
   auto length = H5Gget_objname_by_idx(id, idx, name, size);
   std::string nameStr(name);
@@ -467,7 +467,7 @@ std::string H5::Reader::Generic::getNameAtIdx(H5::IdType id, H5::SizeType idx)
 
 std::string H5::Reader::Generic::getName(H5::IdType id)
 {
-  constexpr size_t size = 120;
+  constexpr usize size = 120;
   char name[size];
   auto length = H5Iget_name(id, name, size);
   std::string nameStr(name);
@@ -475,7 +475,7 @@ std::string H5::Reader::Generic::getName(H5::IdType id)
 }
 
 template <typename T>
-void createLegacyDataArray(complex::DataStructure& ds, const std::string& name, complex::DataObject::IdType parentId, hid_t daId, size_t tDims, size_t cDims)
+void createLegacyDataArray(complex::DataStructure& ds, const std::string& name, complex::DataObject::IdType parentId, hid_t daId, usize tDims, usize cDims)
 {
   auto buffer = std::make_unique<T[]>(tDims * cDims);
   hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
@@ -489,7 +489,7 @@ void createLegacyDataArray(complex::DataStructure& ds, const std::string& name, 
   auto dataArray = DataArray<T>::Create(ds, name, dataStore, parentId);
 }
 
-void readLegacyDataArrayDims(hid_t daId, size_t& tDims, size_t& cDims)
+void readLegacyDataArrayDims(hid_t daId, usize& tDims, usize& cDims)
 {
   hid_t compType = H5::Support::HDFTypeForPrimitive<int64>();
 
@@ -500,7 +500,7 @@ void readLegacyDataArrayDims(hid_t daId, size_t& tDims, size_t& cDims)
       throw std::runtime_error("Error reading legacy DataArray dimensions");
     }
 
-    size_t compSize = H5Aget_storage_size(compId) / 8;
+    usize compSize = H5Aget_storage_size(compId) / 8;
     auto buffer = new int64[compSize];
     H5Aread(compId, compType, buffer);
     H5Aclose(compId);
@@ -516,7 +516,7 @@ void readLegacyDataArrayDims(hid_t daId, size_t& tDims, size_t& cDims)
       throw std::runtime_error("Error reading legacy DataArray dimensions");
     }
 
-    size_t tupleSize = H5Aget_storage_size(tupleId) / 8;
+    usize tupleSize = H5Aget_storage_size(tupleId) / 8;
     auto buffer = new int64[tupleSize];
     H5Aread(tupleId, compType, buffer);
     H5Aclose(tupleId);
@@ -531,8 +531,8 @@ void readLegacyDataArray(complex::DataStructure& ds, hid_t daId, const std::stri
   auto size = H5Dget_storage_size(daId);
   auto typeId = H5Dget_type(daId);
 
-  size_t tDims;
-  size_t cDims;
+  usize tDims;
+  usize cDims;
   readLegacyDataArrayDims(daId, tDims, cDims);
 
   if(H5Tequal(typeId, H5T_NATIVE_FLOAT) > 0)
@@ -848,7 +848,7 @@ complex::DataStructure H5::Reader::DataStructure::readFile(const std::string& fi
  * @return DataObject*
  */
 template <typename T>
-complex::DataObject* createDataArray(complex::DataStructure& ds, hid_t gid, size_t tupleCount, size_t compCount, const std::string& name, const std::optional<DataObject::IdType>& parent,
+complex::DataObject* createDataArray(complex::DataStructure& ds, hid_t gid, usize tupleCount, usize compCount, const std::string& name, const std::optional<DataObject::IdType>& parent,
                                      bool metaDataOnly)
 {
   IDataStore<T>* dataStore;

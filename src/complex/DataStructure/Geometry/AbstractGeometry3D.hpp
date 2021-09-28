@@ -32,7 +32,7 @@ public:
    * @brief Resizes the vertex array to the match the target number of vertices.
    * @param newNumVertices
    */
-  void resizeVertexList(size_t newNumVertices);
+  void resizeVertexList(usize newNumVertices);
 
   /**
    * @brief Sets the SharedVertexList.
@@ -63,20 +63,20 @@ public:
    * @param vertId
    * @param coords
    */
-  void setCoords(size_t vertId, const complex::Point3D<float32>& coords);
+  void setCoords(usize vertId, const complex::Point3D<float32>& coords);
 
   /**
    * @brief Returns the 3D coordinates of the specified vertex as a Point3D<float32>.
    * @param vertId
    * @return complex::Point3D<float32>
    */
-  complex::Point3D<float32> getCoords(size_t vertId) const;
+  complex::Point3D<float32> getCoords(usize vertId) const;
 
   /**
    * @brief Returns the number of vertices in the SharedVertexList.
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfVertices() const;
+  usize getNumberOfVertices() const;
 
   /**
    * @brief Resizes the SharedEdgeList array.
@@ -85,7 +85,7 @@ public:
    * edge list.
    * @param newNumEdges
    */
-  void resizeEdgeList(size_t newNumEdges);
+  void resizeEdgeList(usize newNumEdges);
 
   /**
    * @brief Returns the geometry's edge list array. Returns nullptr if the
@@ -106,14 +106,14 @@ public:
    * @param edgeId
    * @param verts
    */
-  void setVertsAtEdge(size_t edgeId, const size_t verts[2]);
+  void setVertsAtEdge(usize edgeId, const usize verts[2]);
 
   /**
    * @brief Gets the vertex IDs for the specified edge.
    * @param edgeId
    * @param verts
    */
-  void getVertsAtEdge(size_t edgeId, size_t verts[2]) const;
+  void getVertsAtEdge(usize edgeId, usize verts[2]) const;
 
   /**
    * @brief Gets the vertex coordinates for the specified edge.
@@ -121,13 +121,13 @@ public:
    * @param vert1
    * @param vert2
    */
-  void getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const;
+  void getVertCoordsAtEdge(usize edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const;
 
   /**
    * @brief Returns the number of edges that make up the edge list.
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfEdges() const;
+  usize getNumberOfEdges() const;
 
   /**
    * @brief Creates and assigns the edge list array for the current values.
@@ -185,9 +185,9 @@ public:
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfFaces() const;
+  usize getNumberOfFaces() const;
 
   /**
    * @brief
@@ -238,14 +238,14 @@ protected:
    * @param numQuads
    * @return SharedQuadList*
    */
-  SharedQuadList* createSharedQuadList(size_t numQuads);
+  SharedQuadList* createSharedQuadList(usize numQuads);
 
   /**
    * @brief
    * @param numTris
    * @return SharedTriList*
    */
-  SharedTriList* createSharedTriList(size_t numTris);
+  SharedTriList* createSharedTriList(usize numTris);
 
 private:
   std::optional<DataObject::IdType> m_VertexListId;

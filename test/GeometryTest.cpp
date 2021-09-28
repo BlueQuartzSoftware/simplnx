@@ -97,7 +97,7 @@ void testGeom2D(AbstractGeometry2D* geom)
 {
   SECTION("abstract geometry 2D")
   {
-    const size_t vertId = 2;
+    const usize vertId = 2;
     const Point3D<float32> coord = {0.5f, 0.0f, 2.0f};
 
     // Vertices
@@ -106,7 +106,7 @@ void testGeom2D(AbstractGeometry2D* geom)
       REQUIRE(vertices != nullptr);
       geom->setVertices(vertices);
       REQUIRE(geom->getVertices() == vertices);
-      const size_t numVertices = 10;
+      const usize numVertices = 10;
       geom->resizeVertexList(numVertices);
       REQUIRE(geom->getNumberOfVertices() == numVertices);
 
@@ -119,16 +119,16 @@ void testGeom2D(AbstractGeometry2D* geom)
       auto edges = createEdgeList(geom);
       geom->setEdges(edges);
       REQUIRE(geom->getEdges() == edges);
-      const size_t numEdges = 5;
+      const usize numEdges = 5;
       geom->resizeEdgeList(numEdges);
       REQUIRE(geom->getNumberOfEdges() == numEdges);
-      const size_t edgeId = 3;
-      const size_t verts[2] = {vertId, vertId + 1};
+      const usize edgeId = 3;
+      const usize verts[2] = {vertId, vertId + 1};
       geom->setVertsAtEdge(edgeId, verts);
       Point3D<float32> vert1, vert2;
-      size_t vertsOut[2];
+      usize vertsOut[2];
       geom->getVertsAtEdge(edgeId, vertsOut);
-      for(size_t i = 0; i < 2; i++)
+      for(usize i = 0; i < 2; i++)
       {
         REQUIRE(verts[i] == vertsOut[i]);
       }
@@ -142,7 +142,7 @@ void testGeom3D(AbstractGeometry3D* geom)
 {
   SECTION("abstract geometry 3D")
   {
-    const size_t vertId = 2;
+    const usize vertId = 2;
     const Point3D<float32> coord = {0.5f, 0.0f, 2.0f};
 
     // vertices
@@ -150,7 +150,7 @@ void testGeom3D(AbstractGeometry3D* geom)
       auto vertices = createVertexList(geom);
       geom->setVertices(vertices);
       REQUIRE(geom->getVertices() == vertices);
-      const size_t numVertices = 10;
+      const usize numVertices = 10;
       geom->resizeVertexList(numVertices);
       REQUIRE(geom->getNumberOfVertices() == numVertices);
 
@@ -162,16 +162,16 @@ void testGeom3D(AbstractGeometry3D* geom)
       auto edges = createEdgeList(geom);
       geom->setEdges(edges);
       REQUIRE(geom->getEdges() == edges);
-      const size_t numEdges = 5;
+      const usize numEdges = 5;
       geom->resizeEdgeList(numEdges);
       REQUIRE(geom->getNumberOfEdges() == numEdges);
-      const size_t edgeId = 3;
-      const size_t verts[2] = {vertId, vertId + 1};
+      const usize edgeId = 3;
+      const usize verts[2] = {vertId, vertId + 1};
       geom->setVertsAtEdge(edgeId, verts);
       Point3D<float32> vert1, vert2;
-      size_t vertsOut[2];
+      usize vertsOut[2];
       geom->getVertsAtEdge(edgeId, vertsOut);
-      for(size_t i = 0; i < 2; i++)
+      for(usize i = 0; i < 2; i++)
       {
         REQUIRE(verts[i] == vertsOut[i]);
       }
@@ -188,9 +188,9 @@ void testGeomGrid(AbstractGeometryGrid* geom)
 {
   SECTION("abstract geometry grid")
   {
-    const size_t xDim = 10;
-    const size_t yDim = 150;
-    const size_t zDim = 50;
+    const usize xDim = 10;
+    const usize yDim = 150;
+    const usize zDim = 50;
     const SizeVec3 dims = {xDim, yDim, zDim};
     geom->setDimensions(dims);
     REQUIRE(geom->getDimensions() == dims);

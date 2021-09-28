@@ -60,9 +60,9 @@ public:
 
   /**
    * @brief Returns the number of items in the DataMap.
-   * @return size_t
+   * @return usize
    */
-  size_t getSize() const;
+  usize getSize() const;
 
   /**
    * @brief Attempts to insert the target DataObject into the map.

@@ -114,27 +114,27 @@ public:
 
   /**
    * @brief Returns the number of elements in the DataArray.
-   * @return size_t
+   * @return usize
    */
-  size_t getSize() const
+  usize getSize() const
   {
     return getTupleCount() * getNumComponents();
   }
 
   /**
    * @brief Returns the number of tuples in the DataArray.
-   * @return size_t
+   * @return usize
    */
-  size_t getTupleCount() const
+  usize getTupleCount() const
   {
     return m_DataStore->getTupleCount();
   }
 
   /**
    * @brief Returns the tuple getSize.
-   * @return size_t
+   * @return usize
    */
-  size_t getNumComponents() const
+  usize getNumComponents() const
   {
     return m_DataStore->getNumComponents();
   }
@@ -148,7 +148,7 @@ public:
    * @param index
    * @return reference
    */
-  reference operator[](size_t index)
+  reference operator[](usize index)
   {
     if(m_DataStore == nullptr)
     {
@@ -167,7 +167,7 @@ public:
    * @param index
    * @return const_reference
    */
-  const_reference operator[](size_t index) const
+  const_reference operator[](usize index) const
   {
     if(m_DataStore == nullptr)
     {
@@ -186,7 +186,7 @@ public:
    * @param index
    * @return const_reference
    */
-  const_reference at(size_t index) const
+  const_reference at(usize index) const
   {
     if(m_DataStore == nullptr)
     {

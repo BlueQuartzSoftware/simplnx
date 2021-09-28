@@ -26,7 +26,7 @@ AbstractGeometry2D::AbstractGeometry2D(AbstractGeometry2D&& other) noexcept
 
 AbstractGeometry2D::~AbstractGeometry2D() = default;
 
-void AbstractGeometry2D::resizeVertexList(size_t numVertices)
+void AbstractGeometry2D::resizeVertexList(usize numVertices)
 {
   getVertices()->getDataStore()->resizeTuples(numVertices);
 }
@@ -63,7 +63,7 @@ const AbstractGeometry::SharedEdgeList* AbstractGeometry2D::getEdges() const
   return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
 }
 
-size_t AbstractGeometry2D::getNumberOfEdges() const
+usize AbstractGeometry2D::getNumberOfEdges() const
 {
   auto edges = getEdges();
   if(!edges)
@@ -73,7 +73,7 @@ size_t AbstractGeometry2D::getNumberOfEdges() const
   return edges->getTupleCount();
 }
 
-void AbstractGeometry2D::setVertsAtEdge(size_t edgeId, const size_t verts[2])
+void AbstractGeometry2D::setVertsAtEdge(usize edgeId, const usize verts[2])
 {
   auto edges = getEdges();
   if(!edges)
@@ -84,7 +84,7 @@ void AbstractGeometry2D::setVertsAtEdge(size_t edgeId, const size_t verts[2])
   (*edges)[edgeId * 2 + 1] = verts[1];
 }
 
-void AbstractGeometry2D::getVertsAtEdge(size_t edgeId, size_t verts[2]) const
+void AbstractGeometry2D::getVertsAtEdge(usize edgeId, usize verts[2]) const
 {
   auto edges = getEdges();
   if(!edges)

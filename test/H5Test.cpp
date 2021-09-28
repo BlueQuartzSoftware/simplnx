@@ -56,7 +56,7 @@ fs::path getComplexH5File(const Application& app)
 
 bool equalsf(const FloatVec3& lhs, const FloatVec3& rhs)
 {
-  for(size_t i = 0; i < 3; i++)
+  for(usize i = 0; i < 3; i++)
   {
     float32 diff = std::abs(lhs[i] - rhs[i]);
     if(diff >= 0.0001f)

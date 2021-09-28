@@ -96,9 +96,9 @@ public:
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfElements() const override;
+  usize getNumberOfElements() const override;
 
   /**
    * @brief
@@ -216,28 +216,28 @@ public:
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumXPoints() const override;
+  usize getNumXPoints() const override;
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumYPoints() const override;
+  usize getNumYPoints() const override;
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumZPoints() const override;
+  usize getNumZPoints() const override;
 
   /**
    * @brief
    * @param idx
    * @return complex::Point3D<float32>
    */
-  complex::Point3D<float32> getPlaneCoordsf(size_t idx[3]) const override;
+  complex::Point3D<float32> getPlaneCoordsf(usize idx[3]) const override;
 
   /**
    * @brief
@@ -246,21 +246,21 @@ public:
    * @param z
    * @return complex::Point3D<float32>
    */
-  complex::Point3D<float32> getPlaneCoordsf(size_t x, size_t y, size_t z) const override;
+  complex::Point3D<float32> getPlaneCoordsf(usize x, usize y, usize z) const override;
 
   /**
    * @brief
    * @param idx
    * @return complex::Point3D<float32>
    */
-  complex::Point3D<float32> getPlaneCoordsf(size_t idx) const override;
+  complex::Point3D<float32> getPlaneCoordsf(usize idx) const override;
 
   /**
    * @brief
    * @param idx
    * @return complex::Point3D<float64>
    */
-  complex::Point3D<float64> getPlaneCoords(size_t idx[3]) const override;
+  complex::Point3D<float64> getPlaneCoords(usize idx[3]) const override;
 
   /**
    * @brief
@@ -269,21 +269,21 @@ public:
    * @param z
    * @return complex::Point3D<float64>
    */
-  complex::Point3D<float64> getPlaneCoords(size_t x, size_t y, size_t z) const override;
+  complex::Point3D<float64> getPlaneCoords(usize x, usize y, usize z) const override;
 
   /**
    * @brief
    * @param idx
    * @return complex::Point3D<float64>
    */
-  complex::Point3D<float64> getPlaneCoords(size_t idx) const override;
+  complex::Point3D<float64> getPlaneCoords(usize idx) const override;
 
   /**
    * @brief
    * @param idx
    * @return complex::Point3D<float32>
    */
-  complex::Point3D<float32> getCoordsf(size_t idx[3]) const override;
+  complex::Point3D<float32> getCoordsf(usize idx[3]) const override;
 
   /**
    * @brief
@@ -292,21 +292,21 @@ public:
    * @param z
    * @return complex::Point3D<float32>
    */
-  complex::Point3D<float32> getCoordsf(size_t x, size_t y, size_t z) const override;
+  complex::Point3D<float32> getCoordsf(usize x, usize y, usize z) const override;
 
   /**
    * @brief
    * @param idx
    * @return complex::Point3D<float32>
    */
-  complex::Point3D<float32> getCoordsf(size_t idx) const override;
+  complex::Point3D<float32> getCoordsf(usize idx) const override;
 
   /**
    * @brief
    * @param idx
    * @return complex::Point3D<float64>
    */
-  complex::Point3D<float64> getCoords(size_t idx[3]) const override;
+  complex::Point3D<float64> getCoords(usize idx[3]) const override;
 
   /**
    * @brief
@@ -315,14 +315,14 @@ public:
    * @param z
    * @return complex::Point3D<float64>
    */
-  complex::Point3D<float64> getCoords(size_t x, size_t y, size_t z) const override;
+  complex::Point3D<float64> getCoords(usize x, usize y, usize z) const override;
 
   /**
    * @brief
    * @param idx
    * @return complex::Point3D<float64>
    */
-  complex::Point3D<float64> getCoords(size_t idx) const override;
+  complex::Point3D<float64> getCoords(usize idx) const override;
 
   /**
    * @brief
@@ -330,7 +330,7 @@ public:
    * @param yCoord
    * @param zCoord
    */
-  size_t getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const override;
+  usize getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const override;
 
   /**
    * @brief
@@ -338,7 +338,7 @@ public:
    * @param yCoord
    * @param zCoord
    */
-  size_t getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const override;
+  usize getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const override;
 
   /**
    * @brief
@@ -377,7 +377,7 @@ protected:
    * @param preflight
    * @return StatusCode
    */
-  // StatusCode gatherMetaData(hid_t parentId, size_t volDims, bool preflight);
+  // StatusCode gatherMetaData(hid_t parentId, usize volDims, bool preflight);
 
   /**
    * @brief

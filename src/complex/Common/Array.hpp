@@ -9,12 +9,12 @@
 
 namespace complex
 {
-template <typename T, size_t Dimensions>
+template <typename T, usize Dimensions>
 class Array
 {
 public:
   //========================================= STL INTERFACE COMPATIBILITY =================================
-  using size_type = size_t;
+  using size_type = usize;
   using value_type = T;
   using reference = T&;
   using const_reference = const T&;
@@ -28,7 +28,7 @@ public:
 protected:
   Array()
   {
-    for(size_t i = 0; i < Dimensions; i++)
+    for(usize i = 0; i < Dimensions; i++)
     {
       m_Array[i] = static_cast<T>(0);
     }
@@ -41,7 +41,7 @@ protected:
 
   Array(const std::vector<value_type>& data)
   {
-    for(size_t i = 0; i < Dimensions; i++)
+    for(usize i = 0; i < Dimensions; i++)
     {
       m_Array[i] = data[i];
     }
@@ -49,7 +49,7 @@ protected:
 
   Array(const value_type* data)
   {
-    for(size_t i = 0; i < Dimensions; i++)
+    for(usize i = 0; i < Dimensions; i++)
     {
       m_Array[i] = data[i];
     }
@@ -103,7 +103,7 @@ protected:
   template <typename InType>
   Array(const InType& data)
   {
-    for(size_t i = 0; i < Dimensions; i++)
+    for(usize i = 0; i < Dimensions; i++)
     {
       m_Array[i] = data[i];
     }
@@ -257,7 +257,7 @@ protected:
    * @param i
    * @param value
    */
-  void setValue(size_t i, value_type value)
+  void setValue(usize i, value_type value)
   {
     m_Array[i] = value;
   }

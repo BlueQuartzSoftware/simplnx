@@ -67,7 +67,7 @@ public:
    * @brief
    * @param newNumVertices
    */
-  void resizeVertexList(size_t newNumVertices);
+  void resizeVertexList(usize newNumVertices);
 
   /**
    * @brief
@@ -92,26 +92,26 @@ public:
    * @param vertId
    * @param coords
    */
-  void setCoords(size_t vertId, const complex::Point3D<float32>& coords);
+  void setCoords(usize vertId, const complex::Point3D<float32>& coords);
 
   /**
    * @brief
    * @param vertId
    * @return Point3D<float32>
    */
-  complex::Point3D<float32> getCoords(size_t vertId) const;
+  complex::Point3D<float32> getCoords(usize vertId) const;
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfVertices() const;
+  usize getNumberOfVertices() const;
 
   /**
    * @brief
    * @param newNumEdges
    */
-  void resizeEdgeList(size_t newNumEdges);
+  void resizeEdgeList(usize newNumEdges);
 
   /**
    * @brief
@@ -136,14 +136,14 @@ public:
    * @param edgeId
    * @param verts
    */
-  void setVertsAtEdge(size_t edgeId, size_t verts[2]);
+  void setVertsAtEdge(usize edgeId, usize verts[2]);
 
   /**
    * @brief
    * @param edgeId
    * @param verts
    */
-  void getVertsAtEdge(size_t edgeId, size_t verts[2]);
+  void getVertsAtEdge(usize edgeId, usize verts[2]);
 
   /**
    * @brief
@@ -151,13 +151,13 @@ public:
    * @param vert1
    * @param vert2
    */
-  void getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const;
+  void getVertCoordsAtEdge(usize edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const;
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfEdges() const;
+  usize getNumberOfEdges() const;
 
   /**
    * @brief
@@ -166,9 +166,9 @@ public:
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfElements() const override;
+  usize getNumberOfElements() const override;
 
   /**
    * @brief

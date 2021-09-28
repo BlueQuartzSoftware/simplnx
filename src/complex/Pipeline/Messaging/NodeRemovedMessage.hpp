@@ -1,8 +1,7 @@
 #pragma once
 
-#include <cstddef>
-
-#include "AbstractPipelineMessage.hpp"
+#include "complex/Common/Types.hpp"
+#include "complex/Pipeline/Messaging/AbstractPipelineMessage.hpp"
 
 namespace complex
 {
@@ -23,17 +22,17 @@ public:
    * @param pipeline
    * @param index
    */
-  NodeRemovedMessage(Pipeline* pipeline, size_t index);
+  NodeRemovedMessage(Pipeline* pipeline, usize index);
 
   virtual ~NodeRemovedMessage();
 
   /**
    * @brief Returns the index at which the pipeline node was removed.
-   * @return size_t
+   * @return usize
    */
-  size_t getIndex() const;
+  usize getIndex() const;
 
 private:
-  size_t m_Index;
+  usize m_Index;
 };
 } // namespace complex

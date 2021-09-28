@@ -53,7 +53,7 @@ DataStructure::~DataStructure()
   m_IsValid = false;
 }
 
-size_t DataStructure::size() const
+usize DataStructure::size() const
 {
   return m_DataObjects.size();
 }
@@ -72,7 +72,7 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
     const BaseGroup* parent = dynamic_cast<const BaseGroup*>(data);
     pathIds.push_back(data->getId());
 
-    for(size_t i = 1; i < path.getLength(); i++)
+    for(usize i = 1; i < path.getLength(); i++)
     {
       std::string name = path[i];
       data = (*parent)[name];
@@ -113,7 +113,7 @@ DataObject* DataStructure::getData(const std::optional<DataObject::IdType>& id)
   return iter->second.lock().get();
 }
 
-DataObject* traversePath(DataObject* obj, const DataPath& path, size_t index)
+DataObject* traversePath(DataObject* obj, const DataPath& path, usize index)
 {
   if(path.getLength() == index)
   {

@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "complex/Common/Types.hpp"
 #include "complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
 
 namespace complex
@@ -39,15 +40,15 @@ public:
    */
   const complex::DataStructure& getDataStructure() const;
 
-  size_t getDataAddedCount() const;
-  size_t getDataRemovedCount() const;
-  size_t getDataRenamedCount() const;
-  size_t getDataReparentedCount() const;
+  usize getDataAddedCount() const;
+  usize getDataRemovedCount() const;
+  usize getDataRenamedCount() const;
+  usize getDataReparentedCount() const;
 
 private:
   complex::DataStructure& m_DataStructure;
-  size_t m_AddedCount = 0;
-  size_t m_RemovedCount = 0;
-  size_t m_RenamedCount = 0;
-  size_t m_ReparentedCount = 0;
+  usize m_AddedCount = 0;
+  usize m_RemovedCount = 0;
+  usize m_RenamedCount = 0;
+  usize m_ReparentedCount = 0;
 };

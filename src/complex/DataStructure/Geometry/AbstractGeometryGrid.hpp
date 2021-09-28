@@ -30,28 +30,28 @@ public:
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  virtual size_t getNumXPoints() const = 0;
+  virtual usize getNumXPoints() const = 0;
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  virtual size_t getNumYPoints() const = 0;
+  virtual usize getNumYPoints() const = 0;
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  virtual size_t getNumZPoints() const = 0;
+  virtual usize getNumZPoints() const = 0;
 
   /**
    * @brief
    * @param idx
    * @return complex::Point3D<float32>
    */
-  virtual complex::Point3D<float32> getPlaneCoordsf(size_t idx[3]) const = 0;
+  virtual complex::Point3D<float32> getPlaneCoordsf(usize idx[3]) const = 0;
 
   /**
    * @brief
@@ -60,21 +60,21 @@ public:
    * @param z
    * @return complex::Point3D<float32>
    */
-  virtual complex::Point3D<float32> getPlaneCoordsf(size_t x, size_t y, size_t z) const = 0;
+  virtual complex::Point3D<float32> getPlaneCoordsf(usize x, usize y, usize z) const = 0;
 
   /**
    * @brief
    * @param idx
    * @return complex::Point3D<float32>
    */
-  virtual complex::Point3D<float32> getPlaneCoordsf(size_t idx) const = 0;
+  virtual complex::Point3D<float32> getPlaneCoordsf(usize idx) const = 0;
 
   /**
    * @brief
    * @param idx
    * @return complex::Point3D<float64>
    */
-  virtual complex::Point3D<float64> getPlaneCoords(size_t idx[3]) const = 0;
+  virtual complex::Point3D<float64> getPlaneCoords(usize idx[3]) const = 0;
 
   /**
    * @brief
@@ -83,21 +83,21 @@ public:
    * @param z
    * @return complex::Point3D<float64>
    */
-  virtual complex::Point3D<float64> getPlaneCoords(size_t x, size_t y, size_t z) const = 0;
+  virtual complex::Point3D<float64> getPlaneCoords(usize x, usize y, usize z) const = 0;
 
   /**
    * @brief
    * @param idx
    * @return complex::Point3D<float64>
    */
-  virtual complex::Point3D<float64> getPlaneCoords(size_t idx) const = 0;
+  virtual complex::Point3D<float64> getPlaneCoords(usize idx) const = 0;
 
   /**
    * @brief
    * @param idx
    * @return complex::Point3D<float32>
    */
-  virtual complex::Point3D<float32> getCoordsf(size_t idx[3]) const = 0;
+  virtual complex::Point3D<float32> getCoordsf(usize idx[3]) const = 0;
 
   /**
    * @brief
@@ -106,21 +106,21 @@ public:
    * @param z
    * @preturn complex::Point3D<float32>
    */
-  virtual complex::Point3D<float32> getCoordsf(size_t x, size_t y, size_t z) const = 0;
+  virtual complex::Point3D<float32> getCoordsf(usize x, usize y, usize z) const = 0;
 
   /**
    * @brief
    * @param idx
    * @return
    */
-  virtual complex::Point3D<float32> getCoordsf(size_t idx) const = 0;
+  virtual complex::Point3D<float32> getCoordsf(usize idx) const = 0;
 
   /**
    * @brief
    * @param idx
    * @return complex::Point3D<float64>
    */
-  virtual complex::Point3D<float64> getCoords(size_t idx[3]) const = 0;
+  virtual complex::Point3D<float64> getCoords(usize idx[3]) const = 0;
 
   /**
    * @brief
@@ -129,32 +129,32 @@ public:
    * @param z
    * @return complex::Point3D<float64>
    */
-  virtual complex::Point3D<float64> getCoords(size_t x, size_t y, size_t z) const = 0;
+  virtual complex::Point3D<float64> getCoords(usize x, usize y, usize z) const = 0;
 
   /**
    * @brief
    * @param idx
    * @return complex::Point3D<float64>
    */
-  virtual complex::Point3D<float64> getCoords(size_t idx) const = 0;
+  virtual complex::Point3D<float64> getCoords(usize idx) const = 0;
 
   /**
    * @brief
    * @param xCoord
    * @param yCoord
    * @param zCoord
-   * @return size_t
+   * @return usize
    */
-  virtual size_t getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const = 0;
+  virtual usize getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const = 0;
 
   /**
    * @brief
    * @param xCoord
    * @param yCoord
    * @param zCoord
-   * @return size_t
+   * @return usize
    */
-  virtual size_t getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const = 0;
+  virtual usize getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const = 0;
 
 protected:
   /**

@@ -14,7 +14,7 @@ HexahedralGeom::HexahedralGeom(DataStructure& ds, const std::string& name)
 {
 }
 
-HexahedralGeom::HexahedralGeom(DataStructure& ds, const std::string& name, size_t numHexas, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
+HexahedralGeom::HexahedralGeom(DataStructure& ds, const std::string& name, usize numHexas, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
 : AbstractGeometry3D(ds, name)
 {
 }
@@ -76,7 +76,7 @@ std::string HexahedralGeom::getGeometryTypeAsString() const
   return "HexahedralGeom";
 }
 
-void HexahedralGeom::resizeHexList(size_t numHexas)
+void HexahedralGeom::resizeHexList(usize numHexas)
 {
   getHexahedrals()->getDataStore()->resizeTuples(numHexas);
 }
@@ -101,35 +101,35 @@ const AbstractGeometry::SharedHexList* HexahedralGeom::getHexahedrals() const
   return dynamic_cast<const SharedHexList*>(getDataStructure()->getData(m_HexListId));
 }
 
-void HexahedralGeom::setVertsAtHex(size_t hexId, size_t verts[8])
+void HexahedralGeom::setVertsAtHex(usize hexId, usize verts[8])
 {
   auto hex = dynamic_cast<SharedHexList*>(getDataStructure()->getData(m_HexListId));
   if(!hex)
   {
     return;
   }
-  size_t index = hexId * 8;
-  for(size_t i = 0; i < 8; i++)
+  usize index = hexId * 8;
+  for(usize i = 0; i < 8; i++)
   {
     (*hex)[index + i] = verts[i];
   }
 }
 
-void HexahedralGeom::getVertsAtHex(size_t hexId, size_t verts[8]) const
+void HexahedralGeom::getVertsAtHex(usize hexId, usize verts[8]) const
 {
   auto hex = getHexahedrals();
   if(!hex)
   {
     return;
   }
-  size_t index = hexId * 8;
-  for(size_t i = 0; i < 8; i++)
+  usize index = hexId * 8;
+  for(usize i = 0; i < 8; i++)
   {
     verts[i] = (*hex)[index + i];
   }
 }
 
-void HexahedralGeom::getVertCoordsAtHex(size_t hexId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4,
+void HexahedralGeom::getVertCoordsAtHex(usize hexId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4,
                                         complex::Point3D<float32>& vert5, complex::Point3D<float32>& vert6, complex::Point3D<float32>& vert7, complex::Point3D<float32>& vert8) const
 {
   if(!getHexahedrals())
@@ -141,7 +141,7 @@ void HexahedralGeom::getVertCoordsAtHex(size_t hexId, complex::Point3D<float32>&
   {
     return;
   }
-  size_t vertIds[8];
+  usize vertIds[8];
   getVertsAtHex(hexId, vertIds);
 
   vert1 = Point3D<float32>(&(*vertices)[vertIds[0]]);
@@ -154,7 +154,7 @@ void HexahedralGeom::getVertCoordsAtHex(size_t hexId, complex::Point3D<float32>&
   vert8 = Point3D<float32>(&(*vertices)[vertIds[7]]);
 }
 
-size_t HexahedralGeom::getNumberOfHexas() const
+usize HexahedralGeom::getNumberOfHexas() const
 {
   auto hexList = dynamic_cast<const SharedHexList*>(getDataStructure()->getData(m_HexListId));
   if(!hexList)
@@ -178,7 +178,7 @@ void HexahedralGeom::initializeWithZeros()
   }
 }
 
-size_t HexahedralGeom::getNumberOfElements() const
+usize HexahedralGeom::getNumberOfElements() const
 {
   auto elements = dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_HexSizesId));
   if(!elements)
@@ -411,7 +411,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findUnsharedFaces()
   return 1;
 }
 
-void HexahedralGeom::resizeQuadList(size_t numQuads)
+void HexahedralGeom::resizeQuadList(usize numQuads)
 {
   getQuads()->getDataStore()->resizeTuples(numQuads);
 }
@@ -431,7 +431,7 @@ const AbstractGeometry::SharedQuadList* HexahedralGeom::getQuads() const
   return getFaces();
 }
 
-void HexahedralGeom::setVertsAtQuad(size_t quadId, size_t verts[4])
+void HexahedralGeom::setVertsAtQuad(usize quadId, usize verts[4])
 {
   auto quads = getQuads();
   if(!quads)
@@ -445,27 +445,27 @@ void HexahedralGeom::setVertsAtQuad(size_t quadId, size_t verts[4])
     return;
   }
 
-  for(size_t i = 0; i < 4; i++)
+  for(usize i = 0; i < 4; i++)
   {
     verts[i] = (*quads)[quadId + i];
   }
 }
 
-void HexahedralGeom::getVertsAtQuad(size_t quadId, size_t verts[4]) const
+void HexahedralGeom::getVertsAtQuad(usize quadId, usize verts[4]) const
 {
   auto quads = getQuads();
   if(!quads)
   {
     return;
   }
-  size_t index = quadId * 4;
-  for(size_t i = 0; i < 4; i++)
+  usize index = quadId * 4;
+  for(usize i = 0; i < 4; i++)
   {
     verts[i] = quads->at(index + i);
   }
 }
 
-void HexahedralGeom::getVertCoordsAtQuad(size_t quadId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const
+void HexahedralGeom::getVertCoordsAtQuad(usize quadId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const
 {
   if(!getQuads())
   {
@@ -477,9 +477,9 @@ void HexahedralGeom::getVertCoordsAtQuad(size_t quadId, complex::Point3D<float32
     return;
   }
 
-  size_t verts[4];
+  usize verts[4];
   getVertsAtQuad(quadId, verts);
-  for(size_t i = 0; i < 3; i++)
+  for(usize i = 0; i < 3; i++)
   {
     vert1[i] = vertices->at(verts[0] * 3 + i);
     vert2[i] = vertices->at(verts[1] * 3 + i);
@@ -488,7 +488,7 @@ void HexahedralGeom::getVertCoordsAtQuad(size_t quadId, complex::Point3D<float32
   }
 }
 
-size_t HexahedralGeom::getNumberOfQuads() const
+usize HexahedralGeom::getNumberOfQuads() const
 {
   return getNumberOfFaces();
 }

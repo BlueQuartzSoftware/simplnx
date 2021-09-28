@@ -22,7 +22,7 @@ public:
    * @brief Resizes the vertex list with the new number of vertices.
    * @param newNumVertices
    */
-  void resizeVertexList(size_t newNumVertices);
+  void resizeVertexList(usize newNumVertices);
 
   /**
    * @brief Sets a new SharedVertexList, replacing any previous list.
@@ -49,26 +49,26 @@ public:
    * @param vertId
    * @return Point3D<float32>
    */
-  virtual Point3D<float32> getCoords(size_t vertId) const = 0;
+  virtual Point3D<float32> getCoords(usize vertId) const = 0;
 
   /**
    * @brief Sets the coordinates for the specified vertex ID.
    * @param vertId
    * @param coords
    */
-  virtual void setCoords(size_t vertId, const Point3D<float32>& coords) = 0;
+  virtual void setCoords(usize vertId, const Point3D<float32>& coords) = 0;
 
   /**
    * @brief Returns the number of vertices in the geometry.
-   * @return size_t
+   * @return usize
    */
-  virtual size_t getNumberOfVertices() const = 0;
+  virtual usize getNumberOfVertices() const = 0;
 
   /**
    * @brief Resizes the edge list to match the specified number of edges.
    * @param newNumEdges
    */
-  virtual void resizeEdgeList(size_t newNumEdges) = 0;
+  virtual void resizeEdgeList(usize newNumEdges) = 0;
 
   /**
    * @brief Returns a pointer to the SharedEdgeList. Returns nullptr if no
@@ -90,7 +90,7 @@ public:
    * @param edgeId
    * @param verts
    */
-  void setVertsAtEdge(size_t edgeId, const size_t verts[2]);
+  void setVertsAtEdge(usize edgeId, const usize verts[2]);
 
   /**
    * @brief Returns the vertices that make up the specified edge by reference.
@@ -98,7 +98,7 @@ public:
    * @param edgeId
    * @param verts
    */
-  void getVertsAtEdge(size_t edgeId, size_t verts[2]) const;
+  void getVertsAtEdge(usize edgeId, usize verts[2]) const;
 
   /**
    * @brief Returns the vertex coordinates for a specified edge by reference.
@@ -107,14 +107,14 @@ public:
    * @param vert1
    * @param vert2
    */
-  virtual void getVertCoordsAtEdge(size_t edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const = 0;
+  virtual void getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const = 0;
 
   /**
    * @brief Returns the number of edges in the geometry. Returns 0 if no edge
    * list could be found.
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfEdges() const;
+  usize getNumberOfEdges() const;
 
   /**
    * @brief

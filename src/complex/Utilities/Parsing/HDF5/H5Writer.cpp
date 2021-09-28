@@ -22,7 +22,7 @@ H5::ErrorType H5::Writer::Generic::writeStringAttribute(H5::IdType locationID, c
       hid_t attributeType = H5Tcopy(H5T_C_S1);
       if(attributeType >= 0)
       {
-        size_t attributeSize = data.size(); /* extra null term */
+        usize attributeSize = data.size(); /* extra null term */
         herr_t error = H5Tset_size(attributeType, attributeSize);
         if(error < 0)
         {

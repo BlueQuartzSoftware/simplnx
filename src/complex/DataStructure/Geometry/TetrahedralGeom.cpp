@@ -14,7 +14,7 @@ TetrahedralGeom::TetrahedralGeom(DataStructure& ds, const std::string& name)
 {
 }
 
-TetrahedralGeom::TetrahedralGeom(DataStructure& ds, const std::string& name, size_t numTets, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
+TetrahedralGeom::TetrahedralGeom(DataStructure& ds, const std::string& name, usize numTets, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
 : AbstractGeometry3D(ds, name)
 {
 }
@@ -80,7 +80,7 @@ std::string TetrahedralGeom::getGeometryTypeAsString() const
   return "TetrahedralGeom";
 }
 
-void TetrahedralGeom::resizeTriList(size_t numTris)
+void TetrahedralGeom::resizeTriList(usize numTris)
 {
   getTriangles()->getDataStore()->resizeTuples(numTris);
 }
@@ -105,7 +105,7 @@ const AbstractGeometry::SharedTriList* TetrahedralGeom::getTriangles() const
   return dynamic_cast<const SharedTriList*>(getDataStructure()->getData(m_TriListId));
 }
 
-void TetrahedralGeom::setVertsAtTri(size_t triId, size_t verts[3])
+void TetrahedralGeom::setVertsAtTri(usize triId, usize verts[3])
 {
   auto triangles = getTriangles();
   if(!triangles)
@@ -113,13 +113,13 @@ void TetrahedralGeom::setVertsAtTri(size_t triId, size_t verts[3])
     return;
   }
 
-  for(size_t i = 0; i < 3; i++)
+  for(usize i = 0; i < 3; i++)
   {
     (*triangles)[triId * 3 + i] = verts[i];
   }
 }
 
-void TetrahedralGeom::getVertsAtTri(size_t triId, size_t verts[3]) const
+void TetrahedralGeom::getVertsAtTri(usize triId, usize verts[3]) const
 {
   auto triangles = getTriangles();
   if(!triangles)
@@ -127,18 +127,18 @@ void TetrahedralGeom::getVertsAtTri(size_t triId, size_t verts[3]) const
     return;
   }
 
-  for(size_t i = 0; i < 3; i++)
+  for(usize i = 0; i < 3; i++)
   {
     verts[i] = triangles->at(triId * 3 + i);
   }
 }
 
-size_t TetrahedralGeom::getNumberOfTris() const
+usize TetrahedralGeom::getNumberOfTris() const
 {
   return getTriangles()->getTupleCount();
 }
 
-void TetrahedralGeom::resizeTetList(size_t numTets)
+void TetrahedralGeom::resizeTetList(usize numTets)
 {
   getTriangles()->getDataStore()->resizeTuples(numTets);
 }
@@ -163,33 +163,33 @@ const AbstractGeometry::SharedTetList* TetrahedralGeom::getTetrahedra() const
   return dynamic_cast<const SharedTetList*>(getDataStructure()->getData(m_TetListId));
 }
 
-void TetrahedralGeom::setVertsAtTet(size_t tetId, size_t verts[4])
+void TetrahedralGeom::setVertsAtTet(usize tetId, usize verts[4])
 {
   auto tets = getTetrahedra();
   if(!tets)
   {
     return;
   }
-  for(size_t i = 0; i < 4; i++)
+  for(usize i = 0; i < 4; i++)
   {
     (*tets)[tetId * 4 + i] = verts[i];
   }
 }
 
-void TetrahedralGeom::getVertsAtTet(size_t tetId, size_t verts[4]) const
+void TetrahedralGeom::getVertsAtTet(usize tetId, usize verts[4]) const
 {
   auto tets = getTetrahedra();
   if(!tets)
   {
     return;
   }
-  for(size_t i = 0; i < 4; i++)
+  for(usize i = 0; i < 4; i++)
   {
     verts[i] = (*tets)[tetId * 4 + i];
   }
 }
 
-void TetrahedralGeom::getVertCoordsAtTet(size_t tetId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const
+void TetrahedralGeom::getVertCoordsAtTet(usize tetId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const
 {
   if(!getTetrahedra())
   {
@@ -200,7 +200,7 @@ void TetrahedralGeom::getVertCoordsAtTet(size_t tetId, complex::Point3D<float32>
   {
     return;
   }
-  size_t verts[4];
+  usize verts[4];
   getVertsAtTet(tetId, verts);
   vert1 = getCoords(verts[0]);
   vert2 = getCoords(verts[1]);
@@ -208,7 +208,7 @@ void TetrahedralGeom::getVertCoordsAtTet(size_t tetId, complex::Point3D<float32>
   vert4 = getCoords(verts[3]);
 }
 
-size_t TetrahedralGeom::getNumberOfTets() const
+usize TetrahedralGeom::getNumberOfTets() const
 {
   auto tets = getTetrahedra();
   if(!tets)
@@ -232,7 +232,7 @@ void TetrahedralGeom::initializeWithZeros()
   }
 }
 
-size_t TetrahedralGeom::getNumberOfElements() const
+usize TetrahedralGeom::getNumberOfElements() const
 {
   return getNumberOfTets();
 }

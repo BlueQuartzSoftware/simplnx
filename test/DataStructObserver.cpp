@@ -43,22 +43,22 @@ const complex::DataStructure& DataStructObserver::getDataStructure() const
   return m_DataStructure;
 }
 
-size_t DataStructObserver::getDataAddedCount() const
+usize DataStructObserver::getDataAddedCount() const
 {
   return m_AddedCount;
 }
 
-size_t DataStructObserver::getDataRemovedCount() const
+usize DataStructObserver::getDataRemovedCount() const
 {
   return m_RemovedCount;
 }
 
-size_t DataStructObserver::getDataRenamedCount() const
+usize DataStructObserver::getDataRenamedCount() const
 {
   return m_RenamedCount;
 }
 
-size_t DataStructObserver::getDataReparentedCount() const
+usize DataStructObserver::getDataReparentedCount() const
 {
   return m_ReparentedCount;
 }

@@ -67,7 +67,7 @@ public:
    * @brief
    * @param numQuads
    */
-  void resizeQuadList(size_t numQuads);
+  void resizeQuadList(usize numQuads);
 
   /**
    * @brief
@@ -92,14 +92,14 @@ public:
    * @param quadId
    * @param verts
    */
-  void setVertsAtQuad(size_t quadId, size_t verts[4]);
+  void setVertsAtQuad(usize quadId, usize verts[4]);
 
   /**
    * @brief
    * @param quadId
    * @param verts
    */
-  void getVertsAtQuad(size_t quadId, size_t verts[4]) const;
+  void getVertsAtQuad(usize quadId, usize verts[4]) const;
 
   /**
    * @brief
@@ -109,14 +109,14 @@ public:
    * @param vert3
    * @param vert4
    */
-  void getVertCoordsAtQuad(size_t quadId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const;
+  void getVertCoordsAtQuad(usize quadId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const;
 
   /**
    * @brief Returns the number of quads in the geometry. If the quad list has
    * not been set, this method returns 0.
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfQuads() const;
+  usize getNumberOfQuads() const;
 
   /**
    * @brief
@@ -125,9 +125,9 @@ public:
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfElements() const override;
+  usize getNumberOfElements() const override;
 
   /**
    * @brief
@@ -229,26 +229,26 @@ public:
    * @param vertId
    * @param Point3D<float32>
    */
-  void setCoords(size_t vertId, const Point3D<float32>& coord) override;
+  void setCoords(usize vertId, const Point3D<float32>& coord) override;
 
   /**
    * @brief
    * @param vertId
    * @return Point3D<float32>
    */
-  Point3D<float32> getCoords(size_t vertId) const override;
+  Point3D<float32> getCoords(usize vertId) const override;
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfVertices() const override;
+  usize getNumberOfVertices() const override;
 
   /**
    * @brief
    * @param numEdges
    */
-  void resizeEdgeList(size_t numEdges) override;
+  void resizeEdgeList(usize numEdges) override;
 
   /**
    * @brief
@@ -256,7 +256,7 @@ public:
    * @param vert1
    * @param vert2
    */
-  void getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const override;
+  void getVertCoordsAtEdge(usize edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const override;
 
   /**
    * @brief
@@ -308,7 +308,7 @@ protected:
    * @param vertices
    * @param allocate
    */
-  QuadGeom(DataStructure& ds, const std::string& name, size_t numQuads, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
+  QuadGeom(DataStructure& ds, const std::string& name, usize numQuads, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
 
   /**
    * @brief

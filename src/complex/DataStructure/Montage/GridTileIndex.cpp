@@ -31,17 +31,17 @@ GridTileIndex::GridTileIndex(GridTileIndex&& other) noexcept
 
 GridTileIndex::~GridTileIndex() = default;
 
-size_t GridTileIndex::getRow() const
+usize GridTileIndex::getRow() const
 {
   return m_Pos[1];
 }
 
-size_t GridTileIndex::getCol() const
+usize GridTileIndex::getCol() const
 {
   return m_Pos[0];
 }
 
-size_t GridTileIndex::getDepth() const
+usize GridTileIndex::getDepth() const
 {
   return m_Pos[2];
 }

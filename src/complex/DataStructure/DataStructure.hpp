@@ -73,9 +73,9 @@ public:
 
   /**
    * @brief Returns the number of unique DataObjects in the DataStructure.
-   * @return size_t
+   * @return usize
    */
-  size_t size() const;
+  usize size() const;
 
   /**
    * @brief Returns the IdType for the DataObject found at the specified DataPath. The

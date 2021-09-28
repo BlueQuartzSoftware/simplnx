@@ -14,7 +14,7 @@ VertexGeom::VertexGeom(DataStructure& ds, const std::string& name)
 {
 }
 
-VertexGeom::VertexGeom(DataStructure& ds, const std::string& name, size_t numVertices, bool allocate)
+VertexGeom::VertexGeom(DataStructure& ds, const std::string& name, usize numVertices, bool allocate)
 : AbstractGeometry(ds, name)
 {
 }
@@ -74,7 +74,7 @@ void VertexGeom::initializeWithZeros()
 {
 }
 
-void VertexGeom::resizeVertexList(size_t newNumVertices)
+void VertexGeom::resizeVertexList(usize newNumVertices)
 {
   getVertices()->getDataStore()->resizeTuples(newNumVertices);
 }
@@ -99,37 +99,37 @@ const AbstractGeometry::SharedVertexList* VertexGeom::getVertices() const
   return dynamic_cast<const SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
 }
 
-Point3D<float32> VertexGeom::getCoords(size_t vertId) const
+Point3D<float32> VertexGeom::getCoords(usize vertId) const
 {
   auto vertices = getVertices();
   if(!vertices)
   {
     return {};
   }
-  const size_t offset = vertId * 3;
+  const usize offset = vertId * 3;
   Point3D<float32> coords;
-  for(size_t i = 0; i < 3; i++)
+  for(usize i = 0; i < 3; i++)
   {
     coords[i] = (*vertices)[offset + i];
   }
   return coords;
 }
 
-void VertexGeom::setCoords(size_t vertId, const Point3D<float32>& coords)
+void VertexGeom::setCoords(usize vertId, const Point3D<float32>& coords)
 {
   auto vertices = getVertices();
   if(!vertices)
   {
     return;
   }
-  const size_t offset = vertId * 3;
-  for(size_t i = 0; i < 3; i++)
+  const usize offset = vertId * 3;
+  for(usize i = 0; i < 3; i++)
   {
     (*vertices)[offset + i] = coords[i];
   }
 }
 
-size_t VertexGeom::getNumberOfVertices() const
+usize VertexGeom::getNumberOfVertices() const
 {
   auto vertices = getVertices();
   if(!vertices)
@@ -139,7 +139,7 @@ size_t VertexGeom::getNumberOfVertices() const
   return vertices->getId();
 }
 
-size_t VertexGeom::getNumberOfElements() const
+usize VertexGeom::getNumberOfElements() const
 {
   return getNumberOfVertices();
 }

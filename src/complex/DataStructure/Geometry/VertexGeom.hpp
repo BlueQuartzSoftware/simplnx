@@ -72,7 +72,7 @@ public:
    * @brief Resizes the vertex list to the target getSize.
    * @param newNumVertices
    */
-  void resizeVertexList(size_t newNumVertices);
+  void resizeVertexList(usize newNumVertices);
 
   /**
    * @brief Sets the SharedVertexList
@@ -96,26 +96,26 @@ public:
    * @brief Gets the coordinates at the target vertex ID.
    * @param vertId
    */
-  Point3D<float32> getCoords(size_t vertId) const;
+  Point3D<float32> getCoords(usize vertId) const;
 
   /**
    * @brief Sets the coordinates for the specified vertex ID.
    * @param vertId
    * @param coords
    */
-  void setCoords(size_t vertId, const Point3D<float32>& coords);
+  void setCoords(usize vertId, const Point3D<float32>& coords);
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfVertices() const;
+  usize getNumberOfVertices() const;
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfElements() const override;
+  usize getNumberOfElements() const override;
 
   /**
    * @brief
@@ -256,7 +256,7 @@ protected:
    * @param numVertices
    * @param allocate
    */
-  VertexGeom(DataStructure& ds, const std::string& name, size_t numVertices, bool allocate);
+  VertexGeom(DataStructure& ds, const std::string& name, usize numVertices, bool allocate);
 
   /**
    * @brief
