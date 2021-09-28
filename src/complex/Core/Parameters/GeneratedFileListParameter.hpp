@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Core/Parameters/utils/FilePathGenerator.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Filter/ValueParameter.hpp"
 #include "complex/complex_export.hpp"
@@ -11,11 +12,7 @@ namespace complex
 class COMPLEX_EXPORT GeneratedFileListParameter : public ValueParameter
 {
 public:
-  enum class Ordering : uint32
-  {
-    LowToHigh = 0,
-    HighToLow = 1
-  };
+  using Ordering = FilePathGenerator::Ordering;
 
   /**
    * @brief This struct holds all of the data necessary to generate a list of file paths.

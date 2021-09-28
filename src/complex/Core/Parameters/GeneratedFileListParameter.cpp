@@ -152,11 +152,9 @@ Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
   {
     return {nonstd::make_unexpected(std::vector<Error>{{-1, "ordering must be ZERO (0: Low To High) or ONE (1: High To Low)"}})};
   }
-  bool missingFiles = false;
   // Generate the file lsit
-  std::vector<std::string> fileList =
-      FilePathGenerator::GenerateFileList(value.startIndex, value.endIndex, value.incrementIndex, missingFiles, (value.ordering == complex::GeneratedFileListParameter::Ordering::LowToHigh),
-                                          value.inputPath, value.filePrefix, value.fileSuffix, value.fileExtension, value.paddingDigits);
+  auto&& [fileList, missingFiles] = FilePathGenerator::GenerateFileList(value.startIndex, value.endIndex, value.incrementIndex, value.ordering, value.inputPath, value.filePrefix, value.fileSuffix,
+                                                                        value.fileExtension, value.paddingDigits);
   // Validate that they all exist
   for(auto& currentFilePath : fileList)
   {

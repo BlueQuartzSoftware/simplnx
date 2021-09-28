@@ -22,10 +22,8 @@ TEST_CASE("FilePathGenerator")
   value.inputPath = fmt::format("{}/src/complex/Core/Filters/", unit_test::k_ComplexSourceDir.view());
   value.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
 
-  bool missingFiles = false;
-  bool stackLowToHigh = value.ordering == GeneratedFileListParameter::Ordering::LowToHigh;
   // Generate the file list but do *NOT* validate the paths. this is a test after all
-  std::vector<std::string> fileList = FilePathGenerator::GenerateFileList(value.startIndex, value.endIndex, value.incrementIndex, missingFiles, stackLowToHigh, value.inputPath, value.filePrefix,
-                                                                          value.fileSuffix, value.fileExtension, value.paddingDigits);
+  auto&& [fileList, missingFiles] = FilePathGenerator::GenerateFileList(value.startIndex, value.endIndex, value.incrementIndex, value.ordering, value.inputPath, value.filePrefix, value.fileSuffix,
+                                                                        value.fileExtension, value.paddingDigits);
   REQUIRE(fileList.size() == 2);
 }
