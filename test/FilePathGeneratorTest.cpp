@@ -1,4 +1,3 @@
-#include "complex/Core/Parameters/utils/FilePathGenerator.hpp"
 #include "complex/Core/Parameters/GeneratedFileListParameter.hpp"
 
 #include "complex/unit_test/complex_test_dirs.h"
@@ -23,7 +22,7 @@ TEST_CASE("FilePathGenerator")
   value.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
 
   // Generate the file list but do *NOT* validate the paths. this is a test after all
-  auto&& [fileList, missingFiles] = FilePathGenerator::GenerateFileList(value.startIndex, value.endIndex, value.incrementIndex, value.ordering, value.inputPath, value.filePrefix, value.fileSuffix,
-                                                                        value.fileExtension, value.paddingDigits);
+
+  auto&& [fileList, missingFiles] = value.generate();
   REQUIRE(fileList.size() == 2);
 }

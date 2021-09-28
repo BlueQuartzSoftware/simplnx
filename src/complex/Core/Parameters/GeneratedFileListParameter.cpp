@@ -1,7 +1,6 @@
 #include "GeneratedFileListParameter.hpp"
 
 #include "complex/Common/StringLiteral.hpp"
-#include "complex/Core/Parameters/utils/FilePathGenerator.hpp"
 
 #include <filesystem>
 #include <type_traits>
@@ -153,8 +152,7 @@ Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
     return {nonstd::make_unexpected(std::vector<Error>{{-1, "ordering must be ZERO (0: Low To High) or ONE (1: High To Low)"}})};
   }
   // Generate the file lsit
-  auto&& [fileList, missingFiles] = FilePathGenerator::GenerateFileList(value.startIndex, value.endIndex, value.incrementIndex, value.ordering, value.inputPath, value.filePrefix, value.fileSuffix,
-                                                                        value.fileExtension, value.paddingDigits);
+  auto&& [fileList, missingFiles] = value.generate();
   // Validate that they all exist
   for(auto& currentFilePath : fileList)
   {
