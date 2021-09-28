@@ -143,8 +143,6 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.hpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterList.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/utils/FilePathGenerator.hpp
-
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/EdgeGeomFactory.hpp
@@ -246,6 +244,7 @@ set(COMPLEX_HDRS
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
 
+  ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
@@ -262,8 +261,6 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Core/Application.cpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.cpp
   ${COMPLEX_SOURCE_DIR}/Core/FilterList.cpp
-
-  ${COMPLEX_SOURCE_DIR}/Core/Parameters/utils/FilePathGenerator.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.cpp
@@ -347,6 +344,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Writer.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IH5DataFactory.cpp
 
+  ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
 )

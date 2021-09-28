@@ -1,8 +1,8 @@
 #pragma once
 
-#include "complex/Core/Parameters/utils/FilePathGenerator.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Filter/ValueParameter.hpp"
+#include "complex/Utilities/FilePathGenerator.hpp"
 #include "complex/complex_export.hpp"
 
 #include <string>
@@ -28,6 +28,11 @@ public:
     std::string filePrefix;
     std::string fileSuffix;
     std::string fileExtension;
+
+    std::pair<std::vector<std::string>, bool> generate() const
+    {
+      return FilePathGenerator::GenerateFileList(startIndex, endIndex, incrementIndex, ordering, inputPath, filePrefix, fileSuffix, fileExtension, paddingDigits);
+    }
   };
 
   GeneratedFileListParameter() = delete;
