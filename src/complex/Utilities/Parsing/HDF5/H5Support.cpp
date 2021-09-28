@@ -3,7 +3,9 @@
 #include <cstring>
 #include <iostream>
 
-hid_t complex::H5::Support::openId(hid_t locationID, const std::string& objectName, H5O_type_t objectType)
+namespace complex
+{
+hid_t H5::Support::openId(hid_t locationID, const std::string& objectName, H5O_type_t objectType)
 {
   hid_t objectID = -1;
 
@@ -30,7 +32,7 @@ hid_t complex::H5::Support::openId(hid_t locationID, const std::string& objectNa
   return objectID;
 }
 
-herr_t complex::H5::Support::closeId(hid_t objectID, int32 objectType)
+herr_t H5::Support::closeId(hid_t objectID, int32 objectType)
 {
   switch(objectType)
   {
@@ -53,7 +55,7 @@ herr_t complex::H5::Support::closeId(hid_t objectID, int32 objectType)
   return 1;
 }
 
-bool complex::H5::Support::datasetExists(hid_t locationID, const std::string& datasetName)
+bool H5::Support::datasetExists(hid_t locationID, const std::string& datasetName)
 {
   H5O_info1_t objectInfo{};
   HDF_ERROR_HANDLER_OFF
@@ -62,7 +64,7 @@ bool complex::H5::Support::datasetExists(hid_t locationID, const std::string& da
   return error >= 0;
 }
 
-herr_t complex::H5::Support::getDatasetInfo(hid_t locationID, const std::string& datasetName, std::vector<hsize_t>& dims, H5T_class_t& classType, size_t& sizeType)
+herr_t H5::Support::getDatasetInfo(hid_t locationID, const std::string& datasetName, std::vector<hsize_t>& dims, H5T_class_t& classType, size_t& sizeType)
 {
   hid_t datasetID;
   herr_t error = 0;
@@ -124,7 +126,7 @@ herr_t complex::H5::Support::getDatasetInfo(hid_t locationID, const std::string&
   return returnError;
 }
 
-herr_t complex::H5::Support::find_attr(hid_t /*locationID*/, const char* name, const H5A_info_t* /*info*/, void* op_data)
+herr_t H5::Support::find_attr(hid_t /*locationID*/, const char* name, const H5A_info_t* /*info*/, void* op_data)
 {
   /* Define a default zero value for return. This will cause the iterator to continue if
    * the palette attribute is not found yet.
@@ -145,7 +147,7 @@ herr_t complex::H5::Support::find_attr(hid_t /*locationID*/, const char* name, c
   return returnError;
 }
 
-herr_t complex::H5::Support::findAttribute(hid_t locationID, const std::string& attributeName)
+herr_t H5::Support::findAttribute(hid_t locationID, const std::string& attributeName)
 {
   hsize_t attributeNum;
   herr_t returnError = 0;
@@ -156,7 +158,7 @@ herr_t complex::H5::Support::findAttribute(hid_t locationID, const std::string& 
   return returnError;
 }
 
-std::string complex::H5::Support::HDFClassTypeAsStr(hid_t classType)
+std::string H5::Support::HDFClassTypeAsStr(hid_t classType)
 {
   switch(classType)
   {
@@ -199,7 +201,7 @@ std::string complex::H5::Support::HDFClassTypeAsStr(hid_t classType)
 }
 
 #if 0
-hid_t complex::H5::Support::getDatasetType(hid_t locationID, const std::string& datasetName)
+hid_t H5::Support::getDatasetType(hid_t locationID, const std::string& datasetName)
 {
   herr_t error = 0;
   herr_t returnError = 0;
@@ -220,7 +222,7 @@ hid_t complex::H5::Support::getDatasetType(hid_t locationID, const std::string& 
 }
 #endif
 
-herr_t complex::H5::Support::readVectorOfStringDataset(hid_t locationID, const std::string& datasetName, std::vector<std::string>& data)
+herr_t H5::Support::readVectorOfStringDataset(hid_t locationID, const std::string& datasetName, std::vector<std::string>& data)
 {
   herr_t error = 0;
   herr_t returnError = 0;
@@ -303,7 +305,7 @@ herr_t complex::H5::Support::readVectorOfStringDataset(hid_t locationID, const s
   return returnError;
 }
 
-herr_t complex::H5::Support::readStringDataset(hid_t locationID, const std::string& datasetName, std::string& data)
+herr_t H5::Support::readStringDataset(hid_t locationID, const std::string& datasetName, std::string& data)
 {
   herr_t error = 0;
   herr_t returnError = 0;
@@ -356,3 +358,4 @@ herr_t complex::H5::Support::readStringDataset(hid_t locationID, const std::stri
   CloseH5T(typeID, error, returnError);
   return returnError;
 }
+} // namespace complex
