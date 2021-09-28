@@ -29,7 +29,7 @@ class DelimiterType : public std::ctype<char>
   mask my_table[table_size];
 
 public:
-  DelimiterType(char delimiter, size_t refs = 0)
+  DelimiterType(char delimiter, usize refs = 0)
   : std::ctype<char>(&my_table[0], false, refs)
   {
     std::copy_n(classic_table(), table_size, my_table);

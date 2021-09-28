@@ -4,7 +4,7 @@
 
 using namespace complex;
 
-NodeRemovedMessage::NodeRemovedMessage(Pipeline* pipeline, size_t index)
+NodeRemovedMessage::NodeRemovedMessage(Pipeline* pipeline, usize index)
 : AbstractPipelineMessage(pipeline)
 , m_Index(index)
 {
@@ -12,7 +12,7 @@ NodeRemovedMessage::NodeRemovedMessage(Pipeline* pipeline, size_t index)
 
 NodeRemovedMessage::~NodeRemovedMessage() = default;
 
-size_t NodeRemovedMessage::getIndex() const
+usize NodeRemovedMessage::getIndex() const
 {
   return m_Index;
 }

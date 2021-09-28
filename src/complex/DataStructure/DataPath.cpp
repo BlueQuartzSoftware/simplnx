@@ -90,7 +90,7 @@ std::optional<DataPath> DataPath::FromString(std::string_view string, char delim
   return DataPath(parts);
 }
 
-size_t DataPath::getLength() const
+usize DataPath::getLength() const
 {
   return m_Path.size();
 }
@@ -133,7 +133,7 @@ bool DataPath::operator==(const DataPath& rhs) const
     return false;
   }
 
-  for(size_t i = 0; i < m_Path.size(); i++)
+  for(usize i = 0; i < m_Path.size(); i++)
   {
     if(rhs.m_Path[i] != m_Path[i])
     {
@@ -150,7 +150,7 @@ bool DataPath::operator!=(const DataPath& rhs) const
     return true;
   }
 
-  for(size_t i = 0; i < m_Path.size(); i++)
+  for(usize i = 0; i < m_Path.size(); i++)
   {
     if(rhs.m_Path[i] != m_Path[i])
     {
@@ -160,7 +160,7 @@ bool DataPath::operator!=(const DataPath& rhs) const
   return false;
 }
 
-const std::string& DataPath::operator[](size_t index) const
+const std::string& DataPath::operator[](usize index) const
 {
   if(index > m_Path.size())
   {
@@ -172,7 +172,7 @@ const std::string& DataPath::operator[](size_t index) const
 std::string DataPath::toString(const std::string& div) const
 {
   std::string output;
-  for(size_t i = 0; i < getLength(); i++)
+  for(usize i = 0; i < getLength(); i++)
   {
     if(i != 0)
     {

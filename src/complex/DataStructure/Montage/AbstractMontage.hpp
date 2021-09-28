@@ -43,9 +43,9 @@ public:
 
   /**
    * @brief Returns the number of tiles in the montage.
-   * @return size_t
+   * @return usize
    */
-  size_t getTileCount() const;
+  usize getTileCount() const;
 
   /**
    * @brief Returns a collection of geometries in the Montage.

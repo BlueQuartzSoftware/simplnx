@@ -75,7 +75,7 @@ std::string EdgeGeom::getGeometryTypeAsString() const
   return "EdgeGeom";
 }
 
-void EdgeGeom::resizeVertexList(size_t newNumVertices)
+void EdgeGeom::resizeVertexList(usize newNumVertices)
 {
   if(!getVertices())
   {
@@ -103,7 +103,7 @@ const AbstractGeometry::SharedVertexList* EdgeGeom::getVertices() const
   return dynamic_cast<const SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
 }
 
-void EdgeGeom::setCoords(size_t vertId, const complex::Point3D<float32>& coords)
+void EdgeGeom::setCoords(usize vertId, const complex::Point3D<float32>& coords)
 {
   auto vertices = getVertices();
   if(!vertices)
@@ -111,13 +111,13 @@ void EdgeGeom::setCoords(size_t vertId, const complex::Point3D<float32>& coords)
     return;
   }
 
-  for(size_t i = 0; i < 3; i++)
+  for(usize i = 0; i < 3; i++)
   {
     (*vertices)[vertId * 3 + i] = coords[i];
   }
 }
 
-complex::Point3D<float32> EdgeGeom::getCoords(size_t vertId) const
+complex::Point3D<float32> EdgeGeom::getCoords(usize vertId) const
 {
   auto vertices = getVertices();
   if(!vertices)
@@ -126,14 +126,14 @@ complex::Point3D<float32> EdgeGeom::getCoords(size_t vertId) const
   }
 
   Point3D<float32> coord;
-  for(size_t i = 0; i < 3; i++)
+  for(usize i = 0; i < 3; i++)
   {
     coord[i] = (*vertices)[vertId * 3 + i];
   }
   return coord;
 }
 
-size_t EdgeGeom::getNumberOfVertices() const
+usize EdgeGeom::getNumberOfVertices() const
 {
   auto vertices = getVertices();
   if(!vertices)
@@ -143,7 +143,7 @@ size_t EdgeGeom::getNumberOfVertices() const
   return vertices->getTupleCount();
 }
 
-void EdgeGeom::resizeEdgeList(size_t newNumEdges)
+void EdgeGeom::resizeEdgeList(usize newNumEdges)
 {
   auto edges = getEdges();
   if(!edges)
@@ -173,7 +173,7 @@ const AbstractGeometry::SharedEdgeList* EdgeGeom::getEdges() const
   return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
 }
 
-void EdgeGeom::setVertsAtEdge(size_t edgeId, size_t verts[2])
+void EdgeGeom::setVertsAtEdge(usize edgeId, usize verts[2])
 {
   auto edges = getEdges();
   if(!edges)
@@ -187,13 +187,13 @@ void EdgeGeom::setVertsAtEdge(size_t edgeId, size_t verts[2])
     return;
   }
 
-  for(size_t i = 0; i < 2; i++)
+  for(usize i = 0; i < 2; i++)
   {
     (*edges)[edgeId + i] = verts[i];
   }
 }
 
-void EdgeGeom::getVertsAtEdge(size_t edgeId, size_t verts[2])
+void EdgeGeom::getVertsAtEdge(usize edgeId, usize verts[2])
 {
   auto edges = getEdges();
   if(!edges)
@@ -207,13 +207,13 @@ void EdgeGeom::getVertsAtEdge(size_t edgeId, size_t verts[2])
     return;
   }
 
-  for(size_t i = 0; i < 2; i++)
+  for(usize i = 0; i < 2; i++)
   {
     verts[i] = (*edges)[edgeId + i];
   }
 }
 
-void EdgeGeom::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const
+void EdgeGeom::getVertCoordsAtEdge(usize edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const
 {
   auto edges = getEdges();
   if(!edges)
@@ -240,7 +240,7 @@ void EdgeGeom::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float32>& ver
   vert2 = &(*vertices)[vert2Id];
 }
 
-size_t EdgeGeom::getNumberOfEdges() const
+usize EdgeGeom::getNumberOfEdges() const
 {
   auto edges = getEdges();
   if(!edges)
@@ -264,7 +264,7 @@ void EdgeGeom::initializeWithZeros()
   }
 }
 
-size_t EdgeGeom::getNumberOfElements() const
+usize EdgeGeom::getNumberOfElements() const
 {
   auto edges = getEdges();
   if(!edges)
@@ -283,11 +283,11 @@ AbstractGeometry::StatusCode EdgeGeom::findElementSizes()
   Point3D<float32> vert0 = {0.0f, 0.0f, 0.0f};
   Point3D<float32> vert1 = {0.0f, 0.0f, 0.0f};
 
-  for(size_t i = 0; i < getNumberOfEdges(); i++)
+  for(usize i = 0; i < getNumberOfEdges(); i++)
   {
     getVertCoordsAtEdge(i, vert0, vert1);
     float32 length = 0.0f;
-    for(size_t j = 0; j < 3; j++)
+    for(usize j = 0; j < 3; j++)
     {
       length += (vert0[j] - vert1[j]) * (vert0[j] - vert1[j]);
     }

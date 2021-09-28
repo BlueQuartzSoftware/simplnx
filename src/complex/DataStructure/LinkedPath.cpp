@@ -39,7 +39,7 @@ bool LinkedPath::isValid() const
   {
     return false;
   }
-  for(size_t i = 0; i < getLength(); i++)
+  for(usize i = 0; i < getLength(); i++)
   {
     if(getDataAt(i) == nullptr)
     {
@@ -57,19 +57,19 @@ const DataStructure* LinkedPath::getDataStructure() const
 DataPath LinkedPath::toDataPath() const
 {
   std::vector<std::string> names(m_IdPath.size());
-  for(size_t i = 0; i < m_IdPath.size(); i++)
+  for(usize i = 0; i < m_IdPath.size(); i++)
   {
     names[i] = getNameAt(i);
   }
   return DataPath(names);
 }
 
-size_t LinkedPath::getLength() const
+usize LinkedPath::getLength() const
 {
   return m_IdPath.size();
 }
 
-DataObject::IdType LinkedPath::operator[](size_t index) const
+DataObject::IdType LinkedPath::operator[](usize index) const
 {
   return getIdAt(index);
 }
@@ -79,7 +79,7 @@ DataObject::IdType LinkedPath::getId() const
   return getIdAt(getLength() - 1);
 }
 
-DataObject::IdType LinkedPath::getIdAt(size_t index) const
+DataObject::IdType LinkedPath::getIdAt(usize index) const
 {
   return m_IdPath[index];
 }
@@ -89,7 +89,7 @@ const DataObject* LinkedPath::getData() const
   return getDataAt(m_IdPath.size() - 1);
 }
 
-const DataObject* LinkedPath::getDataAt(size_t index) const
+const DataObject* LinkedPath::getDataAt(usize index) const
 {
   return getDataStructure()->getData(m_IdPath[index]);
 }
@@ -99,7 +99,7 @@ std::string LinkedPath::getName() const
   return getData()->getName();
 }
 
-std::string LinkedPath::getNameAt(size_t index) const
+std::string LinkedPath::getNameAt(usize index) const
 {
   const DataObject* data = getDataAt(index);
   if(data == nullptr)
@@ -131,7 +131,7 @@ bool LinkedPath::operator==(const DataPath& rhs) const
     return false;
   }
 
-  for(size_t i = 0; i < m_IdPath.size(); i++)
+  for(usize i = 0; i < m_IdPath.size(); i++)
   {
     if(getNameAt(i) != rhs[i])
     {
@@ -157,7 +157,7 @@ bool LinkedPath::operator!=(const DataPath& rhs) const
     return true;
   }
 
-  for(size_t i = 0; i < m_IdPath.size(); i++)
+  for(usize i = 0; i < m_IdPath.size(); i++)
   {
     if(getNameAt(i) != rhs[i])
     {

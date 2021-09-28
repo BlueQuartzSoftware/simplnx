@@ -32,7 +32,7 @@ AbstractGeometry3D::AbstractGeometry3D(AbstractGeometry3D&& other) noexcept
 
 AbstractGeometry3D::~AbstractGeometry3D() = default;
 
-AbstractGeometry3D::SharedQuadList* AbstractGeometry3D::createSharedQuadList(size_t numQuads)
+AbstractGeometry3D::SharedQuadList* AbstractGeometry3D::createSharedQuadList(usize numQuads)
 {
   auto dataStore = new DataStore<MeshIndexType>(4, numQuads);
   SharedQuadList* quads = DataArray<MeshIndexType>::Create(*getDataStructure(), "Shared Quad List", dataStore, getId());
@@ -40,7 +40,7 @@ AbstractGeometry3D::SharedQuadList* AbstractGeometry3D::createSharedQuadList(siz
   return quads;
 }
 
-AbstractGeometry3D::SharedTriList* AbstractGeometry3D::createSharedTriList(size_t numTris)
+AbstractGeometry3D::SharedTriList* AbstractGeometry3D::createSharedTriList(usize numTris)
 {
   auto dataStore = new DataStore<MeshIndexType>(3, numTris);
   SharedTriList* triangles = DataArray<MeshIndexType>::Create(*getDataStructure(), "Shared Tri List", dataStore, getId());
@@ -48,7 +48,7 @@ AbstractGeometry3D::SharedTriList* AbstractGeometry3D::createSharedTriList(size_
   return triangles;
 }
 
-void AbstractGeometry3D::resizeVertexList(size_t numVertices)
+void AbstractGeometry3D::resizeVertexList(usize numVertices)
 {
   auto vertices = dynamic_cast<SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
   if(!vertices)
@@ -79,7 +79,7 @@ const AbstractGeometry::SharedVertexList* AbstractGeometry3D::getVertices() cons
   return dynamic_cast<const SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
 }
 
-void AbstractGeometry3D::setCoords(size_t vertId, const complex::Point3D<float32>& coords)
+void AbstractGeometry3D::setCoords(usize vertId, const complex::Point3D<float32>& coords)
 {
   auto vertices = dynamic_cast<Float32Array*>(getDataStructure()->getData(m_VertexListId));
   if(!vertices)
@@ -87,14 +87,14 @@ void AbstractGeometry3D::setCoords(size_t vertId, const complex::Point3D<float32
     return;
   }
 
-  size_t index = vertId * 3;
-  for(size_t i = 0; i < 3; i++)
+  usize index = vertId * 3;
+  for(usize i = 0; i < 3; i++)
   {
     (*vertices)[index + i] = coords[i];
   }
 }
 
-complex::Point3D<float32> AbstractGeometry3D::getCoords(size_t vertId) const
+complex::Point3D<float32> AbstractGeometry3D::getCoords(usize vertId) const
 {
   auto vertices = dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_VertexListId));
   if(!vertices)
@@ -102,14 +102,14 @@ complex::Point3D<float32> AbstractGeometry3D::getCoords(size_t vertId) const
     return Point3D<float32>();
   }
 
-  size_t index = vertId * 3;
+  usize index = vertId * 3;
   auto x = (*vertices)[index];
   auto y = (*vertices)[index + 1];
   auto z = (*vertices)[index + 2];
   return Point3D<float32>(x, y, z);
 }
 
-size_t AbstractGeometry3D::getNumberOfVertices() const
+usize AbstractGeometry3D::getNumberOfVertices() const
 {
   auto vertices = dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_VertexListId));
   if(!vertices)
@@ -119,7 +119,7 @@ size_t AbstractGeometry3D::getNumberOfVertices() const
   return vertices->getTupleCount();
 }
 
-void AbstractGeometry3D::resizeEdgeList(size_t numEdges)
+void AbstractGeometry3D::resizeEdgeList(usize numEdges)
 {
   auto edges = getEdges();
   if(!edges)
@@ -139,31 +139,31 @@ const AbstractGeometry::SharedEdgeList* AbstractGeometry3D::getEdges() const
   return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
 }
 
-void AbstractGeometry3D::setVertsAtEdge(size_t edgeId, const size_t verts[2])
+void AbstractGeometry3D::setVertsAtEdge(usize edgeId, const usize verts[2])
 {
   auto edges = dynamic_cast<SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
   if(!edges)
   {
     return;
   }
-  size_t index = edgeId * 2;
+  usize index = edgeId * 2;
   (*edges)[index] = verts[0];
   (*edges)[index + 1] = verts[1];
 }
 
-void AbstractGeometry3D::getVertsAtEdge(size_t edgeId, size_t verts[2]) const
+void AbstractGeometry3D::getVertsAtEdge(usize edgeId, usize verts[2]) const
 {
   auto edges = getEdges();
   if(!edges)
   {
     return;
   }
-  size_t index = edgeId * 2;
+  usize index = edgeId * 2;
   verts[0] = (*edges)[index];
   verts[1] = (*edges)[index + 1];
 }
 
-void AbstractGeometry3D::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const
+void AbstractGeometry3D::getVertCoordsAtEdge(usize edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const
 {
   auto edges = getEdges();
   if(!edges)
@@ -177,17 +177,17 @@ void AbstractGeometry3D::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<flo
     return;
   }
 
-  size_t verts[2];
+  usize verts[2];
   getVertsAtEdge(edgeId, verts);
 
-  for(size_t i = 0; i < 3; i++)
+  for(usize i = 0; i < 3; i++)
   {
     vert1[i] = (*vertices)[verts[0] * 3 + i];
     vert2[i] = (*vertices)[verts[1] * 3 + i];
   }
 }
 
-size_t AbstractGeometry3D::getNumberOfEdges() const
+usize AbstractGeometry3D::getNumberOfEdges() const
 {
   auto edges = getEdges();
   if(!edges)
@@ -231,7 +231,7 @@ void AbstractGeometry3D::deleteUnsharedFaces()
   m_UnsharedFaceListId.reset();
 }
 
-size_t AbstractGeometry3D::getNumberOfFaces() const
+usize AbstractGeometry3D::getNumberOfFaces() const
 {
   auto faces = getFaces();
   if(!faces)

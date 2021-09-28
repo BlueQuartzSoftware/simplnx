@@ -65,15 +65,15 @@ public:
   /**
    * @brief Returns the number of quads in the geometry. Returns 0 if there is
    * no quads array stored in the geometry.
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfQuads() const;
+  usize getNumberOfQuads() const;
 
   /**
    * @brief Resizes the quads array to contain the specified number of items.
    * @param numQuads
    */
-  void resizeQuadList(size_t numQuads);
+  void resizeQuadList(usize numQuads);
 
   /**
    * @brief
@@ -98,14 +98,14 @@ public:
    * @param quadId
    * @param verts
    */
-  void setVertsAtQuad(size_t quadId, size_t verts[4]);
+  void setVertsAtQuad(usize quadId, usize verts[4]);
 
   /**
    * @brief
    * @param quadId
    * @param verts
    */
-  void getVertsAtQuad(size_t quadId, size_t verts[4]) const;
+  void getVertsAtQuad(usize quadId, usize verts[4]) const;
 
   /**
    * @brief
@@ -115,13 +115,13 @@ public:
    * @param vert3
    * @param vert4
    */
-  void getVertCoordsAtQuad(size_t quadId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const;
+  void getVertCoordsAtQuad(usize quadId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const;
 
   /**
    * @brief
    * @param numHexas
    */
-  void resizeHexList(size_t numHexas);
+  void resizeHexList(usize numHexas);
 
   /**
    * @brief
@@ -146,14 +146,14 @@ public:
    * @param hexId
    * @param verts
    */
-  void setVertsAtHex(size_t hexId, size_t verts[8]);
+  void setVertsAtHex(usize hexId, usize verts[8]);
 
   /**
    * @brief
    * @param hexId
    * @param verts
    */
-  void getVertsAtHex(size_t hexId, size_t verts[8]) const;
+  void getVertsAtHex(usize hexId, usize verts[8]) const;
 
   /**
    * @brief
@@ -167,14 +167,14 @@ public:
    * @param vert7
    * @param vert8
    */
-  void getVertCoordsAtHex(size_t hexId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4,
+  void getVertCoordsAtHex(usize hexId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4,
                           complex::Point3D<float32>& vert5, complex::Point3D<float32>& vert6, complex::Point3D<float32>& vert7, complex::Point3D<float32>& vert8) const;
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfHexas() const;
+  usize getNumberOfHexas() const;
 
   /**
    * @brief
@@ -183,9 +183,9 @@ public:
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfElements() const override;
+  usize getNumberOfElements() const override;
 
   /**
    * @brief
@@ -343,7 +343,7 @@ protected:
    * @param vertices
    * @param allocate
    */
-  HexahedralGeom(DataStructure& ds, const std::string& name, size_t numHexas, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
+  HexahedralGeom(DataStructure& ds, const std::string& name, usize numHexas, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
 
   /**
    * @brief

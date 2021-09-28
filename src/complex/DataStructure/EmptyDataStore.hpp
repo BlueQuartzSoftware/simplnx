@@ -35,7 +35,7 @@ public:
    * @param tupleSize
    * @param tupleCount
    */
-  EmptyDataStore(size_t tupleSize, size_t tupleCount)
+  EmptyDataStore(usize tupleSize, usize tupleCount)
   : m_NumComponents(tupleSize)
   , m_TupleCount(tupleCount)
   {
@@ -65,18 +65,18 @@ public:
 
   /**
    * @brief Returns the number of tuples that should be in the data store.
-   * @return size_t
+   * @return usize
    */
-  size_t getTupleCount() const override
+  usize getTupleCount() const override
   {
     return m_TupleCount;
   }
 
   /**
    * @brief Returns the target tuple getSize.
-   * @return size_t
+   * @return usize
    */
-  size_t getNumComponents() const override
+  usize getNumComponents() const override
   {
     return m_NumComponents;
   }
@@ -86,7 +86,7 @@ public:
    * EmptyDataStore class contains no data other than its target getSize.
    * @param tupleCount
    */
-  void resizeTuples(size_t tupleCount) override
+  void resizeTuples(usize tupleCount) override
   {
     throw std::runtime_error("");
   }
@@ -97,7 +97,7 @@ public:
    * @param index
    * @return value_type
    */
-  value_type getValue(size_t index) const override
+  value_type getValue(usize index) const override
   {
     throw std::runtime_error("");
   }
@@ -108,7 +108,7 @@ public:
    * @param index
    * @param value
    */
-  void setValue(size_t index, value_type value) override
+  void setValue(usize index, value_type value) override
   {
     throw std::runtime_error("");
   }
@@ -119,7 +119,7 @@ public:
    * @param index
    * @return const_reference
    */
-  typename IDataStore<T>::const_reference at(size_t index) const override
+  typename IDataStore<T>::const_reference at(usize index) const override
   {
     throw std::runtime_error("");
   }
@@ -130,7 +130,7 @@ public:
    * @param  index
    * @return const_reference
    */
-  typename IDataStore<T>::const_reference operator[](size_t index) const override
+  typename IDataStore<T>::const_reference operator[](usize index) const override
   {
     throw std::runtime_error("");
   }
@@ -141,7 +141,7 @@ public:
    * @param  index
    * @return reference
    */
-  typename IDataStore<T>::reference operator[](size_t index) override
+  typename IDataStore<T>::reference operator[](usize index) override
   {
     throw std::runtime_error("");
   }
@@ -167,7 +167,7 @@ public:
   }
 
 private:
-  size_t m_NumComponents;
-  size_t m_TupleCount;
+  usize m_NumComponents;
+  usize m_TupleCount;
 };
 } // namespace complex

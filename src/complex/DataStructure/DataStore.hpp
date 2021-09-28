@@ -30,7 +30,7 @@ public:
    * @param tupleSize
    * @param tupleCount
    */
-  DataStore(size_t tupleSize, size_t tupleCount)
+  DataStore(usize tupleSize, usize tupleCount)
   : m_NumComponents(tupleSize)
   , m_TupleCount(tupleCount)
   , m_Data(std::make_unique<value_type[]>(tupleSize * tupleCount))
@@ -43,7 +43,7 @@ public:
    * @param tupleCount
    * @param data
    */
-  DataStore(size_t tupleSize, size_t tupleCount, std::unique_ptr<value_type[]>&& data)
+  DataStore(usize tupleSize, usize tupleCount, std::unique_ptr<value_type[]>&& data)
   : m_NumComponents(tupleSize)
   , m_TupleCount(tupleCount)
   , m_Data(std::move(data))
@@ -59,8 +59,8 @@ public:
   , m_NumComponents(other.m_NumComponents)
   , m_Data(std::make_unique<value_type[]>(m_TupleCount * m_NumComponents))
   {
-    const size_t count = m_TupleCount * m_NumComponents;
-    for(size_t i = 0; i < count; i++)
+    const usize count = m_TupleCount * m_NumComponents;
+    for(usize i = 0; i < count; i++)
     {
       m_Data[i] = other.m_Data[i];
     }
@@ -81,18 +81,18 @@ public:
 
   /**
    * @brief Returns the number of tuples in the DataStore.
-   * @return size_t
+   * @return usize
    */
-  size_t getTupleCount() const override
+  usize getTupleCount() const override
   {
     return m_TupleCount;
   }
 
   /**
    * @brief Returns the number of elements in each Tuple.
-   * @return size_t
+   * @return usize
    */
-  size_t getNumComponents() const override
+  usize getNumComponents() const override
   {
     return m_NumComponents;
   }
@@ -101,14 +101,14 @@ public:
    * @brief Resizes the DataStore to handle the specified number of tuples.
    * @param numTuples
    */
-  void resizeTuples(size_t numTuples) override
+  void resizeTuples(usize numTuples) override
   {
     auto oldSize = this->getSize();
     m_TupleCount = numTuples;
     auto newSize = this->getSize();
 
     auto data = new value_type[newSize];
-    for(size_t i = 0; i < newSize && i < oldSize; i++)
+    for(usize i = 0; i < newSize && i < oldSize; i++)
     {
       data[i] = m_Data[i];
     }
@@ -122,7 +122,7 @@ public:
    * @param index
    * @return value_type
    */
-  typename IDataStore<T>::value_type getValue(size_t index) const override
+  typename IDataStore<T>::value_type getValue(usize index) const override
   {
     return m_Data[index];
   }
@@ -132,7 +132,7 @@ public:
    * @param index
    * @param value
    */
-  void setValue(size_t index, value_type value) override
+  void setValue(usize index, value_type value) override
   {
     m_Data[index] = value;
   }
@@ -143,7 +143,7 @@ public:
    * @param  index
    * @return const_reference
    */
-  typename IDataStore<T>::const_reference operator[](size_t index) const override
+  typename IDataStore<T>::const_reference operator[](usize index) const override
   {
     return m_Data[index];
   }
@@ -154,7 +154,7 @@ public:
    * @param  index
    * @return reference
    */
-  typename IDataStore<T>::reference operator[](size_t index) override
+  typename IDataStore<T>::reference operator[](usize index) override
   {
     return m_Data[index];
   }
@@ -165,7 +165,7 @@ public:
    * @param index
    * @return const_reference
    */
-  typename IDataStore<T>::const_reference at(size_t index) const override
+  typename IDataStore<T>::const_reference at(usize index) const override
   {
     if(index >= IDataStore<T>::getSize())
       if(index >= this->getSize())
@@ -182,8 +182,8 @@ public:
   IDataStore<T>* deepCopy() const override
   {
     auto copy = new DataStore(*this);
-    for(size_t i = 0; i < IDataStore<T>::getSize(); i++)
-      for(size_t i = 0; i < this->getSize(); i++)
+    for(usize i = 0; i < IDataStore<T>::getSize(); i++)
+      for(usize i = 0; i < this->getSize(); i++)
       {
         copy->setValue(i, getValue(i));
       }

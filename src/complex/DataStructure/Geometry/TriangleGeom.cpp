@@ -15,7 +15,7 @@ TriangleGeom::TriangleGeom(DataStructure& ds, const std::string& name)
 {
 }
 
-TriangleGeom::TriangleGeom(DataStructure& ds, const std::string& name, size_t numTriangles, const SharedVertexList* vertices, bool allocate)
+TriangleGeom::TriangleGeom(DataStructure& ds, const std::string& name, usize numTriangles, const SharedVertexList* vertices, bool allocate)
 : AbstractGeometry2D(ds, name)
 {
 }
@@ -77,7 +77,7 @@ std::string TriangleGeom::getGeometryTypeAsString() const
   return "TriangleGeom";
 }
 
-void TriangleGeom::resizeTriList(size_t newNumTris)
+void TriangleGeom::resizeTriList(usize newNumTris)
 {
   getTriangles()->getDataStore()->resizeTuples(newNumTris);
 }
@@ -102,33 +102,33 @@ const AbstractGeometry::SharedTriList* TriangleGeom::getTriangles() const
   return dynamic_cast<const SharedTriList*>(getDataStructure()->getData(m_TriListId));
 }
 
-void TriangleGeom::setVertsAtTri(size_t triId, size_t verts[3])
+void TriangleGeom::setVertsAtTri(usize triId, usize verts[3])
 {
   auto tris = getTriangles();
   if(!tris)
   {
     return;
   }
-  for(size_t i = 0; i < 3; i++)
+  for(usize i = 0; i < 3; i++)
   {
     (*tris)[i] = verts[i];
   }
 }
 
-void TriangleGeom::getVertsAtTri(size_t triId, size_t verts[3]) const
+void TriangleGeom::getVertsAtTri(usize triId, usize verts[3]) const
 {
   auto tris = getTriangles();
   if(!tris)
   {
     return;
   }
-  for(size_t i = 0; i < 3; i++)
+  for(usize i = 0; i < 3; i++)
   {
     verts[i] = tris->at(i);
   }
 }
 
-void TriangleGeom::getVertCoordsAtTri(size_t triId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3) const
+void TriangleGeom::getVertCoordsAtTri(usize triId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3) const
 {
   if(!getTriangles())
   {
@@ -138,14 +138,14 @@ void TriangleGeom::getVertCoordsAtTri(size_t triId, Point3D<float32>& vert1, Poi
   {
     return;
   }
-  size_t verts[3];
+  usize verts[3];
   getVertsAtTri(triId, verts);
   vert1 = getCoords(verts[0]);
   vert2 = getCoords(verts[1]);
   vert3 = getCoords(verts[2]);
 }
 
-size_t TriangleGeom::getNumberOfTris() const
+usize TriangleGeom::getNumberOfTris() const
 {
   auto tris = getTriangles();
   if(!tris)
@@ -161,7 +161,7 @@ void TriangleGeom::initializeWithZeros()
   getTriangles()->getDataStore()->fill(0);
 }
 
-size_t TriangleGeom::getNumberOfElements() const
+usize TriangleGeom::getNumberOfElements() const
 {
   return getTriangles()->getTupleCount();
 }
@@ -310,37 +310,37 @@ complex::TooltipGenerator TriangleGeom::getTooltipGenerator() const
   return toolTipGen;
 }
 
-void TriangleGeom::setCoords(size_t vertId, const Point3D<float32>& coords)
+void TriangleGeom::setCoords(usize vertId, const Point3D<float32>& coords)
 {
   auto vertices = getVertices();
   if(!vertices)
   {
     return;
   }
-  const size_t offset = vertId * 3;
-  for(size_t i = 0; i < 3; i++)
+  const usize offset = vertId * 3;
+  for(usize i = 0; i < 3; i++)
   {
     (*vertices)[offset + i] = coords[i];
   }
 }
 
-Point3D<float32> TriangleGeom::getCoords(size_t vertId) const
+Point3D<float32> TriangleGeom::getCoords(usize vertId) const
 {
   auto vertices = getVertices();
   if(!vertices)
   {
     return {};
   }
-  const size_t offset = vertId * 3;
+  const usize offset = vertId * 3;
   Point3D<float32> coords;
-  for(size_t i = 0; i < 3; i++)
+  for(usize i = 0; i < 3; i++)
   {
     coords[i] = vertices->at(offset + i);
   }
   return coords;
 }
 
-size_t TriangleGeom::getNumberOfVertices() const
+usize TriangleGeom::getNumberOfVertices() const
 {
   auto vertices = getVertices();
   if(!vertices)
@@ -364,12 +364,12 @@ AbstractGeometry::StatusCode TriangleGeom::findEdges()
   return 1;
 }
 
-void TriangleGeom::resizeEdgeList(size_t newNumEdges)
+void TriangleGeom::resizeEdgeList(usize newNumEdges)
 {
   getEdges()->getDataStore()->resizeTuples(newNumEdges);
 }
 
-void TriangleGeom::getVertCoordsAtEdge(size_t edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const
+void TriangleGeom::getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const
 {
   if(!getEdges())
   {
@@ -379,7 +379,7 @@ void TriangleGeom::getVertCoordsAtEdge(size_t edgeId, Point3D<float32>& vert1, P
   {
     return;
   }
-  size_t verts[2];
+  usize verts[2];
   getVertsAtEdge(edgeId, verts);
   vert1 = getCoords(verts[0]);
   vert2 = getCoords(verts[1]);

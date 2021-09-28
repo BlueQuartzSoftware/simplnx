@@ -215,9 +215,9 @@ public:
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  virtual size_t getNumberOfElements() const = 0;
+  virtual usize getNumberOfElements() const = 0;
 
   /**
    * @brief
@@ -365,7 +365,7 @@ protected:
    * @param numEdges
    * @return SharedEdgeList*
    */
-  SharedEdgeList* createSharedEdgeList(size_t numEdges);
+  SharedEdgeList* createSharedEdgeList(usize numEdges);
 
   /**
    * @brief

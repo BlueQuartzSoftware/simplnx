@@ -172,9 +172,9 @@ public:
 
   /**
    * @brief Returns the getSize of the pipeline segment.
-   * @return size_t
+   * @return usize
    */
-  size_t size() const;
+  usize size() const;
 
   /**
    * @brief Returns a pointer to the pipeline node at the given index.

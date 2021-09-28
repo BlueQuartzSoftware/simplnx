@@ -1,8 +1,7 @@
 #pragma once
 
-#include <cstddef>
-
-#include "AbstractPipelineMessage.hpp"
+#include "complex/Common/Types.hpp"
+#include "complex/Pipeline/Messaging/AbstractPipelineMessage.hpp"
 
 namespace complex
 {
@@ -24,7 +23,7 @@ public:
    * @param newNode
    * @param index
    */
-  NodeAddedMessage(Pipeline* pipeline, AbstractPipelineNode* newNode, size_t index);
+  NodeAddedMessage(Pipeline* pipeline, AbstractPipelineNode* newNode, usize index);
 
   virtual ~NodeAddedMessage();
 
@@ -36,12 +35,12 @@ public:
 
   /**
    * @brief Returns the index at which the new node was added to the Pipeline.
-   * @return size_t
+   * @return usize
    */
-  size_t getIndex() const;
+  usize getIndex() const;
 
 private:
   AbstractPipelineNode* m_Node;
-  size_t m_Index;
+  usize m_Index;
 };
 } // namespace complex

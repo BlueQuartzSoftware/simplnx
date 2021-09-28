@@ -14,7 +14,7 @@ QuadGeom::QuadGeom(DataStructure& ds, const std::string& name)
 {
 }
 
-QuadGeom::QuadGeom(DataStructure& ds, const std::string& name, size_t numQuads, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
+QuadGeom::QuadGeom(DataStructure& ds, const std::string& name, usize numQuads, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
 : AbstractGeometry2D(ds, name)
 {
 }
@@ -76,7 +76,7 @@ std::string QuadGeom::getGeometryTypeAsString() const
   return "QuadGeom";
 }
 
-void QuadGeom::resizeQuadList(size_t numQuads)
+void QuadGeom::resizeQuadList(usize numQuads)
 {
   getQuads()->getDataStore()->resizeTuples(numQuads);
 }
@@ -101,34 +101,34 @@ const AbstractGeometry::SharedQuadList* QuadGeom::getQuads() const
   return dynamic_cast<const SharedQuadList*>(getDataStructure()->getData(m_QuadListId));
 }
 
-void QuadGeom::setVertsAtQuad(size_t quadId, size_t verts[4])
+void QuadGeom::setVertsAtQuad(usize quadId, usize verts[4])
 {
   auto quads = getQuads();
   if(!quads)
   {
     return;
   }
-  const size_t offset = quadId * 4;
-  for(size_t i = 0; i < 4; i++)
+  const usize offset = quadId * 4;
+  for(usize i = 0; i < 4; i++)
   {
     (*quads)[offset + i] = verts[i];
   }
 }
 
-void QuadGeom::getVertsAtQuad(size_t quadId, size_t verts[4]) const
+void QuadGeom::getVertsAtQuad(usize quadId, usize verts[4]) const
 {
   auto quads = getQuads();
   if(!quads)
   {
     return;
   }
-  for(size_t i = 0; i < 4; i++)
+  for(usize i = 0; i < 4; i++)
   {
     verts[i] = quads->at(quadId * 4 + i);
   }
 }
 
-void QuadGeom::getVertCoordsAtQuad(size_t quadId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const
+void QuadGeom::getVertCoordsAtQuad(usize quadId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const
 {
   if(!getQuads())
   {
@@ -139,9 +139,9 @@ void QuadGeom::getVertCoordsAtQuad(size_t quadId, complex::Point3D<float32>& ver
   {
     return;
   }
-  size_t verts[4];
+  usize verts[4];
   getVertsAtQuad(quadId, verts);
-  for(size_t i = 0; i < 4; i++)
+  for(usize i = 0; i < 4; i++)
   {
     vert1[i] = vertices->at(verts[0] * 4 + i);
     vert2[i] = vertices->at(verts[1] * 4 + i);
@@ -164,7 +164,7 @@ void QuadGeom::initializeWithZeros()
   }
 }
 
-size_t QuadGeom::getNumberOfQuads() const
+usize QuadGeom::getNumberOfQuads() const
 {
   auto quads = getQuads();
   if(!quads)
@@ -174,7 +174,7 @@ size_t QuadGeom::getNumberOfQuads() const
   return quads->getTupleCount();
 }
 
-size_t QuadGeom::getNumberOfElements() const
+usize QuadGeom::getNumberOfElements() const
 {
   return getNumberOfQuads();
 }
@@ -326,32 +326,32 @@ complex::TooltipGenerator QuadGeom::getTooltipGenerator() const
   return toolTipGen;
 }
 
-void QuadGeom::setCoords(size_t vertId, const Point3D<float32>& coord)
+void QuadGeom::setCoords(usize vertId, const Point3D<float32>& coord)
 {
   auto verts = getVertices();
   if(!verts)
   {
     return;
   }
-  size_t index = vertId * 4;
-  for(size_t i = 0; i < 3; i++)
+  usize index = vertId * 4;
+  for(usize i = 0; i < 3; i++)
   {
     (*verts)[index + i] = coord[i];
   }
 }
 
-Point3D<float32> QuadGeom::getCoords(size_t vertId) const
+Point3D<float32> QuadGeom::getCoords(usize vertId) const
 {
   auto verts = getVertices();
   if(!verts)
   {
     return Point3D<float32>();
   }
-  size_t index = vertId * 4;
+  usize index = vertId * 4;
   return {verts->at(index), verts->at(index + 1), verts->at(index + 2)};
 }
 
-size_t QuadGeom::getNumberOfVertices() const
+usize QuadGeom::getNumberOfVertices() const
 {
   auto vertices = getVertices();
   if(!vertices)
@@ -361,12 +361,12 @@ size_t QuadGeom::getNumberOfVertices() const
   return vertices->getTupleCount();
 }
 
-void QuadGeom::resizeEdgeList(size_t numEdges)
+void QuadGeom::resizeEdgeList(usize numEdges)
 {
   getEdges()->getDataStore()->resizeTuples(numEdges);
 }
 
-void QuadGeom::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const
+void QuadGeom::getVertCoordsAtEdge(usize edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const
 {
   if(!getEdges())
   {
@@ -378,10 +378,10 @@ void QuadGeom::getVertCoordsAtEdge(size_t edgeId, complex::Point3D<float32>& ver
     return;
   }
 
-  size_t verts[2];
+  usize verts[2];
   getVertsAtEdge(edgeId, verts);
 
-  for(size_t i = 0; i < 3; i++)
+  for(usize i = 0; i < 3; i++)
   {
     vert1[i] = vertices->at(verts[0] * 4 + i);
     vert2[i] = vertices->at(verts[1] * 4 + i);

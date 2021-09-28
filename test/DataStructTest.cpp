@@ -225,8 +225,8 @@ TEST_CASE("DataStructureCopyTest")
 
 TEST_CASE("DataStoreTest")
 {
-  const size_t tupleSize = 3;
-  const size_t tupleCount = 10;
+  const usize tupleSize = 3;
+  const usize tupleCount = 10;
   DataStore<int32> store(tupleSize, tupleCount);
 
   REQUIRE(store.getTupleCount() == tupleCount);
@@ -235,20 +235,20 @@ TEST_CASE("DataStoreTest")
 
   // subscript operator
   {
-    for(size_t i = 0; i < store.getSize(); i++)
+    for(usize i = 0; i < store.getSize(); i++)
     {
       store[i] = i + 1;
     }
     int32 x = 1;
-    for(size_t i = 0; i < store.getSize(); i++)
+    for(usize i = 0; i < store.getSize(); i++)
     {
       REQUIRE(store[i] == x++);
     }
   }
   // get / set values
   {
-    const size_t index = 5;
-    const size_t value = 25;
+    const usize index = 5;
+    const usize value = 25;
     store.setValue(index, value);
     REQUIRE(store.getValue(index) == value);
   }
@@ -286,12 +286,12 @@ TEST_CASE("DataArrayTest")
   {
     SECTION("test subscript operators")
     {
-      for(size_t i = 0; i < dataArr->getSize(); i++)
+      for(usize i = 0; i < dataArr->getSize(); i++)
       {
         (*dataArr)[i] = i + 1;
       }
       int32 x = 1;
-      for(size_t i = 0; i < dataArr->getSize(); i++)
+      for(usize i = 0; i < dataArr->getSize(); i++)
       {
         REQUIRE((*dataArr)[i] == x++);
       }

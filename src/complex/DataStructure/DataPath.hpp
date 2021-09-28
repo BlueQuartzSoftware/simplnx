@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
@@ -43,9 +44,9 @@ public:
 
   /**
    * @brief Returns the number of items in the DataPath.
-   * @return size_t
+   * @return usize
    */
-  size_t getLength() const;
+  usize getLength() const;
 
   /**
    * @brief Return true if the path is empty
@@ -100,7 +101,7 @@ public:
    * @param index
    * @return std::string
    */
-  const std::string& operator[](size_t index) const;
+  const std::string& operator[](usize index) const;
 
   /**
    * @brief Returns a string representation using a target divider.

@@ -40,21 +40,21 @@ public:
 
   /**
    * @brief Returns the index's row position.
-   * @return size_t
+   * @return usize
    */
-  size_t getRow() const;
+  usize getRow() const;
 
   /**
    * @brief Returns the index's column position.
-   * @return size_t
+   * @return usize
    */
-  size_t getCol() const;
+  usize getCol() const;
 
   /**
    * @brief Returns the index's depth position.
-   * @return size_t
+   * @return usize
    */
-  size_t getDepth() const;
+  usize getDepth() const;
 
   /**
    * @brief Returns the index's 3D tile position.

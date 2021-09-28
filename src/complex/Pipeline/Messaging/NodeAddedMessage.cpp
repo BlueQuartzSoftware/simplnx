@@ -4,7 +4,7 @@
 
 using namespace complex;
 
-NodeAddedMessage::NodeAddedMessage(Pipeline* pipeline, AbstractPipelineNode* newNode, size_t index)
+NodeAddedMessage::NodeAddedMessage(Pipeline* pipeline, AbstractPipelineNode* newNode, usize index)
 : AbstractPipelineMessage(pipeline)
 , m_Node(newNode)
 , m_Index(index)
@@ -18,7 +18,7 @@ AbstractPipelineNode* NodeAddedMessage::getNewNode() const
   return m_Node;
 }
 
-size_t NodeAddedMessage::getIndex() const
+usize NodeAddedMessage::getIndex() const
 {
   return m_Index;
 }

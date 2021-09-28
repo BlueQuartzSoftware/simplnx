@@ -1,5 +1,7 @@
 #pragma once
 
+#include "complex/Common/Types.hpp"
+
 #include <array>
 #include <cstddef>
 #include <stdexcept>
@@ -20,7 +22,7 @@ public:
   using ValueType = T;
   using Pointer = T*;
   using ConstPointer = const T*;
-  const size_t dimensions = 3;
+  const usize dimensions = 3;
   using ArrayType = std::array<T, 3>;
 
   /**
@@ -183,7 +185,7 @@ public:
    */
   void setPos(Pointer pos)
   {
-    for(size_t i = 0; i < dimensions; i++)
+    for(usize i = 0; i < dimensions; i++)
     {
       m_Pos[i] = pos[i];
     }
@@ -206,7 +208,7 @@ public:
   Point3D operator+(const Point3D& rhs) const
   {
     ArrayType pos = {0, 0, 0};
-    for(size_t i = 0; i < dimensions; i++)
+    for(usize i = 0; i < dimensions; i++)
     {
       pos[i] = m_Pos[i] + rhs.m_Pos[i];
     }
@@ -221,7 +223,7 @@ public:
   Point3D operator-(const Point3D& rhs) const
   {
     ArrayType pos = {0, 0, 0};
-    for(size_t i = 0; i < dimensions; i++)
+    for(usize i = 0; i < dimensions; i++)
     {
       pos[i] = m_Pos[i] - rhs.m_Pos[i];
     }
@@ -235,7 +237,7 @@ public:
    */
   Point3D& operator+=(const Point3D& rhs)
   {
-    for(size_t i = 0; i < dimensions; i++)
+    for(usize i = 0; i < dimensions; i++)
     {
       m_Pos[i] += rhs.m_Pos[i];
     }
@@ -249,7 +251,7 @@ public:
    */
   Point3D& operator-=(const Point3D& rhs)
   {
-    for(size_t i = 0; i < dimensions; i++)
+    for(usize i = 0; i < dimensions; i++)
     {
       m_Pos[i] -= rhs.m_Pos[i];
     }
@@ -304,7 +306,7 @@ public:
    * @param index
    * @return ValueType&
    */
-  ValueType& operator[](size_t index)
+  ValueType& operator[](usize index)
   {
     if(index >= 3)
     {
@@ -319,7 +321,7 @@ public:
    * @param index
    * @return const ValueType&
    */
-  const ValueType& operator[](size_t index) const
+  const ValueType& operator[](usize index) const
   {
     if(index >= 3)
     {

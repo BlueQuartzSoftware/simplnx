@@ -96,7 +96,7 @@ bool COMPLEX_EXPORT datasetExists(hid_t locationID, const std::string& datasetNa
  * @param typeSize THe H5 getSize of the data
  * @return Negative value is Failure. Zero or Positive is success;
  */
-herr_t COMPLEX_EXPORT getDatasetInfo(hid_t locationID, const std::string& datasetName, std::vector<hsize_t>& dims, H5T_class_t& classType, size_t& sizeType);
+herr_t COMPLEX_EXPORT getDatasetInfo(hid_t locationID, const std::string& datasetName, std::vector<hsize_t>& dims, H5T_class_t& classType, usize& sizeType);
 
 herr_t COMPLEX_EXPORT find_attr(hid_t /*locationID*/, const char* name, const H5A_info_t* /*info*/, void* op_data);
 
@@ -170,7 +170,7 @@ inline hid_t COMPLEX_EXPORT HDFTypeForPrimitive()
   {
     return H5T_NATIVE_UINT8;
   }
-  else if constexpr(std::is_same_v<T, size_t>)
+  else if constexpr(std::is_same_v<T, usize>)
   {
     return H5T_NATIVE_UINT64;
   }

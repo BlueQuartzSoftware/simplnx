@@ -17,7 +17,7 @@ class Point2D
 public:
   using ValueType = T;
   using Pointer = T*;
-  const size_t dimensions = 2;
+  const usize dimensions = 2;
   using ArrayType = std::array<T, 2>;
 
   /**
@@ -148,7 +148,7 @@ public:
    * @param index
    * @return ValueType&
    */
-  ValueType& operator[](size_t index)
+  ValueType& operator[](usize index)
   {
     return m_Pos[index];
   }
@@ -201,7 +201,7 @@ public:
   Point2D operator+(const Point2D& rhs) const
   {
     ArrayType pos = {0, 0};
-    for(size_t i = 0; i < dimensions; i++)
+    for(usize i = 0; i < dimensions; i++)
     {
       pos[i] = m_Pos[i] + rhs.m_Pos[i];
     }
@@ -216,7 +216,7 @@ public:
   Point2D operator-(const Point2D& rhs) const
   {
     ArrayType pos = {0, 0};
-    for(size_t i = 0; i < dimensions; i++)
+    for(usize i = 0; i < dimensions; i++)
     {
       pos[i] = m_Pos[i] - rhs.m_Pos[i];
     }
@@ -230,7 +230,7 @@ public:
    */
   Point2D& operator+=(const Point2D& rhs)
   {
-    for(size_t i = 0; i < dimensions; i++)
+    for(usize i = 0; i < dimensions; i++)
     {
       m_Pos[i] += rhs.m_Pos[i];
     }
@@ -244,7 +244,7 @@ public:
    */
   Point2D& operator-=(const Point2D& rhs)
   {
-    for(size_t i = 0; i < dimensions; i++)
+    for(usize i = 0; i < dimensions; i++)
     {
       m_Pos[i] -= rhs.m_Pos[i];
     }

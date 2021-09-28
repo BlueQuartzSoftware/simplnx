@@ -114,7 +114,7 @@ const Float32Array* RectGridGeom::getZBounds() const
 
 void RectGridGeom::initializeWithZeros()
 {
-  for(size_t i = 0; i < 3; i++)
+  for(usize i = 0; i < 3; i++)
   {
     m_Dimensions[i] = 0;
   }
@@ -123,7 +123,7 @@ void RectGridGeom::initializeWithZeros()
   m_zBoundsId.reset();
 }
 
-size_t RectGridGeom::getNumberOfElements() const
+usize RectGridGeom::getNumberOfElements() const
 {
   return m_Dimensions.getX() * m_Dimensions.getY() * m_Dimensions.getZ();
 }
@@ -138,11 +138,11 @@ AbstractGeometry::StatusCode RectGridGeom::findElementSizes()
   float32 yRes = 0.0f;
   float32 zRes = 0.0f;
 
-  for(size_t z = 0; z < m_Dimensions[2]; z++)
+  for(usize z = 0; z < m_Dimensions[2]; z++)
   {
-    for(size_t y = 0; y < m_Dimensions[1]; y++)
+    for(usize y = 0; y < m_Dimensions[1]; y++)
     {
-      for(size_t x = 0; x < m_Dimensions[0]; x++)
+      for(usize x = 0; x < m_Dimensions[0]; x++)
       {
         xRes = xBnds->at(x + 1) - xBnds->at(x);
         yRes = yBnds->at(y + 1) - yBnds->at(y);
@@ -309,22 +309,22 @@ complex::SizeVec3 RectGridGeom::getDimensions() const
   return m_Dimensions;
 }
 
-size_t RectGridGeom::getNumXPoints() const
+usize RectGridGeom::getNumXPoints() const
 {
   return m_Dimensions.getX();
 }
 
-size_t RectGridGeom::getNumYPoints() const
+usize RectGridGeom::getNumYPoints() const
 {
   return m_Dimensions.getY();
 }
 
-size_t RectGridGeom::getNumZPoints() const
+usize RectGridGeom::getNumZPoints() const
 {
   return m_Dimensions.getZ();
 }
 
-complex::Point3D<float32> RectGridGeom::getPlaneCoordsf(size_t idx[3]) const
+complex::Point3D<float32> RectGridGeom::getPlaneCoordsf(usize idx[3]) const
 {
   const Float32Array* xBnds = getXBounds();
   const Float32Array* yBnds = getYBounds();
@@ -337,7 +337,7 @@ complex::Point3D<float32> RectGridGeom::getPlaneCoordsf(size_t idx[3]) const
   return coords;
 }
 
-complex::Point3D<float32> RectGridGeom::getPlaneCoordsf(size_t x, size_t y, size_t z) const
+complex::Point3D<float32> RectGridGeom::getPlaneCoordsf(usize x, usize y, usize z) const
 {
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
@@ -350,11 +350,11 @@ complex::Point3D<float32> RectGridGeom::getPlaneCoordsf(size_t x, size_t y, size
   return coords;
 }
 
-complex::Point3D<float32> RectGridGeom::getPlaneCoordsf(size_t idx) const
+complex::Point3D<float32> RectGridGeom::getPlaneCoordsf(usize idx) const
 {
-  size_t column = idx % m_Dimensions[0];
-  size_t row = (idx / m_Dimensions[0]) % m_Dimensions[1];
-  size_t plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
+  usize column = idx % m_Dimensions[0];
+  usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
+  usize plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
 
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
@@ -367,7 +367,7 @@ complex::Point3D<float32> RectGridGeom::getPlaneCoordsf(size_t idx) const
   return coords;
 }
 
-complex::Point3D<float64> RectGridGeom::getPlaneCoords(size_t idx[3]) const
+complex::Point3D<float64> RectGridGeom::getPlaneCoords(usize idx[3]) const
 {
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
@@ -380,7 +380,7 @@ complex::Point3D<float64> RectGridGeom::getPlaneCoords(size_t idx[3]) const
   return coords;
 }
 
-complex::Point3D<float64> RectGridGeom::getPlaneCoords(size_t x, size_t y, size_t z) const
+complex::Point3D<float64> RectGridGeom::getPlaneCoords(usize x, usize y, usize z) const
 {
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
@@ -393,11 +393,11 @@ complex::Point3D<float64> RectGridGeom::getPlaneCoords(size_t x, size_t y, size_
   return coords;
 }
 
-complex::Point3D<float64> RectGridGeom::getPlaneCoords(size_t idx) const
+complex::Point3D<float64> RectGridGeom::getPlaneCoords(usize idx) const
 {
-  size_t column = idx % m_Dimensions[0];
-  size_t row = (idx / m_Dimensions[0]) % m_Dimensions[1];
-  size_t plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
+  usize column = idx % m_Dimensions[0];
+  usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
+  usize plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
 
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
@@ -410,7 +410,7 @@ complex::Point3D<float64> RectGridGeom::getPlaneCoords(size_t idx) const
   return coords;
 }
 
-complex::Point3D<float32> RectGridGeom::getCoordsf(size_t idx[3]) const
+complex::Point3D<float32> RectGridGeom::getCoordsf(usize idx[3]) const
 {
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
@@ -423,7 +423,7 @@ complex::Point3D<float32> RectGridGeom::getCoordsf(size_t idx[3]) const
   return coords;
 }
 
-complex::Point3D<float32> RectGridGeom::getCoordsf(size_t x, size_t y, size_t z) const
+complex::Point3D<float32> RectGridGeom::getCoordsf(usize x, usize y, usize z) const
 {
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
@@ -436,11 +436,11 @@ complex::Point3D<float32> RectGridGeom::getCoordsf(size_t x, size_t y, size_t z)
   return coords;
 }
 
-complex::Point3D<float32> RectGridGeom::getCoordsf(size_t idx) const
+complex::Point3D<float32> RectGridGeom::getCoordsf(usize idx) const
 {
-  size_t column = idx % m_Dimensions[0];
-  size_t row = (idx / m_Dimensions[0]) % m_Dimensions[1];
-  size_t plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
+  usize column = idx % m_Dimensions[0];
+  usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
+  usize plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
 
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
@@ -453,7 +453,7 @@ complex::Point3D<float32> RectGridGeom::getCoordsf(size_t idx) const
   return coords;
 }
 
-complex::Point3D<float64> RectGridGeom::getCoords(size_t idx[3]) const
+complex::Point3D<float64> RectGridGeom::getCoords(usize idx[3]) const
 {
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
@@ -466,7 +466,7 @@ complex::Point3D<float64> RectGridGeom::getCoords(size_t idx[3]) const
   return coords;
 }
 
-complex::Point3D<float64> RectGridGeom::getCoords(size_t x, size_t y, size_t z) const
+complex::Point3D<float64> RectGridGeom::getCoords(usize x, usize y, usize z) const
 {
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
@@ -479,11 +479,11 @@ complex::Point3D<float64> RectGridGeom::getCoords(size_t x, size_t y, size_t z) 
   return coords;
 }
 
-complex::Point3D<float64> RectGridGeom::getCoords(size_t idx) const
+complex::Point3D<float64> RectGridGeom::getCoords(usize idx) const
 {
-  size_t column = idx % m_Dimensions[0];
-  size_t row = (idx / m_Dimensions[0]) % m_Dimensions[1];
-  size_t plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
+  usize column = idx % m_Dimensions[0];
+  usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
+  usize plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
 
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
@@ -496,7 +496,7 @@ complex::Point3D<float64> RectGridGeom::getCoords(size_t idx) const
   return coords;
 }
 
-size_t RectGridGeom::getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const
+usize RectGridGeom::getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const
 {
   auto& xBnds = *getXBounds();
   auto& yBnds = *getYBounds();
@@ -521,12 +521,12 @@ size_t RectGridGeom::getIndex(float32 xCoord, float32 yCoord, float32 zCoord) co
   int64 y = std::distance(yBnds.begin(), std::adjacent_find(yBnds.begin(), yBnds.end(), [yCoord](const float32 a, const float32 b) { return (yCoord >= a && yCoord < b); }));
   int64 z = std::distance(zBnds.begin(), std::adjacent_find(zBnds.begin(), zBnds.end(), [zCoord](const float32 a, const float32 b) { return (zCoord >= a && zCoord < b); }));
 
-  size_t xSize = xBnds.getSize() - 1;
-  size_t ySize = yBnds.getSize() - 1;
+  usize xSize = xBnds.getSize() - 1;
+  usize ySize = yBnds.getSize() - 1;
   return (ySize * xSize * z) + (xSize * y) + x;
 }
 
-size_t RectGridGeom::getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const
+usize RectGridGeom::getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const
 {
   auto& xBnds = *getXBounds();
   auto& yBnds = *getYBounds();
@@ -548,12 +548,12 @@ size_t RectGridGeom::getIndex(float64 xCoord, float64 yCoord, float64 zCoord) co
   }
 
   // Use standard distance to get the index of the returned iterator from adjacent_find
-  size_t x = std::distance(xBnds.begin(), std::adjacent_find(xBnds.begin(), xBnds.end(), [xCoord](const float32 a, const float32 b) { return (xCoord >= a && xCoord < b); }));
-  size_t y = std::distance(yBnds.begin(), std::adjacent_find(yBnds.begin(), yBnds.end(), [yCoord](const float32 a, const float32 b) { return (yCoord >= a && yCoord < b); }));
-  size_t z = std::distance(zBnds.begin(), std::adjacent_find(zBnds.begin(), zBnds.end(), [zCoord](const float32 a, const float32 b) { return (zCoord >= a && zCoord < b); }));
+  usize x = std::distance(xBnds.begin(), std::adjacent_find(xBnds.begin(), xBnds.end(), [xCoord](const float32 a, const float32 b) { return (xCoord >= a && xCoord < b); }));
+  usize y = std::distance(yBnds.begin(), std::adjacent_find(yBnds.begin(), yBnds.end(), [yCoord](const float32 a, const float32 b) { return (yCoord >= a && yCoord < b); }));
+  usize z = std::distance(zBnds.begin(), std::adjacent_find(zBnds.begin(), zBnds.end(), [zCoord](const float32 a, const float32 b) { return (zCoord >= a && zCoord < b); }));
 
-  size_t xSize = xBnds.getSize() - 1;
-  size_t ySize = yBnds.getSize() - 1;
+  usize xSize = xBnds.getSize() - 1;
+  usize ySize = yBnds.getSize() - 1;
   return (ySize * xSize * z) + (xSize * y) + x;
 }
 

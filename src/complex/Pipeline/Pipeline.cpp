@@ -175,7 +175,7 @@ bool Pipeline::executeFrom(const index_type& index)
   return executeFrom(index, ds);
 }
 
-size_t Pipeline::size() const
+usize Pipeline::size() const
 {
   return m_Collection.size();
 }

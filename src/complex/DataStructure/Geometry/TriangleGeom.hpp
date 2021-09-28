@@ -67,7 +67,7 @@ public:
    * @brief
    * @param newNumTris
    */
-  void resizeTriList(size_t newNumTris);
+  void resizeTriList(usize newNumTris);
 
   /**
    * @brief
@@ -92,14 +92,14 @@ public:
    * @param triId
    * @param verts
    */
-  void setVertsAtTri(size_t triId, size_t verts[3]);
+  void setVertsAtTri(usize triId, usize verts[3]);
 
   /**
    * @brief
    * @param triId
    * @param verts
    */
-  void getVertsAtTri(size_t triId, size_t verts[3]) const;
+  void getVertsAtTri(usize triId, usize verts[3]) const;
 
   /**
    * @brief
@@ -108,13 +108,13 @@ public:
    * @param vert2
    * @param vert3
    */
-  void getVertCoordsAtTri(size_t triId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3) const;
+  void getVertCoordsAtTri(usize triId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3) const;
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfTris() const;
+  usize getNumberOfTris() const;
 
   /**
    * @brief
@@ -123,9 +123,9 @@ public:
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfElements() const override;
+  usize getNumberOfElements() const override;
 
   /**
    * @brief
@@ -228,19 +228,19 @@ public:
    * @param vertId
    * @param coords
    */
-  void setCoords(size_t vertId, const Point3D<float32>& coords) override;
+  void setCoords(usize vertId, const Point3D<float32>& coords) override;
 
   /**
    * @brief
    * @param vertId
    */
-  Point3D<float32> getCoords(size_t vertId) const override;
+  Point3D<float32> getCoords(usize vertId) const override;
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfVertices() const override;
+  usize getNumberOfVertices() const override;
 
   /**
    * @brief
@@ -252,7 +252,7 @@ public:
    * @brief
    * @param newNumEdges
    */
-  void resizeEdgeList(size_t newNumEdges) override;
+  void resizeEdgeList(usize newNumEdges) override;
 
   /**
    * @brief
@@ -260,7 +260,7 @@ public:
    * @param vert1
    * @param vert2
    */
-  void getVertCoordsAtEdge(size_t edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const override;
+  void getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const override;
 
   /**
    * @brief
@@ -306,7 +306,7 @@ protected:
    * @param vertices
    * @param allocate
    */
-  TriangleGeom(DataStructure& ds, const std::string& name, size_t numTriangles, const SharedVertexList* vertices, bool allocate);
+  TriangleGeom(DataStructure& ds, const std::string& name, usize numTriangles, const SharedVertexList* vertices, bool allocate);
 
   /**
    * @brief

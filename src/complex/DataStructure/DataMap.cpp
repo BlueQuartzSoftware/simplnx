@@ -37,7 +37,7 @@ DataMap DataMap::deepCopy() const
   return dataMap;
 }
 
-size_t DataMap::getSize() const
+usize DataMap::getSize() const
 {
   return m_Map.size();
 }
@@ -83,7 +83,7 @@ bool DataMap::erase(const Iterator& iter)
 std::vector<DataMap::IdType> DataMap::getKeys() const
 {
   std::vector<IdType> keys(m_Map.size());
-  size_t index = 0;
+  usize index = 0;
   for(auto& pair : m_Map)
   {
     keys[index++] = pair.first;

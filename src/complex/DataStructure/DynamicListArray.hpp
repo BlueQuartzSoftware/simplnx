@@ -77,7 +77,7 @@ public:
   virtual ~DynamicListArray()
   {
     // This makes sure we deallocate any lists that have been created
-    for(size_t i = 0; i < this->m_Size; i++)
+    for(usize i = 0; i < this->m_Size; i++)
     {
       if(this->m_Array[i].cells != nullptr)
       {
@@ -102,9 +102,9 @@ public:
 
   /**
    * @brief Returns the current array size.
-   * @return size_t
+   * @return usize
    */
-  size_t size() const
+  usize size() const
   {
     return m_Size;
   }
@@ -120,14 +120,14 @@ public:
     std::vector<T> linkCounts(m_Size, 0);
 
     // Figure out how many entries, and for each entry, how many cells
-    for(size_t pointId = 0; pointId < m_Size; pointId++)
+    for(usize pointId = 0; pointId < m_Size; pointId++)
     {
       linkCounts[pointId] = this->m_Array[pointId].numCells;
     }
     // Allocate all that in the copy
     copy->allocateLists(linkCounts);
     // Copy the data from the original to the new
-    for(size_t ptId = 0; ptId < m_Size; ptId++)
+    for(usize ptId = 0; ptId < m_Size; ptId++)
     {
       ElementList& elementList = getElementList(ptId);
       copy->setElementList(ptId, elementList);
@@ -150,7 +150,7 @@ public:
    * @param pos
    * @param cellId
    */
-  inline void insertCellReference(size_t pointId, size_t pos, size_t cellId)
+  inline void insertCellReference(usize pointId, usize pos, usize cellId)
   {
     this->m_Array[pointId].cells[pos] = cellId;
   }
@@ -160,7 +160,7 @@ public:
    * @param pointId
    * @return ElementList&
    */
-  ElementList& getElementList(size_t pointId) const
+  ElementList& getElementList(usize pointId) const
   {
     return this->m_Array[pointId];
   }
@@ -172,7 +172,7 @@ public:
    * @param data
    * @return bool
    */
-  bool setElementList(size_t pointId, T numCells, K* data)
+  bool setElementList(usize pointId, T numCells, K* data)
   {
     if(pointId >= m_Size)
     {
@@ -197,7 +197,7 @@ public:
    * @param list
    * @return bool
    */
-  bool setElementList(size_t pointId, ElementList& list)
+  bool setElementList(usize pointId, ElementList& list)
   {
     T nCells = list.numCells;
     K* data = list.cells;
@@ -223,7 +223,7 @@ public:
    * @param pointId
    * @return T
    */
-  T getNumberOfElements(size_t pointId) const
+  T getNumberOfElements(usize pointId) const
   {
     return this->m_Array[pointId].numCells;
   }
@@ -233,7 +233,7 @@ public:
    * @param pointId
    * @return K*
    */
-  K* getElementListPointer(size_t pointId) const
+  K* getElementListPointer(usize pointId) const
   {
     return this->m_Array[pointId].cells;
   }
@@ -243,16 +243,16 @@ public:
    * @param buffer
    * @param numElements
    */
-  void deserializeLinks(std::vector<uint8>& buffer, size_t numElements)
+  void deserializeLinks(std::vector<uint8>& buffer, usize numElements)
   {
-    size_t offset = 0;
+    usize offset = 0;
     allocate(numElements); // Allocate all the links with 0 and nullptr;
     uint8* bufPtr = &(buffer.front());
 
     // Walk the array and allocate all the array links to Zero and nullptr
     T* numCells = nullptr;
     // int32* cells = nullptr;
-    for(size_t i = 0; i < numElements; ++i)
+    for(usize i = 0; i < numElements; ++i)
     {
       numCells = reinterpret_cast<T*>(bufPtr + offset);
       this->m_Array[i].numCells = *numCells; // Set the number of cells in this link
@@ -295,12 +295,12 @@ protected:
   //----------------------------------------------------------------------------
   // This will allocate memory to hold all the NeighborList structures where each
   // structure is initialized to Zero Entries and a nullptr Pointer
-  void allocate(size_t size)
+  void allocate(usize size)
   {
     static typename DynamicListArray<T, K>::ElementList linkInit = {0, nullptr};
 
     // This makes sure we deallocate any lists that have been created
-    for(size_t i = 0; i < this->m_Size; i++)
+    for(usize i = 0; i < this->m_Size; i++)
     {
       if(this->m_Array[i].cells != nullptr)
       {
@@ -318,7 +318,7 @@ protected:
     this->m_Array = new typename DynamicListArray<T, K>::ElementList[size];
 
     // Initialize each structure to have 0 entries and nullptr pointer.
-    for(size_t i = 0; i < size; i++)
+    for(usize i = 0; i < size; i++)
     {
       this->m_Array[i] = linkInit;
     }
@@ -337,7 +337,7 @@ protected:
 
 private:
   ElementList* m_Array = nullptr; // pointer to data
-  size_t m_Size = 0;
+  usize m_Size = 0;
 };
 
 using Int32Int32DynamicListArray = DynamicListArray<int32, int32>;

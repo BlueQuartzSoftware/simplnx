@@ -66,7 +66,7 @@ public:
    * @brief
    * @param numTris
    */
-  void resizeTriList(size_t numTris);
+  void resizeTriList(usize numTris);
 
   /**
    * @brief
@@ -91,26 +91,26 @@ public:
    * @param triId
    * @param verts
    */
-  void setVertsAtTri(size_t triId, size_t verts[3]);
+  void setVertsAtTri(usize triId, usize verts[3]);
 
   /**
    * @brief
    * @param triId
    * @param verts
    */
-  void getVertsAtTri(size_t triId, size_t verts[3]) const;
+  void getVertsAtTri(usize triId, usize verts[3]) const;
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfTris() const;
+  usize getNumberOfTris() const;
 
   /**
    * @brief
    * @param numTets
    */
-  void resizeTetList(size_t numTets);
+  void resizeTetList(usize numTets);
 
   /**
    * @brief
@@ -135,14 +135,14 @@ public:
    * @param tetId
    * @param verts
    */
-  void setVertsAtTet(size_t tetId, size_t verts[4]);
+  void setVertsAtTet(usize tetId, usize verts[4]);
 
   /**
    * @brief
    * @param tetId
    * @param verts
    */
-  void getVertsAtTet(size_t tetId, size_t verts[4]) const;
+  void getVertsAtTet(usize tetId, usize verts[4]) const;
 
   /**
    * @brief
@@ -152,13 +152,13 @@ public:
    * @param vert3
    * @param vert4
    */
-  void getVertCoordsAtTet(size_t tetId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const;
+  void getVertCoordsAtTet(usize tetId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const;
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfTets() const;
+  usize getNumberOfTets() const;
 
   /**
    * @brief
@@ -167,9 +167,9 @@ public:
 
   /**
    * @brief
-   * @return size_t
+   * @return usize
    */
-  size_t getNumberOfElements() const override;
+  usize getNumberOfElements() const override;
 
   /**
    * @brief
@@ -334,7 +334,7 @@ protected:
    * @param vertices
    * @param allocate = true
    */
-  TetrahedralGeom(DataStructure& ds, const std::string& name, size_t numTets, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
+  TetrahedralGeom(DataStructure& ds, const std::string& name, usize numTets, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
 
   /**
    * @brief

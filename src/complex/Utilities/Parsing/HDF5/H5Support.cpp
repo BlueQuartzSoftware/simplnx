@@ -64,7 +64,7 @@ bool H5::Support::datasetExists(hid_t locationID, const std::string& datasetName
   return error >= 0;
 }
 
-herr_t H5::Support::getDatasetInfo(hid_t locationID, const std::string& datasetName, std::vector<hsize_t>& dims, H5T_class_t& classType, size_t& sizeType)
+herr_t H5::Support::getDatasetInfo(hid_t locationID, const std::string& datasetName, std::vector<hsize_t>& dims, H5T_class_t& classType, usize& sizeType)
 {
   hid_t datasetID;
   herr_t error = 0;
@@ -283,7 +283,7 @@ herr_t H5::Support::readVectorOfStringDataset(hid_t locationID, const std::strin
      * copy the data into the vector of strings
      */
     data.resize(dims[0]);
-    for(size_t i = 0; i < dims[0]; i++)
+    for(usize i = 0; i < dims[0]; i++)
     {
       // printf("%s[%d]: %s\n", "VlenStrings", i, rData[i].p);
       data[i] = std::string(rData[i]);

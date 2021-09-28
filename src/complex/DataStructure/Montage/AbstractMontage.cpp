@@ -36,7 +36,7 @@ AbstractMontage::CollectionType AbstractMontage::getGeometries() const
   return geometries;
 }
 
-size_t AbstractMontage::getTileCount() const
+usize AbstractMontage::getTileCount() const
 {
   return m_Collection.size();
 }
