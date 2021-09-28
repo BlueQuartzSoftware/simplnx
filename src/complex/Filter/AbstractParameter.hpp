@@ -22,19 +22,19 @@ public:
    * @brief Returns the user defined name.
    * @return
    */
-  [[nodiscard]] std::string name() const final;
+  std::string name() const final;
 
   /**
    * @brief Returns the user defined human readable name.
    * @return
    */
-  [[nodiscard]] std::string humanName() const final;
+  std::string humanName() const final;
 
   /**
    * @brief Returns the user defined help text.
    * @return
    */
-  [[nodiscard]] std::string helpText() const final;
+  std::string helpText() const final;
 
 protected:
   AbstractParameter() = delete;

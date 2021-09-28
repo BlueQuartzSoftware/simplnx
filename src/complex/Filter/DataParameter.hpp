@@ -36,19 +36,19 @@ public:
    * @brief Returns whether the parameter is a ValueParameter or DataParameter.
    * @return
    */
-  [[nodiscard]] Type type() const final;
+  Type type() const final;
 
   /**
    * @brief Returns whether the parameter refers to a required or created DataObject.
    * @return
    */
-  [[nodiscard]] Category category() const;
+  Category category() const;
 
   /**
    * @brief Returns whether the parameter needs const or non-const access to the DataStructure.
    * @return
    */
-  [[nodiscard]] virtual Mutability mutability() const = 0;
+  virtual Mutability mutability() const = 0;
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
@@ -56,7 +56,7 @@ public:
    * @param value
    * @return
    */
-  [[nodiscard]] virtual Result<> validate(const DataStructure& dataStructure, const std::any& value) const = 0;
+  virtual Result<> validate(const DataStructure& dataStructure, const std::any& value) const = 0;
 
 protected:
   DataParameter() = delete;

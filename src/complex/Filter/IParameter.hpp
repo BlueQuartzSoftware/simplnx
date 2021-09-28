@@ -59,63 +59,63 @@ public:
    * @brief Returns the parameter's uuid.
    * @return
    */
-  [[nodiscard]] virtual Uuid uuid() const = 0;
+  virtual Uuid uuid() const = 0;
 
   /**
    * @brief Returns the user defined name.
    * @return
    */
-  [[nodiscard]] virtual std::string name() const = 0;
+  virtual std::string name() const = 0;
 
   /**
    * @brief Returns the user defined human readable name.
    * @return
    */
-  [[nodiscard]] virtual std::string humanName() const = 0;
+  virtual std::string humanName() const = 0;
 
   /**
    * @brief Returns the user defined help text.
    * @return
    */
-  [[nodiscard]] virtual std::string helpText() const = 0;
+  virtual std::string helpText() const = 0;
 
   /**
    * @brief Returns the user defined default value.
    * @return
    */
-  [[nodiscard]] virtual std::any defaultValue() const = 0;
+  virtual std::any defaultValue() const = 0;
 
   /**
    * @brief Returns whether the parameter is a ValueParameter or DataParameter.
    * @return
    */
-  [[nodiscard]] virtual Type type() const = 0;
+  virtual Type type() const = 0;
 
   /**
    * @brief Returns a list of accpeted input types.
    * @return
    */
-  [[nodiscard]] virtual AcceptedTypes acceptedTypes() const = 0;
+  virtual AcceptedTypes acceptedTypes() const = 0;
 
   /**
    * @brief Converts the given value to JSON.
    * Throws if value is not an accepted type.
    * @param value
    */
-  [[nodiscard]] virtual nlohmann::json toJson(const std::any& value) const = 0;
+  virtual nlohmann::json toJson(const std::any& value) const = 0;
 
   /**
    * @brief Converts the given JSON to a std::any containing the appropriate input type.
    * Returns any warnings/errors.
    * @return
    */
-  [[nodiscard]] virtual Result<std::any> fromJson(const nlohmann::json& json) const = 0;
+  virtual Result<std::any> fromJson(const nlohmann::json& json) const = 0;
 
   /**
    * @brief Creates a copy of the parameter.
    * @return
    */
-  [[nodiscard]] virtual UniquePointer clone() const = 0;
+  virtual UniquePointer clone() const = 0;
 
   /**
    * @brief Constructs an input value from the given arguments.
@@ -123,7 +123,7 @@ public:
    * May be overriden by subclasses that depend on other parameters.
    * @return
    */
-  [[nodiscard]] virtual std::any construct(const Arguments& args) const;
+  virtual std::any construct(const Arguments& args) const;
 
 protected:
   IParameter() = default;

@@ -72,25 +72,25 @@ public:
    * @brief Returns the NumericType of the DataArray to be created.
    * @return
    */
-  [[nodiscard]] NumericType type() const;
+  NumericType type() const;
 
   /**
    * @brief Returns the dimensions of the DataArray to be created.
    * @return
    */
-  [[nodiscard]] std::vector<usize> dims() const;
+  std::vector<usize> dims() const;
 
   /**
    * @brief Returns the number of components of the DataArray to be created.
    * @return
    */
-  [[nodiscard]] uint64 numComponents() const;
+  uint64 numComponents() const;
 
   /**
    * @brief Returns the path of the DataArray to be created.
    * @return
    */
-  [[nodiscard]] DataPath path() const;
+  DataPath path() const;
 
 private:
   NumericType m_Type;

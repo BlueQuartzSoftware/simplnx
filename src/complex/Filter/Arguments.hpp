@@ -46,7 +46,7 @@ public:
    * @param key
    * @return
    */
-  [[nodiscard]] const std::any& at(std::string_view key) const;
+  const std::any& at(std::string_view key) const;
 
   /**
    * @brief Returns a const reference to the value at the given key cast to T.
@@ -56,7 +56,7 @@ public:
    * @return
    */
   template <class T>
-  [[nodiscard]] const T& valueRef(std::string_view key) const
+  const T& valueRef(std::string_view key) const
   {
     const T* value = std::any_cast<T>(&at(key));
     if(value == nullptr)
@@ -74,7 +74,7 @@ public:
    * @return
    */
   template <class T>
-  [[nodiscard]] T value(std::string_view key) const
+  T value(std::string_view key) const
   {
     return std::any_cast<T>(at(key));
   }
@@ -87,7 +87,7 @@ public:
    * @return
    */
   template <class T>
-  [[nodiscard]] T& ref(std::string_view key) const
+  T& ref(std::string_view key) const
   {
     return std::any_cast<std::reference_wrapper<T>>(at(key)).get();
   }
@@ -96,37 +96,37 @@ public:
    * @brief Returns the size of the map of arguments.
    * @return
    */
-  [[nodiscard]] usize size() const;
+  usize size() const;
 
   /**
    * @brief Returns true if empty, false otherwise.
    * @return
    */
-  [[nodiscard]] bool empty() const;
+  bool empty() const;
 
   /**
    * @brief Returns true if this contains the given key, false otherwise.
    * @param key
    * @return
    */
-  [[nodiscard]] bool contains(std::string_view key) const;
+  bool contains(std::string_view key) const;
 
-  [[nodiscard]] auto begin()
+  auto begin()
   {
     return m_Args.begin();
   }
 
-  [[nodiscard]] auto begin() const
+  auto begin() const
   {
     return m_Args.begin();
   }
 
-  [[nodiscard]] auto end()
+  auto end()
   {
     return m_Args.end();
   }
 
-  [[nodiscard]] auto end() const
+  auto end() const
   {
     return m_Args.end();
   }

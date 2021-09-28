@@ -75,31 +75,31 @@ public:
    * @brief Returns the name of the filter.
    * @return
    */
-  [[nodiscard]] virtual std::string name() const = 0;
+  virtual std::string name() const = 0;
 
   /**
    * @brief Returns the uuid of the filter.
    * @return
    */
-  [[nodiscard]] virtual Uuid uuid() const = 0;
+  virtual Uuid uuid() const = 0;
 
   /**
    * @brief Returns the human readable name of the filter.
    * @return
    */
-  [[nodiscard]] virtual std::string humanName() const = 0;
+  virtual std::string humanName() const = 0;
 
   /**
    * @brief Returns the parameters of the filter (i.e. its inputs)
    * @return
    */
-  [[nodiscard]] virtual Parameters parameters() const = 0;
+  virtual Parameters parameters() const = 0;
 
   /**
    * @brief Returns a copy of the filter.
    * @return
    */
-  [[nodiscard]] virtual UniquePointer clone() const = 0;
+  virtual UniquePointer clone() const = 0;
 
   /**
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
@@ -127,14 +127,14 @@ public:
    * @param args
    * @return
    */
-  [[nodiscard]] nlohmann::json toJson(const Arguments& args) const;
+  nlohmann::json toJson(const Arguments& args) const;
 
   /**
    * @brief Converts JSON to arguments based on the filter's parameters.
    * @param json
    * @return
    */
-  [[nodiscard]] Result<Arguments> fromJson(const nlohmann::json& json) const;
+  Result<Arguments> fromJson(const nlohmann::json& json) const;
 
 protected:
   IFilter() = default;
