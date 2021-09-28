@@ -25,7 +25,7 @@ enum class endian : uint8
 };
 
 template <class T>
-[[nodiscard]] inline constexpr T byteswap(T value) noexcept
+inline constexpr T byteswap(T value) noexcept
 {
   static_assert(std::is_integral_v<T>);
   if constexpr(sizeof(T) == sizeof(uint8))
@@ -48,7 +48,7 @@ template <class T>
 }
 
 template <class T, endian Endianness = endian::native, usize Size = sizeof(T)>
-[[nodiscard]] inline constexpr T bit_cast_int(const std::byte* data) noexcept
+inline constexpr T bit_cast_int(const std::byte* data) noexcept
 {
   static_assert(std::is_integral_v<T>);
   static_assert(Size <= sizeof(T));
@@ -69,7 +69,7 @@ template <class T, endian Endianness = endian::native, usize Size = sizeof(T)>
 }
 
 template <class T>
-[[nodiscard]] inline T bit_cast_ptr(const std::byte* data) noexcept
+inline T bit_cast_ptr(const std::byte* data) noexcept
 {
   static_assert(std::is_trivially_constructible_v<T>);
   static_assert(std::is_trivially_copyable_v<T>);

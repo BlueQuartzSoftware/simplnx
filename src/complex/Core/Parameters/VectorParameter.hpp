@@ -16,13 +16,13 @@ public:
    * @brief
    * @return
    */
-  [[nodiscard]] virtual const NamesType& names() const = 0;
+  virtual const NamesType& names() const = 0;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] virtual usize size() const = 0;
+  virtual usize size() const = 0;
 
 protected:
   using ValueParameter::ValueParameter;
@@ -49,69 +49,69 @@ public:
    * @brief
    * @return
    */
-  [[nodiscard]] Uuid uuid() const override;
+  Uuid uuid() const override;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] AcceptedTypes acceptedTypes() const override;
+  AcceptedTypes acceptedTypes() const override;
 
   /**
    * @brief
    * @param value
    */
-  [[nodiscard]] nlohmann::json toJson(const std::any& value) const override;
+  nlohmann::json toJson(const std::any& value) const override;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] Result<std::any> fromJson(const nlohmann::json& json) const override;
+  Result<std::any> fromJson(const nlohmann::json& json) const override;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] UniquePointer clone() const override;
+  UniquePointer clone() const override;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] std::any defaultValue() const override;
+  std::any defaultValue() const override;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] const ValueType& defaultVector() const;
+  const ValueType& defaultVector() const;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] const NamesType& names() const override;
+  const NamesType& names() const override;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] usize size() const override;
-
-  /**
-   * @brief
-   * @param value
-   * @return
-   */
-  [[nodiscard]] Result<> validate(const std::any& value) const override;
+  usize size() const override;
 
   /**
    * @brief
    * @param value
    * @return
    */
-  [[nodiscard]] Result<> validateVector(const ValueType& value) const;
+  Result<> validate(const std::any& value) const override;
+
+  /**
+   * @brief
+   * @param value
+   * @return
+   */
+  Result<> validateVector(const ValueType& value) const;
 
 private:
   ValueType m_DefaultValue = {};

@@ -22,31 +22,31 @@ public:
    * @brief
    * @return
    */
-  [[nodiscard]] std::string name() const override;
+  std::string name() const override;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] Uuid uuid() const override;
+  Uuid uuid() const override;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] std::string humanName() const override;
+  std::string humanName() const override;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] Parameters parameters() const override;
+  Parameters parameters() const override;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] UniquePointer clone() const override;
+  UniquePointer clone() const override;
 
 protected:
   /**

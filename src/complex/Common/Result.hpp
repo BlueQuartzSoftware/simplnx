@@ -40,7 +40,7 @@ struct ResultBase
    * @brief Returns a reference to the contained value if valid. Otherwise throws.
    * @return T&
    */
-  [[nodiscard]] T& value()
+  T& value()
   {
     return m_Expected.value();
   }
@@ -49,7 +49,7 @@ struct ResultBase
    * @brief Returns a const reference to the contained value if valid. Otherwise throws.
    * @return const T&
    */
-  [[nodiscard]] const T& value() const
+  const T& value() const
   {
     return m_Expected.value();
   }
@@ -78,7 +78,7 @@ struct Result : public detail::ResultBaseT<T>
    * @brief Returns true if there are no errors, i.e. it is valid to access the contained type.
    * @return
    */
-  [[nodiscard]] bool valid() const
+  bool valid() const
   {
     return detail::ResultBaseT<T>::m_Expected.has_value();
   }
@@ -87,7 +87,7 @@ struct Result : public detail::ResultBaseT<T>
    * @brief Equivalent to !valid()
    * @return
    */
-  [[nodiscard]] bool invalid() const
+  bool invalid() const
   {
     return !valid();
   }
@@ -96,7 +96,7 @@ struct Result : public detail::ResultBaseT<T>
    * @brief Returns the collection of Error objects
    * @return
    */
-  [[nodiscard]] std::vector<Error>& errors()
+  std::vector<Error>& errors()
   {
     return detail::ResultBaseT<T>::m_Expected.error();
   }
@@ -105,7 +105,7 @@ struct Result : public detail::ResultBaseT<T>
    * @brief Returns the collection of Error objects
    * @return
    */
-  [[nodiscard]] const std::vector<Error>& errors() const
+  const std::vector<Error>& errors() const
   {
     return detail::ResultBaseT<T>::m_Expected.error();
   }
@@ -114,7 +114,7 @@ struct Result : public detail::ResultBaseT<T>
    * @brief Returns the collection of Warning Objects
    * @return
    */
-  [[nodiscard]] std::vector<Warning>& warnings()
+  std::vector<Warning>& warnings()
   {
     return m_Warnings;
   }
@@ -123,7 +123,7 @@ struct Result : public detail::ResultBaseT<T>
    * @brief Returns the collection of Warning Objects
    * @return
    */
-  [[nodiscard]] const std::vector<Warning>& warnings() const
+  const std::vector<Warning>& warnings() const
   {
     return m_Warnings;
   }

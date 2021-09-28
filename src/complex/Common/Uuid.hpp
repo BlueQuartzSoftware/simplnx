@@ -15,7 +15,7 @@ namespace complex
 {
 namespace detail
 {
-[[nodiscard]] inline constexpr std::byte Hex2Byte(char ch) noexcept
+inline constexpr std::byte Hex2Byte(char ch) noexcept
 {
   if(ch >= '0' && ch <= '9')
   {
@@ -35,19 +35,19 @@ namespace detail
   return std::byte{0};
 }
 
-[[nodiscard]] inline constexpr std::byte Hex2Byte(char first, char second) noexcept
+inline constexpr std::byte Hex2Byte(char first, char second) noexcept
 {
   std::byte result = Hex2Byte(first) << 4;
   result |= Hex2Byte(second);
   return result;
 }
 
-[[nodiscard]] inline constexpr bool IsHex(char ch) noexcept
+inline constexpr bool IsHex(char ch) noexcept
 {
   return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F');
 }
 
-[[nodiscard]] inline constexpr usize String2Bytes(std::string_view string, usize offset, usize size, std::array<std::byte, 16>& uuid, usize uuidOffset) noexcept
+inline constexpr usize String2Bytes(std::string_view string, usize offset, usize size, std::array<std::byte, 16>& uuid, usize uuidOffset) noexcept
 {
   for(usize i = 0; i < size; i++)
   {
@@ -84,7 +84,7 @@ struct COMPLEX_EXPORT Uuid
    * Must have both braces or none. Must have all dashes or none.
    * @return Parsed uuid if successful. Otherwise, empty optional.
    */
-  [[nodiscard]] static inline constexpr std::optional<Uuid> FromString(std::string_view string)
+  static inline constexpr std::optional<Uuid> FromString(std::string_view string)
   {
     if(string.empty())
     {
@@ -165,42 +165,42 @@ struct COMPLEX_EXPORT Uuid
     return uuid;
   }
 
-  [[nodiscard]] inline constexpr uint32 time_low() const noexcept
+  inline constexpr uint32 time_low() const noexcept
   {
     return bit_cast_int<uint32, endian::big>(data.data());
   }
 
-  [[nodiscard]] inline constexpr uint16 time_mid() const noexcept
+  inline constexpr uint16 time_mid() const noexcept
   {
     return bit_cast_int<uint16, endian::big>(data.data() + 4);
   }
 
-  [[nodiscard]] inline constexpr uint16 time_hi_version() const noexcept
+  inline constexpr uint16 time_hi_version() const noexcept
   {
     return bit_cast_int<uint16, endian::big>(data.data() + 6);
   }
 
-  [[nodiscard]] inline constexpr uint16 clock_seq_hi_and_res_clock_seq_low() const noexcept
+  inline constexpr uint16 clock_seq_hi_and_res_clock_seq_low() const noexcept
   {
     return bit_cast_int<uint16, endian::big>(data.data() + 8);
   }
 
-  [[nodiscard]] inline constexpr uint8 clock_seq_hi_variant() const noexcept
+  inline constexpr uint8 clock_seq_hi_variant() const noexcept
   {
     return bit_cast_int<uint8, endian::big>(data.data() + 8);
   }
 
-  [[nodiscard]] inline constexpr uint8 clock_seq_low() const noexcept
+  inline constexpr uint8 clock_seq_low() const noexcept
   {
     return bit_cast_int<uint8, endian::big>(data.data() + 9);
   }
 
-  [[nodiscard]] inline constexpr uint64 node() const noexcept
+  inline constexpr uint64 node() const noexcept
   {
     return bit_cast_int<uint64, endian::big, 6>(data.data() + 10);
   }
 
-  [[nodiscard]] inline std::string str() const
+  inline std::string str() const
   {
     return fmt::format("{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:012x}", time_low(), time_mid(), time_hi_version(), clock_seq_hi_variant(), clock_seq_low(), node());
   }

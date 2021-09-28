@@ -23,14 +23,14 @@ public:
    * @brief Returns whether the parameter is a ValueParameter or DataParameter.
    * @return
    */
-  [[nodiscard]] Type type() const final;
+  Type type() const final;
 
   /**
    * @brief Validates the given value. Returns warnings/errors.
    * @param value
    * @return
    */
-  [[nodiscard]] virtual Result<> validate(const std::any& value) const = 0;
+  virtual Result<> validate(const std::any& value) const = 0;
 
 protected:
   ValueParameter() = delete;

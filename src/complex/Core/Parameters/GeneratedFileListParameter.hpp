@@ -51,44 +51,44 @@ public:
    * @brief
    * @return
    */
-  [[nodiscard]] Uuid uuid() const override;
+  Uuid uuid() const override;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] AcceptedTypes acceptedTypes() const override;
+  AcceptedTypes acceptedTypes() const override;
 
   /**
    * @brief
    * @param value
    */
-  [[nodiscard]] nlohmann::json toJson(const std::any& value) const override;
+  nlohmann::json toJson(const std::any& value) const override;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] Result<std::any> fromJson(const nlohmann::json& json) const override;
+  Result<std::any> fromJson(const nlohmann::json& json) const override;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] UniquePointer clone() const override;
+  UniquePointer clone() const override;
 
   /**
    * @brief
    * @return
    */
-  [[nodiscard]] std::any defaultValue() const override;
+  std::any defaultValue() const override;
 
   /**
    * @brief
    * @param value
    * @return
    */
-  [[nodiscard]] Result<> validate(const std::any& value) const override;
+  Result<> validate(const std::any& value) const override;
 
 private:
   ValueType m_DefaultValue = {};
