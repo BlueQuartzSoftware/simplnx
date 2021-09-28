@@ -57,25 +57,39 @@ void PipelineFilter::setArguments(const Arguments& args)
 
 bool PipelineFilter::preflight(DataStructure& data)
 {
-  auto result = m_Filter->preflight(data, getArguments());
-  if(!result.valid())
+  Result<OutputActions> result = m_Filter->preflight(data, getArguments());
+  m_Warnings = std::move(result.warnings());
+  if(result.invalid())
   {
-    m_Warnings = result.warnings();
-    m_Errors = result.errors();
+    m_Errors = std::move(result.errors());
 
     clearPreflightStructure();
     notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
     return false;
   }
-  else
-  {
-    m_Warnings = result.warnings();
-    m_Errors.clear();
 
-    setPreflightStructure(data);
-    notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
-    return true;
+  m_Errors.clear();
+
+  for(const auto& action : result.value().actions)
+  {
+    Result<> actionResult = action->apply(data, IDataAction::Mode::Preflight);
+    for(auto&& warning : actionResult.warnings())
+    {
+      m_Warnings.push_back(std::move(warning));
+    }
+    if(actionResult.invalid())
+    {
+      m_Errors = std::move(actionResult.errors());
+      clearPreflightStructure();
+      notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
+      return false;
+    }
   }
+
+  setPreflightStructure(data);
+
+  notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
+  return true;
 }
 
 bool PipelineFilter::execute(DataStructure& data)
