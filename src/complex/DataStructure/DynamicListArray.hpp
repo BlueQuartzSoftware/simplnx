@@ -340,7 +340,7 @@ private:
   size_t m_Size = 0;
 };
 
-typedef DynamicListArray<int32, int32> Int32Int32DynamicListArray;
-typedef DynamicListArray<uint16, int64> UInt16Int64DynamicListArray;
-typedef DynamicListArray<int64, int64> Int64Int64DynamicListArray;
+using Int32Int32DynamicListArray = DynamicListArray<int32, int32> ;
+using UInt16Int64DynamicListArray = DynamicListArray<uint16, int64>;
+using Int64Int64DynamicListArray = DynamicListArray<int64, int64>;
 } // namespace complex
