@@ -12,14 +12,14 @@ namespace complex
 namespace FilePathGenerator
 {
 // -----------------------------------------------------------------------------
-std::vector<std::string> GenerateFileList(int32 start, int32 end, int32 increment, bool& hasMissingFiles, bool stackLowToHigh, const std::string& inputPath, const std::string& filePrefix,
-                                          const std::string& fileSuffix, const std::string& fileExtension, int32 paddingDigits)
+std::pair<std::vector<std::string>, bool> GenerateFileList(int32 start, int32 end, int32 increment, Ordering order, std::string_view inputPath, std::string_view filePrefix,
+                                                           std::string_view fileSuffix, std::string_view fileExtension, int32 paddingDigits)
 {
   std::vector<std::string> fileList;
 
   if(!fs::exists(inputPath))
   {
-    return fileList;
+    return std::make_pair(std::move(fileList), true);
   }
   int32 index = 0;
 
@@ -28,7 +28,7 @@ std::vector<std::string> GenerateFileList(int32 start, int32 end, int32 incremen
   bool missingFiles = false;
   for(int32 i = 0; i < (end - start) + 1; i += increment)
   {
-    if(stackLowToHigh)
+    if(order == Ordering::LowToHigh)
     {
       index = start + i;
     }
@@ -47,9 +47,7 @@ std::vector<std::string> GenerateFileList(int32 start, int32 end, int32 incremen
     fileList.push_back(filePath);
   }
 
-  hasMissingFiles = missingFiles;
-
-  return fileList;
+  return std::make_pair(std::move(fileList), missingFiles);
 }
 } // namespace FilePathGenerator
 } // namespace complex
