@@ -100,7 +100,7 @@ public:
   {
   }
 
-  virtual ~Point3D() = default;
+  ~Point3D() = default;
 
   /**
    * @brief Returns the point's X value.

@@ -38,7 +38,7 @@ public:
    */
   LinkedPath(LinkedPath&& rhs) noexcept;
 
-  virtual ~LinkedPath();
+  ~LinkedPath();
 
   /**
    * @brief Checks if the path is valid.

@@ -27,7 +27,7 @@ public:
    */
   FilterPreflightMessage(PipelineFilter* filterNode, const std::vector<complex::Warning>& warnings, const std::vector<complex::Error>& errors);
 
-  virtual ~FilterPreflightMessage();
+  ~FilterPreflightMessage() override;
 
   /**
    * @brief Returns a pointer to the target PipelineFilter.

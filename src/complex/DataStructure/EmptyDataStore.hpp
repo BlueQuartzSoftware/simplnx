@@ -61,7 +61,7 @@ public:
   {
   }
 
-  virtual ~EmptyDataStore() = default;
+  ~EmptyDataStore() override = default;
 
   /**
    * @brief Returns the number of tuples that should be in the data store.

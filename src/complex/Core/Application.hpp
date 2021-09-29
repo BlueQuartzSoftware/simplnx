@@ -48,7 +48,7 @@ public:
    * @brief Destroys the Application. If the destroyed Application matches the
    * current Application::Instance(), the instance pointer is set to nullptr.
    */
-  virtual ~Application();
+  ~Application();
 
   /**
    * @brief Returns a pointer to the current Application. This pointer is

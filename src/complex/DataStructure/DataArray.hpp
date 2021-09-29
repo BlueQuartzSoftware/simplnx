@@ -81,7 +81,7 @@ public:
   /**
    * @brief Destroys the DataArray and the contained DataStore.
    */
-  virtual ~DataArray() = default;
+  ~DataArray() override = default;
 
   /**
    * @brief Returns a shallow copy of the DataArray without copying data

@@ -41,7 +41,7 @@ public:
    */
   DataRenamedMessage(DataRenamedMessage&& other) noexcept;
 
-  virtual ~DataRenamedMessage();
+  ~DataRenamedMessage() override;
 
   /**
    * @brief Returns the AbstractDataStructureMessage type.

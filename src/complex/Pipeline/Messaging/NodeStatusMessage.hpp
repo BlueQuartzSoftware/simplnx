@@ -23,7 +23,7 @@ public:
    */
   NodeStatusMessage(AbstractPipelineNode* node, AbstractPipelineNode::Status status);
 
-  virtual ~NodeStatusMessage();
+  ~NodeStatusMessage() override;
 
   /**
    * @brief Returns the updated AbstractPipelineNode::Status.

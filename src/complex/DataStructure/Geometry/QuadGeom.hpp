@@ -37,7 +37,7 @@ public:
    */
   QuadGeom(QuadGeom&& other) noexcept;
 
-  virtual ~QuadGeom();
+  ~QuadGeom() override;
 
   /**
    * @brief Returns typename of the DataObject as a std::string.

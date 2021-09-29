@@ -9,7 +9,7 @@ class COMPLEX_EXPORT ImageGeomFactory : public IH5DataFactory
 public:
   ImageGeomFactory();
 
-  virtual ~ImageGeomFactory();
+  ~ImageGeomFactory() override;
 
   /**
    * @brief Returns the name of the DataObject subclass that the factory is designed for.

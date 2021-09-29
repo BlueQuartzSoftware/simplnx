@@ -9,7 +9,7 @@ class COMPLEX_EXPORT EdgeGeomFactory : public IH5DataFactory
 public:
   EdgeGeomFactory();
 
-  virtual ~EdgeGeomFactory();
+  ~EdgeGeomFactory() override;
 
   /**
    * @brief Returns the name of the DataObject subclass that the factory is designed for.

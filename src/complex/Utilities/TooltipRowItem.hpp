@@ -61,7 +61,7 @@ public:
    */
   TooltipRowItem(TooltipRowItem&& other) noexcept;
 
-  virtual ~TooltipRowItem();
+  ~TooltipRowItem();
 
   /**
    * @brief Gets the row's Type.

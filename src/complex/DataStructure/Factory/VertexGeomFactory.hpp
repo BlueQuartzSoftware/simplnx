@@ -9,7 +9,7 @@ class COMPLEX_EXPORT VertexGeomFactory : public IH5DataFactory
 public:
   VertexGeomFactory();
 
-  virtual ~VertexGeomFactory();
+  ~VertexGeomFactory() override;
 
   /**
    * @brief Returns the name of the DataObject subclass that the factory is designed for.

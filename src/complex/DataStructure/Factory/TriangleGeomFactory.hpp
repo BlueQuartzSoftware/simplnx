@@ -9,7 +9,7 @@ class COMPLEX_EXPORT TriangleGeomFactory : public IH5DataFactory
 public:
   TriangleGeomFactory();
 
-  virtual ~TriangleGeomFactory();
+  ~TriangleGeomFactory() override;
 
   /**
    * @brief Returns the name of the DataObject subclass that the factory is designed for.

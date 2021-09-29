@@ -39,7 +39,7 @@ public:
    */
   AbstractMontage(AbstractMontage&& other) noexcept;
 
-  virtual ~AbstractMontage();
+  ~AbstractMontage() override;
 
   /**
    * @brief Returns the number of tiles in the montage.

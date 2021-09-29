@@ -24,7 +24,7 @@ public:
    */
   NodeRemovedMessage(Pipeline* pipeline, usize index);
 
-  virtual ~NodeRemovedMessage();
+  ~NodeRemovedMessage() override;
 
   /**
    * @brief Returns the index at which the pipeline node was removed.

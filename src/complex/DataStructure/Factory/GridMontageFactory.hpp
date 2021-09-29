@@ -9,7 +9,7 @@ class COMPLEX_EXPORT GridMontageFactory : public IH5DataFactory
 public:
   GridMontageFactory();
 
-  virtual ~GridMontageFactory();
+  ~GridMontageFactory() override;
 
   /**
    * @brief Returns the name of the DataObject subclass that the factory is designed for.

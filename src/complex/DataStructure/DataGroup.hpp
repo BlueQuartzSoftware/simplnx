@@ -44,7 +44,7 @@ public:
    */
   DataGroup(DataGroup&& other) noexcept;
 
-  virtual ~DataGroup();
+  ~DataGroup() override;
 
   /**
    * @brief Creates and returns a deep copy of the DataGroup. The caller is

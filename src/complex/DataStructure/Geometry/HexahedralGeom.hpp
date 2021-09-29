@@ -36,7 +36,7 @@ public:
    */
   HexahedralGeom(HexahedralGeom&& other) noexcept;
 
-  virtual ~HexahedralGeom();
+  ~HexahedralGeom() override;
 
   /**
    * @brief Returns typename of the DataObject as a std::string.

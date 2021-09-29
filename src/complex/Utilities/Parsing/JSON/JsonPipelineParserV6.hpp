@@ -31,7 +31,7 @@ public:
    */
   JsonPipelineParserV6(JsonPipelineParserV6&& other) noexcept;
 
-  virtual ~JsonPipelineParserV6();
+  ~JsonPipelineParserV6() override;
 
   /**
    * @param json

@@ -50,7 +50,7 @@ public:
    * children's known parents. If a child no longer has any parents, the
    * DataObject is destroyed.
    */
-  virtual ~BaseGroup();
+  ~BaseGroup() override;
 
   /**
    * @brief Returns the number of DataObjects in the group.

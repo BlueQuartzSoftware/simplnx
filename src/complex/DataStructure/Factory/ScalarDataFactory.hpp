@@ -9,7 +9,7 @@ class COMPLEX_EXPORT ScalarDataFactory : public IH5DataFactory
 public:
   ScalarDataFactory();
 
-  virtual ~ScalarDataFactory();
+  ~ScalarDataFactory() override;
 
   /**
    * @brief Returns the name of the DataObject subclass that the factory is designed for.

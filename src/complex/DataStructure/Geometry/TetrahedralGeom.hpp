@@ -36,7 +36,7 @@ public:
    */
   TetrahedralGeom(TetrahedralGeom&& other) noexcept;
 
-  virtual ~TetrahedralGeom();
+  ~TetrahedralGeom() override;
 
   /**
    * @brief Returns typename of the DataObject as a std::string.

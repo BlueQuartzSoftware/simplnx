@@ -69,7 +69,7 @@ public:
   {
   }
 
-  virtual ~Ray() = default;
+  ~Ray() = default;
 
   /**
    * @brief Returns the origin point.

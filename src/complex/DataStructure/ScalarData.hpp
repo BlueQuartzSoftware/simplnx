@@ -67,7 +67,7 @@ public:
   {
   }
 
-  virtual ~ScalarData() = default;
+  ~ScalarData() override = default;
 
   /**
    * @brief Returns typename of the DataObject as a std::string.

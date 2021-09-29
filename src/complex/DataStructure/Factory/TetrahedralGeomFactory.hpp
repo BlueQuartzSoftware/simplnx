@@ -9,7 +9,7 @@ class COMPLEX_EXPORT TetrahedralGeomFactory : public IH5DataFactory
 public:
   TetrahedralGeomFactory();
 
-  virtual ~TetrahedralGeomFactory();
+  ~TetrahedralGeomFactory() override;
 
   /**
    * @brief Returns the name of the DataObject subclass that the factory is designed for.

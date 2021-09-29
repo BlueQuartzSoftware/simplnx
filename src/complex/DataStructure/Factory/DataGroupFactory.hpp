@@ -9,7 +9,7 @@ class COMPLEX_EXPORT DataGroupFactory : public IH5DataFactory
 public:
   DataGroupFactory();
 
-  virtual ~DataGroupFactory();
+  ~DataGroupFactory() override;
 
   /**
    * @brief Returns the name of the DataObject subclass that the factory is

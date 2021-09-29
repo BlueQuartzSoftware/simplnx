@@ -49,7 +49,7 @@ public:
    */
   Pipeline(Pipeline&& other) noexcept;
 
-  virtual ~Pipeline();
+  ~Pipeline() override;
 
   /**
    * @brief Returns the node type for quick type checking.
