@@ -14,7 +14,7 @@ namespace complex
 class COMPLEX_EXPORT AbstractGeometryGrid : public AbstractGeometry
 {
 public:
-  virtual ~AbstractGeometryGrid();
+  ~AbstractGeometryGrid() override;
 
   /**
    * @brief

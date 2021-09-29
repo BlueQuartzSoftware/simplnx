@@ -10,7 +10,7 @@ namespace complex
  *
  */
 
-class JsonFilterParserV7 : virtual public IJsonFilterParser
+class JsonFilterParserV7 : public IJsonFilterParser
 {
 public:
   /**
@@ -21,7 +21,7 @@ public:
   /**
    * Empty Destructor
    */
-  virtual ~JsonFilterParserV7();
+  ~JsonFilterParserV7() override;
 
   /**
    * @param json

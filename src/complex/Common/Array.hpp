@@ -315,7 +315,7 @@ public:
     return *this;
   }
 
-  virtual ~Vec2() = default;
+  ~Vec2() override = default;
 
   /**
    * @brief Vec2 Default constructor initializes all values to ZERO.
@@ -493,7 +493,7 @@ public:
     return *this;
   }
 
-  virtual ~Vec3() = default;
+  ~Vec3() override = default;
 
   /**
    * @brief Vec3 Default constructor initializes all values to ZERO.
@@ -691,7 +691,7 @@ public:
     return *this;
   }
 
-  virtual ~Vec4() = default;
+  ~Vec4() override = default;
 
   /**
    * @brief Vec4 Default constructor initializes all values to ZERO.
@@ -911,7 +911,7 @@ public:
     return *this;
   }
 
-  virtual ~Vec6() = default;
+  ~Vec6() override = default;
 
   /**
    * @brief Vec6 Default constructor initializes all values to ZERO.
@@ -1070,7 +1070,7 @@ public:
     return *this;
   }
 
-  virtual ~Vec7() = default;
+  ~Vec7() override = default;
 
   /**
    * @brief Vec7 Default constructor initializes all values to ZERO.

@@ -9,7 +9,7 @@ class COMPLEX_EXPORT RectGridGeomFactory : public IH5DataFactory
 public:
   RectGridGeomFactory();
 
-  virtual ~RectGridGeomFactory();
+  ~RectGridGeomFactory() override;
 
   /**
    * @brief Returns the name of the DataObject subclass that the factory is designed for.

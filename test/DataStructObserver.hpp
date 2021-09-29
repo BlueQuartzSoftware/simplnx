@@ -25,7 +25,7 @@ class DataStructObserver : public complex::AbstractDataStructureObserver
 {
 public:
   DataStructObserver(complex::DataStructure& dataStruct);
-  virtual ~DataStructObserver();
+  ~DataStructObserver() override;
 
   /**
    * @brief

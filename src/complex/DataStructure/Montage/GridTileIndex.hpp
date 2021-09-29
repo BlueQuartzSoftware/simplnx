@@ -36,7 +36,7 @@ public:
    */
   GridTileIndex(GridTileIndex&& other) noexcept;
 
-  virtual ~GridTileIndex();
+  ~GridTileIndex() override;
 
   /**
    * @brief Returns the index's row position.

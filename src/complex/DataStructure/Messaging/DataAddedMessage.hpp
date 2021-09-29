@@ -42,7 +42,7 @@ public:
    */
   DataAddedMessage(DataAddedMessage&& other) noexcept;
 
-  virtual ~DataAddedMessage();
+  ~DataAddedMessage() override;
 
   /**
    * @brief Returns the AbsractDataStructureMessage type.

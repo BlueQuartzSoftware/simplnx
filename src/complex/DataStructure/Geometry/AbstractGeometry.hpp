@@ -141,7 +141,7 @@ public:
    */
   AbstractGeometry(AbstractGeometry&& other) noexcept;
 
-  virtual ~AbstractGeometry();
+  ~AbstractGeometry() override;
 
   /**
    * @brief

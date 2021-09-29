@@ -69,7 +69,7 @@ public:
   /**
    * @brief
    */
-  virtual ~DataStructure();
+  ~DataStructure();
 
   /**
    * @brief Returns the number of unique DataObjects in the DataStructure.

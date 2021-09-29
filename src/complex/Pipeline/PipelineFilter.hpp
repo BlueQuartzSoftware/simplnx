@@ -39,7 +39,7 @@ public:
    */
   PipelineFilter(IFilter::UniquePointer&& filter);
 
-  virtual ~PipelineFilter();
+  ~PipelineFilter() override;
 
   /**
    * @brief Returns the node type for quick type checking.

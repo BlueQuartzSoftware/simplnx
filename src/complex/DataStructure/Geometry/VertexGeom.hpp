@@ -37,7 +37,7 @@ public:
    */
   VertexGeom(VertexGeom&& other) noexcept;
 
-  virtual ~VertexGeom();
+  ~VertexGeom() override;
 
   /**
    * @brief Returns typename of the DataObject as a std::string.

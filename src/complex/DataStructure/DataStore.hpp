@@ -77,7 +77,7 @@ public:
   {
   }
 
-  virtual ~DataStore() = default;
+  ~DataStore() override = default;
 
   /**
    * @brief Returns the number of tuples in the DataStore.

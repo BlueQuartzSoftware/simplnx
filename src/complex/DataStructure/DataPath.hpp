@@ -40,7 +40,7 @@ public:
    */
   DataPath(DataPath&& other) noexcept;
 
-  virtual ~DataPath();
+  ~DataPath();
 
   /**
    * @brief Returns the number of items in the DataPath.

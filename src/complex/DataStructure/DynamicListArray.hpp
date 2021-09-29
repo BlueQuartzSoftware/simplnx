@@ -74,7 +74,7 @@ public:
   // -----------------------------------------------------------------------------
   //
   // -----------------------------------------------------------------------------
-  virtual ~DynamicListArray()
+  ~DynamicListArray() override
   {
     // This makes sure we deallocate any lists that have been created
     for(usize i = 0; i < this->m_Size; i++)

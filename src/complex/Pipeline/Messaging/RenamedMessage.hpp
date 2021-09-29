@@ -26,7 +26,7 @@ public:
    */
   RenamedMessage(Pipeline* pipeline, const std::string& newName, const std::string& oldName);
 
-  virtual ~RenamedMessage();
+  ~RenamedMessage() override;
 
   /**
    * @brief Returns the Pipeline's new name.

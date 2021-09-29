@@ -16,7 +16,7 @@ public:
   /**
    * Empty Destructor
    */
-  virtual ~AbstractGeometry2D();
+  ~AbstractGeometry2D() override;
 
   /**
    * @brief Resizes the vertex list with the new number of vertices.

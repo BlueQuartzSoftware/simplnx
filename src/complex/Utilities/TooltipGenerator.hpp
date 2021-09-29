@@ -38,7 +38,7 @@ public:
    */
   TooltipGenerator(TooltipGenerator&& other) noexcept;
 
-  virtual ~TooltipGenerator();
+  ~TooltipGenerator();
 
   /**
    * @brief Adds a title-type row with the specified name to the end of the
