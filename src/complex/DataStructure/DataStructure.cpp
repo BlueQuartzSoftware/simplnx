@@ -88,6 +88,40 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
   }
 }
 
+LinkedPath DataStructure::makePath(const DataPath& path)
+{
+  try
+  {
+    std::vector<DataObject::IdType> pathIds;
+    std::string name = path[0];
+    const DataObject* data = m_RootGroup[name];
+    if(nullptr == data)
+    {
+      data = complex::DataGroup::Create(*this, name);
+    }
+    const BaseGroup* parent = dynamic_cast<const BaseGroup*>(data);
+    pathIds.push_back(data->getId());
+
+    for(usize i = 1; i < path.getLength(); i++)
+    {
+      name = path[i];
+      data = (*parent)[name];
+      if(nullptr == data)
+      {
+        data = DataGroup::Create(*this, name, pathIds.back());
+      }
+      pathIds.push_back(data->getId());
+
+      parent = dynamic_cast<const BaseGroup*>(data);
+    }
+
+    return LinkedPath(this, pathIds);
+  } catch(const std::exception& e)
+  {
+    return LinkedPath();
+  }
+}
+
 DataObject* DataStructure::getData(DataObject::IdType id)
 {
   auto iter = m_DataObjects.find(id);

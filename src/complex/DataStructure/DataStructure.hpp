@@ -197,6 +197,13 @@ public:
   LinkedPath getLinkedPath(const DataPath& path) const;
 
   /**
+   * @brief Creates the path in the data structure as a series of DataObjects. This method will
+   * create all needed DataObjects until the path is completely created.
+   * @param path The path to create.
+   */
+  LinkedPath makePath(const DataPath& path);
+
+  /**
    * @brief Returns the top-level of the DataStructure.
    * @return std::vector<DataObject*>
    */
