@@ -1,8 +1,11 @@
 #pragma once
 
+#include "complex/complex_export.hpp"
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
+
+#include <string>
+
 
 namespace complex
 {
@@ -18,52 +21,59 @@ public:
   @FILTER_NAME@& operator=(const @FILTER_NAME@&) = delete;
   @FILTER_NAME@& operator=(@FILTER_NAME@&&) noexcept = delete;
 
+  // Parameter Keys
+  // static inline constexpr StringLiteral k_Parameter_Key = "Value of Key";
+
   /**
-   * @brief
+   * @brief Returns the name of this filter
    * @return
    */
   [[nodiscard]] std::string name() const override;
 
   /**
-   * @brief
+   * @brief Returns the UUID of this filter. All filters have a unique UUID
    * @return
    */
   [[nodiscard]] Uuid uuid() const override;
 
   /**
-   * @brief
+   * @brief Returns a 'human readable' string that represents the filter name.
    * @return
    */
   [[nodiscard]] std::string humanName() const override;
 
   /**
-   * @brief
+   * @brief Returns the parameter descriptors for this filter
    * @return
    */
   [[nodiscard]] Parameters parameters() const override;
 
   /**
-   * @brief
+   * @brief Creates a copy of this filter.
    * @return
    */
   [[nodiscard]] UniquePointer clone() const override;
 
 protected:
   /**
-   * @brief
-   * @param data
-   * @param args
+   * @brief Internal implementation of the 'preflight' function. This gives the filter an opportunity to sanity check
+   * the inputs to the filter
+   * @param dataStructure The input data structure
+   * @param filterParameterValues The value of each parameter that is needed by this filter
+   * @param messageHandler = {}
    * @return
    */
-  Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args) const override;
+  Result<OutputActions> preflightImpl(const DataStructure& dataStructure, const Arguments& filterParameterValues, const MessageHandler& messageHandler = {}) const override;
 
   /**
-   * @brief
-   * @param data
-   * @param args
+   * @brief Internal implementation of the 'execute' function which actually will run the filter's algorithm on the
+   * supplied input parameters
+   * @param dataStructure The input data structure
+   * @param filterParameterValues The value of each parameter that is needed by this filter
+   * @param messageHandler = {}
    * @return
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& args) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterParameterValues, const MessageHandler& messageHandler = {}) const override;
 };
 } // namespace complex
 

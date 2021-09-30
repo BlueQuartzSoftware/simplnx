@@ -18,7 +18,7 @@ namespace complex
 {
 std::string @FILTER_NAME@::name() const
 {
-  return FilterTraits<@FILTER_NAME@>::name;
+  return FilterTraits<@FILTER_NAME@>::name.str();
 }
 
 Uuid @FILTER_NAME@::uuid() const
@@ -45,7 +45,7 @@ IFilter::UniquePointer @FILTER_NAME@::clone() const
   return std::make_unique<@FILTER_NAME@>();
 }
 
-Result<OutputActions> @FILTER_NAME@::preflightImpl(const DataStructure& data, const Arguments& args) const
+Result<OutputActions> @FILTER_NAME@::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -53,7 +53,7 @@ Result<OutputActions> @FILTER_NAME@::preflightImpl(const DataStructure& data, co
   return {};
 }
 
-Result<> @FILTER_NAME@::executeImpl(DataStructure& data, const Arguments& args) const
+Result<> @FILTER_NAME@::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write your algorithm implementation in this function
@@ -62,8 +62,8 @@ Result<> @FILTER_NAME@::executeImpl(DataStructure& data, const Arguments& args) 
   /****************************************************************************
    * You will probably need to extract your parameters from the 'args' object
    ***************************************************************************/
-  // auto inputFloatValue = args.value<float>(k_Param1Key.view());
-  // auto inputBoolValue = args.value<bool>(k_Param2Key.view());
+  // auto inputFloatValue = filterArgs.value<float>(k_Param1Key.view());
+  // auto inputBoolValue = filterArgs.value<bool>(k_Param2Key.view());
 
   return {};
 }
