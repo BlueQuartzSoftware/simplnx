@@ -29,6 +29,11 @@ inline constexpr int32 k_Json_Value_Not_String = -102;
 inline constexpr int32 k_Json_Value_Not_Integer = -103;
 inline constexpr int32 k_Json_Value_Not_Unsigned = -104;
 inline constexpr int32 k_Json_Value_Not_Enumeration = -105;
+inline constexpr int32 k_Json_Value_Not_Value_Type = -106;
+
+inline constexpr int32 k_Validate_Empty_Value = -201;
+inline constexpr int32 k_Validate_ExistingValue = -202;
+
 } // namespace FilterParameter::Constants
 
 /**
