@@ -71,6 +71,12 @@ public:
     return m_Params.end();
   }
 
+  /**
+   * @brief Returns a comma delimited list of the keys for this Parameters object
+   * @return
+   */
+  std::string getAcceptedKeys() const;
+
 private:
   std::map<std::string, std::unique_ptr<IParameter>, std::less<>> m_Params;
 };
