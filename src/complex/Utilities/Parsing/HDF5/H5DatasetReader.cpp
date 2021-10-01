@@ -214,7 +214,7 @@ std::vector<T> H5::DatasetReader::readAsVector() const
     return {};
   }
 
-  hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
+  hid_t dataType = H5::Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     return {};

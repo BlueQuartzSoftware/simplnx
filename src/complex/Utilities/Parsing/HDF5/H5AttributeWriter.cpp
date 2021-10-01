@@ -24,7 +24,7 @@ H5::AttributeWriter::~AttributeWriter() = default;
 H5::ErrorType H5::AttributeWriter::findAndDeleteAttribute()
 {
   hsize_t attributeNum = 0;
-  int32_t hasAttribute = H5Aiterate(getObjectId(), H5_INDEX_NAME, H5_ITER_INC, &attributeNum, H5::Support::find_attr, const_cast<char*>(getAttributeName().c_str()));
+  int32_t hasAttribute = H5Aiterate(getObjectId(), H5_INDEX_NAME, H5_ITER_INC, &attributeNum, H5::Support::FindAttr, const_cast<char*>(getAttributeName().c_str()));
 
   /* The attribute already exists, delete it */
   if(hasAttribute == 1)
@@ -132,13 +132,13 @@ herr_t H5::AttributeWriter::writeString(const std::string& text)
                   returnError = error;
                 }
               }
-              CloseH5A(attributeId, error, returnError)
+              H5S_CLOSE_H5_ATTRIBUTE(attributeId, error, returnError)
             }
-            CloseH5S(attributeSpaceID, error, returnError)
+            H5S_CLOSE_H5_DATASPACE(attributeSpaceID, error, returnError)
           }
         }
       }
-      CloseH5T(attributeType, error, returnError)
+      H5S_CLOSE_H5_TYPE(attributeType, error, returnError)
     }
   }
 
@@ -155,7 +155,7 @@ herr_t H5::AttributeWriter::writeValue(T value)
 
   herr_t returnError = 0;
 
-  hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
+  hid_t dataType = H5::Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     return -1;
@@ -226,7 +226,7 @@ herr_t H5::AttributeWriter::writeVector(const DimsVector& dims, const std::vecto
   herr_t returnError = 0;
   int32_t rank = static_cast<int32_t>(dims.size());
 
-  hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
+  hid_t dataType = H5::Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     std::cout << "dataType was unknown" << std::endl;

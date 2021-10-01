@@ -96,7 +96,7 @@ void H5::DatasetWriter::closeHdf5()
 H5::ErrorType H5::DatasetWriter::findAndDeleteAttribute()
 {
   hsize_t attributeNum = 0;
-  int32_t hasAttribute = H5Aiterate(getParentId(), H5_INDEX_NAME, H5_ITER_INC, &attributeNum, H5::Support::find_attr, const_cast<char*>(getName().c_str()));
+  int32_t hasAttribute = H5Aiterate(getParentId(), H5_INDEX_NAME, H5_ITER_INC, &attributeNum, H5::Support::FindAttr, const_cast<char*>(getName().c_str()));
 
   /* The attribute already exists, delete it */
   if(hasAttribute == 1)
@@ -181,12 +181,12 @@ H5::ErrorType H5::DatasetWriter::writeString(const std::string& text)
           {
             returnError = 0;
           }
-          CloseH5D(m_DatasetId, error, returnError, getName())
+          H5_CLOSE_H5_DATASET(m_DatasetId, error, returnError, getName())
         }
-        CloseH5S(dataspaceId, error, returnError)
+        H5S_CLOSE_H5_DATASPACE(dataspaceId, error, returnError)
       }
     }
-    CloseH5T(typeId, error, returnError)
+    H5S_CLOSE_H5_TYPE(typeId, error, returnError)
   }
   return returnError;
 }
@@ -223,8 +223,8 @@ H5::ErrorType H5::DatasetWriter::writeVectorOfStrings(std::vector<std::string>& 
     int nDims = H5Sget_simple_extent_dims(dataspaceID, dims, nullptr);
     if(nDims != 1)
     {
-      CloseH5S(dataspaceID, error, returnError);
-      CloseH5T(typeID, error, returnError);
+      H5S_CLOSE_H5_DATASPACE(dataspaceID, error, returnError);
+      H5S_CLOSE_H5_TYPE(typeID, error, returnError);
       closeHdf5();
       std::cout << "H5Lite.cpp::readVectorOfStringDataset(" << __LINE__ << ") Number of dims should be 1 but it was " << nDims << ". Returning early. Is your data file correct?" << std::endl;
       return -2;
@@ -248,9 +248,9 @@ H5::ErrorType H5::DatasetWriter::writeVectorOfStrings(std::vector<std::string>& 
     if(status < 0)
     {
       status = H5Dvlen_reclaim(memtype, dataspaceID, H5P_DEFAULT, rData.data());
-      CloseH5S(dataspaceID, error, returnError);
-      CloseH5T(typeID, error, returnError);
-      CloseH5T(memtype, error, returnError);
+      H5S_CLOSE_H5_DATASPACE(dataspaceID, error, returnError);
+      H5S_CLOSE_H5_TYPE(typeID, error, returnError);
+      H5S_CLOSE_H5_TYPE(memtype, error, returnError);
       closeHdf5();
       std::cout << "H5Lite.cpp::readVectorOfStringDataset(" << __LINE__ << ") Error reading Dataset at locationID (" << getParentId() << ") with object name (" << getName() << ")" << std::endl;
       return -3;
@@ -271,9 +271,9 @@ H5::ErrorType H5::DatasetWriter::writeVectorOfStrings(std::vector<std::string>& 
      * in rData, as H5Tvlen_reclaim only frees the data these point to.
      */
     status = H5Dvlen_reclaim(memtype, dataspaceID, H5P_DEFAULT, rData.data());
-    CloseH5S(dataspaceID, error, returnError);
-    CloseH5T(typeID, error, returnError);
-    CloseH5T(memtype, error, returnError);
+    H5S_CLOSE_H5_DATASPACE(dataspaceID, error, returnError);
+    H5S_CLOSE_H5_TYPE(typeID, error, returnError);
+    H5S_CLOSE_H5_TYPE(memtype, error, returnError);
   }
 
   return returnError;
@@ -284,7 +284,7 @@ H5::ErrorType H5::DatasetWriter::writeVector(const DimsType& dims, const std::ve
 {
   herr_t returnError = 0;
   int32_t rank = static_cast<int32_t>(dims.size());
-  hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
+  hid_t dataType = H5::Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     std::cout << "dataType was unknown" << std::endl;

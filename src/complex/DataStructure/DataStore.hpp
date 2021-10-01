@@ -174,43 +174,6 @@ public:
   //  }
 
   /**
-   * @brief Returns the dimensions of the Tuples
-   * @return
-   */
-  const ShapeType& getTupleShape() const
-  {
-    return m_TupleShape;
-  }
-
-  /**
-   * @brief Returns the dimensions of the Components
-   * @return
-   */
-  const ShapeType& getComponentShape() const
-  {
-    return m_ComponentShape;
-  }
-
-  //  /**
-  //   * @brief Resizes the DataStore to handle the specified number of tuples.
-  //   * @param numTuples
-  //   */
-  //  void resizeTuples(size_t numTuples) override
-  //  {
-  //    auto oldSize = this->getSize();
-  //    m_TupleShape = numTuples;
-  //    auto newSize = this->getSize();
-  //
-  //    auto data = new value_type[newSize];
-  //    for(size_t i = 0; i < newSize && i < oldSize; i++)
-  //    {
-  //      data[i] = m_Data[i];
-  //    }
-  //
-  //    m_Data.reset(data);
-  //  }
-
-  /**
    * @brief
    * @param tupleShape
    */
@@ -369,7 +332,7 @@ public:
     auto tupleShapeAttribute = datasetReader.getAttribute(k_TupleShape);
     if(!tupleShapeAttribute.isValid())
     {
-      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::getObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
       return nullptr;
     }
     typename DataStore<T>::ShapeType tupleShape = tupleShapeAttribute.readAsVector<size_t>();
@@ -378,7 +341,7 @@ public:
     auto componentShapeAttribute = datasetReader.getAttribute(k_ComponentShape);
     if(!componentShapeAttribute.isValid())
     {
-      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::getObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
       return nullptr;
     }
     typename DataStore<T>::ShapeType componentShape = componentShapeAttribute.readAsVector<size_t>();
