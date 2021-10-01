@@ -44,10 +44,20 @@ set_target_properties(complex
     DEBUG_POSTFIX "_d"
 )
 
-target_compile_options(complex
-  PRIVATE
-    $<$<CXX_COMPILER_ID:MSVC>:/MP>
-)
+if(MSVC)
+  target_compile_options(complex
+    PRIVATE
+      /MP
+      # C4706: assignment within conditional expression
+      /we4706
+  )
+else()
+  target_compile_options(complex
+    PRIVATE
+      # Wparentheses: Warn if parentheses are omitted in certain contexts, such as when there is an assignment in a context where a truth value is expected, or when operators are nested whose precedence people often get confused about
+      -Werror=parentheses
+  )
+endif()
 
 target_include_directories(complex
   PRIVATE
