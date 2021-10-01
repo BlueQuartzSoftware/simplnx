@@ -1,8 +1,5 @@
 #include "DataStructure.hpp"
 
-#include <numeric>
-#include <stdexcept>
-
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/LinkedPath.hpp"
@@ -10,9 +7,15 @@
 #include "complex/DataStructure/Messaging/DataRemovedMessage.hpp"
 #include "complex/DataStructure/Messaging/DataReparentedMessage.hpp"
 #include "complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
+#include "complex/Filter/DataParameter.hpp"
+#include "complex/Filter/ValueParameter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
 
-using namespace complex;
+#include <numeric>
+#include <stdexcept>
+
+namespace complex
+{
 
 namespace Constants
 {
@@ -88,7 +91,7 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
   }
 }
 
-LinkedPath DataStructure::makePath(const DataPath& path)
+Result<LinkedPath> DataStructure::makePath(const DataPath& path)
 {
   try
   {
@@ -115,10 +118,10 @@ LinkedPath DataStructure::makePath(const DataPath& path)
       parent = dynamic_cast<const BaseGroup*>(data);
     }
 
-    return LinkedPath(this, pathIds);
+    return {LinkedPath(this, pathIds)};
   } catch(const std::exception& e)
   {
-    return LinkedPath();
+    return complex::MakeErrorResult<LinkedPath>(-2, "Exception thrown when attempting to create a path in the DataStructure");
   }
 }
 
@@ -469,3 +472,5 @@ DataStructure DataStructure::ReadFromHdf5(H5::IdType fileId, H5::ErrorType& err)
   H5Gclose(dsId);
   return ds;
 }
+
+} // namespace complex
