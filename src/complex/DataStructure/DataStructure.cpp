@@ -29,12 +29,12 @@ DataStructure::DataStructure(const DataStructure& ds)
 , m_RootGroup(ds.m_RootGroup)
 , m_IsValid(ds.m_IsValid)
 {
-  std::map<DataObject::IdType, std::shared_ptr<DataObject>> m_CopyData;
+  std::map<DataObject::IdType, std::shared_ptr<DataObject>> copyData;
   for(auto& dataPair : m_DataObjects)
   {
     auto id = dataPair.first;
     auto copy = std::shared_ptr<DataObject>(dataPair.second.lock()->shallowCopy());
-    m_CopyData[id] = copy;
+    copyData[id] = copy;
     m_DataObjects[id] = copy;
   }
   m_RootGroup.setDataStructure(this);
