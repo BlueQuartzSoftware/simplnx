@@ -232,6 +232,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.hpp
 
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.hpp
 
   ${COMPLEX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.hpp
@@ -335,8 +336,8 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Parameters.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.cpp
 
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.cpp
-
 
   ${COMPLEX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.cpp
