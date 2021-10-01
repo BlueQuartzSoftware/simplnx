@@ -1,5 +1,7 @@
 #include "DataGroupSelectionParameter.hpp"
 
+#include "complex/DataStructure/DataGroup.hpp"
+
 #include <fmt/core.h>
 
 #include <nlohmann/json.hpp>
@@ -84,10 +86,17 @@ Result<> DataGroupSelectionParameter::validatePath(const DataStructure& dataStru
   {
     return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
-  const DataObject* object = dataStructure.getData(value);
-  if(object == nullptr)
+
+  const DataObject* dataObject = dataStructure.getData(value);
+  if(dataObject == nullptr)
   {
     return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
+  }
+
+  const DataGroup* dataGroup = dynamic_cast<const DataGroup*>(dataObject);
+  if(nullptr == dataGroup)
+  {
+    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object at path '{}' is *not* a DataGroup", prefix, value.toString()));
   }
 
   return {};
