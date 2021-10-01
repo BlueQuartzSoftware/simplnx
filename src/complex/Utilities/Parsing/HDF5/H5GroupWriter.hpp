@@ -33,7 +33,7 @@ public:
    * @brief Returns true if the GroupWriter is valid. Returns false otherwise.
    * @return bool
   */
-  bool H5::GroupWriter::isValid() const override;
+  bool isValid() const override;
 
   /**
    * @brief Returns the group's HDF5 ID. Returns 0 if the object is invalid.

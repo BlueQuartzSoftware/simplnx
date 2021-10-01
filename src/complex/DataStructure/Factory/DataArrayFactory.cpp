@@ -5,7 +5,6 @@
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
-#include <complex/DataStructure/DataStore.hpp>
 #include <memory>
 #include <numeric>
 

@@ -347,3 +347,15 @@ H5::ErrorType H5::DatasetWriter::writeVector(const DimsType& dims, const std::ve
   }
   return returnError;
 }
+
+// Declare writeVector
+template H5::ErrorType H5::DatasetWriter::writeVector<int8_t>(const DimsType& dims, const std::vector<int8_t>& values);
+template H5::ErrorType H5::DatasetWriter::writeVector<int16_t>(const DimsType& dims, const std::vector<int16_t>& values);
+template H5::ErrorType H5::DatasetWriter::writeVector<int32_t>(const DimsType& dims, const std::vector<int32_t>& values);
+template H5::ErrorType H5::DatasetWriter::writeVector<int64_t>(const DimsType& dims, const std::vector<int64_t>& values);
+template H5::ErrorType H5::DatasetWriter::writeVector<uint8_t>(const DimsType& dims, const std::vector<uint8_t>& values);
+template H5::ErrorType H5::DatasetWriter::writeVector<uint16_t>(const DimsType& dims, const std::vector<uint16_t>& values);
+template H5::ErrorType H5::DatasetWriter::writeVector<uint32_t>(const DimsType& dims, const std::vector<uint32_t>& values);
+template H5::ErrorType H5::DatasetWriter::writeVector<uint64_t>(const DimsType& dims, const std::vector<uint64_t>& values);
+template H5::ErrorType H5::DatasetWriter::writeVector<float>(const DimsType& dims, const std::vector<float>& values);
+template H5::ErrorType H5::DatasetWriter::writeVector<double>(const DimsType& dims, const std::vector<double>& values);

@@ -122,28 +122,4 @@ private:
   const std::string m_AttributeName;
 };
 } // namespace H5
-
-// declare writeValue
-template H5::ErrorType H5::AttributeWriter::writeValue<int8_t>(int8_t value);
-template H5::ErrorType H5::AttributeWriter::writeValue<int16_t>(int16_t value);
-template H5::ErrorType H5::AttributeWriter::writeValue<int32_t>(int32_t value);
-template H5::ErrorType H5::AttributeWriter::writeValue<int64_t>(int64_t value);
-template H5::ErrorType H5::AttributeWriter::writeValue<uint8_t>(uint8_t value);
-template H5::ErrorType H5::AttributeWriter::writeValue<uint16_t>(uint16_t value);
-template H5::ErrorType H5::AttributeWriter::writeValue<uint32_t>(uint32_t value);
-template H5::ErrorType H5::AttributeWriter::writeValue<uint64_t>(uint64_t value);
-template H5::ErrorType H5::AttributeWriter::writeValue<float>(float value);
-template H5::ErrorType H5::AttributeWriter::writeValue<double>(double value);
-
-// declare writeVector
-template H5::ErrorType H5::AttributeWriter::writeVector<int8_t>(const DimsVector& dims, const std::vector<int8_t>& vector);
-template H5::ErrorType H5::AttributeWriter::writeVector<int16_t>(const DimsVector& dims, const std::vector<int16_t>& vector);
-template H5::ErrorType H5::AttributeWriter::writeVector<int32_t>(const DimsVector& dims, const std::vector<int32_t>& vector);
-template H5::ErrorType H5::AttributeWriter::writeVector<int64_t>(const DimsVector& dims, const std::vector<int64_t>& vector);
-template H5::ErrorType H5::AttributeWriter::writeVector<uint8_t>(const DimsVector& dims, const std::vector<uint8_t>& vector);
-template H5::ErrorType H5::AttributeWriter::writeVector<uint16_t>(const DimsVector& dims, const std::vector<uint16_t>& vector);
-template H5::ErrorType H5::AttributeWriter::writeVector<uint32_t>(const DimsVector& dims, const std::vector<uint32_t>& vector);
-template H5::ErrorType H5::AttributeWriter::writeVector<uint64_t>(const DimsVector& dims, const std::vector<uint64_t>& vector);
-template H5::ErrorType H5::AttributeWriter::writeVector<float>(const DimsVector& dims, const std::vector<float>& vector);
-template H5::ErrorType H5::AttributeWriter::writeVector<double>(const DimsVector& dims, const std::vector<double>& vector);
 } // namespace complex
