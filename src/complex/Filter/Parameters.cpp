@@ -1,7 +1,5 @@
 #include "Parameters.hpp"
 
-#include <sstream>
-
 namespace
 {
 void cloneParams(const std::map<std::string, std::unique_ptr<complex::IParameter>, std::less<>>& inputParams, std::map<std::string, std::unique_ptr<complex::IParameter>, std::less<>>& outputParams)
