@@ -49,4 +49,15 @@ void Parameters::insert(IParameter::UniquePointer parameter)
   std::string name = parameter->name();
   m_Params.insert({std::move(name), std::move(parameter)});
 }
+
+std::vector<std::string> Parameters::getKeys() const
+{
+  std::vector<std::string> acceptedKeys;
+  for(const auto& param : m_Params)
+  {
+    acceptedKeys.push_back(param.first);
+  }
+  return acceptedKeys;
+}
+
 } // namespace complex
