@@ -52,20 +52,14 @@ void Parameters::insert(IParameter::UniquePointer parameter)
   m_Params.insert({std::move(name), std::move(parameter)});
 }
 
-std::string Parameters::getAcceptedKeys() const
+std::vector<std::string> Parameters::getKeys() const
 {
-  std::stringstream acceptedKeys;
-  size_t count = 0;
+  std::vector<std::string> acceptedKeys;
   for(const auto& param : m_Params)
   {
-    acceptedKeys << "'" << param.first << "'";
-    count++;
-    if(count < m_Params.size())
-    {
-      acceptedKeys << ", ";
-    }
+    acceptedKeys.push_back(param.first);
   }
-  return acceptedKeys.str();
+  return acceptedKeys;
 }
 
 } // namespace complex

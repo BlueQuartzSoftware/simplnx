@@ -72,10 +72,10 @@ public:
   }
 
   /**
-   * @brief Returns a comma delimited list of the keys for this Parameters object
-   * @return
+   * @brief Returns a list of the keys that represent the accepted keys for this Parameters Object
+   * @return A vector of std::string objects
    */
-  std::string getAcceptedKeys() const;
+  std::vector<std::string> getKeys() const;
 
 private:
   std::map<std::string, std::unique_ptr<IParameter>, std::less<>> m_Params;
