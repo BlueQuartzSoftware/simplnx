@@ -1,13 +1,13 @@
 #include "IFilter.hpp"
 
-#include <vector>
+#include "complex/Filter/DataParameter.hpp"
+#include "complex/Filter/ValueParameter.hpp"
 
 #include <fmt/format.h>
 
 #include <nlohmann/json.hpp>
 
-#include "complex/Filter/DataParameter.hpp"
-#include "complex/Filter/ValueParameter.hpp"
+#include <vector>
 
 namespace
 {
@@ -45,7 +45,9 @@ Result<OutputActions> IFilter::preflight(const DataStructure& data, const Argume
   {
     if(!params.contains(name))
     {
-      warnings.push_back(Warning{-1, fmt::format("Input contained \"{}\" which is not an accepted argument name", name)});
+      warnings.push_back(Warning{-1, fmt::format("The list of arguments for Filter '{}' contained the argument key '{}' which is not an accepted argument key. The accepted Keys are:\n{}", humanName(),
+                                                 name, fmt::join(params.getKeys(), ", "))});
+
       continue;
     }
     resolvedArgs.insert(name, arg);
