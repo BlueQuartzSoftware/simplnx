@@ -52,8 +52,8 @@ public:
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
-   * @param dataStructure
-   * @param value
+   * @param dataStructure The active DataStructure to use during validation
+   * @param value The value to validate
    * @return
    */
   virtual Result<> validate(const DataStructure& dataStructure, const std::any& value) const = 0;

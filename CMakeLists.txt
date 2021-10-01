@@ -112,6 +112,7 @@ set(CoreFilters
 
 set(CoreParameters
   ArrayCreationParameter
+  ArraySelectionParameter
   BoolParameter
   ChoicesParameter
   DataGroupCreationParameter
