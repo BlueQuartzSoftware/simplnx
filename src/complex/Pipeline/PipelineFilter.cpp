@@ -6,19 +6,26 @@
 
 using namespace complex;
 
-PipelineFilter* PipelineFilter::Create(const FilterHandle& handle)
+PipelineFilter* PipelineFilter::Create(const FilterHandle& handle, const Arguments& args, FilterList* filterList)
 {
-  auto filter = Application::Instance()->getFilterList()->createFilter(handle);
+  // Use current Application FilterList if one is not provided.
+  if(filterList == nullptr)
+  {
+    filterList = Application::Instance()->getFilterList();
+  }
+
+  auto filter = filterList->createFilter(handle);
   if(filter == nullptr)
   {
     return nullptr;
   }
-  return new PipelineFilter(std::move(filter));
+  return new PipelineFilter(std::move(filter), args);
 }
 
-PipelineFilter::PipelineFilter(IFilter::UniquePointer&& filter)
+PipelineFilter::PipelineFilter(IFilter::UniquePointer&& filter, const Arguments& args)
 : AbstractPipelineNode()
 , m_Filter(std::move(filter))
+, m_Arguments(args)
 {
 }
 

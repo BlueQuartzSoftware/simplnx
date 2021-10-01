@@ -9,9 +9,10 @@
 
 using namespace complex;
 
-Pipeline::Pipeline(const std::string& name)
+Pipeline::Pipeline(const std::string& name, FilterList* filterList)
 : AbstractPipelineNode()
 , m_Name(name)
+, m_FilterList(filterList)
 {
 }
 
@@ -19,6 +20,7 @@ Pipeline::Pipeline(const Pipeline& other)
 : AbstractPipelineNode()
 , m_Name(other.m_Name)
 , m_Collection(other.m_Collection)
+, m_FilterList(other.m_FilterList)
 {
 }
 
@@ -26,6 +28,7 @@ Pipeline::Pipeline(Pipeline&& other) noexcept
 : AbstractPipelineNode()
 , m_Name(std::move(other.m_Name))
 , m_Collection(std::move(other.m_Collection))
+, m_FilterList(std::move(other.m_FilterList))
 {
 }
 
@@ -35,6 +38,7 @@ Pipeline& Pipeline::operator=(const Pipeline& rhs) noexcept
 {
   m_Name = rhs.m_Name;
   m_Collection = rhs.m_Collection;
+  m_FilterList = rhs.m_FilterList;
   return *this;
 }
 
@@ -42,7 +46,35 @@ Pipeline& Pipeline::operator=(Pipeline&& rhs) noexcept
 {
   m_Name = std::move(rhs.m_Name);
   m_Collection = std::move(rhs.m_Collection);
+  m_FilterList = std::move(rhs.m_FilterList);
   return *this;
+}
+
+bool Pipeline::hasFilterList() const
+{
+  return m_FilterList != nullptr;
+}
+
+complex::FilterList* Pipeline::getFilterList() const
+{
+  return m_FilterList;
+}
+
+void Pipeline::setFilterList(complex::FilterList* filterList)
+{
+  m_FilterList = filterList;
+}
+
+FilterList* Pipeline::getActiveFilterList() const
+{
+  if(hasFilterList())
+  {
+    return getFilterList();
+  }
+  else
+  {
+    return Application::Instance()->getFilterList();
+  }
 }
 
 AbstractPipelineNode::NodeType Pipeline::getType() const
@@ -215,21 +247,21 @@ bool Pipeline::insertAt(index_type index, AbstractPipelineNode* node)
   return insertAt(begin() + index, ptr);
 }
 
-bool Pipeline::insertAt(index_type index, IFilter::UniquePointer&& filter)
+bool Pipeline::insertAt(index_type index, IFilter::UniquePointer&& filter, const Arguments& args)
 {
   if(filter == nullptr)
   {
     return false;
   }
 
-  return insertAt(index, new PipelineFilter(std::move(filter)));
+  return insertAt(index, new PipelineFilter(std::move(filter), args));
 }
 
-bool Pipeline::insertAt(index_type index, const FilterHandle& handle)
+bool Pipeline::insertAt(index_type index, const FilterHandle& handle, const Arguments& args)
 {
-  auto filterList = Application::Instance()->getFilterList();
+  auto filterList = getActiveFilterList();
   IFilter::UniquePointer filter = filterList->createFilter(handle);
-  return insertAt(index, std::move(filter));
+  return insertAt(index, std::move(filter), args);
 }
 
 bool Pipeline::insertAt(iterator pos, const std::shared_ptr<AbstractPipelineNode>& ptr)
@@ -335,9 +367,21 @@ bool Pipeline::push_front(AbstractPipelineNode* node)
   return insertAt(begin(), std::shared_ptr<AbstractPipelineNode>(node));
 }
 
-bool Pipeline::push_front(const FilterHandle& handle)
+bool Pipeline::push_front(const FilterHandle& handle, const Arguments& args)
 {
-  return push_front(PipelineFilter::Create(handle));
+  return push_front(PipelineFilter::Create(handle, args, getActiveFilterList()));
+}
+
+bool Pipeline::push_front(IFilter::UniquePointer&& filter, const Arguments& args)
+{
+  if(filter == nullptr)
+  {
+    return false;
+  }
+
+  auto filterNode = new PipelineFilter(std::move(filter));
+  filterNode->setArguments(args);
+  return push_front(filterNode);
 }
 
 bool Pipeline::push_back(AbstractPipelineNode* node)
@@ -349,9 +393,21 @@ bool Pipeline::push_back(AbstractPipelineNode* node)
   return insertAt(end(), std::shared_ptr<AbstractPipelineNode>(node));
 }
 
-bool Pipeline::push_back(const FilterHandle& handle)
+bool Pipeline::push_back(const FilterHandle& handle, const Arguments& args)
 {
-  return push_back(PipelineFilter::Create(handle));
+  return push_back(PipelineFilter::Create(handle, args, getActiveFilterList()));
+}
+
+bool Pipeline::push_back(IFilter::UniquePointer&& filter, const Arguments& args)
+{
+  if(filter == nullptr)
+  {
+    return false;
+  }
+
+  auto filterNode = new PipelineFilter(std::move(filter));
+  filterNode->setArguments(args);
+  return push_back(filterNode);
 }
 
 Pipeline::iterator Pipeline::find(AbstractPipelineNode* targetNode)
