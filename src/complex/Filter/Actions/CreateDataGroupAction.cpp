@@ -23,8 +23,8 @@ DataPath CreateDataGroupAction::parentPath() const
 
 Result<> CreateDataGroupAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  LinkedPath linkedPath = dataStructure.makePath(m_Path);
-  if(!linkedPath.isValid())
+  Result<LinkedPath> linkedPath = dataStructure.makePath(m_Path);
+  if(!linkedPath.valid())
   {
     return MakeErrorResult(-2, fmt::format("Path '{}' was not created.", m_Path.toString()));
   }
