@@ -10,6 +10,7 @@
 #include "complex/Core/Parameters/NumberParameter.hpp"
 #include "complex/Core/Parameters/NumericTypeParameter.hpp"
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/Filter/Actions/CreateArrayAction.hpp"
 
 namespace fs = std::filesystem;
 using namespace complex;
