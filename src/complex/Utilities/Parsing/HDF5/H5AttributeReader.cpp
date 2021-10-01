@@ -166,7 +166,7 @@ std::string H5::AttributeReader::readAsString() const
 
   hid_t attrTypeId = getTypeId();
   htri_t isVariableString = H5Tis_variable_str(attrTypeId); // Test if the string is variable length
-  //H5Tclose(attrTypeId);
+  // H5Tclose(attrTypeId);
   if(isVariableString == 1)
   {
     data.clear();
@@ -192,7 +192,7 @@ std::string H5::AttributeReader::readAsString() const
         }
         data.append(attributeOutput.data(), size); // Append the data to the passed in string
       }
-      //H5Tclose(attributeType);
+      // H5Tclose(attributeType);
     }
   }
 

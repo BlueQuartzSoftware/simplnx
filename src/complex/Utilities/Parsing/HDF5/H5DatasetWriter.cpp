@@ -279,6 +279,7 @@ H5::ErrorType H5::DatasetWriter::writeVectorOfStrings(std::vector<std::string>& 
   return returnError;
 }
 
+#if 0
 template <typename T>
 H5::ErrorType H5::DatasetWriter::writeVector(const DimsType& dims, const std::vector<T>& values)
 {
@@ -318,7 +319,8 @@ H5::ErrorType H5::DatasetWriter::writeVector(const DimsType& dims, const std::ve
       if(attributeId >= 0)
       {
         /* Write the attribute data. */
-        error = H5Awrite(attributeId, dataType, values.data());
+        const void* data = static_cast<const void*>(values.data());
+        error = H5Awrite(attributeId, dataType, data);
         if(error < 0)
         {
           std::cout << "Error Writing Attribute" << std::endl;
@@ -359,3 +361,4 @@ template H5::ErrorType H5::DatasetWriter::writeVector<uint32_t>(const DimsType& 
 template H5::ErrorType H5::DatasetWriter::writeVector<uint64_t>(const DimsType& dims, const std::vector<uint64_t>& values);
 template H5::ErrorType H5::DatasetWriter::writeVector<float>(const DimsType& dims, const std::vector<float>& values);
 template H5::ErrorType H5::DatasetWriter::writeVector<double>(const DimsType& dims, const std::vector<double>& values);
+#endif

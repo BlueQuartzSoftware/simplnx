@@ -87,9 +87,76 @@ public:
    * @param vector std::vector of data
    */
   template <typename T>
-  H5::ErrorType writeVector(const DimsVector& dims, const std::vector<T>& vector);
+  H5::ErrorType writeVector(const DimsVector& dims, const std::vector<T>& vector)
+  {
+    if(!isValid())
+    {
+      return -1;
+    }
 
-  #if 0
+    herr_t returnError = 0;
+    int32_t rank = static_cast<int32_t>(dims.size());
+
+    hid_t dataType = H5::Support::HdfTypeForPrimitive<T>();
+    if(dataType == -1)
+    {
+      std::cout << "dataType was unknown" << std::endl;
+      return -1;
+    }
+
+    /* Get the type of object */
+    H5O_info1_t objectInfo;
+    if(H5Oget_info_by_name1(getObjectId(), getObjectName().c_str(), &objectInfo, H5P_DEFAULT) < 0)
+    {
+      std::cout << "Error getting object info at locationId (" << getObjectId() << ") with object name (" << getObjectName() << ")" << std::endl;
+      return -1;
+    }
+
+    hid_t dataspaceId = H5Screate_simple(rank, dims.data(), nullptr);
+    if(dataspaceId >= 0)
+    {
+      // Delete any existing attribute
+      herr_t error = findAndDeleteAttribute();
+
+      if(error >= 0)
+      {
+        /* Create the attribute. */
+        hid_t attributeId = H5Acreate(getObjectId(), getAttributeName().c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
+        if(attributeId >= 0)
+        {
+          /* Write the attribute data. */
+          error = H5Awrite(attributeId, dataType, static_cast<const void*>(vector.data()));
+          if(error < 0)
+          {
+            std::cout << "Error Writing Attribute" << std::endl;
+            returnError = error;
+          }
+        }
+        /* Close the attribute. */
+        error = H5Aclose(attributeId);
+        if(error < 0)
+        {
+          std::cout << "Error Closing Attribute" << std::endl;
+          returnError = error;
+        }
+      }
+      /* Close the dataspace. */
+      error = H5Sclose(dataspaceId);
+      if(error < 0)
+      {
+        std::cout << "Error Closing Dataspace" << std::endl;
+        returnError = error;
+      }
+    }
+    else
+    {
+      returnError = static_cast<herr_t>(dataspaceId);
+    }
+
+    return returnError;
+  }
+
+#if 0
   /**
    * @brief Writes a complex::Array of values to the HDF5 attribute.
    * @tparam T
@@ -107,7 +174,7 @@ public:
     }
     return AttributeWriter::writeVector<T>(dims, data);
   }
-  #endif
+#endif
 
 protected:
   /**

@@ -155,8 +155,8 @@ std::vector<std::string> H5::DatasetReader::readAsVectorOfStrings() const
     int nDims = H5Sget_simple_extent_dims(dataspaceID, dims, nullptr);
     if(nDims != 1)
     {
-      //H5Sclose(dataspaceID);
-      //H5Tclose(typeID);
+      // H5Sclose(dataspaceID);
+      // H5Tclose(typeID);
       std::cout << "H5DatasetReader.cpp::readVectorOfStrings(" << __LINE__ << ") Number of dims should be 1 but it was " << nDims << ". Returning early. Is your data file correct?" << std::endl;
       return {};
     }
@@ -179,8 +179,8 @@ std::vector<std::string> H5::DatasetReader::readAsVectorOfStrings() const
     if(status < 0)
     {
       status = H5Dvlen_reclaim(memtype, dataspaceID, H5P_DEFAULT, rData.data());
-      //H5Sclose(dataspaceID);
-      //H5Tclose(typeID);
+      // H5Sclose(dataspaceID);
+      // H5Tclose(typeID);
       H5Tclose(memtype);
       std::cout << "H5DatasetReader.cpp::readVectorOfStrings(" << __LINE__ << ") Error reading Dataset at locationID (" << getParentId() << ") with object name (" << getName() << ")" << std::endl;
       return {};
@@ -240,8 +240,8 @@ std::vector<T> H5::DatasetReader::readAsVector() const
         std::cout << "Error Reading Data.'" << getName() << "'" << std::endl;
       }
     }
-    //auto error = H5Sclose(spaceId);
-    //if(error < 0)
+    // auto error = H5Sclose(spaceId);
+    // if(error < 0)
     //{
     //  std::cout << "Error Closing Data Space" << std::endl;
     //}

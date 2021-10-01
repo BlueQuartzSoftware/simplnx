@@ -32,7 +32,7 @@ public:
   /**
    * @brief Returns true if the GroupWriter is valid. Returns false otherwise.
    * @return bool
-  */
+   */
   bool isValid() const override;
 
   /**

@@ -215,6 +215,7 @@ herr_t H5::AttributeWriter::writeValue(T value)
   return returnError;
 }
 
+#if 0
 template <typename T>
 herr_t H5::AttributeWriter::writeVector(const DimsVector& dims, const std::vector<T>& vector)
 {
@@ -254,7 +255,7 @@ herr_t H5::AttributeWriter::writeVector(const DimsVector& dims, const std::vecto
       if(attributeId >= 0)
       {
         /* Write the attribute data. */
-        error = H5Awrite(attributeId, dataType, vector.data());
+        error = H5Awrite(attributeId, dataType, static_cast<const void*>(vector.data()));
         if(error < 0)
         {
           std::cout << "Error Writing Attribute" << std::endl;
@@ -284,6 +285,7 @@ herr_t H5::AttributeWriter::writeVector(const DimsVector& dims, const std::vecto
 
   return returnError;
 }
+#endif
 
 // declare writeValue
 template H5::ErrorType H5::AttributeWriter::writeValue<int8_t>(int8_t value);

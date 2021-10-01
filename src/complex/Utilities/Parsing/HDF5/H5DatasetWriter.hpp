@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "complex/Utilities/Parsing/HDF5/H5ObjectWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
 namespace complex
 {
@@ -56,7 +57,7 @@ public:
   /**
    * @brief Writes a given string to the dataset. Returns the HDF5 error,
    * should one occur.
-   * 
+   *
    * Any one of the write* methods must be called before adding attributes to
    * the HDF5 dataset.
    * @param text
@@ -67,7 +68,7 @@ public:
   /**
    * @brief Writes a vector of strings to the dataset. Returns the HDF5 error,
    * should one occur.
-   * 
+   *
    * Any one of the write* methods must be called before adding attributes to
    * the HDF5 dataset.
    * @param text
@@ -78,7 +79,7 @@ public:
   /**
    * @brief Writes a vector of values to the dataset. Returns the HDF5 error,
    * should one occur.
-   * 
+   *
    * Any one of the write* methods must be called before adding attributes to
    * the HDF5 dataset.
    * @tparam T
@@ -87,7 +88,74 @@ public:
    * @return H5::ErrorType
    */
   template <typename T>
-  H5::ErrorType writeVector(const DimsType& dims, const std::vector<T>& values);
+  H5::ErrorType writeVector(const DimsType& dims, const std::vector<T>& values)
+  {
+    herr_t returnError = 0;
+    int32_t rank = static_cast<int32_t>(dims.size());
+    hid_t dataType = H5::Support::HdfTypeForPrimitive<T>();
+    if(dataType == -1)
+    {
+      std::cout << "dataType was unknown" << std::endl;
+      return -1;
+    }
+
+    /* Get the type of object */
+    H5O_info_t objectInfo;
+    if(H5Oget_info_by_name(getParentId(), getName().c_str(), &objectInfo, H5P_DEFAULT) < 0)
+    {
+      std::cout << "Error getting object info at locationId (" << getParentId() << ") with object name (" << getName() << ")" << std::endl;
+      return -1;
+    }
+    /* Open the object */
+    m_DatasetId = H5::Support::OpenId(getParentId(), getName(), objectInfo.type);
+    if(m_DatasetId < 0)
+    {
+      std::cout << "Error opening Object for Attribute operations." << std::endl;
+      return -1;
+    }
+
+    hid_t dataspaceId = H5Screate_simple(rank, dims.data(), nullptr);
+    if(dataspaceId >= 0)
+    {
+      herr_t error = findAndDeleteAttribute();
+
+      if(error >= 0)
+      {
+        /* Create the attribute. */
+        hid_t attributeId = H5Acreate(getId(), getName().c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
+        if(attributeId >= 0)
+        {
+          /* Write the attribute data. */
+          const void* data = static_cast<const void*>(values.data());
+          error = H5Awrite(attributeId, dataType, data);
+          if(error < 0)
+          {
+            std::cout << "Error Writing Attribute" << std::endl;
+            returnError = error;
+          }
+        }
+        /* Close the attribute. */
+        error = H5Aclose(attributeId);
+        if(error < 0)
+        {
+          std::cout << "Error Closing Attribute" << std::endl;
+          returnError = error;
+        }
+      }
+      /* Close the dataspace. */
+      error = H5Sclose(dataspaceId);
+      if(error < 0)
+      {
+        std::cout << "Error Closing Dataspace" << std::endl;
+        returnError = error;
+      }
+    }
+    else
+    {
+      returnError = static_cast<herr_t>(dataspaceId);
+    }
+    return returnError;
+  }
 
 protected:
   /**
