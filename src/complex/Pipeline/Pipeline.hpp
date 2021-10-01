@@ -10,6 +10,7 @@
 namespace complex
 {
 class FilterHandle;
+class FilterList;
 
 /**
  * @class Pipeline
@@ -35,7 +36,7 @@ public:
    * provided, a default name of "Unnamed Pipeline" will be used.
    * @param name = "Unnamed Pipeline"
    */
-  Pipeline(const std::string& name = "Unnamed Pipeline");
+  Pipeline(const std::string& name = "Unnamed Pipeline", FilterList* filterList = nullptr);
 
   /**
    * @brief Creates a copy of the specified Pipeline.
@@ -189,7 +190,7 @@ public:
    * Returns nullptr if the specified index is greater than or equal to the
    * getSize of the pipeline.
    * @param index
-   * @return const AbstractPipelineNode*
+   * @return AbstractPipelineNode*
    */
   AbstractPipelineNode* at(index_type index);
 
@@ -218,18 +219,23 @@ public:
    * This will always fail if the provided filter is null.
    * @param index
    * @param filter
+   * @param args = {}
    * @return bool
    */
-  bool insertAt(index_type index, IFilter::UniquePointer&& filter);
+  bool insertAt(index_type index, IFilter::UniquePointer&& filter, const Arguments& args = {});
 
   /**
-   * @brief Inserts a filter using the provided FilterHandle at the specified
-   * index. Returns true if the process succeeds. Returns false otherwise.
+   * @brief Inserts a filter using the provided FilterHandle and Arguments at
+   * the specified index. Returns true if the process succeeds. Returns false
+   * otherwise.
+   *
+   * This method will fail if the FilterHandle does not point to a known filter.
    * @param index
    * @param handle
+   * @param args = {}
    * @return bool
    */
-  bool insertAt(index_type index, const FilterHandle& handle);
+  bool insertAt(index_type index, const FilterHandle& handle, const Arguments& args = {});
 
   /**
    * @brief Inserts a pipeline node at the specified iterator position. Returns
@@ -303,24 +309,55 @@ public:
   bool push_front(AbstractPipelineNode* node);
 
   /**
-   * @brief Inserts a pipeline node at the front of the pipeline segment based
-   * on the target FilterHandle.
+   * @brief Inserts a PipelineFilter at the front of the pipeline segment based
+   * on the target FilterHandle and Arguments. Returns true if the process
+   * succeeds. Returns false otherwise. This will always fail if no matching
+   * IFilter can be constructed from the FilterHandle.
    * @param handle
+   * @param args = {}
+   * @return bool
    */
-  bool push_front(const FilterHandle& handle);
+  bool push_front(const FilterHandle& handle, const Arguments& args = {});
 
   /**
-   * @brief Inserts the specified pipeline node at the end of the pipeline segment.
+   * @brief Inserts a new filter node at the front of the pipeline using the
+   * specified values. Returns true if the operation succeeded. Returns false
+   * otherwise.
+   * @param filter
+   * @param args = {}
+   * @return bool
+   */
+  bool push_front(IFilter::UniquePointer&& filter, const Arguments& args = {});
+
+  /**
+   * @brief Inserts the specified pipeline node at the end of the pipeline.
+   * Returns true if the operation succeeded. Returns false otherwise. This
+   * will always fail if the given node is null.
    * @param node
+   * @return bool
    */
   bool push_back(AbstractPipelineNode* node);
 
   /**
    * @brief Inserts a pipeline node at the back of the pipeline segment based
-   * on the target FilterHandle.
+   * on the target FilterHandle and Arguments. Returns true if the operation
+   * succeeded. Returns false otherwise. This will always fail if an IFilter
+   * could not be constructed for the given FilterHandle.
    * @param handle
+   * @param args = {}
+   * @return bool
    */
-  bool push_back(const FilterHandle& handle);
+  bool push_back(const FilterHandle& handle, const Arguments& args = {});
+
+  /**
+   * @brief Inserts a new filter node at the back of the pipeline using the
+   * specified values. Returns true if the operation succeeded. Returns false
+   * otherwise. This will always fail if the given filter is null.
+   * @param filter
+   * @param args = {}
+   * @return bool
+   */
+  bool push_back(IFilter::UniquePointer&& filter, const Arguments& args = {});
 
   /**
    * @brief Returns an iterator to the pipeline node. Returns an iterator to
@@ -376,8 +413,41 @@ public:
    */
   Pipeline& operator=(Pipeline&& rhs) noexcept;
 
+  /**
+   * @brief Returns true if the Pipeline has had a FilterList assigned to it.
+   * Returns false otherwise.
+   * @return bool
+   */
+  bool hasFilterList() const;
+
+  /**
+   * @brief Returns a pointer to the assigned FilterList. Returns nullptr if
+   * a FilterList has not been assigned.
+   * @return complex::FilterList*
+   */
+  complex::FilterList* getFilterList() const;
+
+  /**
+   * @brief Assigns a new FilterList for use when adding filters by
+   * FilterHandle. Passing nullptr will clear the assigned FilterList and use
+   * the current Application instance's FilterList instead.
+   * @param filterList
+   */
+  void setFilterList(complex::FilterList* filterList);
+
 private:
+  /**
+   * @brief Returns a pointer to the active FilterList that should be used for
+   * creating IFilters. Returns the assigned FilterList pointer if one was
+   * provided. Otherwise, this returns the current Application's FilterList.
+   * @return complex::FilterList*
+   */
+  complex::FilterList* getActiveFilterList() const;
+
+  ////////////
+  // Variables
   std::string m_Name;
   collection_type m_Collection;
+  FilterList* m_FilterList = nullptr;
 };
 } // namespace complex

@@ -8,6 +8,7 @@
 namespace complex
 {
 class FilterHandle;
+class FilterList;
 
 /**
  * @class PipelineFilter
@@ -27,17 +28,21 @@ public:
    * created. Otherwise, this method returns a pointer to the created
    * PipelineFilter.
    * @param handle
+   * @param args = {}
+   * @param filterList = nullptr
    * @return PipelineFilter*
    */
-  static PipelineFilter* Create(const FilterHandle& handle);
+  static PipelineFilter* Create(const FilterHandle& handle, const Arguments& args = {}, FilterList* filterList = nullptr);
 
   /**
-   * @brief Constructs a PipelineFilter with the specified filter.
+   * @brief Constructs a PipelineFilter with the provided filter and arguments.
+   * If no Arguments are provided, a default empty value will be used instead.
    *
    * The PipelineFilter takes ownership of the std::unique_ptr<IFilter>.
    * @param filter
+   * @param args = {}
    */
-  PipelineFilter(IFilter::UniquePointer&& filter);
+  PipelineFilter(IFilter::UniquePointer&& filter, const Arguments& args = {});
 
   ~PipelineFilter() override;
 
