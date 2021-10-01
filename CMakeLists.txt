@@ -114,6 +114,7 @@ set(CoreParameters
   ArrayCreationParameter
   BoolParameter
   ChoicesParameter
+  DataGroupCreationParameter
   FileSystemPathParameter
   GeneratedFileListParameter
   NumberParameter
