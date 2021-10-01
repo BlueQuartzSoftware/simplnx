@@ -25,8 +25,14 @@ class DataPath;
 namespace Constants {
 inline const std::string k_ObjectTypeTag = "ObjectType";
 inline const std::string k_DataStructureTag = "DataStructure";
-
 }
+
+namespace H5
+{
+class FileReader;
+class FileWriter;
+}
+
 /**
  * @class DataStructure
  * @brief The DataStructure class is both the control center and origin of the
@@ -81,7 +87,7 @@ public:
    * @brief Returns the number of unique DataObjects in the DataStructure.
    * @return usize
    */
-  usize size() const;
+  usize getSize() const;
 
   /**
    * @brief Returns the IdType for the DataObject found at the specified DataPath. The
@@ -270,17 +276,17 @@ public:
 
   /**
    * @brief Writes the DataStructure to the target HDF5 file or group.
-   * @param fileId parent ID
+   * @param fileWriter HDF5 file writer
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::IdType fileId) const;
+  H5::ErrorType writeHdf5(H5::FileWriter& fileWriter) const;
 
   /**
-   * @brief Creates a DataStructure by reading the specified HDF5 file ID.
-   * @param fileId
+   * @brief Creates a DataStructure by reading the specified H5::FileReader.
+   * @param fileReader
    * @return H5::ErrorType
    */
-  static DataStructure readFromHdf5(H5::IdType fileId, H5::ErrorType& err);
+  static DataStructure readFromHdf5(const H5::FileReader& fileReader, H5::ErrorType& err);
 
   /**
    * @brief Copy assignment operator. The copied DataStructure's observers are not retained.
@@ -295,6 +301,16 @@ public:
    * @return DataStructure&
    */
   DataStructure& operator=(DataStructure&& rhs) noexcept;
+
+protected:
+  /**
+   * @brief Returns a new ID for use constructing a DataObject.
+   * IDs created are unique to the DataStructure, not the DataObject. Creating
+   * a copy of the DataStructure will result in the same ID being used for the
+   * next added DataObject to both structures.
+   * @return DataObject::IdType
+   */
+  DataObject::IdType generateId();
 
 private:
   /**
@@ -337,5 +353,6 @@ private:
   std::map<DataObject::IdType, std::weak_ptr<DataObject>> m_DataObjects;
   DataMap m_RootGroup;
   bool m_IsValid = false;
+  DataObject::IdType m_NextId = 1;
 };
 } // namespace complex

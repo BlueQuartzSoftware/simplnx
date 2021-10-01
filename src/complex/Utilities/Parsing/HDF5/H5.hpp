@@ -19,6 +19,8 @@
 #include <cstdint>
 #include <string>
 
+#include "complex/complex_export.hpp"
+
 namespace complex
 {
 namespace H5
@@ -27,6 +29,26 @@ using IdType = int64;
 using ErrorType = int32;
 using SizeType = unsigned long long;
 
+enum class Type
+{
+  int8,
+  int16,
+  int32,
+  int64,
+  uint8,
+  uint16,
+  uint32,
+  uint64,
+  float32,
+  float64,
+  string,
+  unknown = 255
+};
+
+Type COMPLEX_EXPORT getTypeFromId(IdType typeId);
+H5::IdType COMPLEX_EXPORT getIdForType(Type type);
+
+inline const std::string DataTypeTag = "DataType";
 static constexpr StringLiteral k_DataTypeTag = "DataType";
 
 static constexpr StringLiteral k_DataStoreTag = "DataStore";

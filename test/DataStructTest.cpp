@@ -219,7 +219,7 @@ TEST_CASE("DataStructureCopyTest")
 
   auto newGroup2 = DataGroup::Create(dataStrCopy, "New Group (2)", child2Id);
   auto newId2 = newGroup2->getId();
-  REQUIRE(!dataStr.getData(newId2));
+  REQUIRE(dataStr.getData(newId2) != dataStrCopy.getData(newId2));
   REQUIRE(dataStrCopy.getData(newId2));
 }
 

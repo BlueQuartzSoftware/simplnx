@@ -5,7 +5,8 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 using namespace complex;
 
@@ -501,57 +502,74 @@ void ImageGeom::setElementSizes(const Float32Array* elementSizes)
   m_VoxelSizesId = elementSizes->getId();
 }
 
-H5::ErrorType ImageGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
+H5::ErrorType ImageGeom::readHdf5(const H5::GroupReader& groupReader)
 {
-  std::vector<size_t> volDims;
-  std::vector<float> spacing;
-  std::vector<float> origin;
+  auto volumeAttribute = groupReader.getAttribute(k_H5_DIMENSIONS);
+  if(!volumeAttribute.isValid())
+  {
+    return -1;
+  }
 
-  int err = H5::Support::ReadVectorDataset(targetId, k_H5_DIMENSIONS, volDims);
-  if(err < 0)
+  auto spacingAttribute = groupReader.getAttribute(k_H5_SPACING);
+  if(!spacingAttribute.isValid())
   {
-    return err;
+    return -1;
   }
-  err = H5::Support::ReadVectorDataset(targetId, k_H5_SPACING, spacing);
-  if(err < 0)
+
+  auto originAttribute = groupReader.getAttribute(k_H5_ORIGIN);
+  if(!originAttribute.isValid())
   {
-    return err;
+    return -1;
   }
-  err = H5::Support::ReadVectorDataset(targetId, k_H5_ORIGIN, origin);
-  if(err < 0)
-  {
-    return err;
-  }
+
+  std::vector<size_t> volDims = volumeAttribute.readAsVector<size_t>();
+  std::vector<float> spacing = spacingAttribute.readAsVector<float>();
+  std::vector<float> origin = originAttribute.readAsVector<float>();
 
   setDimensions(volDims);
   setSpacing(spacing);
   setOrigin(origin);
 
-  return err;
+  return 0;
 }
 
-H5::ErrorType ImageGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+H5::ErrorType ImageGeom::writeHdf5(H5::GroupWriter& parentGroupWriter) const
 {
+  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
+  writeHdf5DataType(groupWriter);
+
   herr_t err = 0;
 
   SizeVec3 volDims = getDimensions();
   FloatVec3 spacing = getSpacing();
   FloatVec3 origin = getOrigin();
+  H5::AttributeWriter::DimsVector dims = {3};
+  std::vector<size_t> volDimsVector;
+  std::vector<float> spacingVector;
+  std::vector<float> originVector;
+  for(size_t i = 0; i < 3; i++)
+  {
+    volDimsVector[i] = volDims[i];
+    spacingVector[i] = spacing[i];
+    originVector[i] = origin[i];
+  }
 
-  int32_t rank = 1;
-  hsize_t dims[1] = {3};
-
-  err = H5::Support::WritePointerDataset(groupId, k_H5_DIMENSIONS, rank, dims, volDims.data());
+  auto dimensionAttr = groupWriter.createAttribute(k_H5_DIMENSIONS);
+  err = dimensionAttr.writeVector(dims, volDimsVector);
   if(err < 0)
   {
     return err;
   }
-  err = H5::Support::WritePointerDataset(groupId, k_H5_ORIGIN, rank, dims, origin.data());
+  
+  auto originAttr = groupWriter.createAttribute(k_H5_ORIGIN);
+  err = originAttr.writeVector(dims, originVector);
   if(err < 0)
   {
     return err;
   }
-  err = H5::Support::WritePointerDataset(groupId, k_H5_SPACING, rank, dims, spacing.data());
+
+  auto spacingAttr = groupWriter.createAttribute(k_H5_SPACING);
+  err = spacingAttr.writeVector(dims, spacingVector);
   if(err < 0)
   {
     return err;

@@ -9,7 +9,8 @@
 #include "complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
 #include "complex/Filter/DataParameter.hpp"
 #include "complex/Filter/ValueParameter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include <numeric>
 #include <stdexcept>
@@ -31,6 +32,7 @@ DataStructure::DataStructure(const DataStructure& ds)
 : m_DataObjects(ds.m_DataObjects)
 , m_RootGroup(ds.m_RootGroup)
 , m_IsValid(ds.m_IsValid)
+, m_NextId(ds.m_NextId)
 {
   std::map<DataObject::IdType, std::shared_ptr<DataObject>> copyData;
   for(auto& dataPair : m_DataObjects)
@@ -47,6 +49,7 @@ DataStructure::DataStructure(DataStructure&& ds) noexcept
 : m_DataObjects(std::move(ds.m_DataObjects))
 , m_RootGroup(std::move(ds.m_RootGroup))
 , m_IsValid(std::move(ds.m_IsValid))
+, m_NextId(std::move(ds.m_NextId))
 {
   m_RootGroup.setDataStructure(this);
 }
@@ -56,7 +59,12 @@ DataStructure::~DataStructure()
   m_IsValid = false;
 }
 
-usize DataStructure::size() const
+DataObject::IdType DataStructure::generateId()
+{
+  return m_NextId++;
+}
+
+size_t DataStructure::getSize() const
 {
   return m_DataObjects.size();
 }
@@ -429,6 +437,7 @@ DataStructure& DataStructure::operator=(const DataStructure& rhs)
   m_DataObjects = rhs.m_DataObjects;
   m_RootGroup = rhs.m_RootGroup;
   m_IsValid = rhs.m_IsValid;
+  m_NextId = rhs.m_NextId;
 
   std::map<DataObject::IdType, std::shared_ptr<DataObject>> mCopyData;
   for(auto& dataPair : m_DataObjects)
@@ -447,28 +456,23 @@ DataStructure& DataStructure::operator=(DataStructure&& rhs) noexcept
   m_DataObjects = std::move(rhs.m_DataObjects);
   m_RootGroup = std::move(rhs.m_RootGroup);
   m_IsValid = std::move(rhs.m_IsValid);
+  m_NextId = std::move(rhs.m_NextId);
   m_RootGroup.setDataStructure(this);
   return *this;
 }
 
-void readDataObject(DataStructure& ds, H5::IdType objId, const std::string& name)
+H5::ErrorType DataStructure::writeHdf5(H5::FileWriter& fileWriter) const
 {
-}
-
-H5::ErrorType DataStructure::writeHdf5(H5::IdType fileId) const
-{
-  auto dsId = H5Gcreate(fileId, complex::H5::k_DataStructureTag.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  H5::ErrorType err = m_RootGroup.writeH5Group(dsId);
-  H5Gclose(dsId);
+  auto groupWriter = fileWriter.createGroupWriter(Constants::k_DataStructureTag);
+  H5::ErrorType err = m_RootGroup.writeH5Group(groupWriter);
   return err;
 }
 
-DataStructure DataStructure::readFromHdf5(H5::IdType fileId, H5::ErrorType& err)
+DataStructure DataStructure::readFromHdf5(const H5::FileReader& fileReader, H5::ErrorType& err)
 {
   DataStructure ds;
-  hid_t dsId = H5Gopen(fileId, complex::H5::k_DataStructureTag.c_str(), H5P_DEFAULT);
-  err = ds.m_RootGroup.readH5Group(ds, dsId);
-  H5Gclose(dsId);
+  auto rootGroupReader = fileReader.openGroup(Constants::k_DataStructureTag);
+  err = ds.m_RootGroup.readH5Group(ds, rootGroupReader);
   return ds;
 }
 

@@ -3,6 +3,7 @@
 #include <exception>
 #include <stdexcept>
 
+#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 using namespace complex;
@@ -64,12 +65,12 @@ bool DataGroup::canInsert(const DataObject* obj) const
   return BaseGroup::canInsert(obj);
 }
 
-H5::ErrorType DataGroup::readHdf5(H5::IdType targetId, H5::IdType parentId)
+H5::ErrorType DataGroup::readHdf5(const H5::GroupReader& groupReader)
 {
-  return BaseGroup::readHdf5(targetId, parentId);
+  return BaseGroup::readHdf5(groupReader);
 }
 
-H5::ErrorType DataGroup::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+H5::ErrorType DataGroup::writeHdf5(H5::GroupWriter& parentGroupWriter) const
 {
-  return BaseGroup::writeHdf5_impl(parentId, groupId);
+  return BaseGroup::writeHdf5(parentGroupWriter);
 }

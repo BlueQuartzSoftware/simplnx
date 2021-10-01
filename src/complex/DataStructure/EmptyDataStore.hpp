@@ -156,12 +156,11 @@ public:
   }
 
   /**
-   * @brief Writes the data store to HDF5. Returns the HDF5 error code should
-   * one be encountered. Otherwise, returns 0.
-   * @param dataId
+   * @brief Throws a runtime error due to the inability to write values to HDF5.
+   * @param datasetWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::IdType dataId, const std::string& name, DataObject::IdType) const override
+  H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const override
   {
     throw std::runtime_error("");
   }

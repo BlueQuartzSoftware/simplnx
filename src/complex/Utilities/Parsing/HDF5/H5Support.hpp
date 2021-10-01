@@ -10,6 +10,8 @@
 #include "complex/complex_export.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 
+#define H5_USE_110_API
+
 #define HDF_ERROR_HANDLER_OFF                                                                                                                                                                          \
   herr_t (*_oldHDF_error_func)(hid_t, void*);                                                                                                                                                          \
   void* _oldHDF_error_client_data;                                                                                                                                                                     \
@@ -97,8 +99,8 @@ inline bool IsGroup(hid_t nodeId, const std::string& objectName)
 
   bool isGroup = true;
   herr_t error = -1;
-  H5O_info_t objectInfo{};
-  error = H5Oget_info_by_name(nodeId, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  H5O_info1_t objectInfo{};
+  error = H5Oget_info_by_name1(nodeId, objectName.c_str(), &objectInfo, H5P_DEFAULT);
   if(error < 0)
   {
     std::cout << "Error in methd H5Gget_objinfo" << std::endl;
@@ -490,14 +492,14 @@ inline herr_t GetAttributeInfo(hid_t locationId, const std::string& objectName, 
 
   /* identifiers */
   hid_t objectId;
-  H5O_info_t objectInfo{};
+  H5O_info1_t objectInfo{};
   hid_t attributeId;
   herr_t error = 0;
   herr_t returnError = 0;
   hid_t dataspaceId;
   hid_t rank = -1;
 
-  error = H5Oget_info_by_name(locationId, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  error = H5Oget_info_by_name1(locationId, objectName.c_str(), &objectInfo, H5P_DEFAULT);
   if(error < 0)
   {
     return error;
@@ -1037,13 +1039,13 @@ inline herr_t WriteStringAttribute(hid_t locationId, const std::string& objectNa
   hid_t attributeId;
   hid_t objectId;
   int32_t hasAttribute;
-  H5O_info_t objectInfo{};
+  H5O_info1_t objectInfo{};
   size_t attributeSize;
   herr_t error = 0;
   herr_t returnError = 0;
 
   /* Get the type of object */
-  returnError = H5Oget_info_by_name(locationId, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  returnError = H5Oget_info_by_name1(locationId, objectName.c_str(), &objectInfo, H5P_DEFAULT);
   if(returnError >= 0)
   {
     /* Open the object */

@@ -14,6 +14,12 @@ namespace complex
 class DataStructure;
 class DataObject;
 
+namespace H5
+{
+class GroupReader;
+class GroupWriter;
+}
+
 /**
  * @class DataMap
  * @brief The DataMap class is used to handle lookup and storage of DataObjects
@@ -254,17 +260,18 @@ public:
   /**
    * @brief Fills the DataMap with values taken from the specified HDF5 group ID.
    * @param ds Top-level DataStructure
-   * @param h5GroupId
+   * @param h5Group
+   * @param dsParentId = {}
    * @return H5::ErrorType
    */
-  H5::ErrorType readH5Group(DataStructure& ds, H5::IdType h5GroupId, const std::optional<IdType>& dsParentId = {});
+  H5::ErrorType readH5Group(DataStructure& ds, const H5::GroupReader& h5Group, const std::optional<IdType>& dsParentId = {});
 
   /**
    * @brief Writes the DataMap and its DataObjects to the target HDF5 group.
-   * @param groupId
+   * @param groupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeH5Group(H5::IdType groupId) const;
+  H5::ErrorType writeH5Group(H5::GroupWriter& groupWriter) const;
 
 private:
   MapType m_Map;

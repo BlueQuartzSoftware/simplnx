@@ -3,7 +3,8 @@
 #include <stdexcept>
 
 #include "complex/DataStructure/DataObject.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 namespace complex
 {
@@ -178,9 +179,18 @@ public:
    * @param dataId
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType dataId) const override
+  H5::ErrorType writeHdf5(H5::GroupWriter& parentGroupWriter) const override
   {
-    return H5::Writer::Generic::writeScalarAttribute(parentId, getName(), "Value", m_Data);
+    auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
+
+    H5::DatasetWriter::DimsType dims = {1};
+    std::vector<value_type> dataVector = {m_Data};
+    auto error = datasetWriter.writeVector(dims, dataVector);
+    if(error == 0)
+    {
+      error = writeHdf5DataType(datasetWriter);
+    }
+    return error;
   }
 
 protected:

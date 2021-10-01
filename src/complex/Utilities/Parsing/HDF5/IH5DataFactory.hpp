@@ -7,7 +7,13 @@
 
 namespace complex
 {
-class IH5DataFactory
+namespace H5
+{
+class DatasetReader;
+class GroupReader;
+} // namespace H5
+
+class COMPLEX_EXPORT IH5DataFactory
 {
 public:
   virtual ~IH5DataFactory();
@@ -22,15 +28,22 @@ public:
    * @brief Creates and adds a DataObject to the provided DataStructure from
    * the target HDF5 ID
    * @param ds DataStructure to add the created DataObject to.
-   * @param targetId ID for the target HDF5 object.
-   * @param groupId ID for the parent HDF5 group.
-   * @param parentId Optional DataObject ID describing which parent object to
-   * create the generated DataObject under.
+   * @param groupReader Wrapper around an HDF5 group.
+   * @param parentId = {} Optional DataObject ID describing which parent object
+   * to create the generated DataObject under.
    * @return H5::ErrorType
    */
-  virtual H5::ErrorType readDataStructureGroup(DataStructure& ds, H5::IdType targetId, H5::IdType groupId, const std::optional<DataObject::IdType>& parentId = {}) = 0;
+  virtual H5::ErrorType readDataStructureGroup(DataStructure& ds, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId = {}) = 0;
 
-  virtual H5::ErrorType readDataStructureDataset(DataStructure& ds, H5::IdType h5LocationId, const std::string& h5DatasetName, const std::optional<DataObject::IdType>& parentId = {}) = 0;
+  /**
+   * @brief Creates and adds a DataObject to the provided DataStructure from
+   * the target HDF5 ID.
+   * @param ds The target DataStructure to read from.
+   * @param datasetReader Wrapper around the HDF5 dataset.
+   * @param parentId = {}
+   * @return H5::ErrorType
+   */
+  virtual H5::ErrorType readDataStructureDataset(DataStructure& ds, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId = {}) = 0;
 
   // Copy and move constuctors / operators deleted
   IH5DataFactory(const IH5DataFactory& other) = delete;
@@ -43,12 +56,5 @@ protected:
    * @brief Default constructor
    */
   IH5DataFactory();
-
-  /**
-   * @brief Returns the object name at the target ID.
-   * @param targetId
-   * @return std::string
-   */
-  std::string getObjName(H5::IdType targetId) const;
 };
 } // namespace complex

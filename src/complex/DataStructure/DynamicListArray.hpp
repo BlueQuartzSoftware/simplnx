@@ -326,11 +326,10 @@ protected:
 
   /**
    * @brief Writes the DataArray to HDF5 using the provided group ID.
-   * @param parentId
-   * @param dataId
+   * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType dataId) const override
+  H5::ErrorType writeHdf5(H5::GroupWriter& parentGroupWriter) const override
   {
     throw std::runtime_error("");
   }

@@ -2,6 +2,7 @@
 
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 namespace complex
 {
@@ -394,9 +395,15 @@ protected:
    * @param dataId
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType dataId) const override
+  H5::ErrorType writeHdf5(H5::GroupWriter& parentGroupWriter) const override
   {
-    return m_DataStore->writeHdf5(parentId, getName(), getId());
+    auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
+    auto err = m_DataStore->writeHdf5(datasetWriter);
+    if(err == 0)
+    {
+      writeHdf5DataType(datasetWriter);
+    }
+    return err;
   }
 
 private:

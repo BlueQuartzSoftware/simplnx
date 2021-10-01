@@ -244,12 +244,14 @@ usize GridMontage::getOffsetFromTilePos(const SizeVec3& tilePos, const Dimension
   return tilePos[0] + tilePos[1] * numCols + tilePos[2] * numCols * numRows;
 }
 
-H5::ErrorType GridMontage::readHdf5(H5::IdType targetId, H5::IdType groupId)
+H5::ErrorType GridMontage::readHdf5(const H5::GroupReader& groupReader)
 {
-  return getDataMap().readH5Group(*getDataStructure(), targetId);
+  return getDataMap().readH5Group(*getDataStructure(), groupReader, getId());
 }
 
-H5::ErrorType GridMontage::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+H5::ErrorType GridMontage::writeHdf5(H5::GroupWriter& parentGroupWriter) const
 {
-  return getDataMap().writeH5Group(groupId);
+  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
+  writeHdf5DataType(groupWriter);
+  return getDataMap().writeH5Group(groupWriter);
 }

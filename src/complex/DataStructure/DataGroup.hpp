@@ -70,11 +70,10 @@ public:
 
   /**
    * @brief Reads the DataStructure group from a target HDF5 group.
-   * @param targetId
-   * @param parentId
+   * @param groupReader
    * @return H5::Error
    */
-  H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType parentId) override;
+  H5::ErrorType readHdf5(const H5::GroupReader& groupReader) override;
 
 protected:
   /**
@@ -96,10 +95,9 @@ protected:
 
   /**
    * @brief Writes the DataObject to the target HDF5 group.
-   * @param parentId
-   * @param groupId
+   * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const override;
+  H5::ErrorType writeHdf5(H5::GroupWriter& parentGroupWriter) const override;
 };
 } // namespace complex

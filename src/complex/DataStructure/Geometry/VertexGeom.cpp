@@ -6,7 +6,7 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 using namespace complex;
 
@@ -296,28 +296,42 @@ void VertexGeom::setElementSizes(const Float32Array* elementSizes)
   m_VertexSizesId = elementSizes->getId();
 }
 
-H5::ErrorType VertexGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
+H5::ErrorType VertexGeom::readHdf5(const H5::GroupReader& groupReader)
 {
-  return getDataMap().readH5Group(*getDataStructure(), targetId);
+  return getDataMap().readH5Group(*getDataStructure(), groupReader, getId());
 }
 
-H5::ErrorType VertexGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+H5::ErrorType VertexGeom::writeHdf5(H5::GroupWriter& parentGroupWriter) const
 {
-  std::cout << "VertexGeom: Writing HDF5.." << std::endl;
+  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
+  writeHdf5DataType(groupWriter);
+
   H5::ErrorType err = 0;
+  auto vertexListAttr = groupWriter.createAttribute("VertexListId");
   if(m_VertexListId.has_value())
   {
-    err = H5::Support::WriteScalarDataset(groupId, H5::k_VertexListIdTag.str(), m_VertexListId.value());
-    if(err < 0)
-    {
-    }
+    err = vertexListAttr.writeValue<DataObject::IdType>(m_VertexListId.value());
   }
+  else
+  {
+    err = vertexListAttr.writeValue<DataObject::IdType>(0);
+  }
+  if(err < 0)
+  {
+  }
+
+  auto vertexSizesAttr = groupWriter.createAttribute("VertexSizesId");
   if(m_VertexSizesId.has_value())
   {
-    err = H5::Support::WriteScalarDataset(groupId, H5::k_VertexSizesIdTag.str(), m_VertexSizesId.value());
-    if(err < 0)
-    {
-    }
+    err = vertexSizesAttr.writeValue<DataObject::IdType>(m_VertexSizesId.value());
   }
-  return getDataMap().writeH5Group(groupId);
+  else
+  {
+    err = vertexSizesAttr.writeValue<DataObject::IdType>(0);
+  }
+  if(err < 0)
+  {
+  }
+
+  return getDataMap().writeH5Group(groupWriter);
 }

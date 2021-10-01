@@ -8,11 +8,10 @@
 
 namespace complex
 {
-namespace H5::Constants::DataStore
+namespace H5
 {
-// static const std::string TupleShape = "TupleShape";
-// static const std::string ComponentShape = "ComponentShape";
-} // namespace H5::Constants::DataStore
+class DatasetWriter;
+} // namespace H5
 
 /**
  * @class IDataStore
@@ -371,11 +370,10 @@ public:
   /**
    * @brief Writes the data store to HDF5. Returns the HDF5 error code should
    * one be encountered. Otherwise, returns 0.
-   * @param dataId
-   * @param name
+   * @param datasetWriter
    * @return H5::ErrorType
    */
-  virtual H5::ErrorType writeHdf5(H5::IdType dataId, const std::string& name, DataObject::IdType) const = 0;
+  virtual H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const = 0;
 
 protected:
   /**

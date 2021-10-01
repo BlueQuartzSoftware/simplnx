@@ -19,6 +19,12 @@ class BaseGroup;
 class DataPath;
 class DataStructure;
 
+namespace H5
+{
+class GroupWriter;
+class ObjectWriter;
+} // namespace H5
+
 /**
  * @class DataObject
  * @brief The DataObject class is the base class for all items stored in the
@@ -151,10 +157,10 @@ public:
 
   /**
    * @brief Writes the DataObject to the target HDF5 group.
-   * @param groupId
+   * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::IdType groupId) const;
+  virtual H5::ErrorType writeHdf5(H5::GroupWriter& parentGroupWriter) const = 0;
 
 protected:
   /**
@@ -206,23 +212,14 @@ protected:
   virtual void setDataStructure(DataStructure* ds);
 
   /**
-   * @brief Implementation-specific details for writing the DataObject to HDF5.
-   * @param parentId
-   * @param groupId
+   * @brief Writes the dataType as a string attribute for the target HDF5 object.
+   * Returns the HDF5 error should one occur.
+   * @param objectWriter
    * @return H5::ErrorType
    */
-  virtual H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const = 0;
+  H5::ErrorType writeHdf5DataType(H5::ObjectWriter& objectWriter) const;
 
 private:
-  /**
-   * @brief Generates an IdType for the DataObject constructor.
-   * @param opId
-   * @return IdType
-   */
-  static IdType generateId(const std::optional<IdType>& opId = {});
-
-  ////////////
-  // Variables
   DataStructure* m_DataStructure = nullptr;
   ParentCollectionType m_ParentList;
   IdType m_Id;

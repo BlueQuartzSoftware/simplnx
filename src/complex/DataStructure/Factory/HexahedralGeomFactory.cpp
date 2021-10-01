@@ -1,6 +1,7 @@
 #include "HexahedralGeomFactory.hpp"
 
 #include "complex/DataStructure/Geometry/HexahedralGeom.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
 
@@ -16,15 +17,15 @@ std::string HexahedralGeomFactory::getDataTypeName() const
   return "HexahedralGeom";
 }
 
-H5::ErrorType HexahedralGeomFactory::readDataStructureGroup(DataStructure& ds, H5::IdType targetId, H5::IdType groupId, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType HexahedralGeomFactory::readDataStructureGroup(DataStructure& ds, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
 {
-  std::string name = getObjName(targetId);
+  std::string name = groupReader.getName();
   auto geom = HexahedralGeom::Create(ds, name, parentId);
-  return geom->readHdf5(targetId, groupId);
+  return geom->readHdf5(groupReader);
 }
 
 //------------------------------------------------------------------------------
-H5::ErrorType HexahedralGeomFactory::readDataStructureDataset(DataStructure& ds, H5::IdType h5LocationId, const std::string& h5DatasetName, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType HexahedralGeomFactory::readDataStructureDataset(DataStructure& ds, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId)
 {
   return -1;
 }
