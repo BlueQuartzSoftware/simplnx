@@ -98,7 +98,7 @@ Result<LinkedPath> DataStructure::makePath(const DataPath& path)
     std::vector<DataObject::IdType> pathIds;
     std::string name = path[0];
     const DataObject* data = m_RootGroup[name];
-    if(nullptr == data)
+    if(data == nullptr)
     {
       data = complex::DataGroup::Create(*this, name);
     }
@@ -109,7 +109,7 @@ Result<LinkedPath> DataStructure::makePath(const DataPath& path)
     {
       name = path[i];
       data = (*parent)[name];
-      if(nullptr == data)
+      if(data == nullptr)
       {
         data = DataGroup::Create(*this, name, pathIds.back());
       }
