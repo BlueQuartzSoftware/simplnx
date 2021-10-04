@@ -38,6 +38,20 @@ public:
    */
   LinkedPath(LinkedPath&& rhs) noexcept;
 
+  /**
+   * @brief Copy assignment
+   * @param rhs
+   * @return
+   */
+  LinkedPath& operator=(const LinkedPath& rhs);
+
+  /**
+   * @brief Move assingment
+   * @param rhs
+   * @return
+   */
+  LinkedPath& operator=(LinkedPath&& rhs) noexcept;
+
   ~LinkedPath();
 
   /**
