@@ -2,9 +2,11 @@
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Core/Application.hpp"
+#include "complex/Core/Filters/CreateDataGroup.hpp"
 #include "complex/Core/Filters/ImportTextFilter.hpp"
 #include "complex/Core/Parameters/FileSystemPathParameter.hpp"
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Filter/IFilter.hpp"
 
 #include <filesystem>
@@ -119,4 +121,20 @@ TEST_CASE("RunCoreFilter")
       REQUIRE(dataArray[index + 2] == i + 2);
     }
   }
+}
+
+TEST_CASE("CreateDataGroup")
+{
+  DataStructure data;
+  CreateDataGroup filter;
+  Arguments args;
+  const DataPath path({"foo", "bar", "baz"});
+  args.insert(CreateDataGroup::k_DataObjectPath.str(), path);
+  auto result = filter.execute(data, args);
+  REQUIRE(result.valid());
+  DataObject* object = data.getData(path);
+  REQUIRE(object != nullptr);
+  auto* group = dynamic_cast<DataGroup*>(object);
+  REQUIRE(group != nullptr);
+  REQUIRE(data.size() == path.getLength());
 }

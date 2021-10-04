@@ -48,16 +48,6 @@ Result<OutputActions> CreateDataGroup::preflightImpl(const DataStructure& dataSt
 
 Result<> CreateDataGroup::executeImpl(DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  std::cout << "Creating Data Group" << std::endl;
-  DataPath dataObjectPath = args.value<DataPath>(k_DataObjectPath.view());
-
-  auto parentObject = dataStructure.getData(dataObjectPath);
-  std::optional<DataObject::IdType> id = parentObject->getId();
-  DataGroup* createdDataGroup = DataGroup::Create(dataStructure, dataObjectPath.toString("/"), id);
-  if(createdDataGroup == nullptr)
-  {
-    return complex::MakeErrorResult(-301, fmt::format("Requested DataPath '{}' could not be created.", dataObjectPath.toString("/")));
-  }
   return {};
 }
 } // namespace complex
