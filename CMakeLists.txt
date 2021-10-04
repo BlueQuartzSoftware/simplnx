@@ -105,6 +105,7 @@ generate_export_header(complex
 # Specify core filters and parameters here
 set(CoreFilters
   CreateDataArray
+  CreateDataGroup
   ImportTextFilter
   TestFilter1
   TestFilter2
