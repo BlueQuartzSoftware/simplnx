@@ -4,7 +4,6 @@
 
 namespace complex
 {
-
 class CreateDataGroupAction : public IDataAction
 {
 public:
@@ -28,7 +27,7 @@ public:
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
   /**
-   * @brief Returns the NumericType of the DataArray to be created.
+   * @brief Returns the path of the DataGroup to be created.
    * @return
    */
   [[nodiscard]] DataPath parentPath() const;
@@ -36,5 +35,4 @@ public:
 private:
   DataPath m_Path = {};
 };
-
 } // namespace complex

@@ -13,6 +13,7 @@ class COMPLEX_EXPORT DataGroupCreationParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
+
   DataGroupCreationParameter() = delete;
   DataGroupCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
   ~DataGroupCreationParameter() override = default;
@@ -24,71 +25,77 @@ public:
   DataGroupCreationParameter& operator=(DataGroupCreationParameter&&) noexcept = delete;
 
   /**
-   * @brief
+   * @brief Returns the parameter's uuid.
    * @return
    */
-  [[nodiscard]] Uuid uuid() const override;
+  Uuid uuid() const override;
 
   /**
-   * @brief
+   * @brief Returns a list of accpeted input types.
    * @return
    */
-  [[nodiscard]] AcceptedTypes acceptedTypes() const override;
+  AcceptedTypes acceptedTypes() const override;
 
   /**
-   * @brief
+   * @brief Converts the given value to JSON.
+   * Throws if value is not an accepted type.
    * @param value
    */
-  [[nodiscard]] nlohmann::json toJson(const std::any& value) const override;
+  nlohmann::json toJson(const std::any& value) const override;
 
   /**
-   * @brief
+   * @brief Converts the given JSON to a std::any containing the appropriate input type.
+   * Returns any warnings/errors.
    * @return
    */
-  [[nodiscard]] Result<std::any> fromJson(const nlohmann::json& json) const override;
+  Result<std::any> fromJson(const nlohmann::json& json) const override;
 
   /**
-   * @brief
+   * @brief Creates a copy of the parameter.
    * @return
    */
-  [[nodiscard]] UniquePointer clone() const override;
+  UniquePointer clone() const override;
 
   /**
-   * @brief
+   * @brief Returns the user defined default value.
    * @return
    */
-  [[nodiscard]] std::any defaultValue() const override;
+  std::any defaultValue() const override;
 
   /**
-   * @brief
+   * @brief Returns the user defined default path.
    * @return
    */
-  [[nodiscard]] ValueType defaultPath() const;
+  ValueType defaultPath() const;
 
   /**
-   * @brief
+   * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
+   * @param dataStructure The active DataStructure to use during validation
+   * @param value The value to validate
+   * @return
+   */
+  Result<> validate(const DataStructure& dataStructure, const std::any& value) const override;
+
+  /**
+   * @brief Validates the given path against the given DataStructure. Returns warnings/errors.
+   * @param dataStructure The active DataStructure to use during validation
+   * @param value The value to validate
+   * @return
+   */
+  Result<> validatePath(const DataStructure& dataStructure, const DataPath& value) const;
+
+  /**
+   * @brief Takes the value and a mutable DataStructure and attempts store the actual derived DataObject in the std::any.
+   * Returns any warnings/errors.
+   * @param dataStructure
    * @param value
    * @return
    */
-  [[nodiscard]] Result<> validate(const DataStructure& dataStructure, const std::any& value) const override;
-
-  /**
-   * @brief
-   * @param value
-   * @return
-   */
-  [[nodiscard]] Result<> validatePath(const DataStructure& dataStructure, const DataPath& value) const;
-
-  /**
-   * @brief
-   * @param value
-   * @param data
-   * @return
-   */
-  [[nodiscard]] Result<std::any> resolve(DataStructure& dataStructure, const std::any& value) const override;
+  Result<std::any> resolve(DataStructure& dataStructure, const std::any& value) const override;
 
 private:
   ValueType m_DefaultValue = {};
 };
 } // namespace complex
+
 COMPLEX_DEF_PARAMETER_TRAITS(complex::DataGroupCreationParameter, "bff2d4ac-04a6-5251-b188-4f83f7865074");
