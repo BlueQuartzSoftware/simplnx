@@ -94,7 +94,7 @@ Result<> DataGroupSelectionParameter::validatePath(const DataStructure& dataStru
   }
 
   const DataGroup* dataGroup = dynamic_cast<const DataGroup*>(dataObject);
-  if(nullptr == dataGroup)
+  if(dataGroup == nullptr)
   {
     return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object at path '{}' is *not* a DataGroup", prefix, value.toString()));
   }

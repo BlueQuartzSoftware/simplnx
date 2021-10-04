@@ -7,8 +7,6 @@
 #include "complex/Filter/Parameters.hpp"
 #include "complex/complex_export.hpp"
 
-#include <string>
-
 namespace complex
 {
 class COMPLEX_EXPORT CreateDataGroup : public IFilter
@@ -25,56 +23,57 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_DataObjectPath = "Data_Object_Path";
-  /**
-   * @brief Returns the name of this filter
-   * @return
-   */
-  [[nodiscard]] std::string name() const override;
 
   /**
-   * @brief Returns the UUID of this filter. All filters have a unique UUID
+   * @brief Returns the name of the filter.
    * @return
    */
-  [[nodiscard]] Uuid uuid() const override;
+  std::string name() const override;
 
   /**
-   * @brief Returns a 'human readable' string that represents the filter name.
+   * @brief Returns the uuid of the filter.
    * @return
    */
-  [[nodiscard]] std::string humanName() const override;
+  Uuid uuid() const override;
 
   /**
-   * @brief Returns the parameter descriptors for this filter
+   * @brief Returns the human readable name of the filter.
    * @return
    */
-  [[nodiscard]] Parameters parameters() const override;
+  std::string humanName() const override;
 
   /**
-   * @brief Creates a copy of this filter.
+   * @brief Returns the parameters of the filter (i.e. its inputs)
    * @return
    */
-  [[nodiscard]] UniquePointer clone() const override;
+  Parameters parameters() const override;
+
+  /**
+   * @brief Returns a copy of the filter.
+   * @return
+   */
+  UniquePointer clone() const override;
 
 protected:
   /**
-   * @brief Internal implementation of the 'preflight' function. This gives the filter an opportunity to sanity check
-   * the inputs to the filter
-   * @param dataStructure The input data structure
-   * @param filterParameterValues The value of each parameter that is needed by this filter
-   * @param messageHandler = {}
+   * @brief Classes that implement IFilter must provide this function for preflight.
+   * Runs after the filter runs the checks in its parameters.
+   * @param data
+   * @param args
+   * @param messageHandler
    * @return
    */
-  Result<OutputActions> preflightImpl(const DataStructure& dataStructure, const Arguments& filterParameterValues, const MessageHandler& messageHandler = {}) const override;
+  Result<OutputActions> preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler = {}) const override;
 
   /**
-   * @brief Internal implementation of the 'execute' function which actually will run the filter's algorithm on the
-   * supplied input parameters
-   * @param dataStructure The input data structure
-   * @param filterParameterValues The value of each parameter that is needed by this filter
-   * @param messageHandler = {}
+   * @brief Classes that implement IFilter must provide this function for execute.
+   * Runs after the filter applies the OutputActions from preflight.
+   * @param data
+   * @param args
+   * @param messageHandler
    * @return
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterParameterValues, const MessageHandler& messageHandler = {}) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler = {}) const override;
 };
 } // namespace complex
 
