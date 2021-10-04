@@ -7,7 +7,6 @@
 
 namespace complex
 {
-
 //------------------------------------------------------------------------------
 CreateDataGroupAction::CreateDataGroupAction(const DataPath& path)
 : m_Path(path)
@@ -31,5 +30,4 @@ Result<> CreateDataGroupAction::apply(DataStructure& dataStructure, Mode mode) c
   // Assuming nothing went wrong, return an empty Result<> object
   return {};
 }
-
 } // namespace complex
