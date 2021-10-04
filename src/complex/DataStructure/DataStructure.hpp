@@ -1,5 +1,13 @@
 #pragma once
 
+#include "complex/Common/Result.hpp"
+#include "complex/DataStructure/DataMap.hpp"
+#include "complex/DataStructure/DataObject.hpp"
+#include "complex/DataStructure/LinkedPath.hpp"
+#include "complex/complex_export.hpp"
+
+#include "nod/nod.hpp"
+
 #include <filesystem>
 #include <map>
 #include <memory>
@@ -7,13 +15,6 @@
 #include <set>
 #include <string>
 #include <vector>
-
-#include "nod/nod.hpp"
-
-#include "complex/DataStructure/DataMap.hpp"
-#include "complex/DataStructure/DataObject.hpp"
-#include "complex/DataStructure/LinkedPath.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -195,6 +196,14 @@ public:
    * @return LinkedPath
    */
   LinkedPath getLinkedPath(const DataPath& path) const;
+
+  /**
+   * @brief Creates the path in the data structure as a series of DataObjects. This method will
+   * create all needed DataObjects until the path is completely created.
+   * @param path The path to create.
+   * @return Result<LinkedPath> object.
+   */
+  Result<LinkedPath> makePath(const DataPath& path);
 
   /**
    * @brief Returns the top-level of the DataStructure.

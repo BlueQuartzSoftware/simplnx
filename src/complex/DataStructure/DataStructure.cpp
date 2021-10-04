@@ -1,8 +1,5 @@
 #include "DataStructure.hpp"
 
-#include <numeric>
-#include <stdexcept>
-
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/LinkedPath.hpp"
@@ -10,9 +7,15 @@
 #include "complex/DataStructure/Messaging/DataRemovedMessage.hpp"
 #include "complex/DataStructure/Messaging/DataReparentedMessage.hpp"
 #include "complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
+#include "complex/Filter/DataParameter.hpp"
+#include "complex/Filter/ValueParameter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
 
-using namespace complex;
+#include <numeric>
+#include <stdexcept>
+
+namespace complex
+{
 
 namespace Constants
 {
@@ -85,6 +88,40 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
   } catch(std::exception e)
   {
     return LinkedPath();
+  }
+}
+
+Result<LinkedPath> DataStructure::makePath(const DataPath& path)
+{
+  try
+  {
+    std::vector<DataObject::IdType> pathIds;
+    std::string name = path[0];
+    const DataObject* data = m_RootGroup[name];
+    if(nullptr == data)
+    {
+      data = complex::DataGroup::Create(*this, name);
+    }
+    const BaseGroup* parent = dynamic_cast<const BaseGroup*>(data);
+    pathIds.push_back(data->getId());
+
+    for(usize i = 1; i < path.getLength(); i++)
+    {
+      name = path[i];
+      data = (*parent)[name];
+      if(nullptr == data)
+      {
+        data = DataGroup::Create(*this, name, pathIds.back());
+      }
+      pathIds.push_back(data->getId());
+
+      parent = dynamic_cast<const BaseGroup*>(data);
+    }
+
+    return {LinkedPath(this, pathIds)};
+  } catch(const std::exception& e)
+  {
+    return complex::MakeErrorResult<LinkedPath>(-2, "Exception thrown when attempting to create a path in the DataStructure");
   }
 }
 
@@ -435,3 +472,5 @@ DataStructure DataStructure::ReadFromHdf5(H5::IdType fileId, H5::ErrorType& err)
   H5Gclose(dsId);
   return ds;
 }
+
+} // namespace complex
