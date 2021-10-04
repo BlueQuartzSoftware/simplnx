@@ -1,13 +1,13 @@
 #include "complex/DataStructure/LinkedPath.hpp"
+
 #include "complex/DataStructure/DataStructure.hpp"
 
 #include <exception>
+#include <utility>
 
 using namespace complex;
 
-LinkedPath::LinkedPath()
-{
-}
+LinkedPath::LinkedPath() = default;
 
 LinkedPath::LinkedPath(const DataStructure* ds, const std::vector<DataObject::IdType>& idPath)
 : m_DataStructure(ds)
@@ -15,16 +15,21 @@ LinkedPath::LinkedPath(const DataStructure* ds, const std::vector<DataObject::Id
 {
 }
 
-LinkedPath::LinkedPath(const LinkedPath& rhs)
-: m_DataStructure(rhs.m_DataStructure)
-, m_IdPath(rhs.m_IdPath)
+LinkedPath::LinkedPath(const LinkedPath& rhs) = default;
+
+LinkedPath::LinkedPath(LinkedPath&& rhs) noexcept
+: m_DataStructure(std::exchange(rhs.m_DataStructure, nullptr))
+, m_IdPath(std::move(rhs.m_IdPath))
 {
 }
 
-LinkedPath::LinkedPath(LinkedPath&& rhs) noexcept
-: m_DataStructure(std::move(rhs.m_DataStructure))
-, m_IdPath(std::move(rhs.m_IdPath))
+LinkedPath& LinkedPath::operator=(const LinkedPath& rhs) = default;
+
+LinkedPath& LinkedPath::operator=(LinkedPath&& rhs) noexcept
 {
+  m_DataStructure = std::exchange(rhs.m_DataStructure, nullptr);
+  m_IdPath = std::move(rhs.m_IdPath);
+  return *this;
 }
 
 LinkedPath::~LinkedPath() = default;
