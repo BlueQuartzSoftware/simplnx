@@ -116,6 +116,7 @@ set(CoreParameters
   BoolParameter
   ChoicesParameter
   DataGroupCreationParameter
+  DataGroupSelectionParameter
   FileSystemPathParameter
   GeneratedFileListParameter
   NumberParameter
