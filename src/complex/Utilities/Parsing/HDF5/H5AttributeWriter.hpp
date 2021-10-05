@@ -105,12 +105,12 @@ public:
     }
 
     /* Get the type of object */
-    H5O_info1_t objectInfo;
-    if(H5Oget_info_by_name1(getObjectId(), getObjectName().c_str(), &objectInfo, H5P_DEFAULT) < 0)
-    {
-      std::cout << "Error getting object info at locationId (" << getObjectId() << ") with object name (" << getObjectName() << ")" << std::endl;
-      return -1;
-    }
+    //H5O_info_t objectInfo;
+    //if(H5Oget_info_by_name(getObjectId(), getObjectName().c_str(), &objectInfo, H5P_DEFAULT) < 0)
+    //{
+    //  std::cout << "Error getting object info at locationId (" << getObjectId() << ") with object name (" << getObjectName() << ")" << std::endl;
+    //  return -1;
+    //}
 
     hid_t dataspaceId = H5Screate_simple(rank, dims.data(), nullptr);
     if(dataspaceId >= 0)

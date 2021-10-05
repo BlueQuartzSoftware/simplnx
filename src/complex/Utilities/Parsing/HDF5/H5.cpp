@@ -8,6 +8,47 @@ using namespace complex;
 
 H5::Type H5::getTypeFromId(IdType typeId)
 {
+  if(H5Tequal(typeId, H5T_NATIVE_INT8))
+  {
+    return H5::Type::int8;
+  }
+  else if(H5Tequal(typeId, H5T_NATIVE_INT16))
+  {
+    return H5::Type::int16;
+  }
+  else if(H5Tequal(typeId, H5T_NATIVE_INT32))
+  {
+    return H5::Type::int32;
+  }
+  else if(H5Tequal(typeId, H5T_NATIVE_INT64))
+  {
+    return H5::Type::int64;
+  }
+  else if(H5Tequal(typeId, H5T_NATIVE_UINT8))
+  {
+    return H5::Type::uint8;
+  }
+  else if(H5Tequal(typeId, H5T_NATIVE_UINT16))
+  {
+    return H5::Type::uint16;
+  }
+  else if(H5Tequal(typeId, H5T_NATIVE_UINT32))
+  {
+    return H5::Type::uint32;
+  }
+  else if(H5Tequal(typeId, H5T_NATIVE_UINT64))
+  {
+    return H5::Type::uint64;
+  }
+  else if(H5Tequal(typeId, H5T_NATIVE_FLOAT))
+  {
+    return H5::Type::float32;
+  }
+  else if(H5Tequal(typeId, H5T_NATIVE_DOUBLE))
+  {
+    return H5::Type::float64;
+  }
+
   return H5::Type::unknown;
 }
 

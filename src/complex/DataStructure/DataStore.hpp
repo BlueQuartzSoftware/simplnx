@@ -8,6 +8,7 @@
 
 #include <fmt/core.h>
 
+#include <algorithm>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -81,11 +82,13 @@ public:
   : m_TupleShape(other.m_TupleShape)
   , m_ComponentShape(other.m_ComponentShape)
   {
-    const usize count = getNumberOfTuples() * getNumberOfComponents();
+    const usize count = other.getSize();
+    auto data = new value_type[count];
     for(usize i = 0; i < count; i++)
     {
-      m_Data[i] = other.m_Data[i];
+      data[i] = other.m_Data.get()[i];
     }
+    m_Data.reset(data);
   }
 
   /**
@@ -304,9 +307,10 @@ public:
       h5dims.push_back(static_cast<hsize_t>(value));
     }
 
-    size_t count = getNumberOfComponents() * getNumberOfTuples();
+    size_t count = getSize();
     std::vector<T> dataVector;
-    dataVector.assign(m_Data.get(), m_Data.get() + count);
+    auto dataPtr = data();
+    dataVector.assign(dataPtr, dataPtr + count);
     herr_t err = datasetWriter.writeVector(h5dims, dataVector);
     if(err < 0)
     {
@@ -349,7 +353,12 @@ public:
 
     // Create DataStore
     auto dataStore = new complex::DataStore<T>(tupleShape, componentShape);
-    dataStore->m_Data.reset(datasetReader.readAsVector<T>().data());
+    
+    auto count = dataStore->getSize();
+    auto dataVector = datasetReader.readAsVector<T>();
+    auto dataPtr = new value_type[count];
+    std::copy(dataVector.begin(), dataVector.end(), dataPtr);
+    dataStore->m_Data.reset(dataPtr);
 
     return dataStore;
   }

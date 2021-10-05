@@ -34,6 +34,8 @@ public:
 
   /**
    * @brief Attempts to open a nested HDF5 group with the specified name.
+   * The created GroupReader is returned. If the process fails, the returned
+   * GroupReader is invalid.
    * @param name
    * @return GroupReader
    */
@@ -41,6 +43,8 @@ public:
 
   /**
    * @brief Attempts to open a nested HDF5 dataset with the specified name.
+   * The created DatasetReader is returned. If the process fails, the returned
+   * DatasetReader is invalid.
    * @param name
    * @return DatasetReader
    */
@@ -48,6 +52,8 @@ public:
 
   /**
    * @brief Attempts to open a nested HDF5 object with the specified name.
+   * The created ObjectReader is returned. If the process fails, the returned
+   * ObjectReader is invalid.
    * @param name
    * @return ObjectReader
    */
@@ -55,18 +61,24 @@ public:
 
   /**
    * @brief Returns the number of children objects within the group.
+   * 
+   * Returns 0 if the GroupReader is invalid.
    * @return size_t
    */
   size_t getNumChildren() const;
 
   /**
    * @brief Returns a vector with the names of each child object.
+   * 
+   * This will return an empty vector if the GroupReader is invalid.
    * @return std::vector<std::string>
    */
   std::vector<std::string> getChildNames() const;
 
   /**
    * @brief Returns true if the target child is a group. Returns false otherwise.
+   * 
+   * This will always return false if the GroupReader is invalid.
    * @param childName
    * @return bool
    */
@@ -74,6 +86,8 @@ public:
 
   /**
    * @brief Returns true if the target child is a dataset. Returns false otherwise.
+   * 
+   * This will always return false if the GroupReader is invalid.
    * @param childName
    * @return bool
    */

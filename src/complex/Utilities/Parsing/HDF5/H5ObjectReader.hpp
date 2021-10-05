@@ -89,6 +89,14 @@ public:
 
 protected:
   /**
+   * @brief Constructs an ObjectReader for use in derived classes. This
+   * constructor only accepts the parent ID. Derived classes are required to
+   * open their own target and provide the ID via getId().
+   * @param parentId
+   */
+  ObjectReader(H5::IdType parentId);
+
+  /**
    * @brief Closes the HDF5 ID and resets it to 0.
    */
   virtual void closeHdf5();

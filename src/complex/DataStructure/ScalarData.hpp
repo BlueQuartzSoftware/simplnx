@@ -179,7 +179,7 @@ public:
    * @param dataId
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::GroupWriter& parentGroupWriter) const override
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override
   {
     auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
 
@@ -188,7 +188,7 @@ public:
     auto error = datasetWriter.writeVector(dims, dataVector);
     if(error == 0)
     {
-      error = writeHdf5DataType(datasetWriter);
+      error = writeH5ObjectAttributes(datasetWriter);
     }
     return error;
   }

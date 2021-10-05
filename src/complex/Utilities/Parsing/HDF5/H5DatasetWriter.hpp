@@ -100,19 +100,19 @@ public:
     }
 
     /* Get the type of object */
-    H5O_info_t objectInfo;
-    if(H5Oget_info_by_name(getParentId(), getName().c_str(), &objectInfo, H5P_DEFAULT) < 0)
-    {
-      std::cout << "Error getting object info at locationId (" << getParentId() << ") with object name (" << getName() << ")" << std::endl;
-      return -1;
-    }
+    //H5O_info_t objectInfo;
+    //if(H5Oget_info_by_name(getParentId(), getName().c_str(), &objectInfo, H5P_DEFAULT) < 0)
+    //{
+    //  std::cout << "Error getting object info at locationId (" << getParentId() << ") with object name (" << getName() << ")" << std::endl;
+    //  return -1;
+    //}
     /* Open the object */
-    m_DatasetId = H5::Support::OpenId(getParentId(), getName(), objectInfo.type);
-    if(m_DatasetId < 0)
-    {
-      std::cout << "Error opening Object for Attribute operations." << std::endl;
-      return -1;
-    }
+    //m_DatasetId = H5Dcreate(getParentId(), getName(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    //if(m_DatasetId < 0)
+    //{
+    //  std::cout << "Error opening Object for Attribute operations." << std::endl;
+    //  return -1;
+    //}
 
     hid_t dataspaceId = H5Screate_simple(rank, dims.data(), nullptr);
     if(dataspaceId >= 0)
@@ -122,12 +122,13 @@ public:
       if(error >= 0)
       {
         /* Create the attribute. */
-        hid_t attributeId = H5Acreate(getId(), getName().c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
-        if(attributeId >= 0)
+        //hid_t attributeId = H5Acreate(getId(), getName().c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
+        m_DatasetId = H5Dcreate(getParentId(), getName().c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        if(m_DatasetId >= 0)
         {
           /* Write the attribute data. */
           const void* data = static_cast<const void*>(values.data());
-          error = H5Awrite(attributeId, dataType, data);
+          error = H5Dwrite(m_DatasetId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
           if(error < 0)
           {
             std::cout << "Error Writing Attribute" << std::endl;
@@ -135,12 +136,12 @@ public:
           }
         }
         /* Close the attribute. */
-        error = H5Aclose(attributeId);
-        if(error < 0)
-        {
-          std::cout << "Error Closing Attribute" << std::endl;
-          returnError = error;
-        }
+        //error = H5Aclose(attributeId);
+        //if(error < 0)
+        //{
+        //  std::cout << "Error Closing Attribute" << std::endl;
+        //  returnError = error;
+        //}
       }
       /* Close the dataspace. */
       error = H5Sclose(dataspaceId);

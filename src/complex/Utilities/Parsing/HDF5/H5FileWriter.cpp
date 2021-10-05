@@ -26,8 +26,11 @@ H5::FileWriter::~FileWriter()
 
 void H5::FileWriter::closeHdf5()
 {
-  H5Fclose(m_FileId);
-  m_FileId = 0;
+  if(isValid())
+  {
+    H5Fclose(m_FileId);
+    m_FileId = 0;
+  }
 }
 
 H5::IdType H5::FileWriter::getId() const

@@ -41,7 +41,7 @@ H5::ErrorType H5::AttributeWriter::findAndDeleteAttribute()
 
 bool H5::AttributeWriter::isValid() const
 {
-  return (getObjectId() != 0) || (m_AttributeName.empty() != true);
+  return (getObjectId() > 0) || (m_AttributeName.empty() != true);
 }
 
 H5::IdType H5::AttributeWriter::getObjectId() const
@@ -85,11 +85,12 @@ herr_t H5::AttributeWriter::writeString(const std::string& text)
     return -1;
   }
 
+  herr_t returnError = 0;
   size_t size = text.size();
-  H5O_info1_t objectInfo{};
 
   /* Get the type of object */
-  herr_t returnError = H5Oget_info_by_name1(getObjectId(), getAttributeName().c_str(), &objectInfo, H5P_DEFAULT);
+  // H5O_info_t objectInfo{};
+  // returnError = H5Oget_info_by_name(getObjectId(), getAttributeName().c_str(), &objectInfo, H5P_DEFAULT);
   if(returnError >= 0)
   {
     /* Create the attribute */
@@ -128,7 +129,6 @@ herr_t H5::AttributeWriter::writeString(const std::string& text)
                 if(error < 0)
                 {
                   std::cout << "Error Writing String attribute." << std::endl;
-
                   returnError = error;
                 }
               }
@@ -153,6 +153,7 @@ herr_t H5::AttributeWriter::writeValue(T value)
     return -1;
   }
 
+  herr_t error = 0;
   herr_t returnError = 0;
 
   hid_t dataType = H5::Support::HdfTypeForPrimitive<T>();
@@ -161,13 +162,13 @@ herr_t H5::AttributeWriter::writeValue(T value)
     return -1;
   }
   /* Get the type of object */
-  H5O_info1_t objectInfo;
-  herr_t error = H5Oget_info_by_name1(getObjectId(), getObjectName().c_str(), &objectInfo, H5P_DEFAULT);
-  if(error < 0)
-  {
-    std::cout << "Error getting object info at locationId (" << getObjectId() << ") with object name (" << getObjectName() << ")" << std::endl;
-    return error;
-  }
+  // H5O_info_t objectInfo;
+  // error = H5Oget_info_by_name(getObjectId(), getObjectName().c_str(), &objectInfo, H5P_DEFAULT);
+  // if(error < 0)
+  //{
+  //  std::cout << "Error getting object info at locationId (" << getObjectId() << ") with object name (" << getObjectName() << ")" << std::endl;
+  //  return error;
+  //}
 
   /* Create the data space for the attribute. */
   int32_t rank = 1;
@@ -235,8 +236,8 @@ herr_t H5::AttributeWriter::writeVector(const DimsVector& dims, const std::vecto
   }
 
   /* Get the type of object */
-  H5O_info1_t objectInfo;
-  if(H5Oget_info_by_name1(getObjectId(), getObjectName().c_str(), &objectInfo, H5P_DEFAULT) < 0)
+  H5O_info_t objectInfo;
+  if(H5Oget_info_by_name(getObjectId(), getObjectName().c_str(), &objectInfo, H5P_DEFAULT) < 0)
   {
     std::cout << "Error getting object info at locationId (" << getObjectId() << ") with object name (" << getObjectName() << ")" << std::endl;
     return -1;

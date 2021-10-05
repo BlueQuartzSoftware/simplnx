@@ -533,20 +533,22 @@ H5::ErrorType ImageGeom::readHdf5(const H5::GroupReader& groupReader)
   return 0;
 }
 
-H5::ErrorType ImageGeom::writeHdf5(H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  writeHdf5DataType(groupWriter);
-
-  herr_t err = 0;
+  herr_t err = writeH5ObjectAttributes(groupWriter);
+  if(err < 0)
+  {
+    return err;
+  }
 
   SizeVec3 volDims = getDimensions();
   FloatVec3 spacing = getSpacing();
   FloatVec3 origin = getOrigin();
   H5::AttributeWriter::DimsVector dims = {3};
-  std::vector<size_t> volDimsVector;
-  std::vector<float> spacingVector;
-  std::vector<float> originVector;
+  std::vector<size_t> volDimsVector(3);
+  std::vector<float> spacingVector(3);
+  std::vector<float> originVector(3);
   for(size_t i = 0; i < 3; i++)
   {
     volDimsVector[i] = volDims[i];
@@ -575,5 +577,5 @@ H5::ErrorType ImageGeom::writeHdf5(H5::GroupWriter& parentGroupWriter) const
     return err;
   }
 
-  return err;
+  return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }

@@ -21,6 +21,7 @@ class DataStructure;
 
 namespace H5
 {
+class DataStructureWriter;
 class GroupWriter;
 class ObjectWriter;
 } // namespace H5
@@ -157,10 +158,11 @@ public:
 
   /**
    * @brief Writes the DataObject to the target HDF5 group.
+   * @param dataStructureWriter
    * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  virtual H5::ErrorType writeHdf5(H5::GroupWriter& parentGroupWriter) const = 0;
+  virtual H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const = 0;
 
 protected:
   /**
@@ -217,7 +219,7 @@ protected:
    * @param objectWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5DataType(H5::ObjectWriter& objectWriter) const;
+  H5::ErrorType writeH5ObjectAttributes(H5::ObjectWriter& objectWriter) const;
 
 private:
   DataStructure* m_DataStructure = nullptr;

@@ -589,9 +589,14 @@ H5::ErrorType RectGridGeom::readHdf5(const H5::GroupReader& groupReader)
   return getDataMap().readH5Group(*getDataStructure(), groupReader, getId());
 }
 
-H5::ErrorType RectGridGeom::writeHdf5(H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType RectGridGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  writeHdf5DataType(groupWriter);
-  return getDataMap().writeH5Group(groupWriter);
+  auto err = writeH5ObjectAttributes(groupWriter);
+  if(err < 0)
+  {
+    return err;
+  }
+
+  return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }

@@ -3,6 +3,7 @@
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/IH5DataFactory.hpp"
@@ -311,13 +312,14 @@ H5::ErrorType DataMap::readH5Group(DataStructure& ds, const H5::GroupReader& h5G
   return 0;
 }
 
-H5::ErrorType DataMap::writeH5Group(H5::GroupWriter& groupWriter) const
+H5::ErrorType DataMap::writeH5Group(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& groupWriter) const
 {
-  for(const auto& iter : *this)
+  for(const auto& [id, dataObject] : *this)
   {
-    herr_t err = iter.second->writeHdf5(groupWriter);
+    herr_t err = dataStructureWriter.writeDataObject(dataObject.get(), groupWriter);
     if(err < 0)
     {
+      std::cout << "Error writing object (" << dataObject->getName() << ") in DataMap to HDF5 " << std::endl;
       return err;
     }
   }

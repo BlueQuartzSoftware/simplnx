@@ -6,6 +6,11 @@ using namespace complex;
 
 H5::ObjectReader::ObjectReader() = default;
 
+H5::ObjectReader::ObjectReader(H5::IdType parentId)
+: m_ParentId(parentId)
+{
+}
+
 H5::ObjectReader::ObjectReader(H5::IdType parentId, const std::string& targetName)
 : m_ParentId(parentId)
 {
@@ -19,13 +24,16 @@ H5::ObjectReader::~ObjectReader()
 
 void H5::ObjectReader::closeHdf5()
 {
-  H5Oclose(m_ObjectId);
-  m_ObjectId = 0;
+  if(isValid())
+  {
+    H5Oclose(m_ObjectId);
+    m_ObjectId = 0;
+  }
 }
 
 bool H5::ObjectReader::isValid() const
 {
-  return getId() != 0;
+  return getId() > 0;
 }
 
 H5::IdType H5::ObjectReader::getParentId() const

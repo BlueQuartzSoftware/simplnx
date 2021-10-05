@@ -329,7 +329,7 @@ protected:
    * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::GroupWriter& parentGroupWriter) const override
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override
   {
     throw std::runtime_error("");
   }

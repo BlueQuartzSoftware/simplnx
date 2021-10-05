@@ -152,10 +152,14 @@ H5::ErrorType BaseGroup::readHdf5(const H5::GroupReader& groupReader)
   return m_DataMap.readH5Group(*getDataStructure(), groupReader, getId());
 }
 
-H5::ErrorType BaseGroup::writeHdf5(H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType BaseGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  writeHdf5DataType(groupWriter);
+  auto error = writeH5ObjectAttributes(groupWriter);
+  if(error < 0)
+  {
+    return error;
+  }
 
-  return m_DataMap.writeH5Group(groupWriter);
+  return m_DataMap.writeH5Group(dataStructureWriter, groupWriter);
 }

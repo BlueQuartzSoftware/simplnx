@@ -2,14 +2,15 @@
 
 #include <iostream>
 
-#include <H5Apublic.h>
+#include <H5Gpublic.h>
+#include <H5Opublic.h>
 
 using namespace complex;
 
 H5::GroupReader::GroupReader() = default;
 
 H5::GroupReader::GroupReader(H5::IdType parentId, const std::string& groupName)
-: ObjectReader(parentId, groupName)
+: ObjectReader(parentId)
 {
   m_GroupId = H5Gopen(parentId, groupName.c_str(), H5P_DEFAULT);
 }
@@ -18,8 +19,11 @@ H5::GroupReader::~GroupReader() = default;
 
 void H5::GroupReader::closeHdf5()
 {
-  H5Gclose(m_GroupId);
-  m_GroupId = 0;
+  if(isValid())
+  {
+    H5Gclose(m_GroupId);
+    m_GroupId = 0;
+  }
 }
 
 H5::IdType H5::GroupReader::getId() const
@@ -65,7 +69,8 @@ size_t H5::GroupReader::getNumChildren() const
   }
 
   H5::SizeType numChildren;
-  if(!H5Gget_num_objs(getId(), &numChildren))
+  auto err = H5Gget_num_objs(getId(), &numChildren);
+  if(err < 0)
   {
     return 0;
   }
@@ -87,7 +92,7 @@ std::vector<std::string> H5::GroupReader::getChildNames() const
   for(size_t i = 0; i < numChildren; i++)
   {
     auto err = H5Gget_objname_by_idx(getId(), i, buffer, size);
-    if(err == 0)
+    if(err >= 0)
     {
       childNames.push_back(std::string(buffer));
     }
@@ -98,6 +103,11 @@ std::vector<std::string> H5::GroupReader::getChildNames() const
 
 bool H5::GroupReader::isGroup(const std::string& childName) const
 {
+  if(!isValid())
+  {
+    return false;
+  }
+
   bool isGroup = true;
   H5O_info_t objectInfo{};
   auto error = H5Oget_info_by_name(getId(), childName.c_str(), &objectInfo, H5P_DEFAULT);
@@ -125,6 +135,11 @@ bool H5::GroupReader::isGroup(const std::string& childName) const
 
 bool H5::GroupReader::isDataset(const std::string& childName) const
 {
+  if(!isValid())
+  {
+    return false;
+  }
+
   bool isDataset = true;
   H5O_info_t objectInfo{};
   auto error = H5Oget_info_by_name(getId(), childName.c_str(), &objectInfo, H5P_DEFAULT);

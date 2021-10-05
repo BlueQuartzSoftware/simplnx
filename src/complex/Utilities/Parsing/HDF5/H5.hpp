@@ -3,7 +3,8 @@
 #include "complex/Common/Types.hpp"
 #include "complex/Common/StringLiteral.hpp"
 
-#define H5_USE_110_API
+// Defined in CMake
+//#define H5_USE_110_API
 #include <H5Opublic.h>
 #include <hdf5.h>
 

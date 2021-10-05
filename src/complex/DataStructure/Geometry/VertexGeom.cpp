@@ -301,12 +301,15 @@ H5::ErrorType VertexGeom::readHdf5(const H5::GroupReader& groupReader)
   return getDataMap().readH5Group(*getDataStructure(), groupReader, getId());
 }
 
-H5::ErrorType VertexGeom::writeHdf5(H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType VertexGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  writeHdf5DataType(groupWriter);
+  herr_t err = writeH5ObjectAttributes(groupWriter);
+  if(err < 0)
+  {
+    return err;
+  }
 
-  H5::ErrorType err = 0;
   auto vertexListAttr = groupWriter.createAttribute("VertexListId");
   if(m_VertexListId.has_value())
   {
@@ -318,6 +321,7 @@ H5::ErrorType VertexGeom::writeHdf5(H5::GroupWriter& parentGroupWriter) const
   }
   if(err < 0)
   {
+    return err;
   }
 
   auto vertexSizesAttr = groupWriter.createAttribute("VertexSizesId");
@@ -331,7 +335,8 @@ H5::ErrorType VertexGeom::writeHdf5(H5::GroupWriter& parentGroupWriter) const
   }
   if(err < 0)
   {
+    return err;
   }
 
-  return getDataMap().writeH5Group(groupWriter);
+  return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }

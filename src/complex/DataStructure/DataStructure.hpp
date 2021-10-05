@@ -25,6 +25,7 @@ class DataPath;
 namespace Constants {
 inline const std::string k_ObjectTypeTag = "ObjectType";
 inline const std::string k_DataStructureTag = "DataStructure";
+inline const std::string k_ObjectIdTag = "ObjectId";
 }
 
 namespace H5
@@ -276,10 +277,10 @@ public:
 
   /**
    * @brief Writes the DataStructure to the target HDF5 file or group.
-   * @param fileWriter HDF5 file writer
+   * @param parentGroupWriter HDF5 group writer
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::FileWriter& fileWriter) const;
+  H5::ErrorType writeHdf5(H5::GroupWriter& parentGroupWriter) const;
 
   /**
    * @brief Creates a DataStructure by reading the specified H5::FileReader.

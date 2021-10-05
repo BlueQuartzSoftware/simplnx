@@ -31,7 +31,7 @@ template <typename T>
 H5::ErrorType writeScalarAttribute(H5::IdType locationID, const std::string& objectName, const std::string& attributeName, T data)
 {
   hid_t objectID, dataspaceID, attributeID;
-  H5O_info1_t objectInfo;
+  H5O_info_t objectInfo;
   herr_t returnError = 0;
   hsize_t dims = 1;
   int32 rank = 1;
@@ -41,7 +41,7 @@ H5::ErrorType writeScalarAttribute(H5::IdType locationID, const std::string& obj
     return -1;
   }
   /* Get the type of object */
-  herr_t error = H5Oget_info_by_name1(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  herr_t error = H5Oget_info_by_name(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
   if(error < 0)
   {
     std::cout << "Error getting object info at locationID (" << locationID << ") with object name (" << objectName << ")" << std::endl;
@@ -144,7 +144,7 @@ H5::ErrorType writePointerAttribute(H5::IdType locationID, const std::string& ob
 {
   hid_t objectID, dataspaceID, attributeID;
   herr_t hasAttribute;
-  H5O_info1_t objectInfo;
+  H5O_info_t objectInfo;
   herr_t error = 0;
   herr_t returnError = 0;
   hid_t dataType = Support::HdfTypeForPrimitive<T>();
@@ -155,7 +155,7 @@ H5::ErrorType writePointerAttribute(H5::IdType locationID, const std::string& ob
   }
   /* Get the type of object */
 
-  if(H5Oget_info_by_name1(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT) < 0)
+  if(H5Oget_info_by_name(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT) < 0)
   {
     std::cout << "Error getting object info at locationID (" << locationID << ") with object name (" << objectName << ")" << std::endl;
     return -1;

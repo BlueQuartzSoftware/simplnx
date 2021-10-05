@@ -140,9 +140,17 @@ H5::IdType DataObject::getH5Id() const
   return m_H5Id;
 }
 
-H5::ErrorType DataObject::writeHdf5DataType(H5::ObjectWriter& objectWriter) const
+H5::ErrorType DataObject::writeH5ObjectAttributes(H5::ObjectWriter& objectWriter) const
 {
-  auto attributeWriter = objectWriter.createAttribute(complex::Constants::k_ObjectTypeTag);
-  auto error = attributeWriter.writeString(getTypeName());
+  auto typeAttributeWriter = objectWriter.createAttribute(complex::Constants::k_ObjectTypeTag);
+  auto error = typeAttributeWriter.writeString(getTypeName());
+  if(error < 0)
+  {
+    return error;
+  }
+
+  auto idAttributeWriter = objectWriter.createAttribute(complex::Constants::k_ObjectIdTag);
+  error = idAttributeWriter.writeValue(getId());
+
   return error;
 }

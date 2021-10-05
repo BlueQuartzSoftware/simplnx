@@ -64,7 +64,7 @@ H5::ErrorType COMPLEX_EXPORT readStringAttribute(H5::IdType locationID, const st
 template <typename T>
 inline H5::ErrorType readScalarAttribute(H5::IdType locationID, const std::string& objectName, const std::string& attributeName, T& data)
 {
-  H5O_info1_t objectInfo;
+  H5O_info_t objectInfo;
   herr_t returnError = 0;
   hid_t dataType = Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
@@ -73,7 +73,7 @@ inline H5::ErrorType readScalarAttribute(H5::IdType locationID, const std::strin
   }
   // std::cout << "Reading Scalar style Attribute at Path '" << objectName << "' with Key: '" << attributeName << "'" << std::endl;
   /* Get the type of object */
-  herr_t error = H5Oget_info_by_name1(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  herr_t error = H5Oget_info_by_name(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
   if(error < 0)
   {
     return error;
@@ -152,8 +152,8 @@ herr_t readVectorAttribute(hid_t locationID, const std::string& objectName, cons
   }
   // std::cout << "   Reading Vector Attribute at Path '" << objectName << "' with Key: '" << attributeName << "'" << std::endl;
   /* Get the type of object */
-  H5O_info1_t objectInfo;
-  herr_t error = H5Oget_info_by_name1(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  H5O_info_t objectInfo;
+  herr_t error = H5Oget_info_by_name(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
   if(error < 0)
   {
     return error;

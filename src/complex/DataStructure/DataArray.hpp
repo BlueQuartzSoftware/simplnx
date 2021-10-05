@@ -391,19 +391,19 @@ protected:
    * @brief Writes the DataArray to HDF5 using the provided group ID.
    *
    * This method will fail if no DataStore has been set.
-   * @param parentId
-   * @param dataId
+   * @param dataStructureWriter
+   * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::GroupWriter& parentGroupWriter) const override
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override
   {
     auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
     auto err = m_DataStore->writeHdf5(datasetWriter);
-    if(err == 0)
+    if(err < 0)
     {
-      writeHdf5DataType(datasetWriter);
+      return err;
     }
-    return err;
+    return writeH5ObjectAttributes(datasetWriter);
   }
 
 private:

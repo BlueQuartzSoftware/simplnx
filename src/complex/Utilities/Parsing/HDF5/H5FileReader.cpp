@@ -20,8 +20,11 @@ H5::FileReader::~FileReader() = default;
 
 void H5::FileReader::closeHdf5()
 {
-  H5Fclose(m_FileId);
-  m_FileId = 0;
+  if(isValid())
+  {
+    H5Fclose(m_FileId);
+    m_FileId = 0;
+  }
 }
 
 H5::IdType H5::FileReader::getId() const

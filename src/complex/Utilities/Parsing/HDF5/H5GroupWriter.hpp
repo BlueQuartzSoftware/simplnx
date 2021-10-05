@@ -59,6 +59,14 @@ public:
    */
   DatasetWriter createDatasetWriter(const std::string& childName);
 
+  /**
+   * @brief Creates a link within the group to another HDF5 object.
+   * Returns an error code if one occurs. Otherwise, this method returns 0.
+   * @param targetObject
+   * @return H5::ErrorType
+   */
+  H5::ErrorType createLink(const H5::ObjectWriter* targetObject);
+
 protected:
   /**
    * @brief Closes the HDF5 ID and resets it to 0.

@@ -57,9 +57,9 @@ herr_t complex::H5::Support::CloseId(hid_t objectId, int32_t objectType)
 
 bool complex::H5::Support::DatasetExists(hid_t locationId, const std::string& datasetName)
 {
-  H5O_info1_t objectInfo{};
+  H5O_info_t objectInfo{};
   HDF_ERROR_HANDLER_OFF
-  herr_t error = H5Oget_info_by_name1(locationId, datasetName.c_str(), &objectInfo, H5P_DEFAULT);
+  herr_t error = H5Oget_info_by_name(locationId, datasetName.c_str(), &objectInfo, H5P_DEFAULT);
   HDF_ERROR_HANDLER_ON
   return error >= 0;
 }

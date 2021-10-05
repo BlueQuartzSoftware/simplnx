@@ -9,6 +9,7 @@
 #include "complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
 #include "complex/Filter/DataParameter.hpp"
 #include "complex/Filter/ValueParameter.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
@@ -461,10 +462,11 @@ DataStructure& DataStructure::operator=(DataStructure&& rhs) noexcept
   return *this;
 }
 
-H5::ErrorType DataStructure::writeHdf5(H5::FileWriter& fileWriter) const
+H5::ErrorType DataStructure::writeHdf5(H5::GroupWriter& parentGroupWriter) const
 {
-  auto groupWriter = fileWriter.createGroupWriter(Constants::k_DataStructureTag);
-  H5::ErrorType err = m_RootGroup.writeH5Group(groupWriter);
+  H5::DataStructureWriter dataStructureWriter;
+  auto groupWriter = parentGroupWriter.createGroupWriter(Constants::k_DataStructureTag);
+  H5::ErrorType err = m_RootGroup.writeH5Group(dataStructureWriter, groupWriter);
   return err;
 }
 
@@ -472,6 +474,12 @@ DataStructure DataStructure::readFromHdf5(const H5::FileReader& fileReader, H5::
 {
   DataStructure ds;
   auto rootGroupReader = fileReader.openGroup(Constants::k_DataStructureTag);
+  if(!rootGroupReader.isValid())
+  {
+    err = -1;
+    return ds;
+  }
+
   err = ds.m_RootGroup.readH5Group(ds, rootGroupReader);
   return ds;
 }

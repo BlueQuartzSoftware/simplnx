@@ -27,13 +27,16 @@ H5::AttributeReader::~AttributeReader()
 
 void H5::AttributeReader::closeHdf5()
 {
-  H5Aclose(m_AttributeId);
-  m_AttributeId = 0;
+  if(isValid())
+  {
+    H5Aclose(m_AttributeId);
+    m_AttributeId = 0;
+  }
 }
 
 bool H5::AttributeReader::isValid() const
 {
-  return getAttributeId() != 0;
+  return getAttributeId() > 0;
 }
 
 H5::IdType H5::AttributeReader::getObjectId() const

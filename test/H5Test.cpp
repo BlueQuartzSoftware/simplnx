@@ -15,6 +15,7 @@
 #include "complex/DataStructure/Montage/GridMontage.hpp"
 #include "complex/DataStructure/ScalarData.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 #include "complex/Utilities/Parsing/Text/CsvParser.hpp"
 
@@ -229,54 +230,45 @@ TEST_CASE("Image Geometry IO")
 
   fs::path filePath = GetDataDir(app) / "image_geometry_io.h5";
 
-  std::string filePathString = filePath.string();
-
-// Write HDF5 file
-#if 0
+  // Write HDF5 file
   try
   {
     DataStructure ds = CreateDataStructure();
-    auto fileId = H5Fcreate(filePathString.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    REQUIRE(fileId > 0);
+    H5::FileWriter fileWriter(filePath);
+    REQUIRE(fileWriter.isValid());
 
     herr_t err;
-    err = ds.writeHdf5(fileId);
-    REQUIRE(err <= 0);
-
-    err = H5Fclose(fileId);
-    REQUIRE(err <= 0);
+    err = ds.writeHdf5(fileWriter);
+    REQUIRE(err >= 0);
   } catch(const std::exception& e)
   {
     FAIL(e.what());
   }
-#endif
 
   // Read HDF5 file
   try
   {
-    auto fileReader = H5::FileReader(filePathString);
+    auto fileReader = H5::FileReader(filePath);
     REQUIRE(fileReader.isValid());
 
     herr_t err;
     auto ds = DataStructure::readFromHdf5(fileReader, err);
-    REQUIRE(err <= 0);
+    REQUIRE(err >= 0);
 
     filePath = GetDataDir(app) / "image_geometry_io_2.h5";
 
-// Write DataStructure to another file
-#if 0
+    // Write DataStructure to another file
     try
     {
       auto fileWriter = H5::FileWriter(filePath);
       REQUIRE(fileWriter.isValid());
 
       err = ds.writeHdf5(fileWriter);
-      REQUIRE(err <= 0);
+      REQUIRE(err >= 0);
     } catch(const std::exception& e)
     {
       FAIL(e.what());
     }
-#endif
 
   } catch(const std::exception& e)
   {
@@ -324,40 +316,32 @@ TEST_CASE("Node Based Geometry IO")
 
   std::string filePathString = filePath.string();
 
-// Write HDF5 file
-#if 0
+  // Write HDF5 file
   try
   {
     DataStructure ds = CreateNodeBasedGeometries();
-    auto fileId = H5Fcreate(filePathString.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    REQUIRE(fileId > 0);
+    H5::FileWriter fileWriter(filePathString);
+    REQUIRE(fileWriter.isValid());
 
     herr_t err;
-    err = ds.writeHdf5(fileId);
-    REQUIRE(err <= 0);
-
-    err = H5Fclose(fileId);
-    REQUIRE(err <= 0);
+    err = ds.writeHdf5(fileWriter);
+    REQUIRE(err >= 0);
   } catch(const std::exception& e)
   {
     FAIL(e.what());
   }
-#endif
 
   // Read HDF5 file
-  //  try
-  //  {
-  //    auto fileId = H5Fopen(filePathString.c_str(), H5P_DEFAULT, H5P_DEFAULT);
-  //    REQUIRE(fileId > 0);
-  //
-  //    herr_t err;
-  //    auto ds = DataStructure::readFromHdf5(fileId, err);
-  //    REQUIRE(err <= 0);
-  //
-  //    err = H5Fclose(fileId);
-  //    REQUIRE(err <= 0);
-  //  } catch(const std::exception& e)
-  //  {
-  //    FAIL(e.what());
-  //  }
+  try
+  {
+    H5::FileReader fileReader(filePathString);
+    REQUIRE(fileReader.isValid());
+
+    herr_t err;
+    auto ds = DataStructure::readFromHdf5(fileReader, err);
+    REQUIRE(err >= 0);
+  } catch(const std::exception& e)
+  {
+    FAIL(e.what());
+  }
 }
