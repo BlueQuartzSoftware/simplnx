@@ -70,7 +70,7 @@ H5::ErrorType DataGroup::readHdf5(const H5::GroupReader& groupReader)
   return BaseGroup::readHdf5(groupReader);
 }
 
-H5::ErrorType DataGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType DataGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& parentGroupWriter) const
 {
   return BaseGroup::writeHdf5(dataStructureWriter, parentGroupWriter);
 }

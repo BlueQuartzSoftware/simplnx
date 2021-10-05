@@ -312,7 +312,7 @@ H5::ErrorType DataMap::readH5Group(DataStructure& ds, const H5::GroupReader& h5G
   return 0;
 }
 
-H5::ErrorType DataMap::writeH5Group(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& groupWriter) const
+H5::ErrorType DataMap::writeH5Group(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& groupWriter) const
 {
   for(const auto& [id, dataObject] : *this)
   {

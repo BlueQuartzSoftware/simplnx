@@ -160,7 +160,7 @@ public:
    * @param datasetWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const override
+  H5::ErrorType writeHdf5(const std::shared_ptr<H5::DatasetWriter>& datasetWriter) const override
   {
     throw std::runtime_error("");
   }

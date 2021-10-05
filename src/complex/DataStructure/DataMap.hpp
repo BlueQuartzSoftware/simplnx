@@ -272,7 +272,7 @@ public:
    * @param groupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeH5Group(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& groupWriter) const;
+  H5::ErrorType writeH5Group(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& groupWriter) const;
 
 private:
   MapType m_Map;

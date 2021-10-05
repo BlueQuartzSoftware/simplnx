@@ -315,7 +315,7 @@ public:
    * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override;
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& parentGroupWriter) const override;
 
 protected:
   /**

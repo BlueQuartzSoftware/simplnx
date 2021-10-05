@@ -485,10 +485,15 @@ H5::ErrorType EdgeGeom::readHdf5(const H5::GroupReader& groupReader)
   return getDataMap().readH5Group(*getDataStructure(), groupReader, getId());
 }
 
-H5::ErrorType EdgeGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType EdgeGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& parentGroupWriter) const
 {
-  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto err = writeH5ObjectAttributes(groupWriter);
+  if(parentGroupWriter == nullptr)
+  {
+    return -1;
+  }
+
+  auto groupWriter = parentGroupWriter->createGroupWriter(getName());
+  auto err = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
   if(err < 0)
   {
     return err;

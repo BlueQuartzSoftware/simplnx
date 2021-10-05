@@ -179,16 +179,21 @@ public:
    * @param dataId
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& parentGroupWriter) const override
   {
-    auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
+    if(parentGroupWriter == nullptr)
+    {
+      return -1;
+    }
+
+    auto datasetWriter = parentGroupWriter->createDatasetWriter(getName());
 
     H5::DatasetWriter::DimsType dims = {1};
     std::vector<value_type> dataVector = {m_Data};
-    auto error = datasetWriter.writeVector(dims, dataVector);
+    auto error = datasetWriter->writeVector(dims, dataVector);
     if(error == 0)
     {
-      error = writeH5ObjectAttributes(datasetWriter);
+      error = writeH5ObjectAttributes(dataStructureWriter, datasetWriter);
     }
     return error;
   }

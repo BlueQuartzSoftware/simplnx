@@ -2,6 +2,8 @@
 
 #include <H5Apublic.h>
 
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+
 using namespace complex;
 
 H5::ObjectWriter::ObjectWriter()
@@ -14,6 +16,16 @@ H5::ObjectWriter::ObjectWriter(H5::IdType parentId)
 }
 
 H5::ObjectWriter::~ObjectWriter() = default;
+
+H5::IdType H5::ObjectWriter::getFileId() const
+{
+  if(!isValid())
+  {
+    return 0;
+  }
+
+  return H5Iget_file_id(getParentId());
+}
 
 H5::IdType H5::ObjectWriter::getParentId() const
 {
@@ -46,6 +58,16 @@ std::string H5::ObjectWriter::getName() const
   H5Iget_name(getId(), buffer, size);
 
   return std::string(buffer);
+}
+
+std::string H5::ObjectWriter::getObjectPath() const
+{
+  if(!isValid())
+  {
+    return "";
+  }
+
+  return H5::Support::GetObjectPath(getId());
 }
 
 H5::AttributeWriter H5::ObjectWriter::createAttribute(const std::string& name)

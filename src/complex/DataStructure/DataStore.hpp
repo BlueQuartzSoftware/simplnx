@@ -293,8 +293,13 @@ public:
    * @param datasetWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const override
+  H5::ErrorType writeHdf5(const std::shared_ptr<H5::DatasetWriter>& datasetWriter) const override
   {
+    if(datasetWriter == nullptr)
+    {
+      return -1;
+    }
+
     // Consolodate the Tuple and Component Dims into a single array which is used
     // to write the entire data array to HDF5
     std::vector<hsize_t> h5dims;
@@ -311,21 +316,21 @@ public:
     std::vector<T> dataVector;
     auto dataPtr = data();
     dataVector.assign(dataPtr, dataPtr + count);
-    herr_t err = datasetWriter.writeVector(h5dims, dataVector);
+    herr_t err = datasetWriter->writeVector(h5dims, dataVector);
     if(err < 0)
     {
       return err;
     }
 
     // Write shape attributes to the dataset
-    auto tupleAttribute = datasetWriter.createAttribute(k_TupleShape);
+    auto tupleAttribute = datasetWriter->createAttribute(k_TupleShape);
     err = tupleAttribute.writeVector({m_TupleShape.size()}, m_TupleShape);
     if(err < 0)
     {
       return err;
     }
 
-    auto componentAttribute = datasetWriter.createAttribute(k_ComponentShape);
+    auto componentAttribute = datasetWriter->createAttribute(k_ComponentShape);
     err = componentAttribute.writeVector({m_ComponentShape.size()}, m_ComponentShape);
 
     return err;

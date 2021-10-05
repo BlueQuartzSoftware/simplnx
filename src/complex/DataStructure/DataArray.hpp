@@ -395,15 +395,15 @@ protected:
    * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& parentGroupWriter) const override
   {
-    auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
+    auto datasetWriter = parentGroupWriter->createDatasetWriter(getName());
     auto err = m_DataStore->writeHdf5(datasetWriter);
     if(err < 0)
     {
       return err;
     }
-    return writeH5ObjectAttributes(datasetWriter);
+    return writeH5ObjectAttributes(dataStructureWriter, datasetWriter);
   }
 
 private:

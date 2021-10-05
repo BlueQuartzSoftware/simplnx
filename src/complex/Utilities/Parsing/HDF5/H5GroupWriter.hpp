@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5ObjectWriter.hpp"
 
@@ -46,26 +48,27 @@ public:
    * target name. Returns an invalid GroupWriter if the group cannot be
    * created.
    * @param childName
-   * @return GroupWriter
+   * @return std::shared_ptr<GroupWriter>
    */
-  GroupWriter createGroupWriter(const std::string& childName);
+  std::shared_ptr<GroupWriter> createGroupWriter(const std::string& childName);
 
   /**
    * @brief Creates a DatasetWriter for writing to a child group with the
    * target name. Returns an invalid DatasetWriter if the dataset cannot be
    * created.
    * @param childName
-   * @return DatasetWriter
+   * @return std::shared_ptr<DatasetWriter>
    */
-  DatasetWriter createDatasetWriter(const std::string& childName);
+  std::shared_ptr<DatasetWriter> createDatasetWriter(const std::string& childName);
 
   /**
-   * @brief Creates a link within the group to another HDF5 object.
+   * @brief Creates a link within the group to another HDF5 object specified
+   * by an HDF5 object path.
    * Returns an error code if one occurs. Otherwise, this method returns 0.
-   * @param targetObject
+   * @param objectPath
    * @return H5::ErrorType
    */
-  H5::ErrorType createLink(const H5::ObjectWriter* targetObject);
+  H5::ErrorType createLink(const std::string& objectPath);
 
 protected:
   /**
@@ -74,7 +77,7 @@ protected:
   void closeHdf5();
 
 private:
-  H5::IdType m_GroupId;
+  H5::IdType m_GroupId = 0;
 };
 } // namespace H5
 } // namespace complex

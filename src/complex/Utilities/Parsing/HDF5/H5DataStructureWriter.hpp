@@ -14,7 +14,9 @@ class GroupWriter;
 
 class DataStructureWriter
 {
-  using DataMapType = std::map<DataObject::IdType, std::shared_ptr<H5::ObjectWriter>>;
+  friend class complex::DataObject;
+
+  using DataMapType = std::map<DataObject::IdType, std::string>;
 
 public:
   /**
@@ -37,7 +39,7 @@ public:
    * @param parentId
    * @return H5::ErrorType
    */
-  H5::ErrorType writeDataObject(const DataObject* dataObject, GroupWriter& parentGroup);
+  H5::ErrorType writeDataObject(const DataObject* dataObject, const std::shared_ptr<GroupWriter>& parentGroup);
 
 protected:
   /**
@@ -49,7 +51,7 @@ protected:
    * @param parentGroup
    * @return H5::ErrorType
   */
-  H5::ErrorType writeDataObjectLink(const DataObject* dataObject, H5::GroupWriter& parentGroup);
+  H5::ErrorType writeDataObjectLink(const DataObject* dataObject, const std::shared_ptr<H5::GroupWriter>& parentGroup);
 
   /**
    * @brief Returns true if the DataObject has been written to the current
@@ -70,17 +72,24 @@ protected:
   bool hasDataBeenWritten(DataObject::IdType targetId) const;
 
   /**
-   * @brief Returns a pointer to the H5::ObjectWriter for the provided
-   * DataObject ID. Returns nullptr if no HDF5 writer could be found.
+   * @brief Returns the path to the HDF5 object for the provided
+   * DataObject ID. Returns an empty string if no HDF5 writer could be found.
    * @param objectId
-   * @return H5::IdType
+   * @return std::string
    */
-  std::shared_ptr<H5::ObjectWriter> getH5WriterForObjectId(DataObject::IdType objectId) const;
+  std::string getPathForObjectId(DataObject::IdType objectId) const;
 
   /**
    * @brief Clears the DataObject to HDF5 ID map and resets the HDF5 parent ID.
    */
   void clearIdMap();
+
+  /**
+   * @brief Adds the H5::ObjectWriter to the DataStructureWriter for the given DataObject ID
+   * @param objectWriter
+   * @param objectId
+  */
+  void addH5Writer(const std::shared_ptr<H5::ObjectWriter>& objectWriter, DataObject::IdType objectId);
 
 private:
   H5::IdType m_ParentId = 0;

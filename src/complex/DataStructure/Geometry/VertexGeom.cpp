@@ -301,16 +301,21 @@ H5::ErrorType VertexGeom::readHdf5(const H5::GroupReader& groupReader)
   return getDataMap().readH5Group(*getDataStructure(), groupReader, getId());
 }
 
-H5::ErrorType VertexGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType VertexGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& parentGroupWriter) const
 {
-  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  herr_t err = writeH5ObjectAttributes(groupWriter);
+  if(parentGroupWriter == nullptr)
+  {
+    return -1;
+  }
+
+  auto groupWriter = parentGroupWriter->createGroupWriter(getName());
+  herr_t err = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
   if(err < 0)
   {
     return err;
   }
 
-  auto vertexListAttr = groupWriter.createAttribute("VertexListId");
+  auto vertexListAttr = groupWriter->createAttribute("VertexListId");
   if(m_VertexListId.has_value())
   {
     err = vertexListAttr.writeValue<DataObject::IdType>(m_VertexListId.value());
@@ -324,7 +329,7 @@ H5::ErrorType VertexGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter
     return err;
   }
 
-  auto vertexSizesAttr = groupWriter.createAttribute("VertexSizesId");
+  auto vertexSizesAttr = groupWriter->createAttribute("VertexSizesId");
   if(m_VertexSizesId.has_value())
   {
     err = vertexSizesAttr.writeValue<DataObject::IdType>(m_VertexSizesId.value());

@@ -533,10 +533,15 @@ H5::ErrorType ImageGeom::readHdf5(const H5::GroupReader& groupReader)
   return 0;
 }
 
-H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& parentGroupWriter) const
 {
-  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  herr_t err = writeH5ObjectAttributes(groupWriter);
+  if(parentGroupWriter == nullptr)
+  {
+    return -1;
+  }
+
+  auto groupWriter = parentGroupWriter->createGroupWriter(getName());
+  herr_t err = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
   if(err < 0)
   {
     return err;
@@ -556,21 +561,21 @@ H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter,
     originVector[i] = origin[i];
   }
 
-  auto dimensionAttr = groupWriter.createAttribute(k_H5_DIMENSIONS);
+  auto dimensionAttr = groupWriter->createAttribute(k_H5_DIMENSIONS);
   err = dimensionAttr.writeVector(dims, volDimsVector);
   if(err < 0)
   {
     return err;
   }
   
-  auto originAttr = groupWriter.createAttribute(k_H5_ORIGIN);
+  auto originAttr = groupWriter->createAttribute(k_H5_ORIGIN);
   err = originAttr.writeVector(dims, originVector);
   if(err < 0)
   {
     return err;
   }
 
-  auto spacingAttr = groupWriter.createAttribute(k_H5_SPACING);
+  auto spacingAttr = groupWriter->createAttribute(k_H5_SPACING);
   err = spacingAttr.writeVector(dims, spacingVector);
   if(err < 0)
   {

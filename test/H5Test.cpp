@@ -208,6 +208,8 @@ DataStructure CreateDataStructure()
   numComponents = 3;
   UInt8ArrayType* ipf_color_data = CreateTestDataArray<uint8_t>("IPF Colors", dataGraph, tupleShape, {numComponents}, scanData->getId());
 
+  dataGraph.setAdditionalParent(ipf_color_data->getId(), group->getId());
+
   // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
   DataGroup* phase_group = complex::DataGroup::Create(dataGraph, "Phase Data", group->getId());
   numComponents = 1;

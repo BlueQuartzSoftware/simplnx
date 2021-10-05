@@ -39,6 +39,12 @@ public:
   virtual bool isValid() const = 0;
 
   /**
+   * @brief Returns the target HDF5 file ID. Returns 0 if the writer is invalid.
+   * @return H5::IdType
+   */
+  H5::IdType getFileId() const;
+
+  /**
    * @brief Returns the parent object ID. Returns 0 if no parent was set.
    * @return H5::IdType
    */
@@ -63,6 +69,13 @@ public:
    * @return std::string
    */
   virtual std::string getName() const;
+
+  /**
+   * @brief Returns the HDF5 object path from the file ID. Returns an empty
+   * string if the writer is invalid.
+   * @return std::string
+   */
+  std::string getObjectPath() const;
 
   /**
    * @brief Returns an AttributeWriter for the target HDF5 attribute. Returns

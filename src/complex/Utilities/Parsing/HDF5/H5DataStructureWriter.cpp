@@ -10,7 +10,7 @@ H5::DataStructureWriter::DataStructureWriter()
 
 H5::DataStructureWriter::~DataStructureWriter() = default;
 
-H5::ErrorType H5::DataStructureWriter::writeDataObject(const DataObject* dataObject, GroupWriter& parentGroup)
+H5::ErrorType H5::DataStructureWriter::writeDataObject(const DataObject* dataObject, const std::shared_ptr<GroupWriter>& parentGroup)
 {
   // Check if data has already been written
   if(hasDataBeenWritten(dataObject))
@@ -26,10 +26,10 @@ H5::ErrorType H5::DataStructureWriter::writeDataObject(const DataObject* dataObj
   }
 }
 
-H5::ErrorType H5::DataStructureWriter::writeDataObjectLink(const DataObject* dataObject, H5::GroupWriter& parentGroup)
+H5::ErrorType H5::DataStructureWriter::writeDataObjectLink(const DataObject* dataObject, const std::shared_ptr<H5::GroupWriter>& parentGroup)
 {
-  auto objWriter = getH5WriterForObjectId(dataObject->getId());
-  auto err = parentGroup.createLink(objWriter.get());
+  auto objectPath = getPathForObjectId(dataObject->getId());
+  auto err = parentGroup->createLink(objectPath);
   return err;
 }
 
@@ -47,11 +47,11 @@ bool H5::DataStructureWriter::hasDataBeenWritten(DataObject::IdType targetId) co
   return m_IdMap.find(targetId) != m_IdMap.end();
 }
 
-std::shared_ptr<H5::ObjectWriter> H5::DataStructureWriter::getH5WriterForObjectId(DataObject::IdType objectId) const
+std::string H5::DataStructureWriter::getPathForObjectId(DataObject::IdType objectId) const
 {
   if(!hasDataBeenWritten(objectId))
   {
-    return 0;
+    return "";
   }
   return m_IdMap.at(objectId);
 }
@@ -60,4 +60,9 @@ void H5::DataStructureWriter::clearIdMap()
 {
   m_IdMap.clear();
   m_ParentId = 0;
+}
+
+void H5::DataStructureWriter::addH5Writer(const std::shared_ptr<H5::ObjectWriter>& objectWriter, DataObject::IdType objectId)
+{
+  m_IdMap[objectId] = objectWriter->getObjectPath();
 }

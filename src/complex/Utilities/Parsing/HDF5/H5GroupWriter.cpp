@@ -53,28 +53,35 @@ H5::IdType H5::GroupWriter::getId() const
   return m_GroupId;
 }
 
-H5::GroupWriter H5::GroupWriter::createGroupWriter(const std::string& childName)
+std::shared_ptr<H5::GroupWriter> H5::GroupWriter::createGroupWriter(const std::string& childName)
 {
   if(!isValid())
   {
-    return GroupWriter();
+    return std::make_shared<GroupWriter>();
   }
 
-  return GroupWriter(getId(), childName);
+  return std::make_shared<GroupWriter>(getId(), childName);
 }
 
-H5::DatasetWriter H5::GroupWriter::createDatasetWriter(const std::string& childName)
+std::shared_ptr<H5::DatasetWriter> H5::GroupWriter::createDatasetWriter(const std::string& childName)
 {
   if(!isValid())
   {
-    return DatasetWriter();
+    return std::make_shared<DatasetWriter>();
   }
 
-  return DatasetWriter(getId(), childName);
+  return std::make_shared<DatasetWriter>(getId(), childName);
 }
 
-H5::ErrorType H5::GroupWriter::createLink(const H5::ObjectWriter* targetObject)
+H5::ErrorType H5::GroupWriter::createLink(const std::string& objectPath)
 {
-  auto err = H5Lcreate_hard(targetObject->getParentId(), targetObject->getName().c_str(), getId(), targetObject->getName().c_str(), H5P_DEFAULT, H5P_DEFAULT);
+  if(objectPath.empty())
+  {
+    return -1;
+  }
+  auto index = objectPath.find_last_of('/') + 1;
+  std::string objectName = objectPath.substr(index);
+
+  auto err = H5Lcreate_hard(getFileId(), objectPath.c_str(), getId(), objectName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
   return err;
 }
