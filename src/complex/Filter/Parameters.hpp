@@ -4,26 +4,41 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <variant>
 
 #include "complex/Common/Types.hpp"
+#include "complex/Filter/AnyParameter.hpp"
 #include "complex/Filter/IParameter.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
 /**
- * @brief Parameters stores a map of strings to IParameter.
+ * @brief Parameters stores a map of strings to IParameter. Preserves insertion order.
  */
 class COMPLEX_EXPORT Parameters
 {
 public:
+  struct COMPLEX_EXPORT Separator
+  {
+    std::string name;
+  };
+
+  struct COMPLEX_EXPORT ParameterKey
+  {
+    std::string key;
+  };
+
+  using LayoutObject = std::variant<ParameterKey, Separator>;
+  using LayoutVector = std::vector<LayoutObject>;
+
   Parameters() = default;
   ~Parameters() noexcept = default;
 
-  Parameters(const Parameters& rhs);
+  Parameters(const Parameters& rhs) = default;
   Parameters(Parameters&&) noexcept = default;
 
-  Parameters& operator=(const Parameters& rhs);
+  Parameters& operator=(const Parameters& rhs) = default;
   Parameters& operator=(Parameters&&) noexcept = default;
 
   /**
@@ -51,6 +66,24 @@ public:
    */
   void insert(IParameter::UniquePointer parameter);
 
+  /**
+   * @brief Inserts a separator.
+   * @param name
+   */
+  void insert(Separator name);
+
+  /**
+   * @brief Returns a list of the keys (in insertion order) that represent the accepted keys for this Parameters object
+   * @return A vector of std::string objects
+   */
+  std::vector<std::string> getKeys() const;
+
+  /**
+   * @brief Returns the layout of stored parameters (e.g. for display in a GUI). Each element can be a parameter or a separator.
+   * @return
+   */
+  const LayoutVector& getLayout() const;
+
   auto begin()
   {
     return m_Params.begin();
@@ -71,13 +104,8 @@ public:
     return m_Params.end();
   }
 
-  /**
-   * @brief Returns a list of the keys that represent the accepted keys for this Parameters Object
-   * @return A vector of std::string objects
-   */
-  std::vector<std::string> getKeys() const;
-
 private:
-  std::map<std::string, std::unique_ptr<IParameter>, std::less<>> m_Params;
+  std::map<std::string, AnyParameter, std::less<>> m_Params;
+  std::vector<LayoutObject> m_LayoutVector;
 };
 } // namespace complex
