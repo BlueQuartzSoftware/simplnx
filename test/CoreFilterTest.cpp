@@ -54,7 +54,7 @@ TEST_CASE("Create Core Filter")
     for(const auto& [name, param] : params)
     {
       REQUIRE(!name.empty());
-      REQUIRE(param != nullptr);
+      REQUIRE(!param.isEmpty());
     }
   }
 }
