@@ -6,6 +6,7 @@
 
 #include "complex/Common/Array.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex

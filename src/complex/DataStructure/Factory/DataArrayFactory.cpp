@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <numeric>
+#include <optional>
 
 using namespace complex;
 using namespace complex::H5;
@@ -39,7 +40,7 @@ H5::ErrorType DataArrayFactory::readH5Dataset(H5::DataStructureReader& dataStruc
   }
 
   std::string dataArrayName = datasetReader.getName();
-  auto importId = ReadObjectId(datasetReader);
+  DataObject::IdType importId = ReadObjectId(datasetReader);
 
   switch(type)
   {

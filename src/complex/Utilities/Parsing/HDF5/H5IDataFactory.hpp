@@ -2,6 +2,7 @@
 
 #include <optional>
 
+#include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 
@@ -38,7 +39,7 @@ public:
    * to create the generated DataObject under.
    * @return H5::ErrorType
    */
-  virtual H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId = {}) = 0;
+  virtual H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<complex::DataObject::IdType>& parentId = {}) = 0;
 
   /**
    * @brief Creates and adds a DataObject to the provided DataStructure from
@@ -48,7 +49,7 @@ public:
    * @param parentId = {}
    * @return H5::ErrorType
    */
-  virtual H5::ErrorType readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId = {}) = 0;
+  virtual H5::ErrorType readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<complex::DataObject::IdType>& parentId = {}) = 0;
 
   // Copy and move constuctors / operators deleted
   IDataFactory(const IDataFactory& other) = delete;

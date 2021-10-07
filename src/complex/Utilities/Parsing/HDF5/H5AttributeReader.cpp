@@ -61,7 +61,7 @@ std::string H5::AttributeReader::getName() const
     return "";
   }
 
-  constexpr size_t size = 1024;
+  const size_t size = 1024;
   char buffer[size];
   H5Aget_name(getAttributeId(), size, buffer);
 
@@ -82,10 +82,10 @@ size_t H5::AttributeReader::getNumElements() const
 {
   size_t typeSize = H5Tget_size(getTypeId());
   std::vector<hsize_t> dims;
-  auto dataspaceId = getDataspaceId();
+  hid_t dataspaceId = getDataspaceId();
   if(dataspaceId >= 0)
   {
-    if(getType() == Type::string)
+    if(getType() == H5::Type::string)
     {
       size_t rank = 1;
       dims.resize(rank);
@@ -96,7 +96,7 @@ size_t H5::AttributeReader::getNumElements() const
       size_t rank = H5Sget_simple_extent_ndims(dataspaceId);
       std::vector<hsize_t> hdims(rank, 0);
       /* Get dimensions */
-      auto error = H5Sget_simple_extent_dims(dataspaceId, hdims.data(), nullptr);
+      herr_t error = H5Sget_simple_extent_dims(dataspaceId, hdims.data(), nullptr);
       if(error < 0)
       {
         std::cout << "Error Getting Attribute dims" << std::endl;
@@ -109,7 +109,7 @@ size_t H5::AttributeReader::getNumElements() const
     }
   }
 
-  hsize_t numElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<hsize_t>(1), std::multiplies<>());
+  hsize_t numElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<hsize_t>(1), std::multiplies<hsize_t>());
   return numElements;
 }
 
@@ -134,27 +134,6 @@ T H5::AttributeReader::readAsValue() const
   }
 
   return vector[0];
-}
-
-template <typename T>
-std::vector<T> H5::AttributeReader::readAsVector() const
-{
-  if(!isValid())
-  {
-    return {};
-  }
-
-  std::vector<T> values(getNumElements());
-  auto typeId = getTypeId();
-
-  auto error = H5Aread(getAttributeId(), typeId, values.data());
-  if(error != 0)
-  {
-    std::cout << "Error Reading Attribute." << error << std::endl;
-    return {};
-  }
-
-  return values;
 }
 
 std::string H5::AttributeReader::readAsString() const
@@ -182,7 +161,7 @@ std::string H5::AttributeReader::readAsString() const
     hid_t attributeType = getTypeId();
     if(attributeType >= 0)
     {
-      auto error = H5Aread(getAttributeId(), attributeType, attributeOutput.data());
+      herr_t error = H5Aread(getAttributeId(), attributeType, attributeOutput.data());
       if(error < 0)
       {
         std::cout << "Error Reading Attribute." << std::endl;
@@ -213,15 +192,3 @@ template uint32_t H5::AttributeReader::readAsValue<uint32_t>() const;
 template uint64_t H5::AttributeReader::readAsValue<uint64_t>() const;
 template float H5::AttributeReader::readAsValue<float>() const;
 template double H5::AttributeReader::readAsValue<double>() const;
-
-// declare readAsVector
-template std::vector<int8_t> H5::AttributeReader::readAsVector<int8_t>() const;
-template std::vector<int16_t> H5::AttributeReader::readAsVector<int16_t>() const;
-template std::vector<int32_t> H5::AttributeReader::readAsVector<int32_t>() const;
-template std::vector<int64_t> H5::AttributeReader::readAsVector<int64_t>() const;
-template std::vector<uint8_t> H5::AttributeReader::readAsVector<uint8_t>() const;
-template std::vector<uint16_t> H5::AttributeReader::readAsVector<uint16_t>() const;
-template std::vector<uint32_t> H5::AttributeReader::readAsVector<uint32_t>() const;
-template std::vector<uint64_t> H5::AttributeReader::readAsVector<uint64_t>() const;
-template std::vector<float> H5::AttributeReader::readAsVector<float>() const;
-template std::vector<double> H5::AttributeReader::readAsVector<double>() const;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -110,7 +111,25 @@ public:
    * @return std::vector<T>
    */
   template <typename T>
-  std::vector<T> readAsVector() const;
+  std::vector<T> readAsVector() const
+  {
+    if(!isValid())
+    {
+      return {};
+    }
+
+    std::vector<T> values(getNumElements());
+    hid_t typeId = getTypeId();
+
+    herr_t error = H5Aread(getAttributeId(), typeId, values.data());
+    if(error != 0)
+    {
+      std::cout << "Error Reading Attribute." << error << std::endl;
+      return {};
+    }
+
+    return values;
+  }
 
   /**
    * @brief Returns the value for the attribute as a string. Returns an empty

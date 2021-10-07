@@ -312,7 +312,7 @@ public:
       h5dims.push_back(static_cast<hsize_t>(value));
     }
 
-    size_t count = getSize();
+    size_t count = this->getSize();
     std::vector<T> dataVector;
     auto dataPtr = data();
     dataVector.assign(dataPtr, dataPtr + count);
