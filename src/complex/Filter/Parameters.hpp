@@ -77,14 +77,14 @@ public:
    * @param key
    * @return
    */
-  IParameter* at(std::string_view key);
+  AnyParameter& at(std::string_view key);
 
   /**
    * @brief Returns the parameter with the given key. Throws if not found.
    * @param key
    * @return
    */
-  const IParameter* at(std::string_view key) const;
+  const AnyParameter& at(std::string_view key) const;
 
   /**
    * @brief Returns a list of the keys (in insertion order) that represent the accepted keys for this Parameters object
