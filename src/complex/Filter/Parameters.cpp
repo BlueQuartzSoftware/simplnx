@@ -1,5 +1,21 @@
 #include "Parameters.hpp"
 
+using namespace complex;
+
+namespace
+{
+template <class Container>
+auto GetParameter(Container& container, std::string_view key)
+{
+  auto iter = container.find(key);
+  if(iter == container.cend())
+  {
+    throw std::invalid_argument(fmt::format("Key \"{}\" does not exist in Parameters", key));
+  }
+  return iter->second.get();
+}
+} // namespace
+
 namespace complex
 {
 bool Parameters::contains(std::string_view name) const
@@ -39,6 +55,16 @@ void Parameters::insert(IParameter::UniquePointer parameter)
 void Parameters::insert(Separator name)
 {
   m_LayoutVector.push_back(std::move(name));
+}
+
+IParameter* Parameters::at(std::string_view key)
+{
+  return GetParameter(m_Params, key);
+}
+
+const IParameter* Parameters::at(std::string_view key) const
+{
+  return GetParameter(m_Params, key);
 }
 
 std::vector<std::string> Parameters::getKeys() const
