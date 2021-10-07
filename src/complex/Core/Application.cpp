@@ -69,14 +69,14 @@ Application* Application::s_Instance = nullptr;
 
 Application::Application()
 : m_FilterList(new FilterList())
-, m_DataReader(new H5DataReader())
+, m_DataReader(new H5::DataFactoryManager())
 {
   assignInstance();
 }
 
 Application::Application(int argc, char** argv)
 : m_FilterList(new FilterList())
-, m_DataReader(new H5DataReader())
+, m_DataReader(new H5::DataFactoryManager())
 {
   assignInstance();
 }
@@ -138,7 +138,7 @@ JsonPipelineBuilder* Application::getPipelineBuilder() const
   return nullptr;
 }
 
-H5DataReader* Application::getDataStructureReader() const
+H5::DataFactoryManager* Application::getH5FactoryManager() const
 {
   return m_DataReader.get();
 }

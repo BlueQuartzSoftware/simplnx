@@ -1,4 +1,4 @@
-#include "H5DataReader.hpp"
+#include "H5DataFactoryManager.hpp"
 
 #include "complex/DataStructure/Factory/DataArrayFactory.hpp"
 #include "complex/DataStructure/Factory/DataGroupFactory.hpp"
@@ -17,14 +17,14 @@
 
 using namespace complex;
 
-H5DataReader::H5DataReader()
+H5::DataFactoryManager::DataFactoryManager()
 {
   addCoreFactories();
 }
 
-H5DataReader::~H5DataReader() = default;
+H5::DataFactoryManager::~DataFactoryManager() = default;
 
-void H5DataReader::addCoreFactories()
+void H5::DataFactoryManager::addCoreFactories()
 {
   addFactory(new DataArrayFactory());
   addFactory(new DataGroupFactory());
@@ -40,7 +40,7 @@ void H5DataReader::addCoreFactories()
   addFactory(new VertexGeomFactory());
 }
 
-void H5DataReader::addFactory(IH5DataFactory* factory)
+void H5::DataFactoryManager::addFactory(IH5DataFactory* factory)
 {
   if(factory == nullptr)
   {
@@ -50,7 +50,7 @@ void H5DataReader::addFactory(IH5DataFactory* factory)
   m_Factories[factory->getDataTypeName()] = std::shared_ptr<IH5DataFactory>(factory);
 }
 
-std::vector<IH5DataFactory*> H5DataReader::getFactories() const
+std::vector<IH5DataFactory*> H5::DataFactoryManager::getFactories() const
 {
   std::vector<IH5DataFactory*> factories;
   for(auto iter : m_Factories)
@@ -60,17 +60,11 @@ std::vector<IH5DataFactory*> H5DataReader::getFactories() const
   return factories;
 }
 
-IH5DataFactory* H5DataReader::getFactory(const std::string& typeName) const
+IH5DataFactory* H5::DataFactoryManager::getFactory(const std::string& typeName) const
 {
   if(m_Factories.find(typeName) == m_Factories.end())
   {
     throw std::runtime_error("Could not find IH5DataFactory for " + typeName);
   }
   return m_Factories.at(typeName).get();
-}
-
-DataStructure H5DataReader::createDataStructure(H5::IdType topLevelGroup) const
-{
-  DataStructure ds;
-  return ds;
 }

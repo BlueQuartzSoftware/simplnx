@@ -3,10 +3,11 @@
 #include <optional>
 
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DataFactoryManager.hpp"
 
 namespace complex
 {
-class H5DataReader;
+class DataFactoryManager;
 class IH5DataFactory;
 
 namespace H5
@@ -16,7 +17,7 @@ class GroupReader;
 class DataStructureReader
 {
 public:
-  DataStructureReader(H5DataReader* h5DataReader = nullptr);
+  DataStructureReader(H5::DataFactoryManager* h5FactoryManager = nullptr);
   virtual ~DataStructureReader();
 
   complex::DataStructure readH5Group(const H5::GroupReader& groupReader, H5::ErrorType& errorCode);
@@ -27,11 +28,11 @@ public:
   void clearDataStructure();
 
 protected:
-  H5DataReader* getDataReader() const;
+  H5::DataFactoryManager* getDataReader() const;
   IH5DataFactory* getDataFactory(const std::string& typeName) const;
 
 private:
-  H5DataReader* m_DataReader = nullptr;
+  H5::DataFactoryManager* m_FactoryManager = nullptr;
   DataStructure m_CurrentStructure;
 };
 } // namespace H5

@@ -7,8 +7,8 @@
 
 using namespace complex;
 
-H5::DataStructureReader::DataStructureReader(H5DataReader* h5DataReader)
-: m_DataReader(h5DataReader)
+H5::DataStructureReader::DataStructureReader(DataFactoryManager* h5FactoryManager)
+: m_FactoryManager(h5FactoryManager)
 {
 }
 
@@ -107,14 +107,14 @@ void H5::DataStructureReader::clearDataStructure()
   m_CurrentStructure = DataStructure();
 }
 
-H5DataReader* H5::DataStructureReader::getDataReader() const
+H5::DataFactoryManager* H5::DataStructureReader::getDataReader() const
 {
-  if(m_DataReader != nullptr)
+  if(m_FactoryManager != nullptr)
   {
-    return m_DataReader;
+    return m_FactoryManager;
   }
 
-  return Application::Instance()->getDataStructureReader();
+  return Application::Instance()->getH5FactoryManager();
 }
 
 IH5DataFactory* H5::DataStructureReader::getDataFactory(const std::string& typeName) const
