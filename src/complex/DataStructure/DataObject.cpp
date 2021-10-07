@@ -5,7 +5,6 @@
 #include "complex/DataStructure/Metadata.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5ObjectWriter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 #include <algorithm>
 #include <exception>

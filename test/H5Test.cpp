@@ -16,7 +16,6 @@
 #include "complex/DataStructure/ScalarData.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 #include "complex/Utilities/Parsing/Text/CsvParser.hpp"
 
 #include "GeometryTestUtilities.hpp"

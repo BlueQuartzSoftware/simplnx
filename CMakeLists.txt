@@ -274,7 +274,6 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectReader.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectWriter.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Writer.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IH5DataFactory.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
@@ -391,7 +390,6 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectReader.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectWriter.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Writer.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IH5DataFactory.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.cpp

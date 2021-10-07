@@ -4,7 +4,6 @@
 #include <stdexcept>
 
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 using namespace complex;
 

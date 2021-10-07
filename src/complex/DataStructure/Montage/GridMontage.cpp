@@ -3,7 +3,6 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
 
 #include <stdexcept>
 
