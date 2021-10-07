@@ -73,6 +73,20 @@ public:
   void insert(Separator name);
 
   /**
+   * @brief Returns the parameter with the given key. Throws if not found.
+   * @param key
+   * @return
+   */
+  IParameter* at(std::string_view key);
+
+  /**
+   * @brief Returns the parameter with the given key. Throws if not found.
+   * @param key
+   * @return
+   */
+  const IParameter* at(std::string_view key) const;
+
+  /**
    * @brief Returns a list of the keys (in insertion order) that represent the accepted keys for this Parameters object
    * @return A vector of std::string objects
    */
