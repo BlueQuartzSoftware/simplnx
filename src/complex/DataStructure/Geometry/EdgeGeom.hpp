@@ -27,6 +27,16 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return EdgeGeom*
+   */
+  static EdgeGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   EdgeGeom(const EdgeGeom& other);
@@ -303,6 +313,14 @@ protected:
    * @param name
    */
   EdgeGeom(DataStructure& ds, const std::string& name);
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  EdgeGeom(DataStructure& ds, const std::string& name, IdType importId);
 
   /**
    * @brief

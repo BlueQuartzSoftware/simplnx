@@ -10,6 +10,11 @@ AbstractGeometry3D::AbstractGeometry3D(DataStructure& ds, const std::string& nam
 {
 }
 
+AbstractGeometry3D::AbstractGeometry3D(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractGeometry(ds, name, importId)
+{
+}
+
 AbstractGeometry3D::AbstractGeometry3D(const AbstractGeometry3D& other)
 : AbstractGeometry(other)
 , m_VertexListId(other.m_VertexListId)

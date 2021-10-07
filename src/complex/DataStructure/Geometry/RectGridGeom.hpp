@@ -27,6 +27,16 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return RectGridGeom*
+   */
+  static RectGridGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   RectGridGeom(const RectGridGeom& other);
@@ -369,6 +379,14 @@ protected:
    * @param name
    */
   RectGridGeom(DataStructure& ds, const std::string& name);
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  RectGridGeom(DataStructure& ds, const std::string& name, IdType importId);
 
   /**
    * @brief

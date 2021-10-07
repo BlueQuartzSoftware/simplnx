@@ -15,6 +15,11 @@ RectGridGeom::RectGridGeom(DataStructure& ds, const std::string& name)
 {
 }
 
+RectGridGeom::RectGridGeom(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractGeometryGrid(ds, name, importId)
+{
+}
+
 RectGridGeom::RectGridGeom(const RectGridGeom& other)
 : AbstractGeometryGrid(other)
 , m_xBoundsId(other.m_xBoundsId)
@@ -40,6 +45,16 @@ RectGridGeom::~RectGridGeom() = default;
 RectGridGeom* RectGridGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(ds, name));
+  if(!AttemptToAddObject(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+RectGridGeom* RectGridGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(ds, name, importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

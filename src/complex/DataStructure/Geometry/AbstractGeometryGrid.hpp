@@ -166,6 +166,14 @@ protected:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  AbstractGeometryGrid(DataStructure& ds, const std::string& name, IdType importId);
+
+  /**
+   * @brief
    * @param other
    */
   AbstractGeometryGrid(const AbstractGeometryGrid& other);

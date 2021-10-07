@@ -14,6 +14,11 @@ EdgeGeom::EdgeGeom(DataStructure& ds, const std::string& name)
 {
 }
 
+EdgeGeom::EdgeGeom(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractGeometry(ds, name, importId)
+{
+}
+
 EdgeGeom::EdgeGeom(DataStructure& ds, const std::string& name, const SharedEdgeList* edges, const SharedVertexList* vertices)
 : AbstractGeometry(ds, name)
 {
@@ -48,6 +53,16 @@ EdgeGeom::~EdgeGeom() = default;
 EdgeGeom* EdgeGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<EdgeGeom>(new EdgeGeom(ds, name));
+  if(!AttemptToAddObject(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+EdgeGeom* EdgeGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<EdgeGeom>(new EdgeGeom(ds, name, importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

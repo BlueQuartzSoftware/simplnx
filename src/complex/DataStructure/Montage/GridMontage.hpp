@@ -38,6 +38,26 @@ public:
   static GridMontage* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
 
   /**
+   * @brief Attempts to create a new GridMontage and insert it into the
+   * DataStructure. If the parentId is provided, then the created montage will
+   * be nested under the target DataObject. Otherwise, the montage will be
+   * placed directly under the DataStructure.
+   *
+   * If the created montage cannot be placed under the target parent, then this
+   * method returns nullptr. Otherwise, this method returns a pointer to the
+   * created montage.
+   * 
+   * Unlike Create, Import allows the DataObject ID to be set for use in
+   * importing data.
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return GridMontage*
+   */
+  static GridMontage* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+
+  /**
    * @brief Creates a copy of the specified GridMontage but does not add it to
    * the DataStructure. It is up to the caller to delete the created montage.
    * @param other
@@ -230,6 +250,14 @@ protected:
    * @param name
    */
   GridMontage(DataStructure& ds, const std::string& name);
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  GridMontage(DataStructure& ds, const std::string& name, IdType importId);
 
   /**
    * @brief Returns the appropriate linear offset from the provided

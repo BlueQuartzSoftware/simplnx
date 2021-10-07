@@ -15,6 +15,11 @@ TriangleGeom::TriangleGeom(DataStructure& ds, const std::string& name)
 {
 }
 
+TriangleGeom::TriangleGeom(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractGeometry2D(ds, name, importId)
+{
+}
+
 TriangleGeom::TriangleGeom(DataStructure& ds, const std::string& name, usize numTriangles, const SharedVertexList* vertices, bool allocate)
 : AbstractGeometry2D(ds, name)
 {
@@ -50,6 +55,16 @@ TriangleGeom::~TriangleGeom() = default;
 TriangleGeom* TriangleGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(ds, name));
+  if(!AttemptToAddObject(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+TriangleGeom* TriangleGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(ds, name, importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

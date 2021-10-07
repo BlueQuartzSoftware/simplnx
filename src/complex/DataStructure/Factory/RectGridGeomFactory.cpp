@@ -21,7 +21,8 @@ std::string RectGridGeomFactory::getDataTypeName() const
 H5::ErrorType RectGridGeomFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
 {
   auto name = groupReader.getName();
-  auto geom = RectGridGeom::Create(dataStructureReader.getDataStructure(), name, parentId);
+  auto importId = ReadObjectId(groupReader);
+  auto geom = RectGridGeom::Import(dataStructureReader.getDataStructure(), name, importId, parentId);
   return geom->readHdf5(dataStructureReader, groupReader);
 }
 

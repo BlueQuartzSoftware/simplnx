@@ -276,40 +276,6 @@ H5::ErrorType DataMap::readH5Group(H5::DataStructureReader& dataStructureReader,
   for(const auto& childName : childrenNames)
   {
     auto errorCode = dataStructureReader.readObjectFromGroup(h5Group, childName, dsParentId);
-    IH5DataFactory* factory = nullptr;
-
-    // Get IH5DataFactory
-    {
-      auto childObj = h5Group.openObject(childName);
-      auto typeAttribute = childObj.getAttribute(complex::Constants::k_ObjectTypeTag);
-      std::string typeName = typeAttribute.readAsString();
-
-      factory = Application::Instance()->getDataStructureReader()->getFactory(typeName);
-    }
-
-    // Return an error if the factory could not be found.
-    if(factory == nullptr)
-    {
-      return -1;
-    }
-
-    // Read DataObject from Factory
-    if(h5Group.isGroup(childName))
-    {
-      auto childGroup = h5Group.openGroup(childName);
-      if(factory->readH5Group(dataStructureReader, childGroup, dsParentId) < 0)
-      {
-        throw std::runtime_error("Error reading DataMap from HDF5");
-      }
-    }
-    else if(h5Group.isDataset(childName))
-    {
-      auto childDataset = h5Group.openDataset(childName);
-      if(factory->readH5Dataset(dataStructureReader, childDataset, dsParentId) < 0)
-      {
-        throw std::runtime_error("Error reading DataMap from HDF5");
-      }
-    }
   }
   return 0;
 }

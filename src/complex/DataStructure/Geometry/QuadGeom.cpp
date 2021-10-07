@@ -14,6 +14,11 @@ QuadGeom::QuadGeom(DataStructure& ds, const std::string& name)
 {
 }
 
+QuadGeom::QuadGeom(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractGeometry2D(ds, name, importId)
+{
+}
+
 QuadGeom::QuadGeom(DataStructure& ds, const std::string& name, usize numQuads, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
 : AbstractGeometry2D(ds, name)
 {
@@ -49,6 +54,16 @@ QuadGeom::~QuadGeom() = default;
 QuadGeom* QuadGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<QuadGeom>(new QuadGeom(ds, name));
+  if(!AttemptToAddObject(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+QuadGeom* QuadGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<QuadGeom>(new QuadGeom(ds, name, importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

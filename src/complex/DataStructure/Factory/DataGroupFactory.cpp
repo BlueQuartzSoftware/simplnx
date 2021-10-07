@@ -21,7 +21,8 @@ std::string DataGroupFactory::getDataTypeName() const
 H5::ErrorType DataGroupFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
 {
   auto name = groupReader.getName();
-  auto group = DataGroup::Create(dataStructureReader.getDataStructure(), name, parentId);
+  auto importId = ReadObjectId(groupReader);
+  auto group = DataGroup::Import(dataStructureReader.getDataStructure(), name, importId, parentId);
   return group->readHdf5(dataStructureReader, groupReader);
 }
 

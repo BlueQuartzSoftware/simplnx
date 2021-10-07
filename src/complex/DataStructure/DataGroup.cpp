@@ -18,6 +18,11 @@ DataGroup::DataGroup(DataStructure& ds, const std::string& name)
 {
 }
 
+DataGroup::DataGroup(DataStructure& ds, const std::string& name, IdType importId)
+: BaseGroup(ds, name, importId)
+{
+}
+
 DataGroup::DataGroup(const DataGroup& other)
 : BaseGroup(other)
 {
@@ -33,6 +38,16 @@ DataGroup::~DataGroup() = default;
 DataGroup* DataGroup::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<DataGroup>(new DataGroup(ds, name));
+  if(!AttemptToAddObject(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+DataGroup* DataGroup::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<DataGroup>(new DataGroup(ds, name, importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

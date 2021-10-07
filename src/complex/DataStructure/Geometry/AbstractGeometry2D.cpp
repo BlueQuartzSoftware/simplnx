@@ -8,6 +8,11 @@ AbstractGeometry2D::AbstractGeometry2D(DataStructure& ds, const std::string& nam
 {
 }
 
+AbstractGeometry2D::AbstractGeometry2D(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractGeometry(ds, name, importId)
+{
+}
+
 AbstractGeometry2D::AbstractGeometry2D(const AbstractGeometry2D& other)
 : AbstractGeometry(other)
 , m_VertexListId(other.m_VertexListId)

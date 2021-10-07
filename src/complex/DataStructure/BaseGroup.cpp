@@ -12,6 +12,11 @@ BaseGroup::BaseGroup(DataStructure& ds, const std::string& name)
 {
 }
 
+BaseGroup::BaseGroup(DataStructure& ds, const std::string& name, IdType importId)
+: DataObject(ds, name, importId)
+{
+}
+
 BaseGroup::BaseGroup(const BaseGroup& other)
 : DataObject(other)
 , m_DataMap(other.m_DataMap)

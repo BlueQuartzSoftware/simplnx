@@ -21,7 +21,8 @@ std::string ImageGeomFactory::getDataTypeName() const
 H5::ErrorType ImageGeomFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
 {
   auto name = groupReader.getName();
-  auto geom = ImageGeom::Create(dataStructureReader.getDataStructure(), name, parentId);
+  auto importId = ReadObjectId(groupReader);
+  auto geom = ImageGeom::Import(dataStructureReader.getDataStructure(), name, importId, parentId);
   return geom->readHdf5(dataStructureReader, groupReader);
 }
 

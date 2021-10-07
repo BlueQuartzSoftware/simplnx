@@ -58,6 +58,41 @@ public:
   }
 
   /**
+   * @brief Attempts to create a DataArray with the specified values and add
+   * it to the DataStructure. If a parentId is provided, then the DataArray
+   * is created with the target DataObject as its parent. Otherwise, the
+   * created DataArray is nested directly within the DataStructure.
+   *
+   * In either case, the DataArray is then owned by the DataStructure and will
+   * be cleaned up when the DataStructure is finished with it. As such, it is
+   * not recommended that the returned pointer be stored outside of the scope
+   * in which it is created. Use the object's ID or DataPath to retrieve the
+   * DataArray if it is needed after the program has left the current scope.
+   *
+   * Unlike Create, Import allows the DataObject ID to be set for use in
+   * importing data.
+   *
+   * Returns a pointer to the created DataArray if the process succeeds.
+   * Returns nullptr otherwise.
+   *
+   * The created DataArray takes ownership of the provided DataStore.
+   * @param ds
+   * @param name
+   * @param store
+   * @param parentId = {}
+   * @return DataArray<T>*
+   */
+  static DataArray* Import(DataStructure& ds, const std::string& name, IdType importId, store_type* store, const std::optional<IdType>& parentId = {})
+  {
+    auto data = std::shared_ptr<DataArray>(new DataArray(ds, name, importId, store));
+    if(!AttemptToAddObject(ds, data, parentId))
+    {
+      return nullptr;
+    }
+    return data.get();
+  }
+
+  /**
    * @brief Creates a copy of the specified tuple getSize, count, and smart
    * pointer to the target DataStore. This copy is not added to the
    * DataStructure.
@@ -383,6 +418,22 @@ protected:
    */
   DataArray(DataStructure& ds, const std::string& name, const weak_store& store)
   : DataObject(ds, name)
+  {
+    setDataStore(store);
+  }
+
+  /**
+   * @brief Constructs a DataArray with the specified name and DataStore.
+   *
+   * The DataArray takes ownership of the DataStore. If none is provided,
+   * an EmptyDataStore is used instead.
+   * @param ds
+   * @param name
+   * @param importId
+   * @param store
+   */
+  DataArray(DataStructure& ds, const std::string& name, IdType importId, store_type* store = nullptr)
+  : DataObject(ds, name, importId)
   {
     setDataStore(store);
   }

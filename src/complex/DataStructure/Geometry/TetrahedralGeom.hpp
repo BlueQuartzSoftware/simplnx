@@ -26,6 +26,16 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return TetrahedralGeom*
+   */
+  static TetrahedralGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   TetrahedralGeom(const TetrahedralGeom& other);
@@ -325,6 +335,14 @@ protected:
    * @param name
    */
   TetrahedralGeom(DataStructure& ds, const std::string& name);
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  TetrahedralGeom(DataStructure& ds, const std::string& name, IdType importId);
 
   /**
    * @brief

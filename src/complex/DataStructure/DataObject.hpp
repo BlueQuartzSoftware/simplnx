@@ -166,12 +166,21 @@ public:
 
 protected:
   /**
-   * @brief DataObject constructor takes a pointer to the DataStructure and
+   * @brief DataObject constructor takes a reference to the DataStructure and
    * object name.
    * @param ds
    * @param name
    */
   DataObject(DataStructure& ds, std::string name);
+
+  /**
+   * @brief DataObject constructor takes a reference to the DataStructure,
+   * object name, and object ID.
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  DataObject(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief Attempts to add the specified DataObject to the target DataStructure.

@@ -22,6 +22,11 @@ ImageGeom::ImageGeom(DataStructure& ds, const std::string& name)
 {
 }
 
+ImageGeom::ImageGeom(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractGeometryGrid(ds, name, importId)
+{
+}
+
 ImageGeom::ImageGeom(const ImageGeom& other)
 : AbstractGeometryGrid(other)
 , m_VoxelSizesId(other.m_VoxelSizesId)
@@ -45,6 +50,16 @@ ImageGeom::~ImageGeom() = default;
 ImageGeom* ImageGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<ImageGeom>(new ImageGeom(ds, name));
+  if(!AttemptToAddObject(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+ImageGeom* ImageGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<ImageGeom>(new ImageGeom(ds, name, importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

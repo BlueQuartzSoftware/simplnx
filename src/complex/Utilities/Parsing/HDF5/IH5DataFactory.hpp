@@ -12,6 +12,7 @@ namespace H5
 class DataStructureReader;
 class DatasetReader;
 class GroupReader;
+class ObjectReader;
 } // namespace H5
 
 class COMPLEX_EXPORT IH5DataFactory
@@ -57,5 +58,13 @@ protected:
    * @brief Default constructor
    */
   IH5DataFactory();
+
+  /**
+   * @brief Reads and returns the target DataObject ID from a given
+   * H5::ObjectReader.
+   * @param dataReader
+   * @return DataObject::IdType
+   */
+  static DataObject::IdType ReadObjectId(const H5::ObjectReader& dataReader);
 };
 } // namespace complex

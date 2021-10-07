@@ -168,6 +168,14 @@ protected:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  AbstractGeometry2D(DataStructure& ds, const std::string& name, IdType importId);
+
+  /**
+   * @brief
    * @param other
    */
   AbstractGeometry2D(const AbstractGeometry2D& other);

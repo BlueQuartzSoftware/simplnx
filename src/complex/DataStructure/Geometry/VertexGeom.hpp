@@ -27,6 +27,16 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return VertexGeom*
+   */
+  static VertexGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   VertexGeom(const VertexGeom& other);
@@ -247,6 +257,14 @@ protected:
    * @param name
    */
   VertexGeom(DataStructure& ds, const std::string& name);
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  VertexGeom(DataStructure& ds, const std::string& name, IdType importId);
 
   /**
    * @brief

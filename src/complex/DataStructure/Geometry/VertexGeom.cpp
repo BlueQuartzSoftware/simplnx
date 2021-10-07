@@ -15,6 +15,11 @@ VertexGeom::VertexGeom(DataStructure& ds, const std::string& name)
 {
 }
 
+VertexGeom::VertexGeom(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractGeometry(ds, name, importId)
+{
+}
+
 VertexGeom::VertexGeom(DataStructure& ds, const std::string& name, usize numVertices, bool allocate)
 : AbstractGeometry(ds, name)
 {
@@ -44,6 +49,16 @@ VertexGeom::~VertexGeom() = default;
 VertexGeom* VertexGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<VertexGeom>(new VertexGeom(ds, name));
+  if(!AttemptToAddObject(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+VertexGeom* VertexGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<VertexGeom>(new VertexGeom(ds, name, importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

@@ -105,6 +105,11 @@ AbstractGeometry::AbstractGeometry(DataStructure& ds, const std::string& name)
 {
 }
 
+AbstractGeometry::AbstractGeometry(DataStructure& ds, const std::string& name, IdType importId)
+: BaseGroup(ds, name, importId)
+{
+}
+
 AbstractGeometry::AbstractGeometry(const AbstractGeometry& other)
 : BaseGroup(other)
 {

@@ -338,6 +338,14 @@ protected:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  AbstractGeometry(DataStructure& ds, const std::string& name, IdType importId);
+
+  /**
+   * @brief
    * @param elementsContainingVert
    */
   virtual void setElementsContainingVert(const ElementDynamicList* elementsContainingVert) = 0;

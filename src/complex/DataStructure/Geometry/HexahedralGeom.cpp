@@ -14,6 +14,11 @@ HexahedralGeom::HexahedralGeom(DataStructure& ds, const std::string& name)
 {
 }
 
+HexahedralGeom::HexahedralGeom(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractGeometry3D(ds, name, importId)
+{
+}
+
 HexahedralGeom::HexahedralGeom(DataStructure& ds, const std::string& name, usize numHexas, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
 : AbstractGeometry3D(ds, name)
 {
@@ -49,6 +54,16 @@ HexahedralGeom::~HexahedralGeom() = default;
 HexahedralGeom* HexahedralGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(ds, name));
+  if(!AttemptToAddObject(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+HexahedralGeom* HexahedralGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(ds, name, importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

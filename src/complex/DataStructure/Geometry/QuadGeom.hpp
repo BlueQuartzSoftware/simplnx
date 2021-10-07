@@ -27,6 +27,16 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return QuadGeom*
+   */
+  static QuadGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   QuadGeom(const QuadGeom& other);
@@ -299,6 +309,14 @@ protected:
    * @param name
    */
   QuadGeom(DataStructure& ds, const std::string& name);
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  QuadGeom(DataStructure& ds, const std::string& name, IdType importId);
 
   /**
    * @brief

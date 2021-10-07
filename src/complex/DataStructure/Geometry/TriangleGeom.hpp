@@ -27,6 +27,16 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return TriangleGeom*
+   */
+  static TriangleGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   TriangleGeom(const TriangleGeom& other);
@@ -297,6 +307,14 @@ protected:
    * @param name
    */
   TriangleGeom(DataStructure& ds, const std::string& name);
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  TriangleGeom(DataStructure& ds, const std::string& name, IdType importId);
 
   /**
    * @brief

@@ -14,6 +14,11 @@ GridMontage::GridMontage(DataStructure& ds, const std::string& name)
 {
 }
 
+GridMontage::GridMontage(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractMontage(ds, name, importId)
+{
+}
+
 GridMontage::GridMontage(const GridMontage& other)
 : AbstractMontage(other)
 {
@@ -29,6 +34,16 @@ GridMontage::~GridMontage() = default;
 GridMontage* GridMontage::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<GridMontage>(new GridMontage(ds, name));
+  if(!AttemptToAddObject(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+GridMontage* GridMontage::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<GridMontage>(new GridMontage(ds, name, importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

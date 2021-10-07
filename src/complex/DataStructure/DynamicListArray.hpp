@@ -47,6 +47,30 @@ public:
   }
 
   /**
+   * @brief Attempts to create a new DynamicListArray and insert it into the
+   * DataStructure. If a parentId is provided, the created DynamicListArray
+   * will be nested under the target DataObject. Otherwise, it will be placed
+   * directly under the DataStructure.
+   *
+   * Returns a pointer to the created DynamicListArray if the operation succeeded.
+   * Returns nullptr otherwise.
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return DynamicListArray*
+   */
+  static DynamicListArray* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+  {
+    auto data = std::shared_ptr<DynamicListArray>(new DynamicListArray(ds, name, importId));
+    if(!AttemptToAddObject(ds, data, parentId))
+    {
+      return nullptr;
+    }
+    return data.get();
+  }
+
+  /**
    * @brief Creates a copy of the specified DynamicListArray. This copy is not
    * added to the DataStructure. The caller is responsible for deleting the
    * DynamicListArray.
@@ -289,6 +313,17 @@ protected:
    */
   DynamicListArray(DataStructure& ds, const std::string& name)
   : DataObject(ds, name)
+  {
+  }
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  DynamicListArray(DataStructure& ds, const std::string& name, IdType importId)
+  : DataObject(ds, name, importId)
   {
   }
 

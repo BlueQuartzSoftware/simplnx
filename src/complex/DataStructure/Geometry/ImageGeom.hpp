@@ -40,6 +40,16 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return ImageGeom*
+   */
+  static ImageGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   ImageGeom(const ImageGeom& other);
@@ -411,6 +421,14 @@ protected:
    * @param name
    */
   ImageGeom(DataStructure& ds, const std::string& name);
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  ImageGeom(DataStructure& ds, const std::string& name, IdType importId);
 
   /**
    * @brief

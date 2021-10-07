@@ -38,57 +38,58 @@ H5::ErrorType DataArrayFactory::readH5Dataset(H5::DataStructureReader& dataStruc
   }
 
   std::string dataArrayName = datasetReader.getName();
+  auto importId = ReadObjectId(datasetReader);
 
   switch(type)
   {
   case H5::Type::float32: {
     auto* dataStore = DataStore<float>::readHdf5(datasetReader);
-    DataArray<float>::Create(dataStructureReader.getDataStructure(), dataArrayName, dataStore, parentId);
+    DataArray<float>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, dataStore, parentId);
     break;
   }
   case H5::Type::float64: {
     auto* dataStore = DataStore<double>::readHdf5(datasetReader);
-    DataArray<double>::Create(dataStructureReader.getDataStructure(), dataArrayName, dataStore, parentId);
+    DataArray<double>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, dataStore, parentId);
     break;
   }
   case H5::Type::int8: {
     auto* dataStore = DataStore<int8_t>::readHdf5(datasetReader);
-    DataArray<int8_t>::Create(dataStructureReader.getDataStructure(), dataArrayName, dataStore, parentId);
+    DataArray<int8_t>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, dataStore, parentId);
     break;
   }
   case H5::Type::int16: {
     auto* dataStore = DataStore<int16_t>::readHdf5(datasetReader);
-    DataArray<int16_t>::Create(dataStructureReader.getDataStructure(), dataArrayName, dataStore, parentId);
+    DataArray<int16_t>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, dataStore, parentId);
     break;
   }
   case H5::Type::int32: {
     auto* dataStore = DataStore<int32_t>::readHdf5(datasetReader);
-    DataArray<int32_t>::Create(dataStructureReader.getDataStructure(), dataArrayName, dataStore, parentId);
+    DataArray<int32_t>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, dataStore, parentId);
     break;
   }
   case H5::Type::int64: {
     auto* dataStore = DataStore<int64_t>::readHdf5(datasetReader);
-    DataArray<int64_t>::Create(dataStructureReader.getDataStructure(), dataArrayName, dataStore, parentId);
+    DataArray<int64_t>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, dataStore, parentId);
     break;
   }
   case H5::Type::uint8: {
     auto* dataStore = DataStore<uint8_t>::readHdf5(datasetReader);
-    DataArray<uint8_t>::Create(dataStructureReader.getDataStructure(), dataArrayName, dataStore, parentId);
+    DataArray<uint8_t>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, dataStore, parentId);
     break;
   }
   case H5::Type::uint16: {
     auto* dataStore = DataStore<uint16_t>::readHdf5(datasetReader);
-    DataArray<uint16_t>::Create(dataStructureReader.getDataStructure(), dataArrayName, dataStore, parentId);
+    DataArray<uint16_t>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, dataStore, parentId);
     break;
   }
   case H5::Type::uint32: {
     auto* dataStore = DataStore<uint32_t>::readHdf5(datasetReader);
-    DataArray<uint32_t>::Create(dataStructureReader.getDataStructure(), dataArrayName, dataStore, parentId);
+    DataArray<uint32_t>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, dataStore, parentId);
     break;
   }
   case H5::Type::uint64: {
     auto* dataStore = DataStore<uint64_t>::readHdf5(datasetReader);
-    DataArray<uint64_t>::Create(dataStructureReader.getDataStructure(), dataArrayName, dataStore, parentId);
+    DataArray<uint64_t>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, dataStore, parentId);
     break;
   }
   default:

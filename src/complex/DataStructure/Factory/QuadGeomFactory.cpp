@@ -21,7 +21,8 @@ std::string QuadGeomFactory::getDataTypeName() const
 H5::ErrorType QuadGeomFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
 {
   auto name = groupReader.getName();
-  auto geom = QuadGeom::Create(dataStructureReader.getDataStructure(), name, parentId);
+  auto importId = ReadObjectId(groupReader);
+  auto geom = QuadGeom::Import(dataStructureReader.getDataStructure(), name, importId, parentId);
   return geom->readHdf5(dataStructureReader, groupReader);
 }
 

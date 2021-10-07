@@ -20,6 +20,14 @@ DataObject::DataObject(DataStructure& ds, std::string name)
 {
 }
 
+DataObject::DataObject(DataStructure& ds, std::string name, IdType importId)
+: m_Name(std::move(name))
+, m_DataStructure(&ds)
+, m_Id(importId)
+, m_H5Id(-1)
+{
+}
+
 DataObject::DataObject(const DataObject& other)
 : m_Name(other.m_Name)
 , m_DataStructure(other.m_DataStructure)

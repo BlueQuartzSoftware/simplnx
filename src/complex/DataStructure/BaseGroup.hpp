@@ -207,6 +207,14 @@ protected:
   BaseGroup(DataStructure& ds, const std::string& name);
 
   /**
+   * @brief Creates a BaseGroup with the target DataStructure and name.
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  BaseGroup(DataStructure& ds, const std::string& name, IdType importId);
+
+  /**
    * @brief Checks if the provided DataObject can be added to the container.
    * This is a virtual method so that derived classes can modify what can or
    * cannot be added to the container. Returns true if the DataObject can be

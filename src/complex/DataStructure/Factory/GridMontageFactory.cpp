@@ -21,7 +21,8 @@ std::string GridMontageFactory::getDataTypeName() const
 H5::ErrorType GridMontageFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
 {
   std::string name = groupReader.getName();
-  auto montage = GridMontage::Create(dataStructureReader.getDataStructure(), name, parentId);
+  auto importId = ReadObjectId(groupReader);
+  auto montage = GridMontage::Import(dataStructureReader.getDataStructure(), name, importId, parentId);
   return montage->readHdf5(dataStructureReader, groupReader);
 }
 

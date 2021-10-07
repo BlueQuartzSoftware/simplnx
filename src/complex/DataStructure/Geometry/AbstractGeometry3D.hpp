@@ -235,6 +235,14 @@ protected:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  AbstractGeometry3D(DataStructure& ds, const std::string& name, IdType importId);
+
+  /**
+   * @brief
    * @param numQuads
    * @return SharedQuadList*
    */

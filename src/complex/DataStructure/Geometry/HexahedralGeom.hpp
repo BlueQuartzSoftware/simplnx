@@ -26,6 +26,16 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return HexahedralGeom*
+   */
+  static HexahedralGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   HexahedralGeom(const HexahedralGeom& other);
@@ -334,6 +344,14 @@ protected:
    * @param name
    */
   HexahedralGeom(DataStructure& ds, const std::string& name);
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  HexahedralGeom(DataStructure& ds, const std::string& name, IdType importId);
 
   /**
    * @brief
