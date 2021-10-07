@@ -120,6 +120,7 @@ set(CoreParameters
   DataGroupSelectionParameter
   FileSystemPathParameter
   GeneratedFileListParameter
+  MultiArraySelectionParameter
   NumberParameter
   NumericTypeParameter
   StringParameter
