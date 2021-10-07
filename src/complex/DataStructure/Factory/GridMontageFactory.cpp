@@ -18,7 +18,7 @@ std::string GridMontageFactory::getDataTypeName() const
   return "GridMontage";
 }
 
-H5::ErrorType GridMontageFactory::readDataStructureGroup(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType GridMontageFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
 {
   std::string name = groupReader.getName();
   auto montage = GridMontage::Create(dataStructureReader.getDataStructure(), name, parentId);
@@ -26,7 +26,7 @@ H5::ErrorType GridMontageFactory::readDataStructureGroup(H5::DataStructureReader
 }
 
 //------------------------------------------------------------------------------
-H5::ErrorType GridMontageFactory::readDataStructureDataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType GridMontageFactory::readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId)
 {
   return -1;
 }

@@ -18,7 +18,7 @@ std::string HexahedralGeomFactory::getDataTypeName() const
   return "HexahedralGeom";
 }
 
-H5::ErrorType HexahedralGeomFactory::readDataStructureGroup(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType HexahedralGeomFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
 {
   std::string name = groupReader.getName();
   auto geom = HexahedralGeom::Create(dataStructureReader.getDataStructure(), name, parentId);
@@ -26,7 +26,7 @@ H5::ErrorType HexahedralGeomFactory::readDataStructureGroup(H5::DataStructureRea
 }
 
 //------------------------------------------------------------------------------
-H5::ErrorType HexahedralGeomFactory::readDataStructureDataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType HexahedralGeomFactory::readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId)
 {
   return -1;
 }

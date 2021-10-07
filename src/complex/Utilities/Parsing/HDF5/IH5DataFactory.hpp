@@ -34,7 +34,7 @@ public:
    * to create the generated DataObject under.
    * @return H5::ErrorType
    */
-  virtual H5::ErrorType readDataStructureGroup(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId = {}) = 0;
+  virtual H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId = {}) = 0;
 
   /**
    * @brief Creates and adds a DataObject to the provided DataStructure from
@@ -44,7 +44,7 @@ public:
    * @param parentId = {}
    * @return H5::ErrorType
    */
-  virtual H5::ErrorType readDataStructureDataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId = {}) = 0;
+  virtual H5::ErrorType readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId = {}) = 0;
 
   // Copy and move constuctors / operators deleted
   IH5DataFactory(const IH5DataFactory& other) = delete;

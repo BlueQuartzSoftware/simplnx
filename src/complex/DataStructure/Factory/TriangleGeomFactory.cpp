@@ -18,7 +18,7 @@ std::string TriangleGeomFactory::getDataTypeName() const
   return "TriangleGeom";
 }
 
-H5::ErrorType TriangleGeomFactory::readDataStructureGroup(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType TriangleGeomFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
 {
   auto name = groupReader.getName();
   auto geom = TriangleGeom::Create(dataStructureReader.getDataStructure(), name, parentId);
@@ -26,7 +26,7 @@ H5::ErrorType TriangleGeomFactory::readDataStructureGroup(H5::DataStructureReade
 }
 
 //------------------------------------------------------------------------------
-H5::ErrorType TriangleGeomFactory::readDataStructureDataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType TriangleGeomFactory::readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId)
 {
   return -1;
 }

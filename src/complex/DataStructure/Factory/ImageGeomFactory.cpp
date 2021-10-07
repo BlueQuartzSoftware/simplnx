@@ -18,7 +18,7 @@ std::string ImageGeomFactory::getDataTypeName() const
   return "ImageGeom";
 }
 
-H5::ErrorType ImageGeomFactory::readDataStructureGroup(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType ImageGeomFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
 {
   auto name = groupReader.getName();
   auto geom = ImageGeom::Create(dataStructureReader.getDataStructure(), name, parentId);
@@ -26,7 +26,7 @@ H5::ErrorType ImageGeomFactory::readDataStructureGroup(H5::DataStructureReader& 
 }
 
 //------------------------------------------------------------------------------
-H5::ErrorType ImageGeomFactory::readDataStructureDataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType ImageGeomFactory::readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId)
 {
   return -1;
 }

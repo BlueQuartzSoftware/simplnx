@@ -297,7 +297,7 @@ H5::ErrorType DataMap::readH5Group(H5::DataStructureReader& dataStructureReader,
     if(h5Group.isGroup(childName))
     {
       auto childGroup = h5Group.openGroup(childName);
-      if(factory->readDataStructureGroup(dataStructureReader, childGroup, dsParentId) < 0)
+      if(factory->readH5Group(dataStructureReader, childGroup, dsParentId) < 0)
       {
         throw std::runtime_error("Error reading DataMap from HDF5");
       }
@@ -305,7 +305,7 @@ H5::ErrorType DataMap::readH5Group(H5::DataStructureReader& dataStructureReader,
     else if(h5Group.isDataset(childName))
     {
       auto childDataset = h5Group.openDataset(childName);
-      if(factory->readDataStructureDataset(dataStructureReader, childDataset, dsParentId) < 0)
+      if(factory->readH5Dataset(dataStructureReader, childDataset, dsParentId) < 0)
       {
         throw std::runtime_error("Error reading DataMap from HDF5");
       }

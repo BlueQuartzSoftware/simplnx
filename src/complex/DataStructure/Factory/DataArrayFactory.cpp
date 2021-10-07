@@ -23,12 +23,12 @@ std::string DataArrayFactory::getDataTypeName() const
   return "DataArray";
 }
 
-H5::ErrorType DataArrayFactory::readDataStructureGroup(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType DataArrayFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
 {
   return -1;
 }
 
-H5::ErrorType DataArrayFactory::readDataStructureDataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType DataArrayFactory::readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId)
 {
   H5::ErrorType err = 0;
   H5::Type type = datasetReader.getType();
