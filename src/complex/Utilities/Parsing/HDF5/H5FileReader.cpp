@@ -39,9 +39,9 @@ std::string H5::FileReader::getName() const
     return "";
   }
 
-  constexpr size_t size = 256;
+  constexpr size_t size = 1024;
   char buffer[size];
   H5Fget_name(getId(), buffer, size);
 
-  return std::string(buffer);
+  return H5::GetNameFromBuffer(buffer);
 }

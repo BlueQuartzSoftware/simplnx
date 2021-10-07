@@ -118,12 +118,16 @@ public:
     if(dataspaceId >= 0)
     {
       herr_t error = findAndDeleteAttribute();
-
-      if(error >= 0)
+      if(error < 0)
+      {
+        std::cout << "Error Removing Existing Attribute" << std::endl;
+        returnError = error;
+      }
+      else
       {
         /* Create the attribute. */
         //hid_t attributeId = H5Acreate(getId(), getName().c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
-        m_DatasetId = H5Dcreate(getParentId(), getName().c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        createOrOpenDataset(dataType, dataspaceId);
         if(m_DatasetId >= 0)
         {
           /* Write the attribute data. */
@@ -134,6 +138,11 @@ public:
             std::cout << "Error Writing Attribute" << std::endl;
             returnError = error;
           }
+        }
+        else
+        {
+          std::cout << "Error Creating Dataset" << std::endl;
+          returnError = static_cast<herr_t>(m_DatasetId);
         }
         /* Close the attribute. */
         //error = H5Aclose(attributeId);
@@ -165,6 +174,14 @@ protected:
    * @return H5::ErrorType
    */
   H5::ErrorType findAndDeleteAttribute();
+
+  /**
+   * @brief Opens the target HDF5 dataset or creates a new one using the given
+   * datatype and dataspace IDs.
+   * @param typeId
+   * @param dataspaceId
+   */
+  void createOrOpenDataset(H5::IdType typeId, H5::IdType dataspaceId);
 
 private:
 #if 0

@@ -61,11 +61,11 @@ std::string H5::AttributeReader::getName() const
     return "";
   }
 
-  constexpr size_t size = 256;
+  constexpr size_t size = 1024;
   char buffer[size];
   H5Aget_name(getAttributeId(), size, buffer);
 
-  return std::string(buffer);
+  return H5::GetNameFromBuffer(buffer);
 }
 
 H5::Type H5::AttributeReader::getType() const

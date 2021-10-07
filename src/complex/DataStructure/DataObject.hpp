@@ -162,7 +162,7 @@ public:
    * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  virtual H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& parentGroupWriter) const = 0;
+  virtual H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const = 0;
 
 protected:
   /**
@@ -220,7 +220,7 @@ protected:
    * @param objectWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeH5ObjectAttributes(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::ObjectWriter>& objectWriter) const;
+  H5::ErrorType writeH5ObjectAttributes(H5::DataStructureWriter& dataStructureWriter, H5::ObjectWriter& objectWriter) const;
 
 private:
   DataStructure* m_DataStructure = nullptr;

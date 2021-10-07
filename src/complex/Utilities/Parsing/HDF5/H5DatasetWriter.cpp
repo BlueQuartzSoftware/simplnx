@@ -114,6 +114,17 @@ H5::ErrorType H5::DatasetWriter::findAndDeleteAttribute()
   return 0;
 }
 
+void H5::DatasetWriter::createOrOpenDataset(H5::IdType typeId, H5::IdType dataspaceId)
+{
+  HDF_ERROR_HANDLER_OFF
+  m_DatasetId = H5Dopen(getParentId(), getName().c_str(), H5P_DEFAULT);
+  HDF_ERROR_HANDLER_ON
+  if(m_DatasetId < 0) // dataset does not exist so create it
+  {
+    m_DatasetId = H5Dcreate(getParentId(), getName().c_str(), typeId, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  }
+}
+
 bool H5::DatasetWriter::isValid() const
 {
   return (getParentId() > 0) && (m_DatasetName.empty() == false);
@@ -160,14 +171,7 @@ H5::ErrorType H5::DatasetWriter::writeString(const std::string& text)
         if((dataspaceId = H5Screate(H5S_SCALAR)) >= 0)
         {
           /* Create or open the dataset. */
-          HDF_ERROR_HANDLER_OFF
-          m_DatasetId = H5Dopen(getParentId(), getName().c_str(), H5P_DEFAULT);
-          HDF_ERROR_HANDLER_ON
-          if(m_DatasetId < 0) // dataset does not exist so create it
-          {
-            m_DatasetId = H5Dcreate(getParentId(), getName().c_str(), typeId, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-          }
-
+          createOrOpenDataset(typeId, dataspaceId);
           if(m_DatasetId >= 0)
           {
             if(!text.empty())
@@ -184,7 +188,7 @@ H5::ErrorType H5::DatasetWriter::writeString(const std::string& text)
           {
             returnError = 0;
           }
-          H5_CLOSE_H5_DATASET(m_DatasetId, error, returnError, getName())
+          //H5_CLOSE_H5_DATASET(m_DatasetId, error, returnError, getName())
         }
         H5S_CLOSE_H5_DATASPACE(dataspaceId, error, returnError)
       }

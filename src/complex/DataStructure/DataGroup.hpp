@@ -70,10 +70,11 @@ public:
 
   /**
    * @brief Reads the DataStructure group from a target HDF5 group.
+   * @param dataStructureReader
    * @param groupReader
    * @return H5::Error
    */
-  H5::ErrorType readHdf5(const H5::GroupReader& groupReader) override;
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader) override;
 
 protected:
   /**
@@ -98,6 +99,6 @@ protected:
    * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& parentGroupWriter) const override;
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override;
 };
 } // namespace complex

@@ -85,7 +85,7 @@ std::vector<std::string> H5::GroupReader::getChildNames() const
     return childNames;
   }
 
-  constexpr size_t size = 256;
+  constexpr size_t size = 1024;
   char buffer[size];
 
   const size_t numChildren = getNumChildren();
@@ -94,7 +94,7 @@ std::vector<std::string> H5::GroupReader::getChildNames() const
     auto err = H5Gget_objname_by_idx(getId(), i, buffer, size);
     if(err >= 0)
     {
-      childNames.push_back(std::string(buffer));
+      childNames.push_back(GetNameFromBuffer(buffer));
     }
   }
 

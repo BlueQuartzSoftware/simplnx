@@ -373,7 +373,7 @@ public:
    * @param datasetWriter
    * @return H5::ErrorType
    */
-  virtual H5::ErrorType writeHdf5(const std::shared_ptr<H5::DatasetWriter>& datasetWriter) const = 0;
+  virtual H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const = 0;
 
 protected:
   /**

@@ -65,12 +65,12 @@ bool DataGroup::canInsert(const DataObject* obj) const
   return BaseGroup::canInsert(obj);
 }
 
-H5::ErrorType DataGroup::readHdf5(const H5::GroupReader& groupReader)
+H5::ErrorType DataGroup::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  return BaseGroup::readHdf5(groupReader);
+  return BaseGroup::readHdf5(dataStructureReader, groupReader);
 }
 
-H5::ErrorType DataGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& parentGroupWriter) const
+H5::ErrorType DataGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
   return BaseGroup::writeHdf5(dataStructureWriter, parentGroupWriter);
 }

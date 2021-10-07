@@ -49,6 +49,15 @@ enum class Type
 Type COMPLEX_EXPORT getTypeFromId(IdType typeId);
 H5::IdType COMPLEX_EXPORT getIdForType(Type type);
 
+/**
+ * @brief Returns a std::string representation from the provided const char*
+ * buffer. If the buffer contains segments divided by '/', only the last
+ * segment is returned.
+ * @param buffer
+ * @return std::string
+ */
+std::string GetNameFromBuffer(const char* buffer);
+
 inline const std::string DataTypeTag = "DataType";
 static constexpr StringLiteral k_DataTypeTag = "DataType";
 

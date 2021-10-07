@@ -39,7 +39,7 @@ public:
    * @param parentId
    * @return H5::ErrorType
    */
-  H5::ErrorType writeDataObject(const DataObject* dataObject, const std::shared_ptr<GroupWriter>& parentGroup);
+  H5::ErrorType writeDataObject(const DataObject* dataObject, GroupWriter& parentGroup);
 
 protected:
   /**
@@ -51,7 +51,7 @@ protected:
    * @param parentGroup
    * @return H5::ErrorType
   */
-  H5::ErrorType writeDataObjectLink(const DataObject* dataObject, const std::shared_ptr<H5::GroupWriter>& parentGroup);
+  H5::ErrorType writeDataObjectLink(const DataObject* dataObject, H5::GroupWriter& parentGroup);
 
   /**
    * @brief Returns true if the DataObject has been written to the current
@@ -89,7 +89,7 @@ protected:
    * @param objectWriter
    * @param objectId
   */
-  void addH5Writer(const std::shared_ptr<H5::ObjectWriter>& objectWriter, DataObject::IdType objectId);
+  void addH5Writer(H5::ObjectWriter& objectWriter, DataObject::IdType objectId);
 
 private:
   H5::IdType m_ParentId = 0;

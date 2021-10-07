@@ -53,24 +53,24 @@ H5::IdType H5::GroupWriter::getId() const
   return m_GroupId;
 }
 
-std::shared_ptr<H5::GroupWriter> H5::GroupWriter::createGroupWriter(const std::string& childName)
+H5::GroupWriter H5::GroupWriter::createGroupWriter(const std::string& childName)
 {
   if(!isValid())
   {
-    return std::make_shared<GroupWriter>();
+    return GroupWriter();
   }
 
-  return std::make_shared<GroupWriter>(getId(), childName);
+  return GroupWriter(getId(), childName);
 }
 
-std::shared_ptr<H5::DatasetWriter> H5::GroupWriter::createDatasetWriter(const std::string& childName)
+H5::DatasetWriter H5::GroupWriter::createDatasetWriter(const std::string& childName)
 {
   if(!isValid())
   {
-    return std::make_shared<DatasetWriter>();
+    return DatasetWriter();
   }
 
-  return std::make_shared<DatasetWriter>(getId(), childName);
+  return DatasetWriter(getId(), childName);
 }
 
 H5::ErrorType H5::GroupWriter::createLink(const std::string& objectPath)

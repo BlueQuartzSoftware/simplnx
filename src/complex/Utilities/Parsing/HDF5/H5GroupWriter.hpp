@@ -48,18 +48,18 @@ public:
    * target name. Returns an invalid GroupWriter if the group cannot be
    * created.
    * @param childName
-   * @return std::shared_ptr<GroupWriter>
+   * @return GroupWriter
    */
-  std::shared_ptr<GroupWriter> createGroupWriter(const std::string& childName);
+  GroupWriter createGroupWriter(const std::string& childName);
 
   /**
    * @brief Creates a DatasetWriter for writing to a child group with the
    * target name. Returns an invalid DatasetWriter if the dataset cannot be
    * created.
    * @param childName
-   * @return std::shared_ptr<DatasetWriter>
+   * @return DatasetWriter
    */
-  std::shared_ptr<DatasetWriter> createDatasetWriter(const std::string& childName);
+  DatasetWriter createDatasetWriter(const std::string& childName);
 
   /**
    * @brief Creates a link within the group to another HDF5 object specified

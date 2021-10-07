@@ -538,19 +538,14 @@ void HexahedralGeom::setElementSizes(const Float32Array* elementSizes)
   m_HexSizesId = elementSizes->getId();
 }
 
-H5::ErrorType HexahedralGeom::readHdf5(const H5::GroupReader& groupReader)
+H5::ErrorType HexahedralGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  return getDataMap().readH5Group(*getDataStructure(), groupReader, getId());
+  return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
-H5::ErrorType HexahedralGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& parentGroupWriter) const
+H5::ErrorType HexahedralGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
-  if(parentGroupWriter == nullptr)
-  {
-    return -1;
-  }
-
-  auto groupWriter = parentGroupWriter->createGroupWriter(getName());
+  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
   auto err = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
   if(err < 0)
   {

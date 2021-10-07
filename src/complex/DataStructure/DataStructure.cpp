@@ -9,6 +9,7 @@
 #include "complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
 #include "complex/Filter/DataParameter.hpp"
 #include "complex/Filter/ValueParameter.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DataStructureReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
@@ -65,9 +66,24 @@ DataObject::IdType DataStructure::generateId()
   return m_NextId++;
 }
 
+void DataStructure::setNextId(DataObject::IdType nextDataId)
+{
+  m_NextId = nextDataId;
+}
+
 size_t DataStructure::getSize() const
 {
   return m_DataObjects.size();
+}
+
+void DataStructure::clear()
+{
+  auto topDataIds = m_RootGroup.getKeys();
+  for(auto dataId : topDataIds)
+  {
+    removeData(dataId);
+  }
+  m_DataObjects.clear();
 }
 
 std::optional<DataObject::IdType> DataStructure::getId(const DataPath& path) const
@@ -98,6 +114,11 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
   {
     return LinkedPath();
   }
+}
+
+bool DataStructure::containsData(DataObject::IdType id) const
+{
+  return getData(id) != nullptr;
 }
 
 Result<LinkedPath> DataStructure::makePath(const DataPath& path)
@@ -329,6 +350,11 @@ const DataMap& DataStructure::getDataMap() const
   return m_RootGroup;
 }
 
+DataMap& DataStructure::getRootGroup()
+{
+  return m_RootGroup;
+}
+
 bool DataStructure::insertTopLevel(const std::shared_ptr<DataObject>& obj)
 {
   if(obj == nullptr)
@@ -466,22 +492,21 @@ H5::ErrorType DataStructure::writeHdf5(H5::GroupWriter& parentGroupWriter) const
 {
   H5::DataStructureWriter dataStructureWriter;
   auto groupWriter = parentGroupWriter.createGroupWriter(Constants::k_DataStructureTag);
-  H5::ErrorType err = m_RootGroup.writeH5Group(dataStructureWriter, groupWriter);
+  auto idAttribute = groupWriter.createAttribute(Constants::k_NextIdTag);
+  H5::ErrorType err = idAttribute.writeValue(m_NextId);
+  if(err < 0)
+  {
+    return err;
+  }
+
+  err = m_RootGroup.writeH5Group(dataStructureWriter, groupWriter);
   return err;
 }
 
-DataStructure DataStructure::readFromHdf5(const H5::FileReader& fileReader, H5::ErrorType& err)
+DataStructure DataStructure::readFromHdf5(const H5::GroupReader& groupReader, H5::ErrorType& err)
 {
-  DataStructure ds;
-  auto rootGroupReader = fileReader.openGroup(Constants::k_DataStructureTag);
-  if(!rootGroupReader.isValid())
-  {
-    err = -1;
-    return ds;
-  }
-
-  err = ds.m_RootGroup.readH5Group(ds, rootGroupReader);
-  return ds;
+  H5::DataStructureReader dataStructureReader;
+  return dataStructureReader.readH5Group(groupReader, err);
 }
 
 } // namespace complex

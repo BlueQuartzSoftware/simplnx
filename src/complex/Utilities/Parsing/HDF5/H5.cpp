@@ -81,3 +81,14 @@ H5::IdType H5::getIdForType(Type type)
     return -1;
   }
 }
+
+std::string H5::GetNameFromBuffer(const char* buffer)
+{
+  std::string fullname(buffer);
+  size_t substrIndex = fullname.find_last_of('/');
+  if(substrIndex > 0)
+  {
+    substrIndex++;
+  }
+  return fullname.substr(substrIndex);
+}

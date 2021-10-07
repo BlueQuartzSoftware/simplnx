@@ -3,6 +3,7 @@
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DataStructureReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
@@ -268,12 +269,13 @@ DataMap& DataMap::operator=(DataMap&& rhs) noexcept
   return *this;
 }
 
-H5::ErrorType DataMap::readH5Group(DataStructure& ds, const H5::GroupReader& h5Group, const std::optional<DataObject::IdType>& dsParentId)
+H5::ErrorType DataMap::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& h5Group, const std::optional<DataObject::IdType>& dsParentId)
 {
   auto count = h5Group.getNumChildren();
   auto childrenNames = h5Group.getChildNames();
   for(const auto& childName : childrenNames)
   {
+    auto errorCode = dataStructureReader.readObjectFromGroup(h5Group, childName, dsParentId);
     IH5DataFactory* factory = nullptr;
 
     // Get IH5DataFactory
@@ -295,7 +297,7 @@ H5::ErrorType DataMap::readH5Group(DataStructure& ds, const H5::GroupReader& h5G
     if(h5Group.isGroup(childName))
     {
       auto childGroup = h5Group.openGroup(childName);
-      if(factory->readDataStructureGroup(ds, childGroup, dsParentId) < 0)
+      if(factory->readDataStructureGroup(dataStructureReader, childGroup, dsParentId) < 0)
       {
         throw std::runtime_error("Error reading DataMap from HDF5");
       }
@@ -303,7 +305,7 @@ H5::ErrorType DataMap::readH5Group(DataStructure& ds, const H5::GroupReader& h5G
     else if(h5Group.isDataset(childName))
     {
       auto childDataset = h5Group.openDataset(childName);
-      if(factory->readDataStructureDataset(ds, childDataset, dsParentId) < 0)
+      if(factory->readDataStructureDataset(dataStructureReader, childDataset, dsParentId) < 0)
       {
         throw std::runtime_error("Error reading DataMap from HDF5");
       }
@@ -312,7 +314,7 @@ H5::ErrorType DataMap::readH5Group(DataStructure& ds, const H5::GroupReader& h5G
   return 0;
 }
 
-H5::ErrorType DataMap::writeH5Group(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& groupWriter) const
+H5::ErrorType DataMap::writeH5Group(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& groupWriter) const
 {
   for(const auto& [id, dataObject] : *this)
   {

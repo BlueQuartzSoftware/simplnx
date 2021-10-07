@@ -16,6 +16,7 @@ class DataObject;
 
 namespace H5
 {
+class DataStructureReader;
 class DataStructureWriter;
 class GroupReader;
 class GroupWriter;
@@ -260,19 +261,19 @@ public:
 
   /**
    * @brief Fills the DataMap with values taken from the specified HDF5 group ID.
-   * @param ds Top-level DataStructure
+   * @param dataStructureReader
    * @param h5Group
    * @param dsParentId = {}
    * @return H5::ErrorType
    */
-  H5::ErrorType readH5Group(DataStructure& ds, const H5::GroupReader& h5Group, const std::optional<IdType>& dsParentId = {});
+  H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& h5Group, const std::optional<IdType>& dsParentId = {});
 
   /**
    * @brief Writes the DataMap and its DataObjects to the target HDF5 group.
    * @param groupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeH5Group(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& groupWriter) const;
+  H5::ErrorType writeH5Group(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& groupWriter) const;
 
 private:
   MapType m_Map;

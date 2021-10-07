@@ -141,19 +141,19 @@ H5::IdType DataObject::getH5Id() const
   return m_H5Id;
 }
 
-H5::ErrorType DataObject::writeH5ObjectAttributes(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::ObjectWriter>& objectWriter) const
+H5::ErrorType DataObject::writeH5ObjectAttributes(H5::DataStructureWriter& dataStructureWriter, H5::ObjectWriter& objectWriter) const
 {
   // Add to DataStructureWriter for use in linking
   dataStructureWriter.addH5Writer(objectWriter, getId());
 
-  auto typeAttributeWriter = objectWriter->createAttribute(complex::Constants::k_ObjectTypeTag);
+  auto typeAttributeWriter = objectWriter.createAttribute(complex::Constants::k_ObjectTypeTag);
   auto error = typeAttributeWriter.writeString(getTypeName());
   if(error < 0)
   {
     return error;
   }
 
-  auto idAttributeWriter = objectWriter->createAttribute(complex::Constants::k_ObjectIdTag);
+  auto idAttributeWriter = objectWriter.createAttribute(complex::Constants::k_ObjectIdTag);
   error = idAttributeWriter.writeValue(getId());
 
   return error;

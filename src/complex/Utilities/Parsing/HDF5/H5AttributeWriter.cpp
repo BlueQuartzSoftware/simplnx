@@ -41,7 +41,7 @@ H5::ErrorType H5::AttributeWriter::findAndDeleteAttribute()
 
 bool H5::AttributeWriter::isValid() const
 {
-  return (getObjectId() > 0) || (m_AttributeName.empty() != true);
+  return (getObjectId() > 0) && (m_AttributeName.empty() != true);
 }
 
 H5::IdType H5::AttributeWriter::getObjectId() const
@@ -61,11 +61,11 @@ std::string H5::AttributeWriter::getObjectName() const
     return "";
   }
 
-  const size_t size = 256;
+  const size_t size = 1024;
   char buffer[size];
   H5Iget_name(getObjectId(), buffer, size);
 
-  return std::string(buffer);
+  return H5::GetNameFromBuffer(buffer);
 }
 
 std::string H5::AttributeWriter::getAttributeName() const

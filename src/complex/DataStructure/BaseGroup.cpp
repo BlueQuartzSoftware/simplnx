@@ -147,14 +147,14 @@ BaseGroup::ConstIterator BaseGroup::end() const
   return m_DataMap.end();
 }
 
-H5::ErrorType BaseGroup::readHdf5(const H5::GroupReader& groupReader)
+H5::ErrorType BaseGroup::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  return m_DataMap.readH5Group(*getDataStructure(), groupReader, getId());
+  return m_DataMap.readH5Group(dataStructureReader, groupReader, getId());
 }
 
-H5::ErrorType BaseGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& parentGroupWriter) const
+H5::ErrorType BaseGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
-  auto groupWriter = parentGroupWriter->createGroupWriter(getName());
+  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
   auto error = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
   if(error < 0)
   {

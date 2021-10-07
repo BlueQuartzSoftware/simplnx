@@ -235,17 +235,18 @@ protected:
 
   /**
    * @brief Reads the DataStructure group from a target HDF5 group.
+   * @param dataStructureReader
    * @param groupReader
    * @return H5::Error
    */
-  virtual H5::ErrorType readHdf5(const H5::GroupReader& groupReader);
+  virtual H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader);
 
   /**
    * @brief Writes the contained DataObjects to the target HDF5 group.
    * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, const std::shared_ptr<H5::GroupWriter>& parentGroupWriter) const override;
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override;
 
 private:
   DataMap m_DataMap;
