@@ -7,7 +7,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
-#include "complex/Utilities/Parsing/HDF5/IH5DataFactory.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5IDataFactory.hpp"
 
 using namespace complex;
 

@@ -13,9 +13,10 @@
 #include "complex/DataStructure/Factory/TriangleGeomFactory.hpp"
 #include "complex/DataStructure/Factory/VertexGeomFactory.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
-#include "complex/Utilities/Parsing/HDF5/IH5DataFactory.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5IDataFactory.hpp"
 
 using namespace complex;
+using namespace complex::H5;
 
 H5::DataFactoryManager::DataFactoryManager()
 {
@@ -40,19 +41,19 @@ void H5::DataFactoryManager::addCoreFactories()
   addFactory(new VertexGeomFactory());
 }
 
-void H5::DataFactoryManager::addFactory(IH5DataFactory* factory)
+void H5::DataFactoryManager::addFactory(IDataFactory* factory)
 {
   if(factory == nullptr)
   {
     return;
   }
 
-  m_Factories[factory->getDataTypeName()] = std::shared_ptr<IH5DataFactory>(factory);
+  m_Factories[factory->getDataTypeName()] = std::shared_ptr<IDataFactory>(factory);
 }
 
-std::vector<IH5DataFactory*> H5::DataFactoryManager::getFactories() const
+std::vector<H5::IDataFactory*> H5::DataFactoryManager::getFactories() const
 {
-  std::vector<IH5DataFactory*> factories;
+  std::vector<H5::IDataFactory*> factories;
   for(auto iter : m_Factories)
   {
     factories.push_back(iter.second.get());
@@ -60,11 +61,11 @@ std::vector<IH5DataFactory*> H5::DataFactoryManager::getFactories() const
   return factories;
 }
 
-IH5DataFactory* H5::DataFactoryManager::getFactory(const std::string& typeName) const
+H5::IDataFactory* H5::DataFactoryManager::getFactory(const std::string& typeName) const
 {
   if(m_Factories.find(typeName) == m_Factories.end())
   {
-    throw std::runtime_error("Could not find IH5DataFactory for " + typeName);
+    throw std::runtime_error("Could not find H5::IDataFactory for " + typeName);
   }
   return m_Factories.at(typeName).get();
 }

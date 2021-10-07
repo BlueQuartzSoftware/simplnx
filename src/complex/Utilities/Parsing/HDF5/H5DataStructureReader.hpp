@@ -8,11 +8,11 @@
 namespace complex
 {
 class DataFactoryManager;
-class IH5DataFactory;
 
 namespace H5
 {
 class GroupReader;
+class IDataFactory;
 
 class DataStructureReader
 {
@@ -29,7 +29,7 @@ public:
 
 protected:
   H5::DataFactoryManager* getDataReader() const;
-  IH5DataFactory* getDataFactory(const std::string& typeName) const;
+  H5::IDataFactory* getDataFactory(const std::string& typeName) const;
 
 private:
   H5::DataFactoryManager* m_FactoryManager = nullptr;

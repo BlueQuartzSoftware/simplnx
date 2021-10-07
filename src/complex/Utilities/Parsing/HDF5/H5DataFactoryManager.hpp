@@ -9,10 +9,10 @@
 
 namespace complex
 {
-class IH5DataFactory;
-
 namespace H5
 {
+class IDataFactory;
+
 class COMPLEX_EXPORT DataFactoryManager
 {
 public:
@@ -23,24 +23,24 @@ public:
   virtual ~DataFactoryManager();
 
   /**
-   * @brief Adds the specified IH5DataFactory for use when reading HDF5 files.
+   * @brief Adds the specified IDataFactory for use when reading HDF5 files.
    * @param factory
    */
-  void addFactory(IH5DataFactory* factory);
+  void addFactory(IDataFactory* factory);
 
   /**
    * @brief Returns a vector of available IH5DataFactories.
-   * @return std::vector<IH5DataFactory*>
+   * @return std::vector<IDataFactory*>
    */
-  std::vector<IH5DataFactory*> getFactories() const;
+  std::vector<IDataFactory*> getFactories() const;
 
   /**
    * @brief Returns a pointer to the factory used for creating a specific
    * DataObject subclass.
    * @param typeName
-   * @return IH5DataFactory*
+   * @return IDataFactory*
    */
-  IH5DataFactory* getFactory(const std::string& typeName) const;
+  IDataFactory* getFactory(const std::string& typeName) const;
 
 private:
   /**
@@ -50,7 +50,7 @@ private:
 
   ////////////
   // Variables
-  std::map<std::string, std::shared_ptr<IH5DataFactory>> m_Factories;
+  std::map<std::string, std::shared_ptr<IDataFactory>> m_Factories;
 };
 } // namespace H5
 } // namespace complex

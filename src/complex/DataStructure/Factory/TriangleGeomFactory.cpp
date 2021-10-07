@@ -5,9 +5,10 @@
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
+using namespace complex::H5;
 
 TriangleGeomFactory::TriangleGeomFactory()
-: IH5DataFactory()
+: H5::IDataFactory()
 {
 }
 

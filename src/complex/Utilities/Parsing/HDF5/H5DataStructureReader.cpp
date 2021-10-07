@@ -3,7 +3,7 @@
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataMap.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/IH5DataFactory.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5IDataFactory.hpp"
 
 using namespace complex;
 
@@ -40,9 +40,9 @@ complex::DataStructure H5::DataStructureReader::readH5Group(const H5::GroupReade
 
 H5::ErrorType H5::DataStructureReader::readObjectFromGroup(const H5::GroupReader& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId)
 {
-  IH5DataFactory* factory = nullptr;
+  H5::IDataFactory* factory = nullptr;
 
-  // Get IH5DataFactory and check DataObject ID
+  // Get H5::IDataFactory and check DataObject ID
   {
     auto childObj = parentGroup.openObject(objectName);
     
@@ -117,7 +117,7 @@ H5::DataFactoryManager* H5::DataStructureReader::getDataReader() const
   return Application::Instance()->getH5FactoryManager();
 }
 
-IH5DataFactory* H5::DataStructureReader::getDataFactory(const std::string& typeName) const
+H5::IDataFactory* H5::DataStructureReader::getDataFactory(const std::string& typeName) const
 {
   return getDataReader()->getFactory(typeName);
 }

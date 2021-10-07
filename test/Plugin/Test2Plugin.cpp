@@ -17,7 +17,7 @@ Test2Plugin::Test2Plugin()
 
 Test2Plugin::~Test2Plugin() = default;
 
-std::vector<complex::IH5DataFactory*> Test2Plugin::getDataFactories() const
+std::vector<complex::H5::IDataFactory*> Test2Plugin::getDataFactories() const
 {
   return {};
 }

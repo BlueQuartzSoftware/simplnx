@@ -10,9 +10,10 @@
 #include <numeric>
 
 using namespace complex;
+using namespace complex::H5;
 
 DataArrayFactory::DataArrayFactory()
-: IH5DataFactory()
+: IDataFactory()
 {
 }
 

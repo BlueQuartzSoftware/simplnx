@@ -1,10 +1,12 @@
 #pragma once
 
-#include "complex/Utilities/Parsing/HDF5/IH5DataFactory.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5IDataFactory.hpp"
 
 namespace complex
 {
-class COMPLEX_EXPORT DataArrayFactory : public IH5DataFactory
+namespace H5
+{
+class COMPLEX_EXPORT DataArrayFactory : public IDataFactory
 {
 public:
   DataArrayFactory();
@@ -37,4 +39,5 @@ public:
    */
   H5::ErrorType readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId = {}) override;
 };
+} // namespace H5
 } // namespace complex

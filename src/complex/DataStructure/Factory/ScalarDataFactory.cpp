@@ -6,9 +6,10 @@
 #include "complex/Utilities/Parsing/HDF5/H5ObjectReader.hpp"
 
 using namespace complex;
+using namespace complex::H5;
 
 ScalarDataFactory::ScalarDataFactory()
-: IH5DataFactory()
+: H5::IDataFactory()
 {
 }
 

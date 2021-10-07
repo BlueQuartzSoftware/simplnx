@@ -5,9 +5,10 @@
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
+using namespace complex::H5;
 
 GridMontageFactory::GridMontageFactory()
-: IH5DataFactory()
+: IDataFactory()
 {
 }
 

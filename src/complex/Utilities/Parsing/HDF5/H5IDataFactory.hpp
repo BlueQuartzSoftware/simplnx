@@ -13,12 +13,15 @@ class DataStructureReader;
 class DatasetReader;
 class GroupReader;
 class ObjectReader;
-} // namespace H5
 
-class COMPLEX_EXPORT IH5DataFactory
+/**
+ * @class IDataFactory
+ * @brief 
+*/
+class COMPLEX_EXPORT IDataFactory
 {
 public:
-  virtual ~IH5DataFactory();
+  virtual ~IDataFactory();
 
   /**
    * @brief Returns the name of the DataObject subclass that the factory is designed for.
@@ -48,16 +51,16 @@ public:
   virtual H5::ErrorType readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId = {}) = 0;
 
   // Copy and move constuctors / operators deleted
-  IH5DataFactory(const IH5DataFactory& other) = delete;
-  IH5DataFactory(IH5DataFactory&& other) = delete;
-  IH5DataFactory& operator=(const IH5DataFactory& rhs) = delete;
-  IH5DataFactory& operator=(IH5DataFactory&& rhs) = delete;
+  IDataFactory(const IDataFactory& other) = delete;
+  IDataFactory(IDataFactory&& other) = delete;
+  IDataFactory& operator=(const IDataFactory& rhs) = delete;
+  IDataFactory& operator=(IDataFactory&& rhs) = delete;
 
 protected:
   /**
    * @brief Default constructor
    */
-  IH5DataFactory();
+  IDataFactory();
 
   /**
    * @brief Reads and returns the target DataObject ID from a given
@@ -67,4 +70,5 @@ protected:
    */
   static DataObject::IdType ReadObjectId(const H5::ObjectReader& dataReader);
 };
+} // namespace H5
 } // namespace complex
