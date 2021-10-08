@@ -52,9 +52,14 @@ void Parameters::insert(IParameter::UniquePointer parameter)
   m_LayoutVector.push_back(ParameterKey{name});
 }
 
-void Parameters::insert(Separator name)
+void Parameters::insert(Separator separator)
 {
-  m_LayoutVector.push_back(std::move(name));
+  insertSeparator(std::move(separator));
+}
+
+void Parameters::insertSeparator(Separator separator)
+{
+  m_LayoutVector.push_back(std::move(separator));
 }
 
 AnyParameter& Parameters::at(std::string_view key)
