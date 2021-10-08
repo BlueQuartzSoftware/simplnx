@@ -20,7 +20,7 @@ class DataStructureReader;
 class DataStructureWriter;
 class GroupReader;
 class GroupWriter;
-}
+} // namespace H5
 
 /**
  * @class DataMap

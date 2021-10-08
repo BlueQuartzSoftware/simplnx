@@ -16,9 +16,9 @@ class GroupReader;
 class ObjectReader;
 
 /**
- * @class IDataFactory
- * @brief 
-*/
+ * @class H5::IDataFactory
+ * @brief
+ */
 class COMPLEX_EXPORT IDataFactory
 {
 public:

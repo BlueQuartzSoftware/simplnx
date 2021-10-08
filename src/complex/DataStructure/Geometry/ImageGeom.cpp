@@ -577,7 +577,7 @@ H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter,
   {
     return err;
   }
-  
+
   auto originAttr = groupWriter.createAttribute(k_H5_ORIGIN);
   err = originAttr.writeVector(dims, originVector);
   if(err < 0)

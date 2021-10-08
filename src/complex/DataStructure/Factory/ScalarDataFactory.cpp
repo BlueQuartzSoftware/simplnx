@@ -21,7 +21,8 @@ std::string ScalarDataFactory::getDataTypeName() const
 }
 
 template <typename T>
-H5::ErrorType readH5Scalar(DataStructure& dataStructure, const H5::AttributeReader& attributeReader, const std::string& name, DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType readH5Scalar(DataStructure& dataStructure, const H5::AttributeReader& attributeReader, const std::string& name, DataObject::IdType importId,
+                           const std::optional<DataObject::IdType>& parentId)
 {
   H5::ErrorType err = 0;
   T buffer = attributeReader.readAsValue<T>();

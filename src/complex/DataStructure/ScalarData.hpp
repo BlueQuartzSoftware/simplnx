@@ -53,7 +53,7 @@ public:
    *
    * If the ScalarData cannot be created, this method returns nullptr.
    * Otherwise, a pointer to the created ScalarData will be returned.
-   * 
+   *
    * Unlike Create, Import allows setting the DataObject ID for use in
    * importing DataObjects from external sources.
    * @param ds

@@ -46,7 +46,7 @@ public:
    * If the created montage cannot be placed under the target parent, then this
    * method returns nullptr. Otherwise, this method returns a pointer to the
    * created montage.
-   * 
+   *
    * Unlike Create, Import allows the DataObject ID to be set for use in
    * importing data.
    * @param ds

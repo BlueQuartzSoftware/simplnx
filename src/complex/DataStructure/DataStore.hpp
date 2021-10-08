@@ -358,7 +358,7 @@ public:
 
     // Create DataStore
     auto dataStore = new complex::DataStore<T>(tupleShape, componentShape);
-    
+
     auto count = dataStore->getSize();
     auto dataVector = datasetReader.readAsVector<T>();
     auto dataPtr = new value_type[count];
