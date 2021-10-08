@@ -26,6 +26,7 @@ add_executable(complex_test MACOSX_BUNDLE
   PipelineTest.cpp
   PluginTest.cpp
   FilePathGeneratorTest.cpp
+  ParametersTest.cpp
 )
 
 target_link_libraries(complex_test
