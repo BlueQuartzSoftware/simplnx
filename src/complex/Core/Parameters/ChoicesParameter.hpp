@@ -87,6 +87,14 @@ public:
    */
   Choices choices() const;
 
+  /**
+   * @brief Checks whether another parameter would be active when this parameter has the given value.
+   * @param parameterValue The current value corresponding to this parameter.
+   * @param associatedValue The value under which the grouped parameter is active.
+   * @return
+   */
+  bool checkActive(const std::any& parameterValue, const std::any& associatedValue) const;
+
 private:
   ValueType m_DefaultValue = {};
   Choices m_Choices = {};

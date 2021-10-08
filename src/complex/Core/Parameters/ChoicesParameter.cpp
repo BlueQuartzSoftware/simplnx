@@ -1,8 +1,28 @@
 #include "ChoicesParameter.hpp"
 
 #include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <nlohmann/json.hpp>
+
+namespace fmt
+{
+template <>
+struct formatter<complex::Error>
+{
+  template <typename ParseContext>
+  constexpr auto parse(ParseContext& ctx)
+  {
+    return ctx.begin();
+  }
+
+  template <typename FormatContext>
+  auto format(const complex::Error& error, FormatContext& ctx)
+  {
+    return format_to(ctx.out(), "Error({}, {})", error.code, error.message);
+  }
+};
+} // namespace fmt
 
 namespace complex
 {
@@ -80,5 +100,18 @@ Result<> ChoicesParameter::validateIndex(ValueType index) const
 ChoicesParameter::Choices ChoicesParameter::choices() const
 {
   return m_Choices;
+}
+
+bool ChoicesParameter::checkActive(const std::any& parameterValue, const std::any& associatedValue) const
+{
+  auto value = std::any_cast<ValueType>(parameterValue);
+  Result<> result = validateIndex(value);
+  if(result.invalid())
+  {
+    throw std::runtime_error(fmt::format("Parameter value is not valid: {}", fmt::join(result.errors(), " | ")));
+  }
+
+  auto index = std::any_cast<ValueType>(associatedValue);
+  return value == index;
 }
 } // namespace complex
