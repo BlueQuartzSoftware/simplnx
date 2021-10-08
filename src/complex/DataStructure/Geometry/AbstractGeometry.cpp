@@ -2,6 +2,8 @@
 
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5ObjectReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5ObjectWriter.hpp"
 
 using namespace complex;
 
@@ -193,4 +195,38 @@ AbstractGeometry::SharedEdgeList* AbstractGeometry::createSharedEdgeList(usize n
   SharedEdgeList* edges = DataArray<MeshIndexType>::Create(*getDataStructure(), "Shared Edge List", dataStore, getId());
   edges->getDataStore()->fill(0.0);
   return edges;
+}
+
+std::optional<DataObject::IdType> AbstractGeometry::ReadH5DataId(const H5::ObjectReader& objectReader, const std::string& attributeName)
+{
+  if(!objectReader.isValid())
+  {
+    return {};
+  }
+
+  auto attribute = objectReader.getAttribute(attributeName);
+  IdType id = attribute.readAsValue<IdType>();
+  if(id == 0)
+  {
+    return {};
+  }
+  return id;
+}
+
+H5::ErrorType AbstractGeometry::WriteH5DataId(H5::ObjectWriter& objectWriter, const std::optional<DataObject::IdType>& dataId, const std::string& attributeName)
+{
+  if(!objectWriter.isValid())
+  {
+    return -1;
+  }
+
+  auto attribute = objectWriter.createAttribute(attributeName);
+  if(dataId.has_value())
+  {
+    return attribute.writeValue<IdType>(dataId.value());
+  }
+  else
+  {
+    return attribute.writeValue<IdType>(0);
+  }
 }

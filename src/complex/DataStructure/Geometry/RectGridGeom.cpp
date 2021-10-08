@@ -6,8 +6,18 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
+
+namespace H5Constants
+{
+const std::string XBoundsTag = "X Bounds ID";
+const std::string YBoundsTag = "Y Bounds ID";
+const std::string ZBoundsTag = "Z Bounds ID";
+const std::string VoxelSizesTag = "Voxel Sizes ID";
+const std::string DimensionsTag = "Dimensions";
+} // namespace H5Constants
 
 RectGridGeom::RectGridGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometryGrid(ds, name)
@@ -600,16 +610,71 @@ void RectGridGeom::setElementSizes(const Float32Array* elementSizes)
 
 H5::ErrorType RectGridGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
+  // Read Dimensions
+  auto volumeAttribute = groupReader.getAttribute("Dimensions");
+  if(!volumeAttribute.isValid())
+  {
+    return -1;
+  }
+  std::vector<size_t> volumeDimensions = volumeAttribute.readAsVector<size_t>();
+  setDimensions(volumeDimensions);
+
+  // Read DataObject IDs
+  m_xBoundsId = ReadH5DataId(groupReader, H5Constants::XBoundsTag);
+  m_yBoundsId = ReadH5DataId(groupReader, H5Constants::YBoundsTag);
+  m_zBoundsId = ReadH5DataId(groupReader, H5Constants::ZBoundsTag);
+  m_VoxelSizesId = ReadH5DataId(groupReader, H5Constants::VoxelSizesTag);
+
   return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
 H5::ErrorType RectGridGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto err = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
-  if(err < 0)
+  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  if(errorCode < 0)
   {
-    return err;
+    return errorCode;
+  }
+
+  // Write dimensions
+  H5::AttributeWriter::DimsVector dims = {3};
+  std::vector<size_t> dimsVector(3);
+  for(size_t i = 0; i < 3; i++)
+  {
+    dimsVector[i] = m_Dimensions[i];
+  }
+
+  auto dimensionAttr = groupWriter.createAttribute(H5Constants::DimensionsTag);
+  errorCode = dimensionAttr.writeVector(dims, dimsVector);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  // Write DataObject IDs
+  errorCode = WriteH5DataId(groupWriter, m_xBoundsId, H5Constants::XBoundsTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_yBoundsId, H5Constants::YBoundsTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_zBoundsId, H5Constants::ZBoundsTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_VoxelSizesId, H5Constants::VoxelSizesTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
   }
 
   return getDataMap().writeH5Group(dataStructureWriter, groupWriter);

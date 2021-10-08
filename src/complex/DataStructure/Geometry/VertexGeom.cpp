@@ -6,9 +6,16 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 using namespace complex;
+
+namespace H5Constants
+{
+const std::string VertexListTag = "Vertex List ID";
+const std::string VertexSizesTag = "Vertex Sizes ID";
+} // namespace Constants
 
 VertexGeom::VertexGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry(ds, name)
@@ -313,44 +320,32 @@ void VertexGeom::setElementSizes(const Float32Array* elementSizes)
 
 H5::ErrorType VertexGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
+  m_VertexListId = ReadH5DataId(groupReader, H5Constants::VertexListTag);
+  m_VertexSizesId = ReadH5DataId(groupReader, H5Constants::VertexSizesTag);
+
   return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
 H5::ErrorType VertexGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  herr_t err = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
-  if(err < 0)
+  herr_t errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  if(errorCode < 0)
   {
-    return err;
+    return errorCode;
   }
 
-  auto vertexListAttr = groupWriter.createAttribute("VertexListId");
-  if(m_VertexListId.has_value())
+  // Write DataObject IDs
+  errorCode = WriteH5DataId(groupWriter, m_VertexListId, H5Constants::VertexListTag);
+  if(errorCode < 0)
   {
-    err = vertexListAttr.writeValue<DataObject::IdType>(m_VertexListId.value());
-  }
-  else
-  {
-    err = vertexListAttr.writeValue<DataObject::IdType>(0);
-  }
-  if(err < 0)
-  {
-    return err;
+    return errorCode;
   }
 
-  auto vertexSizesAttr = groupWriter.createAttribute("VertexSizesId");
-  if(m_VertexSizesId.has_value())
+  errorCode = WriteH5DataId(groupWriter, m_VertexSizesId, H5Constants::VertexSizesTag);
+  if(errorCode < 0)
   {
-    err = vertexSizesAttr.writeValue<DataObject::IdType>(m_VertexSizesId.value());
-  }
-  else
-  {
-    err = vertexSizesAttr.writeValue<DataObject::IdType>(0);
-  }
-  if(err < 0)
-  {
-    return err;
+    return errorCode;
   }
 
   return getDataMap().writeH5Group(dataStructureWriter, groupWriter);

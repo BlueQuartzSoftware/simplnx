@@ -28,6 +28,11 @@ enum class InfoStringFormat : uint8
   UnknownFormat
 };
 
+namespace H5
+{
+class ObjectReader;
+} // namespace H5
+
 /**
  * @class AbstractGeometry
  * @brief
@@ -381,6 +386,24 @@ protected:
    * @return bool
    */
   bool canInsert(const DataObject* obj) const override;
+
+  /**
+   * @brief Reads an optional DataObject ID from HDF5.
+   * @param objectReader
+   * @param attributeName
+   * @return std::optional<DataObject::IdType>
+   */
+  static std::optional<DataObject::IdType> ReadH5DataId(const H5::ObjectReader& objectReader, const std::string& attributeName);
+
+  /**
+   * @brief Writes an optional DataObject ID to HDF5. Returns an error code if
+   * a problem occurred. Returns 0 otherwise.
+   * @param objectWriter
+   * @param dataId
+   * @param attributeName
+   * @return H5::ErrorType
+   */
+  static H5::ErrorType WriteH5DataId(H5::ObjectWriter& objectWriter, const std::optional<DataObject::IdType>& dataId, const std::string& attributeName);
 
 private:
   LengthUnit m_Units = LengthUnit::Meter;

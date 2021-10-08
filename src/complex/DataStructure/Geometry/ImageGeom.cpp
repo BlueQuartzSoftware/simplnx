@@ -15,6 +15,7 @@ namespace
 constexpr const char k_H5_DIMENSIONS[] = "_DIMENSIONS";
 constexpr const char k_H5_ORIGIN[] = "_ORIGIN";
 constexpr const char k_H5_SPACING[] = "_SPACING";
+constexpr const char k_VoxelSizesTag[] = "Voxel Sizes ID";
 } // namespace
 
 ImageGeom::ImageGeom(DataStructure& ds, const std::string& name)
@@ -545,16 +546,19 @@ H5::ErrorType ImageGeom::readHdf5(H5::DataStructureReader& dataStructureReader, 
   setSpacing(spacing);
   setOrigin(origin);
 
+  // Read DataObject ID
+  m_VoxelSizesId = ReadH5DataId(groupReader, k_VoxelSizesTag);
+
   return 0;
 }
 
 H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  herr_t err = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
-  if(err < 0)
+  herr_t errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  if(errorCode < 0)
   {
-    return err;
+    return errorCode;
   }
 
   SizeVec3 volDims = getDimensions();
@@ -572,24 +576,31 @@ H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter,
   }
 
   auto dimensionAttr = groupWriter.createAttribute(k_H5_DIMENSIONS);
-  err = dimensionAttr.writeVector(dims, volDimsVector);
-  if(err < 0)
+  errorCode = dimensionAttr.writeVector(dims, volDimsVector);
+  if(errorCode < 0)
   {
-    return err;
+    return errorCode;
   }
 
   auto originAttr = groupWriter.createAttribute(k_H5_ORIGIN);
-  err = originAttr.writeVector(dims, originVector);
-  if(err < 0)
+  errorCode = originAttr.writeVector(dims, originVector);
+  if(errorCode < 0)
   {
-    return err;
+    return errorCode;
   }
 
   auto spacingAttr = groupWriter.createAttribute(k_H5_SPACING);
-  err = spacingAttr.writeVector(dims, spacingVector);
-  if(err < 0)
+  errorCode = spacingAttr.writeVector(dims, spacingVector);
+  if(errorCode < 0)
   {
-    return err;
+    return errorCode;
+  }
+
+  // Write DataObject ID
+  errorCode = WriteH5DataId(groupWriter, m_VoxelSizesId, k_VoxelSizesTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
   }
 
   return getDataMap().writeH5Group(dataStructureWriter, groupWriter);

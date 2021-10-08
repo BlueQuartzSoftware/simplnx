@@ -5,8 +5,19 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
+
+namespace H5Constants
+{
+const std::string VertexListTag = "Vertex List ID";
+const std::string EdgeListTag = "Edge List ID";
+const std::string EdgesContainingVertTag = "Edges Containing Vertex ID";
+const std::string EdgeNeighborsTag = "Edge Neighbors ID";
+const std::string EdgeCentroidTag = "Edge Centroids ID";
+const std::string EdgeSizesTag = "Edge Sizes ID";
+} // namespace H5Constants
 
 EdgeGeom::EdgeGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry(ds, name)
@@ -496,6 +507,13 @@ void EdgeGeom::setElementSizes(const Float32Array* elementSizes)
 
 H5::ErrorType EdgeGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
+  m_VertexListId = ReadH5DataId(groupReader, H5Constants::VertexListTag);
+  m_EdgeListId = ReadH5DataId(groupReader, H5Constants::EdgeListTag);
+  m_EdgesContainingVertId = ReadH5DataId(groupReader, H5Constants::EdgesContainingVertTag);
+  m_EdgeNeighborsId = ReadH5DataId(groupReader, H5Constants::EdgeNeighborsTag);
+  m_EdgeCentroidsId = ReadH5DataId(groupReader, H5Constants::EdgeCentroidTag);
+  m_EdgeSizesId = ReadH5DataId(groupReader, H5Constants::EdgeSizesTag);
+
   return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
@@ -506,6 +524,42 @@ H5::ErrorType EdgeGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, 
   if(err < 0)
   {
     return err;
+  }
+
+  auto errorCode = WriteH5DataId(groupWriter, m_VertexListId, H5Constants::VertexListTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_EdgeListId, H5Constants::EdgeListTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_EdgesContainingVertId, H5Constants::EdgesContainingVertTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_EdgeNeighborsId, H5Constants::EdgeNeighborsTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_EdgeCentroidsId, H5Constants::EdgeCentroidTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_EdgeSizesId, H5Constants::EdgeSizesTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
   }
 
   return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
