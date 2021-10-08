@@ -77,6 +77,12 @@ public:
   FilterList* getFilterList() const;
 
   /**
+   * @brief Convenience method to return the loaded plugins
+   * @return
+   */
+  std::unordered_set<AbstractPlugin*> getPluginList() const;
+
+  /**
    * @brief Returns a pointer to the JsonPipelineBuilder. It is the caller's
    * responsibility to delete the pointer when they are done with it.
    * @return JsonPipelineBuilder*

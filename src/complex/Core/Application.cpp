@@ -97,6 +97,10 @@ Application::~Application()
 
 Application* Application::Instance()
 {
+  if(nullptr == s_Instance)
+  {
+    Application* app = new Application();
+  }
   return s_Instance;
 }
 
@@ -131,6 +135,11 @@ void Application::loadPlugins(const std::filesystem::path& pluginDir)
 FilterList* Application::getFilterList() const
 {
   return m_FilterList.get();
+}
+
+std::unordered_set<AbstractPlugin*> Application::getPluginList() const
+{
+  return m_FilterList->getLoadedPlugins();
 }
 
 JsonPipelineBuilder* Application::getPipelineBuilder() const

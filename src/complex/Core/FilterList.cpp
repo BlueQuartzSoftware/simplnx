@@ -19,7 +19,12 @@ FilterList::FilterList()
 
 FilterList::~FilterList() = default;
 
-std::vector<FilterHandle> FilterList::search(const std::string& text) const
+FilterList::FilterContainerType::size_type FilterList::size() const
+{
+  return getFilterHandles().size();
+}
+
+FilterList::SearchContainerType FilterList::search(const std::string& text) const
 {
   std::vector<FilterHandle> handles;
   for(const auto& handle : getFilterHandles())
@@ -31,6 +36,22 @@ std::vector<FilterHandle> FilterList::search(const std::string& text) const
     else if(getPlugin(handle)->getName().find(text) != std::string::npos)
     {
       handles.push_back(handle);
+    }
+  }
+  return handles;
+}
+
+FilterList::SearchContainerType FilterList::getCoreFilters() const
+{
+  SearchContainerType handles;
+  FilterContainerType filterHandles = getFilterHandles();
+  for(const auto& filterHandle : filterHandles)
+  {
+    FilterHandle::PluginIdType pluginId = filterHandle.getPluginId();
+    AbstractPlugin* pluginPtr = getPluginById(pluginId);
+    if(nullptr == pluginPtr)
+    {
+      handles.push_back(filterHandle);
     }
   }
   return handles;
@@ -97,7 +118,7 @@ bool FilterList::addPlugin(const std::string& path)
   return addPlugin(std::make_shared<PluginLoader>(path));
 }
 
-const std::unordered_set<FilterHandle>& FilterList::getFilterHandles() const
+const FilterList::FilterContainerType& FilterList::getFilterHandles() const
 {
   return m_FilterHandles;
 }
