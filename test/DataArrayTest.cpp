@@ -3,6 +3,7 @@
 
 #include <catch2/catch.hpp>
 
+#include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataStore.hpp"

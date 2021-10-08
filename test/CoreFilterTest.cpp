@@ -136,5 +136,5 @@ TEST_CASE("CreateDataGroup")
   REQUIRE(object != nullptr);
   auto* group = dynamic_cast<DataGroup*>(object);
   REQUIRE(group != nullptr);
-  REQUIRE(data.size() == path.getLength());
+  REQUIRE(data.getSize() == path.getLength());
 }

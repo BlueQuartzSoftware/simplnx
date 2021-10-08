@@ -266,7 +266,7 @@ usize TetrahedralGeom::getNumberOfElements() const
 AbstractGeometry::StatusCode TetrahedralGeom::findElementSizes()
 {
   auto dataStore = new DataStore<float32>({getNumberOfTets()}, {1});
-  FloatArray* tetSizes = DataArray<float32>::Create(*getDataStructure(), "Tet Volumes", dataStore, getId());
+  Float32Array* tetSizes = DataArray<float32>::Create(*getDataStructure(), "Tet Volumes", dataStore, getId());
   GeometryHelpers::Topology::FindTetVolumes(getTetrahedra(), getVertices(), tetSizes);
   if(tetSizes == nullptr)
   {

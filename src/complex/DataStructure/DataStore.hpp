@@ -29,7 +29,6 @@ public:
   using value_type = typename IDataStore<T>::value_type;
   using reference = typename IDataStore<T>::reference;
   using const_reference = typename IDataStore<T>::const_reference;
-  using ShapeType = typename std::vector<size_t>;
 
   static constexpr const char k_DataStore[] = "DataStore";
   static constexpr const char k_TupleShape[] = "TupleShape";
@@ -42,10 +41,9 @@ public:
    * a single component dimension of {1}
    * @param numTuples
    */
-  DataStore(size_t tupleSize, size_t tupleCount)
-  : m_NumComponents(tupleSize)
-  , m_TupleCount(tupleCount)
-  , m_Data(std::make_unique<value_type[]>(tupleSize * tupleCount))
+  DataStore(usize numTuples)
+  : m_ComponentShape({1})
+  , m_TupleShape({numTuples})
   {
     reshapeTuples(m_TupleShape);
   }
@@ -55,24 +53,12 @@ public:
    * @param tupleShape The dimensions of the tuples
    * @param componentShape The dimensions of the component at each tuple
    */
-  DataStore(size_t tupleSize, size_t tupleCount, std::unique_ptr<value_type[]>&& data)
-  : m_NumComponents(tupleSize)
-  , m_TupleCount(tupleCount)
-  , m_Data(std::move(data))
+  DataStore(const ShapeType& tupleShape, const ShapeType& componentShape)
+  : m_ComponentShape(componentShape)
+  , m_TupleShape(tupleShape)
   {
-    reshapeTuples(tupleShape); // This should allocate the memory for this DataStore
+    reshapeTuples(m_TupleShape);
   }
-
-  //  /**
-  //   * @brief Constructs a DataStore with the specified tupleSize and tupleCount.
-  //   * @param num_tuples
-  //   * @param data
-  //   */
-  //  DataStore(size_t num_tuples, std::unique_ptr<value_type[]>&& data)
-  //  : m_TupleShape(num_tuples)
-  //  , m_Data(std::move(data))
-  //  {
-  //  }
 
   /**
    * @brief Copy constructor
@@ -181,11 +167,11 @@ public:
    * @brief
    * @param tupleShape
    */
-  void resizeTuples(usize numTuples) override
+  void reshapeTuples(const std::vector<usize>& tupleShape) override
   {
     auto oldSize = this->getSize();
     // Calculate the total number of values in the new array
-    size_t newSize = getNumberOfComponents() * std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+    usize newSize = getNumberOfComponents() * std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
     m_TupleShape = tupleShape;
 
     if(m_Data.get() == nullptr) // Data was never allocated
@@ -312,7 +298,7 @@ public:
       h5dims.push_back(static_cast<hsize_t>(value));
     }
 
-    size_t count = this->getSize();
+    usize count = this->getSize();
     std::vector<T> dataVector;
     auto dataPtr = data();
     dataVector.assign(dataPtr, dataPtr + count);

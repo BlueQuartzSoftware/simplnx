@@ -21,7 +21,6 @@ public:
   using value_type = typename IDataStore<T>::value_type;
   using reference = typename IDataStore<T>::reference;
   using const_reference = typename IDataStore<T>::const_reference;
-  using ShapeType = typename std::vector<size_t>;
 
   /**
    * @brief Constructs an empty data store with a tuple getSize and count of 0.
@@ -67,7 +66,7 @@ public:
    * @brief Returns the number of tuples that should be in the data store.
    * @return usize
    */
-  usize getTupleCount() const override
+  usize getNumberOfTuples() const override
   {
     return 0;
   }

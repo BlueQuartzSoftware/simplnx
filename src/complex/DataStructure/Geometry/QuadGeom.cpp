@@ -206,7 +206,7 @@ usize QuadGeom::getNumberOfElements() const
 AbstractGeometry::StatusCode QuadGeom::findElementSizes()
 {
   auto dataStore = new DataStore<float32>(getNumberOfQuads());
-  FloatArray* quadSizes = DataArray<float32>::Create(*getDataStructure(), "Quad Areas", dataStore, getId());
+  Float32Array* quadSizes = DataArray<float32>::Create(*getDataStructure(), "Quad Areas", dataStore, getId());
   GeometryHelpers::Topology::Find2DElementAreas(getQuads(), getVertices(), quadSizes);
   if(quadSizes == nullptr)
   {

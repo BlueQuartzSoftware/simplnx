@@ -28,6 +28,7 @@ public:
   using value_type = T;
   using reference = T&;
   using const_reference = const T&;
+  using ShapeType = typename std::vector<usize>;
 
   /////////////////////////////////
   // Begin std::iterator support //

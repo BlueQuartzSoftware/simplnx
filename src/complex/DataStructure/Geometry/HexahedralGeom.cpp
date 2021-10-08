@@ -215,7 +215,7 @@ usize HexahedralGeom::getNumberOfElements() const
 AbstractGeometry::StatusCode HexahedralGeom::findElementSizes()
 {
   auto* dataStore = new DataStore<float32>({getNumberOfHexas()}, {1});
-  FloatArray* hexSizes = DataArray<float32>::Create(*getDataStructure(), "Hex Volumes", dataStore, getId());
+  Float32Array* hexSizes = DataArray<float32>::Create(*getDataStructure(), "Hex Volumes", dataStore, getId());
   m_HexSizesId = hexSizes->getId();
   GeometryHelpers::Topology::FindHexVolumes<uint64_t>(getHexahedrals(), getVertices(), hexSizes);
   if(getElementSizes() == nullptr)

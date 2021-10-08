@@ -403,7 +403,7 @@ void EdgeGeom::deleteElementNeighbors()
 AbstractGeometry::StatusCode EdgeGeom::findElementCentroids()
 {
   auto dataStore = new DataStore<float32>({getNumberOfElements()}, {3});
-  FloatArray* edgeCentroids = DataArray<float32>::Create(*getDataStructure(), "Edge Centroids", dataStore, getId());
+  Float32Array* edgeCentroids = DataArray<float32>::Create(*getDataStructure(), "Edge Centroids", dataStore, getId());
   GeometryHelpers::Topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroids);
   if(getElementCentroids() == nullptr)
   {

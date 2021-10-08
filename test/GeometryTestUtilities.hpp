@@ -21,7 +21,7 @@ T* createGeom(DataStructure& ds)
 static const AbstractGeometry::SharedVertexList* createVertexList(AbstractGeometry* geom)
 {
   auto ds = geom->getDataStructure();
-  auto dataStore = new DataStore<float>({0}, {3});
+  auto dataStore = new DataStore<float32>({0}, {3});
   auto dataArr = AbstractGeometry::SharedVertexList::Create(*ds, "Vertices", dataStore, geom->getId());
   REQUIRE(dataArr != nullptr);
   return dynamic_cast<const AbstractGeometry::SharedVertexList*>(dataArr);

@@ -193,7 +193,7 @@ usize TriangleGeom::getNumberOfElements() const
 AbstractGeometry::StatusCode TriangleGeom::findElementSizes()
 {
   auto dataStore = new DataStore<float32>({getNumberOfTris()}, {1});
-  FloatArray* triangleSizes = DataArray<float32>::Create(*getDataStructure(), "Triangle Areas", dataStore, getId());
+  Float32Array* triangleSizes = DataArray<float32>::Create(*getDataStructure(), "Triangle Areas", dataStore, getId());
   GeometryHelpers::Topology::Find2DElementAreas(getTriangles(), getVertices(), triangleSizes);
   if(triangleSizes == nullptr)
   {

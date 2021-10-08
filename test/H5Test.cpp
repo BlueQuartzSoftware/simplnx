@@ -199,13 +199,13 @@ DataStructure CreateDataStructure()
   size_t numComponents = 1;
   std::vector<size_t> tupleShape = {imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]};
 
-  FloatArrayType* ci_data = CreateTestDataArray<float>("Confidence Index", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  Int32ArrayType* feature_ids_data = CreateTestDataArray<int32_t>("FeatureIds", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  FloatArrayType* iq_data = CreateTestDataArray<float>("Image Quality", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  Int32ArrayType* phases_data = CreateTestDataArray<int32_t>("Phases", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Float32Array* ci_data = CreateTestDataArray<float>("Confidence Index", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Int32Array* feature_ids_data = CreateTestDataArray<int32>("FeatureIds", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Float32Array* iq_data = CreateTestDataArray<float>("Image Quality", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Int32Array* phases_data = CreateTestDataArray<int32>("Phases", dataGraph, tupleShape, {numComponents}, scanData->getId());
 
   numComponents = 3;
-  UInt8ArrayType* ipf_color_data = CreateTestDataArray<uint8_t>("IPF Colors", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  UInt8Array* ipf_color_data = CreateTestDataArray<uint8_t>("IPF Colors", dataGraph, tupleShape, {numComponents}, scanData->getId());
 
   dataGraph.setAdditionalParent(ipf_color_data->getId(), group->getId());
 
@@ -213,7 +213,7 @@ DataStructure CreateDataStructure()
   DataGroup* phase_group = complex::DataGroup::Create(dataGraph, "Phase Data", group->getId());
   numComponents = 1;
   size_t numTuples = 2;
-  Int32ArrayType* laue_data = CreateTestDataArray<int32_t>("Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId());
+  Int32Array* laue_data = CreateTestDataArray<int32_t>("Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId());
 
   return dataGraph;
 }
@@ -295,9 +295,9 @@ DataStructure CreateNodeBasedGeometries()
   // Now create some "Cell" data for the Vertex Geometry
   std::vector<size_t> tupleShape = {vertexGeom->getNumberOfVertices()};
   size_t numComponents = 1;
-  Int16ArrayType* ci_data = CreateTestDataArray<int16_t>("Area", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  FloatArrayType* power_data = CreateTestDataArray<float>("Power", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  UInt8ArrayType* laserTTL_data = CreateTestDataArray<uint8_t>("LaserTTL", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Int16Array* ci_data = CreateTestDataArray<int16_t>("Area", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Float32Array* power_data = CreateTestDataArray<float>("Power", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  UInt8Array* laserTTL_data = CreateTestDataArray<uint8_t>("LaserTTL", dataGraph, tupleShape, {numComponents}, scanData->getId());
 
   return dataGraph;
 }

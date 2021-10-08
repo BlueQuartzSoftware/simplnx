@@ -108,7 +108,7 @@ void VertexGeom::resizeVertexList(usize newNumVertices)
   AbstractGeometry::SharedVertexList* vertices = getVertices();
   if(nullptr == vertices)
   {
-    DataStore<float>* dataStore = new DataStore<float>({newNumVertices}, {3});
+    DataStore<float32>* dataStore = new DataStore<float32>({newNumVertices}, {3});
     DataStructure* ds = getDataStructure();
     vertices = AbstractGeometry::SharedVertexList::Create(*ds, "Vertices", dataStore);
     setVertices(vertices);
