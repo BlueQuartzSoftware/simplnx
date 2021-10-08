@@ -129,7 +129,7 @@ TEST_CASE("CreateDataGroup")
   CreateDataGroup filter;
   Arguments args;
   const DataPath path({"foo", "bar", "baz"});
-  args.insert(CreateDataGroup::k_DataObjectPath.str(), path);
+  args.insert(CreateDataGroup::k_DataObjectPath, path);
   auto result = filter.execute(data, args);
   REQUIRE(result.valid());
   DataObject* object = data.getData(path);

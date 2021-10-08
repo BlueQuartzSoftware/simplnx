@@ -12,7 +12,7 @@ TEST_CASE("UuidTest")
     constexpr StringLiteral k_UuidString = "b6936d18-7476-4855-9e13-e795d717c50f";
     constexpr std::array<std::byte, 16> k_UuidBytes = {std::byte{0xb6u}, std::byte{0x93u}, std::byte{0x6du}, std::byte{0x18u}, std::byte{0x74u}, std::byte{0x76u}, std::byte{0x48u}, std::byte{0x55u},
                                                        std::byte{0x9eu}, std::byte{0x13u}, std::byte{0xe7u}, std::byte{0x95u}, std::byte{0xd7u}, std::byte{0x17u}, std::byte{0xc5u}, std::byte{0x0fu}};
-    std::optional<Uuid> uuid = Uuid::FromString(k_UuidString.view());
+    std::optional<Uuid> uuid = Uuid::FromString(k_UuidString);
 
     REQUIRE(uuid.has_value());
 
@@ -26,14 +26,14 @@ TEST_CASE("UuidTest")
     REQUIRE(uuid->clock_seq_low() == 0x13u);
     REQUIRE(uuid->node() == 0xe795d717c50full);
 
-    REQUIRE(uuid->str() == k_UuidString.view());
+    REQUIRE(uuid->str() == k_UuidString);
   }
   SECTION("leading zeros")
   {
     constexpr StringLiteral k_UuidString = "00ab00ff-00ab-0abc-0508-00000ff00000";
     constexpr std::array<std::byte, 16> k_UuidBytes = {std::byte{0x00u}, std::byte{0xabu}, std::byte{0x00u}, std::byte{0xffu}, std::byte{0x00u}, std::byte{0xabu}, std::byte{0x0au}, std::byte{0xbcu},
                                                        std::byte{0x05u}, std::byte{0x08u}, std::byte{0x00u}, std::byte{0x00u}, std::byte{0x0fu}, std::byte{0xf0u}, std::byte{0x00u}, std::byte{0x00u}};
-    std::optional<Uuid> uuid = Uuid::FromString(k_UuidString.view());
+    std::optional<Uuid> uuid = Uuid::FromString(k_UuidString);
 
     REQUIRE(uuid.has_value());
 
@@ -47,7 +47,7 @@ TEST_CASE("UuidTest")
     REQUIRE(uuid->clock_seq_low() == 0x08u);
     REQUIRE(uuid->node() == 0x00000ff00000ull);
 
-    REQUIRE(uuid->str() == k_UuidString.view());
+    REQUIRE(uuid->str() == k_UuidString);
   }
   SECTION("comparison")
   {

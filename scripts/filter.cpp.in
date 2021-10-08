@@ -35,8 +35,8 @@ Parameters @FILTER_NAME@::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  // params.insert(std::make_unique<Float32Parameter>(k_Param1Key.str(), "Parameter 1", "The 1st parameter", 0.1234f));
-  // params.insert(std::make_unique<BoolParameter>(k_Param2Key.str(), "Parameter 2", "The 2nd parameter", false));
+  // params.insert(std::make_unique<Float32Parameter>(k_Param1Key, "Parameter 1", "The 1st parameter", 0.1234f));
+  // params.insert(std::make_unique<BoolParameter>(k_Param2Key, "Parameter 2", "The 2nd parameter", false));
   return params;
 }
 
@@ -62,8 +62,8 @@ Result<> @FILTER_NAME@::executeImpl(DataStructure& data, const Arguments& args) 
   /****************************************************************************
    * You will probably need to extract your parameters from the 'args' object
    ***************************************************************************/
-  // auto inputFloatValue = args.value<float>(k_Param1Key.view());
-  // auto inputBoolValue = args.value<bool>(k_Param2Key.view());
+  // auto inputFloatValue = args.value<float>(k_Param1Key);
+  // auto inputBoolValue = args.value<bool>(k_Param2Key);
 
   return {};
 }

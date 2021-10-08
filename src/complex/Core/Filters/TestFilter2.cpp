@@ -18,7 +18,7 @@ namespace complex
 {
 std::string TestFilter2::name() const
 {
-  return FilterTraits<TestFilter2>::name.str();
+  return FilterTraits<TestFilter2>::name;
 }
 
 Uuid TestFilter2::uuid() const
@@ -34,9 +34,9 @@ std::string TestFilter2::humanName() const
 Parameters TestFilter2::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<Int32Parameter>(k_Param1.str(), "Parameter 1", "The 1st parameter", 0));
-  params.insert(std::make_unique<StringParameter>(k_Param2.str(), "Parameter 2", "The 2nd parameter", "test string"));
-  params.insert(std::make_unique<ChoicesParameter>(k_Param3.str(), "Parameter 3", "The 3rd parameter", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
+  params.insert(std::make_unique<Int32Parameter>(k_Param1, "Parameter 1", "The 1st parameter", 0));
+  params.insert(std::make_unique<StringParameter>(k_Param2, "Parameter 2", "The 2nd parameter", "test string"));
+  params.insert(std::make_unique<ChoicesParameter>(k_Param3, "Parameter 3", "The 3rd parameter", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
   return params;
 }
 
