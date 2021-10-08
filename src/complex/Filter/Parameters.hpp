@@ -68,9 +68,15 @@ public:
 
   /**
    * @brief Inserts a separator.
-   * @param name
+   * @param separator
    */
-  void insert(Separator name);
+  void insert(Separator separator);
+
+  /**
+   * @brief Inserts a separator.
+   * @param separator
+   */
+  void insertSeparator(Separator separator);
 
   /**
    * @brief Returns the parameter with the given key. Throws if not found.
