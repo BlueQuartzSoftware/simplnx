@@ -4,6 +4,8 @@
 #include <numeric>
 #include <vector>
 
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+
 using namespace complex;
 
 H5::AttributeReader::AttributeReader() = default;

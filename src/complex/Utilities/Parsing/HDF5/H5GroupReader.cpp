@@ -5,6 +5,8 @@
 #include <H5Gpublic.h>
 #include <H5Opublic.h>
 
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+
 using namespace complex;
 
 H5::GroupReader::GroupReader() = default;

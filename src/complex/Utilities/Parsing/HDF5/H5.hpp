@@ -3,20 +3,6 @@
 #include "complex/Common/Types.hpp"
 #include "complex/Common/StringLiteral.hpp"
 
-// Defined in CMake
-//#define H5_USE_110_API
-#include <H5Opublic.h>
-#include <hdf5.h>
-
-#ifdef H5Support_USE_MUTEX
-#include <mutex>
-#define H5SUPPORT_MUTEX_LOCK()                                                                                                                                                                         \
-  std::mutex mutex;                                                                                                                                                                                    \
-  std::lock_guard<std::mutex> lock(mutex);
-#else
-#define H5SUPPORT_MUTEX_LOCK()
-#endif
-
 #include <cstdint>
 #include <string>
 
@@ -46,7 +32,19 @@ enum class Type
   unknown = 255
 };
 
+/**
+ * @brief Returns a Type enum representing the corresponding type matching the
+ * specified HDF5 ID.
+ * @param typeId
+ * @return H5::Type
+ */
 Type COMPLEX_EXPORT getTypeFromId(IdType typeId);
+
+/**
+ * @brief Returns the HDF5 type for the specified H5::Type enum.
+ * @param type
+ * @return H5::IdType
+ */
 H5::IdType COMPLEX_EXPORT getIdForType(Type type);
 
 /**
@@ -56,9 +54,8 @@ H5::IdType COMPLEX_EXPORT getIdForType(Type type);
  * @param buffer
  * @return std::string
  */
-std::string GetNameFromBuffer(const char* buffer);
+std::string COMPLEX_EXPORT GetNameFromBuffer(const char* buffer);
 
-inline const std::string DataTypeTag = "DataType";
 static constexpr StringLiteral k_DataTypeTag = "DataType";
 
 static constexpr StringLiteral k_DataStoreTag = "DataStore";

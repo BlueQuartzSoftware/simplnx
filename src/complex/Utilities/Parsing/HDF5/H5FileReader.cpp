@@ -2,6 +2,8 @@
 
 #include <H5Apublic.h>
 
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+
 using namespace complex;
 
 H5::FileReader::FileReader(const std::filesystem::path& filepath)
