@@ -17,16 +17,16 @@ constexpr StringLiteral k_BazParamKey = "BazParam";
 TEST_CASE("ParametersTest")
 {
   Parameters params;
-  params.insert(std::make_unique<Int32Parameter>(k_FooParamKey.str(), "Foo", "Test parameter", 42));
+  params.insert(std::make_unique<Int32Parameter>(k_FooParamKey, "Foo", "Test parameter", 42));
   params.insertSeparator({"Separator Name"});
 
-  REQUIRE_FALSE(params.containsGroup(k_BarParamKey.view()));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_BarParamKey.str(), "Bar", "Test parameter", false));
-  REQUIRE(params.containsGroup(k_BarParamKey.view()));
+  REQUIRE_FALSE(params.containsGroup(k_BarParamKey));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_BarParamKey, "Bar", "Test parameter", false));
+  REQUIRE(params.containsGroup(k_BarParamKey));
 
-  params.insert(std::make_unique<StringParameter>(k_BazParamKey.str(), "Baz", "Test parameter", "default"));
+  params.insert(std::make_unique<StringParameter>(k_BazParamKey, "Baz", "Test parameter", "default"));
 
-  params.linkParameters(k_BarParamKey.str(), k_BazParamKey.str(), true);
+  params.linkParameters(k_BarParamKey, k_BazParamKey, true);
 
   REQUIRE(params.size() == 3);
 
@@ -35,26 +35,26 @@ TEST_CASE("ParametersTest")
   REQUIRE(std::holds_alternative<Parameters::ParameterKey>(params.getLayout().at(0)));
   REQUIRE(std::holds_alternative<Parameters::Separator>(params.getLayout().at(1)));
 
-  REQUIRE_FALSE(params.hasGroup(k_FooParamKey.view()));
-  REQUIRE(params.hasGroup(k_BazParamKey.view()));
+  REQUIRE_FALSE(params.hasGroup(k_FooParamKey));
+  REQUIRE(params.hasGroup(k_BazParamKey));
 
-  REQUIRE(params.getGroup(k_FooParamKey.view()).empty());
-  REQUIRE(params.getGroup(k_BazParamKey.view()) == k_BarParamKey.view());
+  REQUIRE(params.getGroup(k_FooParamKey).empty());
+  REQUIRE(params.getGroup(k_BazParamKey) == k_BarParamKey);
 
-  const std::vector<std::string> expectedKeys = {k_FooParamKey.str(), k_BarParamKey.str(), k_BazParamKey.str()};
+  const std::vector<std::string> expectedKeys = {k_FooParamKey, k_BarParamKey, k_BazParamKey};
 
   REQUIRE(params.getKeys() == expectedKeys);
 
-  const std::vector<std::string> expectedGroupKeys = {k_BarParamKey.str()};
+  const std::vector<std::string> expectedGroupKeys = {k_BarParamKey};
 
   REQUIRE(params.getGroupKeys() == expectedGroupKeys);
 
-  const std::vector<std::string> expectedKeyInGroup = {k_BazParamKey.str()};
+  const std::vector<std::string> expectedKeyInGroup = {k_BazParamKey};
 
-  REQUIRE(params.getKeysInGroup(k_BarParamKey.view()) == expectedKeyInGroup);
+  REQUIRE(params.getKeysInGroup(k_BarParamKey) == expectedKeyInGroup);
 
-  REQUIRE(params.isParameterActive(k_FooParamKey.view(), {}));
+  REQUIRE(params.isParameterActive(k_FooParamKey, {}));
 
-  REQUIRE(params.isParameterActive(k_BazParamKey.view(), true));
-  REQUIRE_FALSE(params.isParameterActive(k_BazParamKey.view(), false));
+  REQUIRE(params.isParameterActive(k_BazParamKey, true));
+  REQUIRE_FALSE(params.isParameterActive(k_BazParamKey, false));
 }

@@ -16,9 +16,9 @@ TEST_CASE("ArgumentsTest")
   {
     static constexpr int32 k_FooValue = 42;
 
-    args.insert(k_FooKey.str(), k_FooValue);
+    args.insert(k_FooKey, k_FooValue);
 
-    auto value = args.value<int32>(k_FooKey.view());
+    auto value = args.value<int32>(k_FooKey);
 
     REQUIRE(value == k_FooValue);
   }
@@ -26,9 +26,9 @@ TEST_CASE("ArgumentsTest")
   {
     const std::string k_FooValue = "value";
 
-    args.insert(k_FooKey.str(), k_FooValue);
+    args.insert(k_FooKey, k_FooValue);
 
-    auto value = args.value<std::string>(k_FooKey.view());
+    auto value = args.value<std::string>(k_FooKey);
 
     REQUIRE(value == k_FooValue);
   }
@@ -36,9 +36,9 @@ TEST_CASE("ArgumentsTest")
   {
     const std::string k_FooValue = "value";
 
-    args.insert(k_FooKey.str(), k_FooValue);
+    args.insert(k_FooKey, k_FooValue);
 
-    const auto& value = args.valueRef<std::string>(k_FooKey.view());
+    const auto& value = args.valueRef<std::string>(k_FooKey);
 
     REQUIRE(value == k_FooValue);
   }
@@ -46,9 +46,9 @@ TEST_CASE("ArgumentsTest")
   {
     int32 value = 42;
 
-    args.insert(k_FooKey.str(), std::ref(value));
+    args.insert(k_FooKey, std::ref(value));
 
-    auto& valueRefWrapper = args.ref<int32>(k_FooKey.view());
+    auto& valueRefWrapper = args.ref<int32>(k_FooKey);
 
     REQUIRE(&value == &valueRefWrapper);
     REQUIRE(value == valueRefWrapper);
@@ -61,9 +61,9 @@ TEST_CASE("ArgumentsTest")
   {
     int32 value = 42;
 
-    args.insert(k_FooKey.str(), std::cref(value));
+    args.insert(k_FooKey, std::cref(value));
 
-    const auto& valueRefWrapper = args.ref<const int32>(k_FooKey.view());
+    const auto& valueRefWrapper = args.ref<const int32>(k_FooKey);
 
     REQUIRE(&value == &valueRefWrapper);
     REQUIRE(value == valueRefWrapper);
@@ -72,13 +72,13 @@ TEST_CASE("ArgumentsTest")
   {
     static constexpr int32 k_Value = 42;
 
-    args.insert(k_FooKey.str(), k_Value);
+    args.insert(k_FooKey, k_Value);
 
-    REQUIRE(args.contains(k_FooKey.view()));
+    REQUIRE(args.contains(k_FooKey));
   }
   SECTION("not contains test")
   {
-    REQUIRE(!args.contains(k_FooKey.view()));
+    REQUIRE(!args.contains(k_FooKey));
   }
   SECTION("size test")
   {

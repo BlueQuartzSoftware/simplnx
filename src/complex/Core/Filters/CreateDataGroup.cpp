@@ -9,7 +9,7 @@ namespace complex
 {
 std::string CreateDataGroup::name() const
 {
-  return FilterTraits<CreateDataGroup>::name.str();
+  return FilterTraits<CreateDataGroup>::name;
 }
 
 Uuid CreateDataGroup::uuid() const
@@ -25,7 +25,7 @@ std::string CreateDataGroup::humanName() const
 Parameters CreateDataGroup::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_DataObjectPath.str(), "DataObject Path", "The complete path to the DataObject being created", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_DataObjectPath, "DataObject Path", "The complete path to the DataObject being created", DataPath{}));
   return params;
 }
 
@@ -36,7 +36,7 @@ IFilter::UniquePointer CreateDataGroup::clone() const
 
 Result<OutputActions> CreateDataGroup::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  DataPath dataObjectPath = args.value<DataPath>(k_DataObjectPath.view());
+  DataPath dataObjectPath = args.value<DataPath>(k_DataObjectPath);
 
   auto action = std::make_unique<CreateDataGroupAction>(dataObjectPath);
 

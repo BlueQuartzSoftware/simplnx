@@ -110,10 +110,50 @@ public:
     return std::basic_string<T>(m_String, size());
   }
 
+  /**
+   * @brief Implicit conversion to std::basic_string<T>
+   */
+  operator std::basic_string<T>() const
+  {
+    return str();
+  }
+
+  /**
+   * @brief Implicit conversion to std::basic_string_view<T>
+   */
+  operator std::basic_string_view<T>() const
+  {
+    return view();
+  }
+
 private:
   const T* m_String;
   usize m_Size;
 };
+
+template <class T>
+constexpr bool operator==(const std::basic_string<T>& lhs, BasicStringLiteral<T> rhs)
+{
+  return lhs == rhs.view();
+}
+
+template <class T>
+constexpr bool operator==(BasicStringLiteral<T> lhs, const std::basic_string<T>& rhs)
+{
+  return rhs == lhs;
+}
+
+template <class T>
+constexpr bool operator!=(const std::basic_string<T>& lhs, BasicStringLiteral<T> rhs)
+{
+  return lhs != rhs.view();
+}
+
+template <class T>
+constexpr bool operator!=(BasicStringLiteral<T> lhs, const std::basic_string<T>& rhs)
+{
+  return rhs != lhs;
+}
 
 using StringLiteral = BasicStringLiteral<char>;
 using WStringLiteral = BasicStringLiteral<wchar_t>;

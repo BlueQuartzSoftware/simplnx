@@ -107,7 +107,7 @@ namespace complex
 {
 std::string ImportTextFilter::name() const
 {
-  return FilterTraits<ImportTextFilter>::name.str();
+  return FilterTraits<ImportTextFilter>::name;
 }
 
 Uuid ImportTextFilter::uuid() const
@@ -124,14 +124,14 @@ Parameters ImportTextFilter::parameters() const
 {
   Parameters params;
   params.insert(
-      std::make_unique<FileSystemPathParameter>(k_InputFileKey.str(), "Input File", "File to read from", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<NumericTypeParameter>(k_ScalarTypeKey.str(), "Scalar Type", "Type to interpret data as", NumericType::int8));
-  params.insert(std::make_unique<UInt64Parameter>(k_NTuplesKey.str(), "Number of Tuples", "Number of tuples in resulting array (i.e. number of lines to read)", 3));
-  params.insert(std::make_unique<UInt64Parameter>(k_NCompKey.str(), "Number of Components", "Number of columns", 3));
-  params.insert(std::make_unique<UInt64Parameter>(k_NSkipLinesKey.str(), "Skip Header Lines", "Number of lines to skip in the file", 7));
-  params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoiceKey.str(), "Delimiter", "Delimiter for values on a line", 0,
+      std::make_unique<FileSystemPathParameter>(k_InputFileKey, "Input File", "File to read from", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<NumericTypeParameter>(k_ScalarTypeKey, "Scalar Type", "Type to interpret data as", NumericType::int8));
+  params.insert(std::make_unique<UInt64Parameter>(k_NTuplesKey, "Number of Tuples", "Number of tuples in resulting array (i.e. number of lines to read)", 3));
+  params.insert(std::make_unique<UInt64Parameter>(k_NCompKey, "Number of Components", "Number of columns", 3));
+  params.insert(std::make_unique<UInt64Parameter>(k_NSkipLinesKey, "Skip Header Lines", "Number of lines to skip in the file", 7));
+  params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoiceKey, "Delimiter", "Delimiter for values on a line", 0,
                                                    ChoicesParameter::Choices{", (comma)", "; (semicolon)", "  (space)", ": (colon)", "\\t (Tab)"}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_DataArrayKey.str(), "Created Array", "Array storing the file data", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_DataArrayKey, "Created Array", "Array storing the file data", DataPath{}));
   return params;
 }
 
@@ -142,10 +142,10 @@ IFilter::UniquePointer ImportTextFilter::clone() const
 
 Result<OutputActions> ImportTextFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  auto numericType = args.value<NumericType>(k_ScalarTypeKey.view());
-  auto arrayPath = args.value<DataPath>(k_DataArrayKey.view());
-  auto nTuples = args.value<uint64>(k_NTuplesKey.view());
-  auto nComp = args.value<uint64>(k_NCompKey.view());
+  auto numericType = args.value<NumericType>(k_ScalarTypeKey);
+  auto arrayPath = args.value<DataPath>(k_DataArrayKey);
+  auto nTuples = args.value<uint64>(k_NTuplesKey);
+  auto nComp = args.value<uint64>(k_NCompKey);
   auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{nTuples}, nComp, arrayPath);
 
   OutputActions actions;
@@ -156,12 +156,12 @@ Result<OutputActions> ImportTextFilter::preflightImpl(const DataStructure& data,
 
 Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  auto inputFilePath = args.value<fs::path>(k_InputFileKey.view());
-  auto numericType = args.value<NumericType>(k_ScalarTypeKey.view());
-  auto components = args.value<uint64>(k_NCompKey.view());
-  auto skipLines = args.value<uint64>(k_NSkipLinesKey.view());
-  auto choiceIndex = args.value<uint64>(k_DelimiterChoiceKey.view());
-  auto path = args.value<DataPath>(k_DataArrayKey.view());
+  auto inputFilePath = args.value<fs::path>(k_InputFileKey);
+  auto numericType = args.value<NumericType>(k_ScalarTypeKey);
+  auto components = args.value<uint64>(k_NCompKey);
+  auto skipLines = args.value<uint64>(k_NSkipLinesKey);
+  auto choiceIndex = args.value<uint64>(k_DelimiterChoiceKey);
+  auto path = args.value<DataPath>(k_DataArrayKey);
 
   char delimiter = IndexToDelimiter(choiceIndex);
 
