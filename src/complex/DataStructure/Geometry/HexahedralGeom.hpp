@@ -26,6 +26,16 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return HexahedralGeom*
+   */
+  static HexahedralGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   HexahedralGeom(const HexahedralGeom& other);
@@ -313,19 +323,19 @@ public:
 
   /**
    * @brief Reads values from HDF5
-   * @param targetId
-   * @param groupId
+   * @param dataStructureReader
+   * @param groupReader
    * @return H5::ErrorType
    */
-  H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType groupId) override;
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader) override;
 
   /**
    * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param parentId
-   * @param groupId
+   * @param dataStructureWriter
+   * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const override;
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override;
 
 protected:
   /**
@@ -334,6 +344,14 @@ protected:
    * @param name
    */
   HexahedralGeom(DataStructure& ds, const std::string& name);
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  HexahedralGeom(DataStructure& ds, const std::string& name, IdType importId);
 
   /**
    * @brief
@@ -379,10 +397,10 @@ protected:
   void setElementSizes(const Float32Array* elementSizes) override;
 
 private:
-  std::optional<DataObject::IdType> m_HexListId;
-  std::optional<DataObject::IdType> m_HexasContainingVertId;
-  std::optional<DataObject::IdType> m_HexNeighborsId;
-  std::optional<DataObject::IdType> m_HexCentroidsId;
-  std::optional<DataObject::IdType> m_HexSizesId;
+  std::optional<IdType> m_HexListId;
+  std::optional<IdType> m_HexasContainingVertId;
+  std::optional<IdType> m_HexNeighborsId;
+  std::optional<IdType> m_HexCentroidsId;
+  std::optional<IdType> m_HexSizesId;
 };
 } // namespace complex

@@ -12,7 +12,10 @@
 
 namespace complex
 {
-class IH5DataFactory;
+namespace H5
+{
+class IDataFactory;
+}
 
 /**
  * @class AbstractPlugin
@@ -79,9 +82,9 @@ public:
   /**
    * @brief Returns a collection of HDF5 DataStructure factories available
    * through the plugin.
-   * @return std::vector<IH5DataFactory*>
+   * @return std::vector<IDataFactory*>
    */
-  virtual std::vector<IH5DataFactory*> getDataFactories() const = 0;
+  virtual std::vector<H5::IDataFactory*> getDataFactories() const = 0;
 
 protected:
   /**

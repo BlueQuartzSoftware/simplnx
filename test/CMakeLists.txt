@@ -26,6 +26,8 @@ add_executable(complex_test MACOSX_BUNDLE
   PipelineTest.cpp
   PluginTest.cpp
   FilePathGeneratorTest.cpp
+  DataArrayTest.cpp
+  GeometryTestUtilities.hpp
   ParametersTest.cpp
 )
 
@@ -56,5 +58,7 @@ target_compile_options(complex_test
 )
 
 target_include_directories(complex_test PRIVATE ${COMPLEX_GENERATED_DIR})
+
+
 
 catch_discover_tests(complex_test)

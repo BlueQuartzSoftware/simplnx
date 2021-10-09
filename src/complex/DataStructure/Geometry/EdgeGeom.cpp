@@ -5,12 +5,27 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
 
+namespace H5Constants
+{
+const std::string VertexListTag = "Vertex List ID";
+const std::string EdgeListTag = "Edge List ID";
+const std::string EdgesContainingVertTag = "Edges Containing Vertex ID";
+const std::string EdgeNeighborsTag = "Edge Neighbors ID";
+const std::string EdgeCentroidTag = "Edge Centroids ID";
+const std::string EdgeSizesTag = "Edge Sizes ID";
+} // namespace H5Constants
+
 EdgeGeom::EdgeGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry(ds, name)
+{
+}
+
+EdgeGeom::EdgeGeom(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractGeometry(ds, name, importId)
 {
 }
 
@@ -55,6 +70,16 @@ EdgeGeom* EdgeGeom::Create(DataStructure& ds, const std::string& name, const std
   return data.get();
 }
 
+EdgeGeom* EdgeGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<EdgeGeom>(new EdgeGeom(ds, name, importId));
+  if(!AttemptToAddObject(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
 std::string EdgeGeom::getTypeName() const
 {
   return "EdgeGeom";
@@ -81,7 +106,7 @@ void EdgeGeom::resizeVertexList(usize newNumVertices)
   {
     return;
   }
-  getVertices()->getDataStore()->resizeTuples(newNumVertices);
+  getVertices()->getDataStore()->reshapeTuples({newNumVertices});
 }
 
 void EdgeGeom::setVertices(const SharedVertexList* vertices)
@@ -140,7 +165,7 @@ usize EdgeGeom::getNumberOfVertices() const
   {
     return 0;
   }
-  return vertices->getTupleCount();
+  return vertices->getNumberOfTuples();
 }
 
 void EdgeGeom::resizeEdgeList(usize newNumEdges)
@@ -150,7 +175,7 @@ void EdgeGeom::resizeEdgeList(usize newNumEdges)
   {
     return;
   }
-  edges->getDataStore()->resizeTuples(newNumEdges);
+  edges->getDataStore()->reshapeTuples({newNumEdges});
 }
 
 void EdgeGeom::setEdges(const SharedEdgeList* edges)
@@ -181,7 +206,7 @@ void EdgeGeom::setVertsAtEdge(usize edgeId, usize verts[2])
     return;
   }
 
-  auto numEdges = edges->getTupleCount();
+  auto numEdges = edges->getNumberOfTuples();
   if(edgeId >= numEdges)
   {
     return;
@@ -201,7 +226,7 @@ void EdgeGeom::getVertsAtEdge(usize edgeId, usize verts[2])
     return;
   }
 
-  auto numEdges = edges->getTupleCount();
+  auto numEdges = edges->getNumberOfTuples();
   if(edgeId >= numEdges)
   {
     return;
@@ -221,7 +246,7 @@ void EdgeGeom::getVertCoordsAtEdge(usize edgeId, complex::Point3D<float32>& vert
     return;
   }
 
-  auto numEdges = edges->getTupleCount();
+  auto numEdges = edges->getNumberOfTuples();
   if(edgeId >= numEdges)
   {
     return;
@@ -247,7 +272,7 @@ usize EdgeGeom::getNumberOfEdges() const
   {
     return 0;
   }
-  return edges->getTupleCount();
+  return edges->getNumberOfTuples();
 }
 
 void EdgeGeom::initializeWithZeros()
@@ -271,12 +296,12 @@ usize EdgeGeom::getNumberOfElements() const
   {
     return 0;
   }
-  return edges->getTupleCount();
+  return edges->getNumberOfTuples();
 }
 
 AbstractGeometry::StatusCode EdgeGeom::findElementSizes()
 {
-  auto dataStore = new DataStore<float32>(1, getNumberOfElements());
+  auto dataStore = new DataStore<float32>(getNumberOfElements());
   auto sizes = DataArray<float32>::Create(*getDataStructure(), "Edge Lengths", dataStore, getId());
   m_EdgeSizesId = sizes->getId();
 
@@ -377,7 +402,7 @@ void EdgeGeom::deleteElementNeighbors()
 
 AbstractGeometry::StatusCode EdgeGeom::findElementCentroids()
 {
-  auto dataStore = new DataStore<float32>(3, getNumberOfElements());
+  auto dataStore = new DataStore<float32>({getNumberOfElements()}, {3});
   Float32Array* edgeCentroids = DataArray<float32>::Create(*getDataStructure(), "Edge Centroids", dataStore, getId());
   GeometryHelpers::Topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroids);
   if(getElementCentroids() == nullptr)
@@ -480,12 +505,62 @@ void EdgeGeom::setElementSizes(const Float32Array* elementSizes)
   m_EdgeSizesId = elementSizes->getId();
 }
 
-H5::ErrorType EdgeGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
+H5::ErrorType EdgeGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  return getDataMap().readH5Group(*getDataStructure(), targetId);
+  m_VertexListId = ReadH5DataId(groupReader, H5Constants::VertexListTag);
+  m_EdgeListId = ReadH5DataId(groupReader, H5Constants::EdgeListTag);
+  m_EdgesContainingVertId = ReadH5DataId(groupReader, H5Constants::EdgesContainingVertTag);
+  m_EdgeNeighborsId = ReadH5DataId(groupReader, H5Constants::EdgeNeighborsTag);
+  m_EdgeCentroidsId = ReadH5DataId(groupReader, H5Constants::EdgeCentroidTag);
+  m_EdgeSizesId = ReadH5DataId(groupReader, H5Constants::EdgeSizesTag);
+
+  return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
-H5::ErrorType EdgeGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+H5::ErrorType EdgeGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
-  return getDataMap().writeH5Group(groupId);
+  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
+  auto err = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  if(err < 0)
+  {
+    return err;
+  }
+
+  auto errorCode = WriteH5DataId(groupWriter, m_VertexListId, H5Constants::VertexListTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_EdgeListId, H5Constants::EdgeListTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_EdgesContainingVertId, H5Constants::EdgesContainingVertTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_EdgeNeighborsId, H5Constants::EdgeNeighborsTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_EdgeCentroidsId, H5Constants::EdgeCentroidTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_EdgeSizesId, H5Constants::EdgeSizesTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }

@@ -26,6 +26,16 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return TetrahedralGeom*
+   */
+  static TetrahedralGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   TetrahedralGeom(const TetrahedralGeom& other);
@@ -304,19 +314,19 @@ public:
 
   /**
    * @brief Reads values from HDF5
-   * @param targetId
-   * @param groupId
+   * @param dataStructureReader
+   * @param groupReader
    * @return H5::ErrorType
    */
-  H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType groupId) override;
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader) override;
 
   /**
    * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param parentId
-   * @param groupId
+   * @param dataStructureWriter
+   * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const override;
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override;
 
 protected:
   /**
@@ -325,6 +335,14 @@ protected:
    * @param name
    */
   TetrahedralGeom(DataStructure& ds, const std::string& name);
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  TetrahedralGeom(DataStructure& ds, const std::string& name, IdType importId);
 
   /**
    * @brief
@@ -364,12 +382,12 @@ protected:
   void setElementCentroids(const Float32Array* elementCentroids) override;
 
 private:
-  std::optional<DataObject::IdType> m_TriListId;
-  std::optional<DataObject::IdType> m_UnsharedTriListId;
-  std::optional<DataObject::IdType> m_TetListId;
-  std::optional<DataObject::IdType> m_TetsContainingVertId;
-  std::optional<DataObject::IdType> m_TetNeighborsId;
-  std::optional<DataObject::IdType> m_TetCentroidsId;
-  std::optional<DataObject::IdType> m_TetSizesId;
+  std::optional<IdType> m_TriListId;
+  std::optional<IdType> m_UnsharedTriListId;
+  std::optional<IdType> m_TetListId;
+  std::optional<IdType> m_TetsContainingVertId;
+  std::optional<IdType> m_TetNeighborsId;
+  std::optional<IdType> m_TetCentroidsId;
+  std::optional<IdType> m_TetSizesId;
 };
 } // namespace complex

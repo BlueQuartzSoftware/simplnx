@@ -1,11 +1,5 @@
 #include "H5Reader.hpp"
 
-#include <memory>
-#include <numeric>
-
-#include <H5Apublic.h>
-#include <hdf5.h>
-
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
@@ -18,6 +12,13 @@
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
+
+#include <H5Apublic.h>
+
+#include <fmt/core.h>
+
+#include <memory>
+#include <numeric>
 
 using namespace complex;
 
@@ -71,7 +72,7 @@ complex::H5::ErrorType readIteratorDataset(hid_t locationID, const std::string& 
   T* buffer = new T[size];
 
   herr_t returnError = 0;
-  hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
+  hid_t dataType = H5::Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     std::cout << "dataType was not supported." << std::endl;
@@ -145,7 +146,7 @@ herr_t complex::H5::Reader::Generic::readVectorOfStringDataset(H5::IdType locati
   hid_t datasetID = H5Dopen(locationID, datasetName.c_str(), H5P_DEFAULT);
   if(datasetID < 0)
   {
-    std::cout << "H5Lite.cpp::readVectorOfStringDataset(" << __LINE__ << ") Error opening Dataset at locationID (" << locationID << ") with object name (" << datasetName << ")" << std::endl;
+    std::cout << "H5Lite.cpp::ReadVectorOfStringDataset(" << __LINE__ << ") Error opening Dataset at locationID (" << locationID << ") with object name (" << datasetName << ")" << std::endl;
     return -1;
   }
   /*
@@ -162,10 +163,10 @@ herr_t complex::H5::Reader::Generic::readVectorOfStringDataset(H5::IdType locati
     int nDims = H5Sget_simple_extent_dims(dataspaceID, dims, nullptr);
     if(nDims != 1)
     {
-      CloseH5S(dataspaceID, error, returnError);
-      CloseH5T(typeID, error, returnError);
-      CloseH5D(datasetID, error, returnError, datasetName);
-      std::cout << "H5Lite.cpp::readVectorOfStringDataset(" << __LINE__ << ") Number of dims should be 1 but it was " << nDims << ". Returning early. Is your data file correct?" << std::endl;
+      H5S_CLOSE_H5_DATASPACE(dataspaceID, error, returnError);
+      H5S_CLOSE_H5_TYPE(typeID, error, returnError);
+      H5_CLOSE_H5_DATASET(datasetID, error, returnError, datasetName);
+      std::cout << "H5Lite.cpp::ReadVectorOfStringDataset(" << __LINE__ << ") Number of dims should be 1 but it was " << nDims << ". Returning early. Is your data file correct?" << std::endl;
       return -2;
     }
 
@@ -187,11 +188,11 @@ herr_t complex::H5::Reader::Generic::readVectorOfStringDataset(H5::IdType locati
     if(status < 0)
     {
       status = H5Dvlen_reclaim(memtype, dataspaceID, H5P_DEFAULT, rData.data());
-      CloseH5S(dataspaceID, error, returnError);
-      CloseH5T(typeID, error, returnError);
-      CloseH5T(memtype, error, returnError);
-      CloseH5D(datasetID, error, returnError, datasetName);
-      std::cout << "H5Lite.cpp::readVectorOfStringDataset(" << __LINE__ << ") Error reading Dataset at locationID (" << locationID << ") with object name (" << datasetName << ")" << std::endl;
+      H5S_CLOSE_H5_DATASPACE(dataspaceID, error, returnError);
+      H5S_CLOSE_H5_TYPE(typeID, error, returnError);
+      H5S_CLOSE_H5_TYPE(memtype, error, returnError);
+      H5_CLOSE_H5_DATASET(datasetID, error, returnError, datasetName);
+      std::cout << "H5Lite.cpp::ReadVectorOfStringDataset(" << __LINE__ << ") Error reading Dataset at locationID (" << locationID << ") with object name (" << datasetName << ")" << std::endl;
       return -3;
     }
     /*
@@ -209,12 +210,12 @@ herr_t complex::H5::Reader::Generic::readVectorOfStringDataset(H5::IdType locati
      * in rData, as H5Tvlen_reclaim only frees the data these point to.
      */
     status = H5Dvlen_reclaim(memtype, dataspaceID, H5P_DEFAULT, rData.data());
-    CloseH5S(dataspaceID, error, returnError);
-    CloseH5T(typeID, error, returnError);
-    CloseH5T(memtype, error, returnError);
+    H5S_CLOSE_H5_DATASPACE(dataspaceID, error, returnError);
+    H5S_CLOSE_H5_TYPE(typeID, error, returnError);
+    H5S_CLOSE_H5_TYPE(memtype, error, returnError);
   }
 
-  CloseH5D(datasetID, error, returnError, datasetName);
+  H5_CLOSE_H5_DATASET(datasetID, error, returnError, datasetName);
 
   return returnError;
 }
@@ -227,7 +228,7 @@ herr_t complex::H5::Reader::Generic::readStringDataset(H5::IdType locationID, co
   hid_t datasetID = H5Dopen(locationID, datasetName.c_str(), H5P_DEFAULT);
   if(datasetID < 0)
   {
-    std::cout << "H5Reader.hpp::readStringDataset(" << __LINE__ << ") Error opening Dataset at locationID (" << locationID << ") with object name (" << datasetName << ")" << std::endl;
+    std::cout << "H5Reader.hpp::ReadStringDataset(" << __LINE__ << ") Error opening Dataset at locationID (" << locationID << ") with object name (" << datasetName << ")" << std::endl;
     return -1;
   }
   /*
@@ -268,8 +269,8 @@ herr_t complex::H5::Reader::Generic::readStringDataset(H5::IdType locationID, co
       }
     }
   }
-  CloseH5D(datasetID, error, returnError, datasetName);
-  CloseH5T(typeID, error, returnError);
+  H5_CLOSE_H5_DATASET(datasetID, error, returnError, datasetName);
+  H5S_CLOSE_H5_TYPE(typeID, error, returnError);
   return returnError;
 }
 
@@ -326,7 +327,7 @@ complex::H5::ErrorType complex::H5::Reader::Generic::readStringAttribute(H5::IdT
   }
 
   /* Open the object */
-  hid_t objectID = Support::openId(locationID, objectName, objectInfo.type);
+  hid_t objectID = Support::OpenId(locationID, objectName, objectInfo.type);
   if(objectID >= 0)
   {
     hid_t attributeID = H5Aopen_by_name(locationID, objectName.c_str(), attributeName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
@@ -337,7 +338,7 @@ complex::H5::ErrorType complex::H5::Reader::Generic::readStringAttribute(H5::IdT
     {
       data.clear();
       returnError = -1;
-      CloseH5A(attributeID, error, returnError);
+      H5S_CLOSE_H5_ATTRIBUTE(attributeID, error, returnError);
       return returnError;
     }
     if(attributeID >= 0)
@@ -361,15 +362,15 @@ complex::H5::ErrorType complex::H5::Reader::Generic::readStringAttribute(H5::IdT
           }
           data.append(attributeOutput.data(), size); // Append the data to the passed in string
         }
-        CloseH5T(attributeType, error, returnError);
+        H5S_CLOSE_H5_TYPE(attributeType, error, returnError);
       }
-      CloseH5A(attributeID, error, returnError);
+      H5S_CLOSE_H5_ATTRIBUTE(attributeID, error, returnError);
     }
     else
     {
       // returnError = attributeID;
     }
-    error = Support::closeId(objectID, objectInfo.type);
+    error = Support::CloseId(objectID, objectInfo.type);
     if(error < 0)
     {
       std::cout << "Error Closing Object ID" << std::endl;
@@ -393,7 +394,7 @@ herr_t complex::H5::Reader::Generic::getAttributeInfo(hid_t locationID, const st
   }
 
   /* Open the object */
-  hid_t objectID = Support::openId(locationID, objectName, objectInfo.type);
+  hid_t objectID = Support::OpenId(locationID, objectName, objectInfo.type);
   if(objectID >= 0)
   {
     hid_t attributeID = H5Aopen_by_name(locationID, objectName.c_str(), attributeName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
@@ -432,18 +433,18 @@ herr_t complex::H5::Reader::Generic::getAttributeInfo(hid_t locationID, const st
             dims.resize(rank);
             std::copy(_dims.cbegin(), _dims.cend(), dims.begin());
           }
-          CloseH5S(dataspaceID, error, returnError);
+          H5S_CLOSE_H5_DATASPACE(dataspaceID, error, returnError);
           dataspaceID = 0;
         }
       }
-      CloseH5A(attributeID, error, returnError);
+      H5S_CLOSE_H5_ATTRIBUTE(attributeID, error, returnError);
       attributeID = 0;
     }
     else
     {
       returnError = -1;
     }
-    error = Support::closeId(objectID, objectInfo.type);
+    error = Support::CloseId(objectID, objectInfo.type);
     if(error < 0)
     {
       std::cout << "Error Closing Object ID" << std::endl;
@@ -474,24 +475,40 @@ std::string H5::Reader::Generic::getName(H5::IdType id)
   return nameStr;
 }
 
+/**
+ * @brief
+ * @tparam T
+ * @param ds
+ * @param name
+ * @param parentId
+ * @param daId
+ * @param tDims
+ * @param cDims
+ */
 template <typename T>
 void createLegacyDataArray(complex::DataStructure& ds, const std::string& name, complex::DataObject::IdType parentId, hid_t daId, usize tDims, usize cDims)
 {
-  auto buffer = std::make_unique<T[]>(tDims * cDims);
-  hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
-  auto err = H5Dread(daId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer.get());
+  auto dataStore = new complex::DataStore<T>({tDims}, {cDims});
+  hid_t dataType = H5::Support::HdfTypeForPrimitive<T>();
+  auto err = H5Dread(daId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, dataStore->data());
   if(err < 0)
   {
-    throw std::runtime_error("");
+    throw std::runtime_error(fmt::format("Error reading HDF5 Data set {}", complex::H5::Support::GetObjectPath(daId)));
   }
 
-  auto dataStore = new complex::DataStore<T>(cDims, tDims, std::move(buffer));
+  // Insert the DataArray into the DataStructure
   auto dataArray = DataArray<T>::Create(ds, name, dataStore, parentId);
 }
 
+/**
+ * @brief
+ * @param daId
+ * @param tDims
+ * @param cDims
+ */
 void readLegacyDataArrayDims(hid_t daId, usize& tDims, usize& cDims)
 {
-  hid_t compType = H5::Support::HDFTypeForPrimitive<int64>();
+  hid_t compType = H5::Support::HdfTypeForPrimitive<int64>();
 
   {
     hid_t compId = H5Aopen(daId, Legacy::CompDims.c_str(), H5P_DEFAULT);
@@ -602,7 +619,7 @@ void readGenericGeomDims(complex::AbstractGeometry* geom, hid_t geomId)
   int32 sDims;
   int32 uDims;
 
-  hid_t dataType = H5::Support::HDFTypeForPrimitive<int32>();
+  hid_t dataType = H5::Support::HdfTypeForPrimitive<int32>();
   hid_t sDimId = H5Aopen(geomId, "SpatialDimensionality", H5P_DEFAULT);
   H5Aread(sDimId, dataType, &sDims);
   H5Aclose(sDimId);
@@ -676,7 +693,7 @@ DataObject* readLegacyImageGeom(complex::DataStructure& ds, hid_t geomId, const 
 
   // DIMENSIONS array
   {
-    hid_t dimsType = H5::Support::HDFTypeForPrimitive<int64>();
+    hid_t dimsType = H5::Support::HdfTypeForPrimitive<int64>();
     int64 dims[3];
     hid_t dimsId = H5Dopen(geomId, "DIMENSIONS", H5P_DEFAULT);
     herr_t error = H5Dread(dimsId, dimsType, H5S_ALL, H5S_ALL, H5P_DEFAULT, dims);
@@ -686,7 +703,7 @@ DataObject* readLegacyImageGeom(complex::DataStructure& ds, hid_t geomId, const 
 
   // ORIGIN array
   {
-    hid_t originType = H5::Support::HDFTypeForPrimitive<float32>();
+    hid_t originType = H5::Support::HdfTypeForPrimitive<float32>();
     float32 origin[3];
     hid_t originId = H5Dopen(geomId, "ORIGIN", H5P_DEFAULT);
     herr_t error = H5Dread(originId, originType, H5S_ALL, H5S_ALL, H5P_DEFAULT, origin);
@@ -696,7 +713,7 @@ DataObject* readLegacyImageGeom(complex::DataStructure& ds, hid_t geomId, const 
 
   // SPACING array
   {
-    hid_t sType = H5::Support::HDFTypeForPrimitive<float32>();
+    hid_t sType = H5::Support::HdfTypeForPrimitive<float32>();
     float32 spacing[3];
     hid_t spacingId = H5Dopen(geomId, "SPACING", H5P_DEFAULT);
     herr_t error = H5Dread(spacingId, sType, H5S_ALL, H5S_ALL, H5P_DEFAULT, spacing);
@@ -827,7 +844,7 @@ complex::DataStructure H5::Reader::DataStructure::readFile(const std::string& fi
     }
     else
     {
-      ds = std::move(complex::DataStructure::ReadFromHdf5(fileId, err));
+      ds = std::move(complex::DataStructure::readFromHdf5(fileId, err));
     }
   }
 

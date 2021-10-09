@@ -27,6 +27,16 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return TriangleGeom*
+   */
+  static TriangleGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   TriangleGeom(const TriangleGeom& other);
@@ -276,19 +286,19 @@ public:
 
   /**
    * @brief Reads values from HDF5
-   * @param targetId
-   * @param groupId
+   * @param dataStructureReader
+   * @param groupReader
    * @return H5::ErrorType
    */
-  H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType groupId) override;
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader) override;
 
   /**
    * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param parentId
-   * @param groupId
+   * @param dataStructureWriter
+   * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType group) const override;
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override;
 
 protected:
   /**
@@ -297,6 +307,14 @@ protected:
    * @param name
    */
   TriangleGeom(DataStructure& ds, const std::string& name);
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  TriangleGeom(DataStructure& ds, const std::string& name, IdType importId);
 
   /**
    * @brief
@@ -342,10 +360,10 @@ protected:
   void setElementSizes(const Float32Array* elementSizes) override;
 
 private:
-  std::optional<DataObject::IdType> m_TriListId;
-  std::optional<DataObject::IdType> m_TrianglesContainingVertId;
-  std::optional<DataObject::IdType> m_TriangleNeighborsId;
-  std::optional<DataObject::IdType> m_TriangleCentroidsId;
-  std::optional<DataObject::IdType> m_TriangleSizesId;
+  std::optional<IdType> m_TriListId;
+  std::optional<IdType> m_TrianglesContainingVertId;
+  std::optional<IdType> m_TriangleNeighborsId;
+  std::optional<IdType> m_TriangleCentroidsId;
+  std::optional<IdType> m_TriangleSizesId;
 };
 } // namespace complex

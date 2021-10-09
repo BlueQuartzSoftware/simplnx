@@ -9,6 +9,11 @@ AbstractMontage::AbstractMontage(DataStructure& ds, const std::string& name)
 {
 }
 
+AbstractMontage::AbstractMontage(DataStructure& ds, const std::string& name, IdType importId)
+: BaseGroup(ds, name, importId)
+{
+}
+
 AbstractMontage::AbstractMontage(const AbstractMontage& other)
 : BaseGroup(other)
 , m_Collection(other.m_Collection)

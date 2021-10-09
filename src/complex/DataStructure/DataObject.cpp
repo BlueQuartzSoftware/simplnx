@@ -1,33 +1,28 @@
 #include "DataObject.hpp"
 
-#include <hdf5.h>
-
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Metadata.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5ObjectWriter.hpp"
 
 #include <algorithm>
 #include <exception>
 
 using namespace complex;
 
-const std::string H5::Constants::DataObject::ObjectTypeTag = "ObjectType";
-
-DataObject::IdType DataObject::generateId(const std::optional<IdType>& opId)
-{
-  static IdType id = 0;
-  if(opId && opId > id)
-  {
-    id = opId.value();
-  }
-  return ++id;
-}
-
 DataObject::DataObject(DataStructure& ds, std::string name)
 : m_Name(std::move(name))
 , m_DataStructure(&ds)
-, m_Id(generateId())
+, m_Id(ds.generateId())
+, m_H5Id(-1)
+{
+}
+
+DataObject::DataObject(DataStructure& ds, std::string name, IdType importId)
+: m_Name(std::move(name))
+, m_DataStructure(&ds)
+, m_Id(importId)
 , m_H5Id(-1)
 {
 }
@@ -153,15 +148,20 @@ H5::IdType DataObject::getH5Id() const
   return m_H5Id;
 }
 
-H5::ErrorType DataObject::writeHdf5(H5::IdType parentId) const
+H5::ErrorType DataObject::writeH5ObjectAttributes(H5::DataStructureWriter& dataStructureWriter, H5::ObjectWriter& objectWriter) const
 {
-  const std::string typeName = getTypeName();
-  hid_t groupId = H5Gcreate(parentId, getName().c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  auto err = H5::Writer::Generic::writeStringAttribute(parentId, getName(), H5::Constants::DataObject::ObjectTypeTag, typeName);
-  if(err >= 0)
+  // Add to DataStructureWriter for use in linking
+  dataStructureWriter.addH5Writer(objectWriter, getId());
+
+  auto typeAttributeWriter = objectWriter.createAttribute(complex::Constants::k_ObjectTypeTag);
+  auto error = typeAttributeWriter.writeString(getTypeName());
+  if(error < 0)
   {
-    err = writeHdf5_impl(parentId, groupId);
+    return error;
   }
-  H5Gclose(groupId);
-  return err;
+
+  auto idAttributeWriter = objectWriter.createAttribute(complex::Constants::k_ObjectIdTag);
+  error = idAttributeWriter.writeValue(getId());
+
+  return error;
 }

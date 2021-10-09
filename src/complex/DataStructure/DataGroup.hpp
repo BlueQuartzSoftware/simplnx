@@ -32,6 +32,26 @@ public:
   static DataGroup* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
 
   /**
+   * @brief Attempts to construct and insert a DataGroup into the DataStructure.
+   * If a parentId is provided, then the DataGroup is created with the
+   * corresponding BaseGroup as its parent. Otherwise, the DataStucture will be
+   * used as the parent object. In either case, the DataStructure will take
+   * ownership of the DataGroup.
+   *
+   * Unlike Create, Import allows setting the DataObject ID for use in
+   * importing data.
+   *
+   * Returns a pointer to the DataGroup if the process succeeds. Returns
+   * nullptr otherwise.
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return DataGroup*
+   */
+  static DataGroup* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+
+  /**
    * @brief Constructs a shallow copy of the DataGroup. This copy is not added
    * to the DataStructure by default.
    * @param other
@@ -70,11 +90,11 @@ public:
 
   /**
    * @brief Reads the DataStructure group from a target HDF5 group.
-   * @param targetId
-   * @param parentId
+   * @param dataStructureReader
+   * @param groupReader
    * @return H5::Error
    */
-  H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType parentId) override;
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader) override;
 
 protected:
   /**
@@ -84,6 +104,15 @@ protected:
    * @param name
    */
   DataGroup(DataStructure& ds, const std::string& name);
+
+  /**
+   * @brief Creates the DataGroup for the target DataStructure and with the
+   * specified name.
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  DataGroup(DataStructure& ds, const std::string& name, IdType importId);
 
   /**
    * @brief Checks if the provided DataObject can be added to the container.
@@ -96,10 +125,9 @@ protected:
 
   /**
    * @brief Writes the DataObject to the target HDF5 group.
-   * @param parentId
-   * @param groupId
+   * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const override;
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override;
 };
 } // namespace complex

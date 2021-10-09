@@ -1,7 +1,6 @@
 #pragma once
 
 #include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
-
 #include "complex/complex_export.hpp"
 
 namespace complex
@@ -168,6 +167,14 @@ protected:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  AbstractGeometry2D(DataStructure& ds, const std::string& name, IdType importId);
+
+  /**
+   * @brief
    * @param other
    */
   AbstractGeometry2D(const AbstractGeometry2D& other);
@@ -179,8 +186,8 @@ protected:
   AbstractGeometry2D(AbstractGeometry2D&& other) noexcept;
 
 private:
-  std::optional<DataObject::IdType> m_VertexListId;
-  std::optional<DataObject::IdType> m_EdgeListId;
-  std::optional<DataObject::IdType> m_UnsharedEdgeListId;
+  std::optional<IdType> m_VertexListId;
+  std::optional<IdType> m_EdgeListId;
+  std::optional<IdType> m_UnsharedEdgeListId;
 };
 } // namespace complex

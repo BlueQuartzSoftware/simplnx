@@ -3,7 +3,8 @@
 #include <stdexcept>
 
 #include "complex/DataStructure/DataObject.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 namespace complex
 {
@@ -37,6 +38,34 @@ public:
   static ScalarData* Create(DataStructure& ds, const std::string& name, value_type defaultValue, const std::optional<IdType>& parentId = {})
   {
     auto data = std::shared_ptr<ScalarData>(new ScalarData(ds, name, defaultValue));
+    if(!AttemptToAddObject(ds, data, parentId))
+    {
+      return nullptr;
+    }
+    return data.get();
+  }
+
+  /**
+   * @brief Attempts to create a ScalarData with the specified default value
+   * and insert it into the DataStructure. If a parent ID is provided, the
+   * ScalarData will be inserted under the target parent. Otherwise, the
+   * ScalarData will be nested directly under the DataStructure.
+   *
+   * If the ScalarData cannot be created, this method returns nullptr.
+   * Otherwise, a pointer to the created ScalarData will be returned.
+   *
+   * Unlike Create, Import allows setting the DataObject ID for use in
+   * importing DataObjects from external sources.
+   * @param ds
+   * @param name
+   * @param importId
+   * @param defaultValue
+   * @param parentId = {}
+   * @return ScalarData*
+   */
+  static ScalarData* Import(DataStructure& ds, const std::string& name, IdType importId, value_type defaultValue, const std::optional<IdType>& parentId = {})
+  {
+    auto data = std::shared_ptr<ScalarData>(new ScalarData(ds, name, importId, defaultValue));
     if(!AttemptToAddObject(ds, data, parentId))
     {
       return nullptr;
@@ -178,9 +207,18 @@ public:
    * @param dataId
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType dataId) const override
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override
   {
-    return H5::Writer::Generic::writeScalarAttribute(parentId, getName(), "Value", m_Data);
+    auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
+
+    H5::DatasetWriter::DimsType dims = {1};
+    std::vector<value_type> dataVector = {m_Data};
+    auto error = datasetWriter.writeVector(dims, dataVector);
+    if(error == 0)
+    {
+      error = writeH5ObjectAttributes(dataStructureWriter, datasetWriter);
+    }
+    return error;
   }
 
 protected:
@@ -192,6 +230,19 @@ protected:
    */
   ScalarData(DataStructure& ds, const std::string& name, value_type defaultValue)
   : DataObject(ds, name)
+  , m_Data(defaultValue)
+  {
+  }
+
+  /**
+   * @brief Constructs a ScalarData object with the target name and value.
+   * @param ds
+   * @param name
+   * @param importId
+   * @param defaultValue
+   */
+  ScalarData(DataStructure& ds, const std::string& name, IdType importId, value_type defaultValue)
+  : DataObject(ds, name, importId)
   , m_Data(defaultValue)
   {
   }

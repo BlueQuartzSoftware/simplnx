@@ -235,6 +235,14 @@ protected:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  AbstractGeometry3D(DataStructure& ds, const std::string& name, IdType importId);
+
+  /**
+   * @brief
    * @param numQuads
    * @return SharedQuadList*
    */
@@ -248,10 +256,10 @@ protected:
   SharedTriList* createSharedTriList(usize numTris);
 
 private:
-  std::optional<DataObject::IdType> m_VertexListId;
-  std::optional<DataObject::IdType> m_EdgeListId;
-  std::optional<DataObject::IdType> m_UnsharedEdgeListId;
-  std::optional<DataObject::IdType> m_FaceListId;
-  std::optional<DataObject::IdType> m_UnsharedFaceListId;
+  std::optional<IdType> m_VertexListId;
+  std::optional<IdType> m_EdgeListId;
+  std::optional<IdType> m_UnsharedEdgeListId;
+  std::optional<IdType> m_FaceListId;
+  std::optional<IdType> m_UnsharedFaceListId;
 };
 } // namespace complex

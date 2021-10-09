@@ -2,10 +2,18 @@
 
 #include <exception>
 
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
+
 using namespace complex;
 
 BaseGroup::BaseGroup(DataStructure& ds, const std::string& name)
 : DataObject(ds, name)
+{
+}
+
+BaseGroup::BaseGroup(DataStructure& ds, const std::string& name, IdType importId)
+: DataObject(ds, name, importId)
 {
 }
 
@@ -144,12 +152,19 @@ BaseGroup::ConstIterator BaseGroup::end() const
   return m_DataMap.end();
 }
 
-H5::ErrorType BaseGroup::readHdf5(H5::IdType targetId, H5::IdType parentId)
+H5::ErrorType BaseGroup::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  return m_DataMap.readH5Group(*getDataStructure(), targetId, getId());
+  return m_DataMap.readH5Group(dataStructureReader, groupReader, getId());
 }
 
-H5::ErrorType BaseGroup::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+H5::ErrorType BaseGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
-  return m_DataMap.writeH5Group(groupId);
+  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
+  auto error = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  if(error < 0)
+  {
+    return error;
+  }
+
+  return m_DataMap.writeH5Group(dataStructureWriter, groupWriter);
 }

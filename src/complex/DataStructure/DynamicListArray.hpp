@@ -47,6 +47,30 @@ public:
   }
 
   /**
+   * @brief Attempts to create a new DynamicListArray and insert it into the
+   * DataStructure. If a parentId is provided, the created DynamicListArray
+   * will be nested under the target DataObject. Otherwise, it will be placed
+   * directly under the DataStructure.
+   *
+   * Returns a pointer to the created DynamicListArray if the operation succeeded.
+   * Returns nullptr otherwise.
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return DynamicListArray*
+   */
+  static DynamicListArray* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+  {
+    auto data = std::shared_ptr<DynamicListArray>(new DynamicListArray(ds, name, importId));
+    if(!AttemptToAddObject(ds, data, parentId))
+    {
+      return nullptr;
+    }
+    return data.get();
+  }
+
+  /**
    * @brief Creates a copy of the specified DynamicListArray. This copy is not
    * added to the DataStructure. The caller is responsible for deleting the
    * DynamicListArray.
@@ -292,6 +316,17 @@ protected:
   {
   }
 
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  DynamicListArray(DataStructure& ds, const std::string& name, IdType importId)
+  : DataObject(ds, name, importId)
+  {
+  }
+
   //----------------------------------------------------------------------------
   // This will allocate memory to hold all the NeighborList structures where each
   // structure is initialized to Zero Entries and a nullptr Pointer
@@ -326,11 +361,10 @@ protected:
 
   /**
    * @brief Writes the DataArray to HDF5 using the provided group ID.
-   * @param parentId
-   * @param dataId
+   * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType dataId) const override
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override
   {
     throw std::runtime_error("");
   }

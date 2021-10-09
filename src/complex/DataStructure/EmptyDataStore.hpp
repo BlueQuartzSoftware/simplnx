@@ -1,8 +1,9 @@
 #pragma once
 
-#include <stdexcept>
-
 #include "complex/DataStructure/IDataStore.hpp"
+
+#include <stdexcept>
+#include <vector>
 
 namespace complex
 {
@@ -20,13 +21,12 @@ public:
   using value_type = typename IDataStore<T>::value_type;
   using reference = typename IDataStore<T>::reference;
   using const_reference = typename IDataStore<T>::const_reference;
+  using ShapeType = typename IDataStore<T>::ShapeType;
 
   /**
    * @brief Constructs an empty data store with a tuple getSize and count of 0.
    */
   EmptyDataStore()
-  : m_NumComponents(0)
-  , m_TupleCount(0)
   {
   }
 
@@ -35,9 +35,9 @@ public:
    * @param tupleSize
    * @param tupleCount
    */
-  EmptyDataStore(usize tupleSize, usize tupleCount)
-  : m_NumComponents(tupleSize)
-  , m_TupleCount(tupleCount)
+  EmptyDataStore(const ShapeType& tupleShape, const ShapeType& componentShape)
+  : m_ComponentShape(componentShape)
+  , m_TupleShape(tupleShape)
   {
   }
 
@@ -46,8 +46,8 @@ public:
    * @param other
    */
   EmptyDataStore(const EmptyDataStore& other)
-  : m_TupleCount(other.m_TupleCount)
-  , m_NumComponents(other.m_NumComponents)
+  : m_TupleShape(other.m_TupleShape)
+  , m_ComponentShape(other.m_ComponentShape)
   {
   }
 
@@ -56,8 +56,8 @@ public:
    * @param other
    */
   EmptyDataStore(EmptyDataStore&& other) noexcept
-  : m_TupleCount(std::move(other.m_TupleCount))
-  , m_NumComponents(std::move(other.m_NumComponents))
+  : m_TupleShape(std::move(other.m_TupleShape))
+  , m_ComponentShape(std::move(other.m_ComponentShape))
   {
   }
 
@@ -67,26 +67,26 @@ public:
    * @brief Returns the number of tuples that should be in the data store.
    * @return usize
    */
-  usize getTupleCount() const override
+  usize getNumberOfTuples() const override
   {
-    return m_TupleCount;
+    return 0;
   }
 
   /**
    * @brief Returns the target tuple getSize.
    * @return usize
    */
-  usize getNumComponents() const override
+  size_t getNumberOfComponents() const override
   {
-    return m_NumComponents;
+    return 0;
   }
 
   /**
    * @brief Throws an exception because this should never be called. The
-   * EmptyDataStore class contains no data other than its target getSize.
-   * @param tupleCount
+   * EmptyDataStore class contains no data other than its target size.
+   * @param tupleShape
    */
-  void resizeTuples(usize tupleCount) override
+  void reshapeTuples(const ShapeType& tupleShape) override
   {
     throw std::runtime_error("");
   }
@@ -156,18 +156,17 @@ public:
   }
 
   /**
-   * @brief Writes the data store to HDF5. Returns the HDF5 error code should
-   * one be encountered. Otherwise, returns 0.
-   * @param dataId
+   * @brief Throws a runtime error due to the inability to write values to HDF5.
+   * @param datasetWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::IdType dataId) const override
+  H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const override
   {
     throw std::runtime_error("");
   }
 
 private:
-  usize m_NumComponents;
-  usize m_TupleCount;
+  ShapeType m_ComponentShape;
+  ShapeType m_TupleShape;
 };
 } // namespace complex

@@ -59,6 +59,9 @@ else()
   )
 endif()
 
+# Force HDF5 1.10 API
+add_compile_definitions("H5_USE_110_API")
+
 target_include_directories(complex
   PRIVATE
     ${HDF5_INCLUDE_DIRS}
@@ -200,6 +203,8 @@ set(COMPLEX_HDRS
   
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/StringUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/AbstractMontage.hpp
@@ -255,11 +260,21 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataReader.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Reader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5AttributeReader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5AttributeWriter.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataFactoryManager.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DatasetReader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DatasetWriter.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataStructureReader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5FileReader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5FileWriter.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5GroupReader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5GroupWriter.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5IDataFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectReader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectWriter.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Writer.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IH5DataFactory.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
 
@@ -360,11 +375,22 @@ set(COMPLEX_SRCS
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataReader.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Reader.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5AttributeReader.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5AttributeWriter.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataFactoryManager.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DatasetReader.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DatasetWriter.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataStructureReader.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataStructureWriter.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5FileReader.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5FileWriter.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5GroupReader.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5GroupWriter.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5IDataFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectReader.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectWriter.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Writer.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IH5DataFactory.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp

@@ -8,6 +8,11 @@ AbstractGeometry2D::AbstractGeometry2D(DataStructure& ds, const std::string& nam
 {
 }
 
+AbstractGeometry2D::AbstractGeometry2D(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractGeometry(ds, name, importId)
+{
+}
+
 AbstractGeometry2D::AbstractGeometry2D(const AbstractGeometry2D& other)
 : AbstractGeometry(other)
 , m_VertexListId(other.m_VertexListId)
@@ -28,7 +33,7 @@ AbstractGeometry2D::~AbstractGeometry2D() = default;
 
 void AbstractGeometry2D::resizeVertexList(usize numVertices)
 {
-  getVertices()->getDataStore()->resizeTuples(numVertices);
+  getVertices()->getDataStore()->reshapeTuples({numVertices});
 }
 
 void AbstractGeometry2D::setVertices(const SharedVertexList* vertices)
@@ -43,13 +48,13 @@ void AbstractGeometry2D::setVertices(const SharedVertexList* vertices)
 
 AbstractGeometry::SharedVertexList* AbstractGeometry2D::getVertices()
 {
-  auto data = getDataStructure()->getData(m_VertexListId);
+  DataObject* data = getDataStructure()->getData(m_VertexListId);
   return dynamic_cast<SharedVertexList*>(data);
 }
 
 const AbstractGeometry::SharedVertexList* AbstractGeometry2D::getVertices() const
 {
-  auto data = getDataStructure()->getData(m_VertexListId);
+  const DataObject* data = getDataStructure()->getData(m_VertexListId);
   return dynamic_cast<const SharedVertexList*>(data);
 }
 
@@ -65,17 +70,17 @@ const AbstractGeometry::SharedEdgeList* AbstractGeometry2D::getEdges() const
 
 usize AbstractGeometry2D::getNumberOfEdges() const
 {
-  auto edges = getEdges();
+  const SharedEdgeList* edges = getEdges();
   if(!edges)
   {
     return 0;
   }
-  return edges->getTupleCount();
+  return edges->getNumberOfTuples();
 }
 
 void AbstractGeometry2D::setVertsAtEdge(usize edgeId, const usize verts[2])
 {
-  auto edges = getEdges();
+  SharedEdgeList* edges = getEdges();
   if(!edges)
   {
     return;
@@ -86,7 +91,7 @@ void AbstractGeometry2D::setVertsAtEdge(usize edgeId, const usize verts[2])
 
 void AbstractGeometry2D::getVertsAtEdge(usize edgeId, usize verts[2]) const
 {
-  auto edges = getEdges();
+  const SharedEdgeList* edges = getEdges();
   if(!edges)
   {
     return;

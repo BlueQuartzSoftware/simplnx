@@ -1,18 +1,14 @@
 #pragma once
 
-#include <numeric>
-#include <optional>
-#include <string>
-
-#define H5_USE_110_API
-
-#include <hdf5.h>
-
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "complex/complex_export.hpp"
+
+#include <numeric>
+#include <optional>
+#include <string>
 
 namespace complex
 {
@@ -68,22 +64,22 @@ H5::ErrorType COMPLEX_EXPORT readStringAttribute(H5::IdType locationID, const st
 template <typename T>
 inline H5::ErrorType readScalarAttribute(H5::IdType locationID, const std::string& objectName, const std::string& attributeName, T& data)
 {
-  H5O_info1_t objectInfo;
+  H5O_info_t objectInfo;
   herr_t returnError = 0;
-  hid_t dataType = Support::HDFTypeForPrimitive<T>();
+  hid_t dataType = Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     return -1;
   }
   // std::cout << "Reading Scalar style Attribute at Path '" << objectName << "' with Key: '" << attributeName << "'" << std::endl;
   /* Get the type of object */
-  herr_t error = H5Oget_info_by_name1(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  herr_t error = H5Oget_info_by_name(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
   if(error < 0)
   {
     return error;
   }
   /* Open the object */
-  hid_t objectID = Support::openId(locationID, objectName, objectInfo.type);
+  hid_t objectID = Support::OpenId(locationID, objectName, objectInfo.type);
   if(objectID >= 0)
   {
     hid_t attributeID = H5Aopen_by_name(locationID, objectName.c_str(), attributeName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
@@ -106,7 +102,7 @@ inline H5::ErrorType readScalarAttribute(H5::IdType locationID, const std::strin
     {
       returnError = static_cast<herr_t>(attributeID);
     }
-    error = Support::closeId(objectID, objectInfo.type);
+    error = Support::CloseId(objectID, objectInfo.type);
     if(error < 0)
     {
       std::cout << "Error Closing Object" << std::endl;
@@ -149,21 +145,21 @@ template <typename T>
 herr_t readVectorAttribute(hid_t locationID, const std::string& objectName, const std::string& attributeName, std::vector<T>& data)
 {
   herr_t returnError = 0;
-  hid_t dataType = Support::HDFTypeForPrimitive<T>();
+  hid_t dataType = Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     return -1;
   }
   // std::cout << "   Reading Vector Attribute at Path '" << objectName << "' with Key: '" << attributeName << "'" << std::endl;
   /* Get the type of object */
-  H5O_info1_t objectInfo;
-  herr_t error = H5Oget_info_by_name1(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  H5O_info_t objectInfo;
+  herr_t error = H5Oget_info_by_name(locationID, objectName.c_str(), &objectInfo, H5P_DEFAULT);
   if(error < 0)
   {
     return error;
   }
   /* Open the object */
-  hid_t objectID = Support::openId(locationID, objectName, objectInfo.type);
+  hid_t objectID = Support::OpenId(locationID, objectName, objectInfo.type);
   if(objectID >= 0)
   {
     hid_t attributeID = H5Aopen_by_name(locationID, objectName.c_str(), attributeName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
@@ -195,7 +191,7 @@ herr_t readVectorAttribute(hid_t locationID, const std::string& objectName, cons
     {
       returnError = static_cast<herr_t>(attributeID);
     }
-    error = Support::closeId(objectID, objectInfo.type);
+    error = Support::CloseId(objectID, objectInfo.type);
     if(error < 0)
     {
       std::cout << "Error Closing Object" << std::endl;
