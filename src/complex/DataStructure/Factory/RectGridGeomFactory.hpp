@@ -1,10 +1,12 @@
 #pragma once
 
-#include "complex/Utilities/Parsing/HDF5/IH5DataFactory.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5IDataFactory.hpp"
 
 namespace complex
 {
-class COMPLEX_EXPORT RectGridGeomFactory : public IH5DataFactory
+namespace H5
+{
+class COMPLEX_EXPORT RectGridGeomFactory : public H5::IDataFactory
 {
 public:
   RectGridGeomFactory();
@@ -20,13 +22,22 @@ public:
   /**
    * @brief Creates and adds an HexahedralGeom to the provided DataStructure from
    * the target HDF5 ID.
-   * @param ds DataStructure to add the created geometry to.
-   * @param targetId ID for the target HDF5 object.
-   * @param groupId ID for the parent HDF5 group.
-   * @param parentId Optional DataObject ID describing which parent object to
-   * create the generated DataObject under.
+   * @param dataStructureReader Active DataStructureReader.
+   * @param groupReader Wrapper around the target HDF5 group.
+   * @param parentId = {} Optional DataObject ID describing which parent object
+   * to create the generated DataObject under.
    * @return H5::ErrorType
    */
-  H5::ErrorType createFromHdf5(DataStructure& ds, H5::IdType targetId, H5::IdType groupId, const std::optional<DataObject::IdType>& parentId = {}) override;
+  H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId = {}) override;
+
+  /**
+   * @brief Reads an HDF5 Dataset that makes up a DataStructure node.
+   * @param dataStructureReader Active DataStructureReader.
+   * @param datasetGroup Wrapper around the HDF5 dataset.
+   * @param parentId = {} The HDF5 ID of the parent object.
+   * @return H5::ErrorType
+   */
+  H5::ErrorType readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId = {}) override;
 };
+} // namespace H5
 } // namespace complex

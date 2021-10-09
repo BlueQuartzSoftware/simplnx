@@ -2,6 +2,7 @@
 
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 namespace complex
 {
@@ -57,6 +58,41 @@ public:
   }
 
   /**
+   * @brief Attempts to create a DataArray with the specified values and add
+   * it to the DataStructure. If a parentId is provided, then the DataArray
+   * is created with the target DataObject as its parent. Otherwise, the
+   * created DataArray is nested directly within the DataStructure.
+   *
+   * In either case, the DataArray is then owned by the DataStructure and will
+   * be cleaned up when the DataStructure is finished with it. As such, it is
+   * not recommended that the returned pointer be stored outside of the scope
+   * in which it is created. Use the object's ID or DataPath to retrieve the
+   * DataArray if it is needed after the program has left the current scope.
+   *
+   * Unlike Create, Import allows the DataObject ID to be set for use in
+   * importing data.
+   *
+   * Returns a pointer to the created DataArray if the process succeeds.
+   * Returns nullptr otherwise.
+   *
+   * The created DataArray takes ownership of the provided DataStore.
+   * @param ds
+   * @param name
+   * @param store
+   * @param parentId = {}
+   * @return DataArray<T>*
+   */
+  static DataArray* Import(DataStructure& ds, const std::string& name, IdType importId, store_type* store, const std::optional<IdType>& parentId = {})
+  {
+    auto data = std::shared_ptr<DataArray>(new DataArray(ds, name, importId, store));
+    if(!AttemptToAddObject(ds, data, parentId))
+    {
+      return nullptr;
+    }
+    return data.get();
+  }
+
+  /**
    * @brief Creates a copy of the specified tuple getSize, count, and smart
    * pointer to the target DataStore. This copy is not added to the
    * DataStructure.
@@ -84,8 +120,8 @@ public:
   ~DataArray() override = default;
 
   /**
-   * @brief Returns a shallow copy of the DataArray without copying data
-   * store's contents.
+   * @brief Returns a shallow copy of the DataArray without copying data. THE CALLING CODE
+   * MUST DISPOSE OF THE RETURNED OBJECT.
    * @return DataObject*
    */
   DataObject* shallowCopy() override
@@ -118,25 +154,25 @@ public:
    */
   usize getSize() const
   {
-    return getTupleCount() * getNumComponents();
+    return getNumberOfTuples() * getNumberOfComponents();
   }
 
   /**
    * @brief Returns the number of tuples in the DataArray.
    * @return usize
    */
-  usize getTupleCount() const
+  size_t getNumberOfTuples() const
   {
-    return m_DataStore->getTupleCount();
+    return m_DataStore->getNumberOfTuples();
   }
 
   /**
    * @brief Returns the tuple getSize.
    * @return usize
    */
-  usize getNumComponents() const
+  size_t getNumberOfComponents() const
   {
-    return m_DataStore->getNumComponents();
+    return m_DataStore->getNumberOfComponents();
   }
 
   /**
@@ -224,14 +260,14 @@ public:
     return m_DataStore;
   }
 
-  /**
-   * @brief Returns true if the DataStore has already been allocated. Returns false otherwise.
-   * @return bool
-   */
-  bool isAllocated() const
-  {
-    return m_DataStore != nullptr;
-  }
+  //  /**
+  //   * @brief Returns true if the DataStore has already been allocated. Returns false otherwise.
+  //   * @return bool
+  //   */
+  //  bool isAllocated() const
+  //  {
+  //    return m_DataStore != nullptr;
+  //  }
 
   /**
    * @brief Sets a new DataStore for the DataArray to handle. The existing DataStore
@@ -349,7 +385,7 @@ public:
    * @param rhs
    * @return DataArray&
    */
-  DataArray& operator=(DataArray&& rhs)
+  DataArray& operator=(DataArray&& rhs) noexcept
   {
     m_DataStore = std::move(rhs.m_DataStore);
     return *this;
@@ -387,16 +423,38 @@ protected:
   }
 
   /**
+   * @brief Constructs a DataArray with the specified name and DataStore.
+   *
+   * The DataArray takes ownership of the DataStore. If none is provided,
+   * an EmptyDataStore is used instead.
+   * @param ds
+   * @param name
+   * @param importId
+   * @param store
+   */
+  DataArray(DataStructure& ds, const std::string& name, IdType importId, store_type* store = nullptr)
+  : DataObject(ds, name, importId)
+  {
+    setDataStore(store);
+  }
+
+  /**
    * @brief Writes the DataArray to HDF5 using the provided group ID.
    *
    * This method will fail if no DataStore has been set.
-   * @param parentId
-   * @param dataId
+   * @param dataStructureWriter
+   * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType dataId) const override
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override
   {
-    return m_DataStore->writeHdf5(dataId);
+    auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
+    auto err = m_DataStore->writeHdf5(datasetWriter);
+    if(err < 0)
+    {
+      return err;
+    }
+    return writeH5ObjectAttributes(dataStructureWriter, datasetWriter);
   }
 
 private:

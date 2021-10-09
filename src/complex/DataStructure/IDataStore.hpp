@@ -1,17 +1,17 @@
 #pragma once
 
+#include "complex/DataStructure/DataObject.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
+
 #include <algorithm>
 #include <iterator>
 
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
-
 namespace complex
 {
-namespace H5::Constants::DataStore
+namespace H5
 {
-static const std::string TupleCount = "TupleCount";
-static const std::string NumComponents = "NumComponents";
-} // namespace H5::Constants::DataStore
+class DatasetWriter;
+} // namespace H5
 
 /**
  * @class IDataStore
@@ -28,6 +28,7 @@ public:
   using value_type = T;
   using reference = T&;
   using const_reference = const T&;
+  using ShapeType = typename std::vector<usize>;
 
   /////////////////////////////////
   // Begin std::iterator support //
@@ -254,13 +255,13 @@ public:
    * @brief Returns the number of tuples in the DataStore.
    * @return usize
    */
-  virtual usize getTupleCount() const = 0;
+  virtual usize getNumberOfTuples() const = 0;
 
   /**
    * @brief Returns the number of components.
    * @return usize
    */
-  virtual usize getNumComponents() const = 0;
+  virtual usize getNumberOfComponents() const = 0;
 
   /**
    * @brief Returns the number of values stored within the DataStore.
@@ -268,14 +269,14 @@ public:
    */
   usize getSize() const
   {
-    return getTupleCount() * getNumComponents();
+    return getNumberOfTuples() * getNumberOfComponents();
   }
 
   /**
    * @brief Resizes the DataStore to handle the specified number of tuples.
    * @param numTuples
    */
-  virtual void resizeTuples(usize numTuples) = 0;
+  virtual void reshapeTuples(const std::vector<usize>& tupleShape) = 0;
 
   /**
    * @brief Returns the value found at the specified index of the DataStore.
@@ -370,10 +371,10 @@ public:
   /**
    * @brief Writes the data store to HDF5. Returns the HDF5 error code should
    * one be encountered. Otherwise, returns 0.
-   * @param dataId
+   * @param datasetWriter
    * @return H5::ErrorType
    */
-  virtual H5::ErrorType writeHdf5(H5::IdType dataId) const = 0;
+  virtual H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const = 0;
 
 protected:
   /**

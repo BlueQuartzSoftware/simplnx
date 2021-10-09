@@ -3,15 +3,15 @@
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
-#include "complex/Utilities/Parsing/HDF5/IH5DataFactory.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DataStructureReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5IDataFactory.hpp"
 
 using namespace complex;
 
-DataMap::DataMap()
-{
-}
-
+DataMap::DataMap() = default;
 DataMap::DataMap(const DataMap& other)
 : m_Map(other.m_Map)
 {
@@ -269,38 +269,25 @@ DataMap& DataMap::operator=(DataMap&& rhs) noexcept
   return *this;
 }
 
-H5::ErrorType DataMap::readH5Group(DataStructure& ds, H5::IdType groupId, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType DataMap::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& h5Group, const std::optional<DataObject::IdType>& dsParentId)
 {
-  const std::string ObjectTypeTag = H5::Constants::DataObject::ObjectTypeTag;
-
-  hsize_t count;
-  H5Gget_num_objs(groupId, &count);
-  for(hsize_t i = 0; i < count; i++)
+  auto count = h5Group.getNumChildren();
+  auto childrenNames = h5Group.getChildNames();
+  for(const auto& childName : childrenNames)
   {
-    const std::string name = H5::Reader::Generic::getNameAtIdx(groupId, i);
-    hid_t objId = H5Gopen(groupId, name.c_str(), H5P_DEFAULT);
-    std::string typeName;
-    H5::Reader::Generic::readStringAttribute(groupId, name, ObjectTypeTag, typeName);
-    // H5::Reader::Generic::readStringAttribute(objId, ObjectTypeTag, ObjectTypeTag, typeName);
-
-    IH5DataFactory* factory = Application::Instance()->getDataStructureReader()->getFactory(typeName);
-    if(factory->createFromHdf5(ds, objId, groupId, parentId) < 0)
-    {
-      throw std::runtime_error("Error reading DataMap from HDF5");
-    }
-
-    H5Gclose(objId);
+    auto errorCode = dataStructureReader.readObjectFromGroup(h5Group, childName, dsParentId);
   }
   return 0;
 }
 
-H5::ErrorType DataMap::writeH5Group(H5::IdType groupId) const
+H5::ErrorType DataMap::writeH5Group(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& groupWriter) const
 {
-  for(const auto& iter : *this)
+  for(const auto& [id, dataObject] : *this)
   {
-    herr_t err = iter.second->writeHdf5(groupId);
+    herr_t err = dataStructureWriter.writeDataObject(dataObject.get(), groupWriter);
     if(err < 0)
     {
+      std::cout << "Error writing object (" << dataObject->getName() << ") in DataMap to HDF5 " << std::endl;
       return err;
     }
   }

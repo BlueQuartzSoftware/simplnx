@@ -1,13 +1,18 @@
 #pragma once
 
+#include "complex/DataStructure/IDataStore.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5AttributeReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+
+#include <fmt/core.h>
+
+#include <algorithm>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
-
-#include <hdf5.h>
-
-#include "complex/DataStructure/IDataStore.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Reader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
+#include <vector>
 
 namespace complex
 {
@@ -24,30 +29,36 @@ public:
   using value_type = typename IDataStore<T>::value_type;
   using reference = typename IDataStore<T>::reference;
   using const_reference = typename IDataStore<T>::const_reference;
+  using ShapeType = typename IDataStore<T>::ShapeType;
+
+  static constexpr const char k_DataStore[] = "DataStore";
+  static constexpr const char k_TupleShape[] = "TupleShape";
+  static constexpr const char k_ComponentShape[] = "ComponentShape";
+  static constexpr const char k_DataObjectId[] = "DataObjectId";
+  static constexpr const char k_DataArrayTypeName[] = "DataArray";
 
   /**
-   * @brief Constructs a DataStore with the specified tupleSize and tupleCount.
-   * @param tupleSize
-   * @param tupleCount
+   * @brief Creates a new DataStore with a single tuple dimensions of 'numTuples' and
+   * a single component dimension of {1}
+   * @param numTuples
    */
-  DataStore(usize tupleSize, usize tupleCount)
-  : m_NumComponents(tupleSize)
-  , m_TupleCount(tupleCount)
-  , m_Data(std::make_unique<value_type[]>(tupleSize * tupleCount))
+  DataStore(usize numTuples)
+  : m_ComponentShape({1})
+  , m_TupleShape({numTuples})
   {
+    reshapeTuples(m_TupleShape);
   }
 
   /**
    * @brief Constructs a DataStore with the specified tupleSize and tupleCount.
-   * @param tupleSize
-   * @param tupleCount
-   * @param data
+   * @param tupleShape The dimensions of the tuples
+   * @param componentShape The dimensions of the component at each tuple
    */
-  DataStore(usize tupleSize, usize tupleCount, std::unique_ptr<value_type[]>&& data)
-  : m_NumComponents(tupleSize)
-  , m_TupleCount(tupleCount)
-  , m_Data(std::move(data))
+  DataStore(const ShapeType& tupleShape, const ShapeType& componentShape)
+  : m_ComponentShape(componentShape)
+  , m_TupleShape(tupleShape)
   {
+    reshapeTuples(m_TupleShape);
   }
 
   /**
@@ -55,15 +66,16 @@ public:
    * @param other
    */
   DataStore(const DataStore& other)
-  : m_TupleCount(other.m_TupleCount)
-  , m_NumComponents(other.m_NumComponents)
-  , m_Data(std::make_unique<value_type[]>(m_TupleCount * m_NumComponents))
+  : m_TupleShape(other.m_TupleShape)
+  , m_ComponentShape(other.m_ComponentShape)
   {
-    const usize count = m_TupleCount * m_NumComponents;
+    const usize count = other.getSize();
+    auto data = new value_type[count];
     for(usize i = 0; i < count; i++)
     {
-      m_Data[i] = other.m_Data[i];
+      data[i] = other.m_Data.get()[i];
     }
+    m_Data.reset(data);
   }
 
   /**
@@ -71,8 +83,8 @@ public:
    * @param other
    */
   DataStore(DataStore&& other) noexcept
-  : m_TupleCount(std::move(other.m_TupleCount))
-  , m_NumComponents(std::move(other.m_NumComponents))
+  : m_TupleShape(std::move(other.m_TupleShape))
+  , m_ComponentShape(std::move(other.m_ComponentShape))
   , m_Data(std::move(other.m_Data))
   {
   }
@@ -83,36 +95,108 @@ public:
    * @brief Returns the number of tuples in the DataStore.
    * @return usize
    */
-  usize getTupleCount() const override
+  usize getNumberOfTuples() const override
   {
-    return m_TupleCount;
+    return std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+  }
+
+  /**
+   * @brief Returns the pointer to the allocated data. Const version
+   * @return
+   */
+  const T* data() const
+  {
+    return m_Data.get();
+  }
+
+  /**
+   * @brief Returns the pointer to the allocated data. Non-const version
+   * @return
+   */
+  T* data()
+  {
+    return m_Data.get();
   }
 
   /**
    * @brief Returns the number of elements in each Tuple.
    * @return usize
    */
-  usize getNumComponents() const override
+  usize getNumberOfComponents() const override
   {
-    return m_NumComponents;
+    return std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>());
   }
 
   /**
-   * @brief Resizes the DataStore to handle the specified number of tuples.
-   * @param numTuples
+   * @brief Returns the dimensions of the Tuples
+   * @return
    */
-  void resizeTuples(usize numTuples) override
+  const ShapeType& getTupleShape() const
+  {
+    return m_TupleShape;
+  }
+
+  /**
+   * @brief Returns the dimensions of the Components
+   * @return
+   */
+  const ShapeType& getComponentShape() const
+  {
+    return m_ComponentShape;
+  }
+
+  //  /**
+  //   * @brief Resizes the DataStore to handle the specified number of tuples.
+  //   * @param numTuples
+  //   */
+  //  void resizeTuples(size_t numTuples) override
+  //  {
+  //    auto oldSize = this->getSize();
+  //    m_TupleShape = numTuples;
+  //    auto newSize = this->getSize();
+  //
+  //    auto data = new value_type[newSize];
+  //    for(size_t i = 0; i < newSize && i < oldSize; i++)
+  //    {
+  //      data[i] = m_Data[i];
+  //    }
+  //
+  //    m_Data.reset(data);
+  //  }
+
+  /**
+   * @brief
+   * @param tupleShape
+   */
+  void reshapeTuples(const std::vector<usize>& tupleShape) override
   {
     auto oldSize = this->getSize();
-    m_TupleCount = numTuples;
-    auto newSize = this->getSize();
+    // Calculate the total number of values in the new array
+    usize newSize = getNumberOfComponents() * std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+    m_TupleShape = tupleShape;
 
+    if(m_Data.get() == nullptr) // Data was never allocated
+    {
+      auto data = new value_type[newSize];
+      m_Data.reset(data);
+      return;
+    }
+
+    // The caller is reshaping the array without actually effecting its overall number
+    // of elements. Old was 100 x 3 and the new was 300. Both with a {1} comp dim.
+    if(newSize == oldSize)
+    {
+      return;
+    }
+
+    // We have now figured out that the old array and the new array are different sizes so
+    // copy the old data into the newly allocated data array or as much or as little
+    // as possible
     auto data = new value_type[newSize];
     for(usize i = 0; i < newSize && i < oldSize; i++)
     {
       data[i] = m_Data[i];
     }
-
     m_Data.reset(data);
   }
 
@@ -193,80 +277,87 @@ public:
   /**
    * @brief Writes the data store to HDF5. Returns the HDF5 error code should
    * one be encountered. Otherwise, returns 0.
-   * @param dataId
+   * @param datasetWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::IdType dataId) const override
+  H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const override
   {
-    int32 rank = 1;
+    if(!datasetWriter.isValid())
+    {
+      return -1;
+    }
 
-    hsize_t dataSize = m_NumComponents * m_TupleCount;
+    // Consolodate the Tuple and Component Dims into a single array which is used
+    // to write the entire data array to HDF5
+    std::vector<hsize_t> h5dims;
+    for(const auto& value : m_TupleShape)
+    {
+      h5dims.push_back(static_cast<hsize_t>(value));
+    }
+    for(const auto& value : m_ComponentShape)
+    {
+      h5dims.push_back(static_cast<hsize_t>(value));
+    }
 
-    hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
-    hid_t dataspaceId = H5Screate_simple(rank, &dataSize, nullptr);
-    auto err = H5::Writer::Generic::writeScalarAttribute(dataId, ".", H5::Constants::DataStore::TupleCount, m_TupleCount);
+    usize count = this->getSize();
+    std::vector<T> dataVector;
+    auto dataPtr = data();
+    dataVector.assign(dataPtr, dataPtr + count);
+    herr_t err = datasetWriter.writeVector(h5dims, dataVector);
     if(err < 0)
     {
-      throw std::runtime_error("Error writing DataStore tuple count");
+      return err;
     }
-    err = H5::Writer::Generic::writeScalarAttribute(dataId, ".", H5::Constants::DataStore::NumComponents, m_NumComponents);
+
+    // Write shape attributes to the dataset
+    auto tupleAttribute = datasetWriter.createAttribute(k_TupleShape);
+    err = tupleAttribute.writeVector({m_TupleShape.size()}, m_TupleShape);
     if(err < 0)
     {
-      throw std::runtime_error("Error writing DataStore tuple size");
+      return err;
     }
-    hid_t storeId = H5Dcreate1(dataId, "DataStore", dataType, dataspaceId, H5P_DEFAULT);
-    err = H5Dwrite(storeId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, m_Data.get());
-    if(H5Dclose(storeId) < 0)
-    {
-      throw std::runtime_error("Error closing HDF5 data store");
-    }
-    if(H5Sclose(dataspaceId) < 0)
-    {
-      throw std::runtime_error("Error closing HDF5 dataspace");
-    }
+
+    auto componentAttribute = datasetWriter.createAttribute(k_ComponentShape);
+    err = componentAttribute.writeVector({m_ComponentShape.size()}, m_ComponentShape);
 
     return err;
   }
 
-  static DataStore* readHdf5(H5::IdType dataId)
+  static DataStore* readHdf5(const H5::DatasetReader& datasetReader)
   {
-    uint64 tDims;
-    uint64 cDims;
-    H5::Reader::Generic::readScalarAttribute(dataId, ".", H5::Constants::DataStore::TupleCount, tDims);
-    H5::Reader::Generic::readScalarAttribute(dataId, ".", H5::Constants::DataStore::NumComponents, cDims);
-
-    auto buffer = new T[tDims * cDims];
-    try
+    // tupleShape
+    H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(k_TupleShape);
+    if(!tupleShapeAttribute.isValid())
     {
-      // auto buffer = std::make_unique<T[]>(tDims * cDims);
-      hid_t dataType = H5::Support::HDFTypeForPrimitive<T>();
-      auto err = H5Dread(dataId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
-      if(err < 0)
-      {
-        throw std::runtime_error("Error reading DataStore from HDF5");
-      }
-    } catch(const std::exception& e)
-    {
-      std::cerr << e.what() << '\n';
-      throw std::runtime_error("Error creating DataStore.\nTupleCount: " + std::to_string(tDims) + "\nTupleSize: " + std::to_string(cDims));
+      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+      return nullptr;
     }
-    delete[] buffer;
+    typename DataStore<T>::ShapeType tupleShape = tupleShapeAttribute.readAsVector<size_t>();
 
-    try
+    // componentShape
+    H5::AttributeReader componentShapeAttribute = datasetReader.getAttribute(k_ComponentShape);
+    if(!componentShapeAttribute.isValid())
     {
-      auto buffer = std::make_unique<T[]>(5);
-      auto dataStore = new complex::DataStore<T>(cDims, tDims, std::move(buffer));
-      return dataStore;
-    } catch(const std::exception& e)
-    {
-      throw std::runtime_error("Error creating DataStore in DataStore::readHdf5");
+      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+      return nullptr;
     }
-    return nullptr;
+    typename DataStore<T>::ShapeType componentShape = componentShapeAttribute.readAsVector<size_t>();
+
+    // Create DataStore
+    auto dataStore = new complex::DataStore<T>(tupleShape, componentShape);
+
+    auto count = dataStore->getSize();
+    auto dataVector = datasetReader.readAsVector<T>();
+    auto dataPtr = new value_type[count];
+    std::copy(dataVector.begin(), dataVector.end(), dataPtr);
+    dataStore->m_Data.reset(dataPtr);
+
+    return dataStore;
   }
 
 private:
-  uint64 m_NumComponents;
-  uint64 m_TupleCount;
+  ShapeType m_ComponentShape;
+  ShapeType m_TupleShape;
   std::unique_ptr<value_type[]> m_Data;
 };
 

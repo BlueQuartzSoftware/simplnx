@@ -11,6 +11,11 @@
 
 namespace complex
 {
+namespace H5
+{
+class GroupReader;
+}
+
 /**
  * @class BaseGroup
  * @brief The BaseGroup class is the base class for all DataObject containers
@@ -202,6 +207,14 @@ protected:
   BaseGroup(DataStructure& ds, const std::string& name);
 
   /**
+   * @brief Creates a BaseGroup with the target DataStructure and name.
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  BaseGroup(DataStructure& ds, const std::string& name, IdType importId);
+
+  /**
    * @brief Checks if the provided DataObject can be added to the container.
    * This is a virtual method so that derived classes can modify what can or
    * cannot be added to the container. Returns true if the DataObject can be
@@ -230,19 +243,18 @@ protected:
 
   /**
    * @brief Reads the DataStructure group from a target HDF5 group.
-   * @param targetId
-   * @param parentId
+   * @param dataStructureReader
+   * @param groupReader
    * @return H5::Error
    */
-  virtual H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType parentId);
+  virtual H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader);
 
   /**
    * @brief Writes the contained DataObjects to the target HDF5 group.
-   * @param parentId
-   * @param groupId
+   * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const override;
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override;
 
 private:
   DataMap m_DataMap;

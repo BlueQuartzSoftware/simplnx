@@ -11,15 +11,15 @@ using namespace complex;
 namespace
 {
 template <class T>
-IDataStore<T>* CreateDataStore(usize tupleSize, usize tupleCount, IDataAction::Mode mode)
+IDataStore<T>* CreateDataStore(const typename IDataStore<T>::ShapeType& tupleShape, const typename IDataStore<T>::ShapeType& componentShape, IDataAction::Mode mode)
 {
   switch(mode)
   {
   case IDataAction::Mode::Preflight: {
-    return new EmptyDataStore<T>(tupleSize, tupleCount);
+    return new EmptyDataStore<T>(tupleShape, componentShape);
   }
   case IDataAction::Mode::Execute: {
-    return new DataStore<T>(tupleSize, tupleCount);
+    return new DataStore<T>(tupleShape, componentShape);
   }
   default: {
     throw std::runtime_error("Invalid mode");
@@ -49,9 +49,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& dim
 
   std::string name = path[last];
 
-  uint64 nTuples = std::accumulate(dims.cbegin(), dims.cend(), static_cast<uint64>(0));
-
-  auto* store = CreateDataStore<T>(nComp, nTuples, mode);
+  auto* store = CreateDataStore<T>(dims, {nComp}, mode);
   auto dataArray = DataArray<T>::Create(dataStructure, name, store, id);
   if(dataArray == nullptr)
   {

@@ -3,7 +3,7 @@
 #include <exception>
 #include <stdexcept>
 
-#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 using namespace complex;
 
@@ -14,6 +14,11 @@ inline const std::string TypeName = "";
 
 DataGroup::DataGroup(DataStructure& ds, const std::string& name)
 : BaseGroup(ds, name)
+{
+}
+
+DataGroup::DataGroup(DataStructure& ds, const std::string& name, IdType importId)
+: BaseGroup(ds, name, importId)
 {
 }
 
@@ -32,6 +37,16 @@ DataGroup::~DataGroup() = default;
 DataGroup* DataGroup::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<DataGroup>(new DataGroup(ds, name));
+  if(!AttemptToAddObject(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+DataGroup* DataGroup::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<DataGroup>(new DataGroup(ds, name, importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
@@ -64,12 +79,12 @@ bool DataGroup::canInsert(const DataObject* obj) const
   return BaseGroup::canInsert(obj);
 }
 
-H5::ErrorType DataGroup::readHdf5(H5::IdType targetId, H5::IdType parentId)
+H5::ErrorType DataGroup::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  return BaseGroup::readHdf5(targetId, parentId);
+  return BaseGroup::readHdf5(dataStructureReader, groupReader);
 }
 
-H5::ErrorType DataGroup::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+H5::ErrorType DataGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
-  return BaseGroup::writeHdf5_impl(parentId, groupId);
+  return BaseGroup::writeHdf5(dataStructureWriter, parentGroupWriter);
 }

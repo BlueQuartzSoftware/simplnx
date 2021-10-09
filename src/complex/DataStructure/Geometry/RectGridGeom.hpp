@@ -27,6 +27,16 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return RectGridGeom*
+   */
+  static RectGridGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   RectGridGeom(const RectGridGeom& other);
@@ -348,19 +358,19 @@ public:
 
   /**
    * @brief Reads values from HDF5
-   * @param targetId
-   * @param groupId
+   * @param dataStructureReader
+   * @param groupReader
    * @return H5::ErrorType
    */
-  H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType groupId) override;
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader) override;
 
   /**
    * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param parentId
-   * @param groupId
+   * @param dataStructureWriter
+   * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const override;
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override;
 
 protected:
   /**
@@ -369,6 +379,14 @@ protected:
    * @param name
    */
   RectGridGeom(DataStructure& ds, const std::string& name);
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  RectGridGeom(DataStructure& ds, const std::string& name, IdType importId);
 
   /**
    * @brief
@@ -404,10 +422,10 @@ protected:
   void setElementSizes(const Float32Array* elementSizes) override;
 
 private:
-  std::optional<DataObject::IdType> m_xBoundsId;
-  std::optional<DataObject::IdType> m_yBoundsId;
-  std::optional<DataObject::IdType> m_zBoundsId;
-  std::optional<DataObject::IdType> m_VoxelSizesId;
+  std::optional<IdType> m_xBoundsId;
+  std::optional<IdType> m_yBoundsId;
+  std::optional<IdType> m_zBoundsId;
+  std::optional<IdType> m_VoxelSizesId;
   SizeVec3 m_Dimensions;
 };
 } // namespace complex

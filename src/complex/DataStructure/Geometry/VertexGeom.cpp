@@ -2,15 +2,28 @@
 
 #include <stdexcept>
 
+#include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 using namespace complex;
 
+namespace H5Constants
+{
+const std::string VertexListTag = "Vertex List ID";
+const std::string VertexSizesTag = "Vertex Sizes ID";
+} // namespace H5Constants
+
 VertexGeom::VertexGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry(ds, name)
+{
+}
+
+VertexGeom::VertexGeom(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractGeometry(ds, name, importId)
 {
 }
 
@@ -50,6 +63,16 @@ VertexGeom* VertexGeom::Create(DataStructure& ds, const std::string& name, const
   return data.get();
 }
 
+VertexGeom* VertexGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<VertexGeom>(new VertexGeom(ds, name, importId));
+  if(!AttemptToAddObject(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
 std::string VertexGeom::getTypeName() const
 {
   return getGeometryTypeAsString();
@@ -72,16 +95,33 @@ std::string VertexGeom::getGeometryTypeAsString() const
 
 void VertexGeom::initializeWithZeros()
 {
+  AbstractGeometry::SharedVertexList* vertices = getVertices();
+  if(nullptr == vertices)
+  {
+    return;
+  }
+  std::fill(vertices->getDataStore()->begin(), vertices->getDataStore()->end(), 0);
 }
 
 void VertexGeom::resizeVertexList(usize newNumVertices)
 {
-  getVertices()->getDataStore()->resizeTuples(newNumVertices);
+  AbstractGeometry::SharedVertexList* vertices = getVertices();
+  if(nullptr == vertices)
+  {
+    DataStore<float32>* dataStore = new DataStore<float32>({newNumVertices}, {3});
+    DataStructure* ds = getDataStructure();
+    vertices = AbstractGeometry::SharedVertexList::Create(*ds, "Vertices", dataStore);
+    setVertices(vertices);
+  }
+  else
+  {
+    vertices->getDataStore()->reshapeTuples({newNumVertices});
+  }
 }
 
 void VertexGeom::setVertices(const SharedVertexList* vertices)
 {
-  if(!vertices)
+  if(nullptr == vertices)
   {
     m_VertexListId.reset();
     return;
@@ -102,7 +142,7 @@ const AbstractGeometry::SharedVertexList* VertexGeom::getVertices() const
 Point3D<float32> VertexGeom::getCoords(usize vertId) const
 {
   auto vertices = getVertices();
-  if(!vertices)
+  if(nullptr == vertices)
   {
     return {};
   }
@@ -118,7 +158,7 @@ Point3D<float32> VertexGeom::getCoords(usize vertId) const
 void VertexGeom::setCoords(usize vertId, const Point3D<float32>& coords)
 {
   auto vertices = getVertices();
-  if(!vertices)
+  if(nullptr == vertices)
   {
     return;
   }
@@ -132,7 +172,7 @@ void VertexGeom::setCoords(usize vertId, const Point3D<float32>& coords)
 usize VertexGeom::getNumberOfVertices() const
 {
   auto vertices = getVertices();
-  if(!vertices)
+  if(nullptr == vertices)
   {
     return 0;
   }
@@ -148,7 +188,7 @@ AbstractGeometry::StatusCode VertexGeom::findElementSizes()
 {
   // Vertices are 0-dimensional (they have no getSize),
   // so simply splat 0 over the sizes array
-  auto dataStore = new DataStore<float32>(1, getNumberOfElements());
+  auto dataStore = new DataStore<float32>({getNumberOfElements()}, {1});
   dataStore->fill(0.0f);
 
   Float32Array* vertexSizes = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", dataStore, getId());
@@ -278,12 +318,35 @@ void VertexGeom::setElementSizes(const Float32Array* elementSizes)
   m_VertexSizesId = elementSizes->getId();
 }
 
-H5::ErrorType VertexGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
+H5::ErrorType VertexGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  return getDataMap().readH5Group(*getDataStructure(), targetId);
+  m_VertexListId = ReadH5DataId(groupReader, H5Constants::VertexListTag);
+  m_VertexSizesId = ReadH5DataId(groupReader, H5Constants::VertexSizesTag);
+
+  return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
-H5::ErrorType VertexGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+H5::ErrorType VertexGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
-  return getDataMap().writeH5Group(groupId);
+  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
+  herr_t errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  // Write DataObject IDs
+  errorCode = WriteH5DataId(groupWriter, m_VertexListId, H5Constants::VertexListTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_VertexSizesId, H5Constants::VertexSizesTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }

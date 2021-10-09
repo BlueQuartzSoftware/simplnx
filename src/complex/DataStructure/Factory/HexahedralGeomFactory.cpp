@@ -1,11 +1,14 @@
 #include "HexahedralGeomFactory.hpp"
 
 #include "complex/DataStructure/Geometry/HexahedralGeom.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DataStructureReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
+using namespace complex::H5;
 
 HexahedralGeomFactory::HexahedralGeomFactory()
-: IH5DataFactory()
+: H5::IDataFactory()
 {
 }
 
@@ -16,9 +19,16 @@ std::string HexahedralGeomFactory::getDataTypeName() const
   return "HexahedralGeom";
 }
 
-H5::ErrorType HexahedralGeomFactory::createFromHdf5(DataStructure& ds, H5::IdType targetId, H5::IdType groupId, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType HexahedralGeomFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
 {
-  std::string name = getObjName(targetId);
-  auto geom = HexahedralGeom::Create(ds, name, parentId);
-  return geom->readHdf5(targetId, groupId);
+  std::string name = groupReader.getName();
+  auto importId = ReadObjectId(groupReader);
+  auto geom = HexahedralGeom::Import(dataStructureReader.getDataStructure(), name, importId, parentId);
+  return geom->readHdf5(dataStructureReader, groupReader);
+}
+
+//------------------------------------------------------------------------------
+H5::ErrorType HexahedralGeomFactory::readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId)
+{
+  return -1;
 }

@@ -1,15 +1,31 @@
 #pragma once
 
+#include <iostream>
+#include <numeric>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-#define H5_USE_110_API
-#include <H5Opublic.h>
-#include <hdf5.h>
-
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
+
+#include <H5Ipublic.h>
+#include <H5Ppublic.h>
+#include <hdf5.h>
+
+#ifdef H5Support_USE_MUTEX
+#include <mutex>
+#define H5SUPPORT_MUTEX_LOCK()                                                                                                                                                                         \
+  std::mutex mutex;                                                                                                                                                                                    \
+  std::lock_guard<std::mutex> lock(mutex);
+#else
+#define H5SUPPORT_MUTEX_LOCK()
+#endif
+
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
+
+// Defined in CMake
+//#define H5_USE_110_API
 
 #define HDF_ERROR_HANDLER_OFF                                                                                                                                                                          \
   herr_t (*_oldHDF_error_func)(hid_t, void*);                                                                                                                                                          \
@@ -19,8 +35,8 @@
 
 #define HDF_ERROR_HANDLER_ON H5Eset_auto(H5E_DEFAULT, _oldHDF_error_func, _oldHDF_error_client_data);
 
-#define CloseH5A(attributeID, error, returnError)                                                                                                                                                      \
-  error = H5Aclose(attributeID);                                                                                                                                                                       \
+#define H5S_CLOSE_H5_ATTRIBUTE(attributeId, error, returnError)                                                                                                                                        \
+  error = H5Aclose(attributeId);                                                                                                                                                                       \
   if(error < 0)                                                                                                                                                                                        \
   {                                                                                                                                                                                                    \
     std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): "                                                                                                                                      \
@@ -28,8 +44,8 @@
     returnError = error;                                                                                                                                                                               \
   }
 
-#define CloseH5S(dataspaceID, error, returnError)                                                                                                                                                      \
-  error = H5Sclose(dataspaceID);                                                                                                                                                                       \
+#define H5S_CLOSE_H5_DATASPACE(dataspaceId, error, returnError)                                                                                                                                        \
+  error = H5Sclose(dataspaceId);                                                                                                                                                                       \
   if(error < 0)                                                                                                                                                                                        \
   {                                                                                                                                                                                                    \
     std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): "                                                                                                                                      \
@@ -37,8 +53,8 @@
     returnError = error;                                                                                                                                                                               \
   }
 
-#define CloseH5T(typeID, error, returnError)                                                                                                                                                           \
-  error = H5Tclose(typeID);                                                                                                                                                                            \
+#define H5S_CLOSE_H5_TYPE(typeId, error, returnError)                                                                                                                                                  \
+  error = H5Tclose(typeId);                                                                                                                                                                            \
   if(error < 0)                                                                                                                                                                                        \
   {                                                                                                                                                                                                    \
     std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): "                                                                                                                                      \
@@ -46,12 +62,12 @@
     returnError = error;                                                                                                                                                                               \
   }
 
-#define CloseH5D(datasetID, error, returnError, datasetName)                                                                                                                                           \
-  error = H5Dclose(datasetID);                                                                                                                                                                         \
+#define H5_CLOSE_H5_DATASET(datasetId, error, returnError, datasetName)                                                                                                                                \
+  error = H5Dclose(datasetId);                                                                                                                                                                         \
   if(error < 0)                                                                                                                                                                                        \
   {                                                                                                                                                                                                    \
     std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): "                                                                                                                                      \
-              << "Error Closing Dataset: " << datasetName << " datasetID=" << datasetID << " retError=" << returnError << std::endl;                                                                   \
+              << "Error Closing Dataset: " << datasetName << " datasetId=" << datasetId << " retError=" << returnError << std::endl;                                                                   \
     returnError = error;                                                                                                                                                                               \
   }
 
@@ -62,58 +78,57 @@ namespace H5
 namespace Support
 {
 /**
- * @brief Opens an object for H5 operations
- * @param locationID The parent object that holds the true object we want to open
- * @param objectName The string name of the object
- * @param objectType The HDF5_TYPE of object
- * @return Standard H5 Error Conditions
+ * @brief Returns if a given hdf5 object is a group
+ * @param objectId The hdf5 object that contains an object with name objectName
+ * @param objectName The name of the object to check
+ * @return True if the given hdf5 object id is a group
  */
-hid_t COMPLEX_EXPORT openId(hid_t locationID, const std::string& objectName, H5O_type_t objectType);
+inline bool COMPLEX_EXPORT IsGroup(hid_t nodeId, const std::string& objectName)
+{
+  H5SUPPORT_MUTEX_LOCK()
+
+  bool isGroup = true;
+  herr_t error = -1;
+  H5O_info_t objectInfo{};
+  error = H5Oget_info_by_name(nodeId, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  if(error < 0)
+  {
+    std::cout << "Error in methd H5Gget_objinfo" << std::endl;
+    return false;
+  }
+  switch(objectInfo.type)
+  {
+  case H5O_TYPE_GROUP:
+    isGroup = true;
+    break;
+  case H5O_TYPE_DATASET:
+    isGroup = false;
+    break;
+  case H5O_TYPE_NAMED_DATATYPE:
+    isGroup = false;
+    break;
+  default:
+    isGroup = false;
+  }
+  return isGroup;
+}
+
+herr_t COMPLEX_EXPORT FindAttr(hid_t /*locationId*/, const char* name, const H5A_info_t* /*info*/, void* opData);
 
 /**
- * @brief Opens an H5 Object
- * @param objectID The Object id
- * @param objectType Basic Object Type
- * @return Standard H5 Error Conditions
- */
-herr_t COMPLEX_EXPORT closeId(hid_t objectID, int32 objectType);
-
-/**
- * @brief Finds a Data set given a data set name
- * @param locationID The location to search
- * @param datasetName The dataset to search for
- * @return Standard H5 Error condition. Negative=DataSet
- */
-bool COMPLEX_EXPORT datasetExists(hid_t locationID, const std::string& datasetName);
-
-/**
- * @brief Get the information about a dataset.
- *
- * @param locationID The parent location of the Dataset
- * @param datasetName The name of the dataset
- * @param dims A std::vector that will hold the sizes of the dimensions
- * @param typeClass The H5 class type
- * @param typeSize THe H5 getSize of the data
- * @return Negative value is Failure. Zero or Positive is success;
- */
-herr_t COMPLEX_EXPORT getDatasetInfo(hid_t locationID, const std::string& datasetName, std::vector<hsize_t>& dims, H5T_class_t& classType, usize& sizeType);
-
-herr_t COMPLEX_EXPORT find_attr(hid_t /*locationID*/, const char* name, const H5A_info_t* /*info*/, void* op_data);
-
-/**
- * @brief Inquires if an attribute named attributeName exists attached to the object locationID.
- * @param locationID The location to search
+ * @brief Inquires if an attribute named attributeName exists attached to the object locationId.
+ * @param locationId The location to search
  * @param attributeName The attribute to search for
  * @return Standard H5 Error condition
  */
-herr_t COMPLEX_EXPORT findAttribute(hid_t locationID, const std::string& attributeName);
+herr_t COMPLEX_EXPORT FindAttribute(hid_t locationId, const std::string& attributeName);
 
 /**
  * @brief Returns the HDF Type for a given primitive value.
  * @return The H5 native type for the value
  */
 template <typename T>
-inline hid_t COMPLEX_EXPORT HDFTypeForPrimitive()
+inline hid_t HdfTypeForPrimitive()
 {
   if constexpr(std::is_same_v<T, float>)
   {
@@ -176,7 +191,7 @@ inline hid_t COMPLEX_EXPORT HDFTypeForPrimitive()
   }
   else
   {
-    throw std::runtime_error("HDFTypeForPrimitive does not support this type");
+    throw std::runtime_error("HdfTypeForPrimitive does not support this type");
     return -1;
   }
 }
@@ -186,39 +201,74 @@ inline hid_t COMPLEX_EXPORT HDFTypeForPrimitive()
  * @param classType
  * @return std::string
  */
-std::string COMPLEX_EXPORT HDFClassTypeAsStr(hid_t classType);
+std::string COMPLEX_EXPORT HdfClassTypeAsStr(hid_t classType);
 
 #if 0
 /**
  * @brief Returns the H5T value for a given dataset.
  *
- * Returns the type of data stored in the dataset. You MUST use H5Tclose(typeID)
+ * Returns the type of data stored in the dataset. You MUST use H5Tclose(typeId)
  * on the returned value or resource leaks will occur.
- * @param locationID A Valid H5 file or group id.
+ * @param locationId A Valid H5 file or group id.
  * @param datasetName Path to the dataset
  * @return
  */
-hid_t COMPLEX_EXPORT getDatasetType(hid_t locationID, const std::string& datasetName);
+hid_t COMPLEX_EXPORT getDatasetType(hid_t locationId, const std::string& datasetName);
 #endif
 
 /**
- * @brief Reads a dataset of multiple strings into a std::vector<std::string>
- * @param locationID
- * @param datasetName
- * @param data
- * @return
+ * @brief Returns the path to an object
+ * @param objectId The HDF5 id of the object
+ * @return  The path to the object relative to the objectId
  */
-herr_t COMPLEX_EXPORT readVectorOfStringDataset(hid_t locationID, const std::string& datasetName, std::vector<std::string>& data);
+inline std::string COMPLEX_EXPORT GetObjectPath(hid_t locationId)
+{
+  H5SUPPORT_MUTEX_LOCK()
+
+  size_t nameSize = 1 + H5Iget_name(locationId, nullptr, 0);
+  std::vector<char> objectName(nameSize, 0);
+  H5Iget_name(locationId, objectName.data(), nameSize);
+  std::string objectPath(objectName.data());
+
+  if((objectPath != "/") && (objectPath.at(0) == '/'))
+  {
+    objectPath.erase(0, 1);
+  }
+
+  return objectPath;
+}
 
 /**
- * @brief Reads a string dataset into the supplied string. Any data currently in the 'data' variable
- * is cleared first before the new data is read into the string.
- * @param locationID The parent group that holds the data object to read
- * @param datasetName The name of the dataset.
- * @param data The std::string to hold the data
- * @return Standard HDF error condition
+ * @brief Returns the H5T value for a given dataset.
+ *
+ * Returns the type of data stored in the dataset. You MUST use H5Tclose(typeId)
+ * on the returned value or resource leaks will occur.
+ * @param locationId A Valid HDF5 file or group id.
+ * @param datasetName Path to the dataset
+ * @return
  */
-herr_t COMPLEX_EXPORT readStringDataset(hid_t locationID, const std::string& datasetName, std::string& data);
+inline hid_t COMPLEX_EXPORT GetDatasetType(hid_t locationId, const std::string& datasetName)
+{
+  H5SUPPORT_MUTEX_LOCK()
+
+  herr_t error = 0;
+  herr_t returnError = 0;
+  hid_t datasetId = -1;
+  /* Open the dataset. */
+  if((datasetId = H5Dopen(locationId, datasetName.c_str(), H5P_DEFAULT)) < 0)
+  {
+    return -1;
+  }
+  /* Get an identifier for the datatype. */
+  hid_t typeId = H5Dget_type(datasetId);
+  H5_CLOSE_H5_DATASET(datasetId, error, returnError, datasetName);
+  if(returnError < 0)
+  {
+    return static_cast<hid_t>(returnError);
+  }
+  return typeId;
+}
+
 } // namespace Support
 } // namespace H5
 } // namespace complex

@@ -1,11 +1,14 @@
 #include "ImageGeomFactory.hpp"
 
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DataStructureReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
+using namespace complex::H5;
 
 ImageGeomFactory::ImageGeomFactory()
-: IH5DataFactory()
+: H5::IDataFactory()
 {
 }
 
@@ -16,9 +19,16 @@ std::string ImageGeomFactory::getDataTypeName() const
   return "ImageGeom";
 }
 
-H5::ErrorType ImageGeomFactory::createFromHdf5(DataStructure& ds, H5::IdType targetId, H5::IdType groupId, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType ImageGeomFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
 {
-  auto name = getObjName(targetId);
-  auto geom = ImageGeom::Create(ds, name, parentId);
-  return geom->readHdf5(targetId, groupId);
+  auto name = groupReader.getName();
+  auto importId = ReadObjectId(groupReader);
+  auto geom = ImageGeom::Import(dataStructureReader.getDataStructure(), name, importId, parentId);
+  return geom->readHdf5(dataStructureReader, groupReader);
+}
+
+//------------------------------------------------------------------------------
+H5::ErrorType ImageGeomFactory::readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId)
+{
+  return -1;
 }

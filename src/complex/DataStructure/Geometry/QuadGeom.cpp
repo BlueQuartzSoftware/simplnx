@@ -5,12 +5,26 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
 
+namespace H5Constants
+{
+const std::string QuadListTag = "Quad List ID";
+const std::string QuadsContainingVertTag = "Quads Containing Vertex ID";
+const std::string QuadNeighborsTag = "Quad Neighbors ID";
+const std::string QuadCentroidsTag = "Quad Centroids ID";
+const std::string QuadSizesTag = "Quad Sizes ID";
+} // namespace H5Constants
+
 QuadGeom::QuadGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry2D(ds, name)
+{
+}
+
+QuadGeom::QuadGeom(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractGeometry2D(ds, name, importId)
 {
 }
 
@@ -56,6 +70,16 @@ QuadGeom* QuadGeom::Create(DataStructure& ds, const std::string& name, const std
   return data.get();
 }
 
+QuadGeom* QuadGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<QuadGeom>(new QuadGeom(ds, name, importId));
+  if(!AttemptToAddObject(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
 std::string QuadGeom::getTypeName() const
 {
   return getGeometryTypeAsString();
@@ -78,7 +102,7 @@ std::string QuadGeom::getGeometryTypeAsString() const
 
 void QuadGeom::resizeQuadList(usize numQuads)
 {
-  getQuads()->getDataStore()->resizeTuples(numQuads);
+  getQuads()->getDataStore()->reshapeTuples({numQuads});
 }
 
 void QuadGeom::setQuads(const SharedQuadList* quads)
@@ -171,7 +195,7 @@ usize QuadGeom::getNumberOfQuads() const
   {
     return 0;
   }
-  return quads->getTupleCount();
+  return quads->getNumberOfTuples();
 }
 
 usize QuadGeom::getNumberOfElements() const
@@ -181,7 +205,7 @@ usize QuadGeom::getNumberOfElements() const
 
 AbstractGeometry::StatusCode QuadGeom::findElementSizes()
 {
-  auto dataStore = new DataStore<float32>(1, getNumberOfQuads());
+  auto dataStore = new DataStore<float32>(getNumberOfQuads());
   Float32Array* quadSizes = DataArray<float32>::Create(*getDataStructure(), "Quad Areas", dataStore, getId());
   GeometryHelpers::Topology::Find2DElementAreas(getQuads(), getVertices(), quadSizes);
   if(quadSizes == nullptr)
@@ -263,7 +287,7 @@ void QuadGeom::deleteElementNeighbors()
 
 AbstractGeometry::StatusCode QuadGeom::findElementCentroids()
 {
-  auto dataStore = new DataStore<float32>(3, getNumberOfQuads());
+  auto dataStore = new DataStore<float32>({getNumberOfQuads()}, {3});
   auto quadCentroids = DataArray<float32>::Create(*getDataStructure(), "Quad Centroids", dataStore, getId());
   GeometryHelpers::Topology::FindElementCentroids(getQuads(), getVertices(), quadCentroids);
   if(quadCentroids == nullptr)
@@ -358,12 +382,12 @@ usize QuadGeom::getNumberOfVertices() const
   {
     return 0;
   }
-  return vertices->getTupleCount();
+  return vertices->getNumberOfTuples();
 }
 
 void QuadGeom::resizeEdgeList(usize numEdges)
 {
-  getEdges()->getDataStore()->resizeTuples(numEdges);
+  getEdges()->getDataStore()->reshapeTuples({numEdges});
 }
 
 void QuadGeom::getVertCoordsAtEdge(usize edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const
@@ -403,7 +427,7 @@ AbstractGeometry::StatusCode QuadGeom::findEdges()
 
 AbstractGeometry::StatusCode QuadGeom::findUnsharedEdges()
 {
-  auto dataStore = new DataStore<MeshIndexType>(2, 0);
+  auto dataStore = new DataStore<MeshIndexType>({0}, {2});
   auto unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", dataStore, getId());
   GeometryHelpers::Connectivity::Find2DUnsharedEdges(getQuads(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
@@ -460,12 +484,56 @@ void QuadGeom::setElementSizes(const Float32Array* elementSizes)
   m_QuadSizesId = elementSizes->getId();
 }
 
-H5::ErrorType QuadGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
+H5::ErrorType QuadGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  return getDataMap().readH5Group(*getDataStructure(), targetId);
+  m_QuadListId = ReadH5DataId(groupReader, H5Constants::QuadListTag);
+  m_QuadsContainingVertId = ReadH5DataId(groupReader, H5Constants::QuadsContainingVertTag);
+  m_QuadNeighborsId = ReadH5DataId(groupReader, H5Constants::QuadNeighborsTag);
+  m_QuadCentroidsId = ReadH5DataId(groupReader, H5Constants::QuadCentroidsTag);
+  m_QuadSizesId = ReadH5DataId(groupReader, H5Constants::QuadSizesTag);
+
+  return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
-H5::ErrorType QuadGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+H5::ErrorType QuadGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
-  return getDataMap().writeH5Group(groupId);
+  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
+  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  // Write DataObject IDs
+  errorCode = WriteH5DataId(groupWriter, m_QuadListId, H5Constants::QuadListTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_QuadsContainingVertId, H5Constants::QuadsContainingVertTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_QuadNeighborsId, H5Constants::QuadNeighborsTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_QuadCentroidsId, H5Constants::QuadCentroidsTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  errorCode = WriteH5DataId(groupWriter, m_QuadSizesId, H5Constants::QuadSizesTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }

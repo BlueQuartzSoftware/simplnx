@@ -5,12 +5,26 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 using namespace complex;
 
+namespace
+{
+constexpr const char k_H5_DIMENSIONS[] = "_DIMENSIONS";
+constexpr const char k_H5_ORIGIN[] = "_ORIGIN";
+constexpr const char k_H5_SPACING[] = "_SPACING";
+constexpr const char k_VoxelSizesTag[] = "Voxel Sizes ID";
+} // namespace
+
 ImageGeom::ImageGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometryGrid(ds, name)
+{
+}
+
+ImageGeom::ImageGeom(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractGeometryGrid(ds, name, importId)
 {
 }
 
@@ -37,6 +51,16 @@ ImageGeom::~ImageGeom() = default;
 ImageGeom* ImageGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<ImageGeom>(new ImageGeom(ds, name));
+  if(!AttemptToAddObject(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+ImageGeom* ImageGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<ImageGeom>(new ImageGeom(ds, name, importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
@@ -131,7 +155,7 @@ AbstractGeometry::StatusCode ImageGeom::findElementSizes()
   {
     return -1;
   }
-  auto dataStore = new DataStore<float32>(1, getNumberOfElements());
+  auto dataStore = new DataStore<float32>({getNumberOfElements()}, {1});
   auto voxelSizes = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", dataStore, getId());
   voxelSizes->getDataStore()->fill(res[0] * res[1] * res[2]);
   m_VoxelSizesId = voxelSizes->getId();
@@ -494,12 +518,90 @@ void ImageGeom::setElementSizes(const Float32Array* elementSizes)
   m_VoxelSizesId = elementSizes->getId();
 }
 
-H5::ErrorType ImageGeom::readHdf5(H5::IdType targetId, H5::IdType groupId)
+H5::ErrorType ImageGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  return getDataMap().readH5Group(*getDataStructure(), targetId);
+  auto volumeAttribute = groupReader.getAttribute(k_H5_DIMENSIONS);
+  if(!volumeAttribute.isValid())
+  {
+    return -1;
+  }
+
+  auto spacingAttribute = groupReader.getAttribute(k_H5_SPACING);
+  if(!spacingAttribute.isValid())
+  {
+    return -1;
+  }
+
+  auto originAttribute = groupReader.getAttribute(k_H5_ORIGIN);
+  if(!originAttribute.isValid())
+  {
+    return -1;
+  }
+
+  std::vector<size_t> volDims = volumeAttribute.readAsVector<size_t>();
+  std::vector<float> spacing = spacingAttribute.readAsVector<float>();
+  std::vector<float> origin = originAttribute.readAsVector<float>();
+
+  setDimensions(volDims);
+  setSpacing(spacing);
+  setOrigin(origin);
+
+  // Read DataObject ID
+  m_VoxelSizesId = ReadH5DataId(groupReader, k_VoxelSizesTag);
+
+  return 0;
 }
 
-H5::ErrorType ImageGeom::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
-  return getDataMap().writeH5Group(groupId);
+  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
+  herr_t errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  SizeVec3 volDims = getDimensions();
+  FloatVec3 spacing = getSpacing();
+  FloatVec3 origin = getOrigin();
+  H5::AttributeWriter::DimsVector dims = {3};
+  std::vector<size_t> volDimsVector(3);
+  std::vector<float> spacingVector(3);
+  std::vector<float> originVector(3);
+  for(size_t i = 0; i < 3; i++)
+  {
+    volDimsVector[i] = volDims[i];
+    spacingVector[i] = spacing[i];
+    originVector[i] = origin[i];
+  }
+
+  auto dimensionAttr = groupWriter.createAttribute(k_H5_DIMENSIONS);
+  errorCode = dimensionAttr.writeVector(dims, volDimsVector);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  auto originAttr = groupWriter.createAttribute(k_H5_ORIGIN);
+  errorCode = originAttr.writeVector(dims, originVector);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  auto spacingAttr = groupWriter.createAttribute(k_H5_SPACING);
+  errorCode = spacingAttr.writeVector(dims, spacingVector);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  // Write DataObject ID
+  errorCode = WriteH5DataId(groupWriter, m_VoxelSizesId, k_VoxelSizesTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }

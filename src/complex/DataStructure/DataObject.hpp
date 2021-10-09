@@ -19,10 +19,12 @@ class BaseGroup;
 class DataPath;
 class DataStructure;
 
-namespace H5::Constants::DataObject
+namespace H5
 {
-extern const std::string ObjectTypeTag;
-}
+class DataStructureWriter;
+class GroupWriter;
+class ObjectWriter;
+} // namespace H5
 
 /**
  * @class DataObject
@@ -156,19 +158,29 @@ public:
 
   /**
    * @brief Writes the DataObject to the target HDF5 group.
-   * @param groupId
+   * @param dataStructureWriter
+   * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::IdType groupId) const;
+  virtual H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const = 0;
 
 protected:
   /**
-   * @brief DataObject constructor takes a pointer to the DataStructure and
+   * @brief DataObject constructor takes a reference to the DataStructure and
    * object name.
    * @param ds
    * @param name
    */
   DataObject(DataStructure& ds, std::string name);
+
+  /**
+   * @brief DataObject constructor takes a reference to the DataStructure,
+   * object name, and object ID.
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  DataObject(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief Attempts to add the specified DataObject to the target DataStructure.
@@ -211,23 +223,15 @@ protected:
   virtual void setDataStructure(DataStructure* ds);
 
   /**
-   * @brief Implementation-specific details for writing the DataObject to HDF5.
-   * @param parentId
-   * @param groupId
+   * @brief Writes the dataType as a string attribute for the target HDF5 object.
+   * Returns the HDF5 error should one occur.
+   * @param dataStructureWriter
+   * @param objectWriter
    * @return H5::ErrorType
    */
-  virtual H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const = 0;
+  H5::ErrorType writeH5ObjectAttributes(H5::DataStructureWriter& dataStructureWriter, H5::ObjectWriter& objectWriter) const;
 
 private:
-  /**
-   * @brief Generates an IdType for the DataObject constructor.
-   * @param opId
-   * @return IdType
-   */
-  static IdType generateId(const std::optional<IdType>& opId = {});
-
-  ////////////
-  // Variables
   DataStructure* m_DataStructure = nullptr;
   ParentCollectionType m_ParentList;
   IdType m_Id;

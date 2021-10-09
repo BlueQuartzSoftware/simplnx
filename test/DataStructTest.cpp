@@ -219,19 +219,19 @@ TEST_CASE("DataStructureCopyTest")
 
   auto newGroup2 = DataGroup::Create(dataStrCopy, "New Group (2)", child2Id);
   auto newId2 = newGroup2->getId();
-  REQUIRE(!dataStr.getData(newId2));
+  REQUIRE(dataStr.getData(newId2) != dataStrCopy.getData(newId2));
   REQUIRE(dataStrCopy.getData(newId2));
 }
 
 TEST_CASE("DataStoreTest")
 {
-  const usize tupleSize = 3;
-  const usize tupleCount = 10;
-  DataStore<int32> store(tupleSize, tupleCount);
+  const size_t numComponents = 3;
+  const size_t numTuples = 10;
+  DataStore<int32_t> store({numTuples}, {numComponents});
 
-  REQUIRE(store.getTupleCount() == tupleCount);
-  REQUIRE(store.getNumComponents() == tupleSize);
-  REQUIRE(store.getSize() == (tupleSize * tupleCount));
+  REQUIRE(store.getNumberOfTuples() == numTuples);
+  REQUIRE(store.getNumberOfComponents() == numComponents);
+  REQUIRE(store.getSize() == (numComponents * numTuples));
 
   // subscript operator
   {
@@ -272,14 +272,14 @@ TEST_CASE("DataArrayTest")
 {
   DataStructure dataStr;
 
-  auto store = new DataStore<int32>(2, 2);
+  auto store = new DataStore<int32>({2}, {2});
   auto dataArr = DataArray<int32>::Create(dataStr, "array", store);
 
   SECTION("test size")
   {
     REQUIRE(dataArr->getSize() == store->getSize());
-    REQUIRE(dataArr->getTupleCount() == store->getTupleCount());
-    REQUIRE(dataArr->getNumComponents() == store->getNumComponents());
+    REQUIRE(dataArr->getNumberOfComponents() == store->getNumberOfComponents());
+    REQUIRE(dataArr->getNumberOfTuples() == store->getNumberOfTuples());
   }
 
   SECTION("test reading / writing to memory")

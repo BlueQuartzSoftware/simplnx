@@ -7,6 +7,11 @@ AbstractGeometryGrid::AbstractGeometryGrid(DataStructure& ds, const std::string&
 {
 }
 
+AbstractGeometryGrid::AbstractGeometryGrid(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractGeometry(ds, name, importId)
+{
+}
+
 AbstractGeometryGrid::AbstractGeometryGrid(const AbstractGeometryGrid& other)
 : AbstractGeometry(other)
 {

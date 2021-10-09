@@ -27,6 +27,16 @@ public:
 
   /**
    * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   * @param parentId = {}
+   * @return VertexGeom*
+   */
+  static VertexGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
    * @param other
    */
   VertexGeom(const VertexGeom& other);
@@ -227,19 +237,18 @@ public:
 
   /**
    * @brief Reads values from HDF5
-   * @param targetId
-   * @param groupId
+   * @param groupReader
    * @return H5::ErrorType
    */
-  H5::ErrorType readHdf5(H5::IdType targetId, H5::IdType groupId) override;
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader) override;
 
   /**
    * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param groupId
-   * @param parentId
+   * @param dataStructureWriter
+   * @param parentGroupWriter
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const override;
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override;
 
 protected:
   /**
@@ -248,6 +257,14 @@ protected:
    * @param name
    */
   VertexGeom(DataStructure& ds, const std::string& name);
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   */
+  VertexGeom(DataStructure& ds, const std::string& name, IdType importId);
 
   /**
    * @brief
@@ -291,7 +308,7 @@ protected:
   void setElementSizes(const Float32Array* elementSizes) override;
 
 private:
-  std::optional<DataObject::IdType> m_VertexListId;
-  std::optional<DataObject::IdType> m_VertexSizesId;
+  std::optional<IdType> m_VertexListId;
+  std::optional<IdType> m_VertexSizesId;
 };
 } // namespace complex

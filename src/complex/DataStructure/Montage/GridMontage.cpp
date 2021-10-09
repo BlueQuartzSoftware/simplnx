@@ -1,17 +1,28 @@
 #include "GridMontage.hpp"
 
-#include <hdf5.h>
-#include <stdexcept>
-
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Writer.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
+
+#include <stdexcept>
 
 using namespace complex;
 
+namespace H5Constants
+{
+inline const std::string RowCountTag = "Row Count";
+inline const std::string ColCountTag = "Column Count";
+inline const std::string DepthCountTag = "Depth Count";
+} // namespace H5Constants
+
 GridMontage::GridMontage(DataStructure& ds, const std::string& name)
 : AbstractMontage(ds, name)
+{
+}
+
+GridMontage::GridMontage(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractMontage(ds, name, importId)
 {
 }
 
@@ -30,6 +41,16 @@ GridMontage::~GridMontage() = default;
 GridMontage* GridMontage::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<GridMontage>(new GridMontage(ds, name));
+  if(!AttemptToAddObject(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+GridMontage* GridMontage::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<GridMontage>(new GridMontage(ds, name, importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
@@ -245,12 +266,49 @@ usize GridMontage::getOffsetFromTilePos(const SizeVec3& tilePos, const Dimension
   return tilePos[0] + tilePos[1] * numCols + tilePos[2] * numCols * numRows;
 }
 
-H5::ErrorType GridMontage::readHdf5(H5::IdType targetId, H5::IdType groupId)
+H5::ErrorType GridMontage::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  return getDataMap().readH5Group(*getDataStructure(), targetId);
+  auto rowCountAttribute = groupReader.getAttribute(H5Constants::RowCountTag);
+  m_RowCount = rowCountAttribute.readAsValue<uint64_t>();
+
+  auto colCountAttribute = groupReader.getAttribute(H5Constants::ColCountTag);
+  m_ColumnCount = colCountAttribute.readAsValue<uint64_t>();
+
+  auto depthCountAttribute = groupReader.getAttribute(H5Constants::DepthCountTag);
+  m_DepthCount = depthCountAttribute.readAsValue<uint64_t>();
+
+  return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
-H5::ErrorType GridMontage::writeHdf5_impl(H5::IdType parentId, H5::IdType groupId) const
+H5::ErrorType GridMontage::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
-  return getDataMap().writeH5Group(groupId);
+  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
+  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  auto rowCountAttribute = groupWriter.createAttribute(H5Constants::RowCountTag);
+  errorCode = rowCountAttribute.writeValue<uint64_t>(m_RowCount);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  auto colCountAttribute = groupWriter.createAttribute(H5Constants::ColCountTag);
+  errorCode = colCountAttribute.writeValue<uint64_t>(m_ColumnCount);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  auto depthCountAttribute = groupWriter.createAttribute(H5Constants::DepthCountTag);
+  errorCode = depthCountAttribute.writeValue<uint64_t>(m_DepthCount);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }

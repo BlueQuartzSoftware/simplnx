@@ -10,6 +10,11 @@ AbstractGeometry3D::AbstractGeometry3D(DataStructure& ds, const std::string& nam
 {
 }
 
+AbstractGeometry3D::AbstractGeometry3D(DataStructure& ds, const std::string& name, IdType importId)
+: AbstractGeometry(ds, name, importId)
+{
+}
+
 AbstractGeometry3D::AbstractGeometry3D(const AbstractGeometry3D& other)
 : AbstractGeometry(other)
 , m_VertexListId(other.m_VertexListId)
@@ -34,7 +39,7 @@ AbstractGeometry3D::~AbstractGeometry3D() = default;
 
 AbstractGeometry3D::SharedQuadList* AbstractGeometry3D::createSharedQuadList(usize numQuads)
 {
-  auto dataStore = new DataStore<MeshIndexType>(4, numQuads);
+  auto dataStore = new DataStore<MeshIndexType>({numQuads}, {4});
   SharedQuadList* quads = DataArray<MeshIndexType>::Create(*getDataStructure(), "Shared Quad List", dataStore, getId());
   dataStore->fill(0);
   return quads;
@@ -42,7 +47,7 @@ AbstractGeometry3D::SharedQuadList* AbstractGeometry3D::createSharedQuadList(usi
 
 AbstractGeometry3D::SharedTriList* AbstractGeometry3D::createSharedTriList(usize numTris)
 {
-  auto dataStore = new DataStore<MeshIndexType>(3, numTris);
+  auto dataStore = new DataStore<MeshIndexType>({numTris}, {3});
   SharedTriList* triangles = DataArray<MeshIndexType>::Create(*getDataStructure(), "Shared Tri List", dataStore, getId());
   triangles->getDataStore()->fill(0);
   return triangles;
@@ -55,7 +60,7 @@ void AbstractGeometry3D::resizeVertexList(usize numVertices)
   {
     return;
   }
-  vertices->getDataStore()->resizeTuples(numVertices);
+  vertices->getDataStore()->reshapeTuples({numVertices});
 }
 
 void AbstractGeometry3D::setVertices(const SharedVertexList* vertices)
@@ -116,7 +121,7 @@ usize AbstractGeometry3D::getNumberOfVertices() const
   {
     return 0;
   }
-  return vertices->getTupleCount();
+  return vertices->getNumberOfTuples();
 }
 
 void AbstractGeometry3D::resizeEdgeList(usize numEdges)
@@ -126,7 +131,7 @@ void AbstractGeometry3D::resizeEdgeList(usize numEdges)
   {
     return;
   }
-  edges->getDataStore()->resizeTuples(numEdges);
+  edges->getDataStore()->reshapeTuples({numEdges});
 }
 
 AbstractGeometry::SharedEdgeList* AbstractGeometry3D::getEdges()
@@ -195,7 +200,7 @@ usize AbstractGeometry3D::getNumberOfEdges() const
     return 0;
   }
 
-  return edges->getTupleCount();
+  return edges->getNumberOfTuples();
 }
 
 void AbstractGeometry3D::deleteEdges()
@@ -238,7 +243,7 @@ usize AbstractGeometry3D::getNumberOfFaces() const
   {
     return 0;
   }
-  return faces->getTupleCount();
+  return faces->getNumberOfTuples();
 }
 
 AbstractGeometry3D::SharedFaceList* AbstractGeometry3D::getFaces()
