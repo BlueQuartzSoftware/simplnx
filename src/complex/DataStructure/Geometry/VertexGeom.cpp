@@ -15,7 +15,7 @@ namespace H5Constants
 {
 const std::string VertexListTag = "Vertex List ID";
 const std::string VertexSizesTag = "Vertex Sizes ID";
-} // namespace Constants
+} // namespace H5Constants
 
 VertexGeom::VertexGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry(ds, name)

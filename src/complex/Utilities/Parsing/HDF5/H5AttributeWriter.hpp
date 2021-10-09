@@ -106,8 +106,8 @@ public:
     }
 
     /* Get the type of object */
-    //H5O_info_t objectInfo;
-    //if(H5Oget_info_by_name(getObjectId(), getObjectName().c_str(), &objectInfo, H5P_DEFAULT) < 0)
+    // H5O_info_t objectInfo;
+    // if(H5Oget_info_by_name(getObjectId(), getObjectName().c_str(), &objectInfo, H5P_DEFAULT) < 0)
     //{
     //  std::cout << "Error getting object info at locationId (" << getObjectId() << ") with object name (" << getObjectName() << ")" << std::endl;
     //  return -1;

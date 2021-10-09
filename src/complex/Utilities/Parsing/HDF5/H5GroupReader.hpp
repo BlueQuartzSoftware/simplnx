@@ -61,7 +61,7 @@ public:
 
   /**
    * @brief Returns the number of children objects within the group.
-   * 
+   *
    * Returns 0 if the GroupReader is invalid.
    * @return size_t
    */
@@ -69,7 +69,7 @@ public:
 
   /**
    * @brief Returns a vector with the names of each child object.
-   * 
+   *
    * This will return an empty vector if the GroupReader is invalid.
    * @return std::vector<std::string>
    */
@@ -77,7 +77,7 @@ public:
 
   /**
    * @brief Returns true if the target child is a group. Returns false otherwise.
-   * 
+   *
    * This will always return false if the GroupReader is invalid.
    * @param childName
    * @return bool
@@ -86,7 +86,7 @@ public:
 
   /**
    * @brief Returns true if the target child is a dataset. Returns false otherwise.
-   * 
+   *
    * This will always return false if the GroupReader is invalid.
    * @param childName
    * @return bool

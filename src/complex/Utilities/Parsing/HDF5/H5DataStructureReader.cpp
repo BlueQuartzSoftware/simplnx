@@ -45,7 +45,7 @@ H5::ErrorType H5::DataStructureReader::readObjectFromGroup(const H5::GroupReader
   // Get H5::IDataFactory and check DataObject ID
   {
     auto childObj = parentGroup.openObject(objectName);
-    
+
     // Check if data has already been read
     auto idAttribute = childObj.getAttribute(complex::Constants::k_ObjectIdTag);
     if(!idAttribute.isValid())

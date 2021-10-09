@@ -1,7 +1,7 @@
 #pragma once
 
-#include "complex/Common/Types.hpp"
 #include "complex/Common/StringLiteral.hpp"
+#include "complex/Common/Types.hpp"
 
 #include <cstdint>
 #include <string>

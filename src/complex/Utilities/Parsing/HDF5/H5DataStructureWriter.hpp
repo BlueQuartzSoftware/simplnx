@@ -25,7 +25,7 @@ public:
   DataStructureWriter();
 
   /**
-  * @brief Default destructor.
+   * @brief Default destructor.
    */
   virtual ~DataStructureWriter();
 
@@ -44,19 +44,19 @@ public:
 protected:
   /**
    * @brief Writes a DataObject link under the given GroupWriter.
-   * 
+   *
    * If the process encounters an error, the error code is returned. Otherwise,
    * this method returns 0.
    * @param dataObject
    * @param parentGroup
    * @return H5::ErrorType
-  */
+   */
   H5::ErrorType writeDataObjectLink(const DataObject* dataObject, H5::GroupWriter& parentGroup);
 
   /**
    * @brief Returns true if the DataObject has been written to the current
    * file. Returns false otherwise.
-   * 
+   *
    * This will always return false if the target DataObject is null.
    * @param targetObject
    * @return bool
@@ -88,7 +88,7 @@ protected:
    * @brief Adds the H5::ObjectWriter to the DataStructureWriter for the given DataObject ID
    * @param objectWriter
    * @param objectId
-  */
+   */
   void addH5Writer(H5::ObjectWriter& objectWriter, DataObject::IdType objectId);
 
 private:

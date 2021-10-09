@@ -188,7 +188,7 @@ H5::ErrorType H5::DatasetWriter::writeString(const std::string& text)
           {
             returnError = 0;
           }
-          //H5_CLOSE_H5_DATASET(m_DatasetId, error, returnError, getName())
+          // H5_CLOSE_H5_DATASET(m_DatasetId, error, returnError, getName())
         }
         H5S_CLOSE_H5_DATASPACE(dataspaceId, error, returnError)
       }

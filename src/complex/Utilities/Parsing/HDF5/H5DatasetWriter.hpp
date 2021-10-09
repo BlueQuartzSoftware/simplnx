@@ -100,15 +100,15 @@ public:
     }
 
     /* Get the type of object */
-    //H5O_info_t objectInfo;
-    //if(H5Oget_info_by_name(getParentId(), getName().c_str(), &objectInfo, H5P_DEFAULT) < 0)
+    // H5O_info_t objectInfo;
+    // if(H5Oget_info_by_name(getParentId(), getName().c_str(), &objectInfo, H5P_DEFAULT) < 0)
     //{
     //  std::cout << "Error getting object info at locationId (" << getParentId() << ") with object name (" << getName() << ")" << std::endl;
     //  return -1;
     //}
     /* Open the object */
-    //m_DatasetId = H5Dcreate(getParentId(), getName(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    //if(m_DatasetId < 0)
+    // m_DatasetId = H5Dcreate(getParentId(), getName(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    // if(m_DatasetId < 0)
     //{
     //  std::cout << "Error opening Object for Attribute operations." << std::endl;
     //  return -1;
@@ -126,7 +126,7 @@ public:
       else
       {
         /* Create the attribute. */
-        //hid_t attributeId = H5Acreate(getId(), getName().c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
+        // hid_t attributeId = H5Acreate(getId(), getName().c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
         createOrOpenDataset(dataType, dataspaceId);
         if(m_DatasetId >= 0)
         {
@@ -145,8 +145,8 @@ public:
           returnError = static_cast<herr_t>(m_DatasetId);
         }
         /* Close the attribute. */
-        //error = H5Aclose(attributeId);
-        //if(error < 0)
+        // error = H5Aclose(attributeId);
+        // if(error < 0)
         //{
         //  std::cout << "Error Closing Attribute" << std::endl;
         //  returnError = error;
