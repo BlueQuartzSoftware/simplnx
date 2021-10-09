@@ -12,7 +12,7 @@ namespace H5
 {
 class GroupWriter;
 
-class DataStructureWriter
+class COMPLEX_EXPORT DataStructureWriter
 {
   friend class complex::DataObject;
 

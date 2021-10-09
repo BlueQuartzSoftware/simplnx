@@ -29,6 +29,7 @@ public:
   using value_type = typename IDataStore<T>::value_type;
   using reference = typename IDataStore<T>::reference;
   using const_reference = typename IDataStore<T>::const_reference;
+  using ShapeType = typename IDataStore<T>::ShapeType;
 
   static constexpr const char k_DataStore[] = "DataStore";
   static constexpr const char k_TupleShape[] = "TupleShape";

@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include <H5Apublic.h>
+
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/complex_export.hpp"
 
@@ -119,9 +121,9 @@ public:
     }
 
     std::vector<T> values(getNumElements());
-    hid_t typeId = getTypeId();
+    H5::IdType typeId = getTypeId();
 
-    herr_t error = H5Aread(getAttributeId(), typeId, values.data());
+    H5::ErrorType error = H5Aread(getAttributeId(), typeId, values.data());
     if(error != 0)
     {
       std::cout << "Error Reading Attribute." << error << std::endl;

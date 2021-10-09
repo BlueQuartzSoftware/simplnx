@@ -21,6 +21,7 @@ public:
   using value_type = typename IDataStore<T>::value_type;
   using reference = typename IDataStore<T>::reference;
   using const_reference = typename IDataStore<T>::const_reference;
+  using ShapeType = typename IDataStore<T>::ShapeType;
 
   /**
    * @brief Constructs an empty data store with a tuple getSize and count of 0.

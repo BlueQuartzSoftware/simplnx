@@ -2,6 +2,7 @@
 
 #include <map>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "complex/DataStructure/DataStructure.hpp"
