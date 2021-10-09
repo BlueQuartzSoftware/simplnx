@@ -79,9 +79,13 @@ H5::ErrorType H5::GroupWriter::createLink(const std::string& objectPath)
   {
     return -1;
   }
-  auto index = objectPath.find_last_of('/') + 1;
+  usize index = objectPath.find_last_of('/');
+  if(index > 0)
+  {
+    index++;
+  }
   std::string objectName = objectPath.substr(index);
 
-  auto err = H5Lcreate_hard(getFileId(), objectPath.c_str(), getId(), objectName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
-  return err;
+  herr_t errorCode = H5Lcreate_hard(getFileId(), objectPath.c_str(), getId(), objectName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
+  return errorCode;
 }

@@ -347,11 +347,11 @@ protected:
   void setElementSizes(const Float32Array* elementSizes) override;
 
 private:
-  std::optional<DataObject::IdType> m_VertexListId;
-  std::optional<DataObject::IdType> m_EdgeListId;
-  std::optional<DataObject::IdType> m_EdgesContainingVertId;
-  std::optional<DataObject::IdType> m_EdgeNeighborsId;
-  std::optional<DataObject::IdType> m_EdgeCentroidsId;
-  std::optional<DataObject::IdType> m_EdgeSizesId;
+  std::optional<IdType> m_VertexListId;
+  std::optional<IdType> m_EdgeListId;
+  std::optional<IdType> m_EdgesContainingVertId;
+  std::optional<IdType> m_EdgeNeighborsId;
+  std::optional<IdType> m_EdgeCentroidsId;
+  std::optional<IdType> m_EdgeSizesId;
 };
 } // namespace complex

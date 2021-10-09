@@ -8,6 +8,8 @@
 
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
+
+#include <H5Ipublic.h>
 #include <H5Ppublic.h>
 #include <hdf5.h>
 
@@ -81,7 +83,7 @@ namespace Support
  * @param objectName The name of the object to check
  * @return True if the given hdf5 object id is a group
  */
-inline bool IsGroup(hid_t nodeId, const std::string& objectName)
+inline bool COMPLEX_EXPORT IsGroup(hid_t nodeId, const std::string& objectName)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -126,7 +128,7 @@ herr_t COMPLEX_EXPORT FindAttribute(hid_t locationId, const std::string& attribu
  * @return The H5 native type for the value
  */
 template <typename T>
-inline hid_t COMPLEX_EXPORT HdfTypeForPrimitive()
+inline hid_t HdfTypeForPrimitive()
 {
   if constexpr(std::is_same_v<T, float>)
   {
@@ -219,7 +221,7 @@ hid_t COMPLEX_EXPORT getDatasetType(hid_t locationId, const std::string& dataset
  * @param objectId The HDF5 id of the object
  * @return  The path to the object relative to the objectId
  */
-inline std::string GetObjectPath(hid_t locationId)
+inline std::string COMPLEX_EXPORT GetObjectPath(hid_t locationId)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -245,7 +247,7 @@ inline std::string GetObjectPath(hid_t locationId)
  * @param datasetName Path to the dataset
  * @return
  */
-inline hid_t GetDatasetType(hid_t locationId, const std::string& datasetName)
+inline hid_t COMPLEX_EXPORT GetDatasetType(hid_t locationId, const std::string& datasetName)
 {
   H5SUPPORT_MUTEX_LOCK()
 

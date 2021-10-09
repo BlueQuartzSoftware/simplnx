@@ -308,7 +308,7 @@ protected:
   void setElementSizes(const Float32Array* elementSizes) override;
 
 private:
-  std::optional<DataObject::IdType> m_VertexListId;
-  std::optional<DataObject::IdType> m_VertexSizesId;
+  std::optional<IdType> m_VertexListId;
+  std::optional<IdType> m_VertexSizesId;
 };
 } // namespace complex

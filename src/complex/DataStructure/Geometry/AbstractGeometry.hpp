@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 
 #include "complex/Common/Point3D.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
@@ -393,7 +394,7 @@ protected:
    * @param attributeName
    * @return std::optional<DataObject::IdType>
    */
-  static std::optional<DataObject::IdType> ReadH5DataId(const H5::ObjectReader& objectReader, const std::string& attributeName);
+  static std::optional<IdType> ReadH5DataId(const H5::ObjectReader& objectReader, const std::string& attributeName);
 
   /**
    * @brief Writes an optional DataObject ID to HDF5. Returns an error code if
@@ -403,7 +404,7 @@ protected:
    * @param attributeName
    * @return H5::ErrorType
    */
-  static H5::ErrorType WriteH5DataId(H5::ObjectWriter& objectWriter, const std::optional<DataObject::IdType>& dataId, const std::string& attributeName);
+  static H5::ErrorType WriteH5DataId(H5::ObjectWriter& objectWriter, const std::optional<IdType>& dataId, const std::string& attributeName);
 
 private:
   LengthUnit m_Units = LengthUnit::Meter;

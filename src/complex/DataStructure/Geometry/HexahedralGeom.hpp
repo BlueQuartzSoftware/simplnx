@@ -397,10 +397,10 @@ protected:
   void setElementSizes(const Float32Array* elementSizes) override;
 
 private:
-  std::optional<DataObject::IdType> m_HexListId;
-  std::optional<DataObject::IdType> m_HexasContainingVertId;
-  std::optional<DataObject::IdType> m_HexNeighborsId;
-  std::optional<DataObject::IdType> m_HexCentroidsId;
-  std::optional<DataObject::IdType> m_HexSizesId;
+  std::optional<IdType> m_HexListId;
+  std::optional<IdType> m_HexasContainingVertId;
+  std::optional<IdType> m_HexNeighborsId;
+  std::optional<IdType> m_HexCentroidsId;
+  std::optional<IdType> m_HexSizesId;
 };
 } // namespace complex

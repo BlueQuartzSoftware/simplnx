@@ -360,10 +360,10 @@ protected:
   void setElementSizes(const Float32Array* elementSizes) override;
 
 private:
-  std::optional<DataObject::IdType> m_TriListId;
-  std::optional<DataObject::IdType> m_TrianglesContainingVertId;
-  std::optional<DataObject::IdType> m_TriangleNeighborsId;
-  std::optional<DataObject::IdType> m_TriangleCentroidsId;
-  std::optional<DataObject::IdType> m_TriangleSizesId;
+  std::optional<IdType> m_TriListId;
+  std::optional<IdType> m_TrianglesContainingVertId;
+  std::optional<IdType> m_TriangleNeighborsId;
+  std::optional<IdType> m_TriangleCentroidsId;
+  std::optional<IdType> m_TriangleSizesId;
 };
 } // namespace complex

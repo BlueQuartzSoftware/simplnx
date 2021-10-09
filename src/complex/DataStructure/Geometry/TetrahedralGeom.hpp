@@ -382,12 +382,12 @@ protected:
   void setElementCentroids(const Float32Array* elementCentroids) override;
 
 private:
-  std::optional<DataObject::IdType> m_TriListId;
-  std::optional<DataObject::IdType> m_UnsharedTriListId;
-  std::optional<DataObject::IdType> m_TetListId;
-  std::optional<DataObject::IdType> m_TetsContainingVertId;
-  std::optional<DataObject::IdType> m_TetNeighborsId;
-  std::optional<DataObject::IdType> m_TetCentroidsId;
-  std::optional<DataObject::IdType> m_TetSizesId;
+  std::optional<IdType> m_TriListId;
+  std::optional<IdType> m_UnsharedTriListId;
+  std::optional<IdType> m_TetListId;
+  std::optional<IdType> m_TetsContainingVertId;
+  std::optional<IdType> m_TetNeighborsId;
+  std::optional<IdType> m_TetCentroidsId;
+  std::optional<IdType> m_TetSizesId;
 };
 } // namespace complex

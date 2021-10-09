@@ -422,10 +422,10 @@ protected:
   void setElementSizes(const Float32Array* elementSizes) override;
 
 private:
-  std::optional<DataObject::IdType> m_xBoundsId;
-  std::optional<DataObject::IdType> m_yBoundsId;
-  std::optional<DataObject::IdType> m_zBoundsId;
-  std::optional<DataObject::IdType> m_VoxelSizesId;
+  std::optional<IdType> m_xBoundsId;
+  std::optional<IdType> m_yBoundsId;
+  std::optional<IdType> m_zBoundsId;
+  std::optional<IdType> m_VoxelSizesId;
   SizeVec3 m_Dimensions;
 };
 } // namespace complex

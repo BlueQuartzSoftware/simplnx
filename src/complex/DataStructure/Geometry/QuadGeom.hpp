@@ -362,10 +362,10 @@ protected:
   void setElementSizes(const Float32Array* elementSizes) override;
 
 private:
-  std::optional<DataObject::IdType> m_QuadListId;
-  std::optional<DataObject::IdType> m_QuadsContainingVertId;
-  std::optional<DataObject::IdType> m_QuadNeighborsId;
-  std::optional<DataObject::IdType> m_QuadCentroidsId;
-  std::optional<DataObject::IdType> m_QuadSizesId;
+  std::optional<IdType> m_QuadListId;
+  std::optional<IdType> m_QuadsContainingVertId;
+  std::optional<IdType> m_QuadNeighborsId;
+  std::optional<IdType> m_QuadCentroidsId;
+  std::optional<IdType> m_QuadSizesId;
 };
 } // namespace complex

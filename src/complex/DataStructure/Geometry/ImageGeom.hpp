@@ -468,7 +468,7 @@ protected:
   void setElementSizes(const Float32Array* elementSizes) override;
 
 private:
-  std::optional<DataObject::IdType> m_VoxelSizesId;
+  std::optional<IdType> m_VoxelSizesId;
   FloatVec3 m_Spacing;
   FloatVec3 m_Origin;
   SizeVec3 m_Dimensions;
