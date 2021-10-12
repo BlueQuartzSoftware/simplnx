@@ -97,10 +97,6 @@ Application::~Application()
 
 Application* Application::Instance()
 {
-  if(nullptr == s_Instance)
-  {
-    Application* app = new Application();
-  }
   return s_Instance;
 }
 
