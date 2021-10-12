@@ -43,6 +43,16 @@ public:
   ~DataPath();
 
   /**
+   * @brief Copy assignment
+   */
+  DataPath& operator=(const DataPath& other) = default;
+
+  /**
+   * @brief Move assignment
+   */
+  DataPath& operator=(DataPath&& other) noexcept = default;
+
+  /**
    * @brief Returns the number of items in the DataPath.
    * @return usize
    */
