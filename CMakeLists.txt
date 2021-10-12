@@ -60,7 +60,8 @@ else()
 endif()
 
 # Force HDF5 1.10 API
-add_compile_definitions("H5_USE_110_API")
+target_compile_definitions(complex PUBLIC "H5_USE_110_API")
+
 
 target_include_directories(complex
   PRIVATE
