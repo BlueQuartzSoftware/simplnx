@@ -22,11 +22,13 @@ class COMPLEX_EXPORT DataPath
 public:
   static std::optional<DataPath> FromString(std::string_view string, char delimter = '/');
 
+  DataPath();
+
   /**
    * @brief Creates a DataPath using a vector of DataObject names.
    * @param path
    */
-  DataPath(const std::vector<std::string>& path = {});
+  DataPath(std::vector<std::string> path);
 
   /**
    * @brief Copy constructor
@@ -40,17 +42,21 @@ public:
    */
   DataPath(DataPath&& other) noexcept;
 
-  ~DataPath();
-
   /**
    * @brief Copy assignment
+   * @param other
+   * @return
    */
-  DataPath& operator=(const DataPath& other) = default;
+  DataPath& operator=(const DataPath& other);
 
   /**
    * @brief Move assignment
+   * @param other
+   * @return
    */
-  DataPath& operator=(DataPath&& other) noexcept = default;
+  DataPath& operator=(DataPath&& other) noexcept;
+
+  ~DataPath() noexcept;
 
   /**
    * @brief Returns the number of items in the DataPath.
