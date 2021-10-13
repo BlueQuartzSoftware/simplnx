@@ -92,7 +92,19 @@ DataObject* QuadGeom::shallowCopy()
 
 DataObject* QuadGeom::deepCopy()
 {
-  throw std::runtime_error("");
+  auto copy = new QuadGeom(*getDataStructure(), getName());
+
+  copy->m_QuadListId = m_QuadListId;
+  copy->m_QuadsContainingVertId = m_QuadsContainingVertId;
+  copy->m_QuadNeighborsId = m_QuadNeighborsId;
+  copy->m_QuadCentroidsId = m_QuadCentroidsId;
+  copy->m_QuadSizesId = m_QuadSizesId;
+
+  for(auto& [id, childPtr] : getDataMap())
+  {
+    copy->insert(childPtr);
+  }
+  return copy;
 }
 
 std::string QuadGeom::getGeometryTypeAsString() const

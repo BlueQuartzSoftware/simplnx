@@ -80,7 +80,18 @@ DataObject* ImageGeom::shallowCopy()
 
 DataObject* ImageGeom::deepCopy()
 {
-  throw std::runtime_error("");
+  auto copy = new ImageGeom(*getDataStructure(), getName());
+
+  copy->m_VoxelSizesId = m_VoxelSizesId;
+  copy->m_Spacing = m_Spacing;
+  copy->m_Origin = m_Origin;
+  copy->m_Dimensions = m_Dimensions;
+
+  for(auto& [id, childPtr] : getDataMap())
+  {
+    copy->insert(childPtr);
+  }
+  return copy;
 }
 
 std::string ImageGeom::getGeometryTypeAsString() const

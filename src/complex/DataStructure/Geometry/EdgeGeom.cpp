@@ -92,7 +92,20 @@ DataObject* EdgeGeom::shallowCopy()
 
 DataObject* EdgeGeom::deepCopy()
 {
-  throw std::runtime_error("");
+  auto copy = new EdgeGeom(*getDataStructure(), getName());
+  
+  copy->m_VertexListId = m_VertexListId;
+  copy->m_EdgeListId = m_EdgeListId;
+  copy->m_EdgesContainingVertId = m_EdgesContainingVertId;
+  copy->m_EdgeNeighborsId = m_EdgeNeighborsId;
+  copy->m_EdgeCentroidsId = m_EdgeCentroidsId;
+  copy->m_EdgeSizesId = m_EdgeSizesId;
+
+  for(auto& [id, childPtr] : getDataMap())
+  {
+    copy->insert(childPtr);
+  }
+  return copy;
 }
 
 std::string EdgeGeom::getGeometryTypeAsString() const

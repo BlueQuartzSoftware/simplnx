@@ -92,7 +92,19 @@ DataObject* HexahedralGeom::shallowCopy()
 
 DataObject* HexahedralGeom::deepCopy()
 {
-  return new HexahedralGeom(*this);
+  auto copy = new HexahedralGeom(*getDataStructure(), getName());
+
+  copy->m_HexListId = m_HexListId;
+  copy->m_HexasContainingVertId = m_HexasContainingVertId;
+  copy->m_HexNeighborsId = m_HexNeighborsId;
+  copy->m_HexCentroidsId = m_HexCentroidsId;
+  copy->m_HexSizesId = m_HexSizesId;
+
+  for(auto& [id, childPtr] : getDataMap())
+  {
+    copy->insert(childPtr);
+  }
+  return copy;
 }
 
 std::string HexahedralGeom::getGeometryTypeAsString() const
