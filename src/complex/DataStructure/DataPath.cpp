@@ -78,7 +78,7 @@ DataPath& DataPath::operator=(const DataPath& other) = default;
 
 DataPath& DataPath::operator=(DataPath&& other) noexcept = default;
 
-DataPath::~DataPath() = default;
+DataPath::~DataPath() noexcept = default;
 
 std::optional<DataPath> DataPath::FromString(std::string_view string, char delimiter)
 {
