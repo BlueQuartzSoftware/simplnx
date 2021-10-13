@@ -39,7 +39,7 @@ DataStructure::DataStructure(const DataStructure& ds)
   // Hold a shared_ptr copy of the DataObjects long enough for
   // m_RootGroup.setDataStructure(this) to operate.
   std::map<DataObject::IdType, std::shared_ptr<DataObject>> sharedData;
-  for(auto&[id, dataPtr] : ds.m_DataObjects)
+  for(auto& [id, dataPtr] : ds.m_DataObjects)
   {
     auto copy = std::shared_ptr<DataObject>(dataPtr.lock()->shallowCopy());
     sharedData[id] = copy;
@@ -472,7 +472,7 @@ DataStructure& DataStructure::operator=(const DataStructure& rhs)
   // Hold a shared_ptr copy of the DataObjects long enough for
   // m_RootGroup.setDataStructure(this) to operate.
   std::map<DataObject::IdType, std::shared_ptr<DataObject>> sharedData;
-  for(auto&[id, dataPtr] : rhs.m_DataObjects)
+  for(auto& [id, dataPtr] : rhs.m_DataObjects)
   {
     auto copy = std::shared_ptr<DataObject>(dataPtr.lock()->shallowCopy());
     sharedData[id] = copy;
