@@ -115,6 +115,44 @@ set(CoreFilters
   ImportTextFilter
   TestFilter1
   TestFilter2
+        CombineAttributeArrays
+        CombineAttributeMatrices
+        ConditionalSetValue
+        ConvertColorToGrayScale
+        ConvertData
+        CopyFeatureArrayToElementArray
+        CopyObject
+        CreateDataContainer
+        CreateFeatureArrayFromElementArray
+        CreateGridMontage
+        CreateStringArray
+        CropVertexGeometry
+        DataContainerWriter
+        ExecuteProcess
+        ExtractAttributeArraysFromGeometry
+        ExtractComponentAsArray
+        ExtractVertexGeometry
+        FeatureCountDecision
+        FeatureDataCSVWriter
+        FindDerivatives
+        GenerateTiltSeries
+        GenerateVertexCoordinates
+        LinkFeatureMapToElementArray
+        MaskCountDecision
+        MoveData
+        PostSlackMessage
+        RawBinaryReader
+        RemoveComponentFromArray
+        RenameAttributeArray
+        RenameAttributeMatrix
+        RenameDataContainer
+        ReplaceValueInArray
+        RequiredZThickness
+        ScaleVolume
+        SetOriginResolutionImageGeom
+        SplitAttributeArray
+        WriteASCIIData
+        WriteTriangleGeometry
 )
 
 set(CoreParameters
