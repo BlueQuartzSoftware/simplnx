@@ -15,7 +15,34 @@ project(complex
   LANGUAGES CXX
 )
 
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+# ---------- Setup output Directories -------------------------
+if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
+    ${complex_BINARY_DIR}/Bin
+    CACHE PATH
+    "Single Directory for all Libraries"
+    )
+endif()
+
+# --------- Setup the Executable output Directory -------------
+if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
+    ${complex_BINARY_DIR}/Bin
+    CACHE PATH
+    "Single Directory for all Executables."
+    )
+endif()
+
+# --------- Setup the Executable output Directory -------------
+if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
+    ${complex_BINARY_DIR}/Bin
+    CACHE PATH
+    "Single Directory for all static libraries."
+    )
+endif()
+
+list(APPEND CMAKE_MODULE_PATH ${complex_SOURCE_DIR}/cmake)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -96,11 +123,11 @@ if(COMPLEX_ENABLE_LINK_FILESYSTEM)
   )
 endif()
 
-set(COMPLEX_GENERATED_DIR ${PROJECT_BINARY_DIR}/generated)
-set(COMPLEX_GENERATED_HEADER_DIR ${PROJECT_BINARY_DIR}/generated/complex)
+set(COMPLEX_GENERATED_DIR ${complex_BINARY_DIR}/generated)
+set(COMPLEX_GENERATED_HEADER_DIR ${complex_BINARY_DIR}/generated/complex)
 set(COMPLEX_EXPORT_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/complex_export.hpp)
 
-file(READ ${PROJECT_SOURCE_DIR}/cmake/complex_export_extra.hpp COMPLEX_EXPORT_HEADER_EXTRA)
+file(READ ${complex_SOURCE_DIR}/cmake/complex_export_extra.hpp COMPLEX_EXPORT_HEADER_EXTRA)
 
 include(GenerateExportHeader)
 generate_export_header(complex
@@ -108,16 +135,7 @@ generate_export_header(complex
   CUSTOM_CONTENT_FROM_VARIABLE COMPLEX_EXPORT_HEADER_EXTRA
 )
 
-# Specify core filters and parameters here
-set(CoreFilters
-  CreateDataArray
-  CreateDataGroup
-  ImportTextFilter
-  ExportH5DataFilter
-  TestFilter1
-  TestFilter2
-)
-
+# Specify parameters here
 set(CoreParameters
   ArrayCreationParameter
   ArraySelectionParameter
@@ -134,18 +152,7 @@ set(CoreParameters
   VectorParameter
 )
 
-# Generate core filter import header
-set(CreateCoreFilters "")
-set(AddCoreFilters "")
-
-foreach(filter ${CoreFilters})
-  string(APPEND CoreFilterIncludes "#include \"complex/Core/Filters/${filter}.hpp\"\n")
-  string(APPEND AddCoreFilters "  addCoreFilter([]() -> IFilter::UniquePointer { return std::make_unique<${filter}>(); });\n")
-endforeach()
-
-configure_file("cmake/ImportCoreFilters.hpp.in" "${COMPLEX_GENERATED_HEADER_DIR}/ImportCoreFilters.hpp" @ONLY)
-
-set(COMPLEX_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/complex)
+set(COMPLEX_SOURCE_DIR ${complex_SOURCE_DIR}/src/complex)
 
 set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Common/Array.hpp
@@ -162,8 +169,8 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Common/Uuid.hpp
 
   ${COMPLEX_SOURCE_DIR}/Core/Application.hpp
-  ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.hpp
-  ${COMPLEX_SOURCE_DIR}/Core/FilterList.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/FilterHandle.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/FilterList.hpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.hpp
@@ -290,15 +297,14 @@ set(COMPLEX_HDRS
 
 set(COMPLEX_GENERATED_HEADERS
   ${COMPLEX_EXPORT_HEADER}
-  ${COMPLEX_GENERATED_HEADER_DIR}/ImportCoreFilters.hpp
 )
 
 set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Common/RgbColor.cpp
 
   ${COMPLEX_SOURCE_DIR}/Core/Application.cpp
-  ${COMPLEX_SOURCE_DIR}/Core/FilterHandle.cpp
-  ${COMPLEX_SOURCE_DIR}/Core/FilterList.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/FilterHandle.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/FilterList.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.cpp
@@ -401,23 +407,14 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
 )
 
-# Add Core Filters
-foreach(filter ${CoreFilters})
-  list(APPEND COMPLEX_HDRS
-    "${COMPLEX_SOURCE_DIR}/Core/Filters/${filter}.hpp"
-  )
-  list(APPEND COMPLEX_SRCS
-    "${COMPLEX_SOURCE_DIR}/Core/Filters/${filter}.cpp"
-  )
-endforeach()
 
 # Add Core FilterParameters
 foreach(param ${CoreParameters})
   list(APPEND COMPLEX_HDRS
-    "${COMPLEX_SOURCE_DIR}/Core/Parameters/${param}.hpp"
+    "${COMPLEX_SOURCE_DIR}/Parameters/${param}.hpp"
   )
   list(APPEND COMPLEX_SRCS
-    "${COMPLEX_SOURCE_DIR}/Core/Parameters/${param}.cpp"
+    "${COMPLEX_SOURCE_DIR}/Parameters/${param}.cpp"
   )
 endforeach()
 
@@ -436,15 +433,60 @@ source_group(TREE ${COMPLEX_SOURCE_DIR} PREFIX "complex" FILES ${COMPLEX_HDRS})
 source_group(TREE ${COMPLEX_GENERATED_HEADER_DIR} PREFIX "complex/generated" FILES ${COMPLEX_GENERATED_HEADERS})
 source_group(TREE ${COMPLEX_SOURCE_DIR} PREFIX "complex" FILES ${COMPLEX_SRCS})
 
-set(COMPLEX_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src)
+set(COMPLEX_INCLUDE_DIR ${complex_SOURCE_DIR}/src)
 
 target_include_directories(complex
   PUBLIC
     $<BUILD_INTERFACE:${COMPLEX_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${COMPLEX_GENERATED_DIR}>
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/3rdparty/nod/include>
+    $<BUILD_INTERFACE:${complex_SOURCE_DIR}/3rdparty/nod/include>
     $<INSTALL_INTERFACE:include>
 )
+
+#------------------------------------------------------------------------------
+# Add in the ComplexCore Plugin
+set(P_PLUGIN_NAME "ComplexCore")
+add_subdirectory(${complex_SOURCE_DIR}/src/Plugins/${P_PLUGIN_NAME} ${complex_BINARY_DIR}/Plugins/${P_PLUGIN_NAME})
+get_property(PluginNumFilters GLOBAL PROPERTY ${P_PLUGIN_NAME}_filter_count)
+message(STATUS "${P_PLUGIN_NAME} [ENABLED] ${PluginNumFilters} Filters")
+
+
+#------------------------------------------------------------------------------
+# Find any extra plugins
+set(COMPLEX_EXTRA_PLUGINS
+  Core
+  AFRLDistributionC
+  BrukerIntegration
+  CAxisByPolarizedLight
+  CRADA3DSystems
+  DREAM3DReview
+  ECAccess
+  EMMPM
+  Generic
+  ImageProcessing
+  ImportExport
+  ITKImageProcessing
+  NETLIntegration
+  OrientationAnalysis
+  Processing
+  ProgWorkshop
+  Reconstruction
+  Sampling
+  SimulationIO
+  StatsToolbox
+  SurfaceMeshing
+  SyntheticBuilding
+  UCSBUtilities
+  VolumeMeshing
+  )
+#------------------------------------------------------------------------------
+# Add user defined Plugin Dirs
+# Use 'COMPLEX_PLUGIN_SEARCH_DIRS' hints to look for plugins in specific directories
+foreach(plugin ${COMPLEX_EXTRA_PLUGINS})
+  complex_add_plugin(PLUGIN_NAME ${plugin})
+endforeach()
+
+
 
 set(COMPLEX_PACKAGE_NAMESPACE "complex::")
 
@@ -460,10 +502,10 @@ if(COMPLEX_ENABLE_INSTALL)
 
   set(COMPLEX_INSTALL_CMAKE_PREFIX "lib/cmake")
 
-  set(COMPLEX_CONFIG_FILE ${PROJECT_BINARY_DIR}/complexConfig.cmake)
-  set(COMPLEX_VERSION_FILE ${PROJECT_BINARY_DIR}/complexConfigVersion.cmake)
+  set(COMPLEX_CONFIG_FILE ${complex_BINARY_DIR}/complexConfig.cmake)
+  set(COMPLEX_VERSION_FILE ${complex_BINARY_DIR}/complexConfigVersion.cmake)
 
-  configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/complexConfig.cmake.in ${COMPLEX_CONFIG_FILE}
+  configure_package_config_file(${complex_SOURCE_DIR}/cmake/complexConfig.cmake.in ${COMPLEX_CONFIG_FILE}
     INSTALL_DESTINATION ${COMPLEX_INSTALL_CMAKE_PREFIX}
   )
 

@@ -5,19 +5,19 @@
 #include "complex/Plugin/AbstractPlugin.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5IDataFactory.hpp"
 
-#include "test/test2plugin_export.hpp"
+#include "TestTwo/TestTwo_export.hpp"
 
-class TEST2PLUGIN_EXPORT Test2Plugin : public complex::AbstractPlugin
+class TESTTWO_EXPORT TestTwoPlugin : public complex::AbstractPlugin
 {
 public:
-  Test2Plugin();
-  ~Test2Plugin() override;
+  TestTwoPlugin();
+  ~TestTwoPlugin() override;
 
-  Test2Plugin(const Test2Plugin&) = delete;
-  Test2Plugin(Test2Plugin&&) = delete;
+  TestTwoPlugin(const TestTwoPlugin&) = delete;
+  TestTwoPlugin(TestTwoPlugin&&) = delete;
 
-  Test2Plugin& operator=(const Test2Plugin&) = delete;
-  Test2Plugin& operator=(Test2Plugin&&) = delete;
+  TestTwoPlugin& operator=(const TestTwoPlugin&) = delete;
+  TestTwoPlugin& operator=(TestTwoPlugin&&) = delete;
 
   /**
    * @brief Returns a collection of HDF5 DataStructure factories available

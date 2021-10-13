@@ -6,16 +6,12 @@
 #include <fmt/core.h>
 
 #include "complex/Core/Application.hpp"
-#include "complex/Core/FilterHandle.hpp"
-#include "complex/ImportCoreFilters.hpp"
+#include "complex/Filter/FilterHandle.hpp"
 #include "complex/Plugin/PluginLoader.hpp"
 
 using namespace complex;
 
-FilterList::FilterList()
-{
-  registerCoreFilters();
-}
+FilterList::FilterList() = default;
 
 FilterList::~FilterList() = default;
 
@@ -36,6 +32,18 @@ std::vector<FilterHandle> FilterList::search(const std::string& text) const
   return handles;
 }
 
+IFilter::UniquePointer FilterList::createFilter(const std::string& filterName) const
+{
+  for(const auto& handle : getFilterHandles())
+  {
+    if(handle.getFilterName() == filterName)
+    {
+      return createFilter(handle);
+    }
+  }
+  return {};
+}
+
 AbstractPlugin* FilterList::getPluginById(const FilterHandle::PluginIdType& id) const
 {
   if(m_PluginMap.find(id) != m_PluginMap.end())
@@ -50,7 +58,7 @@ IFilter::UniquePointer FilterList::createFilter(const FilterHandle& handle) cons
   // Core filter
   if(handle.getPluginId() == Uuid{})
   {
-    return createCoreFilter(handle.getFilterId());
+    return nullptr;
   }
   // Plugin filter
   const auto& loader = m_PluginMap.at(handle.getPluginId());
@@ -137,7 +145,7 @@ std::unordered_set<AbstractPlugin*> FilterList::getLoadedPlugins() const
   }
   return plugins;
 }
-
+#if 0
 void FilterList::addCoreFilter(FilterCreationFunc func)
 {
   IFilter::UniquePointer filter = func();
@@ -164,3 +172,4 @@ IFilter::UniquePointer FilterList::createCoreFilter(const FilterHandle::FilterId
   }
   return m_CoreFiltersMap.at(filterId)();
 }
+#endif

@@ -6,7 +6,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "complex/Core/FilterHandle.hpp"
+#include "complex/Filter/FilterHandle.hpp"
 #include "complex/Filter/IFilter.hpp"
 
 #include "complex/complex_export.hpp"
@@ -58,6 +58,7 @@ public:
    * @return IFilter*
    */
   IFilter::UniquePointer createFilter(const FilterHandle& handle) const;
+  IFilter::UniquePointer createFilter(const std::string& filterName) const;
 
   /**
    * @brief Attempts to create an IFilter specified by the given uuid.
@@ -113,34 +114,9 @@ public:
   AbstractPlugin* getPluginById(const FilterHandle::PluginIdType& id) const;
 
 private:
-  /**
-   * @brief Registers core filters with the FilterList.
-   *
-   * This method is defined within a CMake generated source file.
-   */
-  void registerCoreFilters();
-
-  /**
-   * @brief Registers a specific core filter with the FilterList.
-   *
-   * This method should only be called within registerCoreFilters().
-   * @param func
-   */
-  void addCoreFilter(FilterCreationFunc func);
-
-  /**
-   * @brief Attempts to create and return a filter with the specified ID
-   * from the list of core filters. Returns nullptr if no core filter with
-   * the specified ID could be found.
-   * @param filterId
-   * @return IFilter*
-   */
-  IFilter::UniquePointer createCoreFilter(const FilterHandle::FilterIdType& filterId) const;
-
   ////////////
   // Variables
   std::unordered_set<FilterHandle> m_FilterHandles;
-  std::unordered_map<FilterHandle::FilterIdType, FilterCreationFunc> m_CoreFiltersMap;
   std::unordered_map<FilterHandle::PluginIdType, std::shared_ptr<PluginLoader>> m_PluginMap;
 };
 } // namespace complex

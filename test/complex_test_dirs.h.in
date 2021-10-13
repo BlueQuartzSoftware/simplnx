@@ -7,5 +7,6 @@ namespace complex
 namespace unit_test
 {
 constexpr StringLiteral k_ComplexSourceDir = "@complex_SOURCE_DIR_NORM@";
+constexpr StringLiteral k_PluginDir = "@CMAKE_LIBRARY_OUTPUT_DIRECTORY@/Plugins";
 }
 } // namespace complex

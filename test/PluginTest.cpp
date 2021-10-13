@@ -3,10 +3,12 @@
 #include <catch2/catch.hpp>
 
 #include "complex/Core/Application.hpp"
-#include "complex/Core/FilterHandle.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/Filter/FilterHandle.hpp"
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
+
+#include "complex/unit_test/complex_test_dirs.h"
 
 using namespace complex;
 namespace fs = std::filesystem;
@@ -19,25 +21,21 @@ const FilterHandle test2Handle(Uuid::FromString("ad9cf22b-bc5e-41d6-b02e-bb49ffd
 
 fs::path getPluginDir(const fs::path& appDir)
 {
-#ifdef __APPLE__
-  return appDir.parent_path() / ::PluginDir;
-#else
-  return appDir / ::PluginDir;
-#endif
+  return fs::path(complex::unit_test::k_PluginDir);
 }
 } // namespace
 
 TEST_CASE("Test Loading Plugins")
 {
   Application app;
-  fs::path pluginPath = getPluginDir(app.getCurrentDir());
+  fs::path pluginPath = fs::path(complex::unit_test::k_PluginDir);
   app.loadPlugins(pluginPath);
 
   auto filterList = app.getFilterList();
   auto filterHandles = filterList->getFilterHandles();
   auto plugins = filterList->getLoadedPlugins();
 
-  REQUIRE(plugins.size() == 2);
+  REQUIRE(plugins.size() == 3);
   REQUIRE(filterHandles.size() >= 2);
 
   DataStructure ds;

@@ -5,7 +5,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "complex/Core/FilterHandle.hpp"
+#include "complex/Filter/FilterHandle.hpp"
 #include "complex/Filter/IFilter.hpp"
 
 #include "complex/complex_export.hpp"

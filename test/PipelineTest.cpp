@@ -4,6 +4,7 @@
 #include "complex/Core/FilterHandle.hpp"
 #include "complex/Core/Parameters/GeneratedFileListParameter.hpp"
 #include "complex/Filter/Arguments.hpp"
+#include "complex/Filter/FilterHandle.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
 #include "complex/Pipeline/PipelineFilter.hpp"
 

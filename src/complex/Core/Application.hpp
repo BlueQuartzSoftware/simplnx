@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "complex/Core/FilterList.hpp"
+#include "complex/Filter/FilterList.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DataFactoryManager.hpp"
 
 #include "complex/complex_export.hpp"

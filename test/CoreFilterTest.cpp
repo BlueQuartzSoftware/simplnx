@@ -2,12 +2,10 @@
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Core/Application.hpp"
-#include "complex/Core/Filters/CreateDataGroup.hpp"
-#include "complex/Core/Filters/ImportTextFilter.hpp"
-#include "complex/Core/Parameters/FileSystemPathParameter.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/Parameters/FileSystemPathParameter.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -72,6 +70,7 @@ TEST_CASE("RunCoreFilter")
       file << i << "," << i + 1 << "," << i + 2 << "\n";
     }
   }
+#if 0
   SECTION("Run ImportTextFilter")
   {
     static constexpr uint64 k_NComp = 3;
@@ -121,8 +120,10 @@ TEST_CASE("RunCoreFilter")
       REQUIRE(dataArray[index + 2] == i + 2);
     }
   }
+#endif
 }
 
+#if 0
 TEST_CASE("CreateDataGroup")
 {
   DataStructure data;
@@ -138,3 +139,4 @@ TEST_CASE("CreateDataGroup")
   REQUIRE(group != nullptr);
   REQUIRE(data.getSize() == path.getLength());
 }
+#endif

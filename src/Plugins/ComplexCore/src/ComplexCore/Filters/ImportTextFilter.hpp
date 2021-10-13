@@ -2,21 +2,22 @@
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
+
+#include "ComplexCore/ComplexCore_export.hpp"
 
 namespace complex
 {
-class COMPLEX_EXPORT TestFilter2 : public IFilter
+class COMPLEXCORE_EXPORT ImportTextFilter : public IFilter
 {
 public:
-  TestFilter2() = default;
-  ~TestFilter2() noexcept override = default;
+  ImportTextFilter() = default;
+  ~ImportTextFilter() noexcept override = default;
 
-  TestFilter2(const TestFilter2&) = delete;
-  TestFilter2(TestFilter2&&) noexcept = delete;
+  ImportTextFilter(const ImportTextFilter&) = delete;
+  ImportTextFilter(ImportTextFilter&&) noexcept = delete;
 
-  TestFilter2& operator=(const TestFilter2&) = delete;
-  TestFilter2& operator=(TestFilter2&&) noexcept = delete;
+  ImportTextFilter& operator=(const ImportTextFilter&) = delete;
+  ImportTextFilter& operator=(ImportTextFilter&&) noexcept = delete;
 
   /**
    * @brief
@@ -69,4 +70,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::TestFilter2, "1307bbbc-112d-4aaa-941f-58253787b17e");
+COMPLEX_DEF_FILTER_TRAITS(complex::ImportTextFilter, "25f7df3e-ca3e-4634-adda-732c0e56efd4");

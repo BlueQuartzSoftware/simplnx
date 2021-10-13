@@ -1,4 +1,4 @@
-#include "complex/Core/Parameters/GeneratedFileListParameter.hpp"
+#include "complex/Parameters/GeneratedFileListParameter.hpp"
 
 #include "complex/unit_test/complex_test_dirs.h"
 

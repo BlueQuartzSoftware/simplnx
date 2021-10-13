@@ -1,9 +1,9 @@
 #include "TestFilter2.hpp"
 
 #include "complex/Common/StringLiteral.hpp"
-#include "complex/Core/Parameters/ChoicesParameter.hpp"
-#include "complex/Core/Parameters/NumberParameter.hpp"
-#include "complex/Core/Parameters/StringParameter.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Parameters/StringParameter.hpp"
 
 using namespace complex;
 

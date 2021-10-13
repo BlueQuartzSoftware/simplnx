@@ -1,9 +1,9 @@
 #include "TestFilter1.hpp"
 
 #include "complex/Common/StringLiteral.hpp"
-#include "complex/Core/Parameters/BoolParameter.hpp"
-#include "complex/Core/Parameters/GeneratedFileListParameter.hpp"
-#include "complex/Core/Parameters/NumberParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/GeneratedFileListParameter.hpp"
+#include "complex/Parameters/NumberParameter.hpp"
 
 using namespace complex;
 

@@ -1,0 +1,11 @@
+/*
+ * This file is auto generated during CMake configuration. The generating code is at:
+ * @CMAKE_CURRENT_LIST_FILE@
+ */
+@Filter_Registration_Include_String@
+
+void @COMPLEX_PLUGIN_NAME@Plugin::registerFilters()
+{
+@Filter_Registration_Code@
+}
+

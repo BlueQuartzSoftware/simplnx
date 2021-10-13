@@ -4,13 +4,13 @@
 #include <fstream>
 
 #include "complex/Common/StringLiteral.hpp"
-#include "complex/Core/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Core/Parameters/ChoicesParameter.hpp"
-#include "complex/Core/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Core/Parameters/NumberParameter.hpp"
-#include "complex/Core/Parameters/NumericTypeParameter.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Parameters/NumericTypeParameter.hpp"
 
 namespace fs = std::filesystem;
 using namespace complex;

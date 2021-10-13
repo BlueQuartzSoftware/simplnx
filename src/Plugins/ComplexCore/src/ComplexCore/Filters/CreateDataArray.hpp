@@ -1,13 +1,13 @@
 #pragma once
 
+#include "ComplexCore/ComplexCore_export.hpp"
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
-class COMPLEX_EXPORT CreateDataArray : public IFilter
+class COMPLEXCORE_EXPORT CreateDataArray : public IFilter
 {
 public:
   CreateDataArray() = default;

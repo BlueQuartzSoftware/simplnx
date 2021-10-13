@@ -1,4 +1,4 @@
-#include "complex/Core/FilterHandle.hpp"
+#include "complex/Filter/FilterHandle.hpp"
 
 namespace complex
 {

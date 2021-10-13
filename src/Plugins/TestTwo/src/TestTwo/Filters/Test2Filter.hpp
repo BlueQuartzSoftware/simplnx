@@ -3,13 +3,13 @@
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 
-#include "test/testplugin_export.hpp"
+#include "TestTwo/TestTwo_export.hpp"
 
-class TESTPLUGIN_EXPORT TestFilter : public complex::IFilter
+class TESTTWO_EXPORT Test2Filter : public complex::IFilter
 {
 public:
-  TestFilter();
-  ~TestFilter() override;
+  Test2Filter();
+  ~Test2Filter() override;
 
   /**
    * @brief Returns the name of the filter.
@@ -19,7 +19,7 @@ public:
 
   /**
    * @brief Returns the filters ID as a std::string.
-   * @return Uuid
+   * @return complex::Uuid
    */
   complex::Uuid uuid() const override;
 
@@ -42,8 +42,23 @@ public:
   UniquePointer clone() const override;
 
 protected:
+  /**
+   * @brief Filter-specifics for performing dataCheck.
+   * @param data
+   * @param args
+   * @param messageHandler
+   * @return DataCheckResult
+   */
   complex::Result<complex::OutputActions> preflightImpl(const complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const override;
+
+  /**
+   * @brief Filter-specifics for performing execute.
+   * @param data
+   * @param args
+   * @param messageHandler
+   * @return ExecuteResult
+   */
   complex::Result<> executeImpl(complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const override;
 };
 
-COMPLEX_DEF_FILTER_TRAITS(TestFilter, "5502c3f7-37a8-4a86-b003-1c856be02491");
+COMPLEX_DEF_FILTER_TRAITS(Test2Filter, "ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04");

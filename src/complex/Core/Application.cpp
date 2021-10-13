@@ -15,7 +15,7 @@
 #endif
 
 #include "complex/Core/Application.hpp"
-#include "complex/Core/FilterList.hpp"
+#include "complex/Filter/FilterList.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
 #include "complex/Plugin/PluginLoader.hpp"
 
@@ -145,6 +145,7 @@ H5::DataFactoryManager* Application::getH5FactoryManager() const
 
 void Application::loadPlugin(const std::string& path)
 {
+  std::cout << "Loading Plugin: " << path << std::endl;
   auto pluginLoader = std::make_shared<PluginLoader>(path);
   getFilterList()->addPlugin(pluginLoader);
 

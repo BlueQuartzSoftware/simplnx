@@ -1,9 +1,9 @@
 #include "CreateDataGroup.hpp"
 
-#include "complex/Core/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Core/Parameters/StringParameter.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
+#include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/StringParameter.hpp"
 
 namespace complex
 {
