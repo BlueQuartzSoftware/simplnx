@@ -224,7 +224,7 @@ DataMap::ConstIterator DataMap::find(const std::string& name) const
 
 void DataMap::setDataStructure(DataStructure* dataStr)
 {
-  for(auto&[key, ptr] : *this)
+  for(auto& [key, ptr] : *this)
   {
     // Replace shared_ptr with the corresponding object from the target DataStructure
     auto shareData = dataStr->getSharedData(key);
