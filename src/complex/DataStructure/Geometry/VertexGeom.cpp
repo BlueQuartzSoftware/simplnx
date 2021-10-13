@@ -85,7 +85,16 @@ DataObject* VertexGeom::shallowCopy()
 
 DataObject* VertexGeom::deepCopy()
 {
-  throw std::runtime_error("");
+  auto copy = new VertexGeom(*getDataStructure(), getName());
+
+  copy->m_VertexListId = m_VertexListId;
+  copy->m_VertexSizesId = m_VertexSizesId;
+
+  for(auto& [id, childPtr] : getDataMap())
+  {
+    copy->insert(childPtr);
+  }
+  return copy;
 }
 
 std::string VertexGeom::getGeometryTypeAsString() const

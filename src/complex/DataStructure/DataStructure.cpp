@@ -36,14 +36,17 @@ DataStructure::DataStructure(const DataStructure& ds)
 , m_IsValid(ds.m_IsValid)
 , m_NextId(ds.m_NextId)
 {
-  std::map<DataObject::IdType, std::shared_ptr<DataObject>> copyData;
-  for(auto& dataPair : m_DataObjects)
+  // Hold a shared_ptr copy of the DataObjects long enough for
+  // m_RootGroup.setDataStructure(this) to operate.
+  std::map<DataObject::IdType, std::shared_ptr<DataObject>> sharedData;
+  for(auto&[id, dataPtr] : ds.m_DataObjects)
   {
-    auto id = dataPair.first;
-    auto copy = std::shared_ptr<DataObject>(dataPair.second.lock()->shallowCopy());
-    copyData[id] = copy;
+    auto copy = std::shared_ptr<DataObject>(dataPtr.lock()->shallowCopy());
+    sharedData[id] = copy;
     m_DataObjects[id] = copy;
   }
+  // Updates all DataMaps with the corresponding m_DataObjects pointers.
+  // Updates all DataObjects with their new DataStructure
   m_RootGroup.setDataStructure(this);
 }
 
@@ -466,14 +469,17 @@ DataStructure& DataStructure::operator=(const DataStructure& rhs)
   m_IsValid = rhs.m_IsValid;
   m_NextId = rhs.m_NextId;
 
-  std::map<DataObject::IdType, std::shared_ptr<DataObject>> mCopyData;
-  for(auto& dataPair : m_DataObjects)
+  // Hold a shared_ptr copy of the DataObjects long enough for
+  // m_RootGroup.setDataStructure(this) to operate.
+  std::map<DataObject::IdType, std::shared_ptr<DataObject>> sharedData;
+  for(auto&[id, dataPtr] : rhs.m_DataObjects)
   {
-    auto id = dataPair.first;
-    auto copy = std::shared_ptr<DataObject>(dataPair.second.lock()->shallowCopy());
-    mCopyData[id] = copy;
+    auto copy = std::shared_ptr<DataObject>(dataPtr.lock()->shallowCopy());
+    sharedData[id] = copy;
     m_DataObjects[id] = copy;
   }
+  // Updates all DataMaps with the corresponding m_DataObjects pointers.
+  // Updates all DataObjects with their new DataStructure
   m_RootGroup.setDataStructure(this);
   return *this;
 }

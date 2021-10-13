@@ -93,7 +93,19 @@ DataObject* TriangleGeom::shallowCopy()
 
 DataObject* TriangleGeom::deepCopy()
 {
-  throw std::runtime_error("");
+  auto copy = new TriangleGeom(*getDataStructure(), getName());
+
+  copy->m_TriListId = m_TriListId;
+  copy->m_TrianglesContainingVertId = m_TrianglesContainingVertId;
+  copy->m_TriangleNeighborsId = m_TriangleNeighborsId;
+  copy->m_TriangleCentroidsId = m_TriangleCentroidsId;
+  copy->m_TriangleSizesId = m_TriangleSizesId;
+
+  for(auto& [id, childPtr] : getDataMap())
+  {
+    copy->insert(childPtr);
+  }
+  return copy;
 }
 
 std::string TriangleGeom::getGeometryTypeAsString() const
