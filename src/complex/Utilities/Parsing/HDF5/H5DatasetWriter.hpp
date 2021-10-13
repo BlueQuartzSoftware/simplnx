@@ -5,6 +5,8 @@
 #include "complex/Utilities/Parsing/HDF5/H5ObjectWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
+#include <nonstd/span.hpp>
+
 namespace complex
 {
 namespace H5
@@ -77,7 +79,7 @@ public:
   H5::ErrorType writeVectorOfStrings(std::vector<std::string>& text);
 
   /**
-   * @brief Writes a vector of values to the dataset. Returns the HDF5 error,
+   * @brief Writes a span of values to the dataset. Returns the HDF5 error,
    * should one occur.
    *
    * Any one of the write* methods must be called before adding attributes to
@@ -88,7 +90,7 @@ public:
    * @return H5::ErrorType
    */
   template <typename T>
-  H5::ErrorType writeVector(const DimsType& dims, const std::vector<T>& values)
+  H5::ErrorType writeSpan(const DimsType& dims, nonstd::span<const T> values)
   {
     herr_t returnError = 0;
     int32_t rank = static_cast<int32_t>(dims.size());

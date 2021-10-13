@@ -6,6 +6,8 @@
 #include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
+#include <array>
+
 namespace complex
 {
 
@@ -212,8 +214,8 @@ public:
     auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
 
     H5::DatasetWriter::DimsType dims = {1};
-    std::vector<value_type> dataVector = {m_Data};
-    auto error = datasetWriter.writeVector(dims, dataVector);
+    std::array<T, 1> dataVector = {m_Data};
+    auto error = datasetWriter.writeSpan(dims, nonstd::span<const T>{dataVector});
     if(error == 0)
     {
       error = writeH5ObjectAttributes(dataStructureWriter, datasetWriter);

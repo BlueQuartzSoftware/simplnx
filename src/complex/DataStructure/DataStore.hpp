@@ -300,10 +300,8 @@ public:
     }
 
     usize count = this->getSize();
-    std::vector<T> dataVector;
-    auto dataPtr = data();
-    dataVector.assign(dataPtr, dataPtr + count);
-    herr_t err = datasetWriter.writeVector(h5dims, dataVector);
+    const T* dataPtr = data();
+    herr_t err = datasetWriter.writeSpan(h5dims, nonstd::span<const T>{dataPtr, count});
     if(err < 0)
     {
       return err;
