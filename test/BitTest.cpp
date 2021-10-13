@@ -34,7 +34,7 @@ TEST_CASE("BitTest")
     constexpr uint16 swapped = byteswap(original);
     REQUIRE(swapped == expected);
   }
-  SECTION("i32 byteswap")
+  SECTION("int32 byteswap")
   {
     constexpr int32 original = 0xABCDEF01;
     constexpr int32 expected = 0x01EFCDAB;
@@ -48,7 +48,7 @@ TEST_CASE("BitTest")
     constexpr uint32 swapped = byteswap(original);
     REQUIRE(swapped == expected);
   }
-  SECTION("i64 byteswap")
+  SECTION("int64 byteswap")
   {
     constexpr int64 original = 0xABCDEF1234567890;
     constexpr int64 expected = 0x9078563412EFCDAB;
