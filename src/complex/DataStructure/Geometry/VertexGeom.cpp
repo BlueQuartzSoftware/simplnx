@@ -100,7 +100,7 @@ void VertexGeom::initializeWithZeros()
   {
     return;
   }
-  std::fill(vertices->getDataStore()->begin(), vertices->getDataStore()->end(), 0);
+  std::fill(vertices->getDataStore()->begin(), vertices->getDataStore()->end(), 0.0f);
 }
 
 void VertexGeom::resizeVertexList(usize newNumVertices)
