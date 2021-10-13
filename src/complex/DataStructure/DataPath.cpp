@@ -63,20 +63,20 @@ std::vector<T> split(std::string_view string, char delimiter, bool ignoreEmpty =
 }
 } // namespace
 
-DataPath::DataPath(const std::vector<std::string>& path)
-: m_Path(path)
+DataPath::DataPath() = default;
+
+DataPath::DataPath(std::vector<std::string> path)
+: m_Path(std::move(path))
 {
 }
 
-DataPath::DataPath(const DataPath& other)
-: m_Path(other.m_Path)
-{
-}
+DataPath::DataPath(const DataPath& other) = default;
 
-DataPath::DataPath(DataPath&& other) noexcept
-: m_Path(std::move(other.m_Path))
-{
-}
+DataPath::DataPath(DataPath&& other) noexcept = default;
+
+DataPath& DataPath::operator=(const DataPath& other) = default;
+
+DataPath& DataPath::operator=(DataPath&& other) noexcept = default;
 
 DataPath::~DataPath() = default;
 
