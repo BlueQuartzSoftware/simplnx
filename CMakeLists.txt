@@ -28,6 +28,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 find_package(fmt CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(expected-lite CONFIG REQUIRED)
+find_package(span-lite CONFIG REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(HDF5 REQUIRED)
 
@@ -73,6 +74,7 @@ target_link_libraries(complex
     fmt::fmt
     nlohmann_json::nlohmann_json
     nonstd::expected-lite
+    nonstd::span-lite
     Eigen3::Eigen
     HDF5::HDF5
 )
