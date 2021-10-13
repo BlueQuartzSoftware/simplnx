@@ -18,6 +18,10 @@
     {
       "name": "hdf5"
     }
+    ,
+    {
+      "name": "span-lite"
+    }
   ],
   "features": {
     "python": {

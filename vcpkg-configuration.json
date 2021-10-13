@@ -10,9 +10,10 @@
         "fmt",
         "hdf5",
         "nlohmann-json",
-        "pybind11"
+        "pybind11",
+        "span-lite"
       ],
-      "baseline": "12b29be398ac1519132f3e1b29353833f5666a1c"
+      "baseline": "b74f523e4d7ac892270055840b97d1ea066be95d"
     }
   ]
 }
