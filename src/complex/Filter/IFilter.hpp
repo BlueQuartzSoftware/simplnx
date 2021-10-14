@@ -147,7 +147,7 @@ protected:
    * @param messageHandler
    * @return
    */
-  virtual Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const = 0;
+  virtual Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const = 0;
 
   /**
    * @brief Classes that implement IFilter must provide this function for execute.
@@ -157,7 +157,7 @@ protected:
    * @param messageHandler
    * @return
    */
-  virtual Result<> executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const = 0;
+  virtual Result<> executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const = 0;
 };
 
 using FilterCreationFunc = IFilter::UniquePointer (*)();
