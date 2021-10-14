@@ -64,7 +64,7 @@ protected:
    * Runs after the filter runs the checks in its parameters.
    * @param dataStructure
    * @param args
-   * @param messageHandler = {}
+   * @param messageHandler
    * @return Result<OutputActions>
    */
   Result<OutputActions> preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler = {}) const override;
@@ -74,7 +74,7 @@ protected:
    * Runs after the filter applies the OutputActions from preflight.
    * @param dataStructure
    * @param args
-   * @param messageHandler = {}
+   * @param messageHandler
    * @return Result<>
    */
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler = {}) const override;
