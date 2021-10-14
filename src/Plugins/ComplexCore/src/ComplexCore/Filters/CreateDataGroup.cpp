@@ -24,7 +24,7 @@ Uuid CreateDataGroup::uuid() const
 
 std::string CreateDataGroup::humanName() const
 {
-  return "CreateDataGroup";
+  return "Create Data Group";
 }
 
 Parameters CreateDataGroup::parameters() const

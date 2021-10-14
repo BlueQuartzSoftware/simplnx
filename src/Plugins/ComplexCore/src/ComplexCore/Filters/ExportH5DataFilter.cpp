@@ -24,7 +24,7 @@ Uuid ExportH5DataFilter::uuid() const
 
 std::string ExportH5DataFilter::humanName() const
 {
-  return "Export HDF5 Data Filter";
+  return "Write DREAM.3D File (V7)";
 }
 
 Parameters ExportH5DataFilter::parameters() const

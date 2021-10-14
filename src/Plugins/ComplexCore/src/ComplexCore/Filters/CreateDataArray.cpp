@@ -41,7 +41,7 @@ Uuid CreateDataArray::uuid() const
 
 std::string CreateDataArray::humanName() const
 {
-  return "CreateDataArray";
+  return "Create Data Array";
 }
 
 Parameters CreateDataArray::parameters() const
