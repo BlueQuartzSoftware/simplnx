@@ -16,6 +16,11 @@ std::string CalculateArrayHistogram::name() const
   return FilterTraits<CalculateArrayHistogram>::name.str();
 }
 
+std::string CalculateArrayHistogram::className() const
+{
+  return FilterTraits<CalculateArrayHistogram>::className;
+}
+
 Uuid CalculateArrayHistogram::uuid() const
 {
   return FilterTraits<CalculateArrayHistogram>::uuid;

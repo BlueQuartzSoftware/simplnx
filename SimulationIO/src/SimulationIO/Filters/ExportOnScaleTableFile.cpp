@@ -18,6 +18,11 @@ std::string ExportOnScaleTableFile::name() const
   return FilterTraits<ExportOnScaleTableFile>::name.str();
 }
 
+std::string ExportOnScaleTableFile::className() const
+{
+  return FilterTraits<ExportOnScaleTableFile>::className;
+}
+
 Uuid ExportOnScaleTableFile::uuid() const
 {
   return FilterTraits<ExportOnScaleTableFile>::uuid;

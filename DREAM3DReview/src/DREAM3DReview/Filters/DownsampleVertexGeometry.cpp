@@ -15,6 +15,11 @@ std::string DownsampleVertexGeometry::name() const
   return FilterTraits<DownsampleVertexGeometry>::name.str();
 }
 
+std::string DownsampleVertexGeometry::className() const
+{
+  return FilterTraits<DownsampleVertexGeometry>::className;
+}
+
 Uuid DownsampleVertexGeometry::uuid() const
 {
   return FilterTraits<DownsampleVertexGeometry>::uuid;

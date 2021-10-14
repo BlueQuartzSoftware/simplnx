@@ -16,6 +16,11 @@ std::string AdaptiveAlignmentMutualInformation::name() const
   return FilterTraits<AdaptiveAlignmentMutualInformation>::name.str();
 }
 
+std::string AdaptiveAlignmentMutualInformation::className() const
+{
+  return FilterTraits<AdaptiveAlignmentMutualInformation>::className;
+}
+
 Uuid AdaptiveAlignmentMutualInformation::uuid() const
 {
   return FilterTraits<AdaptiveAlignmentMutualInformation>::uuid;

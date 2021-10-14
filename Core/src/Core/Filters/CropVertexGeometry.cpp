@@ -14,6 +14,11 @@ std::string CropVertexGeometry::name() const
   return FilterTraits<CropVertexGeometry>::name.str();
 }
 
+std::string CropVertexGeometry::className() const
+{
+  return FilterTraits<CropVertexGeometry>::className;
+}
+
 Uuid CropVertexGeometry::uuid() const
 {
   return FilterTraits<CropVertexGeometry>::uuid;

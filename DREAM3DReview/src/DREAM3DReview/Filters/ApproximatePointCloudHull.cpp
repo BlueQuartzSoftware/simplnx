@@ -15,6 +15,11 @@ std::string ApproximatePointCloudHull::name() const
   return FilterTraits<ApproximatePointCloudHull>::name.str();
 }
 
+std::string ApproximatePointCloudHull::className() const
+{
+  return FilterTraits<ApproximatePointCloudHull>::className;
+}
+
 Uuid ApproximatePointCloudHull::uuid() const
 {
   return FilterTraits<ApproximatePointCloudHull>::uuid;

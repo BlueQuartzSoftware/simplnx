@@ -15,6 +15,11 @@ std::string ITKVectorConnectedComponentImage::name() const
   return FilterTraits<ITKVectorConnectedComponentImage>::name.str();
 }
 
+std::string ITKVectorConnectedComponentImage::className() const
+{
+  return FilterTraits<ITKVectorConnectedComponentImage>::className;
+}
+
 Uuid ITKVectorConnectedComponentImage::uuid() const
 {
   return FilterTraits<ITKVectorConnectedComponentImage>::uuid;

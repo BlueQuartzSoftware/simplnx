@@ -19,6 +19,11 @@ std::string PointSampleTriangleGeometry::name() const
   return FilterTraits<PointSampleTriangleGeometry>::name.str();
 }
 
+std::string PointSampleTriangleGeometry::className() const
+{
+  return FilterTraits<PointSampleTriangleGeometry>::className;
+}
+
 Uuid PointSampleTriangleGeometry::uuid() const
 {
   return FilterTraits<PointSampleTriangleGeometry>::uuid;

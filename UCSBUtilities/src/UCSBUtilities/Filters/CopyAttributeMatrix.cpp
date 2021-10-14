@@ -13,6 +13,11 @@ std::string CopyAttributeMatrix::name() const
   return FilterTraits<CopyAttributeMatrix>::name.str();
 }
 
+std::string CopyAttributeMatrix::className() const
+{
+  return FilterTraits<CopyAttributeMatrix>::className;
+}
+
 Uuid CopyAttributeMatrix::uuid() const
 {
   return FilterTraits<CopyAttributeMatrix>::uuid;

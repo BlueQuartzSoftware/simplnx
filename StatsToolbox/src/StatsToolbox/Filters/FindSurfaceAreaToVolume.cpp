@@ -14,6 +14,11 @@ std::string FindSurfaceAreaToVolume::name() const
   return FilterTraits<FindSurfaceAreaToVolume>::name.str();
 }
 
+std::string FindSurfaceAreaToVolume::className() const
+{
+  return FilterTraits<FindSurfaceAreaToVolume>::className;
+}
+
 Uuid FindSurfaceAreaToVolume::uuid() const
 {
   return FilterTraits<FindSurfaceAreaToVolume>::uuid;

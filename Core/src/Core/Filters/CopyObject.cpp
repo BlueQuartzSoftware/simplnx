@@ -15,6 +15,11 @@ std::string CopyObject::name() const
   return FilterTraits<CopyObject>::name.str();
 }
 
+std::string CopyObject::className() const
+{
+  return FilterTraits<CopyObject>::className;
+}
+
 Uuid CopyObject::uuid() const
 {
   return FilterTraits<CopyObject>::uuid;

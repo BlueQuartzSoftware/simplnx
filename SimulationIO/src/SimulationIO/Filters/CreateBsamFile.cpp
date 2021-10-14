@@ -17,6 +17,11 @@ std::string CreateBsamFile::name() const
   return FilterTraits<CreateBsamFile>::name.str();
 }
 
+std::string CreateBsamFile::className() const
+{
+  return FilterTraits<CreateBsamFile>::className;
+}
+
 Uuid CreateBsamFile::uuid() const
 {
   return FilterTraits<CreateBsamFile>::uuid;

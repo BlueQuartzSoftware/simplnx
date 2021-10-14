@@ -22,6 +22,11 @@ std::string IlluminationCorrection::name() const
   return FilterTraits<IlluminationCorrection>::name.str();
 }
 
+std::string IlluminationCorrection::className() const
+{
+  return FilterTraits<IlluminationCorrection>::className;
+}
+
 Uuid IlluminationCorrection::uuid() const
 {
   return FilterTraits<IlluminationCorrection>::uuid;

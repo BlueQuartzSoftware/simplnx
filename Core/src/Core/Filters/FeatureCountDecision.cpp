@@ -11,6 +11,11 @@ std::string FeatureCountDecision::name() const
   return FilterTraits<FeatureCountDecision>::name.str();
 }
 
+std::string FeatureCountDecision::className() const
+{
+  return FilterTraits<FeatureCountDecision>::className;
+}
+
 Uuid FeatureCountDecision::uuid() const
 {
   return FilterTraits<FeatureCountDecision>::uuid;

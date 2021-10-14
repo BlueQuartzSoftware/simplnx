@@ -14,6 +14,11 @@ std::string ITKHMaximaImage::name() const
   return FilterTraits<ITKHMaximaImage>::name.str();
 }
 
+std::string ITKHMaximaImage::className() const
+{
+  return FilterTraits<ITKHMaximaImage>::className;
+}
+
 Uuid ITKHMaximaImage::uuid() const
 {
   return FilterTraits<ITKHMaximaImage>::uuid;

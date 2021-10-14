@@ -14,6 +14,11 @@ std::string ComputeMomentInvariants2D::name() const
   return FilterTraits<ComputeMomentInvariants2D>::name.str();
 }
 
+std::string ComputeMomentInvariants2D::className() const
+{
+  return FilterTraits<ComputeMomentInvariants2D>::className;
+}
+
 Uuid ComputeMomentInvariants2D::uuid() const
 {
   return FilterTraits<ComputeMomentInvariants2D>::uuid;

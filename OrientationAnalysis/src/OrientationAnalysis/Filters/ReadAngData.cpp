@@ -17,6 +17,11 @@ std::string ReadAngData::name() const
   return FilterTraits<ReadAngData>::name.str();
 }
 
+std::string ReadAngData::className() const
+{
+  return FilterTraits<ReadAngData>::className;
+}
+
 Uuid ReadAngData::uuid() const
 {
   return FilterTraits<ReadAngData>::uuid;

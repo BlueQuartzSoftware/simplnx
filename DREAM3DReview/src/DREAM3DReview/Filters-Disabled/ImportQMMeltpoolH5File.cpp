@@ -17,6 +17,11 @@ std::string ImportQMMeltpoolH5File::name() const
   return FilterTraits<ImportQMMeltpoolH5File>::name.str();
 }
 
+std::string ImportQMMeltpoolH5File::className() const
+{
+  return FilterTraits<ImportQMMeltpoolH5File>::className;
+}
+
 Uuid ImportQMMeltpoolH5File::uuid() const
 {
   return FilterTraits<ImportQMMeltpoolH5File>::uuid;

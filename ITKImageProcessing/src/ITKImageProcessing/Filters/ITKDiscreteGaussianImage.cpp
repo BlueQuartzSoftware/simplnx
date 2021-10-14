@@ -16,6 +16,11 @@ std::string ITKDiscreteGaussianImage::name() const
   return FilterTraits<ITKDiscreteGaussianImage>::name.str();
 }
 
+std::string ITKDiscreteGaussianImage::className() const
+{
+  return FilterTraits<ITKDiscreteGaussianImage>::className;
+}
+
 Uuid ITKDiscreteGaussianImage::uuid() const
 {
   return FilterTraits<ITKDiscreteGaussianImage>::uuid;

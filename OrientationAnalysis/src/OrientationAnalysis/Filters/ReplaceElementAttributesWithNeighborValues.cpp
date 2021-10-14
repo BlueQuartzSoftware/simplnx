@@ -15,6 +15,11 @@ std::string ReplaceElementAttributesWithNeighborValues::name() const
   return FilterTraits<ReplaceElementAttributesWithNeighborValues>::name.str();
 }
 
+std::string ReplaceElementAttributesWithNeighborValues::className() const
+{
+  return FilterTraits<ReplaceElementAttributesWithNeighborValues>::className;
+}
+
 Uuid ReplaceElementAttributesWithNeighborValues::uuid() const
 {
   return FilterTraits<ReplaceElementAttributesWithNeighborValues>::uuid;

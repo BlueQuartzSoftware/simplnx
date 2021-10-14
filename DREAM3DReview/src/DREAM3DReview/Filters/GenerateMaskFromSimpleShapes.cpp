@@ -14,6 +14,11 @@ std::string GenerateMaskFromSimpleShapes::name() const
   return FilterTraits<GenerateMaskFromSimpleShapes>::name.str();
 }
 
+std::string GenerateMaskFromSimpleShapes::className() const
+{
+  return FilterTraits<GenerateMaskFromSimpleShapes>::className;
+}
+
 Uuid GenerateMaskFromSimpleShapes::uuid() const
 {
   return FilterTraits<GenerateMaskFromSimpleShapes>::uuid;

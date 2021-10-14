@@ -13,6 +13,11 @@ std::string FindDerivatives::name() const
   return FilterTraits<FindDerivatives>::name.str();
 }
 
+std::string FindDerivatives::className() const
+{
+  return FilterTraits<FindDerivatives>::className;
+}
+
 Uuid FindDerivatives::uuid() const
 {
   return FilterTraits<FindDerivatives>::uuid;

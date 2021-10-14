@@ -17,6 +17,11 @@ std::string ApplyTransformationToGeometry::name() const
   return FilterTraits<ApplyTransformationToGeometry>::name.str();
 }
 
+std::string ApplyTransformationToGeometry::className() const
+{
+  return FilterTraits<ApplyTransformationToGeometry>::className;
+}
+
 Uuid ApplyTransformationToGeometry::uuid() const
 {
   return FilterTraits<ApplyTransformationToGeometry>::uuid;

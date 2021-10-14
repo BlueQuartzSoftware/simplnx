@@ -14,6 +14,11 @@ std::string ITKBoxMeanImage::name() const
   return FilterTraits<ITKBoxMeanImage>::name.str();
 }
 
+std::string ITKBoxMeanImage::className() const
+{
+  return FilterTraits<ITKBoxMeanImage>::className;
+}
+
 Uuid ITKBoxMeanImage::uuid() const
 {
   return FilterTraits<ITKBoxMeanImage>::uuid;

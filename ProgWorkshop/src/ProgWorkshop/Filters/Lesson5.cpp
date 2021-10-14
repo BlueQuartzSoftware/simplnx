@@ -16,6 +16,11 @@ std::string Lesson5::name() const
   return FilterTraits<Lesson5>::name.str();
 }
 
+std::string Lesson5::className() const
+{
+  return FilterTraits<Lesson5>::className;
+}
+
 Uuid Lesson5::uuid() const
 {
   return FilterTraits<Lesson5>::uuid;

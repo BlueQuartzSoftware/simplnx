@@ -41,6 +41,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -88,4 +94,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ImportH5EspritData, "8abdea7d-f715-5a24-8165-7f946bbc2fe9");
+COMPLEX_DEF_FILTER_TRAITS(complex, ImportH5EspritData, "8abdea7d-f715-5a24-8165-7f946bbc2fe9");

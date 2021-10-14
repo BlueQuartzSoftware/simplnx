@@ -13,6 +13,11 @@ std::string ITKNormalizeImage::name() const
   return FilterTraits<ITKNormalizeImage>::name.str();
 }
 
+std::string ITKNormalizeImage::className() const
+{
+  return FilterTraits<ITKNormalizeImage>::className;
+}
+
 Uuid ITKNormalizeImage::uuid() const
 {
   return FilterTraits<ITKNormalizeImage>::uuid;

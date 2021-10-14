@@ -14,6 +14,11 @@ std::string NeighborOrientationCorrelation::name() const
   return FilterTraits<NeighborOrientationCorrelation>::name.str();
 }
 
+std::string NeighborOrientationCorrelation::className() const
+{
+  return FilterTraits<NeighborOrientationCorrelation>::className;
+}
+
 Uuid NeighborOrientationCorrelation::uuid() const
 {
   return FilterTraits<NeighborOrientationCorrelation>::uuid;

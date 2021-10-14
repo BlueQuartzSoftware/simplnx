@@ -21,6 +21,11 @@ std::string ImportH5EspritData::name() const
   return FilterTraits<ImportH5EspritData>::name.str();
 }
 
+std::string ImportH5EspritData::className() const
+{
+  return FilterTraits<ImportH5EspritData>::className;
+}
+
 Uuid ImportH5EspritData::uuid() const
 {
   return FilterTraits<ImportH5EspritData>::uuid;

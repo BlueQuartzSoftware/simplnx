@@ -16,6 +16,11 @@ std::string KDistanceGraph::name() const
   return FilterTraits<KDistanceGraph>::name.str();
 }
 
+std::string KDistanceGraph::className() const
+{
+  return FilterTraits<KDistanceGraph>::className;
+}
+
 Uuid KDistanceGraph::uuid() const
 {
   return FilterTraits<KDistanceGraph>::uuid;

@@ -13,6 +13,11 @@ std::string AddOrientationNoise::name() const
   return FilterTraits<AddOrientationNoise>::name.str();
 }
 
+std::string AddOrientationNoise::className() const
+{
+  return FilterTraits<AddOrientationNoise>::className;
+}
+
 Uuid AddOrientationNoise::uuid() const
 {
   return FilterTraits<AddOrientationNoise>::uuid;

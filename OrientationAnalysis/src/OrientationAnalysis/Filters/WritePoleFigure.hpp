@@ -46,6 +46,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -93,4 +99,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::WritePoleFigure, "15b8857a-a577-5bea-9cf2-37f12f450523");
+COMPLEX_DEF_FILTER_TRAITS(complex, WritePoleFigure, "15b8857a-a577-5bea-9cf2-37f12f450523");

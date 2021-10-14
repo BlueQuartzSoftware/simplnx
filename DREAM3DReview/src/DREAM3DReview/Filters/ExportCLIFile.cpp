@@ -20,6 +20,11 @@ std::string ExportCLIFile::name() const
   return FilterTraits<ExportCLIFile>::name.str();
 }
 
+std::string ExportCLIFile::className() const
+{
+  return FilterTraits<ExportCLIFile>::className;
+}
+
 Uuid ExportCLIFile::uuid() const
 {
   return FilterTraits<ExportCLIFile>::uuid;

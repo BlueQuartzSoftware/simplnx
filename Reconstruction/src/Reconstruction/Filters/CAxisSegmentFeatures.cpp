@@ -15,6 +15,11 @@ std::string CAxisSegmentFeatures::name() const
   return FilterTraits<CAxisSegmentFeatures>::name.str();
 }
 
+std::string CAxisSegmentFeatures::className() const
+{
+  return FilterTraits<CAxisSegmentFeatures>::className;
+}
+
 Uuid CAxisSegmentFeatures::uuid() const
 {
   return FilterTraits<CAxisSegmentFeatures>::uuid;

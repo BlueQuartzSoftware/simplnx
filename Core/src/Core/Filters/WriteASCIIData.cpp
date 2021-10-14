@@ -19,6 +19,11 @@ std::string WriteASCIIData::name() const
   return FilterTraits<WriteASCIIData>::name.str();
 }
 
+std::string WriteASCIIData::className() const
+{
+  return FilterTraits<WriteASCIIData>::className;
+}
+
 Uuid WriteASCIIData::uuid() const
 {
   return FilterTraits<WriteASCIIData>::uuid;

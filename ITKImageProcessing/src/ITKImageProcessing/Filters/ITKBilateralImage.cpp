@@ -14,6 +14,11 @@ std::string ITKBilateralImage::name() const
   return FilterTraits<ITKBilateralImage>::name.str();
 }
 
+std::string ITKBilateralImage::className() const
+{
+  return FilterTraits<ITKBilateralImage>::className;
+}
+
 Uuid ITKBilateralImage::uuid() const
 {
   return FilterTraits<ITKBilateralImage>::uuid;

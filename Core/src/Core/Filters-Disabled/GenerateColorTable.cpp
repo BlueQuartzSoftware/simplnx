@@ -14,6 +14,11 @@ std::string GenerateColorTable::name() const
   return FilterTraits<GenerateColorTable>::name.str();
 }
 
+std::string GenerateColorTable::className() const
+{
+  return FilterTraits<GenerateColorTable>::className;
+}
+
 Uuid GenerateColorTable::uuid() const
 {
   return FilterTraits<GenerateColorTable>::uuid;

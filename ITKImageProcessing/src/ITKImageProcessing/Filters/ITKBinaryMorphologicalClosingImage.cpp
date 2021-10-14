@@ -17,6 +17,11 @@ std::string ITKBinaryMorphologicalClosingImage::name() const
   return FilterTraits<ITKBinaryMorphologicalClosingImage>::name.str();
 }
 
+std::string ITKBinaryMorphologicalClosingImage::className() const
+{
+  return FilterTraits<ITKBinaryMorphologicalClosingImage>::className;
+}
+
 Uuid ITKBinaryMorphologicalClosingImage::uuid() const
 {
   return FilterTraits<ITKBinaryMorphologicalClosingImage>::uuid;

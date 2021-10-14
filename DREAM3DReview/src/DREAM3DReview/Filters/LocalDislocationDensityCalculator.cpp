@@ -16,6 +16,11 @@ std::string LocalDislocationDensityCalculator::name() const
   return FilterTraits<LocalDislocationDensityCalculator>::name.str();
 }
 
+std::string LocalDislocationDensityCalculator::className() const
+{
+  return FilterTraits<LocalDislocationDensityCalculator>::className;
+}
+
 Uuid LocalDislocationDensityCalculator::uuid() const
 {
   return FilterTraits<LocalDislocationDensityCalculator>::uuid;

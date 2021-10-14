@@ -14,6 +14,11 @@ std::string ITKZeroCrossingImage::name() const
   return FilterTraits<ITKZeroCrossingImage>::name.str();
 }
 
+std::string ITKZeroCrossingImage::className() const
+{
+  return FilterTraits<ITKZeroCrossingImage>::className;
+}
+
 Uuid ITKZeroCrossingImage::uuid() const
 {
   return FilterTraits<ITKZeroCrossingImage>::uuid;

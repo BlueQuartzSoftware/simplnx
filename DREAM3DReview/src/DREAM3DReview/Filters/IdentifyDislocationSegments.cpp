@@ -13,6 +13,11 @@ std::string IdentifyDislocationSegments::name() const
   return FilterTraits<IdentifyDislocationSegments>::name.str();
 }
 
+std::string IdentifyDislocationSegments::className() const
+{
+  return FilterTraits<IdentifyDislocationSegments>::className;
+}
+
 Uuid IdentifyDislocationSegments::uuid() const
 {
   return FilterTraits<IdentifyDislocationSegments>::uuid;

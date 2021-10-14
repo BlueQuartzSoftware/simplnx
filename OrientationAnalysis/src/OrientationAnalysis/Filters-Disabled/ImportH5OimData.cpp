@@ -21,6 +21,11 @@ std::string ImportH5OimData::name() const
   return FilterTraits<ImportH5OimData>::name.str();
 }
 
+std::string ImportH5OimData::className() const
+{
+  return FilterTraits<ImportH5OimData>::className;
+}
+
 Uuid ImportH5OimData::uuid() const
 {
   return FilterTraits<ImportH5OimData>::uuid;

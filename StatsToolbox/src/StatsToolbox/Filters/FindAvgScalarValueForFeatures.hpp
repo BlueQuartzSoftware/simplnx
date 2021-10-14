@@ -34,6 +34,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -81,4 +87,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::FindAvgScalarValueForFeatures, "918ad532-c16b-5716-a0e2-fb33e888d670");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindAvgScalarValueForFeatures, "918ad532-c16b-5716-a0e2-fb33e888d670");

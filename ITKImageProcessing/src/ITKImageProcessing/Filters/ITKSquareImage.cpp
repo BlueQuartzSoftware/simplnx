@@ -13,6 +13,11 @@ std::string ITKSquareImage::name() const
   return FilterTraits<ITKSquareImage>::name.str();
 }
 
+std::string ITKSquareImage::className() const
+{
+  return FilterTraits<ITKSquareImage>::className;
+}
+
 Uuid ITKSquareImage::uuid() const
 {
   return FilterTraits<ITKSquareImage>::uuid;

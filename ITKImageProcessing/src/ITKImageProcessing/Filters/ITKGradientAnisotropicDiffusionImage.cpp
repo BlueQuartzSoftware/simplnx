@@ -14,6 +14,11 @@ std::string ITKGradientAnisotropicDiffusionImage::name() const
   return FilterTraits<ITKGradientAnisotropicDiffusionImage>::name.str();
 }
 
+std::string ITKGradientAnisotropicDiffusionImage::className() const
+{
+  return FilterTraits<ITKGradientAnisotropicDiffusionImage>::className;
+}
+
 Uuid ITKGradientAnisotropicDiffusionImage::uuid() const
 {
   return FilterTraits<ITKGradientAnisotropicDiffusionImage>::uuid;

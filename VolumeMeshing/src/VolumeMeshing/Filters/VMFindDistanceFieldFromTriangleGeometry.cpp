@@ -17,6 +17,11 @@ std::string VMFindDistanceFieldFromTriangleGeometry::name() const
   return FilterTraits<VMFindDistanceFieldFromTriangleGeometry>::name.str();
 }
 
+std::string VMFindDistanceFieldFromTriangleGeometry::className() const
+{
+  return FilterTraits<VMFindDistanceFieldFromTriangleGeometry>::className;
+}
+
 Uuid VMFindDistanceFieldFromTriangleGeometry::uuid() const
 {
   return FilterTraits<VMFindDistanceFieldFromTriangleGeometry>::uuid;

@@ -15,6 +15,11 @@ std::string ITKImportImageStack::name() const
   return FilterTraits<ITKImportImageStack>::name.str();
 }
 
+std::string ITKImportImageStack::className() const
+{
+  return FilterTraits<ITKImportImageStack>::className;
+}
+
 Uuid ITKImportImageStack::uuid() const
 {
   return FilterTraits<ITKImportImageStack>::uuid;

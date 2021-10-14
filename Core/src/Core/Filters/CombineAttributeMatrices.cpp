@@ -14,6 +14,11 @@ std::string CombineAttributeMatrices::name() const
   return FilterTraits<CombineAttributeMatrices>::name.str();
 }
 
+std::string CombineAttributeMatrices::className() const
+{
+  return FilterTraits<CombineAttributeMatrices>::className;
+}
+
 Uuid CombineAttributeMatrices::uuid() const
 {
   return FilterTraits<CombineAttributeMatrices>::uuid;

@@ -13,6 +13,11 @@ std::string ITKRGBToLuminanceImage::name() const
   return FilterTraits<ITKRGBToLuminanceImage>::name.str();
 }
 
+std::string ITKRGBToLuminanceImage::className() const
+{
+  return FilterTraits<ITKRGBToLuminanceImage>::className;
+}
+
 Uuid ITKRGBToLuminanceImage::uuid() const
 {
   return FilterTraits<ITKRGBToLuminanceImage>::uuid;

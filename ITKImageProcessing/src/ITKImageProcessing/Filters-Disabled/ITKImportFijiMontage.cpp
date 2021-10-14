@@ -22,6 +22,11 @@ std::string ITKImportFijiMontage::name() const
   return FilterTraits<ITKImportFijiMontage>::name.str();
 }
 
+std::string ITKImportFijiMontage::className() const
+{
+  return FilterTraits<ITKImportFijiMontage>::className;
+}
+
 Uuid ITKImportFijiMontage::uuid() const
 {
   return FilterTraits<ITKImportFijiMontage>::uuid;

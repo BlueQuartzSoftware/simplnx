@@ -37,6 +37,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -84,4 +90,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ImportDelamData, "f3def19a-b932-5ce7-9796-9e9476a29e1a");
+COMPLEX_DEF_FILTER_TRAITS(complex, ImportDelamData, "f3def19a-b932-5ce7-9796-9e9476a29e1a");

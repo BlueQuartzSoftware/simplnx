@@ -13,6 +13,11 @@ std::string ITKStitchMontage::name() const
   return FilterTraits<ITKStitchMontage>::name.str();
 }
 
+std::string ITKStitchMontage::className() const
+{
+  return FilterTraits<ITKStitchMontage>::className;
+}
+
 Uuid ITKStitchMontage::uuid() const
 {
   return FilterTraits<ITKStitchMontage>::uuid;

@@ -44,6 +44,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -91,4 +97,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::FindSchmids, "89c291a9-1c4d-59c2-ba69-b47beb4de594");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindSchmids, "89c291a9-1c4d-59c2-ba69-b47beb4de594");

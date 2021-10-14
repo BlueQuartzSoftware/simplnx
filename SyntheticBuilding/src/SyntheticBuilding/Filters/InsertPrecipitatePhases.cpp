@@ -20,6 +20,11 @@ std::string InsertPrecipitatePhases::name() const
   return FilterTraits<InsertPrecipitatePhases>::name.str();
 }
 
+std::string InsertPrecipitatePhases::className() const
+{
+  return FilterTraits<InsertPrecipitatePhases>::className;
+}
+
 Uuid InsertPrecipitatePhases::uuid() const
 {
   return FilterTraits<InsertPrecipitatePhases>::uuid;

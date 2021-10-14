@@ -18,6 +18,11 @@ std::string WarpRegularGrid::name() const
   return FilterTraits<WarpRegularGrid>::name.str();
 }
 
+std::string WarpRegularGrid::className() const
+{
+  return FilterTraits<WarpRegularGrid>::className;
+}
+
 Uuid WarpRegularGrid::uuid() const
 {
   return FilterTraits<WarpRegularGrid>::uuid;

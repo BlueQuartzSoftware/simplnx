@@ -18,6 +18,11 @@ std::string SteinerCompact::name() const
   return FilterTraits<SteinerCompact>::name.str();
 }
 
+std::string SteinerCompact::className() const
+{
+  return FilterTraits<SteinerCompact>::className;
+}
+
 Uuid SteinerCompact::uuid() const
 {
   return FilterTraits<SteinerCompact>::uuid;

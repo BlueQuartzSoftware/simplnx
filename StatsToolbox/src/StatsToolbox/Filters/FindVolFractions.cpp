@@ -13,6 +13,11 @@ std::string FindVolFractions::name() const
   return FilterTraits<FindVolFractions>::name.str();
 }
 
+std::string FindVolFractions::className() const
+{
+  return FilterTraits<FindVolFractions>::className;
+}
+
 Uuid FindVolFractions::uuid() const
 {
   return FilterTraits<FindVolFractions>::uuid;

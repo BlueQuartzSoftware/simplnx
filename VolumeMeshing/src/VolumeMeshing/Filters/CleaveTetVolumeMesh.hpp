@@ -38,6 +38,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -85,4 +91,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::CleaveTetVolumeMesh, "f12f4d16-9d30-5660-b562-4a5b39b02db3");
+COMPLEX_DEF_FILTER_TRAITS(complex, CleaveTetVolumeMesh, "f12f4d16-9d30-5660-b562-4a5b39b02db3");

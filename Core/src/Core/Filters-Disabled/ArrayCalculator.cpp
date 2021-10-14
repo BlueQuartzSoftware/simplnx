@@ -15,6 +15,11 @@ std::string ArrayCalculator::name() const
   return FilterTraits<ArrayCalculator>::name.str();
 }
 
+std::string ArrayCalculator::className() const
+{
+  return FilterTraits<ArrayCalculator>::className;
+}
+
 Uuid ArrayCalculator::uuid() const
 {
   return FilterTraits<ArrayCalculator>::uuid;

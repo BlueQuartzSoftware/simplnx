@@ -14,6 +14,11 @@ std::string FindTriangleGeomCentroids::name() const
   return FilterTraits<FindTriangleGeomCentroids>::name.str();
 }
 
+std::string FindTriangleGeomCentroids::className() const
+{
+  return FilterTraits<FindTriangleGeomCentroids>::className;
+}
+
 Uuid FindTriangleGeomCentroids::uuid() const
 {
   return FilterTraits<FindTriangleGeomCentroids>::uuid;

@@ -14,6 +14,11 @@ std::string FindBoundaryCells::name() const
   return FilterTraits<FindBoundaryCells>::name.str();
 }
 
+std::string FindBoundaryCells::className() const
+{
+  return FilterTraits<FindBoundaryCells>::className;
+}
+
 Uuid FindBoundaryCells::uuid() const
 {
   return FilterTraits<FindBoundaryCells>::uuid;

@@ -42,6 +42,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -89,4 +95,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::LaplacianSmoothing, "c9fa69da-5f36-592c-a950-6184e4ef1184");
+COMPLEX_DEF_FILTER_TRAITS(complex, LaplacianSmoothing, "c9fa69da-5f36-592c-a950-6184e4ef1184");

@@ -14,6 +14,11 @@ std::string ITKThresholdImage::name() const
   return FilterTraits<ITKThresholdImage>::name.str();
 }
 
+std::string ITKThresholdImage::className() const
+{
+  return FilterTraits<ITKThresholdImage>::className;
+}
+
 Uuid ITKThresholdImage::uuid() const
 {
   return FilterTraits<ITKThresholdImage>::uuid;

@@ -14,6 +14,11 @@ std::string ITKCastImage::name() const
   return FilterTraits<ITKCastImage>::name.str();
 }
 
+std::string ITKCastImage::className() const
+{
+  return FilterTraits<ITKCastImage>::className;
+}
+
 Uuid ITKCastImage::uuid() const
 {
   return FilterTraits<ITKCastImage>::uuid;

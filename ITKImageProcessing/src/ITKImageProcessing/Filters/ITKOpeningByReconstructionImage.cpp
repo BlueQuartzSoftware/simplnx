@@ -16,6 +16,11 @@ std::string ITKOpeningByReconstructionImage::name() const
   return FilterTraits<ITKOpeningByReconstructionImage>::name.str();
 }
 
+std::string ITKOpeningByReconstructionImage::className() const
+{
+  return FilterTraits<ITKOpeningByReconstructionImage>::className;
+}
+
 Uuid ITKOpeningByReconstructionImage::uuid() const
 {
   return FilterTraits<ITKOpeningByReconstructionImage>::uuid;

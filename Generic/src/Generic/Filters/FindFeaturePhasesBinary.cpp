@@ -13,6 +13,11 @@ std::string FindFeaturePhasesBinary::name() const
   return FilterTraits<FindFeaturePhasesBinary>::name.str();
 }
 
+std::string FindFeaturePhasesBinary::className() const
+{
+  return FilterTraits<FindFeaturePhasesBinary>::className;
+}
+
 Uuid FindFeaturePhasesBinary::uuid() const
 {
   return FilterTraits<FindFeaturePhasesBinary>::uuid;

@@ -14,6 +14,11 @@ std::string ITKMaximumProjectionImage::name() const
   return FilterTraits<ITKMaximumProjectionImage>::name.str();
 }
 
+std::string ITKMaximumProjectionImage::className() const
+{
+  return FilterTraits<ITKMaximumProjectionImage>::className;
+}
+
 Uuid ITKMaximumProjectionImage::uuid() const
 {
   return FilterTraits<ITKMaximumProjectionImage>::uuid;

@@ -18,6 +18,11 @@ std::string AlignSectionsFeatureCentroid::name() const
   return FilterTraits<AlignSectionsFeatureCentroid>::name.str();
 }
 
+std::string AlignSectionsFeatureCentroid::className() const
+{
+  return FilterTraits<AlignSectionsFeatureCentroid>::className;
+}
+
 Uuid AlignSectionsFeatureCentroid::uuid() const
 {
   return FilterTraits<AlignSectionsFeatureCentroid>::uuid;

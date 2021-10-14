@@ -14,6 +14,11 @@ std::string CreateAttributeMatrix::name() const
   return FilterTraits<CreateAttributeMatrix>::name.str();
 }
 
+std::string CreateAttributeMatrix::className() const
+{
+  return FilterTraits<CreateAttributeMatrix>::className;
+}
+
 Uuid CreateAttributeMatrix::uuid() const
 {
   return FilterTraits<CreateAttributeMatrix>::uuid;

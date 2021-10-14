@@ -14,6 +14,11 @@ std::string ITKGradientMagnitudeImage::name() const
   return FilterTraits<ITKGradientMagnitudeImage>::name.str();
 }
 
+std::string ITKGradientMagnitudeImage::className() const
+{
+  return FilterTraits<ITKGradientMagnitudeImage>::className;
+}
+
 Uuid ITKGradientMagnitudeImage::uuid() const
 {
   return FilterTraits<ITKGradientMagnitudeImage>::uuid;

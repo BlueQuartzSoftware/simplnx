@@ -15,6 +15,11 @@ std::string EstablishMatrixPhase::name() const
   return FilterTraits<EstablishMatrixPhase>::name.str();
 }
 
+std::string EstablishMatrixPhase::className() const
+{
+  return FilterTraits<EstablishMatrixPhase>::className;
+}
+
 Uuid EstablishMatrixPhase::uuid() const
 {
   return FilterTraits<EstablishMatrixPhase>::uuid;

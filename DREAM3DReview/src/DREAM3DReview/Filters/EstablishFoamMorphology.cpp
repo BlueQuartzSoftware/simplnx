@@ -21,6 +21,11 @@ std::string EstablishFoamMorphology::name() const
   return FilterTraits<EstablishFoamMorphology>::name.str();
 }
 
+std::string EstablishFoamMorphology::className() const
+{
+  return FilterTraits<EstablishFoamMorphology>::className;
+}
+
 Uuid EstablishFoamMorphology::uuid() const
 {
   return FilterTraits<EstablishFoamMorphology>::uuid;

@@ -14,6 +14,11 @@ std::string FindLargestCrossSections::name() const
   return FilterTraits<FindLargestCrossSections>::name.str();
 }
 
+std::string FindLargestCrossSections::className() const
+{
+  return FilterTraits<FindLargestCrossSections>::className;
+}
+
 Uuid FindLargestCrossSections::uuid() const
 {
   return FilterTraits<FindLargestCrossSections>::uuid;

@@ -47,6 +47,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -94,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::FindGBCDMetricBased, "1cf0de20-4cdf-53a3-893d-4f9d3a70b62e");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindGBCDMetricBased, "1cf0de20-4cdf-53a3-893d-4f9d3a70b62e");

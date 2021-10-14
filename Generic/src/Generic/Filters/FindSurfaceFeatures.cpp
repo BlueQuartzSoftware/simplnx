@@ -13,6 +13,11 @@ std::string FindSurfaceFeatures::name() const
   return FilterTraits<FindSurfaceFeatures>::name.str();
 }
 
+std::string FindSurfaceFeatures::className() const
+{
+  return FilterTraits<FindSurfaceFeatures>::className;
+}
+
 Uuid FindSurfaceFeatures::uuid() const
 {
   return FilterTraits<FindSurfaceFeatures>::uuid;

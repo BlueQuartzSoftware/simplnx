@@ -13,6 +13,11 @@ std::string LabelTriangleGeometry::name() const
   return FilterTraits<LabelTriangleGeometry>::name.str();
 }
 
+std::string LabelTriangleGeometry::className() const
+{
+  return FilterTraits<LabelTriangleGeometry>::className;
+}
+
 Uuid LabelTriangleGeometry::uuid() const
 {
   return FilterTraits<LabelTriangleGeometry>::uuid;

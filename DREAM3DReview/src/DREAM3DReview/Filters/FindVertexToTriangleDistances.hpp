@@ -36,6 +36,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -83,4 +89,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::FindVertexToTriangleDistances, "1bab3f41-fdf6-5278-9b17-5db0a142392f");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindVertexToTriangleDistances, "1bab3f41-fdf6-5278-9b17-5db0a142392f");

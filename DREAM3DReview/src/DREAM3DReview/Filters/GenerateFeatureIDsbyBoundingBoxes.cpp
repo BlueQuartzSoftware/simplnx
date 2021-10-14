@@ -14,6 +14,11 @@ std::string GenerateFeatureIDsbyBoundingBoxes::name() const
   return FilterTraits<GenerateFeatureIDsbyBoundingBoxes>::name.str();
 }
 
+std::string GenerateFeatureIDsbyBoundingBoxes::className() const
+{
+  return FilterTraits<GenerateFeatureIDsbyBoundingBoxes>::className;
+}
+
 Uuid GenerateFeatureIDsbyBoundingBoxes::uuid() const
 {
   return FilterTraits<GenerateFeatureIDsbyBoundingBoxes>::uuid;

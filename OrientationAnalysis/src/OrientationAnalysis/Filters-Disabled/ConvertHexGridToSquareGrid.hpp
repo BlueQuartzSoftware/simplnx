@@ -32,6 +32,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -79,4 +85,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ConvertHexGridToSquareGrid, "53b4980c-5c5f-5eb0-a02a-9f1c6858cec6");
+COMPLEX_DEF_FILTER_TRAITS(complex, ConvertHexGridToSquareGrid, "53b4980c-5c5f-5eb0-a02a-9f1c6858cec6");

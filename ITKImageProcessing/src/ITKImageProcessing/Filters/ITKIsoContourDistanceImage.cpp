@@ -14,6 +14,11 @@ std::string ITKIsoContourDistanceImage::name() const
   return FilterTraits<ITKIsoContourDistanceImage>::name.str();
 }
 
+std::string ITKIsoContourDistanceImage::className() const
+{
+  return FilterTraits<ITKIsoContourDistanceImage>::className;
+}
+
 Uuid ITKIsoContourDistanceImage::uuid() const
 {
   return FilterTraits<ITKIsoContourDistanceImage>::uuid;

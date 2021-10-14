@@ -33,6 +33,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -80,4 +86,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::GenerateVertexCoordinates, "0292e91c-ed6a-53c7-941e-38a7e586b397");
+COMPLEX_DEF_FILTER_TRAITS(complex, GenerateVertexCoordinates, "0292e91c-ed6a-53c7-941e-38a7e586b397");

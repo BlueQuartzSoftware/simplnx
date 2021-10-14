@@ -37,6 +37,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -84,4 +90,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::FindAvgOrientations, "5d403c0c-d11b-53ab-8702-38207b5545e4");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindAvgOrientations, "5d403c0c-d11b-53ab-8702-38207b5545e4");

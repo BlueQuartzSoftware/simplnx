@@ -19,6 +19,11 @@ std::string FindTwinBoundarySchmidFactors::name() const
   return FilterTraits<FindTwinBoundarySchmidFactors>::name.str();
 }
 
+std::string FindTwinBoundarySchmidFactors::className() const
+{
+  return FilterTraits<FindTwinBoundarySchmidFactors>::className;
+}
+
 Uuid FindTwinBoundarySchmidFactors::uuid() const
 {
   return FilterTraits<FindTwinBoundarySchmidFactors>::uuid;

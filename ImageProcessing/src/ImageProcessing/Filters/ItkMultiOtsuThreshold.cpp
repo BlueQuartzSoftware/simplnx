@@ -15,6 +15,11 @@ std::string ItkMultiOtsuThreshold::name() const
   return FilterTraits<ItkMultiOtsuThreshold>::name.str();
 }
 
+std::string ItkMultiOtsuThreshold::className() const
+{
+  return FilterTraits<ItkMultiOtsuThreshold>::className;
+}
+
 Uuid ItkMultiOtsuThreshold::uuid() const
 {
   return FilterTraits<ItkMultiOtsuThreshold>::uuid;

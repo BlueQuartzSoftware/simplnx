@@ -14,6 +14,11 @@ std::string ITKSignedDanielssonDistanceMapImage::name() const
   return FilterTraits<ITKSignedDanielssonDistanceMapImage>::name.str();
 }
 
+std::string ITKSignedDanielssonDistanceMapImage::className() const
+{
+  return FilterTraits<ITKSignedDanielssonDistanceMapImage>::className;
+}
+
 Uuid ITKSignedDanielssonDistanceMapImage::uuid() const
 {
   return FilterTraits<ITKSignedDanielssonDistanceMapImage>::uuid;

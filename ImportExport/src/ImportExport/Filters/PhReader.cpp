@@ -18,6 +18,11 @@ std::string PhReader::name() const
   return FilterTraits<PhReader>::name.str();
 }
 
+std::string PhReader::className() const
+{
+  return FilterTraits<PhReader>::className;
+}
+
 Uuid PhReader::uuid() const
 {
   return FilterTraits<PhReader>::uuid;

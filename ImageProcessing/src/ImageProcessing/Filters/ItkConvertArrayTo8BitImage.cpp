@@ -13,6 +13,11 @@ std::string ItkConvertArrayTo8BitImage::name() const
   return FilterTraits<ItkConvertArrayTo8BitImage>::name.str();
 }
 
+std::string ItkConvertArrayTo8BitImage::className() const
+{
+  return FilterTraits<ItkConvertArrayTo8BitImage>::className;
+}
+
 Uuid ItkConvertArrayTo8BitImage::uuid() const
 {
   return FilterTraits<ItkConvertArrayTo8BitImage>::uuid;

@@ -14,6 +14,11 @@ std::string EstablishShapeTypes::name() const
   return FilterTraits<EstablishShapeTypes>::name.str();
 }
 
+std::string EstablishShapeTypes::className() const
+{
+  return FilterTraits<EstablishShapeTypes>::className;
+}
+
 Uuid EstablishShapeTypes::uuid() const
 {
   return FilterTraits<EstablishShapeTypes>::uuid;

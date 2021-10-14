@@ -14,6 +14,11 @@ std::string ITKValuedRegionalMinimaImage::name() const
   return FilterTraits<ITKValuedRegionalMinimaImage>::name.str();
 }
 
+std::string ITKValuedRegionalMinimaImage::className() const
+{
+  return FilterTraits<ITKValuedRegionalMinimaImage>::className;
+}
+
 Uuid ITKValuedRegionalMinimaImage::uuid() const
 {
   return FilterTraits<ITKValuedRegionalMinimaImage>::uuid;

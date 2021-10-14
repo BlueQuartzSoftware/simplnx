@@ -17,6 +17,11 @@ std::string WriteStlFile::name() const
   return FilterTraits<WriteStlFile>::name.str();
 }
 
+std::string WriteStlFile::className() const
+{
+  return FilterTraits<WriteStlFile>::className;
+}
+
 Uuid WriteStlFile::uuid() const
 {
   return FilterTraits<WriteStlFile>::uuid;

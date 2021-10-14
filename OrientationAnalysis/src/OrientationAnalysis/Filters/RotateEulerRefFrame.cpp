@@ -14,6 +14,11 @@ std::string RotateEulerRefFrame::name() const
   return FilterTraits<RotateEulerRefFrame>::name.str();
 }
 
+std::string RotateEulerRefFrame::className() const
+{
+  return FilterTraits<RotateEulerRefFrame>::className;
+}
+
 Uuid RotateEulerRefFrame::uuid() const
 {
   return FilterTraits<RotateEulerRefFrame>::uuid;

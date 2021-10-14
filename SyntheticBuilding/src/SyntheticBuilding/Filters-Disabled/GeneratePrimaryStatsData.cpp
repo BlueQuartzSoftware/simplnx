@@ -20,6 +20,11 @@ std::string GeneratePrimaryStatsData::name() const
   return FilterTraits<GeneratePrimaryStatsData>::name.str();
 }
 
+std::string GeneratePrimaryStatsData::className() const
+{
+  return FilterTraits<GeneratePrimaryStatsData>::className;
+}
+
 Uuid GeneratePrimaryStatsData::uuid() const
 {
   return FilterTraits<GeneratePrimaryStatsData>::uuid;

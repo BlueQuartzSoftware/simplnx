@@ -17,6 +17,11 @@ std::string ITKImageReader::name() const
   return FilterTraits<ITKImageReader>::name.str();
 }
 
+std::string ITKImageReader::className() const
+{
+  return FilterTraits<ITKImageReader>::className;
+}
+
 Uuid ITKImageReader::uuid() const
 {
   return FilterTraits<ITKImageReader>::uuid;

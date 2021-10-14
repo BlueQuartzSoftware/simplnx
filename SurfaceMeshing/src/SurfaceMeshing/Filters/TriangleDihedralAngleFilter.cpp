@@ -12,6 +12,11 @@ std::string TriangleDihedralAngleFilter::name() const
   return FilterTraits<TriangleDihedralAngleFilter>::name.str();
 }
 
+std::string TriangleDihedralAngleFilter::className() const
+{
+  return FilterTraits<TriangleDihedralAngleFilter>::className;
+}
+
 Uuid TriangleDihedralAngleFilter::uuid() const
 {
   return FilterTraits<TriangleDihedralAngleFilter>::uuid;

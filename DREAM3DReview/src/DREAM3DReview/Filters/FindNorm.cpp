@@ -14,6 +14,11 @@ std::string FindNorm::name() const
   return FilterTraits<FindNorm>::name.str();
 }
 
+std::string FindNorm::className() const
+{
+  return FilterTraits<FindNorm>::className;
+}
+
 Uuid FindNorm::uuid() const
 {
   return FilterTraits<FindNorm>::uuid;

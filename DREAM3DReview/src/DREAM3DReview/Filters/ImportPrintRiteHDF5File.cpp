@@ -16,6 +16,11 @@ std::string ImportPrintRiteHDF5File::name() const
   return FilterTraits<ImportPrintRiteHDF5File>::name.str();
 }
 
+std::string ImportPrintRiteHDF5File::className() const
+{
+  return FilterTraits<ImportPrintRiteHDF5File>::className;
+}
+
 Uuid ImportPrintRiteHDF5File::uuid() const
 {
   return FilterTraits<ImportPrintRiteHDF5File>::uuid;

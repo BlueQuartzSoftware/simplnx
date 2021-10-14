@@ -15,6 +15,11 @@ std::string ITKRegionalMaximaImage::name() const
   return FilterTraits<ITKRegionalMaximaImage>::name.str();
 }
 
+std::string ITKRegionalMaximaImage::className() const
+{
+  return FilterTraits<ITKRegionalMaximaImage>::className;
+}
+
 Uuid ITKRegionalMaximaImage::uuid() const
 {
   return FilterTraits<ITKRegionalMaximaImage>::uuid;

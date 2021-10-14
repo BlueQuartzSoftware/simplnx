@@ -15,6 +15,11 @@ std::string FitFeatureData::name() const
   return FilterTraits<FitFeatureData>::name.str();
 }
 
+std::string FitFeatureData::className() const
+{
+  return FilterTraits<FitFeatureData>::className;
+}
+
 Uuid FitFeatureData::uuid() const
 {
   return FilterTraits<FitFeatureData>::uuid;

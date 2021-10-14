@@ -16,6 +16,11 @@ std::string DataContainerWriter::name() const
   return FilterTraits<DataContainerWriter>::name.str();
 }
 
+std::string DataContainerWriter::className() const
+{
+  return FilterTraits<DataContainerWriter>::className;
+}
+
 Uuid DataContainerWriter::uuid() const
 {
   return FilterTraits<DataContainerWriter>::uuid;

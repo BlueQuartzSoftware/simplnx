@@ -15,6 +15,11 @@ std::string ITKSignedMaurerDistanceMapImage::name() const
   return FilterTraits<ITKSignedMaurerDistanceMapImage>::name.str();
 }
 
+std::string ITKSignedMaurerDistanceMapImage::className() const
+{
+  return FilterTraits<ITKSignedMaurerDistanceMapImage>::className;
+}
+
 Uuid ITKSignedMaurerDistanceMapImage::uuid() const
 {
   return FilterTraits<ITKSignedMaurerDistanceMapImage>::uuid;

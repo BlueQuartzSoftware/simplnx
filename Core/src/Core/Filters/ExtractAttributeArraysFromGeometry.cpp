@@ -13,6 +13,11 @@ std::string ExtractAttributeArraysFromGeometry::name() const
   return FilterTraits<ExtractAttributeArraysFromGeometry>::name.str();
 }
 
+std::string ExtractAttributeArraysFromGeometry::className() const
+{
+  return FilterTraits<ExtractAttributeArraysFromGeometry>::className;
+}
+
 Uuid ExtractAttributeArraysFromGeometry::uuid() const
 {
   return FilterTraits<ExtractAttributeArraysFromGeometry>::uuid;

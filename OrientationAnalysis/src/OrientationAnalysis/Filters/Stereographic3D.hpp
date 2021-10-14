@@ -33,6 +33,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -80,4 +86,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::Stereographic3D, "7403472c-d468-5511-b28d-6b66fec56cf0");
+COMPLEX_DEF_FILTER_TRAITS(complex, Stereographic3D, "7403472c-d468-5511-b28d-6b66fec56cf0");

@@ -35,6 +35,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -82,4 +88,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ConvertQuaternion, "2caf96e4-dfce-521d-8560-d0f470759e03");
+COMPLEX_DEF_FILTER_TRAITS(complex, ConvertQuaternion, "2caf96e4-dfce-521d-8560-d0f470759e03");

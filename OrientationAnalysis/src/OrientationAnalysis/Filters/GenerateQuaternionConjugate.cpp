@@ -14,6 +14,11 @@ std::string GenerateQuaternionConjugate::name() const
   return FilterTraits<GenerateQuaternionConjugate>::name.str();
 }
 
+std::string GenerateQuaternionConjugate::className() const
+{
+  return FilterTraits<GenerateQuaternionConjugate>::className;
+}
+
 Uuid GenerateQuaternionConjugate::uuid() const
 {
   return FilterTraits<GenerateQuaternionConjugate>::uuid;

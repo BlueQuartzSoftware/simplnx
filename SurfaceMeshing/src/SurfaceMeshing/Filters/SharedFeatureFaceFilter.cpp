@@ -13,6 +13,11 @@ std::string SharedFeatureFaceFilter::name() const
   return FilterTraits<SharedFeatureFaceFilter>::name.str();
 }
 
+std::string SharedFeatureFaceFilter::className() const
+{
+  return FilterTraits<SharedFeatureFaceFilter>::className;
+}
+
 Uuid SharedFeatureFaceFilter::uuid() const
 {
   return FilterTraits<SharedFeatureFaceFilter>::uuid;

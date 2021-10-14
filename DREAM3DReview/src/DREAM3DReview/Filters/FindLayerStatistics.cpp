@@ -14,6 +14,11 @@ std::string FindLayerStatistics::name() const
   return FilterTraits<FindLayerStatistics>::name.str();
 }
 
+std::string FindLayerStatistics::className() const
+{
+  return FilterTraits<FindLayerStatistics>::className;
+}
+
 Uuid FindLayerStatistics::uuid() const
 {
   return FilterTraits<FindLayerStatistics>::uuid;

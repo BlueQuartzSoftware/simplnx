@@ -15,6 +15,11 @@ std::string ITKBinaryContourImage::name() const
   return FilterTraits<ITKBinaryContourImage>::name.str();
 }
 
+std::string ITKBinaryContourImage::className() const
+{
+  return FilterTraits<ITKBinaryContourImage>::className;
+}
+
 Uuid ITKBinaryContourImage::uuid() const
 {
   return FilterTraits<ITKBinaryContourImage>::uuid;

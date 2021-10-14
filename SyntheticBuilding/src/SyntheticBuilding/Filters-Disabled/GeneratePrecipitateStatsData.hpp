@@ -53,6 +53,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -100,4 +106,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::GeneratePrecipitateStatsData, "bf3a46e2-74fb-5e6f-a242-eb3da3ad5129");
+COMPLEX_DEF_FILTER_TRAITS(complex, GeneratePrecipitateStatsData, "bf3a46e2-74fb-5e6f-a242-eb3da3ad5129");

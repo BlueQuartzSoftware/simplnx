@@ -15,6 +15,11 @@ std::string ItkAutoThreshold::name() const
   return FilterTraits<ItkAutoThreshold>::name.str();
 }
 
+std::string ItkAutoThreshold::className() const
+{
+  return FilterTraits<ItkAutoThreshold>::className;
+}
+
 Uuid ItkAutoThreshold::uuid() const
 {
   return FilterTraits<ItkAutoThreshold>::uuid;

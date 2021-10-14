@@ -13,6 +13,11 @@ std::string RobustAutomaticThreshold::name() const
   return FilterTraits<RobustAutomaticThreshold>::name.str();
 }
 
+std::string RobustAutomaticThreshold::className() const
+{
+  return FilterTraits<RobustAutomaticThreshold>::className;
+}
+
 Uuid RobustAutomaticThreshold::uuid() const
 {
   return FilterTraits<RobustAutomaticThreshold>::uuid;

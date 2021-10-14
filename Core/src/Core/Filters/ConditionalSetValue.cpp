@@ -13,6 +13,11 @@ std::string ConditionalSetValue::name() const
   return FilterTraits<ConditionalSetValue>::name.str();
 }
 
+std::string ConditionalSetValue::className() const
+{
+  return FilterTraits<ConditionalSetValue>::className;
+}
+
 Uuid ConditionalSetValue::uuid() const
 {
   return FilterTraits<ConditionalSetValue>::uuid;

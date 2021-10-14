@@ -14,6 +14,11 @@ std::string ConvertOrientations::name() const
   return FilterTraits<ConvertOrientations>::name.str();
 }
 
+std::string ConvertOrientations::className() const
+{
+  return FilterTraits<ConvertOrientations>::className;
+}
+
 Uuid ConvertOrientations::uuid() const
 {
   return FilterTraits<ConvertOrientations>::uuid;

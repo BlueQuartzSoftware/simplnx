@@ -13,6 +13,11 @@ std::string FindAvgScalarValueForFeatures::name() const
   return FilterTraits<FindAvgScalarValueForFeatures>::name.str();
 }
 
+std::string FindAvgScalarValueForFeatures::className() const
+{
+  return FilterTraits<FindAvgScalarValueForFeatures>::className;
+}
+
 Uuid FindAvgScalarValueForFeatures::uuid() const
 {
   return FilterTraits<FindAvgScalarValueForFeatures>::uuid;

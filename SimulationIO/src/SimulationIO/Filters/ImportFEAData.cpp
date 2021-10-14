@@ -19,6 +19,11 @@ std::string ImportFEAData::name() const
   return FilterTraits<ImportFEAData>::name.str();
 }
 
+std::string ImportFEAData::className() const
+{
+  return FilterTraits<ImportFEAData>::className;
+}
+
 Uuid ImportFEAData::uuid() const
 {
   return FilterTraits<ImportFEAData>::uuid;

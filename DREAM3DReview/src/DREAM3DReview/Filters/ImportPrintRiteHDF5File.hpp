@@ -36,6 +36,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -83,4 +89,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ImportPrintRiteHDF5File, "21be3d9e-06cf-57f8-9534-1626ecc87896");
+COMPLEX_DEF_FILTER_TRAITS(complex, ImportPrintRiteHDF5File, "21be3d9e-06cf-57f8-9534-1626ecc87896");

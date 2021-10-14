@@ -14,6 +14,11 @@ std::string ExtractTripleLinesFromTriangleGeometry::name() const
   return FilterTraits<ExtractTripleLinesFromTriangleGeometry>::name.str();
 }
 
+std::string ExtractTripleLinesFromTriangleGeometry::className() const
+{
+  return FilterTraits<ExtractTripleLinesFromTriangleGeometry>::className;
+}
+
 Uuid ExtractTripleLinesFromTriangleGeometry::uuid() const
 {
   return FilterTraits<ExtractTripleLinesFromTriangleGeometry>::uuid;

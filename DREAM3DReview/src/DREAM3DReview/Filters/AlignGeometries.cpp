@@ -13,6 +13,11 @@ std::string AlignGeometries::name() const
   return FilterTraits<AlignGeometries>::name.str();
 }
 
+std::string AlignGeometries::className() const
+{
+  return FilterTraits<AlignGeometries>::className;
+}
+
 Uuid AlignGeometries::uuid() const
 {
   return FilterTraits<AlignGeometries>::uuid;

@@ -13,6 +13,11 @@ std::string ITKAtanImage::name() const
   return FilterTraits<ITKAtanImage>::name.str();
 }
 
+std::string ITKAtanImage::className() const
+{
+  return FilterTraits<ITKAtanImage>::className;
+}
+
 Uuid ITKAtanImage::uuid() const
 {
   return FilterTraits<ITKAtanImage>::uuid;

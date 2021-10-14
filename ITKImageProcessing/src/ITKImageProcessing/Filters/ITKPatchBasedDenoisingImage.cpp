@@ -16,6 +16,11 @@ std::string ITKPatchBasedDenoisingImage::name() const
   return FilterTraits<ITKPatchBasedDenoisingImage>::name.str();
 }
 
+std::string ITKPatchBasedDenoisingImage::className() const
+{
+  return FilterTraits<ITKPatchBasedDenoisingImage>::className;
+}
+
 Uuid ITKPatchBasedDenoisingImage::uuid() const
 {
   return FilterTraits<ITKPatchBasedDenoisingImage>::uuid;

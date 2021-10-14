@@ -13,6 +13,11 @@ std::string Stereographic3D::name() const
   return FilterTraits<Stereographic3D>::name.str();
 }
 
+std::string Stereographic3D::className() const
+{
+  return FilterTraits<Stereographic3D>::className;
+}
+
 Uuid Stereographic3D::uuid() const
 {
   return FilterTraits<Stereographic3D>::uuid;

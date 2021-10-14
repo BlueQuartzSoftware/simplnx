@@ -13,6 +13,11 @@ std::string FindBoundaryAreas::name() const
   return FilterTraits<FindBoundaryAreas>::name.str();
 }
 
+std::string FindBoundaryAreas::className() const
+{
+  return FilterTraits<FindBoundaryAreas>::className;
+}
+
 Uuid FindBoundaryAreas::uuid() const
 {
   return FilterTraits<FindBoundaryAreas>::uuid;

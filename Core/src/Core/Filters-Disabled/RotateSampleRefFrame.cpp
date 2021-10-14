@@ -16,6 +16,11 @@ std::string RotateSampleRefFrame::name() const
   return FilterTraits<RotateSampleRefFrame>::name.str();
 }
 
+std::string RotateSampleRefFrame::className() const
+{
+  return FilterTraits<RotateSampleRefFrame>::className;
+}
+
 Uuid RotateSampleRefFrame::uuid() const
 {
   return FilterTraits<RotateSampleRefFrame>::uuid;

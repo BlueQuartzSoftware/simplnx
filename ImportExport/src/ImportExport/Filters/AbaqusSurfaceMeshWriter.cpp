@@ -16,6 +16,11 @@ std::string AbaqusSurfaceMeshWriter::name() const
   return FilterTraits<AbaqusSurfaceMeshWriter>::name.str();
 }
 
+std::string AbaqusSurfaceMeshWriter::className() const
+{
+  return FilterTraits<AbaqusSurfaceMeshWriter>::className;
+}
+
 Uuid AbaqusSurfaceMeshWriter::uuid() const
 {
   return FilterTraits<AbaqusSurfaceMeshWriter>::uuid;

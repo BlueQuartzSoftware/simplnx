@@ -34,6 +34,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -81,4 +87,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::AppendImageGeometryZSlice, "b344db62-a44e-58cc-95f9-d07958f6d6a9");
+COMPLEX_DEF_FILTER_TRAITS(complex, AppendImageGeometryZSlice, "b344db62-a44e-58cc-95f9-d07958f6d6a9");

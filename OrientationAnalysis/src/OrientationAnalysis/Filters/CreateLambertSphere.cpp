@@ -15,6 +15,11 @@ std::string CreateLambertSphere::name() const
   return FilterTraits<CreateLambertSphere>::name.str();
 }
 
+std::string CreateLambertSphere::className() const
+{
+  return FilterTraits<CreateLambertSphere>::className;
+}
+
 Uuid CreateLambertSphere::uuid() const
 {
   return FilterTraits<CreateLambertSphere>::uuid;

@@ -14,6 +14,11 @@ std::string ITKBinaryProjectionImage::name() const
   return FilterTraits<ITKBinaryProjectionImage>::name.str();
 }
 
+std::string ITKBinaryProjectionImage::className() const
+{
+  return FilterTraits<ITKBinaryProjectionImage>::className;
+}
+
 Uuid ITKBinaryProjectionImage::uuid() const
 {
   return FilterTraits<ITKBinaryProjectionImage>::uuid;

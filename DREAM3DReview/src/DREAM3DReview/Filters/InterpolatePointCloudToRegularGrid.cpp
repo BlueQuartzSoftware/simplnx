@@ -19,6 +19,11 @@ std::string InterpolatePointCloudToRegularGrid::name() const
   return FilterTraits<InterpolatePointCloudToRegularGrid>::name.str();
 }
 
+std::string InterpolatePointCloudToRegularGrid::className() const
+{
+  return FilterTraits<InterpolatePointCloudToRegularGrid>::className;
+}
+
 Uuid InterpolatePointCloudToRegularGrid::uuid() const
 {
   return FilterTraits<InterpolatePointCloudToRegularGrid>::uuid;

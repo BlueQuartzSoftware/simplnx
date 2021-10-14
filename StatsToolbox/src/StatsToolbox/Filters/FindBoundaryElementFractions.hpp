@@ -34,6 +34,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -81,4 +87,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::FindBoundaryElementFractions, "3424e842-ccc8-58f6-9dba-d38fc17cf2c1");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindBoundaryElementFractions, "3424e842-ccc8-58f6-9dba-d38fc17cf2c1");

@@ -17,6 +17,11 @@ std::string VtkRectilinearGridWriter::name() const
   return FilterTraits<VtkRectilinearGridWriter>::name.str();
 }
 
+std::string VtkRectilinearGridWriter::className() const
+{
+  return FilterTraits<VtkRectilinearGridWriter>::className;
+}
+
 Uuid VtkRectilinearGridWriter::uuid() const
 {
   return FilterTraits<VtkRectilinearGridWriter>::uuid;

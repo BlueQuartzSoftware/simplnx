@@ -14,6 +14,11 @@ std::string ITKSumProjectionImage::name() const
   return FilterTraits<ITKSumProjectionImage>::name.str();
 }
 
+std::string ITKSumProjectionImage::className() const
+{
+  return FilterTraits<ITKSumProjectionImage>::className;
+}
+
 Uuid ITKSumProjectionImage::uuid() const
 {
   return FilterTraits<ITKSumProjectionImage>::uuid;

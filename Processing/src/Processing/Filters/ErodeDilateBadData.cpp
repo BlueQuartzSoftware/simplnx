@@ -16,6 +16,11 @@ std::string ErodeDilateBadData::name() const
   return FilterTraits<ErodeDilateBadData>::name.str();
 }
 
+std::string ErodeDilateBadData::className() const
+{
+  return FilterTraits<ErodeDilateBadData>::className;
+}
+
 Uuid ErodeDilateBadData::uuid() const
 {
   return FilterTraits<ErodeDilateBadData>::uuid;

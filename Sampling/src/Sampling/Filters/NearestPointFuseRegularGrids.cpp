@@ -12,6 +12,11 @@ std::string NearestPointFuseRegularGrids::name() const
   return FilterTraits<NearestPointFuseRegularGrids>::name.str();
 }
 
+std::string NearestPointFuseRegularGrids::className() const
+{
+  return FilterTraits<NearestPointFuseRegularGrids>::className;
+}
+
 Uuid NearestPointFuseRegularGrids::uuid() const
 {
   return FilterTraits<NearestPointFuseRegularGrids>::uuid;

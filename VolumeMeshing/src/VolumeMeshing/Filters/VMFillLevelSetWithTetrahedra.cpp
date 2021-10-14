@@ -17,6 +17,11 @@ std::string VMFillLevelSetWithTetrahedra::name() const
   return FilterTraits<VMFillLevelSetWithTetrahedra>::name.str();
 }
 
+std::string VMFillLevelSetWithTetrahedra::className() const
+{
+  return FilterTraits<VMFillLevelSetWithTetrahedra>::className;
+}
+
 Uuid VMFillLevelSetWithTetrahedra::uuid() const
 {
   return FilterTraits<VMFillLevelSetWithTetrahedra>::uuid;

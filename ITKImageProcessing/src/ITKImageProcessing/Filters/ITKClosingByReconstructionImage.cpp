@@ -16,6 +16,11 @@ std::string ITKClosingByReconstructionImage::name() const
   return FilterTraits<ITKClosingByReconstructionImage>::name.str();
 }
 
+std::string ITKClosingByReconstructionImage::className() const
+{
+  return FilterTraits<ITKClosingByReconstructionImage>::className;
+}
+
 Uuid ITKClosingByReconstructionImage::uuid() const
 {
   return FilterTraits<ITKClosingByReconstructionImage>::uuid;

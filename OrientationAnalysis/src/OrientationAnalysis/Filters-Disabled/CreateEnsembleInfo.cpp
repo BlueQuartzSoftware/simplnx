@@ -14,6 +14,11 @@ std::string CreateEnsembleInfo::name() const
   return FilterTraits<CreateEnsembleInfo>::name.str();
 }
 
+std::string CreateEnsembleInfo::className() const
+{
+  return FilterTraits<CreateEnsembleInfo>::className;
+}
+
 Uuid CreateEnsembleInfo::uuid() const
 {
   return FilterTraits<CreateEnsembleInfo>::uuid;

@@ -14,6 +14,11 @@ std::string ITKGrayscaleGrindPeakImage::name() const
   return FilterTraits<ITKGrayscaleGrindPeakImage>::name.str();
 }
 
+std::string ITKGrayscaleGrindPeakImage::className() const
+{
+  return FilterTraits<ITKGrayscaleGrindPeakImage>::className;
+}
+
 Uuid ITKGrayscaleGrindPeakImage::uuid() const
 {
   return FilterTraits<ITKGrayscaleGrindPeakImage>::uuid;

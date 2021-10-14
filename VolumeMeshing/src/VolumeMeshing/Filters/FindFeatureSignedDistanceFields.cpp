@@ -14,6 +14,11 @@ std::string FindFeatureSignedDistanceFields::name() const
   return FilterTraits<FindFeatureSignedDistanceFields>::name.str();
 }
 
+std::string FindFeatureSignedDistanceFields::className() const
+{
+  return FilterTraits<FindFeatureSignedDistanceFields>::className;
+}
+
 Uuid FindFeatureSignedDistanceFields::uuid() const
 {
   return FilterTraits<FindFeatureSignedDistanceFields>::uuid;

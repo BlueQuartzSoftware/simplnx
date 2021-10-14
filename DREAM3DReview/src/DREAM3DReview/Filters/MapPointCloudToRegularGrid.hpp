@@ -39,6 +39,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -86,4 +92,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::MapPointCloudToRegularGrid, "2db3204e-a4ce-5f37-a928-65744ba06173");
+COMPLEX_DEF_FILTER_TRAITS(complex, MapPointCloudToRegularGrid, "2db3204e-a4ce-5f37-a928-65744ba06173");

@@ -14,6 +14,11 @@ std::string FindProjectedImageStatistics::name() const
   return FilterTraits<FindProjectedImageStatistics>::name.str();
 }
 
+std::string FindProjectedImageStatistics::className() const
+{
+  return FilterTraits<FindProjectedImageStatistics>::className;
+}
+
 Uuid FindProjectedImageStatistics::uuid() const
 {
   return FilterTraits<FindProjectedImageStatistics>::uuid;

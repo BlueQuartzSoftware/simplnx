@@ -15,6 +15,11 @@ std::string GenerateIPFColors::name() const
   return FilterTraits<GenerateIPFColors>::name.str();
 }
 
+std::string GenerateIPFColors::className() const
+{
+  return FilterTraits<GenerateIPFColors>::className;
+}
+
 Uuid GenerateIPFColors::uuid() const
 {
   return FilterTraits<GenerateIPFColors>::uuid;

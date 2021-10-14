@@ -18,6 +18,11 @@ std::string AvizoRectilinearCoordinateWriter::name() const
   return FilterTraits<AvizoRectilinearCoordinateWriter>::name.str();
 }
 
+std::string AvizoRectilinearCoordinateWriter::className() const
+{
+  return FilterTraits<AvizoRectilinearCoordinateWriter>::className;
+}
+
 Uuid AvizoRectilinearCoordinateWriter::uuid() const
 {
   return FilterTraits<AvizoRectilinearCoordinateWriter>::uuid;

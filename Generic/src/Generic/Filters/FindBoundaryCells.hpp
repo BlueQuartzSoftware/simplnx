@@ -35,6 +35,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -82,4 +88,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::FindBoundaryCells, "a7a7a0df-8680-57d6-a447-fb41f2c92f1b");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindBoundaryCells, "a7a7a0df-8680-57d6-a447-fb41f2c92f1b");

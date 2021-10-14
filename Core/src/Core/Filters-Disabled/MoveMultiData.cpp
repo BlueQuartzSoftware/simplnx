@@ -15,6 +15,11 @@ std::string MoveMultiData::name() const
   return FilterTraits<MoveMultiData>::name.str();
 }
 
+std::string MoveMultiData::className() const
+{
+  return FilterTraits<MoveMultiData>::className;
+}
+
 Uuid MoveMultiData::uuid() const
 {
   return FilterTraits<MoveMultiData>::uuid;

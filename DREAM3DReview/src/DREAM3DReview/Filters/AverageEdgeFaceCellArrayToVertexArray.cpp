@@ -13,6 +13,11 @@ std::string AverageEdgeFaceCellArrayToVertexArray::name() const
   return FilterTraits<AverageEdgeFaceCellArrayToVertexArray>::name.str();
 }
 
+std::string AverageEdgeFaceCellArrayToVertexArray::className() const
+{
+  return FilterTraits<AverageEdgeFaceCellArrayToVertexArray>::className;
+}
+
 Uuid AverageEdgeFaceCellArrayToVertexArray::uuid() const
 {
   return FilterTraits<AverageEdgeFaceCellArrayToVertexArray>::uuid;

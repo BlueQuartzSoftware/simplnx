@@ -14,6 +14,11 @@ std::string CreateImageGeometry::name() const
   return FilterTraits<CreateImageGeometry>::name.str();
 }
 
+std::string CreateImageGeometry::className() const
+{
+  return FilterTraits<CreateImageGeometry>::className;
+}
+
 Uuid CreateImageGeometry::uuid() const
 {
   return FilterTraits<CreateImageGeometry>::uuid;

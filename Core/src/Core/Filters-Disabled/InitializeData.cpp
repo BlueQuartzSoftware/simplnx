@@ -15,6 +15,11 @@ std::string InitializeData::name() const
   return FilterTraits<InitializeData>::name.str();
 }
 
+std::string InitializeData::className() const
+{
+  return FilterTraits<InitializeData>::className;
+}
+
 Uuid InitializeData::uuid() const
 {
   return FilterTraits<InitializeData>::uuid;

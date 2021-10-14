@@ -18,6 +18,11 @@ std::string AlignSectionsMisorientation::name() const
   return FilterTraits<AlignSectionsMisorientation>::name.str();
 }
 
+std::string AlignSectionsMisorientation::className() const
+{
+  return FilterTraits<AlignSectionsMisorientation>::className;
+}
+
 Uuid AlignSectionsMisorientation::uuid() const
 {
   return FilterTraits<AlignSectionsMisorientation>::uuid;

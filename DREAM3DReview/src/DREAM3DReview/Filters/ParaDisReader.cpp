@@ -18,6 +18,11 @@ std::string ParaDisReader::name() const
   return FilterTraits<ParaDisReader>::name.str();
 }
 
+std::string ParaDisReader::className() const
+{
+  return FilterTraits<ParaDisReader>::className;
+}
+
 Uuid ParaDisReader::uuid() const
 {
   return FilterTraits<ParaDisReader>::uuid;

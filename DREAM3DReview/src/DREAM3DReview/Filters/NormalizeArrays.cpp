@@ -17,6 +17,11 @@ std::string NormalizeArrays::name() const
   return FilterTraits<NormalizeArrays>::name.str();
 }
 
+std::string NormalizeArrays::className() const
+{
+  return FilterTraits<NormalizeArrays>::className;
+}
+
 Uuid NormalizeArrays::uuid() const
 {
   return FilterTraits<NormalizeArrays>::uuid;

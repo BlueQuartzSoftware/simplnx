@@ -14,6 +14,11 @@ std::string CombineAttributeArrays::name() const
   return FilterTraits<CombineAttributeArrays>::name.str();
 }
 
+std::string CombineAttributeArrays::className() const
+{
+  return FilterTraits<CombineAttributeArrays>::className;
+}
+
 Uuid CombineAttributeArrays::uuid() const
 {
   return FilterTraits<CombineAttributeArrays>::uuid;

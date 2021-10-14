@@ -15,6 +15,11 @@ std::string ITKDoubleThresholdImage::name() const
   return FilterTraits<ITKDoubleThresholdImage>::name.str();
 }
 
+std::string ITKDoubleThresholdImage::className() const
+{
+  return FilterTraits<ITKDoubleThresholdImage>::className;
+}
+
 Uuid ITKDoubleThresholdImage::uuid() const
 {
   return FilterTraits<ITKDoubleThresholdImage>::uuid;

@@ -13,6 +13,11 @@ std::string FindDistsToCharactGBs::name() const
   return FilterTraits<FindDistsToCharactGBs>::name.str();
 }
 
+std::string FindDistsToCharactGBs::className() const
+{
+  return FilterTraits<FindDistsToCharactGBs>::className;
+}
+
 Uuid FindDistsToCharactGBs::uuid() const
 {
   return FilterTraits<FindDistsToCharactGBs>::uuid;

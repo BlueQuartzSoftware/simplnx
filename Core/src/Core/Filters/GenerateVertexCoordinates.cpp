@@ -13,6 +13,11 @@ std::string GenerateVertexCoordinates::name() const
   return FilterTraits<GenerateVertexCoordinates>::name.str();
 }
 
+std::string GenerateVertexCoordinates::className() const
+{
+  return FilterTraits<GenerateVertexCoordinates>::className;
+}
+
 Uuid GenerateVertexCoordinates::uuid() const
 {
   return FilterTraits<GenerateVertexCoordinates>::uuid;

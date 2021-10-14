@@ -15,6 +15,11 @@ std::string IterativeClosestPoint::name() const
   return FilterTraits<IterativeClosestPoint>::name.str();
 }
 
+std::string IterativeClosestPoint::className() const
+{
+  return FilterTraits<IterativeClosestPoint>::className;
+}
+
 Uuid IterativeClosestPoint::uuid() const
 {
   return FilterTraits<IterativeClosestPoint>::uuid;

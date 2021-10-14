@@ -14,6 +14,11 @@ std::string ITKMinimumProjectionImage::name() const
   return FilterTraits<ITKMinimumProjectionImage>::name.str();
 }
 
+std::string ITKMinimumProjectionImage::className() const
+{
+  return FilterTraits<ITKMinimumProjectionImage>::className;
+}
+
 Uuid ITKMinimumProjectionImage::uuid() const
 {
   return FilterTraits<ITKMinimumProjectionImage>::uuid;

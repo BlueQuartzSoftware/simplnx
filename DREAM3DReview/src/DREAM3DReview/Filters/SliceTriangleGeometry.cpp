@@ -19,6 +19,11 @@ std::string SliceTriangleGeometry::name() const
   return FilterTraits<SliceTriangleGeometry>::name.str();
 }
 
+std::string SliceTriangleGeometry::className() const
+{
+  return FilterTraits<SliceTriangleGeometry>::className;
+}
+
 Uuid SliceTriangleGeometry::uuid() const
 {
   return FilterTraits<SliceTriangleGeometry>::uuid;

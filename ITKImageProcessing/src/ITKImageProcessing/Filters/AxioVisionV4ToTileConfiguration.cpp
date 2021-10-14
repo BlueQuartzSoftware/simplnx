@@ -15,6 +15,11 @@ std::string AxioVisionV4ToTileConfiguration::name() const
   return FilterTraits<AxioVisionV4ToTileConfiguration>::name.str();
 }
 
+std::string AxioVisionV4ToTileConfiguration::className() const
+{
+  return FilterTraits<AxioVisionV4ToTileConfiguration>::className;
+}
+
 Uuid AxioVisionV4ToTileConfiguration::uuid() const
 {
   return FilterTraits<AxioVisionV4ToTileConfiguration>::uuid;

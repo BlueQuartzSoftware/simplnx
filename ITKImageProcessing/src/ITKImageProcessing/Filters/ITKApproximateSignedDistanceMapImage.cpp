@@ -14,6 +14,11 @@ std::string ITKApproximateSignedDistanceMapImage::name() const
   return FilterTraits<ITKApproximateSignedDistanceMapImage>::name.str();
 }
 
+std::string ITKApproximateSignedDistanceMapImage::className() const
+{
+  return FilterTraits<ITKApproximateSignedDistanceMapImage>::className;
+}
+
 Uuid ITKApproximateSignedDistanceMapImage::uuid() const
 {
   return FilterTraits<ITKApproximateSignedDistanceMapImage>::uuid;

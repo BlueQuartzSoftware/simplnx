@@ -11,6 +11,11 @@ std::string RequiredZThickness::name() const
   return FilterTraits<RequiredZThickness>::name.str();
 }
 
+std::string RequiredZThickness::className() const
+{
+  return FilterTraits<RequiredZThickness>::className;
+}
+
 Uuid RequiredZThickness::uuid() const
 {
   return FilterTraits<RequiredZThickness>::uuid;

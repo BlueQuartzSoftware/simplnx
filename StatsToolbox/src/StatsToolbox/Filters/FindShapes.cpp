@@ -14,6 +14,11 @@ std::string FindShapes::name() const
   return FilterTraits<FindShapes>::name.str();
 }
 
+std::string FindShapes::className() const
+{
+  return FilterTraits<FindShapes>::className;
+}
+
 Uuid FindShapes::uuid() const
 {
   return FilterTraits<FindShapes>::uuid;

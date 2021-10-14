@@ -16,6 +16,11 @@ std::string INLWriter::name() const
   return FilterTraits<INLWriter>::name.str();
 }
 
+std::string INLWriter::className() const
+{
+  return FilterTraits<INLWriter>::className;
+}
+
 Uuid INLWriter::uuid() const
 {
   return FilterTraits<INLWriter>::uuid;

@@ -44,6 +44,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -91,4 +97,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ITKImportFijiMontage, "edd9c7f3-aed0-51db-b7e8-97571ea409e8");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKImportFijiMontage, "edd9c7f3-aed0-51db-b7e8-97571ea409e8");

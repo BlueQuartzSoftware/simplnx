@@ -34,6 +34,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -81,4 +87,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::FindMinkowskiBouligandDimension, "1eaa74db-9218-5528-989e-ded856c7ec7e");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindMinkowskiBouligandDimension, "1eaa74db-9218-5528-989e-ded856c7ec7e");

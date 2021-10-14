@@ -38,6 +38,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -85,4 +91,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ResampleRectGridToImageGeom, "75e973cb-3225-55f1-945a-622a21ea464c");
+COMPLEX_DEF_FILTER_TRAITS(complex, ResampleRectGridToImageGeom, "75e973cb-3225-55f1-945a-622a21ea464c");

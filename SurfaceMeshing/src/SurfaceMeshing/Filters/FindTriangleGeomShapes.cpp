@@ -14,6 +14,11 @@ std::string FindTriangleGeomShapes::name() const
   return FilterTraits<FindTriangleGeomShapes>::name.str();
 }
 
+std::string FindTriangleGeomShapes::className() const
+{
+  return FilterTraits<FindTriangleGeomShapes>::className;
+}
+
 Uuid FindTriangleGeomShapes::uuid() const
 {
   return FilterTraits<FindTriangleGeomShapes>::uuid;

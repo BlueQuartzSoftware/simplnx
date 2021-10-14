@@ -35,6 +35,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -82,4 +88,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ITKLaplacianRecursiveGaussianImage, "04f741b2-b44c-5175-8a6e-2887afc76a5e");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKLaplacianRecursiveGaussianImage, "04f741b2-b44c-5175-8a6e-2887afc76a5e");

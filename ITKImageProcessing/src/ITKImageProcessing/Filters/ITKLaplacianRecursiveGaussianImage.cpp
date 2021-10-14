@@ -15,6 +15,11 @@ std::string ITKLaplacianRecursiveGaussianImage::name() const
   return FilterTraits<ITKLaplacianRecursiveGaussianImage>::name.str();
 }
 
+std::string ITKLaplacianRecursiveGaussianImage::className() const
+{
+  return FilterTraits<ITKLaplacianRecursiveGaussianImage>::className;
+}
+
 Uuid ITKLaplacianRecursiveGaussianImage::uuid() const
 {
   return FilterTraits<ITKLaplacianRecursiveGaussianImage>::uuid;

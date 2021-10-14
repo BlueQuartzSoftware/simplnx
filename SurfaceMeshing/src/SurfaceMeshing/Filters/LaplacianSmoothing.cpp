@@ -14,6 +14,11 @@ std::string LaplacianSmoothing::name() const
   return FilterTraits<LaplacianSmoothing>::name.str();
 }
 
+std::string LaplacianSmoothing::className() const
+{
+  return FilterTraits<LaplacianSmoothing>::className;
+}
+
 Uuid LaplacianSmoothing::uuid() const
 {
   return FilterTraits<LaplacianSmoothing>::uuid;

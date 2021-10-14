@@ -17,6 +17,11 @@ std::string ITKBinaryErodeImage::name() const
   return FilterTraits<ITKBinaryErodeImage>::name.str();
 }
 
+std::string ITKBinaryErodeImage::className() const
+{
+  return FilterTraits<ITKBinaryErodeImage>::className;
+}
+
 Uuid ITKBinaryErodeImage::uuid() const
 {
   return FilterTraits<ITKBinaryErodeImage>::uuid;

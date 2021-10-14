@@ -40,6 +40,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -87,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::WriteStatsGenOdfAngleFile, "40288ce5-92cd-5dcd-b136-3e61569b4b23");
+COMPLEX_DEF_FILTER_TRAITS(complex, WriteStatsGenOdfAngleFile, "40288ce5-92cd-5dcd-b136-3e61569b4b23");

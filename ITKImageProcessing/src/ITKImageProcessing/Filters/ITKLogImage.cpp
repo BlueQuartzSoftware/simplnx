@@ -13,6 +13,11 @@ std::string ITKLogImage::name() const
   return FilterTraits<ITKLogImage>::name.str();
 }
 
+std::string ITKLogImage::className() const
+{
+  return FilterTraits<ITKLogImage>::className;
+}
+
 Uuid ITKLogImage::uuid() const
 {
   return FilterTraits<ITKLogImage>::uuid;

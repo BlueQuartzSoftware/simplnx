@@ -12,6 +12,11 @@ std::string TriangleAreaFilter::name() const
   return FilterTraits<TriangleAreaFilter>::name.str();
 }
 
+std::string TriangleAreaFilter::className() const
+{
+  return FilterTraits<TriangleAreaFilter>::className;
+}
+
 Uuid TriangleAreaFilter::uuid() const
 {
   return FilterTraits<TriangleAreaFilter>::uuid;

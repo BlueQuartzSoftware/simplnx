@@ -18,6 +18,11 @@ std::string AvizoUniformCoordinateWriter::name() const
   return FilterTraits<AvizoUniformCoordinateWriter>::name.str();
 }
 
+std::string AvizoUniformCoordinateWriter::className() const
+{
+  return FilterTraits<AvizoUniformCoordinateWriter>::className;
+}
+
 Uuid AvizoUniformCoordinateWriter::uuid() const
 {
   return FilterTraits<AvizoUniformCoordinateWriter>::uuid;

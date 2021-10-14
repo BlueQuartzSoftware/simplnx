@@ -35,6 +35,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -82,4 +88,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::AvizoUniformCoordinateWriter, "1a8be644-8d69-5a9d-8a2c-ed380ce44098");
+COMPLEX_DEF_FILTER_TRAITS(complex, AvizoUniformCoordinateWriter, "1a8be644-8d69-5a9d-8a2c-ed380ce44098");

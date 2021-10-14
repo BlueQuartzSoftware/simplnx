@@ -13,6 +13,11 @@ std::string GenerateGeometryConnectivity::name() const
   return FilterTraits<GenerateGeometryConnectivity>::name.str();
 }
 
+std::string GenerateGeometryConnectivity::className() const
+{
+  return FilterTraits<GenerateGeometryConnectivity>::className;
+}
+
 Uuid GenerateGeometryConnectivity::uuid() const
 {
   return FilterTraits<GenerateGeometryConnectivity>::uuid;

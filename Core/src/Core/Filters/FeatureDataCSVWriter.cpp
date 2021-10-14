@@ -18,6 +18,11 @@ std::string FeatureDataCSVWriter::name() const
   return FilterTraits<FeatureDataCSVWriter>::name.str();
 }
 
+std::string FeatureDataCSVWriter::className() const
+{
+  return FilterTraits<FeatureDataCSVWriter>::className;
+}
+
 Uuid FeatureDataCSVWriter::uuid() const
 {
   return FilterTraits<FeatureDataCSVWriter>::uuid;

@@ -17,6 +17,11 @@ std::string ResampleImageGeom::name() const
   return FilterTraits<ResampleImageGeom>::name.str();
 }
 
+std::string ResampleImageGeom::className() const
+{
+  return FilterTraits<ResampleImageGeom>::className;
+}
+
 Uuid ResampleImageGeom::uuid() const
 {
   return FilterTraits<ResampleImageGeom>::uuid;

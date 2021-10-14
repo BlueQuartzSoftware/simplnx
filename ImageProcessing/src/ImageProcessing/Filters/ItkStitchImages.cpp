@@ -15,6 +15,11 @@ std::string ItkStitchImages::name() const
   return FilterTraits<ItkStitchImages>::name.str();
 }
 
+std::string ItkStitchImages::className() const
+{
+  return FilterTraits<ItkStitchImages>::className;
+}
+
 Uuid ItkStitchImages::uuid() const
 {
   return FilterTraits<ItkStitchImages>::uuid;

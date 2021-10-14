@@ -14,6 +14,11 @@ std::string ITKStandardDeviationProjectionImage::name() const
   return FilterTraits<ITKStandardDeviationProjectionImage>::name.str();
 }
 
+std::string ITKStandardDeviationProjectionImage::className() const
+{
+  return FilterTraits<ITKStandardDeviationProjectionImage>::className;
+}
+
 Uuid ITKStandardDeviationProjectionImage::uuid() const
 {
   return FilterTraits<ITKStandardDeviationProjectionImage>::uuid;

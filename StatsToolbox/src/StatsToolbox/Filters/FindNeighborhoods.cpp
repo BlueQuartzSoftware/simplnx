@@ -14,6 +14,11 @@ std::string FindNeighborhoods::name() const
   return FilterTraits<FindNeighborhoods>::name.str();
 }
 
+std::string FindNeighborhoods::className() const
+{
+  return FilterTraits<FindNeighborhoods>::className;
+}
+
 Uuid FindNeighborhoods::uuid() const
 {
   return FilterTraits<FindNeighborhoods>::uuid;

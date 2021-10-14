@@ -15,6 +15,11 @@ std::string ITKGradientMagnitudeRecursiveGaussianImage::name() const
   return FilterTraits<ITKGradientMagnitudeRecursiveGaussianImage>::name.str();
 }
 
+std::string ITKGradientMagnitudeRecursiveGaussianImage::className() const
+{
+  return FilterTraits<ITKGradientMagnitudeRecursiveGaussianImage>::className;
+}
+
 Uuid ITKGradientMagnitudeRecursiveGaussianImage::uuid() const
 {
   return FilterTraits<ITKGradientMagnitudeRecursiveGaussianImage>::uuid;

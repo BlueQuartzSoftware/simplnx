@@ -15,6 +15,11 @@ std::string ITKVectorRescaleIntensityImage::name() const
   return FilterTraits<ITKVectorRescaleIntensityImage>::name.str();
 }
 
+std::string ITKVectorRescaleIntensityImage::className() const
+{
+  return FilterTraits<ITKVectorRescaleIntensityImage>::className;
+}
+
 Uuid ITKVectorRescaleIntensityImage::uuid() const
 {
   return FilterTraits<ITKVectorRescaleIntensityImage>::uuid;

@@ -17,6 +17,11 @@ std::string CombineStlFiles::name() const
   return FilterTraits<CombineStlFiles>::name.str();
 }
 
+std::string CombineStlFiles::className() const
+{
+  return FilterTraits<CombineStlFiles>::className;
+}
+
 Uuid CombineStlFiles::uuid() const
 {
   return FilterTraits<CombineStlFiles>::uuid;

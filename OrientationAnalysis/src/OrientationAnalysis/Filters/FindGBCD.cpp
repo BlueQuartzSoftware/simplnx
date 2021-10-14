@@ -14,6 +14,11 @@ std::string FindGBCD::name() const
   return FilterTraits<FindGBCD>::name.str();
 }
 
+std::string FindGBCD::className() const
+{
+  return FilterTraits<FindGBCD>::className;
+}
+
 Uuid FindGBCD::uuid() const
 {
   return FilterTraits<FindGBCD>::uuid;

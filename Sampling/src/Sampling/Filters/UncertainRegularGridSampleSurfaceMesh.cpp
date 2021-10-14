@@ -16,6 +16,11 @@ std::string UncertainRegularGridSampleSurfaceMesh::name() const
   return FilterTraits<UncertainRegularGridSampleSurfaceMesh>::name.str();
 }
 
+std::string UncertainRegularGridSampleSurfaceMesh::className() const
+{
+  return FilterTraits<UncertainRegularGridSampleSurfaceMesh>::className;
+}
+
 Uuid UncertainRegularGridSampleSurfaceMesh::uuid() const
 {
   return FilterTraits<UncertainRegularGridSampleSurfaceMesh>::uuid;

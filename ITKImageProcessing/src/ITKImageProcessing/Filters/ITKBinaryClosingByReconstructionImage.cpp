@@ -17,6 +17,11 @@ std::string ITKBinaryClosingByReconstructionImage::name() const
   return FilterTraits<ITKBinaryClosingByReconstructionImage>::name.str();
 }
 
+std::string ITKBinaryClosingByReconstructionImage::className() const
+{
+  return FilterTraits<ITKBinaryClosingByReconstructionImage>::className;
+}
+
 Uuid ITKBinaryClosingByReconstructionImage::uuid() const
 {
   return FilterTraits<ITKBinaryClosingByReconstructionImage>::uuid;

@@ -13,6 +13,11 @@ std::string ITKCosImage::name() const
   return FilterTraits<ITKCosImage>::name.str();
 }
 
+std::string ITKCosImage::className() const
+{
+  return FilterTraits<ITKCosImage>::className;
+}
+
 Uuid ITKCosImage::uuid() const
 {
   return FilterTraits<ITKCosImage>::uuid;

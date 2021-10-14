@@ -17,6 +17,11 @@ std::string ITKBinaryDilateImage::name() const
   return FilterTraits<ITKBinaryDilateImage>::name.str();
 }
 
+std::string ITKBinaryDilateImage::className() const
+{
+  return FilterTraits<ITKBinaryDilateImage>::className;
+}
+
 Uuid ITKBinaryDilateImage::uuid() const
 {
   return FilterTraits<ITKBinaryDilateImage>::uuid;

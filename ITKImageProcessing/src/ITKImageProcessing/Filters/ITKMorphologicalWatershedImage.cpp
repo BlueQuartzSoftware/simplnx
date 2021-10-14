@@ -15,6 +15,11 @@ std::string ITKMorphologicalWatershedImage::name() const
   return FilterTraits<ITKMorphologicalWatershedImage>::name.str();
 }
 
+std::string ITKMorphologicalWatershedImage::className() const
+{
+  return FilterTraits<ITKMorphologicalWatershedImage>::className;
+}
+
 Uuid ITKMorphologicalWatershedImage::uuid() const
 {
   return FilterTraits<ITKMorphologicalWatershedImage>::uuid;

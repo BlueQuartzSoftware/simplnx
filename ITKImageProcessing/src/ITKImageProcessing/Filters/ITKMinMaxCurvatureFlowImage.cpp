@@ -14,6 +14,11 @@ std::string ITKMinMaxCurvatureFlowImage::name() const
   return FilterTraits<ITKMinMaxCurvatureFlowImage>::name.str();
 }
 
+std::string ITKMinMaxCurvatureFlowImage::className() const
+{
+  return FilterTraits<ITKMinMaxCurvatureFlowImage>::className;
+}
+
 Uuid ITKMinMaxCurvatureFlowImage::uuid() const
 {
   return FilterTraits<ITKMinMaxCurvatureFlowImage>::uuid;

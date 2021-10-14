@@ -34,6 +34,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -81,4 +87,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::LabelTriangleGeometry, "9488d377-c163-5752-87e4-10d607773d12");
+COMPLEX_DEF_FILTER_TRAITS(complex, LabelTriangleGeometry, "9488d377-c163-5752-87e4-10d607773d12");

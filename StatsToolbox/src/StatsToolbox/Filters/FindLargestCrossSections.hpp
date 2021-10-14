@@ -34,6 +34,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -81,4 +87,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::FindLargestCrossSections, "b881e549-8c73-5f08-a0dc-ad2b2b7d0e5d");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindLargestCrossSections, "b881e549-8c73-5f08-a0dc-ad2b2b7d0e5d");

@@ -15,6 +15,11 @@ std::string FindRelativeMotionBetweenSlices::name() const
   return FilterTraits<FindRelativeMotionBetweenSlices>::name.str();
 }
 
+std::string FindRelativeMotionBetweenSlices::className() const
+{
+  return FilterTraits<FindRelativeMotionBetweenSlices>::className;
+}
+
 Uuid FindRelativeMotionBetweenSlices::uuid() const
 {
   return FilterTraits<FindRelativeMotionBetweenSlices>::uuid;

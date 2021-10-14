@@ -32,6 +32,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -79,4 +85,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::TriangleNormalFilter, "a09e69b1-5f02-5a2b-b92a-e67268538558");
+COMPLEX_DEF_FILTER_TRAITS(complex, TriangleNormalFilter, "a09e69b1-5f02-5a2b-b92a-e67268538558");

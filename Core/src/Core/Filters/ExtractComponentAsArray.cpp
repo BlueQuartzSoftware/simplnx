@@ -14,6 +14,11 @@ std::string ExtractComponentAsArray::name() const
   return FilterTraits<ExtractComponentAsArray>::name.str();
 }
 
+std::string ExtractComponentAsArray::className() const
+{
+  return FilterTraits<ExtractComponentAsArray>::className;
+}
+
 Uuid ExtractComponentAsArray::uuid() const
 {
   return FilterTraits<ExtractComponentAsArray>::uuid;

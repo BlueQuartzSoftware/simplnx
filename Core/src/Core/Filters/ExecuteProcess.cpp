@@ -12,6 +12,11 @@ std::string ExecuteProcess::name() const
   return FilterTraits<ExecuteProcess>::name.str();
 }
 
+std::string ExecuteProcess::className() const
+{
+  return FilterTraits<ExecuteProcess>::className;
+}
+
 Uuid ExecuteProcess::uuid() const
 {
   return FilterTraits<ExecuteProcess>::uuid;

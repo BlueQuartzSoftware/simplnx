@@ -13,6 +13,11 @@ std::string ImportHDF5Dataset::name() const
   return FilterTraits<ImportHDF5Dataset>::name.str();
 }
 
+std::string ImportHDF5Dataset::className() const
+{
+  return FilterTraits<ImportHDF5Dataset>::className;
+}
+
 Uuid ImportHDF5Dataset::uuid() const
 {
   return FilterTraits<ImportHDF5Dataset>::uuid;

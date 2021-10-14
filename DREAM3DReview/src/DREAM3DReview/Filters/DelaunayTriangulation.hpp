@@ -39,6 +39,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -86,4 +92,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::DelaunayTriangulation, "38d0d24f-e90a-573e-8aac-0bd483b02c0f");
+COMPLEX_DEF_FILTER_TRAITS(complex, DelaunayTriangulation, "38d0d24f-e90a-573e-8aac-0bd483b02c0f");

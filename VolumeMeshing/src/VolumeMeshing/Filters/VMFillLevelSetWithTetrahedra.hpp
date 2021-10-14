@@ -40,6 +40,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -87,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::VMFillLevelSetWithTetrahedra, "317afa50-defb-541c-8d42-ea659953bde2");
+COMPLEX_DEF_FILTER_TRAITS(complex, VMFillLevelSetWithTetrahedra, "317afa50-defb-541c-8d42-ea659953bde2");

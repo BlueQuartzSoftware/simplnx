@@ -17,6 +17,11 @@ std::string ImportMASSIFData::name() const
   return FilterTraits<ImportMASSIFData>::name.str();
 }
 
+std::string ImportMASSIFData::className() const
+{
+  return FilterTraits<ImportMASSIFData>::className;
+}
+
 Uuid ImportMASSIFData::uuid() const
 {
   return FilterTraits<ImportMASSIFData>::uuid;

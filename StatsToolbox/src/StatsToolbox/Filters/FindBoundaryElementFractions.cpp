@@ -13,6 +13,11 @@ std::string FindBoundaryElementFractions::name() const
   return FilterTraits<FindBoundaryElementFractions>::name.str();
 }
 
+std::string FindBoundaryElementFractions::className() const
+{
+  return FilterTraits<FindBoundaryElementFractions>::className;
+}
+
 Uuid FindBoundaryElementFractions::uuid() const
 {
   return FilterTraits<FindBoundaryElementFractions>::uuid;

@@ -35,6 +35,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -82,4 +88,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::FindTriangleGeomNeighbors, "c1a2cc33-4db8-5d9b-ad80-153062a17976");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindTriangleGeomNeighbors, "c1a2cc33-4db8-5d9b-ad80-153062a17976");

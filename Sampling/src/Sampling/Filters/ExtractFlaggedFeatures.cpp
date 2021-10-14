@@ -12,6 +12,11 @@ std::string ExtractFlaggedFeatures::name() const
   return FilterTraits<ExtractFlaggedFeatures>::name.str();
 }
 
+std::string ExtractFlaggedFeatures::className() const
+{
+  return FilterTraits<ExtractFlaggedFeatures>::className;
+}
+
 Uuid ExtractFlaggedFeatures::uuid() const
 {
   return FilterTraits<ExtractFlaggedFeatures>::uuid;

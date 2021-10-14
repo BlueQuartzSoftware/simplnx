@@ -34,6 +34,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -81,4 +87,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::WriteTriangleGeometry, "bb06c259-ebeb-5d63-b86b-ef5197f6bef5");
+COMPLEX_DEF_FILTER_TRAITS(complex, WriteTriangleGeometry, "bb06c259-ebeb-5d63-b86b-ef5197f6bef5");

@@ -13,6 +13,11 @@ std::string CopyDataContainer::name() const
   return FilterTraits<CopyDataContainer>::name.str();
 }
 
+std::string CopyDataContainer::className() const
+{
+  return FilterTraits<CopyDataContainer>::className;
+}
+
 Uuid CopyDataContainer::uuid() const
 {
   return FilterTraits<CopyDataContainer>::uuid;

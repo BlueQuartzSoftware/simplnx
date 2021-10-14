@@ -18,6 +18,11 @@ std::string VisualizeGBCDGMT::name() const
   return FilterTraits<VisualizeGBCDGMT>::name.str();
 }
 
+std::string VisualizeGBCDGMT::className() const
+{
+  return FilterTraits<VisualizeGBCDGMT>::className;
+}
+
 Uuid VisualizeGBCDGMT::uuid() const
 {
   return FilterTraits<VisualizeGBCDGMT>::uuid;

@@ -38,6 +38,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -85,4 +91,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ExportMultiOnScaleTableFile, "4bdb2202-d8e5-59cd-96fe-09f86adcf9b3");
+COMPLEX_DEF_FILTER_TRAITS(complex, ExportMultiOnScaleTableFile, "4bdb2202-d8e5-59cd-96fe-09f86adcf9b3");

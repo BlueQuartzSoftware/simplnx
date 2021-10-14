@@ -11,6 +11,11 @@ std::string CreateGridMontage::name() const
   return FilterTraits<CreateGridMontage>::name.str();
 }
 
+std::string CreateGridMontage::className() const
+{
+  return FilterTraits<CreateGridMontage>::className;
+}
+
 Uuid CreateGridMontage::uuid() const
 {
   return FilterTraits<CreateGridMontage>::uuid;

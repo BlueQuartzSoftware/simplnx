@@ -13,6 +13,11 @@ std::string FindAvgCAxes::name() const
   return FilterTraits<FindAvgCAxes>::name.str();
 }
 
+std::string FindAvgCAxes::className() const
+{
+  return FilterTraits<FindAvgCAxes>::className;
+}
+
 Uuid FindAvgCAxes::uuid() const
 {
   return FilterTraits<FindAvgCAxes>::uuid;

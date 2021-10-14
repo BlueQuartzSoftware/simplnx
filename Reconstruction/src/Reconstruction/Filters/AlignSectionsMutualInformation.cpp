@@ -18,6 +18,11 @@ std::string AlignSectionsMutualInformation::name() const
   return FilterTraits<AlignSectionsMutualInformation>::name.str();
 }
 
+std::string AlignSectionsMutualInformation::className() const
+{
+  return FilterTraits<AlignSectionsMutualInformation>::className;
+}
+
 Uuid AlignSectionsMutualInformation::uuid() const
 {
   return FilterTraits<AlignSectionsMutualInformation>::uuid;

@@ -41,6 +41,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -88,4 +94,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::UncertainRegularGridSampleSurfaceMesh, "64c3aa41-4a2b-532d-baa4-89ffe05331e7");
+COMPLEX_DEF_FILTER_TRAITS(complex, UncertainRegularGridSampleSurfaceMesh, "64c3aa41-4a2b-532d-baa4-89ffe05331e7");

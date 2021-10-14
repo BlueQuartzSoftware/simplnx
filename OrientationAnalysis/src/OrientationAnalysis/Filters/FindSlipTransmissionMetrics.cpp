@@ -13,6 +13,11 @@ std::string FindSlipTransmissionMetrics::name() const
   return FilterTraits<FindSlipTransmissionMetrics>::name.str();
 }
 
+std::string FindSlipTransmissionMetrics::className() const
+{
+  return FilterTraits<FindSlipTransmissionMetrics>::className;
+}
+
 Uuid FindSlipTransmissionMetrics::uuid() const
 {
   return FilterTraits<FindSlipTransmissionMetrics>::uuid;

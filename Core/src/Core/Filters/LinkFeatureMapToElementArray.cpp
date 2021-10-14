@@ -13,6 +13,11 @@ std::string LinkFeatureMapToElementArray::name() const
   return FilterTraits<LinkFeatureMapToElementArray>::name.str();
 }
 
+std::string LinkFeatureMapToElementArray::className() const
+{
+  return FilterTraits<LinkFeatureMapToElementArray>::className;
+}
+
 Uuid LinkFeatureMapToElementArray::uuid() const
 {
   return FilterTraits<LinkFeatureMapToElementArray>::uuid;

@@ -12,6 +12,11 @@ std::string PipelineAnnotation::name() const
   return FilterTraits<PipelineAnnotation>::name.str();
 }
 
+std::string PipelineAnnotation::className() const
+{
+  return FilterTraits<PipelineAnnotation>::className;
+}
+
 Uuid PipelineAnnotation::uuid() const
 {
   return FilterTraits<PipelineAnnotation>::uuid;

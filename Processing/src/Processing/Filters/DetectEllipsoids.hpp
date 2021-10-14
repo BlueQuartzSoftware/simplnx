@@ -44,6 +44,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -91,4 +97,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::DetectEllipsoids, "56f5483c-bbef-5fed-9cd3-a96df98b1971");
+COMPLEX_DEF_FILTER_TRAITS(complex, DetectEllipsoids, "56f5483c-bbef-5fed-9cd3-a96df98b1971");

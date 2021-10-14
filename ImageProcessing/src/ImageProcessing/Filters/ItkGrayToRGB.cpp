@@ -13,6 +13,11 @@ std::string ItkGrayToRGB::name() const
   return FilterTraits<ItkGrayToRGB>::name.str();
 }
 
+std::string ItkGrayToRGB::className() const
+{
+  return FilterTraits<ItkGrayToRGB>::className;
+}
+
 Uuid ItkGrayToRGB::uuid() const
 {
   return FilterTraits<ItkGrayToRGB>::uuid;

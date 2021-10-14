@@ -16,6 +16,11 @@ std::string ImportEbsdMontage::name() const
   return FilterTraits<ImportEbsdMontage>::name.str();
 }
 
+std::string ImportEbsdMontage::className() const
+{
+  return FilterTraits<ImportEbsdMontage>::className;
+}
+
 Uuid ImportEbsdMontage::uuid() const
 {
   return FilterTraits<ImportEbsdMontage>::uuid;

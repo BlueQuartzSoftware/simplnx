@@ -16,6 +16,11 @@ std::string DelaunayTriangulation::name() const
   return FilterTraits<DelaunayTriangulation>::name.str();
 }
 
+std::string DelaunayTriangulation::className() const
+{
+  return FilterTraits<DelaunayTriangulation>::className;
+}
+
 Uuid DelaunayTriangulation::uuid() const
 {
   return FilterTraits<DelaunayTriangulation>::uuid;

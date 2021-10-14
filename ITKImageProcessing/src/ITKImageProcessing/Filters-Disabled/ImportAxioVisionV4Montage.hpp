@@ -47,6 +47,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -94,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ImportAxioVisionV4Montage, "f793164c-d8a4-576a-8cd1-846f8f835a6a");
+COMPLEX_DEF_FILTER_TRAITS(complex, ImportAxioVisionV4Montage, "f793164c-d8a4-576a-8cd1-846f8f835a6a");

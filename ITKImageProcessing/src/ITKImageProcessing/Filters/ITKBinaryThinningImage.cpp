@@ -13,6 +13,11 @@ std::string ITKBinaryThinningImage::name() const
   return FilterTraits<ITKBinaryThinningImage>::name.str();
 }
 
+std::string ITKBinaryThinningImage::className() const
+{
+  return FilterTraits<ITKBinaryThinningImage>::className;
+}
+
 Uuid ITKBinaryThinningImage::uuid() const
 {
   return FilterTraits<ITKBinaryThinningImage>::uuid;

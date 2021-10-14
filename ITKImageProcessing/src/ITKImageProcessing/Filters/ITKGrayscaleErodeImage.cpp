@@ -15,6 +15,11 @@ std::string ITKGrayscaleErodeImage::name() const
   return FilterTraits<ITKGrayscaleErodeImage>::name.str();
 }
 
+std::string ITKGrayscaleErodeImage::className() const
+{
+  return FilterTraits<ITKGrayscaleErodeImage>::className;
+}
+
 Uuid ITKGrayscaleErodeImage::uuid() const
 {
   return FilterTraits<ITKGrayscaleErodeImage>::uuid;

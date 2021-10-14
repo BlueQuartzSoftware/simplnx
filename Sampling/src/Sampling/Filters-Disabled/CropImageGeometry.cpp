@@ -17,6 +17,11 @@ std::string CropImageGeometry::name() const
   return FilterTraits<CropImageGeometry>::name.str();
 }
 
+std::string CropImageGeometry::className() const
+{
+  return FilterTraits<CropImageGeometry>::className;
+}
+
 Uuid CropImageGeometry::uuid() const
 {
   return FilterTraits<CropImageGeometry>::uuid;

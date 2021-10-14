@@ -32,6 +32,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -79,4 +85,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::TriangleAreaFilter, "71df3378-16b5-575d-8889-3ddae4dcec4b");
+COMPLEX_DEF_FILTER_TRAITS(complex, TriangleAreaFilter, "71df3378-16b5-575d-8889-3ddae4dcec4b");

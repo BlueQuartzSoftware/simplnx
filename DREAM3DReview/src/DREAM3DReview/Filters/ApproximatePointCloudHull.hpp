@@ -35,6 +35,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -82,4 +88,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ApproximatePointCloudHull, "0a0cff3a-6ec2-57af-9120-40dbee90c9d2");
+COMPLEX_DEF_FILTER_TRAITS(complex, ApproximatePointCloudHull, "0a0cff3a-6ec2-57af-9120-40dbee90c9d2");

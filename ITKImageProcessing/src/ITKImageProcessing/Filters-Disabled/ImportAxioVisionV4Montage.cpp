@@ -20,6 +20,11 @@ std::string ImportAxioVisionV4Montage::name() const
   return FilterTraits<ImportAxioVisionV4Montage>::name.str();
 }
 
+std::string ImportAxioVisionV4Montage::className() const
+{
+  return FilterTraits<ImportAxioVisionV4Montage>::className;
+}
+
 Uuid ImportAxioVisionV4Montage::uuid() const
 {
   return FilterTraits<ImportAxioVisionV4Montage>::uuid;

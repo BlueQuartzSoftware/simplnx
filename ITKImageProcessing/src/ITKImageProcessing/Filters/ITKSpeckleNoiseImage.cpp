@@ -14,6 +14,11 @@ std::string ITKSpeckleNoiseImage::name() const
   return FilterTraits<ITKSpeckleNoiseImage>::name.str();
 }
 
+std::string ITKSpeckleNoiseImage::className() const
+{
+  return FilterTraits<ITKSpeckleNoiseImage>::className;
+}
+
 Uuid ITKSpeckleNoiseImage::uuid() const
 {
   return FilterTraits<ITKSpeckleNoiseImage>::uuid;

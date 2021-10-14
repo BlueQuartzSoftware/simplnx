@@ -14,6 +14,11 @@ std::string ITKMaskImage::name() const
   return FilterTraits<ITKMaskImage>::name.str();
 }
 
+std::string ITKMaskImage::className() const
+{
+  return FilterTraits<ITKMaskImage>::className;
+}
+
 Uuid ITKMaskImage::uuid() const
 {
   return FilterTraits<ITKMaskImage>::uuid;

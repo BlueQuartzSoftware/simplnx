@@ -14,6 +14,11 @@ std::string ITKConnectedComponentImage::name() const
   return FilterTraits<ITKConnectedComponentImage>::name.str();
 }
 
+std::string ITKConnectedComponentImage::className() const
+{
+  return FilterTraits<ITKConnectedComponentImage>::className;
+}
+
 Uuid ITKConnectedComponentImage::uuid() const
 {
   return FilterTraits<ITKConnectedComponentImage>::uuid;

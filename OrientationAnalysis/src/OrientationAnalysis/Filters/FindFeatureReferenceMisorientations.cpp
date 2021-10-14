@@ -14,6 +14,11 @@ std::string FindFeatureReferenceMisorientations::name() const
   return FilterTraits<FindFeatureReferenceMisorientations>::name.str();
 }
 
+std::string FindFeatureReferenceMisorientations::className() const
+{
+  return FilterTraits<FindFeatureReferenceMisorientations>::className;
+}
+
 Uuid FindFeatureReferenceMisorientations::uuid() const
 {
   return FilterTraits<FindFeatureReferenceMisorientations>::uuid;

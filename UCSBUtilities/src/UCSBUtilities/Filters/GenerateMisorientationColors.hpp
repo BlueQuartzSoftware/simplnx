@@ -39,6 +39,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -86,4 +92,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::GenerateMisorientationColors, "19ec050c-7117-5749-ab20-673d3e148ff2");
+COMPLEX_DEF_FILTER_TRAITS(complex, GenerateMisorientationColors, "19ec050c-7117-5749-ab20-673d3e148ff2");

@@ -13,6 +13,11 @@ std::string FindModulusMismatch::name() const
   return FilterTraits<FindModulusMismatch>::name.str();
 }
 
+std::string FindModulusMismatch::className() const
+{
+  return FilterTraits<FindModulusMismatch>::className;
+}
+
 Uuid FindModulusMismatch::uuid() const
 {
   return FilterTraits<FindModulusMismatch>::uuid;

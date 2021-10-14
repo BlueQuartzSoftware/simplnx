@@ -12,6 +12,11 @@ std::string RemoveArrays::name() const
   return FilterTraits<RemoveArrays>::name.str();
 }
 
+std::string RemoveArrays::className() const
+{
+  return FilterTraits<RemoveArrays>::className;
+}
+
 Uuid RemoveArrays::uuid() const
 {
   return FilterTraits<RemoveArrays>::uuid;

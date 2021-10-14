@@ -16,6 +16,11 @@ std::string SampleSurfaceMeshSpecifiedPoints::name() const
   return FilterTraits<SampleSurfaceMeshSpecifiedPoints>::name.str();
 }
 
+std::string SampleSurfaceMeshSpecifiedPoints::className() const
+{
+  return FilterTraits<SampleSurfaceMeshSpecifiedPoints>::className;
+}
+
 Uuid SampleSurfaceMeshSpecifiedPoints::uuid() const
 {
   return FilterTraits<SampleSurfaceMeshSpecifiedPoints>::uuid;

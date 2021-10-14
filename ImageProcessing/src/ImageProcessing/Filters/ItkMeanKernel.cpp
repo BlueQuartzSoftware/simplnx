@@ -15,6 +15,11 @@ std::string ItkMeanKernel::name() const
   return FilterTraits<ItkMeanKernel>::name.str();
 }
 
+std::string ItkMeanKernel::className() const
+{
+  return FilterTraits<ItkMeanKernel>::className;
+}
+
 Uuid ItkMeanKernel::uuid() const
 {
   return FilterTraits<ItkMeanKernel>::uuid;

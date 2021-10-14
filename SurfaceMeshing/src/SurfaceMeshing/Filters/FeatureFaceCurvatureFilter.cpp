@@ -16,6 +16,11 @@ std::string FeatureFaceCurvatureFilter::name() const
   return FilterTraits<FeatureFaceCurvatureFilter>::name.str();
 }
 
+std::string FeatureFaceCurvatureFilter::className() const
+{
+  return FilterTraits<FeatureFaceCurvatureFilter>::className;
+}
+
 Uuid FeatureFaceCurvatureFilter::uuid() const
 {
   return FilterTraits<FeatureFaceCurvatureFilter>::uuid;

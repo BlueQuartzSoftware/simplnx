@@ -14,6 +14,11 @@ std::string ITKSigmoidImage::name() const
   return FilterTraits<ITKSigmoidImage>::name.str();
 }
 
+std::string ITKSigmoidImage::className() const
+{
+  return FilterTraits<ITKSigmoidImage>::className;
+}
+
 Uuid ITKSigmoidImage::uuid() const
 {
   return FilterTraits<ITKSigmoidImage>::uuid;

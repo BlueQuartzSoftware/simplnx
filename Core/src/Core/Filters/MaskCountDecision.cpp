@@ -11,6 +11,11 @@ std::string MaskCountDecision::name() const
   return FilterTraits<MaskCountDecision>::name.str();
 }
 
+std::string MaskCountDecision::className() const
+{
+  return FilterTraits<MaskCountDecision>::className;
+}
+
 Uuid MaskCountDecision::uuid() const
 {
   return FilterTraits<MaskCountDecision>::uuid;

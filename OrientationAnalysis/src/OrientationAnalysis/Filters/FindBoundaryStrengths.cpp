@@ -14,6 +14,11 @@ std::string FindBoundaryStrengths::name() const
   return FilterTraits<FindBoundaryStrengths>::name.str();
 }
 
+std::string FindBoundaryStrengths::className() const
+{
+  return FilterTraits<FindBoundaryStrengths>::className;
+}
+
 Uuid FindBoundaryStrengths::uuid() const
 {
   return FilterTraits<FindBoundaryStrengths>::uuid;

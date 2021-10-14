@@ -13,6 +13,11 @@ std::string CopyFeatureArrayToElementArray::name() const
   return FilterTraits<CopyFeatureArrayToElementArray>::name.str();
 }
 
+std::string CopyFeatureArrayToElementArray::className() const
+{
+  return FilterTraits<CopyFeatureArrayToElementArray>::className;
+}
+
 Uuid CopyFeatureArrayToElementArray::uuid() const
 {
   return FilterTraits<CopyFeatureArrayToElementArray>::uuid;

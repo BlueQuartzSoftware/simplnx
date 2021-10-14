@@ -16,6 +16,11 @@ std::string AdaptiveAlignmentMisorientation::name() const
   return FilterTraits<AdaptiveAlignmentMisorientation>::name.str();
 }
 
+std::string AdaptiveAlignmentMisorientation::className() const
+{
+  return FilterTraits<AdaptiveAlignmentMisorientation>::className;
+}
+
 Uuid AdaptiveAlignmentMisorientation::uuid() const
 {
   return FilterTraits<AdaptiveAlignmentMisorientation>::uuid;

@@ -13,6 +13,11 @@ std::string InputCrystalCompliances::name() const
   return FilterTraits<InputCrystalCompliances>::name.str();
 }
 
+std::string InputCrystalCompliances::className() const
+{
+  return FilterTraits<InputCrystalCompliances>::className;
+}
+
 Uuid InputCrystalCompliances::uuid() const
 {
   return FilterTraits<InputCrystalCompliances>::uuid;

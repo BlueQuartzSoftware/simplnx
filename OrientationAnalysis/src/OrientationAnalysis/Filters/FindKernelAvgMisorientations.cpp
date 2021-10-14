@@ -14,6 +14,11 @@ std::string FindKernelAvgMisorientations::name() const
   return FilterTraits<FindKernelAvgMisorientations>::name.str();
 }
 
+std::string FindKernelAvgMisorientations::className() const
+{
+  return FilterTraits<FindKernelAvgMisorientations>::className;
+}
+
 Uuid FindKernelAvgMisorientations::uuid() const
 {
   return FilterTraits<FindKernelAvgMisorientations>::uuid;

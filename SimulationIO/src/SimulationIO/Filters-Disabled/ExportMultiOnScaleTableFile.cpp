@@ -19,6 +19,11 @@ std::string ExportMultiOnScaleTableFile::name() const
   return FilterTraits<ExportMultiOnScaleTableFile>::name.str();
 }
 
+std::string ExportMultiOnScaleTableFile::className() const
+{
+  return FilterTraits<ExportMultiOnScaleTableFile>::className;
+}
+
 Uuid ExportMultiOnScaleTableFile::uuid() const
 {
   return FilterTraits<ExportMultiOnScaleTableFile>::uuid;

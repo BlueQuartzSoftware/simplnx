@@ -14,6 +14,11 @@ std::string RodriguesConvertor::name() const
   return FilterTraits<RodriguesConvertor>::name.str();
 }
 
+std::string RodriguesConvertor::className() const
+{
+  return FilterTraits<RodriguesConvertor>::className;
+}
+
 Uuid RodriguesConvertor::uuid() const
 {
   return FilterTraits<RodriguesConvertor>::uuid;

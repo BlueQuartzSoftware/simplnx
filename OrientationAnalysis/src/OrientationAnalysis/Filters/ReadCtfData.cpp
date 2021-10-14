@@ -18,6 +18,11 @@ std::string ReadCtfData::name() const
   return FilterTraits<ReadCtfData>::name.str();
 }
 
+std::string ReadCtfData::className() const
+{
+  return FilterTraits<ReadCtfData>::className;
+}
+
 Uuid ReadCtfData::uuid() const
 {
   return FilterTraits<ReadCtfData>::uuid;

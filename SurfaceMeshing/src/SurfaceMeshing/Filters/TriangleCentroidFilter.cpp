@@ -12,6 +12,11 @@ std::string TriangleCentroidFilter::name() const
   return FilterTraits<TriangleCentroidFilter>::name.str();
 }
 
+std::string TriangleCentroidFilter::className() const
+{
+  return FilterTraits<TriangleCentroidFilter>::className;
+}
+
 Uuid TriangleCentroidFilter::uuid() const
 {
   return FilterTraits<TriangleCentroidFilter>::uuid;

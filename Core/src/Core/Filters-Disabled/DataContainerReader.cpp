@@ -13,6 +13,11 @@ std::string DataContainerReader::name() const
   return FilterTraits<DataContainerReader>::name.str();
 }
 
+std::string DataContainerReader::className() const
+{
+  return FilterTraits<DataContainerReader>::className;
+}
+
 Uuid DataContainerReader::uuid() const
 {
   return FilterTraits<DataContainerReader>::uuid;

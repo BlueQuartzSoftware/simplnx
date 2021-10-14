@@ -14,6 +14,11 @@ std::string ItkFindMaxima::name() const
   return FilterTraits<ItkFindMaxima>::name.str();
 }
 
+std::string ItkFindMaxima::className() const
+{
+  return FilterTraits<ItkFindMaxima>::className;
+}
+
 Uuid ItkFindMaxima::uuid() const
 {
   return FilterTraits<ItkFindMaxima>::uuid;

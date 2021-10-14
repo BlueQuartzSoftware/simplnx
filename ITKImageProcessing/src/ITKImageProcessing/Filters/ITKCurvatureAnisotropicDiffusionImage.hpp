@@ -37,6 +37,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -84,4 +90,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ITKCurvatureAnisotropicDiffusionImage, "60387baa-1ab0-5b32-ada4-f0e99d554117");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKCurvatureAnisotropicDiffusionImage, "60387baa-1ab0-5b32-ada4-f0e99d554117");

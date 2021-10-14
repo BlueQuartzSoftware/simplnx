@@ -13,6 +13,11 @@ std::string SplitAttributeArray::name() const
   return FilterTraits<SplitAttributeArray>::name.str();
 }
 
+std::string SplitAttributeArray::className() const
+{
+  return FilterTraits<SplitAttributeArray>::className;
+}
+
 Uuid SplitAttributeArray::uuid() const
 {
   return FilterTraits<SplitAttributeArray>::uuid;

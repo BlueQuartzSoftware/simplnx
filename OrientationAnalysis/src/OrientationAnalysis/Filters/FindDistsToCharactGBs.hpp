@@ -40,6 +40,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -87,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::FindDistsToCharactGBs, "cfcaf881-d90e-5e2b-ad6e-0265177107ca");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindDistsToCharactGBs, "cfcaf881-d90e-5e2b-ad6e-0265177107ca");

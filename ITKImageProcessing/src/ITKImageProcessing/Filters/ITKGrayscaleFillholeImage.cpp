@@ -14,6 +14,11 @@ std::string ITKGrayscaleFillholeImage::name() const
   return FilterTraits<ITKGrayscaleFillholeImage>::name.str();
 }
 
+std::string ITKGrayscaleFillholeImage::className() const
+{
+  return FilterTraits<ITKGrayscaleFillholeImage>::className;
+}
+
 Uuid ITKGrayscaleFillholeImage::uuid() const
 {
   return FilterTraits<ITKGrayscaleFillholeImage>::uuid;

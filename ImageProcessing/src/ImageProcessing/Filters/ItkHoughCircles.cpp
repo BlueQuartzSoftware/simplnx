@@ -15,6 +15,11 @@ std::string ItkHoughCircles::name() const
   return FilterTraits<ItkHoughCircles>::name.str();
 }
 
+std::string ItkHoughCircles::className() const
+{
+  return FilterTraits<ItkHoughCircles>::className;
+}
+
 Uuid ItkHoughCircles::uuid() const
 {
   return FilterTraits<ItkHoughCircles>::uuid;

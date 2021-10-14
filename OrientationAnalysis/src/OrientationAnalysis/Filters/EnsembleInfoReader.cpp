@@ -17,6 +17,11 @@ std::string EnsembleInfoReader::name() const
   return FilterTraits<EnsembleInfoReader>::name.str();
 }
 
+std::string EnsembleInfoReader::className() const
+{
+  return FilterTraits<EnsembleInfoReader>::className;
+}
+
 Uuid EnsembleInfoReader::uuid() const
 {
   return FilterTraits<EnsembleInfoReader>::uuid;

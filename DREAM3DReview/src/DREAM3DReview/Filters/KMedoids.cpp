@@ -16,6 +16,11 @@ std::string KMedoids::name() const
   return FilterTraits<KMedoids>::name.str();
 }
 
+std::string KMedoids::className() const
+{
+  return FilterTraits<KMedoids>::className;
+}
+
 Uuid KMedoids::uuid() const
 {
   return FilterTraits<KMedoids>::uuid;

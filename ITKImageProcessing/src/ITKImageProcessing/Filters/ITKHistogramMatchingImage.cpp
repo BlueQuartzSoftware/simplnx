@@ -15,6 +15,11 @@ std::string ITKHistogramMatchingImage::name() const
   return FilterTraits<ITKHistogramMatchingImage>::name.str();
 }
 
+std::string ITKHistogramMatchingImage::className() const
+{
+  return FilterTraits<ITKHistogramMatchingImage>::className;
+}
+
 Uuid ITKHistogramMatchingImage::uuid() const
 {
   return FilterTraits<ITKHistogramMatchingImage>::uuid;

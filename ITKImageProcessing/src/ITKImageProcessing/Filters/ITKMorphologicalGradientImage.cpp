@@ -15,6 +15,11 @@ std::string ITKMorphologicalGradientImage::name() const
   return FilterTraits<ITKMorphologicalGradientImage>::name.str();
 }
 
+std::string ITKMorphologicalGradientImage::className() const
+{
+  return FilterTraits<ITKMorphologicalGradientImage>::className;
+}
+
 Uuid ITKMorphologicalGradientImage::uuid() const
 {
   return FilterTraits<ITKMorphologicalGradientImage>::uuid;
