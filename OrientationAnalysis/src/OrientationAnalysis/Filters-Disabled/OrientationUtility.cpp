@@ -12,6 +12,11 @@ std::string OrientationUtility::name() const
   return FilterTraits<OrientationUtility>::name.str();
 }
 
+std::string OrientationUtility::className() const
+{
+  return FilterTraits<OrientationUtility>::className;
+}
+
 Uuid OrientationUtility::uuid() const
 {
   return FilterTraits<OrientationUtility>::uuid;

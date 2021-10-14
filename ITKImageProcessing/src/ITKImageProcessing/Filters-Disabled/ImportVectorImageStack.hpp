@@ -38,6 +38,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -85,4 +91,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ImportVectorImageStack, "0c8cf5ce-1166-5cbc-8349-c4cd87af7498");
+COMPLEX_DEF_FILTER_TRAITS(complex, ImportVectorImageStack, "0c8cf5ce-1166-5cbc-8349-c4cd87af7498");

@@ -34,6 +34,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -81,4 +87,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ITKValuedRegionalMinimaImage, "a7a93aed-3639-55fd-8c88-d79c5fd2583e");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKValuedRegionalMinimaImage, "a7a93aed-3639-55fd-8c88-d79c5fd2583e");

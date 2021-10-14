@@ -16,6 +16,11 @@ std::string ITKDilateObjectMorphologyImage::name() const
   return FilterTraits<ITKDilateObjectMorphologyImage>::name.str();
 }
 
+std::string ITKDilateObjectMorphologyImage::className() const
+{
+  return FilterTraits<ITKDilateObjectMorphologyImage>::className;
+}
+
 Uuid ITKDilateObjectMorphologyImage::uuid() const
 {
   return FilterTraits<ITKDilateObjectMorphologyImage>::uuid;

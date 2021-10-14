@@ -14,6 +14,11 @@ std::string ComputeUmeyamaTransform::name() const
   return FilterTraits<ComputeUmeyamaTransform>::name.str();
 }
 
+std::string ComputeUmeyamaTransform::className() const
+{
+  return FilterTraits<ComputeUmeyamaTransform>::className;
+}
+
 Uuid ComputeUmeyamaTransform::uuid() const
 {
   return FilterTraits<ComputeUmeyamaTransform>::uuid;

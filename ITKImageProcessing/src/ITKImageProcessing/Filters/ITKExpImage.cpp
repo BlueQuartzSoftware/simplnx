@@ -13,6 +13,11 @@ std::string ITKExpImage::name() const
   return FilterTraits<ITKExpImage>::name.str();
 }
 
+std::string ITKExpImage::className() const
+{
+  return FilterTraits<ITKExpImage>::className;
+}
+
 Uuid ITKExpImage::uuid() const
 {
   return FilterTraits<ITKExpImage>::uuid;

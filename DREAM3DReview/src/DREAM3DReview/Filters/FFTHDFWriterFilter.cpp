@@ -17,6 +17,11 @@ std::string FFTHDFWriterFilter::name() const
   return FilterTraits<FFTHDFWriterFilter>::name.str();
 }
 
+std::string FFTHDFWriterFilter::className() const
+{
+  return FilterTraits<FFTHDFWriterFilter>::className;
+}
+
 Uuid FFTHDFWriterFilter::uuid() const
 {
   return FilterTraits<FFTHDFWriterFilter>::uuid;

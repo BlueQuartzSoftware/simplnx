@@ -20,6 +20,11 @@ std::string WritePoleFigure::name() const
   return FilterTraits<WritePoleFigure>::name.str();
 }
 
+std::string WritePoleFigure::className() const
+{
+  return FilterTraits<WritePoleFigure>::className;
+}
+
 Uuid WritePoleFigure::uuid() const
 {
   return FilterTraits<WritePoleFigure>::uuid;

@@ -14,6 +14,11 @@ std::string FindEuclideanDistMap::name() const
   return FilterTraits<FindEuclideanDistMap>::name.str();
 }
 
+std::string FindEuclideanDistMap::className() const
+{
+  return FilterTraits<FindEuclideanDistMap>::className;
+}
+
 Uuid FindEuclideanDistMap::uuid() const
 {
   return FilterTraits<FindEuclideanDistMap>::uuid;

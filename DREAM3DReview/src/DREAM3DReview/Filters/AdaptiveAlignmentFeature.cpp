@@ -15,6 +15,11 @@ std::string AdaptiveAlignmentFeature::name() const
   return FilterTraits<AdaptiveAlignmentFeature>::name.str();
 }
 
+std::string AdaptiveAlignmentFeature::className() const
+{
+  return FilterTraits<AdaptiveAlignmentFeature>::className;
+}
+
 Uuid AdaptiveAlignmentFeature::uuid() const
 {
   return FilterTraits<AdaptiveAlignmentFeature>::uuid;

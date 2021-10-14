@@ -14,6 +14,11 @@ std::string ITKPCMTileRegistration::name() const
   return FilterTraits<ITKPCMTileRegistration>::name.str();
 }
 
+std::string ITKPCMTileRegistration::className() const
+{
+  return FilterTraits<ITKPCMTileRegistration>::className;
+}
+
 Uuid ITKPCMTileRegistration::uuid() const
 {
   return FilterTraits<ITKPCMTileRegistration>::uuid;

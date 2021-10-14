@@ -14,6 +14,11 @@ std::string ITKBinaryThresholdImage::name() const
   return FilterTraits<ITKBinaryThresholdImage>::name.str();
 }
 
+std::string ITKBinaryThresholdImage::className() const
+{
+  return FilterTraits<ITKBinaryThresholdImage>::className;
+}
+
 Uuid ITKBinaryThresholdImage::uuid() const
 {
   return FilterTraits<ITKBinaryThresholdImage>::uuid;

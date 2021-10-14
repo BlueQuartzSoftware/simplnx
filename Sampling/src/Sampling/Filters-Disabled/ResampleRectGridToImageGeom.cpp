@@ -17,6 +17,11 @@ std::string ResampleRectGridToImageGeom::name() const
   return FilterTraits<ResampleRectGridToImageGeom>::name.str();
 }
 
+std::string ResampleRectGridToImageGeom::className() const
+{
+  return FilterTraits<ResampleRectGridToImageGeom>::className;
+}
+
 Uuid ResampleRectGridToImageGeom::uuid() const
 {
   return FilterTraits<ResampleRectGridToImageGeom>::uuid;

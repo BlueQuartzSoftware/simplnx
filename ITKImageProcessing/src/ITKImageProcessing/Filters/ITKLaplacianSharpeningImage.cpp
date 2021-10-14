@@ -14,6 +14,11 @@ std::string ITKLaplacianSharpeningImage::name() const
   return FilterTraits<ITKLaplacianSharpeningImage>::name.str();
 }
 
+std::string ITKLaplacianSharpeningImage::className() const
+{
+  return FilterTraits<ITKLaplacianSharpeningImage>::className;
+}
+
 Uuid ITKLaplacianSharpeningImage::uuid() const
 {
   return FilterTraits<ITKLaplacianSharpeningImage>::uuid;

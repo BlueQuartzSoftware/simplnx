@@ -13,6 +13,11 @@ std::string JumbleOrientations::name() const
   return FilterTraits<JumbleOrientations>::name.str();
 }
 
+std::string JumbleOrientations::className() const
+{
+  return FilterTraits<JumbleOrientations>::className;
+}
+
 Uuid JumbleOrientations::uuid() const
 {
   return FilterTraits<JumbleOrientations>::uuid;

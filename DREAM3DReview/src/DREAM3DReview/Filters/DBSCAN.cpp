@@ -16,6 +16,11 @@ std::string DBSCAN::name() const
   return FilterTraits<DBSCAN>::name.str();
 }
 
+std::string DBSCAN::className() const
+{
+  return FilterTraits<DBSCAN>::className;
+}
+
 Uuid DBSCAN::uuid() const
 {
   return FilterTraits<DBSCAN>::uuid;

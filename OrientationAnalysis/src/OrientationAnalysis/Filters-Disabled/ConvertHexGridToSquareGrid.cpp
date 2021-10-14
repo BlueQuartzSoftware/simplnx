@@ -12,6 +12,11 @@ std::string ConvertHexGridToSquareGrid::name() const
   return FilterTraits<ConvertHexGridToSquareGrid>::name.str();
 }
 
+std::string ConvertHexGridToSquareGrid::className() const
+{
+  return FilterTraits<ConvertHexGridToSquareGrid>::className;
+}
+
 Uuid ConvertHexGridToSquareGrid::uuid() const
 {
   return FilterTraits<ConvertHexGridToSquareGrid>::uuid;

@@ -13,6 +13,11 @@ std::string IdentifySample::name() const
   return FilterTraits<IdentifySample>::name.str();
 }
 
+std::string IdentifySample::className() const
+{
+  return FilterTraits<IdentifySample>::className;
+}
+
 Uuid IdentifySample::uuid() const
 {
   return FilterTraits<IdentifySample>::uuid;

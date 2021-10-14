@@ -15,6 +15,11 @@ std::string FindTwinBoundaries::name() const
   return FilterTraits<FindTwinBoundaries>::name.str();
 }
 
+std::string FindTwinBoundaries::className() const
+{
+  return FilterTraits<FindTwinBoundaries>::className;
+}
+
 Uuid FindTwinBoundaries::uuid() const
 {
   return FilterTraits<FindTwinBoundaries>::uuid;

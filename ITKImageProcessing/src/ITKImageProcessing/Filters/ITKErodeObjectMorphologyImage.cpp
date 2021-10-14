@@ -16,6 +16,11 @@ std::string ITKErodeObjectMorphologyImage::name() const
   return FilterTraits<ITKErodeObjectMorphologyImage>::name.str();
 }
 
+std::string ITKErodeObjectMorphologyImage::className() const
+{
+  return FilterTraits<ITKErodeObjectMorphologyImage>::className;
+}
+
 Uuid ITKErodeObjectMorphologyImage::uuid() const
 {
   return FilterTraits<ITKErodeObjectMorphologyImage>::uuid;

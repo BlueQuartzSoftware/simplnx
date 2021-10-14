@@ -14,6 +14,11 @@ std::string StatsGeneratorFilter::name() const
   return FilterTraits<StatsGeneratorFilter>::name.str();
 }
 
+std::string StatsGeneratorFilter::className() const
+{
+  return FilterTraits<StatsGeneratorFilter>::className;
+}
+
 Uuid StatsGeneratorFilter::uuid() const
 {
   return FilterTraits<StatsGeneratorFilter>::uuid;

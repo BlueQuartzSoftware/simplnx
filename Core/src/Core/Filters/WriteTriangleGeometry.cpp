@@ -16,6 +16,11 @@ std::string WriteTriangleGeometry::name() const
   return FilterTraits<WriteTriangleGeometry>::name.str();
 }
 
+std::string WriteTriangleGeometry::className() const
+{
+  return FilterTraits<WriteTriangleGeometry>::className;
+}
+
 Uuid WriteTriangleGeometry::uuid() const
 {
   return FilterTraits<WriteTriangleGeometry>::uuid;

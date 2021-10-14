@@ -16,6 +16,11 @@ std::string DetectEllipsoids::name() const
   return FilterTraits<DetectEllipsoids>::name.str();
 }
 
+std::string DetectEllipsoids::className() const
+{
+  return FilterTraits<DetectEllipsoids>::className;
+}
+
 Uuid DetectEllipsoids::uuid() const
 {
   return FilterTraits<DetectEllipsoids>::uuid;

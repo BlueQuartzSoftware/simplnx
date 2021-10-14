@@ -13,6 +13,11 @@ std::string ReplaceValueInArray::name() const
   return FilterTraits<ReplaceValueInArray>::name.str();
 }
 
+std::string ReplaceValueInArray::className() const
+{
+  return FilterTraits<ReplaceValueInArray>::className;
+}
+
 Uuid ReplaceValueInArray::uuid() const
 {
   return FilterTraits<ReplaceValueInArray>::uuid;

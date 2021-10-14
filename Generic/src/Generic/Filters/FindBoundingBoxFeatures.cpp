@@ -14,6 +14,11 @@ std::string FindBoundingBoxFeatures::name() const
   return FilterTraits<FindBoundingBoxFeatures>::name.str();
 }
 
+std::string FindBoundingBoxFeatures::className() const
+{
+  return FilterTraits<FindBoundingBoxFeatures>::className;
+}
+
 Uuid FindBoundingBoxFeatures::uuid() const
 {
   return FilterTraits<FindBoundingBoxFeatures>::uuid;

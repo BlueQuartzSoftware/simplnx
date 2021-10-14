@@ -16,6 +16,11 @@ std::string FindArrayStatistics::name() const
   return FilterTraits<FindArrayStatistics>::name.str();
 }
 
+std::string FindArrayStatistics::className() const
+{
+  return FilterTraits<FindArrayStatistics>::className;
+}
+
 Uuid FindArrayStatistics::uuid() const
 {
   return FilterTraits<FindArrayStatistics>::uuid;

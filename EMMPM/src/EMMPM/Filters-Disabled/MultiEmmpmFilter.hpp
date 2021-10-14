@@ -43,6 +43,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -90,4 +96,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::MultiEmmpmFilter, "da0cd175-99d4-5d23-a76d-9fb72a422966");
+COMPLEX_DEF_FILTER_TRAITS(complex, MultiEmmpmFilter, "da0cd175-99d4-5d23-a76d-9fb72a422966");

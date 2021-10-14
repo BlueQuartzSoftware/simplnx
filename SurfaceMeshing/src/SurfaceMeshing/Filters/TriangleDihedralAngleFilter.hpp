@@ -32,6 +32,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -79,4 +85,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::TriangleDihedralAngleFilter, "4658b821-26de-5930-80a9-d3bb2e94d4ea");
+COMPLEX_DEF_FILTER_TRAITS(complex, TriangleDihedralAngleFilter, "4658b821-26de-5930-80a9-d3bb2e94d4ea");

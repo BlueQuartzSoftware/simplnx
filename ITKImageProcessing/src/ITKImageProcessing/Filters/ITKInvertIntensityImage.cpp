@@ -14,6 +14,11 @@ std::string ITKInvertIntensityImage::name() const
   return FilterTraits<ITKInvertIntensityImage>::name.str();
 }
 
+std::string ITKInvertIntensityImage::className() const
+{
+  return FilterTraits<ITKInvertIntensityImage>::className;
+}
+
 Uuid ITKInvertIntensityImage::uuid() const
 {
   return FilterTraits<ITKInvertIntensityImage>::uuid;

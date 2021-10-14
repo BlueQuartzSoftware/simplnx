@@ -16,6 +16,11 @@ std::string GBCDTriangleDumper::name() const
   return FilterTraits<GBCDTriangleDumper>::name.str();
 }
 
+std::string GBCDTriangleDumper::className() const
+{
+  return FilterTraits<GBCDTriangleDumper>::className;
+}
+
 Uuid GBCDTriangleDumper::uuid() const
 {
   return FilterTraits<GBCDTriangleDumper>::uuid;

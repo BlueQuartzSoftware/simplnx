@@ -14,6 +14,11 @@ std::string ApplyDewarpParameters::name() const
   return FilterTraits<ApplyDewarpParameters>::name.str();
 }
 
+std::string ApplyDewarpParameters::className() const
+{
+  return FilterTraits<ApplyDewarpParameters>::className;
+}
+
 Uuid ApplyDewarpParameters::uuid() const
 {
   return FilterTraits<ApplyDewarpParameters>::uuid;

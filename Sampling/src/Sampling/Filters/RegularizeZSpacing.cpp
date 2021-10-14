@@ -17,6 +17,11 @@ std::string RegularizeZSpacing::name() const
   return FilterTraits<RegularizeZSpacing>::name.str();
 }
 
+std::string RegularizeZSpacing::className() const
+{
+  return FilterTraits<RegularizeZSpacing>::className;
+}
+
 Uuid RegularizeZSpacing::uuid() const
 {
   return FilterTraits<RegularizeZSpacing>::uuid;

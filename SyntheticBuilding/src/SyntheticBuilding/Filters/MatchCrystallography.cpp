@@ -14,6 +14,11 @@ std::string MatchCrystallography::name() const
   return FilterTraits<MatchCrystallography>::name.str();
 }
 
+std::string MatchCrystallography::className() const
+{
+  return FilterTraits<MatchCrystallography>::className;
+}
+
 Uuid MatchCrystallography::uuid() const
 {
   return FilterTraits<MatchCrystallography>::uuid;

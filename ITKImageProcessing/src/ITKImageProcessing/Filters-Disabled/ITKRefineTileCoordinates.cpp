@@ -17,6 +17,11 @@ std::string ITKRefineTileCoordinates::name() const
   return FilterTraits<ITKRefineTileCoordinates>::name.str();
 }
 
+std::string ITKRefineTileCoordinates::className() const
+{
+  return FilterTraits<ITKRefineTileCoordinates>::className;
+}
+
 Uuid ITKRefineTileCoordinates::uuid() const
 {
   return FilterTraits<ITKRefineTileCoordinates>::uuid;

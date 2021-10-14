@@ -13,6 +13,11 @@ std::string MultiThresholdObjects::name() const
   return FilterTraits<MultiThresholdObjects>::name.str();
 }
 
+std::string MultiThresholdObjects::className() const
+{
+  return FilterTraits<MultiThresholdObjects>::className;
+}
+
 Uuid MultiThresholdObjects::uuid() const
 {
   return FilterTraits<MultiThresholdObjects>::uuid;

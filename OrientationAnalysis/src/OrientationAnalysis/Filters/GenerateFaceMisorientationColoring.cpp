@@ -13,6 +13,11 @@ std::string GenerateFaceMisorientationColoring::name() const
   return FilterTraits<GenerateFaceMisorientationColoring>::name.str();
 }
 
+std::string GenerateFaceMisorientationColoring::className() const
+{
+  return FilterTraits<GenerateFaceMisorientationColoring>::className;
+}
+
 Uuid GenerateFaceMisorientationColoring::uuid() const
 {
   return FilterTraits<GenerateFaceMisorientationColoring>::uuid;

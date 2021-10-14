@@ -16,6 +16,11 @@ std::string CalcDewarpParameters::name() const
   return FilterTraits<CalcDewarpParameters>::name.str();
 }
 
+std::string CalcDewarpParameters::className() const
+{
+  return FilterTraits<CalcDewarpParameters>::className;
+}
+
 Uuid CalcDewarpParameters::uuid() const
 {
   return FilterTraits<CalcDewarpParameters>::uuid;

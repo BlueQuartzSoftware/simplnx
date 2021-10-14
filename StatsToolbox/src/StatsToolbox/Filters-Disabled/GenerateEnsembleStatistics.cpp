@@ -17,6 +17,11 @@ std::string GenerateEnsembleStatistics::name() const
   return FilterTraits<GenerateEnsembleStatistics>::name.str();
 }
 
+std::string GenerateEnsembleStatistics::className() const
+{
+  return FilterTraits<GenerateEnsembleStatistics>::className;
+}
+
 Uuid GenerateEnsembleStatistics::uuid() const
 {
   return FilterTraits<GenerateEnsembleStatistics>::uuid;

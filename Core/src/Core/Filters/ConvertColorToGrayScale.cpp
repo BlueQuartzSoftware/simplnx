@@ -17,6 +17,11 @@ std::string ConvertColorToGrayScale::name() const
   return FilterTraits<ConvertColorToGrayScale>::name.str();
 }
 
+std::string ConvertColorToGrayScale::className() const
+{
+  return FilterTraits<ConvertColorToGrayScale>::className;
+}
+
 Uuid ConvertColorToGrayScale::uuid() const
 {
   return FilterTraits<ConvertColorToGrayScale>::uuid;

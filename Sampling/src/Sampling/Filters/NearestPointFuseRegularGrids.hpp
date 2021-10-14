@@ -33,6 +33,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -80,4 +86,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::NearestPointFuseRegularGrids, "baeeb05b-0d98-5590-998c-2b70bb774f88");
+COMPLEX_DEF_FILTER_TRAITS(complex, NearestPointFuseRegularGrids, "baeeb05b-0d98-5590-998c-2b70bb774f88");

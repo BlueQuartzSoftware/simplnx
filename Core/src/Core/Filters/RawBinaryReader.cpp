@@ -19,6 +19,11 @@ std::string RawBinaryReader::name() const
   return FilterTraits<RawBinaryReader>::name.str();
 }
 
+std::string RawBinaryReader::className() const
+{
+  return FilterTraits<RawBinaryReader>::className;
+}
+
 Uuid RawBinaryReader::uuid() const
 {
   return FilterTraits<RawBinaryReader>::uuid;

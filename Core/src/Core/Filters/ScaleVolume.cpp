@@ -14,6 +14,11 @@ std::string ScaleVolume::name() const
   return FilterTraits<ScaleVolume>::name.str();
 }
 
+std::string ScaleVolume::className() const
+{
+  return FilterTraits<ScaleVolume>::className;
+}
+
 Uuid ScaleVolume::uuid() const
 {
   return FilterTraits<ScaleVolume>::uuid;

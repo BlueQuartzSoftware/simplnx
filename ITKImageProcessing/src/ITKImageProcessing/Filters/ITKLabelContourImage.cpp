@@ -15,6 +15,11 @@ std::string ITKLabelContourImage::name() const
   return FilterTraits<ITKLabelContourImage>::name.str();
 }
 
+std::string ITKLabelContourImage::className() const
+{
+  return FilterTraits<ITKLabelContourImage>::className;
+}
+
 Uuid ITKLabelContourImage::uuid() const
 {
   return FilterTraits<ITKLabelContourImage>::uuid;

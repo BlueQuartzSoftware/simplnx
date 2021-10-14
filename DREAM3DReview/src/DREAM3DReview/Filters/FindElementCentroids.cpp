@@ -14,6 +14,11 @@ std::string FindElementCentroids::name() const
   return FilterTraits<FindElementCentroids>::name.str();
 }
 
+std::string FindElementCentroids::className() const
+{
+  return FilterTraits<FindElementCentroids>::className;
+}
+
 Uuid FindElementCentroids::uuid() const
 {
   return FilterTraits<FindElementCentroids>::uuid;

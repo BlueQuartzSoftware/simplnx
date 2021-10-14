@@ -13,6 +13,11 @@ std::string RenameAttributeMatrix::name() const
   return FilterTraits<RenameAttributeMatrix>::name.str();
 }
 
+std::string RenameAttributeMatrix::className() const
+{
+  return FilterTraits<RenameAttributeMatrix>::className;
+}
+
 Uuid RenameAttributeMatrix::uuid() const
 {
   return FilterTraits<RenameAttributeMatrix>::uuid;

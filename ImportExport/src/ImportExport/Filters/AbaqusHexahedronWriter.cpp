@@ -18,6 +18,11 @@ std::string AbaqusHexahedronWriter::name() const
   return FilterTraits<AbaqusHexahedronWriter>::name.str();
 }
 
+std::string AbaqusHexahedronWriter::className() const
+{
+  return FilterTraits<AbaqusHexahedronWriter>::className;
+}
+
 Uuid AbaqusHexahedronWriter::uuid() const
 {
   return FilterTraits<AbaqusHexahedronWriter>::uuid;

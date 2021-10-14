@@ -17,6 +17,11 @@ std::string RegularGridSampleSurfaceMesh::name() const
   return FilterTraits<RegularGridSampleSurfaceMesh>::name.str();
 }
 
+std::string RegularGridSampleSurfaceMesh::className() const
+{
+  return FilterTraits<RegularGridSampleSurfaceMesh>::className;
+}
+
 Uuid RegularGridSampleSurfaceMesh::uuid() const
 {
   return FilterTraits<RegularGridSampleSurfaceMesh>::uuid;

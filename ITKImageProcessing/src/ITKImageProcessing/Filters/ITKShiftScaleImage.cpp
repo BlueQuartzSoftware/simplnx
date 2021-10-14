@@ -14,6 +14,11 @@ std::string ITKShiftScaleImage::name() const
   return FilterTraits<ITKShiftScaleImage>::name.str();
 }
 
+std::string ITKShiftScaleImage::className() const
+{
+  return FilterTraits<ITKShiftScaleImage>::className;
+}
+
 Uuid ITKShiftScaleImage::uuid() const
 {
   return FilterTraits<ITKShiftScaleImage>::uuid;

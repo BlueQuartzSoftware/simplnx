@@ -13,6 +13,11 @@ std::string FindCAxisLocations::name() const
   return FilterTraits<FindCAxisLocations>::name.str();
 }
 
+std::string FindCAxisLocations::className() const
+{
+  return FilterTraits<FindCAxisLocations>::className;
+}
+
 Uuid FindCAxisLocations::uuid() const
 {
   return FilterTraits<FindCAxisLocations>::uuid;

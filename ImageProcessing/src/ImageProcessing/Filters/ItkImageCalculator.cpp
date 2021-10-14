@@ -14,6 +14,11 @@ std::string ItkImageCalculator::name() const
   return FilterTraits<ItkImageCalculator>::name.str();
 }
 
+std::string ItkImageCalculator::className() const
+{
+  return FilterTraits<ItkImageCalculator>::className;
+}
+
 Uuid ItkImageCalculator::uuid() const
 {
   return FilterTraits<ItkImageCalculator>::uuid;

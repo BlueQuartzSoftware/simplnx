@@ -19,6 +19,11 @@ std::string SPParksDumpReader::name() const
   return FilterTraits<SPParksDumpReader>::name.str();
 }
 
+std::string SPParksDumpReader::className() const
+{
+  return FilterTraits<SPParksDumpReader>::className;
+}
+
 Uuid SPParksDumpReader::uuid() const
 {
   return FilterTraits<SPParksDumpReader>::uuid;

@@ -16,6 +16,11 @@ std::string MultiEmmpmFilter::name() const
   return FilterTraits<MultiEmmpmFilter>::name.str();
 }
 
+std::string MultiEmmpmFilter::className() const
+{
+  return FilterTraits<MultiEmmpmFilter>::className;
+}
+
 Uuid MultiEmmpmFilter::uuid() const
 {
   return FilterTraits<MultiEmmpmFilter>::uuid;

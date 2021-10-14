@@ -16,6 +16,11 @@ std::string ExportLAMMPSFile::name() const
   return FilterTraits<ExportLAMMPSFile>::name.str();
 }
 
+std::string ExportLAMMPSFile::className() const
+{
+  return FilterTraits<ExportLAMMPSFile>::className;
+}
+
 Uuid ExportLAMMPSFile::uuid() const
 {
   return FilterTraits<ExportLAMMPSFile>::uuid;

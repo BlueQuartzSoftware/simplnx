@@ -19,6 +19,11 @@ std::string WriteStatsGenOdfAngleFile::name() const
   return FilterTraits<WriteStatsGenOdfAngleFile>::name.str();
 }
 
+std::string WriteStatsGenOdfAngleFile::className() const
+{
+  return FilterTraits<WriteStatsGenOdfAngleFile>::className;
+}
+
 Uuid WriteStatsGenOdfAngleFile::uuid() const
 {
   return FilterTraits<WriteStatsGenOdfAngleFile>::uuid;

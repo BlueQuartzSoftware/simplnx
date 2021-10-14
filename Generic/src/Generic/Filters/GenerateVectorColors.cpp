@@ -14,6 +14,11 @@ std::string GenerateVectorColors::name() const
   return FilterTraits<GenerateVectorColors>::name.str();
 }
 
+std::string GenerateVectorColors::className() const
+{
+  return FilterTraits<GenerateVectorColors>::className;
+}
+
 Uuid GenerateVectorColors::uuid() const
 {
   return FilterTraits<GenerateVectorColors>::uuid;

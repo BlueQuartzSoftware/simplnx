@@ -16,6 +16,11 @@ std::string ITKBinaryMorphologicalOpeningImage::name() const
   return FilterTraits<ITKBinaryMorphologicalOpeningImage>::name.str();
 }
 
+std::string ITKBinaryMorphologicalOpeningImage::className() const
+{
+  return FilterTraits<ITKBinaryMorphologicalOpeningImage>::className;
+}
+
 Uuid ITKBinaryMorphologicalOpeningImage::uuid() const
 {
   return FilterTraits<ITKBinaryMorphologicalOpeningImage>::uuid;

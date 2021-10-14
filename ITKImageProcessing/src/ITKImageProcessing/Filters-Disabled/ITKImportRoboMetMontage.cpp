@@ -22,6 +22,11 @@ std::string ITKImportRoboMetMontage::name() const
   return FilterTraits<ITKImportRoboMetMontage>::name.str();
 }
 
+std::string ITKImportRoboMetMontage::className() const
+{
+  return FilterTraits<ITKImportRoboMetMontage>::className;
+}
+
 Uuid ITKImportRoboMetMontage::uuid() const
 {
   return FilterTraits<ITKImportRoboMetMontage>::uuid;

@@ -16,6 +16,11 @@ std::string QuickSurfaceMesh::name() const
   return FilterTraits<QuickSurfaceMesh>::name.str();
 }
 
+std::string QuickSurfaceMesh::className() const
+{
+  return FilterTraits<QuickSurfaceMesh>::className;
+}
+
 Uuid QuickSurfaceMesh::uuid() const
 {
   return FilterTraits<QuickSurfaceMesh>::uuid;

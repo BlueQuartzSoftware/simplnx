@@ -13,6 +13,11 @@ std::string FindFeaturePhases::name() const
   return FilterTraits<FindFeaturePhases>::name.str();
 }
 
+std::string FindFeaturePhases::className() const
+{
+  return FilterTraits<FindFeaturePhases>::className;
+}
+
 Uuid FindFeaturePhases::uuid() const
 {
   return FilterTraits<FindFeaturePhases>::uuid;

@@ -15,6 +15,11 @@ std::string DiscretizeDDDomain::name() const
   return FilterTraits<DiscretizeDDDomain>::name.str();
 }
 
+std::string DiscretizeDDDomain::className() const
+{
+  return FilterTraits<DiscretizeDDDomain>::className;
+}
+
 Uuid DiscretizeDDDomain::uuid() const
 {
   return FilterTraits<DiscretizeDDDomain>::uuid;

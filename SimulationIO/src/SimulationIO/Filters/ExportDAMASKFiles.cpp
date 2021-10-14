@@ -20,6 +20,11 @@ std::string ExportDAMASKFiles::name() const
   return FilterTraits<ExportDAMASKFiles>::name.str();
 }
 
+std::string ExportDAMASKFiles::className() const
+{
+  return FilterTraits<ExportDAMASKFiles>::className;
+}
+
 Uuid ExportDAMASKFiles::uuid() const
 {
   return FilterTraits<ExportDAMASKFiles>::uuid;

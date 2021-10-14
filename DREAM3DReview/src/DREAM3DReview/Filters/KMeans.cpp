@@ -16,6 +16,11 @@ std::string KMeans::name() const
   return FilterTraits<KMeans>::name.str();
 }
 
+std::string KMeans::className() const
+{
+  return FilterTraits<KMeans>::className;
+}
+
 Uuid KMeans::uuid() const
 {
   return FilterTraits<KMeans>::uuid;

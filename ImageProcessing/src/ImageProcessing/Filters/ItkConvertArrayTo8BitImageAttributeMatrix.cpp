@@ -12,6 +12,11 @@ std::string ItkConvertArrayTo8BitImageAttributeMatrix::name() const
   return FilterTraits<ItkConvertArrayTo8BitImageAttributeMatrix>::name.str();
 }
 
+std::string ItkConvertArrayTo8BitImageAttributeMatrix::className() const
+{
+  return FilterTraits<ItkConvertArrayTo8BitImageAttributeMatrix>::className;
+}
+
 Uuid ItkConvertArrayTo8BitImageAttributeMatrix::uuid() const
 {
   return FilterTraits<ItkConvertArrayTo8BitImageAttributeMatrix>::uuid;

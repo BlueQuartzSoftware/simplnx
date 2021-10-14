@@ -34,6 +34,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -81,4 +87,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::SampleSurfaceMeshSpecifiedPoints, "b940c282-f89d-5058-96ba-3767c843ccbb");
+COMPLEX_DEF_FILTER_TRAITS(complex, SampleSurfaceMeshSpecifiedPoints, "b940c282-f89d-5058-96ba-3767c843ccbb");

@@ -14,6 +14,11 @@ std::string ItkWatershed::name() const
   return FilterTraits<ItkWatershed>::name.str();
 }
 
+std::string ItkWatershed::className() const
+{
+  return FilterTraits<ItkWatershed>::className;
+}
+
 Uuid ItkWatershed::uuid() const
 {
   return FilterTraits<ItkWatershed>::uuid;

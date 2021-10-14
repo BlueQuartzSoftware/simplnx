@@ -33,6 +33,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -80,4 +86,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::FindDerivatives, "d4688d2a-9e86-5f0b-b534-d02c97a7afbf");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindDerivatives, "d4688d2a-9e86-5f0b-b534-d02c97a7afbf");

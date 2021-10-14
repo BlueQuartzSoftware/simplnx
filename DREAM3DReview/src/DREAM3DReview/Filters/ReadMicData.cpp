@@ -17,6 +17,11 @@ std::string ReadMicData::name() const
   return FilterTraits<ReadMicData>::name.str();
 }
 
+std::string ReadMicData::className() const
+{
+  return FilterTraits<ReadMicData>::className;
+}
+
 Uuid ReadMicData::uuid() const
 {
   return FilterTraits<ReadMicData>::uuid;

@@ -15,6 +15,11 @@ std::string ITKMultiScaleHessianBasedObjectnessImage::name() const
   return FilterTraits<ITKMultiScaleHessianBasedObjectnessImage>::name.str();
 }
 
+std::string ITKMultiScaleHessianBasedObjectnessImage::className() const
+{
+  return FilterTraits<ITKMultiScaleHessianBasedObjectnessImage>::className;
+}
+
 Uuid ITKMultiScaleHessianBasedObjectnessImage::uuid() const
 {
   return FilterTraits<ITKMultiScaleHessianBasedObjectnessImage>::uuid;

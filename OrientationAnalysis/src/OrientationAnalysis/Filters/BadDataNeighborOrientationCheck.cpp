@@ -13,6 +13,11 @@ std::string BadDataNeighborOrientationCheck::name() const
   return FilterTraits<BadDataNeighborOrientationCheck>::name.str();
 }
 
+std::string BadDataNeighborOrientationCheck::className() const
+{
+  return FilterTraits<BadDataNeighborOrientationCheck>::className;
+}
+
 Uuid BadDataNeighborOrientationCheck::uuid() const
 {
   return FilterTraits<BadDataNeighborOrientationCheck>::uuid;

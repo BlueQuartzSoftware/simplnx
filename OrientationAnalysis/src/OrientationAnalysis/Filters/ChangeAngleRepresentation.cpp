@@ -13,6 +13,11 @@ std::string ChangeAngleRepresentation::name() const
   return FilterTraits<ChangeAngleRepresentation>::name.str();
 }
 
+std::string ChangeAngleRepresentation::className() const
+{
+  return FilterTraits<ChangeAngleRepresentation>::className;
+}
+
 Uuid ChangeAngleRepresentation::uuid() const
 {
   return FilterTraits<ChangeAngleRepresentation>::uuid;

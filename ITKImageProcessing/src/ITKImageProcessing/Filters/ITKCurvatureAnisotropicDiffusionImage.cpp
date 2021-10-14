@@ -14,6 +14,11 @@ std::string ITKCurvatureAnisotropicDiffusionImage::name() const
   return FilterTraits<ITKCurvatureAnisotropicDiffusionImage>::name.str();
 }
 
+std::string ITKCurvatureAnisotropicDiffusionImage::className() const
+{
+  return FilterTraits<ITKCurvatureAnisotropicDiffusionImage>::className;
+}
+
 Uuid ITKCurvatureAnisotropicDiffusionImage::uuid() const
 {
   return FilterTraits<ITKCurvatureAnisotropicDiffusionImage>::uuid;

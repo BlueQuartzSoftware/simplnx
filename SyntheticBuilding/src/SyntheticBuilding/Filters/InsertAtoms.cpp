@@ -16,6 +16,11 @@ std::string InsertAtoms::name() const
   return FilterTraits<InsertAtoms>::name.str();
 }
 
+std::string InsertAtoms::className() const
+{
+  return FilterTraits<InsertAtoms>::className;
+}
+
 Uuid InsertAtoms::uuid() const
 {
   return FilterTraits<InsertAtoms>::uuid;

@@ -17,6 +17,11 @@ std::string DxWriter::name() const
   return FilterTraits<DxWriter>::name.str();
 }
 
+std::string DxWriter::className() const
+{
+  return FilterTraits<DxWriter>::className;
+}
+
 Uuid DxWriter::uuid() const
 {
   return FilterTraits<DxWriter>::uuid;

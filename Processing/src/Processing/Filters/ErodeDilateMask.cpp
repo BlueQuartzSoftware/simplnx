@@ -15,6 +15,11 @@ std::string ErodeDilateMask::name() const
   return FilterTraits<ErodeDilateMask>::name.str();
 }
 
+std::string ErodeDilateMask::className() const
+{
+  return FilterTraits<ErodeDilateMask>::className;
+}
+
 Uuid ErodeDilateMask::uuid() const
 {
   return FilterTraits<ErodeDilateMask>::uuid;

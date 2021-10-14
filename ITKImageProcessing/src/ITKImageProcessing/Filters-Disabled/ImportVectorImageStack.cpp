@@ -16,6 +16,11 @@ std::string ImportVectorImageStack::name() const
   return FilterTraits<ImportVectorImageStack>::name.str();
 }
 
+std::string ImportVectorImageStack::className() const
+{
+  return FilterTraits<ImportVectorImageStack>::className;
+}
+
 Uuid ImportVectorImageStack::uuid() const
 {
   return FilterTraits<ImportVectorImageStack>::uuid;

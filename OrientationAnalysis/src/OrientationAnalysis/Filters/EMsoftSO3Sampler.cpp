@@ -16,6 +16,11 @@ std::string EMsoftSO3Sampler::name() const
   return FilterTraits<EMsoftSO3Sampler>::name.str();
 }
 
+std::string EMsoftSO3Sampler::className() const
+{
+  return FilterTraits<EMsoftSO3Sampler>::className;
+}
+
 Uuid EMsoftSO3Sampler::uuid() const
 {
   return FilterTraits<EMsoftSO3Sampler>::uuid;

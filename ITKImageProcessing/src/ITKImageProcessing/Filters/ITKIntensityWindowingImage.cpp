@@ -14,6 +14,11 @@ std::string ITKIntensityWindowingImage::name() const
   return FilterTraits<ITKIntensityWindowingImage>::name.str();
 }
 
+std::string ITKIntensityWindowingImage::className() const
+{
+  return FilterTraits<ITKIntensityWindowingImage>::className;
+}
+
 Uuid ITKIntensityWindowingImage::uuid() const
 {
   return FilterTraits<ITKIntensityWindowingImage>::uuid;

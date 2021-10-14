@@ -16,6 +16,11 @@ std::string ITKGrayscaleMorphologicalClosingImage::name() const
   return FilterTraits<ITKGrayscaleMorphologicalClosingImage>::name.str();
 }
 
+std::string ITKGrayscaleMorphologicalClosingImage::className() const
+{
+  return FilterTraits<ITKGrayscaleMorphologicalClosingImage>::className;
+}
+
 Uuid ITKGrayscaleMorphologicalClosingImage::uuid() const
 {
   return FilterTraits<ITKGrayscaleMorphologicalClosingImage>::uuid;

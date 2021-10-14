@@ -14,6 +14,11 @@ std::string ITKShotNoiseImage::name() const
   return FilterTraits<ITKShotNoiseImage>::name.str();
 }
 
+std::string ITKShotNoiseImage::className() const
+{
+  return FilterTraits<ITKShotNoiseImage>::className;
+}
+
 Uuid ITKShotNoiseImage::uuid() const
 {
   return FilterTraits<ITKShotNoiseImage>::uuid;

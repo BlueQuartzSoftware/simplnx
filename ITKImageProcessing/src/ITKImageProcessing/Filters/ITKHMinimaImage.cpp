@@ -15,6 +15,11 @@ std::string ITKHMinimaImage::name() const
   return FilterTraits<ITKHMinimaImage>::name.str();
 }
 
+std::string ITKHMinimaImage::className() const
+{
+  return FilterTraits<ITKHMinimaImage>::className;
+}
+
 Uuid ITKHMinimaImage::uuid() const
 {
   return FilterTraits<ITKHMinimaImage>::uuid;

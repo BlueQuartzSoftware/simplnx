@@ -17,6 +17,11 @@ std::string ReadStlFile::name() const
   return FilterTraits<ReadStlFile>::name.str();
 }
 
+std::string ReadStlFile::className() const
+{
+  return FilterTraits<ReadStlFile>::className;
+}
+
 Uuid ReadStlFile::uuid() const
 {
   return FilterTraits<ReadStlFile>::uuid;

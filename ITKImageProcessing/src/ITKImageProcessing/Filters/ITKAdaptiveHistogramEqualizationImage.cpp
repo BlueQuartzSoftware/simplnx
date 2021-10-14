@@ -15,6 +15,11 @@ std::string ITKAdaptiveHistogramEqualizationImage::name() const
   return FilterTraits<ITKAdaptiveHistogramEqualizationImage>::name.str();
 }
 
+std::string ITKAdaptiveHistogramEqualizationImage::className() const
+{
+  return FilterTraits<ITKAdaptiveHistogramEqualizationImage>::className;
+}
+
 Uuid ITKAdaptiveHistogramEqualizationImage::uuid() const
 {
   return FilterTraits<ITKAdaptiveHistogramEqualizationImage>::uuid;

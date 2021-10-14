@@ -18,6 +18,11 @@ std::string ImportDelamData::name() const
   return FilterTraits<ImportDelamData>::name.str();
 }
 
+std::string ImportDelamData::className() const
+{
+  return FilterTraits<ImportDelamData>::className;
+}
+
 Uuid ImportDelamData::uuid() const
 {
   return FilterTraits<ImportDelamData>::uuid;

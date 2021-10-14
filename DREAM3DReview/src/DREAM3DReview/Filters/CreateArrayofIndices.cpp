@@ -12,6 +12,11 @@ std::string CreateArrayofIndices::name() const
   return FilterTraits<CreateArrayofIndices>::name.str();
 }
 
+std::string CreateArrayofIndices::className() const
+{
+  return FilterTraits<CreateArrayofIndices>::className;
+}
+
 Uuid CreateArrayofIndices::uuid() const
 {
   return FilterTraits<CreateArrayofIndices>::uuid;

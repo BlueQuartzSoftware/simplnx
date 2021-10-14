@@ -45,6 +45,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -92,4 +98,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::MatchCrystallography, "ffeb3492-3af0-59ec-a426-1dc276abd427");
+COMPLEX_DEF_FILTER_TRAITS(complex, MatchCrystallography, "ffeb3492-3af0-59ec-a426-1dc276abd427");

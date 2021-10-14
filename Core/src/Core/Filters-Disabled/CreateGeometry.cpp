@@ -18,6 +18,11 @@ std::string CreateGeometry::name() const
   return FilterTraits<CreateGeometry>::name.str();
 }
 
+std::string CreateGeometry::className() const
+{
+  return FilterTraits<CreateGeometry>::className;
+}
+
 Uuid CreateGeometry::uuid() const
 {
   return FilterTraits<CreateGeometry>::uuid;

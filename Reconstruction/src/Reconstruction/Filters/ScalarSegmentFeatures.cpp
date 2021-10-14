@@ -15,6 +15,11 @@ std::string ScalarSegmentFeatures::name() const
   return FilterTraits<ScalarSegmentFeatures>::name.str();
 }
 
+std::string ScalarSegmentFeatures::className() const
+{
+  return FilterTraits<ScalarSegmentFeatures>::className;
+}
+
 Uuid ScalarSegmentFeatures::uuid() const
 {
   return FilterTraits<ScalarSegmentFeatures>::uuid;

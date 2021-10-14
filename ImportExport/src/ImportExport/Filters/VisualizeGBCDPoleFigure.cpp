@@ -18,6 +18,11 @@ std::string VisualizeGBCDPoleFigure::name() const
   return FilterTraits<VisualizeGBCDPoleFigure>::name.str();
 }
 
+std::string VisualizeGBCDPoleFigure::className() const
+{
+  return FilterTraits<VisualizeGBCDPoleFigure>::className;
+}
+
 Uuid VisualizeGBCDPoleFigure::uuid() const
 {
   return FilterTraits<VisualizeGBCDPoleFigure>::uuid;

@@ -20,6 +20,11 @@ std::string FeatureInfoReader::name() const
   return FilterTraits<FeatureInfoReader>::name.str();
 }
 
+std::string FeatureInfoReader::className() const
+{
+  return FilterTraits<FeatureInfoReader>::className;
+}
+
 Uuid FeatureInfoReader::uuid() const
 {
   return FilterTraits<FeatureInfoReader>::uuid;

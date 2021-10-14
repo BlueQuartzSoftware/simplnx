@@ -15,6 +15,11 @@ std::string MinSize::name() const
   return FilterTraits<MinSize>::name.str();
 }
 
+std::string MinSize::className() const
+{
+  return FilterTraits<MinSize>::className;
+}
+
 Uuid MinSize::uuid() const
 {
   return FilterTraits<MinSize>::uuid;

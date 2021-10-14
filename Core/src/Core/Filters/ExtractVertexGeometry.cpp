@@ -17,6 +17,11 @@ std::string ExtractVertexGeometry::name() const
   return FilterTraits<ExtractVertexGeometry>::name.str();
 }
 
+std::string ExtractVertexGeometry::className() const
+{
+  return FilterTraits<ExtractVertexGeometry>::className;
+}
+
 Uuid ExtractVertexGeometry::uuid() const
 {
   return FilterTraits<ExtractVertexGeometry>::uuid;

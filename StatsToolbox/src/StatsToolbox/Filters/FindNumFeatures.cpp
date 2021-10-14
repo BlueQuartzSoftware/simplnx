@@ -13,6 +13,11 @@ std::string FindNumFeatures::name() const
   return FilterTraits<FindNumFeatures>::name.str();
 }
 
+std::string FindNumFeatures::className() const
+{
+  return FilterTraits<FindNumFeatures>::className;
+}
+
 Uuid FindNumFeatures::uuid() const
 {
   return FilterTraits<FindNumFeatures>::uuid;

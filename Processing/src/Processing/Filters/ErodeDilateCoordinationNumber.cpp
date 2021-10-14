@@ -15,6 +15,11 @@ std::string ErodeDilateCoordinationNumber::name() const
   return FilterTraits<ErodeDilateCoordinationNumber>::name.str();
 }
 
+std::string ErodeDilateCoordinationNumber::className() const
+{
+  return FilterTraits<ErodeDilateCoordinationNumber>::className;
+}
+
 Uuid ErodeDilateCoordinationNumber::uuid() const
 {
   return FilterTraits<ErodeDilateCoordinationNumber>::uuid;

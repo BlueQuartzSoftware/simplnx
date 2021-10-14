@@ -14,6 +14,11 @@ std::string ConvertData::name() const
   return FilterTraits<ConvertData>::name.str();
 }
 
+std::string ConvertData::className() const
+{
+  return FilterTraits<ConvertData>::className;
+}
+
 Uuid ConvertData::uuid() const
 {
   return FilterTraits<ConvertData>::uuid;

@@ -15,6 +15,11 @@ std::string ITKProxTVImage::name() const
   return FilterTraits<ITKProxTVImage>::name.str();
 }
 
+std::string ITKProxTVImage::className() const
+{
+  return FilterTraits<ITKProxTVImage>::className;
+}
+
 Uuid ITKProxTVImage::uuid() const
 {
   return FilterTraits<ITKProxTVImage>::uuid;

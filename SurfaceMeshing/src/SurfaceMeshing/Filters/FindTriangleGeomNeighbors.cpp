@@ -14,6 +14,11 @@ std::string FindTriangleGeomNeighbors::name() const
   return FilterTraits<FindTriangleGeomNeighbors>::name.str();
 }
 
+std::string FindTriangleGeomNeighbors::className() const
+{
+  return FilterTraits<FindTriangleGeomNeighbors>::className;
+}
+
 Uuid FindTriangleGeomNeighbors::uuid() const
 {
   return FilterTraits<FindTriangleGeomNeighbors>::uuid;

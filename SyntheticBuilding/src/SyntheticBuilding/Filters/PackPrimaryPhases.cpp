@@ -21,6 +21,11 @@ std::string PackPrimaryPhases::name() const
   return FilterTraits<PackPrimaryPhases>::name.str();
 }
 
+std::string PackPrimaryPhases::className() const
+{
+  return FilterTraits<PackPrimaryPhases>::className;
+}
+
 Uuid PackPrimaryPhases::uuid() const
 {
   return FilterTraits<PackPrimaryPhases>::uuid;

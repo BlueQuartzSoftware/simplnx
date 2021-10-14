@@ -15,6 +15,11 @@ std::string Silhouette::name() const
   return FilterTraits<Silhouette>::name.str();
 }
 
+std::string Silhouette::className() const
+{
+  return FilterTraits<Silhouette>::className;
+}
+
 Uuid Silhouette::uuid() const
 {
   return FilterTraits<Silhouette>::uuid;

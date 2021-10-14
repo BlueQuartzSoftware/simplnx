@@ -33,6 +33,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -80,4 +86,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::WaveFrontObjectFileWriter, "29c6512f-5928-5eb4-8ec0-729b34ce97a4");
+COMPLEX_DEF_FILTER_TRAITS(complex, WaveFrontObjectFileWriter, "29c6512f-5928-5eb4-8ec0-729b34ce97a4");

@@ -17,6 +17,11 @@ std::string ITKBinaryOpeningByReconstructionImage::name() const
   return FilterTraits<ITKBinaryOpeningByReconstructionImage>::name.str();
 }
 
+std::string ITKBinaryOpeningByReconstructionImage::className() const
+{
+  return FilterTraits<ITKBinaryOpeningByReconstructionImage>::className;
+}
+
 Uuid ITKBinaryOpeningByReconstructionImage::uuid() const
 {
   return FilterTraits<ITKBinaryOpeningByReconstructionImage>::uuid;

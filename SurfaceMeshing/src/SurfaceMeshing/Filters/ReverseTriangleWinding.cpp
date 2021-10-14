@@ -12,6 +12,11 @@ std::string ReverseTriangleWinding::name() const
   return FilterTraits<ReverseTriangleWinding>::name.str();
 }
 
+std::string ReverseTriangleWinding::className() const
+{
+  return FilterTraits<ReverseTriangleWinding>::className;
+}
+
 Uuid ReverseTriangleWinding::uuid() const
 {
   return FilterTraits<ReverseTriangleWinding>::uuid;

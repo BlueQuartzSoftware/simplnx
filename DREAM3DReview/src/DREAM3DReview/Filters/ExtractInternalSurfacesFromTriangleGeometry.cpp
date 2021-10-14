@@ -14,6 +14,11 @@ std::string ExtractInternalSurfacesFromTriangleGeometry::name() const
   return FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::name.str();
 }
 
+std::string ExtractInternalSurfacesFromTriangleGeometry::className() const
+{
+  return FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::className;
+}
+
 Uuid ExtractInternalSurfacesFromTriangleGeometry::uuid() const
 {
   return FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::uuid;

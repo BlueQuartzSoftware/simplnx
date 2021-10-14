@@ -15,6 +15,11 @@ std::string ITKRelabelComponentImage::name() const
   return FilterTraits<ITKRelabelComponentImage>::name.str();
 }
 
+std::string ITKRelabelComponentImage::className() const
+{
+  return FilterTraits<ITKRelabelComponentImage>::className;
+}
+
 Uuid ITKRelabelComponentImage::uuid() const
 {
   return FilterTraits<ITKRelabelComponentImage>::uuid;

@@ -46,6 +46,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -93,4 +99,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::InterpolatePointCloudToRegularGrid, "55c08183-543b-5c6a-b5a4-3d6829fac71f");
+COMPLEX_DEF_FILTER_TRAITS(complex, InterpolatePointCloudToRegularGrid, "55c08183-543b-5c6a-b5a4-3d6829fac71f");

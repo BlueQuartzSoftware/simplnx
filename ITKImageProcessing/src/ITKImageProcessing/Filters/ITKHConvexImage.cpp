@@ -15,6 +15,11 @@ std::string ITKHConvexImage::name() const
   return FilterTraits<ITKHConvexImage>::name.str();
 }
 
+std::string ITKHConvexImage::className() const
+{
+  return FilterTraits<ITKHConvexImage>::className;
+}
+
 Uuid ITKHConvexImage::uuid() const
 {
   return FilterTraits<ITKHConvexImage>::uuid;

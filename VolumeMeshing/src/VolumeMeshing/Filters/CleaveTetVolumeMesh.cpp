@@ -14,6 +14,11 @@ std::string CleaveTetVolumeMesh::name() const
   return FilterTraits<CleaveTetVolumeMesh>::name.str();
 }
 
+std::string CleaveTetVolumeMesh::className() const
+{
+  return FilterTraits<CleaveTetVolumeMesh>::className;
+}
+
 Uuid CleaveTetVolumeMesh::uuid() const
 {
   return FilterTraits<CleaveTetVolumeMesh>::uuid;

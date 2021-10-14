@@ -13,6 +13,11 @@ std::string CreateStringArray::name() const
   return FilterTraits<CreateStringArray>::name.str();
 }
 
+std::string CreateStringArray::className() const
+{
+  return FilterTraits<CreateStringArray>::className;
+}
+
 Uuid CreateStringArray::uuid() const
 {
   return FilterTraits<CreateStringArray>::uuid;

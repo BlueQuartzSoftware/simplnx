@@ -13,6 +13,11 @@ std::string ComputeFeatureRect::name() const
   return FilterTraits<ComputeFeatureRect>::name.str();
 }
 
+std::string ComputeFeatureRect::className() const
+{
+  return FilterTraits<ComputeFeatureRect>::className;
+}
+
 Uuid ComputeFeatureRect::uuid() const
 {
   return FilterTraits<ComputeFeatureRect>::uuid;

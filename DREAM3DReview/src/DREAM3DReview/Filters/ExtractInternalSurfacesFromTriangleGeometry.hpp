@@ -34,6 +34,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -81,4 +87,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ExtractInternalSurfacesFromTriangleGeometry, "1531f0cc-82c4-5efb-8b0f-44be9cfe2836");
+COMPLEX_DEF_FILTER_TRAITS(complex, ExtractInternalSurfacesFromTriangleGeometry, "1531f0cc-82c4-5efb-8b0f-44be9cfe2836");

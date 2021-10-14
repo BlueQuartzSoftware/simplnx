@@ -14,6 +14,11 @@ std::string SetOriginResolutionImageGeom::name() const
   return FilterTraits<SetOriginResolutionImageGeom>::name.str();
 }
 
+std::string SetOriginResolutionImageGeom::className() const
+{
+  return FilterTraits<SetOriginResolutionImageGeom>::className;
+}
+
 Uuid SetOriginResolutionImageGeom::uuid() const
 {
   return FilterTraits<SetOriginResolutionImageGeom>::uuid;

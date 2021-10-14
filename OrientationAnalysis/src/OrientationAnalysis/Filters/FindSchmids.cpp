@@ -15,6 +15,11 @@ std::string FindSchmids::name() const
   return FilterTraits<FindSchmids>::name.str();
 }
 
+std::string FindSchmids::className() const
+{
+  return FilterTraits<FindSchmids>::className;
+}
+
 Uuid FindSchmids::uuid() const
 {
   return FilterTraits<FindSchmids>::uuid;

@@ -47,6 +47,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -94,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::FindNeighborListStatistics, "1c469a65-3326-53dc-92aa-a96ccaf2fd77");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindNeighborListStatistics, "1c469a65-3326-53dc-92aa-a96ccaf2fd77");

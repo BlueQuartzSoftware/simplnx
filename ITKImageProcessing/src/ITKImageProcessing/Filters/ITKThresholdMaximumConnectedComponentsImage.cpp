@@ -14,6 +14,11 @@ std::string ITKThresholdMaximumConnectedComponentsImage::name() const
   return FilterTraits<ITKThresholdMaximumConnectedComponentsImage>::name.str();
 }
 
+std::string ITKThresholdMaximumConnectedComponentsImage::className() const
+{
+  return FilterTraits<ITKThresholdMaximumConnectedComponentsImage>::className;
+}
+
 Uuid ITKThresholdMaximumConnectedComponentsImage::uuid() const
 {
   return FilterTraits<ITKThresholdMaximumConnectedComponentsImage>::uuid;

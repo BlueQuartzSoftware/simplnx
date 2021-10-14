@@ -36,6 +36,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -83,4 +89,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ITKSignedDanielssonDistanceMapImage, "8a689c33-9c20-5562-9c3d-cb616e66104b");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKSignedDanielssonDistanceMapImage, "8a689c33-9c20-5562-9c3d-cb616e66104b");

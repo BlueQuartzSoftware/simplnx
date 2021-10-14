@@ -53,6 +53,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -100,4 +106,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::Export3dSolidMesh, "e7f02408-6c01-5b56-b970-7813e64c12e2");
+COMPLEX_DEF_FILTER_TRAITS(complex, Export3dSolidMesh, "e7f02408-6c01-5b56-b970-7813e64c12e2");

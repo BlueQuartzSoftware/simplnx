@@ -14,6 +14,11 @@ std::string FindCSLBoundaries::name() const
   return FilterTraits<FindCSLBoundaries>::name.str();
 }
 
+std::string FindCSLBoundaries::className() const
+{
+  return FilterTraits<FindCSLBoundaries>::className;
+}
+
 Uuid FindCSLBoundaries::uuid() const
 {
   return FilterTraits<FindCSLBoundaries>::uuid;

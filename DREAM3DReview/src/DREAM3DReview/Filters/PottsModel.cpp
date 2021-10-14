@@ -14,6 +14,11 @@ std::string PottsModel::name() const
   return FilterTraits<PottsModel>::name.str();
 }
 
+std::string PottsModel::className() const
+{
+  return FilterTraits<PottsModel>::className;
+}
+
 Uuid PottsModel::uuid() const
 {
   return FilterTraits<PottsModel>::uuid;

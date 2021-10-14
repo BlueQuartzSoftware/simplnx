@@ -16,6 +16,11 @@ std::string ITKBlackTopHatImage::name() const
   return FilterTraits<ITKBlackTopHatImage>::name.str();
 }
 
+std::string ITKBlackTopHatImage::className() const
+{
+  return FilterTraits<ITKBlackTopHatImage>::className;
+}
+
 Uuid ITKBlackTopHatImage::uuid() const
 {
   return FilterTraits<ITKBlackTopHatImage>::uuid;

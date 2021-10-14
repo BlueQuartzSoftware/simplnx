@@ -18,6 +18,11 @@ std::string VtkStructuredPointsReader::name() const
   return FilterTraits<VtkStructuredPointsReader>::name.str();
 }
 
+std::string VtkStructuredPointsReader::className() const
+{
+  return FilterTraits<VtkStructuredPointsReader>::className;
+}
+
 Uuid VtkStructuredPointsReader::uuid() const
 {
   return FilterTraits<VtkStructuredPointsReader>::uuid;

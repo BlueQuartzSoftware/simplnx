@@ -15,6 +15,11 @@ std::string MergeColonies::name() const
   return FilterTraits<MergeColonies>::name.str();
 }
 
+std::string MergeColonies::className() const
+{
+  return FilterTraits<MergeColonies>::className;
+}
+
 Uuid MergeColonies::uuid() const
 {
   return FilterTraits<MergeColonies>::uuid;

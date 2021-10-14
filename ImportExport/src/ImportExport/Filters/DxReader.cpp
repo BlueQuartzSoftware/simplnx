@@ -18,6 +18,11 @@ std::string DxReader::name() const
   return FilterTraits<DxReader>::name.str();
 }
 
+std::string DxReader::className() const
+{
+  return FilterTraits<DxReader>::className;
+}
+
 Uuid DxReader::uuid() const
 {
   return FilterTraits<DxReader>::uuid;

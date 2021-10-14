@@ -13,6 +13,11 @@ std::string FindMinkowskiBouligandDimension::name() const
   return FilterTraits<FindMinkowskiBouligandDimension>::name.str();
 }
 
+std::string FindMinkowskiBouligandDimension::className() const
+{
+  return FilterTraits<FindMinkowskiBouligandDimension>::className;
+}
+
 Uuid FindMinkowskiBouligandDimension::uuid() const
 {
   return FilterTraits<FindMinkowskiBouligandDimension>::uuid;

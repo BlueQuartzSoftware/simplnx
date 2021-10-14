@@ -15,6 +15,11 @@ std::string ItkMedianKernel::name() const
   return FilterTraits<ItkMedianKernel>::name.str();
 }
 
+std::string ItkMedianKernel::className() const
+{
+  return FilterTraits<ItkMedianKernel>::className;
+}
+
 Uuid ItkMedianKernel::uuid() const
 {
   return FilterTraits<ItkMedianKernel>::uuid;

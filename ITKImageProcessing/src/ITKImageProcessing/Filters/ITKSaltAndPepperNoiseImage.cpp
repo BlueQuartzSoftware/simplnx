@@ -14,6 +14,11 @@ std::string ITKSaltAndPepperNoiseImage::name() const
   return FilterTraits<ITKSaltAndPepperNoiseImage>::name.str();
 }
 
+std::string ITKSaltAndPepperNoiseImage::className() const
+{
+  return FilterTraits<ITKSaltAndPepperNoiseImage>::className;
+}
+
 Uuid ITKSaltAndPepperNoiseImage::uuid() const
 {
   return FilterTraits<ITKSaltAndPepperNoiseImage>::uuid;

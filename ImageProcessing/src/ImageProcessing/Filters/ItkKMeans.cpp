@@ -15,6 +15,11 @@ std::string ItkKMeans::name() const
   return FilterTraits<ItkKMeans>::name.str();
 }
 
+std::string ItkKMeans::className() const
+{
+  return FilterTraits<ItkKMeans>::className;
+}
+
 Uuid ItkKMeans::uuid() const
 {
   return FilterTraits<ItkKMeans>::uuid;

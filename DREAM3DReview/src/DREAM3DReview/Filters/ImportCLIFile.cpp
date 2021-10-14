@@ -17,6 +17,11 @@ std::string ImportCLIFile::name() const
   return FilterTraits<ImportCLIFile>::name.str();
 }
 
+std::string ImportCLIFile::className() const
+{
+  return FilterTraits<ImportCLIFile>::className;
+}
+
 Uuid ImportCLIFile::uuid() const
 {
   return FilterTraits<ImportCLIFile>::uuid;

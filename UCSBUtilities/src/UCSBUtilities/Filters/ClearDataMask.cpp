@@ -12,6 +12,11 @@ std::string ClearDataMask::name() const
   return FilterTraits<ClearDataMask>::name.str();
 }
 
+std::string ClearDataMask::className() const
+{
+  return FilterTraits<ClearDataMask>::className;
+}
+
 Uuid ClearDataMask::uuid() const
 {
   return FilterTraits<ClearDataMask>::uuid;

@@ -20,6 +20,11 @@ std::string Export3dSolidMesh::name() const
   return FilterTraits<Export3dSolidMesh>::name.str();
 }
 
+std::string Export3dSolidMesh::className() const
+{
+  return FilterTraits<Export3dSolidMesh>::className;
+}
+
 Uuid Export3dSolidMesh::uuid() const
 {
   return FilterTraits<Export3dSolidMesh>::uuid;

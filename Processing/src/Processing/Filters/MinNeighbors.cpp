@@ -15,6 +15,11 @@ std::string MinNeighbors::name() const
   return FilterTraits<MinNeighbors>::name.str();
 }
 
+std::string MinNeighbors::className() const
+{
+  return FilterTraits<MinNeighbors>::className;
+}
+
 Uuid MinNeighbors::uuid() const
 {
   return FilterTraits<MinNeighbors>::uuid;

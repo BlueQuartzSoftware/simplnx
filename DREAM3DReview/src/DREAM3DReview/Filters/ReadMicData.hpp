@@ -35,6 +35,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -82,4 +88,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ReadMicData, "dac4155e-bf33-54cf-9401-f9282a4c5c41");
+COMPLEX_DEF_FILTER_TRAITS(complex, ReadMicData, "dac4155e-bf33-54cf-9401-f9282a4c5c41");

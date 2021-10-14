@@ -14,6 +14,11 @@ std::string ITKFFTNormalizedCorrelationImage::name() const
   return FilterTraits<ITKFFTNormalizedCorrelationImage>::name.str();
 }
 
+std::string ITKFFTNormalizedCorrelationImage::className() const
+{
+  return FilterTraits<ITKFFTNormalizedCorrelationImage>::className;
+}
+
 Uuid ITKFFTNormalizedCorrelationImage::uuid() const
 {
   return FilterTraits<ITKFFTNormalizedCorrelationImage>::uuid;

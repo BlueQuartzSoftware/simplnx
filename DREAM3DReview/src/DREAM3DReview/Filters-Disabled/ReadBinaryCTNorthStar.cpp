@@ -21,6 +21,11 @@ std::string ReadBinaryCTNorthStar::name() const
   return FilterTraits<ReadBinaryCTNorthStar>::name.str();
 }
 
+std::string ReadBinaryCTNorthStar::className() const
+{
+  return FilterTraits<ReadBinaryCTNorthStar>::className;
+}
+
 Uuid ReadBinaryCTNorthStar::uuid() const
 {
   return FilterTraits<ReadBinaryCTNorthStar>::uuid;

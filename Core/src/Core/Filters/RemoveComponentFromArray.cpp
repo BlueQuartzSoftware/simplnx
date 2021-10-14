@@ -15,6 +15,11 @@ std::string RemoveComponentFromArray::name() const
   return FilterTraits<RemoveComponentFromArray>::name.str();
 }
 
+std::string RemoveComponentFromArray::className() const
+{
+  return FilterTraits<RemoveComponentFromArray>::className;
+}
+
 Uuid RemoveComponentFromArray::uuid() const
 {
   return FilterTraits<RemoveComponentFromArray>::uuid;

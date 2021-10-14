@@ -20,6 +20,11 @@ std::string ImportAsciDataArray::name() const
   return FilterTraits<ImportAsciDataArray>::name.str();
 }
 
+std::string ImportAsciDataArray::className() const
+{
+  return FilterTraits<ImportAsciDataArray>::className;
+}
+
 Uuid ImportAsciDataArray::uuid() const
 {
   return FilterTraits<ImportAsciDataArray>::uuid;

@@ -16,6 +16,11 @@ std::string PhWriter::name() const
   return FilterTraits<PhWriter>::name.str();
 }
 
+std::string PhWriter::className() const
+{
+  return FilterTraits<PhWriter>::className;
+}
+
 Uuid PhWriter::uuid() const
 {
   return FilterTraits<PhWriter>::uuid;

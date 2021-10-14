@@ -14,6 +14,11 @@ std::string GenerateFZQuaternions::name() const
   return FilterTraits<GenerateFZQuaternions>::name.str();
 }
 
+std::string GenerateFZQuaternions::className() const
+{
+  return FilterTraits<GenerateFZQuaternions>::className;
+}
+
 Uuid GenerateFZQuaternions::uuid() const
 {
   return FilterTraits<GenerateFZQuaternions>::uuid;

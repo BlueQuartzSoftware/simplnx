@@ -14,6 +14,11 @@ std::string ItkSobelEdge::name() const
   return FilterTraits<ItkSobelEdge>::name.str();
 }
 
+std::string ItkSobelEdge::className() const
+{
+  return FilterTraits<ItkSobelEdge>::className;
+}
+
 Uuid ItkSobelEdge::uuid() const
 {
   return FilterTraits<ItkSobelEdge>::uuid;

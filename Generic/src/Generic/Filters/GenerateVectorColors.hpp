@@ -35,6 +35,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -82,4 +88,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::GenerateVectorColors, "d4281f41-ba5f-5429-8bbc-257c785505cb");
+COMPLEX_DEF_FILTER_TRAITS(complex, GenerateVectorColors, "d4281f41-ba5f-5429-8bbc-257c785505cb");

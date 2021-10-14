@@ -17,6 +17,11 @@ std::string ImportVolumeGraphicsFile::name() const
   return FilterTraits<ImportVolumeGraphicsFile>::name.str();
 }
 
+std::string ImportVolumeGraphicsFile::className() const
+{
+  return FilterTraits<ImportVolumeGraphicsFile>::className;
+}
+
 Uuid ImportVolumeGraphicsFile::uuid() const
 {
   return FilterTraits<ImportVolumeGraphicsFile>::uuid;

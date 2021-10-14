@@ -16,6 +16,11 @@ std::string FindFeatureClustering::name() const
   return FilterTraits<FindFeatureClustering>::name.str();
 }
 
+std::string FindFeatureClustering::className() const
+{
+  return FilterTraits<FindFeatureClustering>::className;
+}
+
 Uuid FindFeatureClustering::uuid() const
 {
   return FilterTraits<FindFeatureClustering>::uuid;

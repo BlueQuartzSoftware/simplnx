@@ -15,6 +15,11 @@ std::string LaplacianSmoothPointCloud::name() const
   return FilterTraits<LaplacianSmoothPointCloud>::name.str();
 }
 
+std::string LaplacianSmoothPointCloud::className() const
+{
+  return FilterTraits<LaplacianSmoothPointCloud>::className;
+}
+
 Uuid LaplacianSmoothPointCloud::uuid() const
 {
   return FilterTraits<LaplacianSmoothPointCloud>::uuid;

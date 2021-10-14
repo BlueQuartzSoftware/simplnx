@@ -36,6 +36,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -83,4 +89,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::GBCDTriangleDumper, "663e708d-f701-566f-aa33-7e5ab30bd238");
+COMPLEX_DEF_FILTER_TRAITS(complex, GBCDTriangleDumper, "663e708d-f701-566f-aa33-7e5ab30bd238");

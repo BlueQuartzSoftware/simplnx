@@ -18,6 +18,11 @@ std::string MapPointCloudToRegularGrid::name() const
   return FilterTraits<MapPointCloudToRegularGrid>::name.str();
 }
 
+std::string MapPointCloudToRegularGrid::className() const
+{
+  return FilterTraits<MapPointCloudToRegularGrid>::className;
+}
+
 Uuid MapPointCloudToRegularGrid::uuid() const
 {
   return FilterTraits<MapPointCloudToRegularGrid>::uuid;

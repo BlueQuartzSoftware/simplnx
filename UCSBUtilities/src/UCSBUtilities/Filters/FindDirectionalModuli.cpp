@@ -14,6 +14,11 @@ std::string FindDirectionalModuli::name() const
   return FilterTraits<FindDirectionalModuli>::name.str();
 }
 
+std::string FindDirectionalModuli::className() const
+{
+  return FilterTraits<FindDirectionalModuli>::className;
+}
+
 Uuid FindDirectionalModuli::uuid() const
 {
   return FilterTraits<FindDirectionalModuli>::uuid;

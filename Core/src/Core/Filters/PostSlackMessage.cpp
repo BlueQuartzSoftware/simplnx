@@ -13,6 +13,11 @@ std::string PostSlackMessage::name() const
   return FilterTraits<PostSlackMessage>::name.str();
 }
 
+std::string PostSlackMessage::className() const
+{
+  return FilterTraits<PostSlackMessage>::className;
+}
+
 Uuid PostSlackMessage::uuid() const
 {
   return FilterTraits<PostSlackMessage>::uuid;

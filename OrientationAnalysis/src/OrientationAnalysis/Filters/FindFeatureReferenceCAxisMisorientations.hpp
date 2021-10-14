@@ -38,6 +38,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -85,4 +91,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::FindFeatureReferenceCAxisMisorientations, "92502590-0051-5d5a-8e3d-5ca7f2274d83");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindFeatureReferenceCAxisMisorientations, "92502590-0051-5d5a-8e3d-5ca7f2274d83");

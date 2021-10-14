@@ -37,6 +37,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -84,4 +90,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::IterativeClosestPoint, "2ad37842-acdc-5c7a-a90e-c9389883e32b");
+COMPLEX_DEF_FILTER_TRAITS(complex, IterativeClosestPoint, "2ad37842-acdc-5c7a-a90e-c9389883e32b");

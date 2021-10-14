@@ -37,6 +37,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -84,4 +90,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ItkHoughCircles, "ad32238c-d377-5c03-8709-9f0078c0f55c");
+COMPLEX_DEF_FILTER_TRAITS(complex, ItkHoughCircles, "ad32238c-d377-5c03-8709-9f0078c0f55c");

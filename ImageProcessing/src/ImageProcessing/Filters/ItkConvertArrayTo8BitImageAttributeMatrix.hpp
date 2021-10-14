@@ -32,6 +32,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -79,4 +85,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ItkConvertArrayTo8BitImageAttributeMatrix, "70b13194-5060-55b0-8127-e969c53fa7a7");
+COMPLEX_DEF_FILTER_TRAITS(complex, ItkConvertArrayTo8BitImageAttributeMatrix, "70b13194-5060-55b0-8127-e969c53fa7a7");

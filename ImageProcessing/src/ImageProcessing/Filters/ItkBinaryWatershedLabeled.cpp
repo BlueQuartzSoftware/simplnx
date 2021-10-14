@@ -14,6 +14,11 @@ std::string ItkBinaryWatershedLabeled::name() const
   return FilterTraits<ItkBinaryWatershedLabeled>::name.str();
 }
 
+std::string ItkBinaryWatershedLabeled::className() const
+{
+  return FilterTraits<ItkBinaryWatershedLabeled>::className;
+}
+
 Uuid ItkBinaryWatershedLabeled::uuid() const
 {
   return FilterTraits<ItkBinaryWatershedLabeled>::uuid;

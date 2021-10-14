@@ -36,6 +36,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -83,4 +89,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::AbaqusHexahedronWriter, "1c0a7657-c853-5798-ad55-09ec9cca2528");
+COMPLEX_DEF_FILTER_TRAITS(complex, AbaqusHexahedronWriter, "1c0a7657-c853-5798-ad55-09ec9cca2528");

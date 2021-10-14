@@ -37,6 +37,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -84,4 +90,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::KDistanceGraph, "559d7a0e-3bfa-5e71-9255-86eaa90845ad");
+COMPLEX_DEF_FILTER_TRAITS(complex, KDistanceGraph, "559d7a0e-3bfa-5e71-9255-86eaa90845ad");

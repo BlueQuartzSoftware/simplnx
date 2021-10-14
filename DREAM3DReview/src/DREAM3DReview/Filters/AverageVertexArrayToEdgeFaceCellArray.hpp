@@ -34,6 +34,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -81,4 +87,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::AverageVertexArrayToEdgeFaceCellArray, "d5d7625a-2344-551d-8834-b838e5531866");
+COMPLEX_DEF_FILTER_TRAITS(complex, AverageVertexArrayToEdgeFaceCellArray, "d5d7625a-2344-551d-8834-b838e5531866");

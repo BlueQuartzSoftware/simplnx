@@ -15,6 +15,11 @@ std::string GenerateTiltSeries::name() const
   return FilterTraits<GenerateTiltSeries>::name.str();
 }
 
+std::string GenerateTiltSeries::className() const
+{
+  return FilterTraits<GenerateTiltSeries>::className;
+}
+
 Uuid GenerateTiltSeries::uuid() const
 {
   return FilterTraits<GenerateTiltSeries>::uuid;

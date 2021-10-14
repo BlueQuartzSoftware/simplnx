@@ -13,6 +13,11 @@ std::string ITKAcosImage::name() const
   return FilterTraits<ITKAcosImage>::name.str();
 }
 
+std::string ITKAcosImage::className() const
+{
+  return FilterTraits<ITKAcosImage>::className;
+}
+
 Uuid ITKAcosImage::uuid() const
 {
   return FilterTraits<ITKAcosImage>::uuid;

@@ -18,6 +18,11 @@ std::string ITKImageWriter::name() const
   return FilterTraits<ITKImageWriter>::name.str();
 }
 
+std::string ITKImageWriter::className() const
+{
+  return FilterTraits<ITKImageWriter>::className;
+}
+
 Uuid ITKImageWriter::uuid() const
 {
   return FilterTraits<ITKImageWriter>::uuid;

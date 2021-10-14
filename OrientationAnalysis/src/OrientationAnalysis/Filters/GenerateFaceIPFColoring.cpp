@@ -13,6 +13,11 @@ std::string GenerateFaceIPFColoring::name() const
   return FilterTraits<GenerateFaceIPFColoring>::name.str();
 }
 
+std::string GenerateFaceIPFColoring::className() const
+{
+  return FilterTraits<GenerateFaceIPFColoring>::className;
+}
+
 Uuid GenerateFaceIPFColoring::uuid() const
 {
   return FilterTraits<GenerateFaceIPFColoring>::uuid;

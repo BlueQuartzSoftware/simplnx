@@ -13,6 +13,11 @@ std::string RenameDataContainer::name() const
   return FilterTraits<RenameDataContainer>::name.str();
 }
 
+std::string RenameDataContainer::className() const
+{
+  return FilterTraits<RenameDataContainer>::className;
+}
+
 Uuid RenameDataContainer::uuid() const
 {
   return FilterTraits<RenameDataContainer>::uuid;

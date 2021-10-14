@@ -13,6 +13,11 @@ std::string AppendImageGeometryZSlice::name() const
   return FilterTraits<AppendImageGeometryZSlice>::name.str();
 }
 
+std::string AppendImageGeometryZSlice::className() const
+{
+  return FilterTraits<AppendImageGeometryZSlice>::className;
+}
+
 Uuid AppendImageGeometryZSlice::uuid() const
 {
   return FilterTraits<AppendImageGeometryZSlice>::uuid;

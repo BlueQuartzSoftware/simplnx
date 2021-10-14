@@ -15,6 +15,11 @@ std::string ConvertQuaternion::name() const
   return FilterTraits<ConvertQuaternion>::name.str();
 }
 
+std::string ConvertQuaternion::className() const
+{
+  return FilterTraits<ConvertQuaternion>::className;
+}
+
 Uuid ConvertQuaternion::uuid() const
 {
   return FilterTraits<ConvertQuaternion>::uuid;

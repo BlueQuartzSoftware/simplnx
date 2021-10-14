@@ -16,6 +16,11 @@ std::string EMMPMFilter::name() const
   return FilterTraits<EMMPMFilter>::name.str();
 }
 
+std::string EMMPMFilter::className() const
+{
+  return FilterTraits<EMMPMFilter>::className;
+}
+
 Uuid EMMPMFilter::uuid() const
 {
   return FilterTraits<EMMPMFilter>::uuid;

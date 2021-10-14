@@ -13,6 +13,11 @@ std::string FindDifferenceMap::name() const
   return FilterTraits<FindDifferenceMap>::name.str();
 }
 
+std::string FindDifferenceMap::className() const
+{
+  return FilterTraits<FindDifferenceMap>::className;
+}
+
 Uuid FindDifferenceMap::uuid() const
 {
   return FilterTraits<FindDifferenceMap>::uuid;

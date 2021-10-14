@@ -19,6 +19,11 @@ std::string ImportOnScaleTableFile::name() const
   return FilterTraits<ImportOnScaleTableFile>::name.str();
 }
 
+std::string ImportOnScaleTableFile::className() const
+{
+  return FilterTraits<ImportOnScaleTableFile>::className;
+}
+
 Uuid ImportOnScaleTableFile::uuid() const
 {
   return FilterTraits<ImportOnScaleTableFile>::uuid;

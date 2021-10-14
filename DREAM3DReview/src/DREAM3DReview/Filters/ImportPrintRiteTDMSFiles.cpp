@@ -21,6 +21,11 @@ std::string ImportPrintRiteTDMSFiles::name() const
   return FilterTraits<ImportPrintRiteTDMSFiles>::name.str();
 }
 
+std::string ImportPrintRiteTDMSFiles::className() const
+{
+  return FilterTraits<ImportPrintRiteTDMSFiles>::className;
+}
+
 Uuid ImportPrintRiteTDMSFiles::uuid() const
 {
   return FilterTraits<ImportPrintRiteTDMSFiles>::uuid;

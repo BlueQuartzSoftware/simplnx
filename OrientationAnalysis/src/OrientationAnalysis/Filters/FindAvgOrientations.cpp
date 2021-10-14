@@ -13,6 +13,11 @@ std::string FindAvgOrientations::name() const
   return FilterTraits<FindAvgOrientations>::name.str();
 }
 
+std::string FindAvgOrientations::className() const
+{
+  return FilterTraits<FindAvgOrientations>::className;
+}
+
 Uuid FindAvgOrientations::uuid() const
 {
   return FilterTraits<FindAvgOrientations>::uuid;

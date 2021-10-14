@@ -14,6 +14,11 @@ std::string FindFeatureNeighborCAxisMisalignments::name() const
   return FilterTraits<FindFeatureNeighborCAxisMisalignments>::name.str();
 }
 
+std::string FindFeatureNeighborCAxisMisalignments::className() const
+{
+  return FilterTraits<FindFeatureNeighborCAxisMisalignments>::className;
+}
+
 Uuid FindFeatureNeighborCAxisMisalignments::uuid() const
 {
   return FilterTraits<FindFeatureNeighborCAxisMisalignments>::uuid;

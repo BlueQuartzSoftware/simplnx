@@ -12,6 +12,11 @@ std::string CreateDataContainer::name() const
   return FilterTraits<CreateDataContainer>::name.str();
 }
 
+std::string CreateDataContainer::className() const
+{
+  return FilterTraits<CreateDataContainer>::className;
+}
+
 Uuid CreateDataContainer::uuid() const
 {
   return FilterTraits<CreateDataContainer>::uuid;

@@ -19,6 +19,11 @@ std::string InitializeSyntheticVolume::name() const
   return FilterTraits<InitializeSyntheticVolume>::name.str();
 }
 
+std::string InitializeSyntheticVolume::className() const
+{
+  return FilterTraits<InitializeSyntheticVolume>::className;
+}
+
 Uuid InitializeSyntheticVolume::uuid() const
 {
   return FilterTraits<InitializeSyntheticVolume>::uuid;

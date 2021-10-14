@@ -12,6 +12,11 @@ std::string TriangleNormalFilter::name() const
   return FilterTraits<TriangleNormalFilter>::name.str();
 }
 
+std::string TriangleNormalFilter::className() const
+{
+  return FilterTraits<TriangleNormalFilter>::className;
+}
+
 Uuid TriangleNormalFilter::uuid() const
 {
   return FilterTraits<TriangleNormalFilter>::uuid;

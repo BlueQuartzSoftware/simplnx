@@ -15,6 +15,11 @@ std::string EBSDSegmentFeatures::name() const
   return FilterTraits<EBSDSegmentFeatures>::name.str();
 }
 
+std::string EBSDSegmentFeatures::className() const
+{
+  return FilterTraits<EBSDSegmentFeatures>::className;
+}
+
 Uuid EBSDSegmentFeatures::uuid() const
 {
   return FilterTraits<EBSDSegmentFeatures>::uuid;

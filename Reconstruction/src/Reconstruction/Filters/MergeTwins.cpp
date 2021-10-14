@@ -15,6 +15,11 @@ std::string MergeTwins::name() const
   return FilterTraits<MergeTwins>::name.str();
 }
 
+std::string MergeTwins::className() const
+{
+  return FilterTraits<MergeTwins>::className;
+}
+
 Uuid MergeTwins::uuid() const
 {
   return FilterTraits<MergeTwins>::uuid;

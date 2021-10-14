@@ -17,6 +17,11 @@ std::string AlignSectionsFeature::name() const
   return FilterTraits<AlignSectionsFeature>::name.str();
 }
 
+std::string AlignSectionsFeature::className() const
+{
+  return FilterTraits<AlignSectionsFeature>::className;
+}
+
 Uuid AlignSectionsFeature::uuid() const
 {
   return FilterTraits<AlignSectionsFeature>::uuid;

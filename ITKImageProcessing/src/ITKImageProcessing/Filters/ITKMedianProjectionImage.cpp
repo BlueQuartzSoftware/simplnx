@@ -14,6 +14,11 @@ std::string ITKMedianProjectionImage::name() const
   return FilterTraits<ITKMedianProjectionImage>::name.str();
 }
 
+std::string ITKMedianProjectionImage::className() const
+{
+  return FilterTraits<ITKMedianProjectionImage>::className;
+}
+
 Uuid ITKMedianProjectionImage::uuid() const
 {
   return FilterTraits<ITKMedianProjectionImage>::uuid;

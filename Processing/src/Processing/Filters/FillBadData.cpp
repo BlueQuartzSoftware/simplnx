@@ -15,6 +15,11 @@ std::string FillBadData::name() const
   return FilterTraits<FillBadData>::name.str();
 }
 
+std::string FillBadData::className() const
+{
+  return FilterTraits<FillBadData>::className;
+}
+
 Uuid FillBadData::uuid() const
 {
   return FilterTraits<FillBadData>::uuid;

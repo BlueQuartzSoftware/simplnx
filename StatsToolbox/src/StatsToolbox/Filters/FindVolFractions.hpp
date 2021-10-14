@@ -33,6 +33,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -80,4 +86,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::FindVolFractions, "d0ef7827-cbf1-5a3f-938a-2d184604b49f");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindVolFractions, "d0ef7827-cbf1-5a3f-938a-2d184604b49f");

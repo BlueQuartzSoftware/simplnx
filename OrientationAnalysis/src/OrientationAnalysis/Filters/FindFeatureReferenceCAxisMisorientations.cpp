@@ -13,6 +13,11 @@ std::string FindFeatureReferenceCAxisMisorientations::name() const
   return FilterTraits<FindFeatureReferenceCAxisMisorientations>::name.str();
 }
 
+std::string FindFeatureReferenceCAxisMisorientations::className() const
+{
+  return FilterTraits<FindFeatureReferenceCAxisMisorientations>::className;
+}
+
 Uuid FindFeatureReferenceCAxisMisorientations::uuid() const
 {
   return FilterTraits<FindFeatureReferenceCAxisMisorientations>::uuid;

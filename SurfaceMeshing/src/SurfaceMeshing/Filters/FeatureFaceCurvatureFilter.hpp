@@ -47,6 +47,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -94,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::FeatureFaceCurvatureFilter, "69a75d68-16e7-53b1-9f6f-d49b6524bba0");
+COMPLEX_DEF_FILTER_TRAITS(complex, FeatureFaceCurvatureFilter, "69a75d68-16e7-53b1-9f6f-d49b6524bba0");

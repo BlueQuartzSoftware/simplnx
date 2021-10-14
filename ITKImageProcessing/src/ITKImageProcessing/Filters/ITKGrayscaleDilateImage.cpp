@@ -15,6 +15,11 @@ std::string ITKGrayscaleDilateImage::name() const
   return FilterTraits<ITKGrayscaleDilateImage>::name.str();
 }
 
+std::string ITKGrayscaleDilateImage::className() const
+{
+  return FilterTraits<ITKGrayscaleDilateImage>::className;
+}
+
 Uuid ITKGrayscaleDilateImage::uuid() const
 {
   return FilterTraits<ITKGrayscaleDilateImage>::uuid;

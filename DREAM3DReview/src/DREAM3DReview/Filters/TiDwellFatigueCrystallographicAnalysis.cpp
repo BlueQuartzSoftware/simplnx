@@ -17,6 +17,11 @@ std::string TiDwellFatigueCrystallographicAnalysis::name() const
   return FilterTraits<TiDwellFatigueCrystallographicAnalysis>::name.str();
 }
 
+std::string TiDwellFatigueCrystallographicAnalysis::className() const
+{
+  return FilterTraits<TiDwellFatigueCrystallographicAnalysis>::className;
+}
+
 Uuid TiDwellFatigueCrystallographicAnalysis::uuid() const
 {
   return FilterTraits<TiDwellFatigueCrystallographicAnalysis>::uuid;

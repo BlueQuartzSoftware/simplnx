@@ -16,6 +16,11 @@ std::string ITKGrayscaleMorphologicalOpeningImage::name() const
   return FilterTraits<ITKGrayscaleMorphologicalOpeningImage>::name.str();
 }
 
+std::string ITKGrayscaleMorphologicalOpeningImage::className() const
+{
+  return FilterTraits<ITKGrayscaleMorphologicalOpeningImage>::className;
+}
+
 Uuid ITKGrayscaleMorphologicalOpeningImage::uuid() const
 {
   return FilterTraits<ITKGrayscaleMorphologicalOpeningImage>::uuid;

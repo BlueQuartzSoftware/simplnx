@@ -16,6 +16,11 @@ std::string LosAlamosFFTWriter::name() const
   return FilterTraits<LosAlamosFFTWriter>::name.str();
 }
 
+std::string LosAlamosFFTWriter::className() const
+{
+  return FilterTraits<LosAlamosFFTWriter>::className;
+}
+
 Uuid LosAlamosFFTWriter::uuid() const
 {
   return FilterTraits<LosAlamosFFTWriter>::uuid;

@@ -12,6 +12,11 @@ std::string EbsdToH5Ebsd::name() const
   return FilterTraits<EbsdToH5Ebsd>::name.str();
 }
 
+std::string EbsdToH5Ebsd::className() const
+{
+  return FilterTraits<EbsdToH5Ebsd>::className;
+}
+
 Uuid EbsdToH5Ebsd::uuid() const
 {
   return FilterTraits<EbsdToH5Ebsd>::uuid;

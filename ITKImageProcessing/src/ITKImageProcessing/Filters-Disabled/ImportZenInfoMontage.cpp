@@ -22,6 +22,11 @@ std::string ImportZenInfoMontage::name() const
   return FilterTraits<ImportZenInfoMontage>::name.str();
 }
 
+std::string ImportZenInfoMontage::className() const
+{
+  return FilterTraits<ImportZenInfoMontage>::className;
+}
+
 Uuid ImportZenInfoMontage::uuid() const
 {
   return FilterTraits<ImportZenInfoMontage>::uuid;

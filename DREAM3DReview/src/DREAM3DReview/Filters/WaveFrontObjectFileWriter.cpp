@@ -16,6 +16,11 @@ std::string WaveFrontObjectFileWriter::name() const
   return FilterTraits<WaveFrontObjectFileWriter>::name.str();
 }
 
+std::string WaveFrontObjectFileWriter::className() const
+{
+  return FilterTraits<WaveFrontObjectFileWriter>::className;
+}
+
 Uuid WaveFrontObjectFileWriter::uuid() const
 {
   return FilterTraits<WaveFrontObjectFileWriter>::uuid;

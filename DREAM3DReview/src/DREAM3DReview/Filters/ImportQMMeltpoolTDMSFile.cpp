@@ -16,6 +16,11 @@ std::string ImportQMMeltpoolTDMSFile::name() const
   return FilterTraits<ImportQMMeltpoolTDMSFile>::name.str();
 }
 
+std::string ImportQMMeltpoolTDMSFile::className() const
+{
+  return FilterTraits<ImportQMMeltpoolTDMSFile>::className;
+}
+
 Uuid ImportQMMeltpoolTDMSFile::uuid() const
 {
   return FilterTraits<ImportQMMeltpoolTDMSFile>::uuid;

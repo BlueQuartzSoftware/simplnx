@@ -17,6 +17,11 @@ std::string PrincipalComponentAnalysis::name() const
   return FilterTraits<PrincipalComponentAnalysis>::name.str();
 }
 
+std::string PrincipalComponentAnalysis::className() const
+{
+  return FilterTraits<PrincipalComponentAnalysis>::className;
+}
+
 Uuid PrincipalComponentAnalysis::uuid() const
 {
   return FilterTraits<PrincipalComponentAnalysis>::uuid;

@@ -20,6 +20,11 @@ std::string FindGBCDMetricBased::name() const
   return FilterTraits<FindGBCDMetricBased>::name.str();
 }
 
+std::string FindGBCDMetricBased::className() const
+{
+  return FilterTraits<FindGBCDMetricBased>::className;
+}
+
 Uuid FindGBCDMetricBased::uuid() const
 {
   return FilterTraits<FindGBCDMetricBased>::uuid;

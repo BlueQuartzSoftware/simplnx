@@ -15,6 +15,11 @@ std::string ITKSmoothingRecursiveGaussianImage::name() const
   return FilterTraits<ITKSmoothingRecursiveGaussianImage>::name.str();
 }
 
+std::string ITKSmoothingRecursiveGaussianImage::className() const
+{
+  return FilterTraits<ITKSmoothingRecursiveGaussianImage>::className;
+}
+
 Uuid ITKSmoothingRecursiveGaussianImage::uuid() const
 {
   return FilterTraits<ITKSmoothingRecursiveGaussianImage>::uuid;

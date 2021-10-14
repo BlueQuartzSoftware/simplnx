@@ -15,6 +15,11 @@ std::string ITKOtsuMultipleThresholdsImage::name() const
   return FilterTraits<ITKOtsuMultipleThresholdsImage>::name.str();
 }
 
+std::string ITKOtsuMultipleThresholdsImage::className() const
+{
+  return FilterTraits<ITKOtsuMultipleThresholdsImage>::className;
+}
+
 Uuid ITKOtsuMultipleThresholdsImage::uuid() const
 {
   return FilterTraits<ITKOtsuMultipleThresholdsImage>::uuid;

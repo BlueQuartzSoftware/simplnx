@@ -19,6 +19,11 @@ std::string CreateAbaqusFile::name() const
   return FilterTraits<CreateAbaqusFile>::name.str();
 }
 
+std::string CreateAbaqusFile::className() const
+{
+  return FilterTraits<CreateAbaqusFile>::className;
+}
+
 Uuid CreateAbaqusFile::uuid() const
 {
   return FilterTraits<CreateAbaqusFile>::uuid;

@@ -15,6 +15,11 @@ std::string ComputeFeatureEigenstrains::name() const
   return FilterTraits<ComputeFeatureEigenstrains>::name.str();
 }
 
+std::string ComputeFeatureEigenstrains::className() const
+{
+  return FilterTraits<ComputeFeatureEigenstrains>::className;
+}
+
 Uuid ComputeFeatureEigenstrains::uuid() const
 {
   return FilterTraits<ComputeFeatureEigenstrains>::uuid;

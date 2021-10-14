@@ -14,6 +14,11 @@ std::string ITKCurvatureFlowImage::name() const
   return FilterTraits<ITKCurvatureFlowImage>::name.str();
 }
 
+std::string ITKCurvatureFlowImage::className() const
+{
+  return FilterTraits<ITKCurvatureFlowImage>::className;
+}
+
 Uuid ITKCurvatureFlowImage::uuid() const
 {
   return FilterTraits<ITKCurvatureFlowImage>::uuid;

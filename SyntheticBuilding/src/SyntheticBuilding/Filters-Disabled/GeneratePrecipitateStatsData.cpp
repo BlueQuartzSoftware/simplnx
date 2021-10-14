@@ -21,6 +21,11 @@ std::string GeneratePrecipitateStatsData::name() const
   return FilterTraits<GeneratePrecipitateStatsData>::name.str();
 }
 
+std::string GeneratePrecipitateStatsData::className() const
+{
+  return FilterTraits<GeneratePrecipitateStatsData>::className;
+}
+
 Uuid GeneratePrecipitateStatsData::uuid() const
 {
   return FilterTraits<GeneratePrecipitateStatsData>::uuid;

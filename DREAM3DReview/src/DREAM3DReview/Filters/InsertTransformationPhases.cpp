@@ -18,6 +18,11 @@ std::string InsertTransformationPhases::name() const
   return FilterTraits<InsertTransformationPhases>::name.str();
 }
 
+std::string InsertTransformationPhases::className() const
+{
+  return FilterTraits<InsertTransformationPhases>::className;
+}
+
 Uuid InsertTransformationPhases::uuid() const
 {
   return FilterTraits<InsertTransformationPhases>::uuid;

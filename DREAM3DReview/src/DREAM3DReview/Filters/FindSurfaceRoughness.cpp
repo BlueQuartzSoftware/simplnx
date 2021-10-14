@@ -13,6 +13,11 @@ std::string FindSurfaceRoughness::name() const
   return FilterTraits<FindSurfaceRoughness>::name.str();
 }
 
+std::string FindSurfaceRoughness::className() const
+{
+  return FilterTraits<FindSurfaceRoughness>::className;
+}
+
 Uuid FindSurfaceRoughness::uuid() const
 {
   return FilterTraits<FindSurfaceRoughness>::uuid;

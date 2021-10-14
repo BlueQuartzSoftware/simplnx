@@ -12,6 +12,11 @@ std::string ReadASCIIData::name() const
   return FilterTraits<ReadASCIIData>::name.str();
 }
 
+std::string ReadASCIIData::className() const
+{
+  return FilterTraits<ReadASCIIData>::className;
+}
+
 Uuid ReadASCIIData::uuid() const
 {
   return FilterTraits<ReadASCIIData>::uuid;

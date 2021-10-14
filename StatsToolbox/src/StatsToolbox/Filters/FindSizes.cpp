@@ -15,6 +15,11 @@ std::string FindSizes::name() const
   return FilterTraits<FindSizes>::name.str();
 }
 
+std::string FindSizes::className() const
+{
+  return FilterTraits<FindSizes>::className;
+}
+
 Uuid FindSizes::uuid() const
 {
   return FilterTraits<FindSizes>::uuid;

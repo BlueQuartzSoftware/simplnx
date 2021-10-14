@@ -14,6 +14,11 @@ std::string GenerateOrientationMatrixTranspose::name() const
   return FilterTraits<GenerateOrientationMatrixTranspose>::name.str();
 }
 
+std::string GenerateOrientationMatrixTranspose::className() const
+{
+  return FilterTraits<GenerateOrientationMatrixTranspose>::className;
+}
+
 Uuid GenerateOrientationMatrixTranspose::uuid() const
 {
   return FilterTraits<GenerateOrientationMatrixTranspose>::uuid;

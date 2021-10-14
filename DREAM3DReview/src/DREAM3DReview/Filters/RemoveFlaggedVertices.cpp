@@ -14,6 +14,11 @@ std::string RemoveFlaggedVertices::name() const
   return FilterTraits<RemoveFlaggedVertices>::name.str();
 }
 
+std::string RemoveFlaggedVertices::className() const
+{
+  return FilterTraits<RemoveFlaggedVertices>::className;
+}
+
 Uuid RemoveFlaggedVertices::uuid() const
 {
   return FilterTraits<RemoveFlaggedVertices>::uuid;

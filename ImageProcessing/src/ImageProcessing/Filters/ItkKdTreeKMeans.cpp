@@ -14,6 +14,11 @@ std::string ItkKdTreeKMeans::name() const
   return FilterTraits<ItkKdTreeKMeans>::name.str();
 }
 
+std::string ItkKdTreeKMeans::className() const
+{
+  return FilterTraits<ItkKdTreeKMeans>::className;
+}
+
 Uuid ItkKdTreeKMeans::uuid() const
 {
   return FilterTraits<ItkKdTreeKMeans>::uuid;

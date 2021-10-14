@@ -32,6 +32,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */
@@ -79,4 +85,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ReverseTriangleWinding, "9844a992-a520-5611-aa20-aab712caa337");
+COMPLEX_DEF_FILTER_TRAITS(complex, ReverseTriangleWinding, "9844a992-a520-5611-aa20-aab712caa337");

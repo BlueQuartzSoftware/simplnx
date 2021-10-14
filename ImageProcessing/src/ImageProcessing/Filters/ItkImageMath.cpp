@@ -16,6 +16,11 @@ std::string ItkImageMath::name() const
   return FilterTraits<ItkImageMath>::name.str();
 }
 
+std::string ItkImageMath::className() const
+{
+  return FilterTraits<ItkImageMath>::className;
+}
+
 Uuid ItkImageMath::uuid() const
 {
   return FilterTraits<ItkImageMath>::uuid;

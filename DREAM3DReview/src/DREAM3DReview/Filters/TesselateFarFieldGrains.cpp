@@ -15,6 +15,11 @@ std::string TesselateFarFieldGrains::name() const
   return FilterTraits<TesselateFarFieldGrains>::name.str();
 }
 
+std::string TesselateFarFieldGrains::className() const
+{
+  return FilterTraits<TesselateFarFieldGrains>::className;
+}
+
 Uuid TesselateFarFieldGrains::uuid() const
 {
   return FilterTraits<TesselateFarFieldGrains>::uuid;

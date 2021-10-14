@@ -14,6 +14,11 @@ std::string FindVertexToTriangleDistances::name() const
   return FilterTraits<FindVertexToTriangleDistances>::name.str();
 }
 
+std::string FindVertexToTriangleDistances::className() const
+{
+  return FilterTraits<FindVertexToTriangleDistances>::className;
+}
+
 Uuid FindVertexToTriangleDistances::uuid() const
 {
   return FilterTraits<FindVertexToTriangleDistances>::uuid;

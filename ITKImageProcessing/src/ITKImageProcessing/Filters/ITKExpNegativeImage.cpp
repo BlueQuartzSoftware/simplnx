@@ -13,6 +13,11 @@ std::string ITKExpNegativeImage::name() const
   return FilterTraits<ITKExpNegativeImage>::name.str();
 }
 
+std::string ITKExpNegativeImage::className() const
+{
+  return FilterTraits<ITKExpNegativeImage>::className;
+}
+
 Uuid ITKExpNegativeImage::uuid() const
 {
   return FilterTraits<ITKExpNegativeImage>::uuid;

@@ -14,6 +14,11 @@ std::string ITKMeanProjectionImage::name() const
   return FilterTraits<ITKMeanProjectionImage>::name.str();
 }
 
+std::string ITKMeanProjectionImage::className() const
+{
+  return FilterTraits<ITKMeanProjectionImage>::className;
+}
+
 Uuid ITKMeanProjectionImage::uuid() const
 {
   return FilterTraits<ITKMeanProjectionImage>::uuid;

@@ -14,6 +14,11 @@ std::string ITKBinomialBlurImage::name() const
   return FilterTraits<ITKBinomialBlurImage>::name.str();
 }
 
+std::string ITKBinomialBlurImage::className() const
+{
+  return FilterTraits<ITKBinomialBlurImage>::className;
+}
+
 Uuid ITKBinomialBlurImage::uuid() const
 {
   return FilterTraits<ITKBinomialBlurImage>::uuid;

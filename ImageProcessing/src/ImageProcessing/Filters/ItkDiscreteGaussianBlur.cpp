@@ -15,6 +15,11 @@ std::string ItkDiscreteGaussianBlur::name() const
   return FilterTraits<ItkDiscreteGaussianBlur>::name.str();
 }
 
+std::string ItkDiscreteGaussianBlur::className() const
+{
+  return FilterTraits<ItkDiscreteGaussianBlur>::className;
+}
+
 Uuid ItkDiscreteGaussianBlur::uuid() const
 {
   return FilterTraits<ItkDiscreteGaussianBlur>::uuid;

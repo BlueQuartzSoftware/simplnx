@@ -13,6 +13,11 @@ std::string ITKBoundedReciprocalImage::name() const
   return FilterTraits<ITKBoundedReciprocalImage>::name.str();
 }
 
+std::string ITKBoundedReciprocalImage::className() const
+{
+  return FilterTraits<ITKBoundedReciprocalImage>::className;
+}
+
 Uuid ITKBoundedReciprocalImage::uuid() const
 {
   return FilterTraits<ITKBoundedReciprocalImage>::uuid;

@@ -16,6 +16,11 @@ std::string SPParksSitesWriter::name() const
   return FilterTraits<SPParksSitesWriter>::name.str();
 }
 
+std::string SPParksSitesWriter::className() const
+{
+  return FilterTraits<SPParksSitesWriter>::className;
+}
+
 Uuid SPParksSitesWriter::uuid() const
 {
   return FilterTraits<SPParksSitesWriter>::uuid;

@@ -14,6 +14,11 @@ std::string CreateFeatureArrayFromElementArray::name() const
   return FilterTraits<CreateFeatureArrayFromElementArray>::name.str();
 }
 
+std::string CreateFeatureArrayFromElementArray::className() const
+{
+  return FilterTraits<CreateFeatureArrayFromElementArray>::className;
+}
+
 Uuid CreateFeatureArrayFromElementArray::uuid() const
 {
   return FilterTraits<CreateFeatureArrayFromElementArray>::uuid;

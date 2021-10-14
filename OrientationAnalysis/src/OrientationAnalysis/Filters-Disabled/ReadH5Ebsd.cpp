@@ -14,6 +14,11 @@ std::string ReadH5Ebsd::name() const
   return FilterTraits<ReadH5Ebsd>::name.str();
 }
 
+std::string ReadH5Ebsd::className() const
+{
+  return FilterTraits<ReadH5Ebsd>::className;
+}
+
 Uuid ReadH5Ebsd::uuid() const
 {
   return FilterTraits<ReadH5Ebsd>::uuid;

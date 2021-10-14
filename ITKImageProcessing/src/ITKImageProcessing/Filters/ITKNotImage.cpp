@@ -13,6 +13,11 @@ std::string ITKNotImage::name() const
   return FilterTraits<ITKNotImage>::name.str();
 }
 
+std::string ITKNotImage::className() const
+{
+  return FilterTraits<ITKNotImage>::className;
+}
+
 Uuid ITKNotImage::uuid() const
 {
   return FilterTraits<ITKNotImage>::uuid;
