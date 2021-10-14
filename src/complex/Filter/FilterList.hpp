@@ -26,6 +26,9 @@ class PluginLoader;
 class COMPLEX_EXPORT FilterList
 {
 public:
+  using FilterContainerType = std::unordered_set<FilterHandle>;
+  using SearchContainerType = std::vector<FilterHandle>;
+
   /**
    * Constructs the FilterList and registers core filters.
    */
@@ -37,10 +40,16 @@ public:
   ~FilterList();
 
   /**
-   * @brief Returns a set of FilterHandles pointing to each of the known filters.
-   * @return std::unordered_set<FilterHandle>
+   * @brief Returns the number of filters available.
+   * @return
    */
-  const std::unordered_set<FilterHandle>& getFilterHandles() const;
+  size_t size() const;
+
+  /**
+   * @brief Returns a set of FilterHandles pointing to each of the known filters.
+   * @return FilterContainerType
+   */
+  const FilterContainerType& getFilterHandles() const;
 
   /**
    * @brief Searches the FilterHandles for the text within the filter and plugin
@@ -48,7 +57,13 @@ public:
    * @param text
    * @return std::vector<FilterHandle>
    */
-  std::vector<FilterHandle> search(const std::string& text) const;
+  SearchContainerType search(const std::string& text) const;
+
+  /**
+   * @brief Return the core filters in complex
+   * @return
+   */
+  SearchContainerType getCoreFilters() const;
 
   /**
    * @brief Attempts to create an IFilter specified by the given FilterHandle.
@@ -58,7 +73,15 @@ public:
    * @return IFilter*
    */
   IFilter::UniquePointer createFilter(const FilterHandle& handle) const;
-  IFilter::UniquePointer createFilter(const std::string& filterName) const;
+
+  /**
+   * @brief Attempts to create an IFilter specified by the given Filter Name.
+   * Returns a unique pointer to the created filter if one was created.
+   * Returns nullptr otherwise.
+   * @param humanOrClassName
+   * @return IFilter*
+   */
+  IFilter::UniquePointer createFilter(const std::string& humanOrClassName) const;
 
   /**
    * @brief Attempts to create an IFilter specified by the given uuid.
@@ -116,7 +139,7 @@ public:
 private:
   ////////////
   // Variables
-  std::unordered_set<FilterHandle> m_FilterHandles;
+  FilterContainerType m_FilterHandles;
   std::unordered_map<FilterHandle::PluginIdType, std::shared_ptr<PluginLoader>> m_PluginMap;
 };
 } // namespace complex

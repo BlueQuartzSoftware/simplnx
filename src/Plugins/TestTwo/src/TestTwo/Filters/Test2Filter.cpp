@@ -1,6 +1,18 @@
 #include "Test2Filter.hpp"
 
+#include "complex/Common/StringLiteral.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Parameters/StringParameter.hpp"
+
 using namespace complex;
+
+namespace
+{
+constexpr StringLiteral k_Param1 = "param1";
+constexpr StringLiteral k_Param2 = "param2";
+constexpr StringLiteral k_Param3 = "param3";
+} // namespace
 
 Test2Filter::Test2Filter() = default;
 
@@ -23,7 +35,11 @@ std::string Test2Filter::humanName() const
 
 complex::Parameters Test2Filter::parameters() const
 {
-  return {};
+  Parameters params;
+  params.insert(std::make_unique<Int32Parameter>(k_Param1, "Parameter 1", "The 1st parameter", 0));
+  params.insert(std::make_unique<StringParameter>(k_Param2, "Parameter 2", "The 2nd parameter", "test string"));
+  params.insert(std::make_unique<ChoicesParameter>(k_Param3, "Parameter 3", "The 3rd parameter", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
+  return params;
 }
 
 complex::IFilter::UniquePointer Test2Filter::clone() const

@@ -452,40 +452,12 @@ message(STATUS "${P_PLUGIN_NAME} [ENABLED] ${PluginNumFilters} Filters")
 
 
 #------------------------------------------------------------------------------
-# Find any extra plugins
-set(COMPLEX_EXTRA_PLUGINS
-  Core
-  AFRLDistributionC
-  BrukerIntegration
-  CAxisByPolarizedLight
-  CRADA3DSystems
-  DREAM3DReview
-  ECAccess
-  EMMPM
-  Generic
-  ImageProcessing
-  ImportExport
-  ITKImageProcessing
-  NETLIntegration
-  OrientationAnalysis
-  Processing
-  ProgWorkshop
-  Reconstruction
-  Sampling
-  SimulationIO
-  StatsToolbox
-  SurfaceMeshing
-  SyntheticBuilding
-  UCSBUtilities
-  VolumeMeshing
-  )
-#------------------------------------------------------------------------------
-# Add user defined Plugin Dirs
+# Add user defined Plugin Dirs based on the COMPLEX_PLUGIN_SEARCH_DIRS variable
+# and falling back to complex_SOURCE_DIR/../complex_plugins if not defined
 # Use 'COMPLEX_PLUGIN_SEARCH_DIRS' hints to look for plugins in specific directories
 foreach(plugin ${COMPLEX_EXTRA_PLUGINS})
   complex_add_plugin(PLUGIN_NAME ${plugin})
 endforeach()
-
 
 
 set(COMPLEX_PACKAGE_NAMESPACE "complex::")

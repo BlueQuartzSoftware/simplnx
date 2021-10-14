@@ -18,7 +18,7 @@ TEST_CASE("FilePathGenerator")
   value.filePrefix = "TestFilter";
   value.fileSuffix = "";
   value.fileExtension = ".cpp";
-  value.inputPath = fmt::format("{}/src/complex/Core/Filters/", unit_test::k_ComplexSourceDir.view());
+  value.inputPath = fmt::format("{}/src/Plugins/ComplexCore/src/ComplexCore/Filters/", unit_test::k_ComplexSourceDir.view());
   value.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
 
   // Generate the file list but do *NOT* validate the paths. this is a test after all

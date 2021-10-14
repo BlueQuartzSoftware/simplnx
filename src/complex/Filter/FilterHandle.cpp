@@ -9,8 +9,9 @@ FilterHandle::FilterHandle(const FilterIdType& filterId, const PluginIdType& plu
 {
 }
 
-FilterHandle::FilterHandle(const std::string& filterName, const FilterIdType& filterId, const PluginIdType& pluginId)
+FilterHandle::FilterHandle(const std::string& filterName, const std::string& className, const FilterIdType& filterId, const PluginIdType& pluginId)
 : m_FilterName(filterName)
+, m_ClassName(className)
 , m_FilterId(filterId)
 , m_PluginId(pluginId)
 {
@@ -29,6 +30,11 @@ FilterHandle::~FilterHandle() noexcept = default;
 std::string FilterHandle::getFilterName() const
 {
   return m_FilterName;
+}
+
+std::string FilterHandle::getClassName() const
+{
+  return m_ClassName;
 }
 
 FilterHandle::FilterIdType FilterHandle::getFilterId() const

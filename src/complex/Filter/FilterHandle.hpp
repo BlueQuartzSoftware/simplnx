@@ -87,6 +87,12 @@ public:
   std::string getFilterName() const;
 
   /**
+   * @brief Returns the C++ classname for the filter
+   * @return
+   */
+  std::string getClassName() const;
+
+  /**
    * @brief Returns the filter ID within the target plugin.
    * @return PluginIdType
    */
@@ -106,10 +112,11 @@ protected:
    * @param filterId
    * @param pluginId
    */
-  FilterHandle(const std::string& filterName, const FilterIdType& filterId, const PluginIdType& pluginId);
+  FilterHandle(const std::string& filterHumanName, const std::string& className, const FilterIdType& filterId, const PluginIdType& pluginId);
 
 private:
   std::string m_FilterName;
+  std::string m_ClassName;
   FilterIdType m_FilterId;
   PluginIdType m_PluginId;
 };

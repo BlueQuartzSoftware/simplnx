@@ -65,7 +65,7 @@ public:
    * Plugins are found by using the file extension of ".complex".
    * @param pluginDir
    */
-  void loadPlugins(const std::filesystem::path& pluginDir);
+  void loadPlugins(const std::filesystem::path& pluginDir, bool verbose = false);
 
   /**
    * @brief Returns a pointer to the Application's FilterList.
@@ -75,6 +75,19 @@ public:
    * @return FilterList*
    */
   FilterList* getFilterList() const;
+
+  /**
+   * @brief Convenience method to return the loaded plugins
+   * @return
+   */
+  std::unordered_set<AbstractPlugin*> getPluginList() const;
+
+  /**
+   * @brief
+   * @param pluginName
+   * @return
+   */
+  AbstractPlugin* getPlugin(const std::string& pluginName) const;
 
   /**
    * @brief Returns a pointer to the JsonPipelineBuilder. It is the caller's
@@ -116,7 +129,7 @@ private:
    * FilterList with the new IFilters.
    * @param path
    */
-  void loadPlugin(const std::string& path);
+  void loadPlugin(const std::string& path, bool verbose = false);
 
   //////////////////
   // Static Variable

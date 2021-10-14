@@ -10,7 +10,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("05cc618b-781f-4ac0-b9
 } // namespace
 
 TestTwoPlugin::TestTwoPlugin()
-: AbstractPlugin(k_ID, "Test 2 Plugin", "Description", "BlueQuartz Software")
+: AbstractPlugin(k_ID, "TestTwo", "Test Plugin", "BlueQuartz Software")
 {
   addFilter([]() -> IFilter::UniquePointer { return std::make_unique<Test2Filter>(); });
 }

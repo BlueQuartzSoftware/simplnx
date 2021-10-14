@@ -28,6 +28,7 @@ class COMPLEX_EXPORT AbstractPlugin
 {
 public:
   using IdType = Uuid;
+  using FilterContainerType = std::unordered_set<FilterHandle>;
 
   virtual ~AbstractPlugin();
 
@@ -71,7 +72,13 @@ public:
    * contained in the plugin.
    * @return std::unordered_set<complex::FilterHandle>
    */
-  std::unordered_set<FilterHandle> getFilterHandles() const;
+  FilterContainerType getFilterHandles() const;
+
+  /**
+   * @brief
+   * @return
+   */
+  FilterContainerType::size_type getFilterCount() const;
 
   /**
    * @brief Returns the plugin's vendor name.

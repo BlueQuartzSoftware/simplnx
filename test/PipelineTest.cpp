@@ -7,6 +7,14 @@
 #include "complex/Filter/FilterHandle.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
 #include "complex/Pipeline/PipelineFilter.hpp"
+#include "complex/Plugin/AbstractPlugin.hpp"
+
+#include "complex/unit_test/complex_test_dirs.h"
+
+#include <filesystem>
+#include <iostream>
+
+namespace fs = std::filesystem;
 
 #include <typeinfo>
 
@@ -14,58 +22,114 @@
 
 namespace complex
 {
-
 namespace Constants
 {
-const FilterHandle k_ImportTextHandle(*Uuid::FromString("25f7df3e-ca3e-4634-adda-732c0e56efd4"), Uuid());
-const FilterHandle k_FilterHandle1(*Uuid::FromString("dd92896b-26ec-4419-b905-567e93e8f39d"), Uuid());
-const FilterHandle k_FilterHandle2(*Uuid::FromString("1307bbbc-112d-4aaa-941f-58253787b17e"), Uuid());
 const FilterHandle k_BadHandle(Uuid{}, Uuid{});
 } // namespace Constants
-
 } // namespace complex
 
 using namespace complex;
 
+void PrintAllFilters()
+{
+  std::cout << "#---------------------------------------------------------------------------" << std::endl;
+  Application* app = Application::Instance();
+  FilterList* filterList = app->getFilterList();
+  std::cout << "Filter Count: " << filterList->getFilterHandles().size() << std::endl;
+
+  std::unordered_set<FilterHandle> filterHandles = filterList->getFilterHandles();
+
+  std::cout << "----- Available Filters --------" << std::endl;
+  Pipeline pipeline;
+  for(const auto& filterHandle : filterHandles)
+  {
+    FilterHandle::PluginIdType pluginId = filterHandle.getPluginId();
+    AbstractPlugin* pluginPtr = filterList->getPluginById(pluginId);
+    if(nullptr != pluginPtr)
+    {
+      std::cout << pluginPtr->getName() << "\t" << filterHandle.getFilterName() << std::endl;
+    }
+    pipeline.push_back(filterHandle);
+  }
+}
+
 TEST_CASE("Execute Pipeline")
 {
   Application app;
+  app.loadPlugins(fs::path(complex::unit_test::k_PluginDir));
   auto filterList = app.getFilterList();
+
+  AbstractPlugin* test1Plugin = app.getPlugin("TestOne");
+  REQUIRE(test1Plugin != nullptr);
+  auto testFilter1 = filterList->createFilter("TestFilter");
+  REQUIRE(testFilter1 != nullptr);
+  FilterHandle tf1Handle(testFilter1->uuid(), test1Plugin->getId());
+
+  AbstractPlugin* test2Plugin = app.getPlugin("TestTwo");
+  REQUIRE(test2Plugin != nullptr);
+  auto testFilter2 = filterList->createFilter("Test2Filter");
+  REQUIRE(testFilter2 != nullptr);
+  FilterHandle tf2Handle(testFilter2->uuid(), test2Plugin->getId());
 
   Pipeline pipeline;
   REQUIRE(pipeline.execute());
-  REQUIRE(pipeline.push_front(Constants::k_FilterHandle1));
+  REQUIRE(pipeline.push_front(tf1Handle));
   REQUIRE(pipeline.execute());
-  REQUIRE(!pipeline.push_back(Constants::k_BadHandle));
+  REQUIRE(pipeline.push_back(tf2Handle));
 }
 
 TEST_CASE("Complex Pipeline")
 {
   Application app;
+  app.loadPlugins(fs::path(complex::unit_test::k_PluginDir));
+  auto filterList = app.getFilterList();
+  AbstractPlugin* test1Plugin = app.getPlugin("TestOne");
+  REQUIRE(test1Plugin != nullptr);
 
-  FilterHandle handle = Constants::k_FilterHandle1;
+  auto testFilter1 = filterList->createFilter("TestFilter");
+  REQUIRE(testFilter1 != nullptr);
+  FilterHandle tf1Handle(testFilter1->uuid(), test1Plugin->getId());
 
   Pipeline pipeline;
-  PipelineFilter* node = PipelineFilter::Create(handle);
+  PipelineFilter* node = PipelineFilter::Create(tf1Handle);
   REQUIRE(node != nullptr);
   REQUIRE(node->getParameters().empty() == false);
   REQUIRE(pipeline.push_back(node));
 
   auto segment2 = new Pipeline();
-  segment2->push_back(handle);
+  segment2->push_back(tf1Handle);
   REQUIRE(pipeline.push_back(segment2));
 }
 
+#if 0
 Pipeline CreatePipeline()
 {
+  Application app;
+  app.loadPlugins(fs::path(complex::unit_test::k_PluginDir));
+  auto filterList = app.getFilterList();
+
+
+  AbstractPlugin* test1Plugin = app.getPlugin("TestOne");
+  REQUIRE(test1Plugin != nullptr);
+  auto testFilter1 = filterList->createFilter("TestFilter");
+  REQUIRE(testFilter1 != nullptr);
+  FilterHandle tf1Handle (testFilter1->uuid(), test1Plugin->getId());
+
+  AbstractPlugin* test2Plugin = app.getPlugin("TestTwo");
+  REQUIRE(test2Plugin != nullptr);
+  auto testFilter2 = filterList->createFilter("Test2Filter");
+  REQUIRE(testFilter2 != nullptr);
+  FilterHandle tf2Handle (testFilter2->uuid(), test2Plugin->getId());
+
+
   Pipeline pipeline;
-  auto node = PipelineFilter::Create(Constants::k_FilterHandle1);
+  auto node = PipelineFilter::Create(tf1Handle);
   pipeline.push_back(node);
-  pipeline.push_back(Constants::k_FilterHandle2);
+  pipeline.push_back(tf2Handle);
 
   // Add additional segment to the main pipeline
   auto segment = new Pipeline();
-  segment->push_back(Constants::k_ImportTextHandle);
+  segment->push_back(tf1Handle);
   pipeline.push_back(segment);
 
   // Set Filter1

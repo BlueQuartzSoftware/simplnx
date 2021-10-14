@@ -14,7 +14,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("05cc618b-781f-4ac0-b9
 } // namespace
 
 ComplexCorePlugin::ComplexCorePlugin()
-: AbstractPlugin(k_ID, "Test Plugin", "Description", "BlueQuartz Software")
+: AbstractPlugin(k_ID, "ComplexCore", "Description", "BlueQuartz Software")
 {
   registerFilters();
 }

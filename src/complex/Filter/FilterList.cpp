@@ -6,7 +6,7 @@
 #include <fmt/core.h>
 
 #include "complex/Core/Application.hpp"
-#include "complex/Filter/FilterHandle.hpp"
+#include "complex/Filter//FilterHandle.hpp"
 #include "complex/Plugin/PluginLoader.hpp"
 
 using namespace complex;
@@ -15,7 +15,12 @@ FilterList::FilterList() = default;
 
 FilterList::~FilterList() = default;
 
-std::vector<FilterHandle> FilterList::search(const std::string& text) const
+FilterList::FilterContainerType::size_type FilterList::size() const
+{
+  return getFilterHandles().size();
+}
+
+FilterList::SearchContainerType FilterList::search(const std::string& text) const
 {
   std::vector<FilterHandle> handles;
   for(const auto& handle : getFilterHandles())
@@ -32,16 +37,20 @@ std::vector<FilterHandle> FilterList::search(const std::string& text) const
   return handles;
 }
 
-IFilter::UniquePointer FilterList::createFilter(const std::string& filterName) const
+FilterList::SearchContainerType FilterList::getCoreFilters() const
 {
-  for(const auto& handle : getFilterHandles())
+  SearchContainerType handles;
+  FilterContainerType filterHandles = getFilterHandles();
+  for(const auto& filterHandle : filterHandles)
   {
-    if(handle.getFilterName() == filterName)
+    FilterHandle::PluginIdType pluginId = filterHandle.getPluginId();
+    AbstractPlugin* pluginPtr = getPluginById(pluginId);
+    if(nullptr == pluginPtr)
     {
-      return createFilter(handle);
+      handles.push_back(filterHandle);
     }
   }
-  return {};
+  return handles;
 }
 
 AbstractPlugin* FilterList::getPluginById(const FilterHandle::PluginIdType& id) const
@@ -49,6 +58,18 @@ AbstractPlugin* FilterList::getPluginById(const FilterHandle::PluginIdType& id) 
   if(m_PluginMap.find(id) != m_PluginMap.end())
   {
     return m_PluginMap.at(id)->getPlugin();
+  }
+  return nullptr;
+}
+
+IFilter::UniquePointer FilterList::createFilter(const std::string& humanOrClassName) const
+{
+  for(const auto& handle : getFilterHandles())
+  {
+    if(handle.getFilterName() == humanOrClassName || handle.getClassName() == humanOrClassName)
+    {
+      return createFilter(handle);
+    }
   }
   return nullptr;
 }
@@ -127,7 +148,7 @@ bool FilterList::addPlugin(const std::string& path)
   return addPlugin(std::make_shared<PluginLoader>(path));
 }
 
-const std::unordered_set<FilterHandle>& FilterList::getFilterHandles() const
+const FilterList::FilterContainerType& FilterList::getFilterHandles() const
 {
   return m_FilterHandles;
 }
@@ -145,31 +166,3 @@ std::unordered_set<AbstractPlugin*> FilterList::getLoadedPlugins() const
   }
   return plugins;
 }
-#if 0
-void FilterList::addCoreFilter(FilterCreationFunc func)
-{
-  IFilter::UniquePointer filter = func();
-  if(filter == nullptr)
-  {
-    throw std::runtime_error("Failed to instantiate core filter");
-  }
-  Uuid uuid = filter->uuid();
-  if(m_CoreFiltersMap.count(uuid) > 0)
-  {
-    IFilter::UniquePointer existingFilter = m_CoreFiltersMap[uuid]();
-    throw std::runtime_error(
-        fmt::format("Attempted to add core filter \"{}\" with uuid \"{}\", but core filter \"{}\" already exists with that uuid", filter->name(), uuid.str(), existingFilter->name()));
-  }
-  m_CoreFiltersMap[uuid] = func;
-  m_FilterHandles.insert(FilterHandle(filter->humanName(), uuid, {}));
-}
-
-IFilter::UniquePointer FilterList::createCoreFilter(const FilterHandle::FilterIdType& filterId) const
-{
-  if(m_CoreFiltersMap.find(filterId) == m_CoreFiltersMap.end())
-  {
-    return nullptr;
-  }
-  return m_CoreFiltersMap.at(filterId)();
-}
-#endif
