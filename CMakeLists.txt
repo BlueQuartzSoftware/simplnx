@@ -113,6 +113,7 @@ set(CoreFilters
   CreateDataArray
   CreateDataGroup
   ImportTextFilter
+  ExportH5DataFilter
   TestFilter1
   TestFilter2
 )
