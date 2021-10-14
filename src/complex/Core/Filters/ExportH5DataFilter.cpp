@@ -54,7 +54,11 @@ Result<> ExportH5DataFilter::executeImpl(DataStructure& dataStructure, const Arg
 {
   auto h5FilePath = args.value<std::filesystem::path>(k_ExportFilePath);
   H5::FileWriter fileWriter(h5FilePath);
-  dataStructure.writeHdf5(fileWriter);
+  auto errorCode = dataStructure.writeHdf5(fileWriter);
+  if(errorCode < 0)
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, "Failed to write DataStructure to HDF5 file."}})};
+  }
 
   return {};
 }
