@@ -43,7 +43,7 @@ Result<OutputActions> ExportH5DataFilter::preflightImpl(const DataStructure& dat
     return {nonstd::make_unexpected(std::vector<Error>{Error{-1, "Export file path not provided."}})};
   }
   auto exportDirectoryPath = h5FilePath.parent_path();
-  if(std::filesystem::exists(exportDirectoryPath))
+  if(std::filesystem::exists(exportDirectoryPath) == false)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{-3, "Export parent directory does not exist."}})};
   }
