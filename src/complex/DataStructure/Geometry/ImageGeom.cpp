@@ -80,7 +80,7 @@ DataObject* ImageGeom::shallowCopy()
 
 DataObject* ImageGeom::deepCopy()
 {
-  auto copy = new ImageGeom(*getDataStructure(), getName());
+  auto copy = new ImageGeom(*getDataStructure(), getName(), getId());
 
   copy->m_VoxelSizesId = m_VoxelSizesId;
   copy->m_Spacing = m_Spacing;

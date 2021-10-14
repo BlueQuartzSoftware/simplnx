@@ -163,7 +163,13 @@ std::vector<DataPath> DataStructure::getAllDataPaths() const
   std::vector<DataPath> dataPaths;
   for(const auto& [id, weakPtr] : m_DataObjects)
   {
-    auto localPaths = weakPtr.lock()->getDataPaths();
+    auto sharedPtr = weakPtr.lock();
+    if(sharedPtr == nullptr)
+    {
+      continue;
+    }
+
+    auto localPaths = sharedPtr->getDataPaths();
     dataPaths.insert(dataPaths.end(), localPaths.begin(), localPaths.end());
   }
   return dataPaths;
@@ -348,7 +354,6 @@ void DataStructure::dataDeleted(DataObject::IdType id, const std::string& name)
     return;
   }
 
-  m_DataObjects.erase(id);
   auto msg = std::make_shared<DataRemovedMessage>(this, id, name);
   notify(msg);
 }

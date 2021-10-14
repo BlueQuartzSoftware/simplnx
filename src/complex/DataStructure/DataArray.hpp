@@ -136,7 +136,7 @@ public:
    */
   DataObject* deepCopy() override
   {
-    return new DataArray(*getDataStructure(), getName(), getDataStore()->deepCopy());
+    return new DataArray(*getDataStructure(), getName(), getId(), getDataStore()->deepCopy());
   }
 
   /**
