@@ -33,6 +33,7 @@ public:
    * @return PipelineFilter*
    */
   static PipelineFilter* Create(const FilterHandle& handle, const Arguments& args = {}, FilterList* filterList = nullptr);
+  static PipelineFilter* Create(const std::string& humanOrClassName, const Arguments& args = {}, FilterList* filterList = nullptr);
 
   /**
    * @brief Constructs a PipelineFilter from json. Returns nullptr on failure.

@@ -17,15 +17,18 @@ struct FilterTraits
 };
 } // namespace complex
 
-#define COMPLEX_DEF_FILTER_TRAITS_NAMED(type, nameString, uuidString)                                                                                                                                  \
+#define COMPLEX_DEF(ns_name) #ns_name
+
+#define COMPLEX_DEF_FILTER_TRAITS_NAMED(ns, filter_name, uuidString)                                                                                                                                   \
   template <>                                                                                                                                                                                          \
-  struct complex::FilterTraits<type>                                                                                                                                                                   \
+  struct complex::FilterTraits<ns::filter_name>                                                                                                                                                        \
   {                                                                                                                                                                                                    \
-    static inline constexpr complex::StringLiteral name = nameString;                                                                                                                                  \
+    static inline constexpr complex::StringLiteral className = #filter_name;                                                                                                                           \
+    static inline constexpr complex::StringLiteral name = COMPLEX_DEF(ns::filter_name);                                                                                                                \
     static inline constexpr complex::Uuid uuid = *complex::Uuid::FromString(uuidString);                                                                                                               \
   }
 
-#define COMPLEX_DEF_FILTER_TRAITS(type, uuidString) COMPLEX_DEF_FILTER_TRAITS_NAMED(type, #type, uuidString)
+#define COMPLEX_DEF_FILTER_TRAITS(ns, name, uuidString) COMPLEX_DEF_FILTER_TRAITS_NAMED(ns, name, uuidString)
 
 #define COMPLEX_NAMESPACE_CONCAT(nameSpace, type) nameSpace::type
 

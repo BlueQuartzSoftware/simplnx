@@ -124,6 +124,18 @@ AbstractPlugin* FilterList::getPlugin(const FilterHandle& handle) const
   return nullptr;
 }
 
+AbstractPlugin* FilterList::getPlugin(const std::string& humanOrClassName) const
+{
+  for(const auto& handle : getFilterHandles())
+  {
+    if(handle.getFilterName() == humanOrClassName || handle.getClassName() == humanOrClassName)
+    {
+      return getPlugin(handle);
+    }
+  }
+  return nullptr;
+}
+
 bool FilterList::addPlugin(const std::shared_ptr<PluginLoader>& loader)
 {
   if(!loader->isLoaded())

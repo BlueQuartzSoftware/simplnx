@@ -78,6 +78,12 @@ public:
   virtual std::string name() const = 0;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  virtual std::string className() const = 0;
+
+  /**
    * @brief Returns the uuid of the filter.
    * @return
    */

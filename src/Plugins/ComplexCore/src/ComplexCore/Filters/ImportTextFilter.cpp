@@ -110,6 +110,11 @@ std::string ImportTextFilter::name() const
   return FilterTraits<ImportTextFilter>::name;
 }
 
+std::string ImportTextFilter::className() const
+{
+  return FilterTraits<ImportTextFilter>::className;
+}
+
 Uuid ImportTextFilter::uuid() const
 {
   return FilterTraits<ImportTextFilter>::uuid;

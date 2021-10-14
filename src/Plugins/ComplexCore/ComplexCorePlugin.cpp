@@ -1,11 +1,5 @@
 #include "ComplexCorePlugin.hpp"
 
-#include "ComplexCore/Filters/CreateDataArray.hpp"
-#include "ComplexCore/Filters/CreateDataGroup.hpp"
-#include "ComplexCore/Filters/ImportTextFilter.hpp"
-#include "ComplexCore/Filters/TestFilter1.hpp"
-#include "ComplexCore/Filters/TestFilter2.hpp"
-
 using namespace complex;
 
 namespace

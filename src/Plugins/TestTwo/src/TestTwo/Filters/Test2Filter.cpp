@@ -23,6 +23,11 @@ std::string Test2Filter::name() const
   return FilterTraits<Test2Filter>::name;
 }
 
+std::string Test2Filter::className() const
+{
+  return FilterTraits<Test2Filter>::className;
+}
+
 complex::Uuid Test2Filter::uuid() const
 {
   return FilterTraits<Test2Filter>::uuid;

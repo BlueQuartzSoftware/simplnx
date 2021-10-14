@@ -29,6 +29,11 @@ std::string CreateDataArray::name() const
   return FilterTraits<CreateDataArray>::name;
 }
 
+std::string CreateDataArray::className() const
+{
+  return FilterTraits<CreateDataArray>::className;
+}
+
 Uuid CreateDataArray::uuid() const
 {
   return FilterTraits<CreateDataArray>::uuid;

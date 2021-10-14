@@ -4,7 +4,8 @@
 #include "complex/Filter/IFilter.hpp"
 
 #include "TestTwo/TestTwo_export.hpp"
-
+namespace complex
+{
 class TESTTWO_EXPORT Test2Filter : public complex::IFilter
 {
 public:
@@ -16,6 +17,12 @@ public:
    * @return std::string
    */
   std::string name() const override;
+
+  /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
 
   /**
    * @brief Returns the filters ID as a std::string.
@@ -60,5 +67,6 @@ protected:
    */
   complex::Result<> executeImpl(complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const override;
 };
+} // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(Test2Filter, "ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04");
+COMPLEX_DEF_FILTER_TRAITS(complex, Test2Filter, "ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04");

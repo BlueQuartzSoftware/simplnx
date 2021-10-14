@@ -12,6 +12,11 @@ std::string CreateDataGroup::name() const
   return FilterTraits<CreateDataGroup>::name;
 }
 
+std::string CreateDataGroup::className() const
+{
+  return FilterTraits<CreateDataGroup>::className;
+}
+
 Uuid CreateDataGroup::uuid() const
 {
   return FilterTraits<CreateDataGroup>::uuid;
