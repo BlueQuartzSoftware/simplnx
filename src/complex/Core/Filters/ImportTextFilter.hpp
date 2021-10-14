@@ -53,7 +53,7 @@ protected:
    * @brief
    * @param data
    * @param args
-   * @param messageHandler = {}
+   * @param messageHandler
    * @return
    */
   Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const override;
@@ -62,7 +62,7 @@ protected:
    * @brief
    * @param data
    * @param args
-   * @param messageHandler = {}
+   * @param messageHandler
    * @return
    */
   Result<> executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const override;

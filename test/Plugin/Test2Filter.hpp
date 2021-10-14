@@ -46,7 +46,7 @@ protected:
    * @brief Filter-specifics for performing dataCheck.
    * @param data
    * @param args
-   * @param messageHandler = {}
+   * @param messageHandler
    * @return DataCheckResult
    */
   complex::Result<complex::OutputActions> preflightImpl(const complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler = {}) const override;
@@ -55,7 +55,7 @@ protected:
    * @brief Filter-specifics for performing execute.
    * @param data
    * @param args
-   * @param messageHandler = {}
+   * @param messageHandler
    * @return ExecuteResult
    */
   complex::Result<> executeImpl(complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler = {}) const override;
