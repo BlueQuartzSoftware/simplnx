@@ -39,8 +39,10 @@ std::string ExampleFilter2::humanName() const
 Parameters ExampleFilter2::parameters() const
 {
   Parameters params;
+  params.insertSeparator({"First Group of Parameters"});
   params.insert(std::make_unique<Int32Parameter>(k_Param1, "Parameter 1", "The 1st parameter", 0));
   params.insert(std::make_unique<StringParameter>(k_Param2, "Parameter 2", "The 2nd parameter", "test string"));
+  params.insertSeparator({"Second Group of Parameters"});
   params.insert(std::make_unique<ChoicesParameter>(k_Param3, "Parameter 3", "The 3rd parameter", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
   return params;
 }
