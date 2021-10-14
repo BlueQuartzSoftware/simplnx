@@ -67,7 +67,7 @@ protected:
    * @param messageHandler
    * @return Result<OutputActions>
    */
-  Result<OutputActions> preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler = {}) const override;
+  Result<OutputActions> preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const override;
 
   /**
    * @brief Classes that implement IFilter must provide this function for execute.
@@ -77,7 +77,7 @@ protected:
    * @param messageHandler
    * @return Result<>
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler = {}) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const override;
 };
 } // namespace complex
 
