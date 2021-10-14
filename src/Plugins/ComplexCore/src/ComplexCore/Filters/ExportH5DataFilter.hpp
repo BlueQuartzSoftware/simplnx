@@ -1,10 +1,11 @@
 #pragma once
 
+#include "ComplexCore/ComplexCore_export.hpp"
+
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Filter/Parameters.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -13,7 +14,7 @@ namespace complex
  * @brief The ExportH5DataFilter is an IFilter class designed to export the
  * DataStructure to a target HDF5 file.
  */
-class COMPLEX_EXPORT ExportH5DataFilter : public IFilter
+class COMPLEXCORE_EXPORT ExportH5DataFilter : public IFilter
 {
 public:
   ExportH5DataFilter() = default;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ComplexCore/ComplexCore_export.hpp"
+
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
