@@ -4,7 +4,7 @@
  */
 @Filter_Registration_Include_String@
 
-void @COMPLEX_PLUGIN_NAME@Plugin::registerFilters()
+void @PLUGIN_NAME@Plugin::registerFilters()
 {
 @Filter_Registration_Code@
 }
