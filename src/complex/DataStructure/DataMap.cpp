@@ -1,5 +1,7 @@
 #include "complex/DataStructure/DataMap.hpp"
 
+#include <algorithm>
+
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
@@ -118,6 +120,17 @@ std::map<DataMap::IdType, std::weak_ptr<DataObject>> DataMap::getAllItems() cons
     }
   }
   return map;
+}
+
+std::vector<std::string> DataMap::getNames() const
+{
+  std::vector<std::string> names;
+  for(const auto& [id, data] : m_Map)
+  {
+    names.push_back(data->getName());
+  }
+  std::sort(names.begin(), names.end());
+  return names;
 }
 
 bool DataMap::contains(const std::string& name) const
@@ -256,7 +269,7 @@ DataMap& DataMap::operator=(const DataMap& rhs)
   auto keys = rhs.getKeys();
   for(auto& key : keys)
   {
-    DataObject* copy = rhs.m_Map.at(key)->deepCopy();
+    DataObject* copy = rhs.m_Map.at(key)->shallowCopy();
     m_Map[key] = std::shared_ptr<DataObject>(copy);
   }
 

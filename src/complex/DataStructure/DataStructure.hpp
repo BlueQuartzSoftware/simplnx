@@ -332,6 +332,12 @@ public:
   Result<LinkedPath> makePath(const DataPath& path);
 
   /**
+   * @brief Returns a collection of all DataPaths within the structure.
+   * @return std::vector<DataPath>
+   */
+  std::vector<DataPath> getAllDataPaths() const;
+
+  /**
    * @brief Returns the top-level of the DataStructure.
    * @return std::vector<DataObject*>
    */
