@@ -16,7 +16,7 @@ namespace fs = std::filesystem;
 TEST_CASE("Test Loading Plugins")
 {
   Application app;
-  app.loadPlugins(fs::path(complex::unit_test::k_PluginDir));
+  app.loadPlugins(fs::path(complex::unit_test::k_PluginDir.str()));
 
   auto filterList = app.getFilterList();
   auto filterHandles = filterList->getFilterHandles();
@@ -43,7 +43,7 @@ TEST_CASE("Test Loading Plugins")
 void initApplication()
 {
   Application* app = new Application();
-  app->loadPlugins(fs::path(complex::unit_test::k_PluginDir));
+  app->loadPlugins(fs::path(complex::unit_test::k_PluginDir.str()));
 }
 
 TEST_CASE("Test Singleton")

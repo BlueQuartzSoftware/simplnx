@@ -4,10 +4,11 @@
 
 #include "complex/Filter/MutableDataParameter.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
+#include "complex/complex_export.hpp"
 
 namespace complex
 {
-class ArrayCreationParameter : public MutableDataParameter
+class COMPLEX_EXPORT ArrayCreationParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
