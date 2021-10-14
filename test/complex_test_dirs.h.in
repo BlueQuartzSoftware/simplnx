@@ -2,11 +2,21 @@
 
 #include "complex/Common/StringLiteral.hpp"
 
+#include <fmt/format.h>
+
 namespace complex
 {
 namespace unit_test
 {
 constexpr StringLiteral k_ComplexSourceDir = "@complex_SOURCE_DIR_NORM@";
-constexpr StringLiteral k_PluginDir = "@CMAKE_LIBRARY_OUTPUT_DIRECTORY@/Plugins";
+
+#ifdef CMAKE_INTDIR
+constexpr StringLiteral k_BuildTypeDir = CMAKE_INTDIR;
+#else
+constexpr StringLiteral k_BuildTypeDir = "";
+#endif
+
+constexpr StringLiteral k_BuildDir = "@CMAKE_LIBRARY_OUTPUT_DIRECTORY@";
+
 }
 } // namespace complex

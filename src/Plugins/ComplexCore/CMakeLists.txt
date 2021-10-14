@@ -63,9 +63,13 @@ add_library(complex::${COMPLEX_PLUGIN_NAME} ALIAS ${COMPLEX_PLUGIN_NAME})
 set_target_properties(${COMPLEX_PLUGIN_NAME} PROPERTIES
     FOLDER "Plugins/${COMPLEX_PLUGIN_NAME}"
     SUFFIX ".complex"
-    LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/Plugins
-    RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/Plugins
 )
+if(NOT MSVC)
+  set_target_properties(${COMPLEX_PLUGIN_NAME} PROPERTIES
+      LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/Plugins
+      RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>/Plugins
+  )
+endif()
 
 #------------------------------------------------------------------------------
 # Where are the plugins going to be placed during the build

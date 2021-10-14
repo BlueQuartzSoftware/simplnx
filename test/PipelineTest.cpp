@@ -56,8 +56,8 @@ void PrintAllFilters()
 TEST_CASE("Execute Pipeline")
 {
   Application app;
-  app.loadPlugins(fs::path(complex::unit_test::k_PluginDir.str()));
-  auto filterList = app.getFilterList();
+  fs::path pluginPath = fmt::format("{}/{}/",complex::unit_test::k_BuildDir, complex::unit_test::k_BuildTypeDir );
+  app.loadPlugins(pluginPath);  auto filterList = app.getFilterList();
 
   AbstractPlugin* test1Plugin = app.getPlugin("TestOne");
   REQUIRE(test1Plugin != nullptr);
@@ -81,7 +81,8 @@ TEST_CASE("Execute Pipeline")
 TEST_CASE("Complex Pipeline")
 {
   Application app;
-  app.loadPlugins(fs::path(complex::unit_test::k_PluginDir.str()));
+  fs::path pluginPath = fmt::format("{}/{}/",complex::unit_test::k_BuildDir, complex::unit_test::k_BuildTypeDir );
+  app.loadPlugins(pluginPath);
   auto filterList = app.getFilterList();
   AbstractPlugin* test1Plugin = app.getPlugin("TestOne");
   REQUIRE(test1Plugin != nullptr);
