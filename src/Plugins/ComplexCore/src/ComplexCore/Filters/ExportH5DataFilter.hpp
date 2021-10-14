@@ -35,6 +35,12 @@ public:
   std::string name() const override;
 
   /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
    * @brief Returns the ExportH5DataFilter class's UUID.
    * @return Uuid
    */
@@ -81,4 +87,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::ExportH5DataFilter, "b3a95784-2ced-11ec-8d3d-0242ac130003");
+COMPLEX_DEF_FILTER_TRAITS(complex, ExportH5DataFilter, "b3a95784-2ced-11ec-8d3d-0242ac130003");

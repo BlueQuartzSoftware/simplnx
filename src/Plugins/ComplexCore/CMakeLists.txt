@@ -8,8 +8,9 @@ set(FilterList
   CreateDataArray
   CreateDataGroup
   ImportTextFilter
-  TestFilter1
-  TestFilter2
+  ExampleFilter1
+  ExampleFilter2
+  ExportH5DataFilter
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}

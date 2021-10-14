@@ -1,4 +1,4 @@
-#include "TestFilter1.hpp"
+#include "ExampleFilter1.hpp"
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
@@ -16,22 +16,27 @@ constexpr StringLiteral k_Param3 = "param3";
 
 namespace complex
 {
-std::string TestFilter1::name() const
+std::string ExampleFilter1::name() const
 {
-  return FilterTraits<TestFilter1>::name;
+  return FilterTraits<ExampleFilter1>::name;
 }
 
-Uuid TestFilter1::uuid() const
+std::string ExampleFilter1::className() const
 {
-  return FilterTraits<TestFilter1>::uuid;
+  return FilterTraits<ExampleFilter1>::className;
 }
 
-std::string TestFilter1::humanName() const
+Uuid ExampleFilter1::uuid() const
 {
-  return "Test Filter 1";
+  return FilterTraits<ExampleFilter1>::uuid;
 }
 
-Parameters TestFilter1::parameters() const
+std::string ExampleFilter1::humanName() const
+{
+  return "Example Filter 1";
+}
+
+Parameters ExampleFilter1::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<Float32Parameter>(k_Param1, "Parameter 1", "The 1st parameter", 0.1234f));
@@ -40,17 +45,17 @@ Parameters TestFilter1::parameters() const
   return params;
 }
 
-IFilter::UniquePointer TestFilter1::clone() const
+IFilter::UniquePointer ExampleFilter1::clone() const
 {
-  return std::make_unique<TestFilter1>();
+  return std::make_unique<ExampleFilter1>();
 }
 
-Result<OutputActions> TestFilter1::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+Result<OutputActions> ExampleFilter1::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   return {};
 }
 
-Result<> TestFilter1::executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+Result<> ExampleFilter1::executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   return {};
 }

@@ -1,8 +1,8 @@
 #include "ExportH5DataFilter.hpp"
 
-#include "complex/Core/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Core/Parameters/StringParameter.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 namespace complex
@@ -10,6 +10,11 @@ namespace complex
 std::string ExportH5DataFilter::name() const
 {
   return FilterTraits<ExportH5DataFilter>::name;
+}
+
+std::string ExportH5DataFilter::className() const
+{
+  return FilterTraits<ExportH5DataFilter>::className;
 }
 
 Uuid ExportH5DataFilter::uuid() const

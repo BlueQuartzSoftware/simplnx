@@ -7,23 +7,29 @@
 
 namespace complex
 {
-class COMPLEXCORE_EXPORT TestFilter2 : public IFilter
+class COMPLEXCORE_EXPORT ExampleFilter1 : public IFilter
 {
 public:
-  TestFilter2() = default;
-  ~TestFilter2() noexcept override = default;
+  ExampleFilter1() = default;
+  ~ExampleFilter1() noexcept override = default;
 
-  TestFilter2(const TestFilter2&) = delete;
-  TestFilter2(TestFilter2&&) noexcept = delete;
+  ExampleFilter1(const ExampleFilter1&) = delete;
+  ExampleFilter1(ExampleFilter1&&) noexcept = delete;
 
-  TestFilter2& operator=(const TestFilter2&) = delete;
-  TestFilter2& operator=(TestFilter2&&) noexcept = delete;
+  ExampleFilter1& operator=(const ExampleFilter1&) = delete;
+  ExampleFilter1& operator=(ExampleFilter1&&) noexcept = delete;
 
   /**
    * @brief
    * @return
    */
   std::string name() const override;
+
+  /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
 
   /**
    * @brief
@@ -70,4 +76,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::TestFilter2, "1307bbbc-112d-4aaa-941f-58253787b17e");
+COMPLEX_DEF_FILTER_TRAITS(complex, ExampleFilter1, "dd92896b-26ec-4419-b905-567e93e8f39d");
