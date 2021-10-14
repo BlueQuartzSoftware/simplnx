@@ -1,0 +1,104 @@
+#include "FindEuclideanDistMap.hpp"
+
+#include "complex/DataStructure/DataPath.hpp"
+#include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
+
+using namespace complex;
+
+namespace complex
+{
+std::string FindEuclideanDistMap::name() const
+{
+  return FilterTraits<FindEuclideanDistMap>::name.str();
+}
+
+Uuid FindEuclideanDistMap::uuid() const
+{
+  return FilterTraits<FindEuclideanDistMap>::uuid;
+}
+
+std::string FindEuclideanDistMap::humanName() const
+{
+  return "Find Euclidean Distance Map";
+}
+
+Parameters FindEuclideanDistMap::parameters() const
+{
+  Parameters params;
+  // Create the parameter descriptors that are needed for this filter
+  params.insert(std::make_unique<BoolParameter>(k_CalcManhattanDist_Key, "Calculate Manhattan Distance", "", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_DoBoundaries_Key, "Calculate Distance to Boundaries", "", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_DoTripleLines_Key, "Calculate Distance to Triple Lines", "", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_DoQuadPoints_Key, "Calculate Distance to Quadruple Points", "", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveNearestNeighbors_Key, "Store the Nearest Boundary Cells", "", false));
+  params.insertSeparator(Parameters::Separator{"Cell Data"});
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}));
+  params.insertSeparator(Parameters::Separator{"Cell Data"});
+  params.insert(std::make_unique<ArrayCreationParameter>(k_GBDistancesArrayName_Key, "Boundary Distances", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_TJDistancesArrayName_Key, "Triple Line Distances", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_QPDistancesArrayName_Key, "Quadruple Point Distances", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NearestNeighborsArrayName_Key, "Nearest Neighbors", "", DataPath{}));
+  // Associate the Linkable Parameter(s) to the children parameters that they control
+  params.linkParameters(k_DoBoundaries_Key, k_GBDistancesArrayName_Key, true);
+  params.linkParameters(k_DoTripleLines_Key, k_TJDistancesArrayName_Key, true);
+  params.linkParameters(k_DoQuadPoints_Key, k_QPDistancesArrayName_Key, true);
+  params.linkParameters(k_SaveNearestNeighbors_Key, k_NearestNeighborsArrayName_Key, true);
+
+  return params;
+}
+
+IFilter::UniquePointer FindEuclideanDistMap::clone() const
+{
+  return std::make_unique<FindEuclideanDistMap>();
+}
+
+Result<OutputActions> FindEuclideanDistMap::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+{
+  /****************************************************************************
+   * Write any preflight sanity checking codes in this function
+   ***************************************************************************/
+  auto pCalcManhattanDistValue = filterArgs.value<bool>(k_CalcManhattanDist_Key);
+  auto pDoBoundariesValue = filterArgs.value<bool>(k_DoBoundaries_Key);
+  auto pDoTripleLinesValue = filterArgs.value<bool>(k_DoTripleLines_Key);
+  auto pDoQuadPointsValue = filterArgs.value<bool>(k_DoQuadPoints_Key);
+  auto pSaveNearestNeighborsValue = filterArgs.value<bool>(k_SaveNearestNeighbors_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pGBDistancesArrayNameValue = filterArgs.value<DataPath>(k_GBDistancesArrayName_Key);
+  auto pTJDistancesArrayNameValue = filterArgs.value<DataPath>(k_TJDistancesArrayName_Key);
+  auto pQPDistancesArrayNameValue = filterArgs.value<DataPath>(k_QPDistancesArrayName_Key);
+  auto pNearestNeighborsArrayNameValue = filterArgs.value<DataPath>(k_NearestNeighborsArrayName_Key);
+
+  OutputActions actions;
+#if 0
+  // Define a custom class that generates the changes to the DataStructure.
+  auto action = std::make_unique<FindEuclideanDistMapAction>();
+  actions.actions.push_back(std::move(action));
+#endif
+  return {std::move(actions)};
+}
+
+Result<> FindEuclideanDistMap::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+{
+  /****************************************************************************
+   * Extract the actual input values from the 'filterArgs' object
+   ***************************************************************************/
+  auto pCalcManhattanDistValue = filterArgs.value<bool>(k_CalcManhattanDist_Key);
+  auto pDoBoundariesValue = filterArgs.value<bool>(k_DoBoundaries_Key);
+  auto pDoTripleLinesValue = filterArgs.value<bool>(k_DoTripleLines_Key);
+  auto pDoQuadPointsValue = filterArgs.value<bool>(k_DoQuadPoints_Key);
+  auto pSaveNearestNeighborsValue = filterArgs.value<bool>(k_SaveNearestNeighbors_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pGBDistancesArrayNameValue = filterArgs.value<DataPath>(k_GBDistancesArrayName_Key);
+  auto pTJDistancesArrayNameValue = filterArgs.value<DataPath>(k_TJDistancesArrayName_Key);
+  auto pQPDistancesArrayNameValue = filterArgs.value<DataPath>(k_QPDistancesArrayName_Key);
+  auto pNearestNeighborsArrayNameValue = filterArgs.value<DataPath>(k_NearestNeighborsArrayName_Key);
+
+  /****************************************************************************
+   * Write your algorithm implementation in this function
+   ***************************************************************************/
+
+  return {};
+}
+} // namespace complex
