@@ -81,6 +81,6 @@ void AbstractPlugin::addFilter(FilterCreationFunc filterFunc)
                                          existingFilter->name()));
   }
 
-  m_FilterHandles.insert(FilterHandle(filter->humanName(), filter->name(), uuid, getId()));
+  m_FilterHandles.insert(FilterHandle(filter->humanName(), filter->className(), uuid, getId()));
   m_InitializerMap[uuid] = filterFunc;
 }
