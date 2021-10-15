@@ -1,8 +1,9 @@
 #pragma once
 
+#include "DREAM3DReview/DREAM3DReview_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class FindSurfaceRoughness
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT FindSurfaceRoughness : public IFilter
+class DREAM3DREVIEW_EXPORT FindSurfaceRoughness : public IFilter
 {
 public:
   FindSurfaceRoughness() = default;

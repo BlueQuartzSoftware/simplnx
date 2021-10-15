@@ -1,8 +1,9 @@
 #pragma once
 
+#include "DREAM3DReview/DREAM3DReview_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class AdaptiveAlignmentMisorientation
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT AdaptiveAlignmentMisorientation : public IFilter
+class DREAM3DREVIEW_EXPORT AdaptiveAlignmentMisorientation : public IFilter
 {
 public:
   AdaptiveAlignmentMisorientation() = default;

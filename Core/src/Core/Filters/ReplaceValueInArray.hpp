@@ -1,8 +1,9 @@
 #pragma once
 
+#include "Core/Core_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class ReplaceValueInArray
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT ReplaceValueInArray : public IFilter
+class CORE_EXPORT ReplaceValueInArray : public IFilter
 {
 public:
   ReplaceValueInArray() = default;

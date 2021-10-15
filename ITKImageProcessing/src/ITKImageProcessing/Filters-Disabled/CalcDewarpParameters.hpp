@@ -1,8 +1,9 @@
 #pragma once
 
+#include "ITKImageProcessing/ITKImageProcessing_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class CalcDewarpParameters
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT CalcDewarpParameters : public IFilter
+class ITKIMAGEPROCESSING_EXPORT CalcDewarpParameters : public IFilter
 {
 public:
   CalcDewarpParameters() = default;

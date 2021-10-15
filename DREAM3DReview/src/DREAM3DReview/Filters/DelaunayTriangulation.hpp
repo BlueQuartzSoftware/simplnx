@@ -1,8 +1,9 @@
 #pragma once
 
+#include "DREAM3DReview/DREAM3DReview_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class DelaunayTriangulation
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT DelaunayTriangulation : public IFilter
+class DREAM3DREVIEW_EXPORT DelaunayTriangulation : public IFilter
 {
 public:
   DelaunayTriangulation() = default;

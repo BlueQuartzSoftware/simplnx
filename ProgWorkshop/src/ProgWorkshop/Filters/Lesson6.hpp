@@ -1,8 +1,9 @@
 #pragma once
 
+#include "ProgWorkshop/ProgWorkshop_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class Lesson6
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT Lesson6 : public IFilter
+class PROGWORKSHOP_EXPORT Lesson6 : public IFilter
 {
 public:
   Lesson6() = default;

@@ -1,8 +1,9 @@
 #pragma once
 
+#include "UCSBUtilities/UCSBUtilities_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class CopyDataContainer
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT CopyDataContainer : public IFilter
+class UCSBUTILITIES_EXPORT CopyDataContainer : public IFilter
 {
 public:
   CopyDataContainer() = default;

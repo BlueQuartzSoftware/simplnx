@@ -1,8 +1,9 @@
 #pragma once
 
+#include "StatsToolbox/StatsToolbox_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class GenerateEnsembleStatistics
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT GenerateEnsembleStatistics : public IFilter
+class STATSTOOLBOX_EXPORT GenerateEnsembleStatistics : public IFilter
 {
 public:
   GenerateEnsembleStatistics() = default;

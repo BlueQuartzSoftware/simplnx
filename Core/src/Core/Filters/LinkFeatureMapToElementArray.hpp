@@ -1,8 +1,9 @@
 #pragma once
 
+#include "Core/Core_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class LinkFeatureMapToElementArray
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT LinkFeatureMapToElementArray : public IFilter
+class CORE_EXPORT LinkFeatureMapToElementArray : public IFilter
 {
 public:
   LinkFeatureMapToElementArray() = default;

@@ -1,8 +1,9 @@
 #pragma once
 
+#include "SyntheticBuilding/SyntheticBuilding_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class PackPrimaryPhases
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT PackPrimaryPhases : public IFilter
+class SYNTHETICBUILDING_EXPORT PackPrimaryPhases : public IFilter
 {
 public:
   PackPrimaryPhases() = default;

@@ -1,8 +1,9 @@
 #pragma once
 
+#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class ChangeAngleRepresentation
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT ChangeAngleRepresentation : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ChangeAngleRepresentation : public IFilter
 {
 public:
   ChangeAngleRepresentation() = default;

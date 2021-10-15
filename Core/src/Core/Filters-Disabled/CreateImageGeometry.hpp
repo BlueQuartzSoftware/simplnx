@@ -1,8 +1,9 @@
 #pragma once
 
+#include "Core/Core_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class CreateImageGeometry
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT CreateImageGeometry : public IFilter
+class CORE_EXPORT CreateImageGeometry : public IFilter
 {
 public:
   CreateImageGeometry() = default;
