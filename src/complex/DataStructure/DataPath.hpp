@@ -65,10 +65,17 @@ public:
   usize getLength() const;
 
   /**
-   * @brief Return true if the path is empty
+   * @brief Return true if the path is empty. Returns false otherwise.
    * @return bool
    */
   bool empty() const;
+
+  /**
+   * @brief Returns the last name on the path. Returns an empty string if the
+   * path is empty.
+   * @return std::string
+   */
+  std::string getTargetName() const;
 
   /**
    * @brief Returns the path as a vector of strings.

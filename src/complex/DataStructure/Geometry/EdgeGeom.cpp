@@ -92,7 +92,7 @@ DataObject* EdgeGeom::shallowCopy()
 
 DataObject* EdgeGeom::deepCopy()
 {
-  auto copy = new EdgeGeom(*getDataStructure(), getName());
+  auto copy = new EdgeGeom(*getDataStructure(), getName(), getId());
 
   copy->m_VertexListId = m_VertexListId;
   copy->m_EdgeListId = m_EdgeListId;

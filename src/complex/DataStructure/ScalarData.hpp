@@ -127,7 +127,7 @@ public:
    */
   DataObject* deepCopy() override
   {
-    return Create(*getDataStructure(), getName(), getValue());
+    return new ScalarData(*getDataStructure(), getName(), getId(), getValue());
   }
 
   /**

@@ -100,6 +100,15 @@ bool DataPath::empty() const
   return m_Path.empty();
 }
 
+std::string DataPath::getTargetName() const
+{
+  if(empty())
+  {
+    return "";
+  }
+  return m_Path.at(getLength() - 1);
+}
+
 std::vector<std::string> DataPath::getPathVector() const
 {
   return m_Path;
@@ -107,6 +116,11 @@ std::vector<std::string> DataPath::getPathVector() const
 
 DataPath DataPath::getParent() const
 {
+  if(empty())
+  {
+    return {};
+  }
+
   std::vector<std::string> parentPath = m_Path;
   parentPath.pop_back();
   return DataPath(parentPath);
@@ -162,7 +176,7 @@ bool DataPath::operator!=(const DataPath& rhs) const
 
 const std::string& DataPath::operator[](usize index) const
 {
-  if(index > m_Path.size())
+  if(index >= m_Path.size())
   {
     throw std::runtime_error("");
   }
