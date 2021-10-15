@@ -92,7 +92,7 @@ DataObject* QuadGeom::shallowCopy()
 
 DataObject* QuadGeom::deepCopy()
 {
-  auto copy = new QuadGeom(*getDataStructure(), getName());
+  auto copy = new QuadGeom(*getDataStructure(), getName(), getId());
 
   copy->m_QuadListId = m_QuadListId;
   copy->m_QuadsContainingVertId = m_QuadsContainingVertId;

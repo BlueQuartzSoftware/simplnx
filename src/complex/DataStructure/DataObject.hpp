@@ -48,7 +48,7 @@ public:
    * @brief The ParentCollectionType alias describes the format by which parent
    * collections are returned via public API.
    */
-  using ParentCollectionType = std::list<BaseGroup*>;
+  using ParentCollectionType = std::list<IdType>;
 
   friend class BaseGroup;
   friend class DataMap;
@@ -130,7 +130,7 @@ public:
    * @brief Returns a collection of the parent containers that store the DataObject.
    * @return ParentCollectionType
    */
-  ParentCollectionType getParents() const;
+  ParentCollectionType getParentIds() const;
 
   /**
    * @brief Returns a vector of DataPaths.

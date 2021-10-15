@@ -83,7 +83,7 @@ DataObject* RectGridGeom::shallowCopy()
 
 DataObject* RectGridGeom::deepCopy()
 {
-  auto copy = new RectGridGeom(*getDataStructure(), getName());
+  auto copy = new RectGridGeom(*getDataStructure(), getName(), getId());
 
   copy->m_xBoundsId = m_xBoundsId;
   copy->m_yBoundsId = m_yBoundsId;

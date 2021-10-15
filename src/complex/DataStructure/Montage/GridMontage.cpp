@@ -70,7 +70,7 @@ DataObject* GridMontage::shallowCopy()
 
 DataObject* GridMontage::deepCopy()
 {
-  auto copy = new GridMontage(*getDataStructure(), getName());
+  auto copy = new GridMontage(*getDataStructure(), getName(), getId());
 
   copy->m_RowCount = m_RowCount;
   copy->m_ColumnCount = m_ColumnCount;

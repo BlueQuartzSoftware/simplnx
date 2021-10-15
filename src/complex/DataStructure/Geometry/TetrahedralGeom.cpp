@@ -98,7 +98,7 @@ DataObject* TetrahedralGeom::shallowCopy()
 
 DataObject* TetrahedralGeom::deepCopy()
 {
-  auto copy = new TetrahedralGeom(*getDataStructure(), getName());
+  auto copy = new TetrahedralGeom(*getDataStructure(), getName(), getId());
 
   copy->m_TriListId = m_TriListId;
   copy->m_UnsharedTriListId = m_UnsharedTriListId;

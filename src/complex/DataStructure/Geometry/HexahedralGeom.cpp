@@ -92,7 +92,7 @@ DataObject* HexahedralGeom::shallowCopy()
 
 DataObject* HexahedralGeom::deepCopy()
 {
-  auto copy = new HexahedralGeom(*getDataStructure(), getName());
+  auto copy = new HexahedralGeom(*getDataStructure(), getName(), getId());
 
   copy->m_HexListId = m_HexListId;
   copy->m_HexasContainingVertId = m_HexasContainingVertId;

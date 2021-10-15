@@ -30,6 +30,7 @@ DataObject::DataObject(DataStructure& ds, std::string name, IdType importId)
 DataObject::DataObject(const DataObject& other)
 : m_Name(other.m_Name)
 , m_DataStructure(other.m_DataStructure)
+, m_ParentList(other.m_ParentList)
 , m_Id(other.m_Id)
 , m_H5Id(other.m_H5Id)
 {
@@ -38,8 +39,9 @@ DataObject::DataObject(const DataObject& other)
 DataObject::DataObject(DataObject&& other) noexcept
 : m_Name(std::move(other.m_Name))
 , m_DataStructure(other.m_DataStructure)
-, m_Id(other.m_Id)
-, m_H5Id(other.m_H5Id)
+, m_ParentList(std::move(other.m_ParentList))
+, m_Id(std::move(other.m_Id))
+, m_H5Id(std::move(other.m_H5Id))
 {
 }
 
@@ -80,7 +82,8 @@ std::string DataObject::getName() const
 
 bool DataObject::canRename(const std::string& name) const
 {
-  return !std::any_of(m_ParentList.cbegin(), m_ParentList.cend(), [name](BaseGroup* parent) { return parent->contains(name); });
+  auto dataStruct = getDataStructure();
+  return !std::any_of(m_ParentList.cbegin(), m_ParentList.cend(), [dataStruct, name](IdType parentId) { return dataStruct->getDataAs<BaseGroup>(parentId)->contains(name); });
 }
 
 bool DataObject::rename(const std::string& name)
@@ -94,7 +97,7 @@ bool DataObject::rename(const std::string& name)
   return true;
 }
 
-DataObject::ParentCollectionType DataObject::getParents() const
+DataObject::ParentCollectionType DataObject::getParentIds() const
 {
   return m_ParentList;
 }
@@ -106,17 +109,17 @@ Metadata* DataObject::getMetadata() const
 
 void DataObject::addParent(BaseGroup* parent)
 {
-  m_ParentList.push_back(parent);
+  m_ParentList.push_back(parent->getId());
 }
 
 void DataObject::removeParent(BaseGroup* parent)
 {
-  m_ParentList.remove(parent);
+  m_ParentList.remove(parent->getId());
 }
 
 void DataObject::replaceParent(BaseGroup* oldParent, BaseGroup* newParent)
 {
-  std::replace(m_ParentList.begin(), m_ParentList.end(), oldParent, newParent);
+  std::replace(m_ParentList.begin(), m_ParentList.end(), oldParent->getId(), newParent->getId());
 }
 
 std::vector<DataPath> DataObject::getDataPaths() const
@@ -127,8 +130,14 @@ std::vector<DataPath> DataObject::getDataPaths() const
   }
 
   std::vector<DataPath> paths;
-  for(auto* parent : m_ParentList)
+  for(const auto& parentId : m_ParentList)
   {
+    auto parent = getDataStructure()->getData(parentId);
+    if(parent == nullptr)
+    {
+      continue;
+    }
+
     auto parentPaths = parent->getDataPaths();
     for(auto& dataPath : parentPaths)
     {

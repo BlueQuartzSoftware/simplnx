@@ -93,7 +93,7 @@ DataObject* TriangleGeom::shallowCopy()
 
 DataObject* TriangleGeom::deepCopy()
 {
-  auto copy = new TriangleGeom(*getDataStructure(), getName());
+  auto copy = new TriangleGeom(*getDataStructure(), getName(), getId());
 
   copy->m_TriListId = m_TriListId;
   copy->m_TrianglesContainingVertId = m_TrianglesContainingVertId;

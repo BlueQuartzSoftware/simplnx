@@ -125,6 +125,12 @@ public:
   std::map<IdType, std::weak_ptr<DataObject>> getAllItems() const;
 
   /**
+   * @brief Returns a vector of the contained DataObject names.
+   * @return std::vector<std::string>
+   */
+  std::vector<std::string> getNames() const;
+
+  /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
    * Returns nullptr if no DataObject is found.
    * @param key

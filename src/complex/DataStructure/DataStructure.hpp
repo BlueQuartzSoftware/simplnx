@@ -128,11 +128,35 @@ public:
 
   /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
+   * If no such object exists, this method returns nullptr.
+   * @param id
+   * @return T*
+   */
+  template <typename T>
+  T* getDataAs(DataObject::IdType id)
+  {
+    return dynamic_cast<T*>(getData(id));
+  }
+
+  /**
+   * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, or no ID is provided, this method returns nullptr.
    * @param id
    * @return DataObject*
    */
   DataObject* getData(const std::optional<DataObject::IdType>& id);
+
+  /**
+   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * If no such object exists, or no ID is provided, this method returns nullptr.
+   * @param id
+   * @return T*
+   */
+  template <typename T>
+  T* getDataAs(const std::optional<DataObject::IdType>& id)
+  {
+    return dynamic_cast<T*>(getData(id));
+  }
 
   /**
    * @brief Returns a pointer to the DataObject at the given DataPath. If no
@@ -143,6 +167,18 @@ public:
   DataObject* getData(const DataPath& path);
 
   /**
+   * @brief Returns a pointer to the DataObject at the given DataPath. If no
+   * DataObject is found, this method returns nullptr.
+   * @param path
+   * @return T*
+   */
+  template <typename T>
+  T* getDataAs(const DataPath& path)
+  {
+    return dynamic_cast<T*>(getData(path));
+  }
+
+  /**
    * @brief Returns a pointer to the DataObject found at the specified
    * LinkedPath. If no such DataObject is found, this method returns nullptr.
    * @param path
@@ -151,36 +187,96 @@ public:
   DataObject* getData(const LinkedPath& path);
 
   /**
+   * @brief Returns a pointer to the DataObject found at the specified
+   * LinkedPath. If no such DataObject is found, this method returns nullptr.
+   * @param path
+   * @return T*
+   */
+  template <typename T>
+  T* getDataAs(const LinkedPath& path)
+  {
+    return dynamic_cast<T*>(getData(path));
+  }
+
+  /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, this method returns nullptr.
    * @param id
-   * @return DataObject*
+   * @return const DataObject*
    */
   const DataObject* getData(DataObject::IdType id) const;
 
   /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
+   * If no such object exists, this method returns nullptr.
+   * @param id
+   * @return const T*
+   */
+  template <typename T>
+  const T* getDataAs(DataObject::IdType id) const
+  {
+    return dynamic_cast<const T*>(getData(id));
+  }
+
+  /**
+   * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, or no ID is provided, this method returns nullptr.
    * @param id
-   * @return DataObject*
+   * @return const DataObject*
    */
   const DataObject* getData(const std::optional<DataObject::IdType>& id) const;
+
+  /**
+   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * If no such object exists, or no ID is provided, this method returns nullptr.
+   * @param id
+   * @return const T*
+   */
+  template <typename T>
+  const T* getDataAs(const std::optional<DataObject::IdType>& id) const
+  {
+    return dynamic_cast<const T*>(getData(id));
+  }
 
   /**
    * @brief Returns a pointer to the DataObject at the given DataPath. If no
    * DataObject is found, this method returns nullptr.
    * @param path
-   * @return DataObject*
+   * @return const DataObject*
    */
   const DataObject* getData(const DataPath& path) const;
+
+  /**
+   * @brief Returns a pointer to the DataObject at the given DataPath. If no
+   * DataObject is found, this method returns nullptr.
+   * @param path
+   * @return const T*
+   */
+  template <typename T>
+  const T* getDataAs(const DataPath& path) const
+  {
+    return dynamic_cast<const T*>(getData(path));
+  }
 
   /**
    * @brief Returns a pointer to the DataObject found at the specified
    * LinkedPath. If no such DataObject is found, this method returns nullptr.
    * @param path
-   * @return DataObject*
+   * @return const DataObject*
    */
   const DataObject* getData(const LinkedPath& path) const;
+
+  /**
+   * @brief Returns a pointer to the DataObject found at the specified
+   * LinkedPath. If no such DataObject is found, this method returns nullptr.
+   * @param path
+   * @return const T*
+   */
+  template <typename T>
+  const T* getDataAs(const LinkedPath& path) const
+  {
+    return dynamic_cast<const T*>(getData(path));
+  }
 
   /**
    * @brief Returns the shared pointer for the specified DataObject.
@@ -234,6 +330,12 @@ public:
    * @return Result<LinkedPath> object.
    */
   Result<LinkedPath> makePath(const DataPath& path);
+
+  /**
+   * @brief Returns a collection of all DataPaths within the structure.
+   * @return std::vector<DataPath>
+   */
+  std::vector<DataPath> getAllDataPaths() const;
 
   /**
    * @brief Returns the top-level of the DataStructure.

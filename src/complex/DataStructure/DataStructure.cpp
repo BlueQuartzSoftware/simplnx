@@ -158,6 +158,23 @@ Result<LinkedPath> DataStructure::makePath(const DataPath& path)
   }
 }
 
+std::vector<DataPath> DataStructure::getAllDataPaths() const
+{
+  std::vector<DataPath> dataPaths;
+  for(const auto& [id, weakPtr] : m_DataObjects)
+  {
+    auto sharedPtr = weakPtr.lock();
+    if(sharedPtr == nullptr)
+    {
+      continue;
+    }
+
+    auto localPaths = sharedPtr->getDataPaths();
+    dataPaths.insert(dataPaths.end(), localPaths.begin(), localPaths.end());
+  }
+  return dataPaths;
+}
+
 DataObject* DataStructure::getData(DataObject::IdType id)
 {
   auto iter = m_DataObjects.find(id);
@@ -247,6 +264,11 @@ const DataObject* DataStructure::getData(const std::optional<DataObject::IdType>
 
 const DataObject* DataStructure::getData(const DataPath& path) const
 {
+  if(path.empty())
+  {
+    return nullptr;
+  }
+
   auto topLevel = getTopLevelData();
   for(DataObject* obj : topLevel)
   {
@@ -308,13 +330,14 @@ bool DataStructure::removeData(DataObject* data)
   }
 
   auto pathsToData = data->getDataPaths();
-  auto parents = data->getParents();
-  if(parents.size() == 0)
+  auto parentIds = data->getParentIds();
+  if(parentIds.size() == 0)
   {
     return removeTopLevel(data);
   }
-  for(BaseGroup* parent : parents)
+  for(DataObject::IdType parentId : parentIds)
   {
+    auto parent = getDataAs<BaseGroup>(parentId);
     if(!parent->remove(data))
     {
       return false;
@@ -331,7 +354,6 @@ void DataStructure::dataDeleted(DataObject::IdType id, const std::string& name)
     return;
   }
 
-  m_DataObjects.erase(id);
   auto msg = std::make_shared<DataRemovedMessage>(this, id, name);
   notify(msg);
 }

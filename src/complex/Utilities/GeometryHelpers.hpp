@@ -27,7 +27,7 @@ template <typename T, typename K>
 void FindElementsContainingVert(const DataArray<K>* elemList, DynamicListArray<T, K>* dynamicList, usize numVerts)
 {
   DataStructure* dataStructure = dynamicList->getDataStructure();
-  auto parentId = dynamicList->getParents().front()->getId();
+  auto parentId = dynamicList->getParentIds().front();
 
   auto& elems = *elemList;
   const usize numElems = elemList->getNumberOfTuples();
@@ -81,7 +81,7 @@ template <typename T, typename K>
 ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListArray<T, K>* elemsContainingVert, DynamicListArray<T, K>* dynamicList, AbstractGeometry::Type geometryType)
 {
   DataStructure* dataStructure = dynamicList->getDataStructure();
-  auto parentId = dynamicList->getParents().front()->getId();
+  auto parentId = dynamicList->getParentIds().front();
   auto& elems = *elemList;
   const usize numElems = elemList->getNumberOfTuples();
   const usize numVertsPerElem = elemList->getNumberOfComponents();
