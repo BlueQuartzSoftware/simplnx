@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Filter/FilterHandle.hpp"
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 

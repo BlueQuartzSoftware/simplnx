@@ -6,7 +6,6 @@
 #include <fmt/core.h>
 
 #include "complex/Core/Application.hpp"
-#include "complex/Filter//FilterHandle.hpp"
 #include "complex/Plugin/PluginLoader.hpp"
 
 using namespace complex;
@@ -25,29 +24,9 @@ FilterList::SearchContainerType FilterList::search(const std::string& text) cons
   std::vector<FilterHandle> handles;
   for(const auto& handle : getFilterHandles())
   {
-    if(handle.getFilterName().find(text) != std::string::npos)
+    if(handle.getFilterName().find(text) != std::string::npos || getPlugin(handle)->getName().find(text) != std::string::npos)
     {
       handles.push_back(handle);
-    }
-    else if(getPlugin(handle)->getName().find(text) != std::string::npos)
-    {
-      handles.push_back(handle);
-    }
-  }
-  return handles;
-}
-
-FilterList::SearchContainerType FilterList::getCoreFilters() const
-{
-  SearchContainerType handles;
-  FilterContainerType filterHandles = getFilterHandles();
-  for(const auto& filterHandle : filterHandles)
-  {
-    FilterHandle::PluginIdType pluginId = filterHandle.getPluginId();
-    AbstractPlugin* pluginPtr = getPluginById(pluginId);
-    if(nullptr == pluginPtr)
-    {
-      handles.push_back(filterHandle);
     }
   }
   return handles;
@@ -58,18 +37,6 @@ AbstractPlugin* FilterList::getPluginById(const FilterHandle::PluginIdType& id) 
   if(m_PluginMap.find(id) != m_PluginMap.end())
   {
     return m_PluginMap.at(id)->getPlugin();
-  }
-  return nullptr;
-}
-
-IFilter::UniquePointer FilterList::createFilter(const std::string& humanOrClassName) const
-{
-  for(const auto& handle : getFilterHandles())
-  {
-    if(handle.getFilterName() == humanOrClassName || handle.getClassName() == humanOrClassName)
-    {
-      return createFilter(handle);
-    }
   }
   return nullptr;
 }
@@ -168,7 +135,7 @@ const FilterList::FilterContainerType& FilterList::getFilterHandles() const
 std::unordered_set<AbstractPlugin*> FilterList::getLoadedPlugins() const
 {
   std::unordered_set<AbstractPlugin*> plugins;
-  for(auto& iter : m_PluginMap)
+  for(const auto& iter : m_PluginMap)
   {
     if(!iter.second->isLoaded())
     {

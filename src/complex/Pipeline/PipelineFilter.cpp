@@ -32,21 +32,6 @@ PipelineFilter* PipelineFilter::Create(const FilterHandle& handle, const Argumen
   return new PipelineFilter(std::move(filter), args);
 }
 
-PipelineFilter* PipelineFilter::Create(const std::string& humanOrClassName, const Arguments& args, FilterList* filterList)
-{
-  // Use current Application FilterList if one is not provided.
-  if(filterList == nullptr)
-  {
-    filterList = Application::Instance()->getFilterList();
-  }
-  auto filter = filterList->createFilter(humanOrClassName);
-  if(filter == nullptr)
-  {
-    return nullptr;
-  }
-  return new PipelineFilter(std::move(filter), args);
-}
-
 PipelineFilter::PipelineFilter(IFilter::UniquePointer&& filter, const Arguments& args)
 : AbstractPipelineNode()
 , m_Filter(std::move(filter))

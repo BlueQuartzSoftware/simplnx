@@ -25,6 +25,18 @@ namespace complex
 namespace Constants
 {
 const FilterHandle k_BadHandle(Uuid{}, Uuid{});
+// TestOne Plugin
+const FilterHandle k_TestFilterHandle(Uuid::FromString("5502c3f7-37a8-4a86-b003-1c856be02491").value(), Uuid::FromString("01ff618b-781f-4ac0-b9ac-43f26ce1854f").value());
+// TestTwo Plugin
+const FilterHandle k_Test2FilterHandle(Uuid::FromString("ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f33ce1854e").value());
+//
+const FilterHandle k_CreateDataGroupHandle(Uuid::FromString("e7d2f9b8-4131-4b28-a843-ea3c6950f101").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
+const FilterHandle k_ExportH5DataFilterHandle(Uuid::FromString("b3a95784-2ced-11ec-8d3d-0242ac130003").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
+const FilterHandle k_ExampleFilter2Handle(Uuid::FromString("1307bbbc-112d-4aaa-941f-58253787b17e").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
+const FilterHandle k_ImportTextFilterHandle(Uuid::FromString("25f7df3e-ca3e-4634-adda-732c0e56efd4").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
+const FilterHandle k_CreateDataArrayHandle(Uuid::FromString("67041f9b-bdc6-4122-acc6-c9fe9280e90d").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
+const FilterHandle k_ExampleFilter1Handle(Uuid::FromString("dd92896b-26ec-4419-b905-567e93e8f39d").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
+
 } // namespace Constants
 } // namespace complex
 
@@ -62,13 +74,13 @@ TEST_CASE("Execute Pipeline")
 
   AbstractPlugin* test1Plugin = app.getPlugin("TestOne");
   REQUIRE(test1Plugin != nullptr);
-  auto testFilter1 = filterList->createFilter("TestFilter");
+  auto testFilter1 = filterList->createFilter(complex::Constants::k_TestFilterHandle);
   REQUIRE(testFilter1 != nullptr);
   FilterHandle tf1Handle(testFilter1->uuid(), test1Plugin->getId());
 
   AbstractPlugin* test2Plugin = app.getPlugin("TestTwo");
   REQUIRE(test2Plugin != nullptr);
-  auto testFilter2 = filterList->createFilter("Test2Filter");
+  auto testFilter2 = filterList->createFilter(complex::Constants::k_Test2FilterHandle);
   REQUIRE(testFilter2 != nullptr);
   FilterHandle tf2Handle(testFilter2->uuid(), test2Plugin->getId());
 
@@ -84,11 +96,14 @@ TEST_CASE("Complex Pipeline")
   Application app;
   fs::path pluginPath = fmt::format("{}/{}/", complex::unit_test::k_BuildDir, complex::unit_test::k_BuildTypeDir);
   app.loadPlugins(pluginPath);
+
   auto filterList = app.getFilterList();
+  REQUIRE(filterList->size() != 0);
+
   AbstractPlugin* test1Plugin = app.getPlugin("TestOne");
   REQUIRE(test1Plugin != nullptr);
 
-  auto testFilter1 = filterList->createFilter("TestFilter");
+  auto testFilter1 = filterList->createFilter(complex::Constants::k_TestFilterHandle);
   REQUIRE(testFilter1 != nullptr);
   FilterHandle tf1Handle(testFilter1->uuid(), test1Plugin->getId());
 

@@ -60,12 +60,6 @@ public:
   SearchContainerType search(const std::string& text) const;
 
   /**
-   * @brief Return the core filters in complex
-   * @return
-   */
-  SearchContainerType getCoreFilters() const;
-
-  /**
    * @brief Attempts to create an IFilter specified by the given FilterHandle.
    * Returns a unique pointer to the created filter if one was created.
    * Returns nullptr otherwise.
@@ -73,15 +67,6 @@ public:
    * @return IFilter*
    */
   IFilter::UniquePointer createFilter(const FilterHandle& handle) const;
-
-  /**
-   * @brief Attempts to create an IFilter specified by the given Filter Name.
-   * Returns a unique pointer to the created filter if one was created.
-   * Returns nullptr otherwise.
-   * @param humanOrClassName
-   * @return IFilter*
-   */
-  IFilter::UniquePointer createFilter(const std::string& humanOrClassName) const;
 
   /**
    * @brief Attempts to create an IFilter specified by the given uuid.
