@@ -1,8 +1,9 @@
 #pragma once
 
+#include "DREAM3DReview/DREAM3DReview_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class ImportQMMeltpoolH5File
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT ImportQMMeltpoolH5File : public IFilter
+class DREAM3DREVIEW_EXPORT ImportQMMeltpoolH5File : public IFilter
 {
 public:
   ImportQMMeltpoolH5File() = default;

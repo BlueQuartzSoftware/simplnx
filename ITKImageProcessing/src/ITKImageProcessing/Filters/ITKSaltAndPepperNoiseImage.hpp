@@ -1,8 +1,9 @@
 #pragma once
 
+#include "ITKImageProcessing/ITKImageProcessing_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class ITKSaltAndPepperNoiseImage
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT ITKSaltAndPepperNoiseImage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKSaltAndPepperNoiseImage : public IFilter
 {
 public:
   ITKSaltAndPepperNoiseImage() = default;

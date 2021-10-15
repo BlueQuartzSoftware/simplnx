@@ -1,8 +1,9 @@
 #pragma once
 
+#include "StatsToolbox/StatsToolbox_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class FindLargestCrossSections
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT FindLargestCrossSections : public IFilter
+class STATSTOOLBOX_EXPORT FindLargestCrossSections : public IFilter
 {
 public:
   FindLargestCrossSections() = default;

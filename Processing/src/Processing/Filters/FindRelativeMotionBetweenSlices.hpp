@@ -1,8 +1,9 @@
 #pragma once
 
+#include "Processing/Processing_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class FindRelativeMotionBetweenSlices
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT FindRelativeMotionBetweenSlices : public IFilter
+class PROCESSING_EXPORT FindRelativeMotionBetweenSlices : public IFilter
 {
 public:
   FindRelativeMotionBetweenSlices() = default;

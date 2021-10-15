@@ -1,8 +1,9 @@
 #pragma once
 
+#include "ITKImageProcessing/ITKImageProcessing_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class AxioVisionV4ToTileConfiguration
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT AxioVisionV4ToTileConfiguration : public IFilter
+class ITKIMAGEPROCESSING_EXPORT AxioVisionV4ToTileConfiguration : public IFilter
 {
 public:
   AxioVisionV4ToTileConfiguration() = default;

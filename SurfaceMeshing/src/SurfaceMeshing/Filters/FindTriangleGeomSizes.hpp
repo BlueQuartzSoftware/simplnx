@@ -1,8 +1,9 @@
 #pragma once
 
+#include "SurfaceMeshing/SurfaceMeshing_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class FindTriangleGeomSizes
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT FindTriangleGeomSizes : public IFilter
+class SURFACEMESHING_EXPORT FindTriangleGeomSizes : public IFilter
 {
 public:
   FindTriangleGeomSizes() = default;

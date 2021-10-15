@@ -1,8 +1,9 @@
 #pragma once
 
+#include "Sampling/Sampling_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class ExtractFlaggedFeatures
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT ExtractFlaggedFeatures : public IFilter
+class SAMPLING_EXPORT ExtractFlaggedFeatures : public IFilter
 {
 public:
   ExtractFlaggedFeatures() = default;

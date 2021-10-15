@@ -1,8 +1,9 @@
 #pragma once
 
+#include "Sampling/Sampling_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class RegularGridSampleSurfaceMesh
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT RegularGridSampleSurfaceMesh : public IFilter
+class SAMPLING_EXPORT RegularGridSampleSurfaceMesh : public IFilter
 {
 public:
   RegularGridSampleSurfaceMesh() = default;

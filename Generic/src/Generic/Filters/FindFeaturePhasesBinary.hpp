@@ -1,8 +1,9 @@
 #pragma once
 
+#include "Generic/Generic_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class FindFeaturePhasesBinary
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT FindFeaturePhasesBinary : public IFilter
+class GENERIC_EXPORT FindFeaturePhasesBinary : public IFilter
 {
 public:
   FindFeaturePhasesBinary() = default;

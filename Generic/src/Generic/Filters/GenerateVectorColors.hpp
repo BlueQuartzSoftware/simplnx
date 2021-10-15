@@ -1,8 +1,9 @@
 #pragma once
 
+#include "Generic/Generic_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class GenerateVectorColors
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT GenerateVectorColors : public IFilter
+class GENERIC_EXPORT GenerateVectorColors : public IFilter
 {
 public:
   GenerateVectorColors() = default;

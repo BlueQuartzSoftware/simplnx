@@ -1,8 +1,9 @@
 #pragma once
 
+#include "Reconstruction/Reconstruction_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class AlignSectionsFeatureCentroid
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT AlignSectionsFeatureCentroid : public IFilter
+class RECONSTRUCTION_EXPORT AlignSectionsFeatureCentroid : public IFilter
 {
 public:
   AlignSectionsFeatureCentroid() = default;

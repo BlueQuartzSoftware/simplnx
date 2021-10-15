@@ -1,8 +1,9 @@
 #pragma once
 
+#include "VolumeMeshing/VolumeMeshing_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class CleaveTetVolumeMesh
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT CleaveTetVolumeMesh : public IFilter
+class VOLUMEMESHING_EXPORT CleaveTetVolumeMesh : public IFilter
 {
 public:
   CleaveTetVolumeMesh() = default;

@@ -1,8 +1,9 @@
 #pragma once
 
+#include "EMMPM/EMMPM_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class EMMPMFilter
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT EMMPMFilter : public IFilter
+class EMMPM_EXPORT EMMPMFilter : public IFilter
 {
 public:
   EMMPMFilter() = default;

@@ -1,8 +1,9 @@
 #pragma once
 
+#include "ImportExport/ImportExport_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class AbaqusSurfaceMeshWriter
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT AbaqusSurfaceMeshWriter : public IFilter
+class IMPORTEXPORT_EXPORT AbaqusSurfaceMeshWriter : public IFilter
 {
 public:
   AbaqusSurfaceMeshWriter() = default;
