@@ -26,9 +26,15 @@ namespace Constants
 {
 const FilterHandle k_BadHandle(Uuid{}, Uuid{});
 // TestOne Plugin
-const FilterHandle k_TestFilterHandle(Uuid::FromString("5502c3f7-37a8-4a86-b003-1c856be02491").value(), Uuid::FromString("01ff618b-781f-4ac0-b9ac-43f26ce1854f").value());
+constexpr StringLiteral k_TestOnePluginId = "01ff618b-781f-4ac0-b9ac-43f26ce1854f";
+constexpr StringLiteral k_TestFilterId = "5502c3f7-37a8-4a86-b003-1c856be02491";
+const FilterHandle k_TestFilterHandle(Uuid::FromString(k_TestFilterId.str()).value(), Uuid::FromString(k_TestOnePluginId.str()).value());
+
 // TestTwo Plugin
-const FilterHandle k_Test2FilterHandle(Uuid::FromString("ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f33ce1854e").value());
+constexpr StringLiteral k_TestTwoPluginId = "05cc618b-781f-4ac0-b9ac-43f33ce1854e";
+constexpr StringLiteral k_Test2FilterId = "ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04";
+const FilterHandle k_Test2FilterHandle(Uuid::FromString(k_Test2FilterId.str()).value(), Uuid::FromString(k_TestTwoPluginId.str()).value());
+
 //
 const FilterHandle k_CreateDataGroupHandle(Uuid::FromString("e7d2f9b8-4131-4b28-a843-ea3c6950f101").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
 const FilterHandle k_ExportH5DataFilterHandle(Uuid::FromString("b3a95784-2ced-11ec-8d3d-0242ac130003").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
@@ -42,34 +48,11 @@ const FilterHandle k_ExampleFilter1Handle(Uuid::FromString("dd92896b-26ec-4419-b
 
 using namespace complex;
 
-void PrintAllFilters()
-{
-  std::cout << "#---------------------------------------------------------------------------" << std::endl;
-  Application* app = Application::Instance();
-  FilterList* filterList = app->getFilterList();
-  std::cout << "Filter Count: " << filterList->getFilterHandles().size() << std::endl;
-
-  std::unordered_set<FilterHandle> filterHandles = filterList->getFilterHandles();
-
-  std::cout << "----- Available Filters --------" << std::endl;
-  Pipeline pipeline;
-  for(const auto& filterHandle : filterHandles)
-  {
-    FilterHandle::PluginIdType pluginId = filterHandle.getPluginId();
-    AbstractPlugin* pluginPtr = filterList->getPluginById(pluginId);
-    if(nullptr != pluginPtr)
-    {
-      std::cout << pluginPtr->getName() << "\t" << filterHandle.getFilterName() << std::endl;
-    }
-    pipeline.push_back(filterHandle);
-  }
-}
-
 TEST_CASE("Execute Pipeline")
 {
   Application app;
   fs::path pluginPath = fmt::format("{}/{}/", complex::unit_test::k_BuildDir, complex::unit_test::k_BuildTypeDir);
-  app.loadPlugins(pluginPath);
+  app.loadPlugins(pluginPath, false);
   auto filterList = app.getFilterList();
 
   AbstractPlugin* test1Plugin = app.getPlugin("TestOne");
@@ -95,7 +78,7 @@ TEST_CASE("Complex Pipeline")
 {
   Application app;
   fs::path pluginPath = fmt::format("{}/{}/", complex::unit_test::k_BuildDir, complex::unit_test::k_BuildTypeDir);
-  app.loadPlugins(pluginPath);
+  app.loadPlugins(pluginPath, false);
 
   auto filterList = app.getFilterList();
   REQUIRE(filterList->size() != 0);
