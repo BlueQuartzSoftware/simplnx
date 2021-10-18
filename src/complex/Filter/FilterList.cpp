@@ -59,7 +59,7 @@ IFilter::UniquePointer FilterList::createFilter(const FilterHandle& handle) cons
 
 IFilter::UniquePointer FilterList::createFilter(const Uuid& uuid) const
 {
-  auto iter = std::find_if(m_PluginMap.cbegin(), m_PluginMap.cend(), [uuid](const decltype(*m_PluginMap.cbegin())& item) { return item.second->getPlugin()->containsFilterId(uuid); });
+  auto iter = std::find_if(m_PluginMap.cbegin(), m_PluginMap.cend(), [uuid](decltype(*m_PluginMap.cbegin())& item) { return item.second->getPlugin()->containsFilterId(uuid); });
 
   if(iter == m_PluginMap.cend())
   {
@@ -81,18 +81,6 @@ AbstractPlugin* FilterList::getPlugin(const FilterHandle& handle) const
     if(iter.second->getPlugin()->getId() == handle.getPluginId())
     {
       return iter.second->getPlugin();
-    }
-  }
-  return nullptr;
-}
-
-AbstractPlugin* FilterList::getPlugin(const std::string& humanOrClassName) const
-{
-  for(const auto& handle : getFilterHandles())
-  {
-    if(handle.getFilterName() == humanOrClassName || handle.getClassName() == humanOrClassName)
-    {
-      return getPlugin(handle);
     }
   }
   return nullptr;

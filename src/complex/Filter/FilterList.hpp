@@ -89,13 +89,6 @@ public:
   AbstractPlugin* getPlugin(const FilterHandle& handle) const;
 
   /**
-   * @brief
-   * @param humanOrClassName
-   * @return
-   */
-  AbstractPlugin* getPlugin(const std::string& humanOrClassName) const;
-
-  /**
    * @brief Attempts to add a plugin using the specified PluginLoader. Returns
    * true if the plugin was added. Returns false otherwise.
    * @param loader
