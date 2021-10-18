@@ -27,16 +27,11 @@ const FilterHandle k_Test2FilterHandle(Uuid::FromString(k_Test2FilterId.str()).v
 } // namespace UnitTest
 } // namespace PluginTest
 
-void initApplication()
-{
-  Application* app = new Application();
-  fs::path pluginPath = fmt::format("{}/{}/", complex::unit_test::k_BuildDir, complex::unit_test::k_BuildTypeDir);
-  app->loadPlugins(pluginPath, false);
-}
-
 TEST_CASE("Test Loading Plugins")
 {
-  initApplication();
+  Application app;
+  fs::path pluginPath = fmt::format("{}/{}/", complex::unit_test::k_BuildDir, complex::unit_test::k_BuildTypeDir);
+  app.loadPlugins(pluginPath, false);
 
   auto* filterList = Application::Instance()->getFilterList();
   const auto& filterHandles = filterList->getFilterHandles();
@@ -63,7 +58,9 @@ TEST_CASE("Test Loading Plugins")
 
 TEST_CASE("Test Singleton")
 {
-  Application* app = Application::Instance();
+  Application* app = new Application();
+  fs::path pluginPath = fmt::format("{}/{}/", complex::unit_test::k_BuildDir, complex::unit_test::k_BuildTypeDir);
+  app->loadPlugins(pluginPath, false);
 
   REQUIRE(app != nullptr);
 
