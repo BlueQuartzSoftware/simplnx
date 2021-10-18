@@ -1,10 +1,11 @@
 #include "catch2/catch.hpp"
 
 #include "complex/Core/Application.hpp"
-#include "complex/Core/FilterHandle.hpp"
-#include "complex/Core/Parameters/GeneratedFileListParameter.hpp"
+#include "complex/Filter//FilterHandle.hpp"
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Filter/FilterHandle.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/GeneratedFileListParameter.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
 #include "complex/Pipeline/PipelineFilter.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
@@ -155,10 +156,13 @@ Pipeline CreatePipeline()
 
   return pipeline;
 }
+#endif
 
 TEST_CASE("PipelineJson")
 {
   Application app;
+  fs::path pluginPath = fmt::format("{}/{}/", complex::unit_test::k_BuildDir, complex::unit_test::k_BuildTypeDir);
+  app.loadPlugins(pluginPath, false);
 
   Pipeline pipeline("test");
 
@@ -166,13 +170,13 @@ TEST_CASE("PipelineJson")
   filter1Args.insert("param1", 1.2f);
   filter1Args.insert("param2", true);
   filter1Args.insert("param3", GeneratedFileListParameter::ValueType{});
-  pipeline.push_back(Constants::k_FilterHandle1, filter1Args);
+  pipeline.push_back(Constants::k_TestFilterHandle, filter1Args);
 
   Arguments filter2Args;
   filter2Args.insert("param1", 42);
   filter2Args.insert("param2", std::string("foobarbaz"));
-  filter2Args.insert("param3", std::make_any<uint64>(13));
-  pipeline.push_back(Constants::k_FilterHandle2, filter2Args);
+  filter2Args.insert("param3", ChoicesParameter::ValueType{});
+  pipeline.push_back(Constants::k_Test2FilterHandle, filter2Args);
 
   nlohmann::json pipelineJson = pipeline.toJson();
 

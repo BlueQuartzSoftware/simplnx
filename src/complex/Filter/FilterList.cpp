@@ -59,11 +59,6 @@ IFilter::UniquePointer FilterList::createFilter(const FilterHandle& handle) cons
 
 IFilter::UniquePointer FilterList::createFilter(const Uuid& uuid) const
 {
-  if(m_CoreFiltersMap.count(uuid) > 0)
-  {
-    return createCoreFilter(uuid);
-  }
-
   auto iter = std::find_if(m_PluginMap.cbegin(), m_PluginMap.cend(), [uuid](const decltype(*m_PluginMap.cbegin())& item) { return item.second->getPlugin()->containsFilterId(uuid); });
 
   if(iter == m_PluginMap.cend())
