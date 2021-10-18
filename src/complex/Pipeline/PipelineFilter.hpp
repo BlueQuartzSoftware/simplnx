@@ -35,6 +35,21 @@ public:
   static PipelineFilter* Create(const FilterHandle& handle, const Arguments& args = {}, FilterList* filterList = nullptr);
 
   /**
+   * @brief Constructs a PipelineFilter from json. Returns nullptr on failure.
+   * @param json
+   * @return
+   */
+  static std::unique_ptr<PipelineFilter> FromJson(const nlohmann::json& json);
+
+  /**
+   * @brief Constructs a PipelineFilter from json using the given filter list. Returns nullptr on failure.
+   * @param json
+   * @param filterList
+   * @return
+   */
+  static std::unique_ptr<PipelineFilter> FromJson(const nlohmann::json& json, const FilterList& filterList);
+
+  /**
    * @brief Constructs a PipelineFilter with the provided filter and arguments.
    * If no Arguments are provided, a default empty value will be used instead.
    *
@@ -111,6 +126,12 @@ public:
    * @return std::vector<complex::Error>
    */
   std::vector<Error> getErrors() const;
+
+  /**
+   * @brief Converts the current node to json.
+   * @return
+   */
+  nlohmann::json toJson() const override;
 
 private:
   IFilter::UniquePointer m_Filter;

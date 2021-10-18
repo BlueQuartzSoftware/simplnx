@@ -3,6 +3,8 @@
 #include <memory>
 #include <vector>
 
+#include <nlohmann/json_fwd.hpp>
+
 #include "nod/nod.hpp"
 
 #include "complex/DataStructure/DataStructure.hpp"
@@ -139,6 +141,12 @@ public:
    * @return SignalType&
    */
   SignalType& getSignal();
+
+  /**
+   * @brief Converts the current node to json.
+   * @return
+   */
+  virtual nlohmann::json toJson() const = 0;
 
 protected:
   /**

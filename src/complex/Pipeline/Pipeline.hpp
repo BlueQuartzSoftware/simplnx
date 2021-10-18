@@ -32,6 +32,21 @@ public:
   using const_iterator = collection_type::const_iterator;
 
   /**
+   * @brief Constructs a Pipeline from json.
+   * @param json
+   * @return
+   */
+  static Pipeline FromJson(const nlohmann::json& json);
+
+  /**
+   * @brief Constructs a Pipeline from json and the given filter list.
+   * @param json
+   * @param filterList
+   * @return
+   */
+  static Pipeline FromJson(const nlohmann::json& json, FilterList* filterList);
+
+  /**
    * @brief Constructs a pipeline with the specified name. If no name is
    * provided, a default name of "Unnamed Pipeline" will be used.
    * @param name = "Unnamed Pipeline"
@@ -434,6 +449,12 @@ public:
    * @param filterList
    */
   void setFilterList(complex::FilterList* filterList);
+
+  /**
+   * @brief Converts the current node to json.
+   * @return
+   */
+  nlohmann::json toJson() const override;
 
 private:
   /**

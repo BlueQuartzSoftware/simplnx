@@ -2,9 +2,14 @@
 
 #include "complex/Core/Application.hpp"
 #include "complex/Core/FilterHandle.hpp"
+#include "complex/Core/Parameters/GeneratedFileListParameter.hpp"
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
 #include "complex/Pipeline/PipelineFilter.hpp"
+
+#include <typeinfo>
+
+#include <nlohmann/json.hpp>
 
 namespace complex
 {
@@ -84,4 +89,63 @@ Pipeline CreatePipeline()
   REQUIRE(pipeline.execute());
 
   return pipeline;
+}
+
+TEST_CASE("PipelineJson")
+{
+  Application app;
+
+  Pipeline pipeline("test");
+
+  Arguments filter1Args;
+  filter1Args.insert("param1", 1.2f);
+  filter1Args.insert("param2", true);
+  filter1Args.insert("param3", GeneratedFileListParameter::ValueType{});
+  pipeline.push_back(Constants::k_FilterHandle1, filter1Args);
+
+  Arguments filter2Args;
+  filter2Args.insert("param1", 42);
+  filter2Args.insert("param2", std::string("foobarbaz"));
+  filter2Args.insert("param3", std::make_any<uint64>(13));
+  pipeline.push_back(Constants::k_FilterHandle2, filter2Args);
+
+  nlohmann::json pipelineJson = pipeline.toJson();
+
+  Pipeline pipeline2 = Pipeline::FromJson(pipelineJson);
+
+  REQUIRE(pipeline2.getName() == pipeline.getName());
+  REQUIRE(pipeline2.size() == pipeline.size());
+  usize size = pipeline2.size();
+  for(usize i = 0; i < size; i++)
+  {
+    const auto* originalNode = dynamic_cast<const PipelineFilter*>(pipeline.at(i));
+
+    const AbstractPipelineNode* node = pipeline2.at(i);
+    REQUIRE(node != nullptr);
+    const auto* pipelineFilter = dynamic_cast<const PipelineFilter*>(node);
+    REQUIRE(pipelineFilter != nullptr);
+    const IFilter* filter = pipelineFilter->getFilter();
+    REQUIRE(filter != nullptr);
+
+    Uuid expectedUuid = originalNode->getFilter()->uuid();
+    REQUIRE(filter->uuid() == expectedUuid);
+
+    Arguments expectedArgs = originalNode->getArguments();
+
+    Arguments args = pipelineFilter->getArguments();
+
+    REQUIRE(args.size() == expectedArgs.size());
+
+    for(const auto& [key, expectedValue] : expectedArgs)
+    {
+      REQUIRE(args.contains(key));
+      const std::any& value = args.at(key);
+      REQUIRE(value.has_value());
+      REQUIRE(value.type() == expectedValue.type());
+    }
+  }
+
+  nlohmann::json pipeline2Json = pipeline2.toJson();
+
+  REQUIRE(pipelineJson == pipeline2Json);
 }
