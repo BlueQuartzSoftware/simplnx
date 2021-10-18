@@ -69,58 +69,63 @@ Result<std::any> GeneratedFileListParameter::fromJson(const nlohmann::json& json
 
   if(!json.contains(name()))
   {
-    return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}JSON Data does not contain an entry with a key of \"{}\"", prefix, name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}JSON data does not contain an entry with a key of \"{}\"", prefix, name()));
   }
   auto jsonValue = json.at(name());
   if(!jsonValue.is_object())
   {
-    return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Value_Not_Object,
-                                              fmt::format("{}}The JSON data entry for key \"{}\" is not in the form of a JSON Object.", prefix, name()));
-  }
-
-  uint32 ordering_check = json[k_Ordering.c_str()].get<uint32>();
-  if(ordering_check != static_cast<uint32>(Ordering::LowToHigh) && ordering_check != static_cast<uint32>(Ordering::HighToLow))
-  {
-    return complex::MakeErrorResult<std::any>(
-        complex::FilterParameter::Constants::k_Json_Value_Not_Enumeration,
-        fmt::format("{}JSON value for key \"{}\" was not a valid ordering Value. [{}|{}] allowed.", prefix, k_Ordering.view(), Ordering::LowToHigh, Ordering::HighToLow));
-  }
-
-  if(!json[k_PaddingDigits.c_str()].is_number_unsigned())
-  {
-    return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Value_Not_Unsigned,
-                                              fmt::format("{}JSON value for key \"{}\" is not an unsigned int", prefix, k_PaddingDigits.view()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Object, fmt::format("{}The JSON data entry for key \"{}\" is not in the form of a JSON Object.", prefix, name()));
   }
 
   std::vector<const char*> keys = {k_StartIndex.c_str(), k_EndIndex.c_str(), k_PaddingDigits.c_str(), k_Ordering.c_str(), k_IncrementIndex.c_str()};
   for(const auto& key : keys)
   {
-    if(!json[key].is_number_integer())
+    if(!jsonValue.contains(key))
     {
-      return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Value_Not_Integer, fmt::format("{}JSON value for key \"{}\" is not an integer", prefix, key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of \"{}\"", prefix, key));
+    }
+    if(!jsonValue[key].is_number_integer())
+    {
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Integer, fmt::format("{}JSON value for key \"{}\" is not an integer", prefix, key));
     }
   }
 
   keys = {k_InputPath.c_str(), k_FilePrefix.c_str(), k_FileSuffix.c_str(), k_FileExtension.c_str()};
   for(const auto& key : keys)
   {
-    if(!json[key].is_string())
+    if(!jsonValue.contains(key))
     {
-      return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key \"{}\" is not a string", prefix, key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of \"{}\"", prefix, key));
     }
+    if(!jsonValue[key].is_string())
+    {
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key \"{}\" is not a string", prefix, key));
+    }
+  }
+
+  uint32 ordering_check = jsonValue[k_Ordering.c_str()].get<uint32>();
+  if(ordering_check != static_cast<uint32>(Ordering::LowToHigh) && ordering_check != static_cast<uint32>(Ordering::HighToLow))
+  {
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration,
+                                     fmt::format("{}JSON value for key \"{}\" was not a valid ordering Value. [{}|{}] allowed.", prefix, k_Ordering.view(), Ordering::LowToHigh, Ordering::HighToLow));
+  }
+
+  if(!jsonValue[k_PaddingDigits.c_str()].is_number_unsigned())
+  {
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Unsigned, fmt::format("{}JSON value for key \"{}\" is not an unsigned int", prefix, k_PaddingDigits.view()));
   }
 
   ValueType value;
 
-  value.paddingDigits = json[k_PaddingDigits.c_str()].get<int32>();
-  value.ordering = static_cast<Ordering>(json[k_Ordering.c_str()].get<uint32>());
-  value.incrementIndex = json[k_IncrementIndex.c_str()].get<int32>();
-  value.inputPath = json[k_InputPath.c_str()].get<std::string>();
-  value.filePrefix = json[k_FilePrefix.c_str()].get<std::string>();
-  value.fileSuffix = json[k_FileSuffix.c_str()].get<std::string>();
-  value.fileExtension = json[k_FileExtension.c_str()].get<std::string>();
-  value.startIndex = json[k_StartIndex.c_str()].get<int32>();
-  value.endIndex = json[k_EndIndex.c_str()].get<int32>();
+  value.paddingDigits = jsonValue[k_PaddingDigits.c_str()].get<int32>();
+  value.ordering = static_cast<Ordering>(jsonValue[k_Ordering.c_str()].get<uint32>());
+  value.incrementIndex = jsonValue[k_IncrementIndex.c_str()].get<int32>();
+  value.inputPath = jsonValue[k_InputPath.c_str()].get<std::string>();
+  value.filePrefix = jsonValue[k_FilePrefix.c_str()].get<std::string>();
+  value.fileSuffix = jsonValue[k_FileSuffix.c_str()].get<std::string>();
+  value.fileExtension = jsonValue[k_FileExtension.c_str()].get<std::string>();
+  value.startIndex = jsonValue[k_StartIndex.c_str()].get<int32>();
+  value.endIndex = jsonValue[k_EndIndex.c_str()].get<int32>();
 
   return {value};
 }
