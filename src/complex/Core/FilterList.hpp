@@ -60,6 +60,15 @@ public:
   IFilter::UniquePointer createFilter(const FilterHandle& handle) const;
 
   /**
+   * @brief Attempts to create an IFilter specified by the given uuid.
+   * Returns a unique pointer to the created filter if one was created.
+   * Returns nullptr otherwise.
+   * @param handle
+   * @return IFilter::UniquePointer
+   */
+  IFilter::UniquePointer createFilter(const Uuid& uuid) const;
+
+  /**
    * @brief Returns the AbstractPlugin pointer corresponding to the specified
    * FilterHandle. Returns nullptr if the plugin could not be found.
    *

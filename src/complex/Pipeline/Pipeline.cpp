@@ -7,7 +7,17 @@
 #include "complex/Pipeline/Messaging/NodeRemovedMessage.hpp"
 #include "complex/Pipeline/PipelineFilter.hpp"
 
+#include <stdexcept>
+
+#include <nlohmann/json.hpp>
+
 using namespace complex;
+
+namespace
+{
+constexpr StringLiteral k_PipelineNameKey = "name";
+constexpr StringLiteral k_PipelineItemsKey = "pipeline";
+} // namespace
 
 Pipeline::Pipeline(const std::string& name, FilterList* filterList)
 : AbstractPipelineNode()
@@ -438,4 +448,45 @@ Pipeline::const_iterator Pipeline::begin() const
 Pipeline::const_iterator Pipeline::end() const
 {
   return m_Collection.end();
+}
+
+nlohmann::json Pipeline::toJson() const
+{
+  auto jsonObject = nlohmann::json::object();
+  jsonObject[k_PipelineNameKey] = m_Name;
+
+  auto jsonArray = nlohmann::json::array();
+  for(const auto& item : m_Collection)
+  {
+    jsonArray.push_back(item->toJson());
+  }
+
+  jsonObject[k_PipelineItemsKey] = std::move(jsonArray);
+
+  return jsonObject;
+}
+
+Pipeline Pipeline::FromJson(const nlohmann::json& json)
+{
+  return FromJson(json, Application::Instance()->getFilterList());
+}
+
+Pipeline Pipeline::FromJson(const nlohmann::json& json, FilterList* filterList)
+{
+  auto name = json[k_PipelineNameKey].get<std::string>();
+
+  Pipeline pipeline(name, filterList);
+
+  for(const auto& item : json[k_PipelineItemsKey])
+  {
+    std::unique_ptr<PipelineFilter> pipelineFilter = PipelineFilter::FromJson(item, *filterList);
+    if(pipelineFilter == nullptr)
+    {
+      throw std::runtime_error("Invalid filter json");
+    }
+
+    pipeline.push_back(pipelineFilter.release());
+  }
+
+  return pipeline;
 }
