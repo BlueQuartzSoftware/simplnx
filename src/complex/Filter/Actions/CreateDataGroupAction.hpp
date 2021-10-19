@@ -1,10 +1,11 @@
 #pragma once
 
 #include "complex/Filter/Output.hpp"
+#include "complex/complex_export.hpp"
 
 namespace complex
 {
-class CreateDataGroupAction : public IDataAction
+class COMPLEX_EXPORT CreateDataGroupAction : public IDataAction
 {
 public:
   CreateDataGroupAction() = delete;

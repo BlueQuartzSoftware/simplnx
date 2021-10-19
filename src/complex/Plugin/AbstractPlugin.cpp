@@ -44,9 +44,14 @@ bool AbstractPlugin::containsFilterId(FilterHandle::FilterIdType uuid) const
   return m_InitializerMap.find(uuid) != m_InitializerMap.end();
 }
 
-std::unordered_set<FilterHandle> AbstractPlugin::getFilterHandles() const
+AbstractPlugin::FilterContainerType AbstractPlugin::getFilterHandles() const
 {
   return m_FilterHandles;
+}
+
+AbstractPlugin::FilterContainerType::size_type AbstractPlugin::getFilterCount() const
+{
+  return m_FilterHandles.size();
 }
 
 IFilter::UniquePointer AbstractPlugin::createFilter(FilterHandle::FilterIdType id) const
@@ -76,6 +81,6 @@ void AbstractPlugin::addFilter(FilterCreationFunc filterFunc)
                                          existingFilter->name()));
   }
 
-  m_FilterHandles.insert(FilterHandle(filter->humanName(), uuid, getId()));
+  m_FilterHandles.insert(FilterHandle(filter->humanName(), filter->className(), uuid, getId()));
   m_InitializerMap[uuid] = filterFunc;
 }

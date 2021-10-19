@@ -2,8 +2,8 @@
 
 //#include "complex/Common/StringLiteral.hpp"
 // INSERT YOUR PARAMETER HEADERS
-//#include "complex/Core/Parameters/BoolParameter.hpp"
-//#include "complex/Core/Parameters/NumberParameter.hpp"
+//#include "complex/Parameters/BoolParameter.hpp"
+//#include "complex/Parameters/NumberParameter.hpp"
 
 using namespace complex;
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "complex/Filter/IParameter.hpp"
+#include "complex/complex_export.hpp"
 
 namespace complex
 {

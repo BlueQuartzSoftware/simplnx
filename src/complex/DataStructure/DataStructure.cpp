@@ -405,7 +405,7 @@ bool DataStructure::removeTopLevel(DataObject* data)
 
 bool DataStructure::finishAddingObject(const std::shared_ptr<DataObject>& obj, const std::optional<DataObject::IdType>& parent)
 {
-  if(parent.has_value())
+  if(parent.has_value() && nullptr != getData(parent.value()))
   {
     auto parentContainer = dynamic_cast<BaseGroup*>(getData(parent.value()));
     if(!parentContainer->insert(obj))
