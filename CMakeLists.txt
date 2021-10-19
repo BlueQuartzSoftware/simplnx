@@ -126,6 +126,7 @@ set(CoreParameters
   DataGroupSelectionParameter
   FileSystemPathParameter
   GeneratedFileListParameter
+  H5DataStructureImportParameter
   MultiArraySelectionParameter
   NumberParameter
   NumericTypeParameter
@@ -235,6 +236,7 @@ set(COMPLEX_HDRS
 
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.hpp
 
   ${COMPLEX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.hpp
@@ -349,6 +351,7 @@ set(COMPLEX_SRCS
 
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.cpp
 
   ${COMPLEX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.cpp

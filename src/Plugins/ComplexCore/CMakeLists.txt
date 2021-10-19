@@ -8,6 +8,8 @@ set(FilterList
   CreateDataArray
   CreateDataGroup
   ImportTextFilter
+  ImportH5DataFilter
+  ExportH5DataFilter
   ExampleFilter1
   ExampleFilter2
   ExportH5DataFilter

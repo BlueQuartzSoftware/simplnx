@@ -298,6 +298,16 @@ std::shared_ptr<DataObject> DataStructure::getSharedData(DataObject::IdType id) 
   return m_DataObjects.at(id).lock();
 }
 
+std::shared_ptr<DataObject> DataStructure::getSharedData(const DataPath& path) const
+{
+  auto dataObject = getData(path);
+  if(dataObject == nullptr)
+  {
+    return nullptr;
+  }
+  return m_DataObjects.at(dataObject->getId()).lock();
+}
+
 bool DataStructure::removeData(DataObject::IdType id)
 {
   DataObject* data = getData(id);
@@ -442,6 +452,21 @@ DataStructure::ConstIterator DataStructure::begin() const
 DataStructure::ConstIterator DataStructure::end() const
 {
   return m_RootGroup.end();
+}
+
+bool DataStructure::insert(const std::shared_ptr<DataObject>& dataObject, const DataPath& dataPath)
+{
+  if(dataPath.empty())
+  {
+    return m_RootGroup.insert(dataObject);
+  }
+
+  auto parentData = dynamic_cast<BaseGroup*>(getData(dataPath));
+  if(parentData == nullptr)
+  {
+    return false;
+  }
+  return parentData->insert(dataObject);
 }
 
 bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject::IdType newParentId)

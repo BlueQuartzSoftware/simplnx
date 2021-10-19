@@ -291,6 +291,18 @@ public:
   std::shared_ptr<DataObject> getSharedData(DataObject::IdType id) const;
 
   /**
+   * @brief Returns the shared pointer for the DataObject at the target path.
+   * Returns nullptr if no DataObject is found.
+   *
+   * Use getData(const DataPath&) instead. This was only made public for
+   * use in importing a DataObject from another DataStructure when select data
+   * needs to be preserved beyond the imported DataStructure.
+   * @param path
+   * @return std::shared_ptr<DataObject>
+   */
+  std::shared_ptr<DataObject> getSharedData(const DataPath& path) const;
+
+  /**
    * @brief Removes the DataObject using the specified IdType. Returns true
    * if an object was found. Otherwise, returns false.
    * @param id
@@ -348,6 +360,18 @@ public:
    * @return const DataMap&
    */
   const DataMap& getDataMap() const;
+
+  /**
+   * @brief Inserts a DataObject into the DataStructure nested under the given
+   * DataPath. If the DataPath is empty, the DataObject is added directly to
+   * the DataStructure.
+   *
+   * Returns true if the process succeeds. Returns false otherwise.
+   * @param dataObject
+   * @param dataPath
+   * @return bool
+   */
+  bool insert(const std::shared_ptr<DataObject>& dataObject, const DataPath& dataPath);
 
   /**
    * @brief Adds an additional parent to the target DataObject.
