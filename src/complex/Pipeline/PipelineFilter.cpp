@@ -1,7 +1,7 @@
 #include "PipelineFilter.hpp"
 
 #include "complex/Core/Application.hpp"
-#include "complex/Core/FilterList.hpp"
+#include "complex/Filter/FilterList.hpp"
 #include "complex/Pipeline/Messaging/FilterPreflightMessage.hpp"
 
 #include <nlohmann/json.hpp>

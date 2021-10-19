@@ -1,9 +1,9 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Core/Parameters/BoolParameter.hpp"
-#include "complex/Core/Parameters/NumberParameter.hpp"
-#include "complex/Core/Parameters/StringParameter.hpp"
 #include "complex/Filter/Parameters.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Parameters/StringParameter.hpp"
 
 using namespace complex;
 

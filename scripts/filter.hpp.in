@@ -67,4 +67,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex::@FILTER_NAME@, "@UUID@");
+COMPLEX_DEF_FILTER_TRAITS(complex, @FILTER_NAME@, "@UUID@");

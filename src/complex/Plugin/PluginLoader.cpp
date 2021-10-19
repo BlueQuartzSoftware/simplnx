@@ -23,7 +23,7 @@ static_assert(false, "Plugin loading not implemented on this platform");
 
 #define COMPLEX_TEXT(text) COMPLEX_TEXT_IMPL(text)
 
-#include "complex/Core/FilterHandle.hpp"
+#include "complex/Filter/FilterHandle.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
 
 using namespace complex;

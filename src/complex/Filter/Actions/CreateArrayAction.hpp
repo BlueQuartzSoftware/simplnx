@@ -1,13 +1,14 @@
 #pragma once
 
 #include "complex/Filter/Output.hpp"
+#include "complex/complex_export.hpp"
 
 namespace complex
 {
 /**
  * @brief Action for creating DataArrays in a DataStructure
  */
-class CreateArrayAction : public IDataAction
+class COMPLEX_EXPORT CreateArrayAction : public IDataAction
 {
 public:
   CreateArrayAction() = delete;

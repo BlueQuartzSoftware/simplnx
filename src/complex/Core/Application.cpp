@@ -15,7 +15,7 @@
 #endif
 
 #include "complex/Core/Application.hpp"
-#include "complex/Core/FilterList.hpp"
+#include "complex/Filter/FilterList.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
 #include "complex/Plugin/PluginLoader.hpp"
 
@@ -110,27 +110,44 @@ std::filesystem::path Application::getCurrentDir() const
   return m_CurrentPath.parent_path();
 }
 
-void Application::loadPlugins(const std::filesystem::path& pluginDir)
+void Application::loadPlugins(const std::filesystem::path& pluginDir, bool verbose)
 {
+  if(verbose)
+  {
+    std::cout << "Loading Plugins from " << pluginDir << std::endl;
+  }
   for(const auto& entry : std::filesystem::directory_iterator(pluginDir))
   {
     auto path = std::filesystem::path(entry.path());
     std::string extension = path.extension().string();
     if(extension == ".complex")
     {
-      loadPlugin(path.string());
+      loadPlugin(path.string(), verbose);
     }
   }
 }
 
-// RestServer* Application::startRestServer(int32 port)
-//{
-//  return nullptr;
-//}
-
 FilterList* Application::getFilterList() const
 {
   return m_FilterList.get();
+}
+
+std::unordered_set<AbstractPlugin*> Application::getPluginList() const
+{
+  return m_FilterList->getLoadedPlugins();
+}
+
+AbstractPlugin* Application::getPlugin(const std::string& pluginName) const
+{
+  std::unordered_set<AbstractPlugin*> plugins = m_FilterList->getLoadedPlugins();
+  for(const auto& plugin : plugins)
+  {
+    if(plugin->getName() == pluginName)
+    {
+      return plugin;
+    }
+  }
+  return nullptr;
 }
 
 JsonPipelineBuilder* Application::getPipelineBuilder() const
@@ -143,8 +160,12 @@ H5::DataFactoryManager* Application::getH5FactoryManager() const
   return m_DataReader.get();
 }
 
-void Application::loadPlugin(const std::string& path)
+void Application::loadPlugin(const std::string& path, bool verbose)
 {
+  if(verbose)
+  {
+    std::cout << "Loading Plugin: " << path << std::endl;
+  }
   auto pluginLoader = std::make_shared<PluginLoader>(path);
   getFilterList()->addPlugin(pluginLoader);
 
