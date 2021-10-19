@@ -15,7 +15,7 @@ set(FilterList
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
                       FILTER_LIST ${FilterList}
-                      DESCRIPTION "Plugin for Comp${PLUGIN_NAME}lexCore"
+                      DESCRIPTION "Plugin for ${PLUGIN_NAME}"
                       VERSION "0.1.0"
 )
 
