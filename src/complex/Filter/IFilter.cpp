@@ -176,4 +176,9 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
     return {nonstd::make_unexpected(std::move(errors))};
   }
 }
+
+std::vector<std::string> IFilter::defaultTags() const
+{
+  return {};
+}
 } // namespace complex
