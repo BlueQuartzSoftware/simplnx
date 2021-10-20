@@ -12,7 +12,6 @@ set(FilterList
   ExportH5DataFilter
   ExampleFilter1
   ExampleFilter2
-  ExportH5DataFilter
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
