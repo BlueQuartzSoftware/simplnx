@@ -3,6 +3,7 @@
 #include <functional>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include <nonstd/expected.hpp>
 
@@ -94,6 +95,12 @@ public:
    * @return
    */
   virtual std::string humanName() const = 0;
+
+  /**
+   * @brief Returns the default tags for this filter.
+   * @return
+   */
+  virtual std::vector<std::string> defaultTags() const;
 
   /**
    * @brief Returns the parameters of the filter (i.e. its inputs)
