@@ -143,6 +143,7 @@ bool Pipeline::preflightFrom(const index_type& index, DataStructure& ds)
   {
     return false;
   }
+
   for(auto iter = begin() + index; iter != end(); iter++)
   {
     if(!iter->get()->preflight(ds))

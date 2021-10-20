@@ -129,9 +129,17 @@ public:
 
   /**
    * @brief Converts the current node to json.
-   * @return
+   * @return nlohmann::json
    */
   nlohmann::json toJson() const override;
+
+protected:
+  /**
+   * @brief Notifies observers to an IFilter::Message emitted by the IFilter
+   * during preflight or execute.
+   * @param message
+   */
+  void notifyFilterMessage(const IFilter::Message& message);
 
 private:
   IFilter::UniquePointer m_Filter;

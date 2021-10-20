@@ -3,6 +3,7 @@
 #include "complex/Core/Application.hpp"
 #include "complex/Filter/FilterList.hpp"
 #include "complex/Pipeline/Messaging/FilterPreflightMessage.hpp"
+#include "complex/Pipeline/Messaging/PipelineFilterMessage.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -74,7 +75,10 @@ void PipelineFilter::setArguments(const Arguments& args)
 
 bool PipelineFilter::preflight(DataStructure& data)
 {
-  Result<OutputActions> result = m_Filter->preflight(data, getArguments());
+  IFilter::MessageHandler messageHandler;
+  messageHandler.m_Callback = [this](const IFilter::Message& message) { this->notifyFilterMessage(message); };
+
+  Result<OutputActions> result = m_Filter->preflight(data, getArguments(), messageHandler);
   m_Warnings = std::move(result.warnings());
   if(result.invalid())
   {
@@ -111,7 +115,10 @@ bool PipelineFilter::preflight(DataStructure& data)
 
 bool PipelineFilter::execute(DataStructure& data)
 {
-  auto results = m_Filter->execute(data, getArguments());
+  IFilter::MessageHandler messageHandler;
+  messageHandler.m_Callback = [this](const IFilter::Message& message) { this->notifyFilterMessage(message); };
+
+  auto results = m_Filter->execute(data, getArguments(), messageHandler);
   if(!results.valid())
   {
     m_Warnings = results.warnings();
@@ -140,6 +147,11 @@ std::vector<complex::Warning> PipelineFilter::getWarnings() const
 std::vector<complex::Error> PipelineFilter::getErrors() const
 {
   return m_Errors;
+}
+
+void PipelineFilter::notifyFilterMessage(const IFilter::Message& message)
+{
+  notify(std::make_shared<PipelineFilterMessage>(this, message));
 }
 
 nlohmann::json PipelineFilter::toJson() const
