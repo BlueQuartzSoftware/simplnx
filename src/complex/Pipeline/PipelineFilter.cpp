@@ -75,8 +75,7 @@ void PipelineFilter::setArguments(const Arguments& args)
 
 bool PipelineFilter::preflight(DataStructure& data)
 {
-  IFilter::MessageHandler messageHandler;
-  messageHandler.m_Callback = [this](const IFilter::Message& message) { this->notifyFilterMessage(message); };
+  IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
   Result<OutputActions> result = m_Filter->preflight(data, getArguments(), messageHandler);
   m_Warnings = std::move(result.warnings());
@@ -115,8 +114,7 @@ bool PipelineFilter::preflight(DataStructure& data)
 
 bool PipelineFilter::execute(DataStructure& data)
 {
-  IFilter::MessageHandler messageHandler;
-  messageHandler.m_Callback = [this](const IFilter::Message& message) { this->notifyFilterMessage(message); };
+  IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
   auto results = m_Filter->execute(data, getArguments(), messageHandler);
   if(!results.valid())
