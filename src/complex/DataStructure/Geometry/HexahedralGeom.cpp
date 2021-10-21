@@ -193,7 +193,7 @@ void HexahedralGeom::getVertCoordsAtHex(usize hexId, complex::Point3D<float32>& 
 usize HexahedralGeom::getNumberOfHexas() const
 {
   const auto* hexList = dynamic_cast<const SharedHexList*>(getDataStructure()->getData(m_HexListId));
-  if(nullptr == hexList)
+  if(hexList == nullptr)
   {
     return 0;
   }
@@ -217,7 +217,7 @@ void HexahedralGeom::initializeWithZeros()
 usize HexahedralGeom::getNumberOfElements() const
 {
   const auto* elements = dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_HexSizesId));
-  if(nullptr == elements)
+  if(elements == nullptr)
   {
     return 0;
   }

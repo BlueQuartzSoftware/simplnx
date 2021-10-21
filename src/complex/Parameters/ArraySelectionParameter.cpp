@@ -87,7 +87,7 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
   }
 
   const DataGroup* dataGroup = dynamic_cast<const DataGroup*>(object);
-  if(nullptr != dataGroup)
+  if(dataGroup != nullptr)
   {
     return complex::MakeErrorResult<>(-2, fmt::format("Object at path '{}' is a DataGroup but needs to be a DataArray.", value.toString()));
   }
