@@ -2,6 +2,7 @@
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/GeneratedFileListParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 
@@ -12,6 +13,8 @@ namespace
 constexpr StringLiteral k_Param1 = "param1";
 constexpr StringLiteral k_Param2 = "param2";
 constexpr StringLiteral k_Param3 = "param3";
+constexpr StringLiteral k_Param4 = "param4";
+
 } // namespace
 
 namespace complex
@@ -44,6 +47,8 @@ Parameters ExampleFilter2::parameters() const
   params.insert(std::make_unique<StringParameter>(k_Param2, "Parameter 2", "The 2nd parameter", "test string"));
   params.insertSeparator({"Second Group of Parameters"});
   params.insert(std::make_unique<ChoicesParameter>(k_Param3, "Parameter 3", "The 3rd parameter", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
+  params.insert(std::make_unique<GeneratedFileListParameter>(k_Param4, "Input File List", "Data needed to generate the input file list", GeneratedFileListParameter::ValueType{}));
+
   return params;
 }
 
