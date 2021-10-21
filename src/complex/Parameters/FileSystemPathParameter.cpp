@@ -92,7 +92,7 @@ nlohmann::json FileSystemPathParameter::toJson(const std::any& value) const
 {
   ValueType path = std::any_cast<ValueType>(value);
   nlohmann::json json;
-  json[k_PathKey.c_str()] = path.string();
+  json[k_PathKey] = path.string();
   return json;
 }
 
