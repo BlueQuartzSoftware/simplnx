@@ -36,8 +36,13 @@ add_executable(complex_test
 target_link_libraries(complex_test
   PRIVATE
     complex
+    ComplexCore
     Catch2::Catch2
 )
+
+# Require that the test plugins are built before tests because some tests
+# require loading from those plugins but don't want to link to them.
+add_dependencies(complex_test TestOne TestTwo)
 
 set_target_properties(complex_test
   PROPERTIES
