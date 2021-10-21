@@ -206,7 +206,7 @@ const AbstractGeometry::SharedTetList* TetrahedralGeom::getTetrahedra() const
 void TetrahedralGeom::setVertsAtTet(usize tetId, usize verts[4])
 {
   auto* tets = getTetrahedra();
-  if(nullptr == tets)
+  if(tets == nullptr)
   {
     return;
   }
