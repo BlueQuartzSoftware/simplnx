@@ -14,6 +14,8 @@
 #include <mach-o/dyld.h>
 #endif
 
+#include <fmt/core.h>
+
 #include "complex/Core/Application.hpp"
 #include "complex/Filter/FilterList.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
@@ -68,15 +70,14 @@ std::filesystem::path findCurrentPath()
 Application* Application::s_Instance = nullptr;
 
 Application::Application()
-: m_FilterList(new FilterList())
-, m_DataReader(new H5::DataFactoryManager())
+: m_FilterList(std::make_unique<FilterList>())
+, m_DataReader(std::make_unique<H5::DataFactoryManager>())
 {
   assignInstance();
 }
 
 Application::Application(int argc, char** argv)
-: m_FilterList(new FilterList())
-, m_DataReader(new H5::DataFactoryManager())
+: Application()
 {
   assignInstance();
 }
@@ -114,15 +115,15 @@ void Application::loadPlugins(const std::filesystem::path& pluginDir, bool verbo
 {
   if(verbose)
   {
-    std::cout << "Loading Plugins from " << pluginDir << std::endl;
+    fmt::print("Loading Plugins from {}\n", pluginDir.string());
   }
   for(const auto& entry : std::filesystem::directory_iterator(pluginDir))
   {
-    auto path = std::filesystem::path(entry.path());
+    std::filesystem::path path = entry.path();
     std::string extension = path.extension().string();
     if(extension == ".complex")
     {
-      loadPlugin(path.string(), verbose);
+      loadPlugin(path, verbose);
     }
   }
 }
@@ -137,12 +138,12 @@ std::unordered_set<AbstractPlugin*> Application::getPluginList() const
   return m_FilterList->getLoadedPlugins();
 }
 
-AbstractPlugin* Application::getPlugin(const std::string& pluginName) const
+const AbstractPlugin* Application::getPlugin(const Uuid& uuid) const
 {
   std::unordered_set<AbstractPlugin*> plugins = m_FilterList->getLoadedPlugins();
-  for(const auto& plugin : plugins)
+  for(const auto* plugin : plugins)
   {
-    if(plugin->getName() == pluginName)
+    if(plugin->getId() == uuid)
     {
       return plugin;
     }
@@ -160,11 +161,11 @@ H5::DataFactoryManager* Application::getH5FactoryManager() const
   return m_DataReader.get();
 }
 
-void Application::loadPlugin(const std::string& path, bool verbose)
+void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
 {
   if(verbose)
   {
-    std::cout << "Loading Plugin: " << path << std::endl;
+    fmt::print("Loading Plugin: {}\n", path.string());
   }
   auto pluginLoader = std::make_shared<PluginLoader>(path);
   getFilterList()->addPlugin(pluginLoader);

@@ -21,7 +21,7 @@
 #include "GeometryTestUtilities.hpp"
 
 // This file is generated into the binary directory
-#include "complex/unit_test/complex_test_dirs.h"
+#include "complex/unit_test/complex_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -184,14 +184,14 @@ DataArray<T>* CreateTestDataArray(const std::string& name, DataStructure& dataGr
 DataStructure CreateDataStructure()
 {
   DataStructure dataGraph;
-  DataGroup* group = complex::DataGroup::Create(dataGraph, "Small IN100");
-  DataGroup* scanData = complex::DataGroup::Create(dataGraph, "EBSD Scan Data", group->getId());
+  DataGroup* group = DataGroup::Create(dataGraph, "Small IN100");
+  DataGroup* scanData = DataGroup::Create(dataGraph, "EBSD Scan Data", group->getId());
 
   // Create an Image Geometry grid for the Scan Data
   ImageGeom* imageGeom = ImageGeom::Create(dataGraph, "Small IN100 Grid", scanData->getId());
   imageGeom->setSpacing({0.25f, 0.25f, 0.25f});
   imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
-  complex::SizeVec3 imageGeomDims = {100, 100, 100};
+  SizeVec3 imageGeomDims = {100, 100, 100};
   imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
 
   // Create some DataArrays; The DataStructure keeps a shared_ptr<> to the DataArray so DO NOT put
@@ -210,7 +210,7 @@ DataStructure CreateDataStructure()
   dataGraph.setAdditionalParent(ipf_color_data->getId(), group->getId());
 
   // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
-  DataGroup* phase_group = complex::DataGroup::Create(dataGraph, "Phase Data", group->getId());
+  DataGroup* phase_group = DataGroup::Create(dataGraph, "Phase Data", group->getId());
   numComponents = 1;
   size_t numTuples = 2;
   Int32Array* laue_data = CreateTestDataArray<int32_t>("Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId());
@@ -281,12 +281,12 @@ TEST_CASE("Image Geometry IO")
 DataStructure CreateNodeBasedGeometries()
 {
   DataStructure dataGraph;
-  DataGroup* group = complex::DataGroup::Create(dataGraph, "AM LPBF Experiment");
-  DataGroup* scanData = complex::DataGroup::Create(dataGraph, "Melt Pool Data", group->getId());
+  DataGroup* group = DataGroup::Create(dataGraph, "AM LPBF Experiment");
+  DataGroup* scanData = DataGroup::Create(dataGraph, "Melt Pool Data", group->getId());
 
   // Read the vertices into a vector and then copy that into a VertexGeometry
-  std::string inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", complex::unit_test::k_ComplexSourceDir.c_str());
-  std::vector<float> csvVerts = complex::CsvParser::ParseVertices(inputFile, ",", true);
+  std::string inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
+  std::vector<float> csvVerts = CsvParser::ParseVertices(inputFile, ",", true);
   auto vertexGeom = VertexGeom::Create(dataGraph, "[Geometry] Vertex", scanData->getId());
   vertexGeom->resizeVertexList(csvVerts.size() / 3);
   AbstractGeometry::SharedVertexList* vertices = vertexGeom->getVertices();

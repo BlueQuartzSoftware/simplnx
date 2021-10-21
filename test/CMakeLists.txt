@@ -1,8 +1,9 @@
-file(TO_CMAKE_PATH "${complex_SOURCE_DIR}" complex_SOURCE_DIR_NORM)
+file(TO_CMAKE_PATH "${PROJECT_SOURCE_DIR}" COMPLEX_SOURCE_DIR_NORM)
+file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}" COMPLEX_BINARY_DIR_NORM)
 
-set(COMPLEX_TEST_DIRS_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/unit_test/complex_test_dirs.h)
+set(COMPLEX_TEST_DIRS_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/unit_test/complex_test_dirs.hpp)
 
-configure_file(${complex_SOURCE_DIR}/test/complex_test_dirs.h.in ${COMPLEX_TEST_DIRS_HEADER} @ONLY)
+configure_file(${complex_SOURCE_DIR}/test/complex_test_dirs.hpp.in ${COMPLEX_TEST_DIRS_HEADER} @ONLY)
 
 find_package(Catch2 CONFIG REQUIRED)
 
@@ -12,7 +13,6 @@ add_subdirectory(${complex_SOURCE_DIR}/src/Plugins/TestOne ${complex_BINARY_DIR}
 add_subdirectory(${complex_SOURCE_DIR}/src/Plugins/TestTwo ${complex_BINARY_DIR}/Plugins/TestTwo)
 
 add_executable(complex_test 
-  # MACOSX_BUNDLE
   ${COMPLEX_TEST_DIRS_HEADER}
   complex_test_main.cpp
   ArgumentsTest.cpp
@@ -44,15 +44,10 @@ set_target_properties(complex_test
     RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
 )
 
-# set_target_properties(complex_test
-#   PROPERTIES
-#     BUNDLE True
-#     MACOSX_BUNDLE_GUI_IDENTIFIER com.BlueQuartzSoftware.style.complex.Tests
-#     MACOSX_BUNDLE_BUNDLE_NAME "Complex Tests"
-#     MACOSX_BUNDLE_BUNDLE_VERSION "0.1"
-#     MACOSX_BUNDLE_SHORT_VERSION_STRING "0.1"
-#     MACOSX_BUNDLE_INFO_PLIST ${complex_SOURCE_DIR}/cmake/MacOSXBundleInfo.plist.in
-# )
+target_compile_definitions(complex_test
+  PRIVATE
+    COMPLEX_BUILD_DIR="$<TARGET_FILE_DIR:complex_test>"
+)
 
 target_compile_options(complex_test
   PRIVATE
@@ -60,7 +55,5 @@ target_compile_options(complex_test
 )
 
 target_include_directories(complex_test PRIVATE ${COMPLEX_GENERATED_DIR})
-
-
 
 catch_discover_tests(complex_test)
