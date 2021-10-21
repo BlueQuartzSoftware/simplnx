@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string RenameAttributeArray::name() const
 {
   return FilterTraits<RenameAttributeArray>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string RenameAttributeArray::className() const
 {
   return FilterTraits<RenameAttributeArray>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid RenameAttributeArray::uuid() const
 {
   return FilterTraits<RenameAttributeArray>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string RenameAttributeArray::humanName() const
 {
   return "Rename Attribute Array";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> RenameAttributeArray::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters RenameAttributeArray::parameters() const
 {
   Parameters params;
@@ -38,11 +49,13 @@ Parameters RenameAttributeArray::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RenameAttributeArray::clone() const
 {
   return std::make_unique<RenameAttributeArray>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> RenameAttributeArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -60,6 +73,7 @@ Result<OutputActions> RenameAttributeArray::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> RenameAttributeArray::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

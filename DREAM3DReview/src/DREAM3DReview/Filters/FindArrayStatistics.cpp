@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindArrayStatistics::name() const
 {
   return FilterTraits<FindArrayStatistics>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindArrayStatistics::className() const
 {
   return FilterTraits<FindArrayStatistics>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindArrayStatistics::uuid() const
 {
   return FilterTraits<FindArrayStatistics>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindArrayStatistics::humanName() const
 {
   return "Find Attribute Array Statistics";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindArrayStatistics::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Statistics"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindArrayStatistics::parameters() const
 {
   Parameters params;
@@ -85,11 +96,13 @@ Parameters FindArrayStatistics::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindArrayStatistics::clone() const
 {
   return std::make_unique<FindArrayStatistics>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindArrayStatistics::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -133,6 +146,7 @@ Result<OutputActions> FindArrayStatistics::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindArrayStatistics::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

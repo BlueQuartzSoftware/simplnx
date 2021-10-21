@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string InsertTransformationPhases::name() const
 {
   return FilterTraits<InsertTransformationPhases>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string InsertTransformationPhases::className() const
 {
   return FilterTraits<InsertTransformationPhases>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid InsertTransformationPhases::uuid() const
 {
   return FilterTraits<InsertTransformationPhases>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string InsertTransformationPhases::humanName() const
 {
   return "Insert Transformation Phases";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> InsertTransformationPhases::defaultTags() const
+{
+  return {"#Unsupported", "#Packing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters InsertTransformationPhases::parameters() const
 {
   Parameters params;
@@ -75,11 +86,13 @@ Parameters InsertTransformationPhases::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer InsertTransformationPhases::clone() const
 {
   return std::make_unique<InsertTransformationPhases>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> InsertTransformationPhases::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -121,6 +134,7 @@ Result<OutputActions> InsertTransformationPhases::preflightImpl(const DataStruct
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> InsertTransformationPhases::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

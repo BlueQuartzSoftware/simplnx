@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ErodeDilateCoordinationNumber::name() const
 {
   return FilterTraits<ErodeDilateCoordinationNumber>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ErodeDilateCoordinationNumber::className() const
 {
   return FilterTraits<ErodeDilateCoordinationNumber>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ErodeDilateCoordinationNumber::uuid() const
 {
   return FilterTraits<ErodeDilateCoordinationNumber>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ErodeDilateCoordinationNumber::humanName() const
 {
   return "Smooth Bad Data (Coordination Number)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ErodeDilateCoordinationNumber::defaultTags() const
+{
+  return {"#Processing", "#Cleanup"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ErodeDilateCoordinationNumber::parameters() const
 {
   Parameters params;
@@ -44,11 +55,13 @@ Parameters ErodeDilateCoordinationNumber::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ErodeDilateCoordinationNumber::clone() const
 {
   return std::make_unique<ErodeDilateCoordinationNumber>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ErodeDilateCoordinationNumber::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -68,6 +81,7 @@ Result<OutputActions> ErodeDilateCoordinationNumber::preflightImpl(const DataStr
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ErodeDilateCoordinationNumber::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

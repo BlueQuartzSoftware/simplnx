@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkMeanKernel::name() const
 {
   return FilterTraits<ItkMeanKernel>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkMeanKernel::className() const
 {
   return FilterTraits<ItkMeanKernel>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkMeanKernel::uuid() const
 {
   return FilterTraits<ItkMeanKernel>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkMeanKernel::humanName() const
 {
   return "Mean (Kernel) (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkMeanKernel::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkMeanKernel::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters ItkMeanKernel::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkMeanKernel::clone() const
 {
   return std::make_unique<ItkMeanKernel>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkMeanKernel::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> ItkMeanKernel::preflightImpl(const DataStructure& ds, cons
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkMeanKernel::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

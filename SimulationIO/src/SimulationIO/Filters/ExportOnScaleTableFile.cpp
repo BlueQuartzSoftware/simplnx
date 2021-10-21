@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ExportOnScaleTableFile::name() const
 {
   return FilterTraits<ExportOnScaleTableFile>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ExportOnScaleTableFile::className() const
 {
   return FilterTraits<ExportOnScaleTableFile>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ExportOnScaleTableFile::uuid() const
 {
   return FilterTraits<ExportOnScaleTableFile>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ExportOnScaleTableFile::humanName() const
 {
   return "Create OnScale Table File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ExportOnScaleTableFile::defaultTags() const
+{
+  return {"#Unsupported", "#SimulationIO"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ExportOnScaleTableFile::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters ExportOnScaleTableFile::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExportOnScaleTableFile::clone() const
 {
   return std::make_unique<ExportOnScaleTableFile>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ExportOnScaleTableFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -73,6 +86,7 @@ Result<OutputActions> ExportOnScaleTableFile::preflightImpl(const DataStructure&
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ExportOnScaleTableFile::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

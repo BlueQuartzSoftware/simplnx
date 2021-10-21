@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AverageVertexArrayToEdgeFaceCellArray::name() const
 {
   return FilterTraits<AverageVertexArrayToEdgeFaceCellArray>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AverageVertexArrayToEdgeFaceCellArray::className() const
 {
   return FilterTraits<AverageVertexArrayToEdgeFaceCellArray>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AverageVertexArrayToEdgeFaceCellArray::uuid() const
 {
   return FilterTraits<AverageVertexArrayToEdgeFaceCellArray>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AverageVertexArrayToEdgeFaceCellArray::humanName() const
 {
   return "Average Vertex Array to Edge/Face/Cell Array";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AverageVertexArrayToEdgeFaceCellArray::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Statistics"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AverageVertexArrayToEdgeFaceCellArray::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters AverageVertexArrayToEdgeFaceCellArray::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AverageVertexArrayToEdgeFaceCellArray::clone() const
 {
   return std::make_unique<AverageVertexArrayToEdgeFaceCellArray>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AverageVertexArrayToEdgeFaceCellArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -65,6 +78,7 @@ Result<OutputActions> AverageVertexArrayToEdgeFaceCellArray::preflightImpl(const
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AverageVertexArrayToEdgeFaceCellArray::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

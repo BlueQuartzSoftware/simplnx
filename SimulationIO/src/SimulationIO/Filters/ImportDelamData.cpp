@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportDelamData::name() const
 {
   return FilterTraits<ImportDelamData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ImportDelamData::className() const
 {
   return FilterTraits<ImportDelamData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportDelamData::uuid() const
 {
   return FilterTraits<ImportDelamData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportDelamData::humanName() const
 {
   return "Import Delam Data";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportDelamData::defaultTags() const
+{
+  return {"#IO", "#SimulationIO"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportDelamData::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters ImportDelamData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportDelamData::clone() const
 {
   return std::make_unique<ImportDelamData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ImportDelamData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -73,6 +86,7 @@ Result<OutputActions> ImportDelamData::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ImportDelamData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

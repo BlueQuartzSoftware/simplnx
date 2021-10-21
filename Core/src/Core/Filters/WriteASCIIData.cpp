@@ -14,26 +14,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string WriteASCIIData::name() const
 {
   return FilterTraits<WriteASCIIData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string WriteASCIIData::className() const
 {
   return FilterTraits<WriteASCIIData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid WriteASCIIData::uuid() const
 {
   return FilterTraits<WriteASCIIData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string WriteASCIIData::humanName() const
 {
   return "Export ASCII Data";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> WriteASCIIData::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters WriteASCIIData::parameters() const
 {
   Parameters params;
@@ -55,11 +66,13 @@ Parameters WriteASCIIData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteASCIIData::clone() const
 {
   return std::make_unique<WriteASCIIData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> WriteASCIIData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -82,6 +95,7 @@ Result<OutputActions> WriteASCIIData::preflightImpl(const DataStructure& ds, con
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> WriteASCIIData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

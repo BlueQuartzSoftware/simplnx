@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string UncertainRegularGridSampleSurfaceMesh::name() const
 {
   return FilterTraits<UncertainRegularGridSampleSurfaceMesh>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string UncertainRegularGridSampleSurfaceMesh::className() const
 {
   return FilterTraits<UncertainRegularGridSampleSurfaceMesh>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid UncertainRegularGridSampleSurfaceMesh::uuid() const
 {
   return FilterTraits<UncertainRegularGridSampleSurfaceMesh>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string UncertainRegularGridSampleSurfaceMesh::humanName() const
 {
   return "Sample Triangle Geometry on Uncertain Regular Grid";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> UncertainRegularGridSampleSurfaceMesh::defaultTags() const
+{
+  return {"#Sampling", "#Spacing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters UncertainRegularGridSampleSurfaceMesh::parameters() const
 {
   Parameters params;
@@ -51,11 +62,13 @@ Parameters UncertainRegularGridSampleSurfaceMesh::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer UncertainRegularGridSampleSurfaceMesh::clone() const
 {
   return std::make_unique<UncertainRegularGridSampleSurfaceMesh>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> UncertainRegularGridSampleSurfaceMesh::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -81,6 +94,7 @@ Result<OutputActions> UncertainRegularGridSampleSurfaceMesh::preflightImpl(const
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> UncertainRegularGridSampleSurfaceMesh::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

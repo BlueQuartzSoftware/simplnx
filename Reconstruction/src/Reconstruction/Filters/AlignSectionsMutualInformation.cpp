@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AlignSectionsMutualInformation::name() const
 {
   return FilterTraits<AlignSectionsMutualInformation>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AlignSectionsMutualInformation::className() const
 {
   return FilterTraits<AlignSectionsMutualInformation>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AlignSectionsMutualInformation::uuid() const
 {
   return FilterTraits<AlignSectionsMutualInformation>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AlignSectionsMutualInformation::humanName() const
 {
   return "Align Sections (Mutual Information)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AlignSectionsMutualInformation::defaultTags() const
+{
+  return {"#Reconstruction", "#Alignment"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AlignSectionsMutualInformation::parameters() const
 {
   Parameters params;
@@ -55,11 +66,13 @@ Parameters AlignSectionsMutualInformation::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AlignSectionsMutualInformation::clone() const
 {
   return std::make_unique<AlignSectionsMutualInformation>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AlignSectionsMutualInformation::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -83,6 +96,7 @@ Result<OutputActions> AlignSectionsMutualInformation::preflightImpl(const DataSt
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AlignSectionsMutualInformation::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

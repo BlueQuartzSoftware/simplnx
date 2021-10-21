@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkAutoThreshold::name() const
 {
   return FilterTraits<ItkAutoThreshold>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkAutoThreshold::className() const
 {
   return FilterTraits<ItkAutoThreshold>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkAutoThreshold::uuid() const
 {
   return FilterTraits<ItkAutoThreshold>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkAutoThreshold::humanName() const
 {
   return "Threshold Image (Auto) (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkAutoThreshold::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkAutoThreshold::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters ItkAutoThreshold::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkAutoThreshold::clone() const
 {
   return std::make_unique<ItkAutoThreshold>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkAutoThreshold::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> ItkAutoThreshold::preflightImpl(const DataStructure& ds, c
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkAutoThreshold::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

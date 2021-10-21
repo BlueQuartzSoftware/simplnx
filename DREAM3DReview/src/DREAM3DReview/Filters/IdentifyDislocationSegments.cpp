@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string IdentifyDislocationSegments::name() const
 {
   return FilterTraits<IdentifyDislocationSegments>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string IdentifyDislocationSegments::className() const
 {
   return FilterTraits<IdentifyDislocationSegments>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid IdentifyDislocationSegments::uuid() const
 {
   return FilterTraits<IdentifyDislocationSegments>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string IdentifyDislocationSegments::humanName() const
 {
   return "Identify Dislocation Segments";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> IdentifyDislocationSegments::defaultTags() const
+{
+  return {"#Unsupported", "#FeatureIdentification"};
+}
+
+//------------------------------------------------------------------------------
 Parameters IdentifyDislocationSegments::parameters() const
 {
   Parameters params;
@@ -44,11 +55,13 @@ Parameters IdentifyDislocationSegments::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer IdentifyDislocationSegments::clone() const
 {
   return std::make_unique<IdentifyDislocationSegments>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> IdentifyDislocationSegments::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -69,6 +82,7 @@ Result<OutputActions> IdentifyDislocationSegments::preflightImpl(const DataStruc
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> IdentifyDislocationSegments::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

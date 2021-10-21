@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkSobelEdge::name() const
 {
   return FilterTraits<ItkSobelEdge>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkSobelEdge::className() const
 {
   return FilterTraits<ItkSobelEdge>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkSobelEdge::uuid() const
 {
   return FilterTraits<ItkSobelEdge>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkSobelEdge::humanName() const
 {
   return "Sobel Edge Detector (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkSobelEdge::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkSobelEdge::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters ItkSobelEdge::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkSobelEdge::clone() const
 {
   return std::make_unique<ItkSobelEdge>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkSobelEdge::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -69,6 +82,7 @@ Result<OutputActions> ItkSobelEdge::preflightImpl(const DataStructure& ds, const
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkSobelEdge::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

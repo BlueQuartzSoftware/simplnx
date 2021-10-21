@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ClearDataMask::name() const
 {
   return FilterTraits<ClearDataMask>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ClearDataMask::className() const
 {
   return FilterTraits<ClearDataMask>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ClearDataMask::uuid() const
 {
   return FilterTraits<ClearDataMask>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ClearDataMask::humanName() const
 {
   return "Clear Data (Mask)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ClearDataMask::defaultTags() const
+{
+  return {"#Processing", "#Cleanup"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ClearDataMask::parameters() const
 {
   Parameters params;
@@ -36,11 +47,13 @@ Parameters ClearDataMask::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ClearDataMask::clone() const
 {
   return std::make_unique<ClearDataMask>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ClearDataMask::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -57,6 +70,7 @@ Result<OutputActions> ClearDataMask::preflightImpl(const DataStructure& ds, cons
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ClearDataMask::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

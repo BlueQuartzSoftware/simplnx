@@ -6,26 +6,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string MaskCountDecision::name() const
 {
   return FilterTraits<MaskCountDecision>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string MaskCountDecision::className() const
 {
   return FilterTraits<MaskCountDecision>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid MaskCountDecision::uuid() const
 {
   return FilterTraits<MaskCountDecision>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string MaskCountDecision::humanName() const
 {
   return "Mask Count Decision";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> MaskCountDecision::defaultTags() const
+{
+  return {"#Core", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MaskCountDecision::parameters() const
 {
   Parameters params;
@@ -34,11 +45,13 @@ Parameters MaskCountDecision::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MaskCountDecision::clone() const
 {
   return std::make_unique<MaskCountDecision>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> MaskCountDecision::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -54,6 +67,7 @@ Result<OutputActions> MaskCountDecision::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> MaskCountDecision::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

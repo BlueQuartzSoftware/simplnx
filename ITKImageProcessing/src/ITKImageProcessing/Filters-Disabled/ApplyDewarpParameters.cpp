@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ApplyDewarpParameters::name() const
 {
   return FilterTraits<ApplyDewarpParameters>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ApplyDewarpParameters::className() const
 {
   return FilterTraits<ApplyDewarpParameters>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ApplyDewarpParameters::uuid() const
 {
   return FilterTraits<ApplyDewarpParameters>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ApplyDewarpParameters::humanName() const
 {
   return "Apply Dewarp Parameters";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ApplyDewarpParameters::defaultTags() const
+{
+  return {"#Processing", "#Processing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ApplyDewarpParameters::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters ApplyDewarpParameters::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ApplyDewarpParameters::clone() const
 {
   return std::make_unique<ApplyDewarpParameters>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ApplyDewarpParameters::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -67,6 +80,7 @@ Result<OutputActions> ApplyDewarpParameters::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ApplyDewarpParameters::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

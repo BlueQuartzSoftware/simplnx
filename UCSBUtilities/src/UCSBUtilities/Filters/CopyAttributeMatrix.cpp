@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CopyAttributeMatrix::name() const
 {
   return FilterTraits<CopyAttributeMatrix>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CopyAttributeMatrix::className() const
 {
   return FilterTraits<CopyAttributeMatrix>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CopyAttributeMatrix::uuid() const
 {
   return FilterTraits<CopyAttributeMatrix>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CopyAttributeMatrix::humanName() const
 {
   return "Copy Attribute Matrix";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CopyAttributeMatrix::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CopyAttributeMatrix::parameters() const
 {
   Parameters params;
@@ -38,11 +49,13 @@ Parameters CopyAttributeMatrix::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CopyAttributeMatrix::clone() const
 {
   return std::make_unique<CopyAttributeMatrix>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CopyAttributeMatrix::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -60,6 +73,7 @@ Result<OutputActions> CopyAttributeMatrix::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CopyAttributeMatrix::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -8,115 +8,17 @@ set(FilterList
   #ApplyDewarpParameters # MISSING 1 or more Parameter Implementations
   AxioVisionV4ToTileConfiguration
   #CalcDewarpParameters # MISSING 1 or more Parameter Implementations
-  ITKAbsImage
-  ITKAcosImage
-  ITKAdaptiveHistogramEqualizationImage
-  ITKApproximateSignedDistanceMapImage
-  ITKAsinImage
-  ITKAtanImage
-  ITKBilateralImage
-  ITKBinaryClosingByReconstructionImage
-  ITKBinaryContourImage
-  ITKBinaryDilateImage
-  ITKBinaryErodeImage
-  ITKBinaryMorphologicalClosingImage
-  ITKBinaryMorphologicalOpeningImage
-  ITKBinaryOpeningByReconstructionImage
-  ITKBinaryProjectionImage
-  ITKBinaryThinningImage
-  ITKBinaryThresholdImage
-  ITKBinomialBlurImage
-  ITKBlackTopHatImage
-  ITKBoundedReciprocalImage
-  ITKBoxMeanImage
-  ITKCastImage
-  ITKClosingByReconstructionImage
-  ITKConnectedComponentImage
-  ITKCosImage
-  ITKCurvatureAnisotropicDiffusionImage
-  ITKCurvatureFlowImage
-  ITKDanielssonDistanceMapImage
-  ITKDilateObjectMorphologyImage
   ITKDiscreteGaussianImage
-  ITKDoubleThresholdImage
-  ITKErodeObjectMorphologyImage
-  ITKExpImage
-  ITKExpNegativeImage
-  ITKFFTNormalizedCorrelationImage
-  ITKGradientAnisotropicDiffusionImage
-  ITKGradientMagnitudeImage
-  ITKGradientMagnitudeRecursiveGaussianImage
-  ITKGrayscaleDilateImage
-  ITKGrayscaleErodeImage
-  ITKGrayscaleFillholeImage
-  ITKGrayscaleGrindPeakImage
-  ITKGrayscaleMorphologicalClosingImage
-  ITKGrayscaleMorphologicalOpeningImage
-  ITKHConvexImage
-  ITKHMaximaImage
-  ITKHMinimaImage
-  ITKHistogramMatchingImage
   ITKImageReader
   ITKImageWriter
   #ITKImportFijiMontage # MISSING 1 or more Parameter Implementations
   ITKImportImageStack
   #ITKImportRoboMetMontage # MISSING 1 or more Parameter Implementations
-  ITKIntensityWindowingImage
-  ITKInvertIntensityImage
-  ITKIsoContourDistanceImage
-  ITKLabelContourImage
-  ITKLaplacianRecursiveGaussianImage
-  ITKLaplacianSharpeningImage
-  ITKLog10Image
-  ITKLogImage
-  ITKMaskImage
-  ITKMaximumProjectionImage
-  ITKMeanProjectionImage
   ITKMedianImage
-  ITKMedianProjectionImage
-  ITKMinMaxCurvatureFlowImage
-  ITKMinimumProjectionImage
-  ITKMorphologicalGradientImage
-  ITKMorphologicalWatershedFromMarkersImage
-  ITKMorphologicalWatershedImage
-  ITKMultiScaleHessianBasedObjectnessImage
-  ITKNormalizeImage
-  ITKNormalizeToConstantImage
-  ITKNotImage
-  ITKOpeningByReconstructionImage
-  ITKOtsuMultipleThresholdsImage
   ITKPCMTileRegistration
-  ITKPatchBasedDenoisingImage
   ITKProxTVImage
-  ITKRGBToLuminanceImage
   #ITKRefineTileCoordinates # MISSING 1 or more Parameter Implementations
-  ITKRegionalMaximaImage
-  ITKRegionalMinimaImage
-  ITKRelabelComponentImage
-  ITKRescaleIntensityImage
-  ITKSaltAndPepperNoiseImage
-  ITKShiftScaleImage
-  ITKShotNoiseImage
-  ITKSigmoidImage
-  ITKSignedDanielssonDistanceMapImage
-  ITKSignedMaurerDistanceMapImage
-  ITKSinImage
-  ITKSmoothingRecursiveGaussianImage
-  ITKSpeckleNoiseImage
-  ITKSqrtImage
-  ITKSquareImage
-  ITKStandardDeviationProjectionImage
   #ITKStitchMontage # MISSING 1 or more Parameter Implementations
-  ITKSumProjectionImage
-  ITKTanImage
-  ITKThresholdImage
-  ITKThresholdMaximumConnectedComponentsImage
-  ITKValuedRegionalMaximaImage
-  ITKValuedRegionalMinimaImage
-  ITKVectorConnectedComponentImage
-  ITKVectorRescaleIntensityImage
-  ITKWhiteTopHatImage
-  ITKZeroCrossingImage
   #IlluminationCorrection # MISSING 1 or more Parameter Implementations
   #ImportAxioVisionV4Montage # MISSING 1 or more Parameter Implementations
   #ImportVectorImageStack # MISSING 1 or more Parameter Implementations

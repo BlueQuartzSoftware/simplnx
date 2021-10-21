@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ITKRefineTileCoordinates::name() const
 {
   return FilterTraits<ITKRefineTileCoordinates>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ITKRefineTileCoordinates::className() const
 {
   return FilterTraits<ITKRefineTileCoordinates>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ITKRefineTileCoordinates::uuid() const
 {
   return FilterTraits<ITKRefineTileCoordinates>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ITKRefineTileCoordinates::humanName() const
 {
   return "ITK::Refine Tile Coordinates";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ITKRefineTileCoordinates::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ITKRefineTileCoordinates::parameters() const
 {
   Parameters params;
@@ -50,11 +61,13 @@ Parameters ITKRefineTileCoordinates::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKRefineTileCoordinates::clone() const
 {
   return std::make_unique<ITKRefineTileCoordinates>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ITKRefineTileCoordinates::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -77,6 +90,7 @@ Result<OutputActions> ITKRefineTileCoordinates::preflightImpl(const DataStructur
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ITKRefineTileCoordinates::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

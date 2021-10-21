@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string LaplacianSmoothPointCloud::name() const
 {
   return FilterTraits<LaplacianSmoothPointCloud>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string LaplacianSmoothPointCloud::className() const
 {
   return FilterTraits<LaplacianSmoothPointCloud>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid LaplacianSmoothPointCloud::uuid() const
 {
   return FilterTraits<LaplacianSmoothPointCloud>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string LaplacianSmoothPointCloud::humanName() const
 {
   return "Smooth Point Cloud (Laplacian)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> LaplacianSmoothPointCloud::defaultTags() const
+{
+  return {"#PointCloudFilters", "#Smoothing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters LaplacianSmoothPointCloud::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters LaplacianSmoothPointCloud::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer LaplacianSmoothPointCloud::clone() const
 {
   return std::make_unique<LaplacianSmoothPointCloud>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> LaplacianSmoothPointCloud::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -70,6 +83,7 @@ Result<OutputActions> LaplacianSmoothPointCloud::preflightImpl(const DataStructu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> LaplacianSmoothPointCloud::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkGaussianBlur::name() const
 {
   return FilterTraits<ItkGaussianBlur>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkGaussianBlur::className() const
 {
   return FilterTraits<ItkGaussianBlur>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkGaussianBlur::uuid() const
 {
   return FilterTraits<ItkGaussianBlur>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkGaussianBlur::humanName() const
 {
   return "Gaussian Blur (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkGaussianBlur::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkGaussianBlur::parameters() const
 {
   Parameters params;
@@ -44,11 +55,13 @@ Parameters ItkGaussianBlur::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkGaussianBlur::clone() const
 {
   return std::make_unique<ItkGaussianBlur>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkGaussianBlur::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -67,6 +80,7 @@ Result<OutputActions> ItkGaussianBlur::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkGaussianBlur::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

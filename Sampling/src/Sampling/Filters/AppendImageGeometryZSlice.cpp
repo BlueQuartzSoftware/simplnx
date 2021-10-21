@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AppendImageGeometryZSlice::name() const
 {
   return FilterTraits<AppendImageGeometryZSlice>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AppendImageGeometryZSlice::className() const
 {
   return FilterTraits<AppendImageGeometryZSlice>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AppendImageGeometryZSlice::uuid() const
 {
   return FilterTraits<AppendImageGeometryZSlice>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AppendImageGeometryZSlice::humanName() const
 {
   return "Append Z Slice (Image Geometry)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AppendImageGeometryZSlice::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AppendImageGeometryZSlice::parameters() const
 {
   Parameters params;
@@ -39,11 +50,13 @@ Parameters AppendImageGeometryZSlice::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AppendImageGeometryZSlice::clone() const
 {
   return std::make_unique<AppendImageGeometryZSlice>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AppendImageGeometryZSlice::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> AppendImageGeometryZSlice::preflightImpl(const DataStructu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AppendImageGeometryZSlice::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

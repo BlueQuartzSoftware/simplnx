@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindAvgOrientations::name() const
 {
   return FilterTraits<FindAvgOrientations>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindAvgOrientations::className() const
 {
   return FilterTraits<FindAvgOrientations>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindAvgOrientations::uuid() const
 {
   return FilterTraits<FindAvgOrientations>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindAvgOrientations::humanName() const
 {
   return "Find Feature Average Orientations";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindAvgOrientations::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindAvgOrientations::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters FindAvgOrientations::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindAvgOrientations::clone() const
 {
   return std::make_unique<FindAvgOrientations>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindAvgOrientations::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -71,6 +84,7 @@ Result<OutputActions> FindAvgOrientations::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindAvgOrientations::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

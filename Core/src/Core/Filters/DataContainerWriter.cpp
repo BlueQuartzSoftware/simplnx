@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string DataContainerWriter::name() const
 {
   return FilterTraits<DataContainerWriter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string DataContainerWriter::className() const
 {
   return FilterTraits<DataContainerWriter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid DataContainerWriter::uuid() const
 {
   return FilterTraits<DataContainerWriter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string DataContainerWriter::humanName() const
 {
   return "Write DREAM.3D Data File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> DataContainerWriter::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters DataContainerWriter::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters DataContainerWriter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer DataContainerWriter::clone() const
 {
   return std::make_unique<DataContainerWriter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> DataContainerWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -65,6 +78,7 @@ Result<OutputActions> DataContainerWriter::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> DataContainerWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string Lesson1::name() const
 {
   return FilterTraits<Lesson1>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string Lesson1::className() const
 {
   return FilterTraits<Lesson1>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid Lesson1::uuid() const
 {
   return FilterTraits<Lesson1>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string Lesson1::humanName() const
 {
   return "Lesson1";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> Lesson1::defaultTags() const
+{
+  return {"#Unsupported", "#ProgWorkshop"};
+}
+
+//------------------------------------------------------------------------------
 Parameters Lesson1::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters Lesson1::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer Lesson1::clone() const
 {
   return std::make_unique<Lesson1>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> Lesson1::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -63,6 +76,7 @@ Result<OutputActions> Lesson1::preflightImpl(const DataStructure& ds, const Argu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> Lesson1::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

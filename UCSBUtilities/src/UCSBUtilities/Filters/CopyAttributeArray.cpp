@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CopyAttributeArray::name() const
 {
   return FilterTraits<CopyAttributeArray>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CopyAttributeArray::className() const
 {
   return FilterTraits<CopyAttributeArray>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CopyAttributeArray::uuid() const
 {
   return FilterTraits<CopyAttributeArray>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CopyAttributeArray::humanName() const
 {
   return "Copy Attribute Array";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CopyAttributeArray::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CopyAttributeArray::parameters() const
 {
   Parameters params;
@@ -38,11 +49,13 @@ Parameters CopyAttributeArray::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CopyAttributeArray::clone() const
 {
   return std::make_unique<CopyAttributeArray>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CopyAttributeArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -60,6 +73,7 @@ Result<OutputActions> CopyAttributeArray::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CopyAttributeArray::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

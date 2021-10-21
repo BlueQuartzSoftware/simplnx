@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ComputeUmeyamaTransform::name() const
 {
   return FilterTraits<ComputeUmeyamaTransform>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ComputeUmeyamaTransform::className() const
 {
   return FilterTraits<ComputeUmeyamaTransform>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ComputeUmeyamaTransform::uuid() const
 {
   return FilterTraits<ComputeUmeyamaTransform>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ComputeUmeyamaTransform::humanName() const
 {
   return "Compute Umeyama Transform";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ComputeUmeyamaTransform::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Registration"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ComputeUmeyamaTransform::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters ComputeUmeyamaTransform::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeUmeyamaTransform::clone() const
 {
   return std::make_unique<ComputeUmeyamaTransform>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ComputeUmeyamaTransform::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -68,6 +81,7 @@ Result<OutputActions> ComputeUmeyamaTransform::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ComputeUmeyamaTransform::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

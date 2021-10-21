@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ComputeMomentInvariants2D::name() const
 {
   return FilterTraits<ComputeMomentInvariants2D>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ComputeMomentInvariants2D::className() const
 {
   return FilterTraits<ComputeMomentInvariants2D>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ComputeMomentInvariants2D::uuid() const
 {
   return FilterTraits<ComputeMomentInvariants2D>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ComputeMomentInvariants2D::humanName() const
 {
   return "Compute MomentInvariants (2D)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ComputeMomentInvariants2D::defaultTags() const
+{
+  return {"#Unsupported", "#Statistics"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ComputeMomentInvariants2D::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters ComputeMomentInvariants2D::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeMomentInvariants2D::clone() const
 {
   return std::make_unique<ComputeMomentInvariants2D>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ComputeMomentInvariants2D::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -74,6 +87,7 @@ Result<OutputActions> ComputeMomentInvariants2D::preflightImpl(const DataStructu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ComputeMomentInvariants2D::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

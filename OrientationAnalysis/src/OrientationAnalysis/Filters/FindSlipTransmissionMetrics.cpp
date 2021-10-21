@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindSlipTransmissionMetrics::name() const
 {
   return FilterTraits<FindSlipTransmissionMetrics>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindSlipTransmissionMetrics::className() const
 {
   return FilterTraits<FindSlipTransmissionMetrics>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindSlipTransmissionMetrics::uuid() const
 {
   return FilterTraits<FindSlipTransmissionMetrics>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindSlipTransmissionMetrics::humanName() const
 {
   return "Find Neighbor Slip Transmission Metrics";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindSlipTransmissionMetrics::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindSlipTransmissionMetrics::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters FindSlipTransmissionMetrics::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindSlipTransmissionMetrics::clone() const
 {
   return std::make_unique<FindSlipTransmissionMetrics>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindSlipTransmissionMetrics::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -75,6 +88,7 @@ Result<OutputActions> FindSlipTransmissionMetrics::preflightImpl(const DataStruc
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindSlipTransmissionMetrics::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

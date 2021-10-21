@@ -6,26 +6,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FeatureCountDecision::name() const
 {
   return FilterTraits<FeatureCountDecision>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FeatureCountDecision::className() const
 {
   return FilterTraits<FeatureCountDecision>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FeatureCountDecision::uuid() const
 {
   return FilterTraits<FeatureCountDecision>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FeatureCountDecision::humanName() const
 {
   return "Feature Count Decision";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FeatureCountDecision::defaultTags() const
+{
+  return {"#Core", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FeatureCountDecision::parameters() const
 {
   Parameters params;
@@ -34,11 +45,13 @@ Parameters FeatureCountDecision::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FeatureCountDecision::clone() const
 {
   return std::make_unique<FeatureCountDecision>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FeatureCountDecision::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -54,6 +67,7 @@ Result<OutputActions> FeatureCountDecision::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FeatureCountDecision::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

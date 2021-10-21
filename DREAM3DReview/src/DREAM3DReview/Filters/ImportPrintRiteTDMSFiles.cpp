@@ -16,26 +16,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportPrintRiteTDMSFiles::name() const
 {
   return FilterTraits<ImportPrintRiteTDMSFiles>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ImportPrintRiteTDMSFiles::className() const
 {
   return FilterTraits<ImportPrintRiteTDMSFiles>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportPrintRiteTDMSFiles::uuid() const
 {
   return FilterTraits<ImportPrintRiteTDMSFiles>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportPrintRiteTDMSFiles::humanName() const
 {
   return "Import PrintRite TDMS File(s) to HDF5";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportPrintRiteTDMSFiles::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportPrintRiteTDMSFiles::parameters() const
 {
   Parameters params;
@@ -81,11 +92,13 @@ Parameters ImportPrintRiteTDMSFiles::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportPrintRiteTDMSFiles::clone() const
 {
   return std::make_unique<ImportPrintRiteTDMSFiles>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ImportPrintRiteTDMSFiles::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -120,6 +133,7 @@ Result<OutputActions> ImportPrintRiteTDMSFiles::preflightImpl(const DataStructur
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ImportPrintRiteTDMSFiles::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

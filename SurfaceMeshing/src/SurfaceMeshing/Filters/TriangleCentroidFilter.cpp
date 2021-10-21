@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string TriangleCentroidFilter::name() const
 {
   return FilterTraits<TriangleCentroidFilter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string TriangleCentroidFilter::className() const
 {
   return FilterTraits<TriangleCentroidFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid TriangleCentroidFilter::uuid() const
 {
   return FilterTraits<TriangleCentroidFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string TriangleCentroidFilter::humanName() const
 {
   return "Generate Triangle Centroids";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> TriangleCentroidFilter::defaultTags() const
+{
+  return {"#Surface Meshing", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters TriangleCentroidFilter::parameters() const
 {
   Parameters params;
@@ -37,11 +48,13 @@ Parameters TriangleCentroidFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer TriangleCentroidFilter::clone() const
 {
   return std::make_unique<TriangleCentroidFilter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> TriangleCentroidFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -58,6 +71,7 @@ Result<OutputActions> TriangleCentroidFilter::preflightImpl(const DataStructure&
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> TriangleCentroidFilter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

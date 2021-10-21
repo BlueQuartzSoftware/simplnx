@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkConvertArrayTo8BitImageAttributeMatrix::name() const
 {
   return FilterTraits<ItkConvertArrayTo8BitImageAttributeMatrix>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkConvertArrayTo8BitImageAttributeMatrix::className() const
 {
   return FilterTraits<ItkConvertArrayTo8BitImageAttributeMatrix>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkConvertArrayTo8BitImageAttributeMatrix::uuid() const
 {
   return FilterTraits<ItkConvertArrayTo8BitImageAttributeMatrix>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkConvertArrayTo8BitImageAttributeMatrix::humanName() const
 {
   return "Convert Array to 8 Bit Image Attribute Matrix (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkConvertArrayTo8BitImageAttributeMatrix::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkConvertArrayTo8BitImageAttributeMatrix::parameters() const
 {
   Parameters params;
@@ -37,11 +48,13 @@ Parameters ItkConvertArrayTo8BitImageAttributeMatrix::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkConvertArrayTo8BitImageAttributeMatrix::clone() const
 {
   return std::make_unique<ItkConvertArrayTo8BitImageAttributeMatrix>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkConvertArrayTo8BitImageAttributeMatrix::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -58,6 +71,7 @@ Result<OutputActions> ItkConvertArrayTo8BitImageAttributeMatrix::preflightImpl(c
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkConvertArrayTo8BitImageAttributeMatrix::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

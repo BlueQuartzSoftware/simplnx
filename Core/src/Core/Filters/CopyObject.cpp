@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CopyObject::name() const
 {
   return FilterTraits<CopyObject>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CopyObject::className() const
 {
   return FilterTraits<CopyObject>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CopyObject::uuid() const
 {
   return FilterTraits<CopyObject>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CopyObject::humanName() const
 {
   return "Copy Object";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CopyObject::defaultTags() const
+{
+  return {"#Core", "#Conversion"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CopyObject::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters CopyObject::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CopyObject::clone() const
 {
   return std::make_unique<CopyObject>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CopyObject::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -73,6 +86,7 @@ Result<OutputActions> CopyObject::preflightImpl(const DataStructure& ds, const A
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CopyObject::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

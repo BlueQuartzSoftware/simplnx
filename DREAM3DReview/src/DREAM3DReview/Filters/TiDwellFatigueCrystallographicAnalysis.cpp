@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string TiDwellFatigueCrystallographicAnalysis::name() const
 {
   return FilterTraits<TiDwellFatigueCrystallographicAnalysis>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string TiDwellFatigueCrystallographicAnalysis::className() const
 {
   return FilterTraits<TiDwellFatigueCrystallographicAnalysis>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid TiDwellFatigueCrystallographicAnalysis::uuid() const
 {
   return FilterTraits<TiDwellFatigueCrystallographicAnalysis>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string TiDwellFatigueCrystallographicAnalysis::humanName() const
 {
   return "Ti Dwell Fatigue Crystallographic Analysis";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> TiDwellFatigueCrystallographicAnalysis::defaultTags() const
+{
+  return {"#Unsupported", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters TiDwellFatigueCrystallographicAnalysis::parameters() const
 {
   Parameters params;
@@ -80,11 +91,13 @@ Parameters TiDwellFatigueCrystallographicAnalysis::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer TiDwellFatigueCrystallographicAnalysis::clone() const
 {
   return std::make_unique<TiDwellFatigueCrystallographicAnalysis>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> TiDwellFatigueCrystallographicAnalysis::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -131,6 +144,7 @@ Result<OutputActions> TiDwellFatigueCrystallographicAnalysis::preflightImpl(cons
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> TiDwellFatigueCrystallographicAnalysis::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string LinkFeatureMapToElementArray::name() const
 {
   return FilterTraits<LinkFeatureMapToElementArray>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string LinkFeatureMapToElementArray::className() const
 {
   return FilterTraits<LinkFeatureMapToElementArray>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid LinkFeatureMapToElementArray::uuid() const
 {
   return FilterTraits<LinkFeatureMapToElementArray>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string LinkFeatureMapToElementArray::humanName() const
 {
   return "Link Feature Attribute Matrix to Element Attribute Array";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> LinkFeatureMapToElementArray::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters LinkFeatureMapToElementArray::parameters() const
 {
   Parameters params;
@@ -41,11 +52,13 @@ Parameters LinkFeatureMapToElementArray::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer LinkFeatureMapToElementArray::clone() const
 {
   return std::make_unique<LinkFeatureMapToElementArray>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> LinkFeatureMapToElementArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -64,6 +77,7 @@ Result<OutputActions> LinkFeatureMapToElementArray::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> LinkFeatureMapToElementArray::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

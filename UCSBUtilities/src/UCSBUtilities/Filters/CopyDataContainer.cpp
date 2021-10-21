@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CopyDataContainer::name() const
 {
   return FilterTraits<CopyDataContainer>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CopyDataContainer::className() const
 {
   return FilterTraits<CopyDataContainer>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CopyDataContainer::uuid() const
 {
   return FilterTraits<CopyDataContainer>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CopyDataContainer::humanName() const
 {
   return "Copy Data Container";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CopyDataContainer::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CopyDataContainer::parameters() const
 {
   Parameters params;
@@ -38,11 +49,13 @@ Parameters CopyDataContainer::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CopyDataContainer::clone() const
 {
   return std::make_unique<CopyDataContainer>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CopyDataContainer::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -60,6 +73,7 @@ Result<OutputActions> CopyDataContainer::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CopyDataContainer::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

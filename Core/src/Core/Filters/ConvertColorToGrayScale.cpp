@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ConvertColorToGrayScale::name() const
 {
   return FilterTraits<ConvertColorToGrayScale>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ConvertColorToGrayScale::className() const
 {
   return FilterTraits<ConvertColorToGrayScale>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ConvertColorToGrayScale::uuid() const
 {
   return FilterTraits<ConvertColorToGrayScale>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ConvertColorToGrayScale::humanName() const
 {
   return "Color to GrayScale";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ConvertColorToGrayScale::defaultTags() const
+{
+  return {"#Core", "#Image"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ConvertColorToGrayScale::parameters() const
 {
   Parameters params;
@@ -52,11 +63,13 @@ Parameters ConvertColorToGrayScale::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ConvertColorToGrayScale::clone() const
 {
   return std::make_unique<ConvertColorToGrayScale>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ConvertColorToGrayScale::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -79,6 +92,7 @@ Result<OutputActions> ConvertColorToGrayScale::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ConvertColorToGrayScale::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

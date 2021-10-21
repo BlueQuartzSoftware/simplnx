@@ -17,26 +17,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string IlluminationCorrection::name() const
 {
   return FilterTraits<IlluminationCorrection>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string IlluminationCorrection::className() const
 {
   return FilterTraits<IlluminationCorrection>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid IlluminationCorrection::uuid() const
 {
   return FilterTraits<IlluminationCorrection>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string IlluminationCorrection::humanName() const
 {
   return "ITK::Illumination Correction";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> IlluminationCorrection::defaultTags() const
+{
+  return {"#Processing", "#Image"};
+}
+
+//------------------------------------------------------------------------------
 Parameters IlluminationCorrection::parameters() const
 {
   Parameters params;
@@ -69,11 +80,13 @@ Parameters IlluminationCorrection::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer IlluminationCorrection::clone() const
 {
   return std::make_unique<IlluminationCorrection>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> IlluminationCorrection::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -104,6 +117,7 @@ Result<OutputActions> IlluminationCorrection::preflightImpl(const DataStructure&
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> IlluminationCorrection::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

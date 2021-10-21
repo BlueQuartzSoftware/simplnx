@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindMisorientations::name() const
 {
   return FilterTraits<FindMisorientations>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindMisorientations::className() const
 {
   return FilterTraits<FindMisorientations>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindMisorientations::uuid() const
 {
   return FilterTraits<FindMisorientations>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindMisorientations::humanName() const
 {
   return "Find Feature Neighbor Misorientations";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindMisorientations::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindMisorientations::parameters() const
 {
   Parameters params;
@@ -49,11 +60,13 @@ Parameters FindMisorientations::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindMisorientations::clone() const
 {
   return std::make_unique<FindMisorientations>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindMisorientations::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -76,6 +89,7 @@ Result<OutputActions> FindMisorientations::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindMisorientations::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

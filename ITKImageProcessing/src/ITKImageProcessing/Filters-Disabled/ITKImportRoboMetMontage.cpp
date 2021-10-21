@@ -17,26 +17,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ITKImportRoboMetMontage::name() const
 {
   return FilterTraits<ITKImportRoboMetMontage>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ITKImportRoboMetMontage::className() const
 {
   return FilterTraits<ITKImportRoboMetMontage>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ITKImportRoboMetMontage::uuid() const
 {
   return FilterTraits<ITKImportRoboMetMontage>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ITKImportRoboMetMontage::humanName() const
 {
   return "ITK::Import RoboMet Montage";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ITKImportRoboMetMontage::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ITKImportRoboMetMontage::parameters() const
 {
   Parameters params;
@@ -68,11 +79,13 @@ Parameters ITKImportRoboMetMontage::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKImportRoboMetMontage::clone() const
 {
   return std::make_unique<ITKImportRoboMetMontage>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ITKImportRoboMetMontage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -106,6 +119,7 @@ Result<OutputActions> ITKImportRoboMetMontage::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ITKImportRoboMetMontage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

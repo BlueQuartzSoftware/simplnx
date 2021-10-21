@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindTriangleGeomCentroids::name() const
 {
   return FilterTraits<FindTriangleGeomCentroids>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindTriangleGeomCentroids::className() const
 {
   return FilterTraits<FindTriangleGeomCentroids>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindTriangleGeomCentroids::uuid() const
 {
   return FilterTraits<FindTriangleGeomCentroids>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindTriangleGeomCentroids::humanName() const
 {
   return "Find Feature Centroids from Triangle Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindTriangleGeomCentroids::defaultTags() const
+{
+  return {"#Generic", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindTriangleGeomCentroids::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters FindTriangleGeomCentroids::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindTriangleGeomCentroids::clone() const
 {
   return std::make_unique<FindTriangleGeomCentroids>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindTriangleGeomCentroids::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -66,6 +79,7 @@ Result<OutputActions> FindTriangleGeomCentroids::preflightImpl(const DataStructu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindTriangleGeomCentroids::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

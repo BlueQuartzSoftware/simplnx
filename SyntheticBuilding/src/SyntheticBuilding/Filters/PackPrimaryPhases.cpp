@@ -16,26 +16,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string PackPrimaryPhases::name() const
 {
   return FilterTraits<PackPrimaryPhases>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string PackPrimaryPhases::className() const
 {
   return FilterTraits<PackPrimaryPhases>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid PackPrimaryPhases::uuid() const
 {
   return FilterTraits<PackPrimaryPhases>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string PackPrimaryPhases::humanName() const
 {
   return "Pack Primary Phases";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> PackPrimaryPhases::defaultTags() const
+{
+  return {"#Synthetic Building", "#Packing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters PackPrimaryPhases::parameters() const
 {
   Parameters params;
@@ -76,11 +87,13 @@ Parameters PackPrimaryPhases::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer PackPrimaryPhases::clone() const
 {
   return std::make_unique<PackPrimaryPhases>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> PackPrimaryPhases::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -115,6 +128,7 @@ Result<OutputActions> PackPrimaryPhases::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> PackPrimaryPhases::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string QuickSurfaceMesh::name() const
 {
   return FilterTraits<QuickSurfaceMesh>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string QuickSurfaceMesh::className() const
 {
   return FilterTraits<QuickSurfaceMesh>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid QuickSurfaceMesh::uuid() const
 {
   return FilterTraits<QuickSurfaceMesh>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string QuickSurfaceMesh::humanName() const
 {
   return "Quick Surface Mesh";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> QuickSurfaceMesh::defaultTags() const
+{
+  return {"#Surface Meshing", "#Generation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters QuickSurfaceMesh::parameters() const
 {
   Parameters params;
@@ -53,11 +64,13 @@ Parameters QuickSurfaceMesh::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer QuickSurfaceMesh::clone() const
 {
   return std::make_unique<QuickSurfaceMesh>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> QuickSurfaceMesh::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -82,6 +95,7 @@ Result<OutputActions> QuickSurfaceMesh::preflightImpl(const DataStructure& ds, c
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> QuickSurfaceMesh::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

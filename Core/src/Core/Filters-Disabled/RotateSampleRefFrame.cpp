@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string RotateSampleRefFrame::name() const
 {
   return FilterTraits<RotateSampleRefFrame>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string RotateSampleRefFrame::className() const
 {
   return FilterTraits<RotateSampleRefFrame>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid RotateSampleRefFrame::uuid() const
 {
   return FilterTraits<RotateSampleRefFrame>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string RotateSampleRefFrame::humanName() const
 {
   return "Rotate Sample Reference Frame";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> RotateSampleRefFrame::defaultTags() const
+{
+  return {"#Sampling", "#Rotating/Transforming"};
+}
+
+//------------------------------------------------------------------------------
 Parameters RotateSampleRefFrame::parameters() const
 {
   Parameters params;
@@ -49,11 +60,13 @@ Parameters RotateSampleRefFrame::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RotateSampleRefFrame::clone() const
 {
   return std::make_unique<RotateSampleRefFrame>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> RotateSampleRefFrame::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -74,6 +87,7 @@ Result<OutputActions> RotateSampleRefFrame::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> RotateSampleRefFrame::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

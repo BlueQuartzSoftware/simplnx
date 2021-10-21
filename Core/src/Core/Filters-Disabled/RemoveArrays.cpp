@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string RemoveArrays::name() const
 {
   return FilterTraits<RemoveArrays>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string RemoveArrays::className() const
 {
   return FilterTraits<RemoveArrays>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid RemoveArrays::uuid() const
 {
   return FilterTraits<RemoveArrays>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string RemoveArrays::humanName() const
 {
   return "Delete Data";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> RemoveArrays::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters RemoveArrays::parameters() const
 {
   Parameters params;
@@ -36,11 +47,13 @@ Parameters RemoveArrays::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RemoveArrays::clone() const
 {
   return std::make_unique<RemoveArrays>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> RemoveArrays::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -57,6 +70,7 @@ Result<OutputActions> RemoveArrays::preflightImpl(const DataStructure& ds, const
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> RemoveArrays::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

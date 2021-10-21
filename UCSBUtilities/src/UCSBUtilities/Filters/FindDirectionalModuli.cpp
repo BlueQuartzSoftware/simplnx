@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindDirectionalModuli::name() const
 {
   return FilterTraits<FindDirectionalModuli>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindDirectionalModuli::className() const
 {
   return FilterTraits<FindDirectionalModuli>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindDirectionalModuli::uuid() const
 {
   return FilterTraits<FindDirectionalModuli>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindDirectionalModuli::humanName() const
 {
   return "Find Directional Moduli";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindDirectionalModuli::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindDirectionalModuli::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters FindDirectionalModuli::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindDirectionalModuli::clone() const
 {
   return std::make_unique<FindDirectionalModuli>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindDirectionalModuli::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -69,6 +82,7 @@ Result<OutputActions> FindDirectionalModuli::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindDirectionalModuli::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

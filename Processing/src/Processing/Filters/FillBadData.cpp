@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FillBadData::name() const
 {
   return FilterTraits<FillBadData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FillBadData::className() const
 {
   return FilterTraits<FillBadData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FillBadData::uuid() const
 {
   return FilterTraits<FillBadData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FillBadData::humanName() const
 {
   return "Fill Bad Data";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FillBadData::defaultTags() const
+{
+  return {"#Processing", "#Cleanup"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FillBadData::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters FillBadData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FillBadData::clone() const
 {
   return std::make_unique<FillBadData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FillBadData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> FillBadData::preflightImpl(const DataStructure& ds, const 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FillBadData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CreateArrayofIndices::name() const
 {
   return FilterTraits<CreateArrayofIndices>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CreateArrayofIndices::className() const
 {
   return FilterTraits<CreateArrayofIndices>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CreateArrayofIndices::uuid() const
 {
   return FilterTraits<CreateArrayofIndices>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CreateArrayofIndices::humanName() const
 {
   return "Create Array of Indices";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CreateArrayofIndices::defaultTags() const
+{
+  return {"#Unsupported", "#DREAM3DReview"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CreateArrayofIndices::parameters() const
 {
   Parameters params;
@@ -36,11 +47,13 @@ Parameters CreateArrayofIndices::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateArrayofIndices::clone() const
 {
   return std::make_unique<CreateArrayofIndices>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CreateArrayofIndices::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -57,6 +70,7 @@ Result<OutputActions> CreateArrayofIndices::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CreateArrayofIndices::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportVolumeGraphicsFile::name() const
 {
   return FilterTraits<ImportVolumeGraphicsFile>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ImportVolumeGraphicsFile::className() const
 {
   return FilterTraits<ImportVolumeGraphicsFile>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportVolumeGraphicsFile::uuid() const
 {
   return FilterTraits<ImportVolumeGraphicsFile>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportVolumeGraphicsFile::humanName() const
 {
   return "Import Volume Graphics File (.vgi/.vol)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportVolumeGraphicsFile::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportVolumeGraphicsFile::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters ImportVolumeGraphicsFile::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportVolumeGraphicsFile::clone() const
 {
   return std::make_unique<ImportVolumeGraphicsFile>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ImportVolumeGraphicsFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -70,6 +83,7 @@ Result<OutputActions> ImportVolumeGraphicsFile::preflightImpl(const DataStructur
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ImportVolumeGraphicsFile::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

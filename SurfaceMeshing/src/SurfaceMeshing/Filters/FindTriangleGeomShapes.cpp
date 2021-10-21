@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindTriangleGeomShapes::name() const
 {
   return FilterTraits<FindTriangleGeomShapes>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindTriangleGeomShapes::className() const
 {
   return FilterTraits<FindTriangleGeomShapes>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindTriangleGeomShapes::uuid() const
 {
   return FilterTraits<FindTriangleGeomShapes>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindTriangleGeomShapes::humanName() const
 {
   return "Find Feature Shapes from Triangle Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindTriangleGeomShapes::defaultTags() const
+{
+  return {"#Statistics", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindTriangleGeomShapes::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters FindTriangleGeomShapes::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindTriangleGeomShapes::clone() const
 {
   return std::make_unique<FindTriangleGeomShapes>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindTriangleGeomShapes::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -76,6 +89,7 @@ Result<OutputActions> FindTriangleGeomShapes::preflightImpl(const DataStructure&
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindTriangleGeomShapes::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

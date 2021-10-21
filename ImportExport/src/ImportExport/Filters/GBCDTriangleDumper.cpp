@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GBCDTriangleDumper::name() const
 {
   return FilterTraits<GBCDTriangleDumper>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GBCDTriangleDumper::className() const
 {
   return FilterTraits<GBCDTriangleDumper>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GBCDTriangleDumper::uuid() const
 {
   return FilterTraits<GBCDTriangleDumper>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GBCDTriangleDumper::humanName() const
 {
   return "Export GBCD Triangles File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GBCDTriangleDumper::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GBCDTriangleDumper::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters GBCDTriangleDumper::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GBCDTriangleDumper::clone() const
 {
   return std::make_unique<GBCDTriangleDumper>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GBCDTriangleDumper::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -71,6 +84,7 @@ Result<OutputActions> GBCDTriangleDumper::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GBCDTriangleDumper::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

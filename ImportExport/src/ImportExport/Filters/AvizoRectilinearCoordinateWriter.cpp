@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AvizoRectilinearCoordinateWriter::name() const
 {
   return FilterTraits<AvizoRectilinearCoordinateWriter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AvizoRectilinearCoordinateWriter::className() const
 {
   return FilterTraits<AvizoRectilinearCoordinateWriter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AvizoRectilinearCoordinateWriter::uuid() const
 {
   return FilterTraits<AvizoRectilinearCoordinateWriter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AvizoRectilinearCoordinateWriter::humanName() const
 {
   return "Avizo Rectilinear Coordinate Exporter";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AvizoRectilinearCoordinateWriter::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AvizoRectilinearCoordinateWriter::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters AvizoRectilinearCoordinateWriter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AvizoRectilinearCoordinateWriter::clone() const
 {
   return std::make_unique<AvizoRectilinearCoordinateWriter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AvizoRectilinearCoordinateWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -69,6 +82,7 @@ Result<OutputActions> AvizoRectilinearCoordinateWriter::preflightImpl(const Data
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AvizoRectilinearCoordinateWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

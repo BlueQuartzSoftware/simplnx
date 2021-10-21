@@ -15,26 +15,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportAsciDataArray::name() const
 {
   return FilterTraits<ImportAsciDataArray>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ImportAsciDataArray::className() const
 {
   return FilterTraits<ImportAsciDataArray>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportAsciDataArray::uuid() const
 {
   return FilterTraits<ImportAsciDataArray>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportAsciDataArray::humanName() const
 {
   return "Import ASCII Attribute Array";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportAsciDataArray::defaultTags() const
+{
+  return {"#Core", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportAsciDataArray::parameters() const
 {
   Parameters params;
@@ -50,11 +61,13 @@ Parameters ImportAsciDataArray::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportAsciDataArray::clone() const
 {
   return std::make_unique<ImportAsciDataArray>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ImportAsciDataArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -77,6 +90,7 @@ Result<OutputActions> ImportAsciDataArray::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ImportAsciDataArray::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

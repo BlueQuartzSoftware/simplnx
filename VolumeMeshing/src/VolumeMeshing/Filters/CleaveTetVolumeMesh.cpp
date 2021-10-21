@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CleaveTetVolumeMesh::name() const
 {
   return FilterTraits<CleaveTetVolumeMesh>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CleaveTetVolumeMesh::className() const
 {
   return FilterTraits<CleaveTetVolumeMesh>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CleaveTetVolumeMesh::uuid() const
 {
   return FilterTraits<CleaveTetVolumeMesh>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CleaveTetVolumeMesh::humanName() const
 {
   return "Generate Tetrahedral Volume Mesh";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CleaveTetVolumeMesh::defaultTags() const
+{
+  return {"#Volume Meshing", "#Generation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CleaveTetVolumeMesh::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters CleaveTetVolumeMesh::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CleaveTetVolumeMesh::clone() const
 {
   return std::make_unique<CleaveTetVolumeMesh>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CleaveTetVolumeMesh::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> CleaveTetVolumeMesh::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CleaveTetVolumeMesh::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

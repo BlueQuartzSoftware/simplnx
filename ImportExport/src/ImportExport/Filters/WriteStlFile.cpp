@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string WriteStlFile::name() const
 {
   return FilterTraits<WriteStlFile>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string WriteStlFile::className() const
 {
   return FilterTraits<WriteStlFile>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid WriteStlFile::uuid() const
 {
   return FilterTraits<WriteStlFile>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string WriteStlFile::humanName() const
 {
   return "Export STL Files from Triangle Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> WriteStlFile::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters WriteStlFile::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters WriteStlFile::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteStlFile::clone() const
 {
   return std::make_unique<WriteStlFile>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> WriteStlFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -68,6 +81,7 @@ Result<OutputActions> WriteStlFile::preflightImpl(const DataStructure& ds, const
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> WriteStlFile::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -14,26 +14,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ExportMultiOnScaleTableFile::name() const
 {
   return FilterTraits<ExportMultiOnScaleTableFile>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ExportMultiOnScaleTableFile::className() const
 {
   return FilterTraits<ExportMultiOnScaleTableFile>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ExportMultiOnScaleTableFile::uuid() const
 {
   return FilterTraits<ExportMultiOnScaleTableFile>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ExportMultiOnScaleTableFile::humanName() const
 {
   return "Create Multi OnScale Table File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ExportMultiOnScaleTableFile::defaultTags() const
+{
+  return {"#Unsupported", "#SimulationIO"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ExportMultiOnScaleTableFile::parameters() const
 {
   Parameters params;
@@ -50,11 +61,13 @@ Parameters ExportMultiOnScaleTableFile::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExportMultiOnScaleTableFile::clone() const
 {
   return std::make_unique<ExportMultiOnScaleTableFile>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ExportMultiOnScaleTableFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -77,6 +90,7 @@ Result<OutputActions> ExportMultiOnScaleTableFile::preflightImpl(const DataStruc
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ExportMultiOnScaleTableFile::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

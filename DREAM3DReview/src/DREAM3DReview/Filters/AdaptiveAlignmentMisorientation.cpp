@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AdaptiveAlignmentMisorientation::name() const
 {
   return FilterTraits<AdaptiveAlignmentMisorientation>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AdaptiveAlignmentMisorientation::className() const
 {
   return FilterTraits<AdaptiveAlignmentMisorientation>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AdaptiveAlignmentMisorientation::uuid() const
 {
   return FilterTraits<AdaptiveAlignmentMisorientation>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AdaptiveAlignmentMisorientation::humanName() const
 {
   return "Adaptive Alignment (Misorientation)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AdaptiveAlignmentMisorientation::defaultTags() const
+{
+  return {"#Reconstruction", "#Anisotropic Alignment"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AdaptiveAlignmentMisorientation::parameters() const
 {
   Parameters params;
@@ -59,11 +70,13 @@ Parameters AdaptiveAlignmentMisorientation::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AdaptiveAlignmentMisorientation::clone() const
 {
   return std::make_unique<AdaptiveAlignmentMisorientation>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AdaptiveAlignmentMisorientation::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -90,6 +103,7 @@ Result<OutputActions> AdaptiveAlignmentMisorientation::preflightImpl(const DataS
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AdaptiveAlignmentMisorientation::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkHoughCircles::name() const
 {
   return FilterTraits<ItkHoughCircles>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkHoughCircles::className() const
 {
   return FilterTraits<ItkHoughCircles>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkHoughCircles::uuid() const
 {
   return FilterTraits<ItkHoughCircles>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkHoughCircles::humanName() const
 {
   return "Hough Circle Detection (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkHoughCircles::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkHoughCircles::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters ItkHoughCircles::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkHoughCircles::clone() const
 {
   return std::make_unique<ItkHoughCircles>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkHoughCircles::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -74,6 +87,7 @@ Result<OutputActions> ItkHoughCircles::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkHoughCircles::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

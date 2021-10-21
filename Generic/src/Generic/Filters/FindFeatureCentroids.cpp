@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindFeatureCentroids::name() const
 {
   return FilterTraits<FindFeatureCentroids>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindFeatureCentroids::className() const
 {
   return FilterTraits<FindFeatureCentroids>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindFeatureCentroids::uuid() const
 {
   return FilterTraits<FindFeatureCentroids>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindFeatureCentroids::humanName() const
 {
   return "Find Feature Centroids";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindFeatureCentroids::defaultTags() const
+{
+  return {"#Generic", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindFeatureCentroids::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters FindFeatureCentroids::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindFeatureCentroids::clone() const
 {
   return std::make_unique<FindFeatureCentroids>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindFeatureCentroids::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> FindFeatureCentroids::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindFeatureCentroids::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

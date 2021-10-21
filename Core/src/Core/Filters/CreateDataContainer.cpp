@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CreateDataContainer::name() const
 {
   return FilterTraits<CreateDataContainer>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CreateDataContainer::className() const
 {
   return FilterTraits<CreateDataContainer>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CreateDataContainer::uuid() const
 {
   return FilterTraits<CreateDataContainer>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CreateDataContainer::humanName() const
 {
   return "Create Data Container";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CreateDataContainer::defaultTags() const
+{
+  return {"#Core", "#Generation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CreateDataContainer::parameters() const
 {
   Parameters params;
@@ -36,11 +47,13 @@ Parameters CreateDataContainer::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateDataContainer::clone() const
 {
   return std::make_unique<CreateDataContainer>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CreateDataContainer::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -57,6 +70,7 @@ Result<OutputActions> CreateDataContainer::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CreateDataContainer::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

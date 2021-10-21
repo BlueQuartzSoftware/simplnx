@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GenerateMaskFromSimpleShapes::name() const
 {
   return FilterTraits<GenerateMaskFromSimpleShapes>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateMaskFromSimpleShapes::className() const
 {
   return FilterTraits<GenerateMaskFromSimpleShapes>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GenerateMaskFromSimpleShapes::uuid() const
 {
   return FilterTraits<GenerateMaskFromSimpleShapes>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateMaskFromSimpleShapes::humanName() const
 {
   return "Generate Mask From Simple Shapes";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GenerateMaskFromSimpleShapes::defaultTags() const
+{
+  return {"#Unsupported", "#DREAM3DReview"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GenerateMaskFromSimpleShapes::parameters() const
 {
   Parameters params;
@@ -49,11 +60,13 @@ Parameters GenerateMaskFromSimpleShapes::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GenerateMaskFromSimpleShapes::clone() const
 {
   return std::make_unique<GenerateMaskFromSimpleShapes>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GenerateMaskFromSimpleShapes::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -76,6 +89,7 @@ Result<OutputActions> GenerateMaskFromSimpleShapes::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GenerateMaskFromSimpleShapes::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

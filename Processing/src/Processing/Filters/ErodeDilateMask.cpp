@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ErodeDilateMask::name() const
 {
   return FilterTraits<ErodeDilateMask>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ErodeDilateMask::className() const
 {
   return FilterTraits<ErodeDilateMask>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ErodeDilateMask::uuid() const
 {
   return FilterTraits<ErodeDilateMask>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ErodeDilateMask::humanName() const
 {
   return "Erode/Dilate Mask";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ErodeDilateMask::defaultTags() const
+{
+  return {"#Processing", "#Cleanup"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ErodeDilateMask::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters ErodeDilateMask::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ErodeDilateMask::clone() const
 {
   return std::make_unique<ErodeDilateMask>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ErodeDilateMask::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -71,6 +84,7 @@ Result<OutputActions> ErodeDilateMask::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ErodeDilateMask::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindFeatureNeighborCAxisMisalignments::name() const
 {
   return FilterTraits<FindFeatureNeighborCAxisMisalignments>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindFeatureNeighborCAxisMisalignments::className() const
 {
   return FilterTraits<FindFeatureNeighborCAxisMisalignments>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindFeatureNeighborCAxisMisalignments::uuid() const
 {
   return FilterTraits<FindFeatureNeighborCAxisMisalignments>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindFeatureNeighborCAxisMisalignments::humanName() const
 {
   return "Find Feature Neighbor C-Axis Misalignments";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindFeatureNeighborCAxisMisalignments::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindFeatureNeighborCAxisMisalignments::parameters() const
 {
   Parameters params;
@@ -49,11 +60,13 @@ Parameters FindFeatureNeighborCAxisMisalignments::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindFeatureNeighborCAxisMisalignments::clone() const
 {
   return std::make_unique<FindFeatureNeighborCAxisMisalignments>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindFeatureNeighborCAxisMisalignments::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -76,6 +89,7 @@ Result<OutputActions> FindFeatureNeighborCAxisMisalignments::preflightImpl(const
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindFeatureNeighborCAxisMisalignments::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

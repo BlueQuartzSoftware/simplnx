@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string MultiEmmpmFilter::name() const
 {
   return FilterTraits<MultiEmmpmFilter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string MultiEmmpmFilter::className() const
 {
   return FilterTraits<MultiEmmpmFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid MultiEmmpmFilter::uuid() const
 {
   return FilterTraits<MultiEmmpmFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string MultiEmmpmFilter::humanName() const
 {
   return "Segment Features (EM/MPM Multi-Array)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> MultiEmmpmFilter::defaultTags() const
+{
+  return {"#Reconstruction", "#Segmentation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MultiEmmpmFilter::parameters() const
 {
   Parameters params;
@@ -58,11 +69,13 @@ Parameters MultiEmmpmFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MultiEmmpmFilter::clone() const
 {
   return std::make_unique<MultiEmmpmFilter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> MultiEmmpmFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -90,6 +103,7 @@ Result<OutputActions> MultiEmmpmFilter::preflightImpl(const DataStructure& ds, c
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> MultiEmmpmFilter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

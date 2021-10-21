@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CreateStringArray::name() const
 {
   return FilterTraits<CreateStringArray>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CreateStringArray::className() const
 {
   return FilterTraits<CreateStringArray>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CreateStringArray::uuid() const
 {
   return FilterTraits<CreateStringArray>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CreateStringArray::humanName() const
 {
   return "Create String Array";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CreateStringArray::defaultTags() const
+{
+  return {"#Core", "#Generation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CreateStringArray::parameters() const
 {
   Parameters params;
@@ -38,11 +49,13 @@ Parameters CreateStringArray::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateStringArray::clone() const
 {
   return std::make_unique<CreateStringArray>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CreateStringArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -60,6 +73,7 @@ Result<OutputActions> CreateStringArray::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CreateStringArray::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

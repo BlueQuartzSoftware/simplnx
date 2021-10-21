@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string InputCrystalCompliances::name() const
 {
   return FilterTraits<InputCrystalCompliances>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string InputCrystalCompliances::className() const
 {
   return FilterTraits<InputCrystalCompliances>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid InputCrystalCompliances::uuid() const
 {
   return FilterTraits<InputCrystalCompliances>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string InputCrystalCompliances::humanName() const
 {
   return "Input Crystal Compliances";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> InputCrystalCompliances::defaultTags() const
+{
+  return {"#Generic", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters InputCrystalCompliances::parameters() const
 {
   Parameters params;
@@ -39,11 +50,13 @@ Parameters InputCrystalCompliances::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer InputCrystalCompliances::clone() const
 {
   return std::make_unique<InputCrystalCompliances>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> InputCrystalCompliances::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -61,6 +74,7 @@ Result<OutputActions> InputCrystalCompliances::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> InputCrystalCompliances::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

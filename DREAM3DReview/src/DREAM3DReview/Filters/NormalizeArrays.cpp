@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string NormalizeArrays::name() const
 {
   return FilterTraits<NormalizeArrays>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string NormalizeArrays::className() const
 {
   return FilterTraits<NormalizeArrays>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid NormalizeArrays::uuid() const
 {
   return FilterTraits<NormalizeArrays>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string NormalizeArrays::humanName() const
 {
   return "Normalize Attribute Arrays";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> NormalizeArrays::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Statistics"};
+}
+
+//------------------------------------------------------------------------------
 Parameters NormalizeArrays::parameters() const
 {
   Parameters params;
@@ -54,11 +65,13 @@ Parameters NormalizeArrays::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer NormalizeArrays::clone() const
 {
   return std::make_unique<NormalizeArrays>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> NormalizeArrays::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -82,6 +95,7 @@ Result<OutputActions> NormalizeArrays::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> NormalizeArrays::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

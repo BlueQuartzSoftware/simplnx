@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindElementCentroids::name() const
 {
   return FilterTraits<FindElementCentroids>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindElementCentroids::className() const
 {
   return FilterTraits<FindElementCentroids>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindElementCentroids::uuid() const
 {
   return FilterTraits<FindElementCentroids>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindElementCentroids::humanName() const
 {
   return "Find Element Centroids";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindElementCentroids::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Geometry"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindElementCentroids::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters FindElementCentroids::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindElementCentroids::clone() const
 {
   return std::make_unique<FindElementCentroids>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindElementCentroids::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -69,6 +82,7 @@ Result<OutputActions> FindElementCentroids::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindElementCentroids::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

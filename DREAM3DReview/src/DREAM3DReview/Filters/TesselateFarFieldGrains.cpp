@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string TesselateFarFieldGrains::name() const
 {
   return FilterTraits<TesselateFarFieldGrains>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string TesselateFarFieldGrains::className() const
 {
   return FilterTraits<TesselateFarFieldGrains>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid TesselateFarFieldGrains::uuid() const
 {
   return FilterTraits<TesselateFarFieldGrains>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string TesselateFarFieldGrains::humanName() const
 {
   return "Tesselate Far Field Grains";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> TesselateFarFieldGrains::defaultTags() const
+{
+  return {"#Unsupported", "#Packing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters TesselateFarFieldGrains::parameters() const
 {
   Parameters params;
@@ -53,11 +64,13 @@ Parameters TesselateFarFieldGrains::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer TesselateFarFieldGrains::clone() const
 {
   return std::make_unique<TesselateFarFieldGrains>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> TesselateFarFieldGrains::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -84,6 +97,7 @@ Result<OutputActions> TesselateFarFieldGrains::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> TesselateFarFieldGrains::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string VMFindDistanceFieldFromTriangleGeometry::name() const
 {
   return FilterTraits<VMFindDistanceFieldFromTriangleGeometry>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string VMFindDistanceFieldFromTriangleGeometry::className() const
 {
   return FilterTraits<VMFindDistanceFieldFromTriangleGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid VMFindDistanceFieldFromTriangleGeometry::uuid() const
 {
   return FilterTraits<VMFindDistanceFieldFromTriangleGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string VMFindDistanceFieldFromTriangleGeometry::humanName() const
 {
   return "Find Distance Field from Triangle Geometry (VolumeMeshing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> VMFindDistanceFieldFromTriangleGeometry::defaultTags() const
+{
+  return {"#Volume Meshing", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters VMFindDistanceFieldFromTriangleGeometry::parameters() const
 {
   Parameters params;
@@ -51,11 +62,13 @@ Parameters VMFindDistanceFieldFromTriangleGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer VMFindDistanceFieldFromTriangleGeometry::clone() const
 {
   return std::make_unique<VMFindDistanceFieldFromTriangleGeometry>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> VMFindDistanceFieldFromTriangleGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -79,6 +92,7 @@ Result<OutputActions> VMFindDistanceFieldFromTriangleGeometry::preflightImpl(con
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> VMFindDistanceFieldFromTriangleGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

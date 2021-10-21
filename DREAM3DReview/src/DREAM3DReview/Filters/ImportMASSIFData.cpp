@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportMASSIFData::name() const
 {
   return FilterTraits<ImportMASSIFData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ImportMASSIFData::className() const
 {
   return FilterTraits<ImportMASSIFData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportMASSIFData::uuid() const
 {
   return FilterTraits<ImportMASSIFData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportMASSIFData::humanName() const
 {
   return "Import MASSIF Data (HDF5)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportMASSIFData::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportMASSIFData::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters ImportMASSIFData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportMASSIFData::clone() const
 {
   return std::make_unique<ImportMASSIFData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ImportMASSIFData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -66,6 +79,7 @@ Result<OutputActions> ImportMASSIFData::preflightImpl(const DataStructure& ds, c
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ImportMASSIFData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

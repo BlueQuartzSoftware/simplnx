@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ExecuteProcess::name() const
 {
   return FilterTraits<ExecuteProcess>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ExecuteProcess::className() const
 {
   return FilterTraits<ExecuteProcess>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ExecuteProcess::uuid() const
 {
   return FilterTraits<ExecuteProcess>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ExecuteProcess::humanName() const
 {
   return "Execute Process";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ExecuteProcess::defaultTags() const
+{
+  return {"#Core", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ExecuteProcess::parameters() const
 {
   Parameters params;
@@ -36,11 +47,13 @@ Parameters ExecuteProcess::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExecuteProcess::clone() const
 {
   return std::make_unique<ExecuteProcess>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ExecuteProcess::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -57,6 +70,7 @@ Result<OutputActions> ExecuteProcess::preflightImpl(const DataStructure& ds, con
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ExecuteProcess::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

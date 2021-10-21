@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindCSLBoundaries::name() const
 {
   return FilterTraits<FindCSLBoundaries>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindCSLBoundaries::className() const
 {
   return FilterTraits<FindCSLBoundaries>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindCSLBoundaries::uuid() const
 {
   return FilterTraits<FindCSLBoundaries>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindCSLBoundaries::humanName() const
 {
   return "Find CSL Boundaries";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindCSLBoundaries::defaultTags() const
+{
+  return {"#Unsupported", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindCSLBoundaries::parameters() const
 {
   Parameters params;
@@ -51,11 +62,13 @@ Parameters FindCSLBoundaries::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindCSLBoundaries::clone() const
 {
   return std::make_unique<FindCSLBoundaries>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindCSLBoundaries::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -81,6 +94,7 @@ Result<OutputActions> FindCSLBoundaries::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindCSLBoundaries::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

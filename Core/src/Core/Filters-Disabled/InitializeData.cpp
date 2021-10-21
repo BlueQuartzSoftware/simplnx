@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string InitializeData::name() const
 {
   return FilterTraits<InitializeData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string InitializeData::className() const
 {
   return FilterTraits<InitializeData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid InitializeData::uuid() const
 {
   return FilterTraits<InitializeData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string InitializeData::humanName() const
 {
   return "Initialize Data";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> InitializeData::defaultTags() const
+{
+  return {"#Processing", "#Conversion"};
+}
+
+//------------------------------------------------------------------------------
 Parameters InitializeData::parameters() const
 {
   Parameters params;
@@ -52,11 +63,13 @@ Parameters InitializeData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer InitializeData::clone() const
 {
   return std::make_unique<InitializeData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> InitializeData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -82,6 +95,7 @@ Result<OutputActions> InitializeData::preflightImpl(const DataStructure& ds, con
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> InitializeData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

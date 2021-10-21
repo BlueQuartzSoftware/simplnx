@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindSurfaceAreaToVolume::name() const
 {
   return FilterTraits<FindSurfaceAreaToVolume>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindSurfaceAreaToVolume::className() const
 {
   return FilterTraits<FindSurfaceAreaToVolume>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindSurfaceAreaToVolume::uuid() const
 {
   return FilterTraits<FindSurfaceAreaToVolume>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindSurfaceAreaToVolume::humanName() const
 {
   return "Find Surface Area to Volume & Sphericity";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindSurfaceAreaToVolume::defaultTags() const
+{
+  return {"#Statistics", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindSurfaceAreaToVolume::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters FindSurfaceAreaToVolume::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindSurfaceAreaToVolume::clone() const
 {
   return std::make_unique<FindSurfaceAreaToVolume>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindSurfaceAreaToVolume::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> FindSurfaceAreaToVolume::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindSurfaceAreaToVolume::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

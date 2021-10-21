@@ -15,26 +15,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string InsertPrecipitatePhases::name() const
 {
   return FilterTraits<InsertPrecipitatePhases>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string InsertPrecipitatePhases::className() const
 {
   return FilterTraits<InsertPrecipitatePhases>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid InsertPrecipitatePhases::uuid() const
 {
   return FilterTraits<InsertPrecipitatePhases>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string InsertPrecipitatePhases::humanName() const
 {
   return "Insert Precipitate Phases";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> InsertPrecipitatePhases::defaultTags() const
+{
+  return {"#Synthetic Building", "#Packing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters InsertPrecipitatePhases::parameters() const
 {
   Parameters params;
@@ -72,11 +83,13 @@ Parameters InsertPrecipitatePhases::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer InsertPrecipitatePhases::clone() const
 {
   return std::make_unique<InsertPrecipitatePhases>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> InsertPrecipitatePhases::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -109,6 +122,7 @@ Result<OutputActions> InsertPrecipitatePhases::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> InsertPrecipitatePhases::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

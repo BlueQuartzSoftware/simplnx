@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string MoveData::name() const
 {
   return FilterTraits<MoveData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string MoveData::className() const
 {
   return FilterTraits<MoveData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid MoveData::uuid() const
 {
   return FilterTraits<MoveData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string MoveData::humanName() const
 {
   return "Move Data";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> MoveData::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MoveData::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters MoveData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MoveData::clone() const
 {
   return std::make_unique<MoveData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> MoveData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> MoveData::preflightImpl(const DataStructure& ds, const Arg
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> MoveData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

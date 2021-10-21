@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportCLIFile::name() const
 {
   return FilterTraits<ImportCLIFile>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ImportCLIFile::className() const
 {
   return FilterTraits<ImportCLIFile>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportCLIFile::uuid() const
 {
   return FilterTraits<ImportCLIFile>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportCLIFile::humanName() const
 {
   return "Import CLI File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportCLIFile::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportCLIFile::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters ImportCLIFile::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportCLIFile::clone() const
 {
   return std::make_unique<ImportCLIFile>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ImportCLIFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -74,6 +87,7 @@ Result<OutputActions> ImportCLIFile::preflightImpl(const DataStructure& ds, cons
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ImportCLIFile::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

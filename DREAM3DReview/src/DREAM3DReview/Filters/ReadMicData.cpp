@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ReadMicData::name() const
 {
   return FilterTraits<ReadMicData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ReadMicData::className() const
 {
   return FilterTraits<ReadMicData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ReadMicData::uuid() const
 {
   return FilterTraits<ReadMicData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ReadMicData::humanName() const
 {
   return "Import HEDM Data (.mic)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ReadMicData::defaultTags() const
+{
+  return {"#Unsupported", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ReadMicData::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters ReadMicData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadMicData::clone() const
 {
   return std::make_unique<ReadMicData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ReadMicData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -70,6 +83,7 @@ Result<OutputActions> ReadMicData::preflightImpl(const DataStructure& ds, const 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ReadMicData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

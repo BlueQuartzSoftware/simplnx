@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GenerateFZQuaternions::name() const
 {
   return FilterTraits<GenerateFZQuaternions>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateFZQuaternions::className() const
 {
   return FilterTraits<GenerateFZQuaternions>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GenerateFZQuaternions::uuid() const
 {
   return FilterTraits<GenerateFZQuaternions>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateFZQuaternions::humanName() const
 {
   return "Reduce Orientations to Fundamental Zone";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GenerateFZQuaternions::defaultTags() const
+{
+  return {"#Processing", "#OrientationAnalysis"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GenerateFZQuaternions::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters GenerateFZQuaternions::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GenerateFZQuaternions::clone() const
 {
   return std::make_unique<GenerateFZQuaternions>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GenerateFZQuaternions::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -74,6 +87,7 @@ Result<OutputActions> GenerateFZQuaternions::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GenerateFZQuaternions::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

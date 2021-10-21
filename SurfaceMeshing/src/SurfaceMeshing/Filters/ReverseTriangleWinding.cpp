@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ReverseTriangleWinding::name() const
 {
   return FilterTraits<ReverseTriangleWinding>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ReverseTriangleWinding::className() const
 {
   return FilterTraits<ReverseTriangleWinding>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ReverseTriangleWinding::uuid() const
 {
   return FilterTraits<ReverseTriangleWinding>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ReverseTriangleWinding::humanName() const
 {
   return "Reverse Triangle Winding";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ReverseTriangleWinding::defaultTags() const
+{
+  return {"#Surface Meshing", "#Connectivity Arrangement"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ReverseTriangleWinding::parameters() const
 {
   Parameters params;
@@ -36,11 +47,13 @@ Parameters ReverseTriangleWinding::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReverseTriangleWinding::clone() const
 {
   return std::make_unique<ReverseTriangleWinding>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ReverseTriangleWinding::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -57,6 +70,7 @@ Result<OutputActions> ReverseTriangleWinding::preflightImpl(const DataStructure&
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ReverseTriangleWinding::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

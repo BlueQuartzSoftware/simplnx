@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string PottsModel::name() const
 {
   return FilterTraits<PottsModel>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string PottsModel::className() const
 {
   return FilterTraits<PottsModel>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid PottsModel::uuid() const
 {
   return FilterTraits<PottsModel>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string PottsModel::humanName() const
 {
   return "Potts Model";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> PottsModel::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Coarsening"};
+}
+
+//------------------------------------------------------------------------------
 Parameters PottsModel::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters PottsModel::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer PottsModel::clone() const
 {
   return std::make_unique<PottsModel>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> PottsModel::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> PottsModel::preflightImpl(const DataStructure& ds, const A
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> PottsModel::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

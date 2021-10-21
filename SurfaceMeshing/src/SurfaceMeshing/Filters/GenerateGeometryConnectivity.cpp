@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GenerateGeometryConnectivity::name() const
 {
   return FilterTraits<GenerateGeometryConnectivity>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateGeometryConnectivity::className() const
 {
   return FilterTraits<GenerateGeometryConnectivity>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GenerateGeometryConnectivity::uuid() const
 {
   return FilterTraits<GenerateGeometryConnectivity>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateGeometryConnectivity::humanName() const
 {
   return "Generate Geometry Connectivity";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GenerateGeometryConnectivity::defaultTags() const
+{
+  return {"#Surface Meshing", "#Connectivity Arrangement"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GenerateGeometryConnectivity::parameters() const
 {
   Parameters params;
@@ -39,11 +50,13 @@ Parameters GenerateGeometryConnectivity::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GenerateGeometryConnectivity::clone() const
 {
   return std::make_unique<GenerateGeometryConnectivity>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GenerateGeometryConnectivity::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> GenerateGeometryConnectivity::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GenerateGeometryConnectivity::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

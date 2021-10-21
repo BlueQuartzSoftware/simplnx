@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string MoveMultiData::name() const
 {
   return FilterTraits<MoveMultiData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string MoveMultiData::className() const
 {
   return FilterTraits<MoveMultiData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid MoveMultiData::uuid() const
 {
   return FilterTraits<MoveMultiData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string MoveMultiData::humanName() const
 {
   return "Move Multi Data";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> MoveMultiData::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MoveMultiData::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters MoveMultiData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MoveMultiData::clone() const
 {
   return std::make_unique<MoveMultiData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> MoveMultiData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -73,6 +86,7 @@ Result<OutputActions> MoveMultiData::preflightImpl(const DataStructure& ds, cons
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> MoveMultiData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

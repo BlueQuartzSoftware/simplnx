@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ConvertQuaternion::name() const
 {
   return FilterTraits<ConvertQuaternion>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ConvertQuaternion::className() const
 {
   return FilterTraits<ConvertQuaternion>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ConvertQuaternion::uuid() const
 {
   return FilterTraits<ConvertQuaternion>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ConvertQuaternion::humanName() const
 {
   return "Convert Quaternion Order";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ConvertQuaternion::defaultTags() const
+{
+  return {"#Processing", "#Conversion"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ConvertQuaternion::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters ConvertQuaternion::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ConvertQuaternion::clone() const
 {
   return std::make_unique<ConvertQuaternion>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ConvertQuaternion::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -66,6 +79,7 @@ Result<OutputActions> ConvertQuaternion::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ConvertQuaternion::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkBinaryWatershedLabeled::name() const
 {
   return FilterTraits<ItkBinaryWatershedLabeled>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkBinaryWatershedLabeled::className() const
 {
   return FilterTraits<ItkBinaryWatershedLabeled>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkBinaryWatershedLabeled::uuid() const
 {
   return FilterTraits<ItkBinaryWatershedLabeled>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkBinaryWatershedLabeled::humanName() const
 {
   return "Binary Watershed Labeled (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkBinaryWatershedLabeled::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkBinaryWatershedLabeled::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters ItkBinaryWatershedLabeled::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkBinaryWatershedLabeled::clone() const
 {
   return std::make_unique<ItkBinaryWatershedLabeled>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkBinaryWatershedLabeled::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -65,6 +78,7 @@ Result<OutputActions> ItkBinaryWatershedLabeled::preflightImpl(const DataStructu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkBinaryWatershedLabeled::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

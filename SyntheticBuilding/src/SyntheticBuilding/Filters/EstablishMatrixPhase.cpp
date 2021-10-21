@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string EstablishMatrixPhase::name() const
 {
   return FilterTraits<EstablishMatrixPhase>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string EstablishMatrixPhase::className() const
 {
   return FilterTraits<EstablishMatrixPhase>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid EstablishMatrixPhase::uuid() const
 {
   return FilterTraits<EstablishMatrixPhase>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string EstablishMatrixPhase::humanName() const
 {
   return "Establish Matrix Phase";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> EstablishMatrixPhase::defaultTags() const
+{
+  return {"#Synthetic Building", "#Packing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters EstablishMatrixPhase::parameters() const
 {
   Parameters params;
@@ -57,11 +68,13 @@ Parameters EstablishMatrixPhase::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer EstablishMatrixPhase::clone() const
 {
   return std::make_unique<EstablishMatrixPhase>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> EstablishMatrixPhase::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -89,6 +102,7 @@ Result<OutputActions> EstablishMatrixPhase::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> EstablishMatrixPhase::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

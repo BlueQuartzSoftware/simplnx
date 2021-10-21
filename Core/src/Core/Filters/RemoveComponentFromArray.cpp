@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string RemoveComponentFromArray::name() const
 {
   return FilterTraits<RemoveComponentFromArray>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string RemoveComponentFromArray::className() const
 {
   return FilterTraits<RemoveComponentFromArray>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid RemoveComponentFromArray::uuid() const
 {
   return FilterTraits<RemoveComponentFromArray>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string RemoveComponentFromArray::humanName() const
 {
   return "Remove Component From Array";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> RemoveComponentFromArray::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters RemoveComponentFromArray::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters RemoveComponentFromArray::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RemoveComponentFromArray::clone() const
 {
   return std::make_unique<RemoveComponentFromArray>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> RemoveComponentFromArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -70,6 +83,7 @@ Result<OutputActions> RemoveComponentFromArray::preflightImpl(const DataStructur
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> RemoveComponentFromArray::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

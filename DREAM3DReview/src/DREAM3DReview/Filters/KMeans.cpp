@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string KMeans::name() const
 {
   return FilterTraits<KMeans>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string KMeans::className() const
 {
   return FilterTraits<KMeans>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid KMeans::uuid() const
 {
   return FilterTraits<KMeans>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string KMeans::humanName() const
 {
   return "K Means";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> KMeans::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Clustering"};
+}
+
+//------------------------------------------------------------------------------
 Parameters KMeans::parameters() const
 {
   Parameters params;
@@ -49,11 +60,13 @@ Parameters KMeans::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer KMeans::clone() const
 {
   return std::make_unique<KMeans>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> KMeans::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -77,6 +90,7 @@ Result<OutputActions> KMeans::preflightImpl(const DataStructure& ds, const Argum
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> KMeans::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

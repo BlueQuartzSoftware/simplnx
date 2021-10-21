@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkMedianKernel::name() const
 {
   return FilterTraits<ItkMedianKernel>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkMedianKernel::className() const
 {
   return FilterTraits<ItkMedianKernel>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkMedianKernel::uuid() const
 {
   return FilterTraits<ItkMedianKernel>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkMedianKernel::humanName() const
 {
   return "Median (Kernel) (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkMedianKernel::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkMedianKernel::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters ItkMedianKernel::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkMedianKernel::clone() const
 {
   return std::make_unique<ItkMedianKernel>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkMedianKernel::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> ItkMedianKernel::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkMedianKernel::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

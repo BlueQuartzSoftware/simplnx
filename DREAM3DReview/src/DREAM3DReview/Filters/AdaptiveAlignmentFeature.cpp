@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AdaptiveAlignmentFeature::name() const
 {
   return FilterTraits<AdaptiveAlignmentFeature>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AdaptiveAlignmentFeature::className() const
 {
   return FilterTraits<AdaptiveAlignmentFeature>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AdaptiveAlignmentFeature::uuid() const
 {
   return FilterTraits<AdaptiveAlignmentFeature>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AdaptiveAlignmentFeature::humanName() const
 {
   return "Adaptive Alignment (Feature)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AdaptiveAlignmentFeature::defaultTags() const
+{
+  return {"#Reconstruction", "#Anisotropic Alignment"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AdaptiveAlignmentFeature::parameters() const
 {
   Parameters params;
@@ -51,11 +62,13 @@ Parameters AdaptiveAlignmentFeature::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AdaptiveAlignmentFeature::clone() const
 {
   return std::make_unique<AdaptiveAlignmentFeature>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AdaptiveAlignmentFeature::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -77,6 +90,7 @@ Result<OutputActions> AdaptiveAlignmentFeature::preflightImpl(const DataStructur
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AdaptiveAlignmentFeature::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

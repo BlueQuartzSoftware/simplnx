@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string DelaunayTriangulation::name() const
 {
   return FilterTraits<DelaunayTriangulation>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string DelaunayTriangulation::className() const
 {
   return FilterTraits<DelaunayTriangulation>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid DelaunayTriangulation::uuid() const
 {
   return FilterTraits<DelaunayTriangulation>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string DelaunayTriangulation::humanName() const
 {
   return "Delaunay Triangulation";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> DelaunayTriangulation::defaultTags() const
+{
+  return {"#Surface Meshing", "#Generation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters DelaunayTriangulation::parameters() const
 {
   Parameters params;
@@ -51,11 +62,13 @@ Parameters DelaunayTriangulation::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer DelaunayTriangulation::clone() const
 {
   return std::make_unique<DelaunayTriangulation>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> DelaunayTriangulation::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -79,6 +92,7 @@ Result<OutputActions> DelaunayTriangulation::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> DelaunayTriangulation::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

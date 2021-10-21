@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string EMsoftSO3Sampler::name() const
 {
   return FilterTraits<EMsoftSO3Sampler>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string EMsoftSO3Sampler::className() const
 {
   return FilterTraits<EMsoftSO3Sampler>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid EMsoftSO3Sampler::uuid() const
 {
   return FilterTraits<EMsoftSO3Sampler>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string EMsoftSO3Sampler::humanName() const
 {
   return "SO3 Angle Sampler";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> EMsoftSO3Sampler::defaultTags() const
+{
+  return {"#Sampling", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters EMsoftSO3Sampler::parameters() const
 {
   Parameters params;
@@ -58,11 +69,13 @@ Parameters EMsoftSO3Sampler::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer EMsoftSO3Sampler::clone() const
 {
   return std::make_unique<EMsoftSO3Sampler>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> EMsoftSO3Sampler::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -87,6 +100,7 @@ Result<OutputActions> EMsoftSO3Sampler::preflightImpl(const DataStructure& ds, c
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> EMsoftSO3Sampler::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

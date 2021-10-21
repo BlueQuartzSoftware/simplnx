@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string Lesson5::name() const
 {
   return FilterTraits<Lesson5>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string Lesson5::className() const
 {
   return FilterTraits<Lesson5>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid Lesson5::uuid() const
 {
   return FilterTraits<Lesson5>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string Lesson5::humanName() const
 {
   return "Lesson5";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> Lesson5::defaultTags() const
+{
+  return {"#Unsupported", "#ProgWorkshop"};
+}
+
+//------------------------------------------------------------------------------
 Parameters Lesson5::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters Lesson5::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer Lesson5::clone() const
 {
   return std::make_unique<Lesson5>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> Lesson5::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -73,6 +86,7 @@ Result<OutputActions> Lesson5::preflightImpl(const DataStructure& ds, const Argu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> Lesson5::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

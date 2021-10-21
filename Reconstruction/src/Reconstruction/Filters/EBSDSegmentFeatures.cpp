@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string EBSDSegmentFeatures::name() const
 {
   return FilterTraits<EBSDSegmentFeatures>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string EBSDSegmentFeatures::className() const
 {
   return FilterTraits<EBSDSegmentFeatures>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid EBSDSegmentFeatures::uuid() const
 {
   return FilterTraits<EBSDSegmentFeatures>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string EBSDSegmentFeatures::humanName() const
 {
   return "Segment Features (Misorientation)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> EBSDSegmentFeatures::defaultTags() const
+{
+  return {"#Reconstruction", "#Segmentation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters EBSDSegmentFeatures::parameters() const
 {
   Parameters params;
@@ -53,11 +64,13 @@ Parameters EBSDSegmentFeatures::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer EBSDSegmentFeatures::clone() const
 {
   return std::make_unique<EBSDSegmentFeatures>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> EBSDSegmentFeatures::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -82,6 +95,7 @@ Result<OutputActions> EBSDSegmentFeatures::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> EBSDSegmentFeatures::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

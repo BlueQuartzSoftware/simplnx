@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string IterativeClosestPoint::name() const
 {
   return FilterTraits<IterativeClosestPoint>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string IterativeClosestPoint::className() const
 {
   return FilterTraits<IterativeClosestPoint>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid IterativeClosestPoint::uuid() const
 {
   return FilterTraits<IterativeClosestPoint>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string IterativeClosestPoint::humanName() const
 {
   return "Iterative Closest Point";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> IterativeClosestPoint::defaultTags() const
+{
+  return {"#Reconstruction", "#Alignment"};
+}
+
+//------------------------------------------------------------------------------
 Parameters IterativeClosestPoint::parameters() const
 {
   Parameters params;
@@ -44,11 +55,13 @@ Parameters IterativeClosestPoint::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer IterativeClosestPoint::clone() const
 {
   return std::make_unique<IterativeClosestPoint>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> IterativeClosestPoint::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -70,6 +83,7 @@ Result<OutputActions> IterativeClosestPoint::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> IterativeClosestPoint::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

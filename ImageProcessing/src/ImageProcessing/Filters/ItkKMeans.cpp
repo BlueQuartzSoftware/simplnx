@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkKMeans::name() const
 {
   return FilterTraits<ItkKMeans>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkKMeans::className() const
 {
   return FilterTraits<ItkKMeans>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkKMeans::uuid() const
 {
   return FilterTraits<ItkKMeans>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkKMeans::humanName() const
 {
   return "K Means (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkKMeans::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkKMeans::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters ItkKMeans::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkKMeans::clone() const
 {
   return std::make_unique<ItkKMeans>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkKMeans::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> ItkKMeans::preflightImpl(const DataStructure& ds, const Ar
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkKMeans::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

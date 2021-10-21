@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string RodriguesConvertor::name() const
 {
   return FilterTraits<RodriguesConvertor>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string RodriguesConvertor::className() const
 {
   return FilterTraits<RodriguesConvertor>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid RodriguesConvertor::uuid() const
 {
   return FilterTraits<RodriguesConvertor>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string RodriguesConvertor::humanName() const
 {
   return "Rodrigues Convertor";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> RodriguesConvertor::defaultTags() const
+{
+  return {"#Processing", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters RodriguesConvertor::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters RodriguesConvertor::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RodriguesConvertor::clone() const
 {
   return std::make_unique<RodriguesConvertor>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> RodriguesConvertor::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -63,6 +76,7 @@ Result<OutputActions> RodriguesConvertor::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> RodriguesConvertor::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

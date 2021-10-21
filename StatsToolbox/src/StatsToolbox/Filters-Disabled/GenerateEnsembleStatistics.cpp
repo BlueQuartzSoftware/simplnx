@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GenerateEnsembleStatistics::name() const
 {
   return FilterTraits<GenerateEnsembleStatistics>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateEnsembleStatistics::className() const
 {
   return FilterTraits<GenerateEnsembleStatistics>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GenerateEnsembleStatistics::uuid() const
 {
   return FilterTraits<GenerateEnsembleStatistics>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateEnsembleStatistics::humanName() const
 {
   return "Generate Ensemble Statistics";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GenerateEnsembleStatistics::defaultTags() const
+{
+  return {"#Statistics", "#Ensemble"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GenerateEnsembleStatistics::parameters() const
 {
   Parameters params;
@@ -90,11 +101,13 @@ Parameters GenerateEnsembleStatistics::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GenerateEnsembleStatistics::clone() const
 {
   return std::make_unique<GenerateEnsembleStatistics>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GenerateEnsembleStatistics::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -137,6 +150,7 @@ Result<OutputActions> GenerateEnsembleStatistics::preflightImpl(const DataStruct
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GenerateEnsembleStatistics::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

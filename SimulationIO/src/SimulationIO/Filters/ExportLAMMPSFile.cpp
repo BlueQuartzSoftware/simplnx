@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ExportLAMMPSFile::name() const
 {
   return FilterTraits<ExportLAMMPSFile>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ExportLAMMPSFile::className() const
 {
   return FilterTraits<ExportLAMMPSFile>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ExportLAMMPSFile::uuid() const
 {
   return FilterTraits<ExportLAMMPSFile>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ExportLAMMPSFile::humanName() const
 {
   return "Export LAMMPS Data File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ExportLAMMPSFile::defaultTags() const
+{
+  return {"#Unsupported", "#SimulationIO"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ExportLAMMPSFile::parameters() const
 {
   Parameters params;
@@ -41,11 +52,13 @@ Parameters ExportLAMMPSFile::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExportLAMMPSFile::clone() const
 {
   return std::make_unique<ExportLAMMPSFile>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ExportLAMMPSFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -63,6 +76,7 @@ Result<OutputActions> ExportLAMMPSFile::preflightImpl(const DataStructure& ds, c
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ExportLAMMPSFile::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

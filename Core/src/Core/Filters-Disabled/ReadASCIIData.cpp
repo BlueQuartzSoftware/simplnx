@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ReadASCIIData::name() const
 {
   return FilterTraits<ReadASCIIData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ReadASCIIData::className() const
 {
   return FilterTraits<ReadASCIIData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ReadASCIIData::uuid() const
 {
   return FilterTraits<ReadASCIIData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ReadASCIIData::humanName() const
 {
   return "Import ASCII Data";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ReadASCIIData::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ReadASCIIData::parameters() const
 {
   Parameters params;
@@ -36,11 +47,13 @@ Parameters ReadASCIIData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadASCIIData::clone() const
 {
   return std::make_unique<ReadASCIIData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ReadASCIIData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -57,6 +70,7 @@ Result<OutputActions> ReadASCIIData::preflightImpl(const DataStructure& ds, cons
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ReadASCIIData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

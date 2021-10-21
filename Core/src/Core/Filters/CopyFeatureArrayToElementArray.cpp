@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CopyFeatureArrayToElementArray::name() const
 {
   return FilterTraits<CopyFeatureArrayToElementArray>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CopyFeatureArrayToElementArray::className() const
 {
   return FilterTraits<CopyFeatureArrayToElementArray>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CopyFeatureArrayToElementArray::uuid() const
 {
   return FilterTraits<CopyFeatureArrayToElementArray>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CopyFeatureArrayToElementArray::humanName() const
 {
   return "Create Element Array from Feature Array";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CopyFeatureArrayToElementArray::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CopyFeatureArrayToElementArray::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters CopyFeatureArrayToElementArray::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CopyFeatureArrayToElementArray::clone() const
 {
   return std::make_unique<CopyFeatureArrayToElementArray>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CopyFeatureArrayToElementArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -65,6 +78,7 @@ Result<OutputActions> CopyFeatureArrayToElementArray::preflightImpl(const DataSt
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CopyFeatureArrayToElementArray::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

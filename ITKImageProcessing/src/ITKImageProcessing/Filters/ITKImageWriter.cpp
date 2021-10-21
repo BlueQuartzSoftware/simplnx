@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ITKImageWriter::name() const
 {
   return FilterTraits<ITKImageWriter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ITKImageWriter::className() const
 {
   return FilterTraits<ITKImageWriter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ITKImageWriter::uuid() const
 {
   return FilterTraits<ITKImageWriter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ITKImageWriter::humanName() const
 {
   return "ITK::Image Export";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ITKImageWriter::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ITKImageWriter::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters ITKImageWriter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKImageWriter::clone() const
 {
   return std::make_unique<ITKImageWriter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ITKImageWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -70,6 +83,7 @@ Result<OutputActions> ITKImageWriter::preflightImpl(const DataStructure& ds, con
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ITKImageWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

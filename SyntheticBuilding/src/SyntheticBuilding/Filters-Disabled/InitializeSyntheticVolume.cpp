@@ -14,26 +14,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string InitializeSyntheticVolume::name() const
 {
   return FilterTraits<InitializeSyntheticVolume>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string InitializeSyntheticVolume::className() const
 {
   return FilterTraits<InitializeSyntheticVolume>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid InitializeSyntheticVolume::uuid() const
 {
   return FilterTraits<InitializeSyntheticVolume>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string InitializeSyntheticVolume::humanName() const
 {
   return "Initialize Synthetic Volume";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> InitializeSyntheticVolume::defaultTags() const
+{
+  return {"#Synthetic Building", "#Packing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters InitializeSyntheticVolume::parameters() const
 {
   Parameters params;
@@ -67,11 +78,13 @@ Parameters InitializeSyntheticVolume::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer InitializeSyntheticVolume::clone() const
 {
   return std::make_unique<InitializeSyntheticVolume>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> InitializeSyntheticVolume::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -101,6 +114,7 @@ Result<OutputActions> InitializeSyntheticVolume::preflightImpl(const DataStructu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> InitializeSyntheticVolume::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

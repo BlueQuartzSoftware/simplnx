@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ApproximatePointCloudHull::name() const
 {
   return FilterTraits<ApproximatePointCloudHull>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ApproximatePointCloudHull::className() const
 {
   return FilterTraits<ApproximatePointCloudHull>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ApproximatePointCloudHull::uuid() const
 {
   return FilterTraits<ApproximatePointCloudHull>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ApproximatePointCloudHull::humanName() const
 {
   return "Approximate Point Cloud Hull";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ApproximatePointCloudHull::defaultTags() const
+{
+  return {"#PointCloudFilters", "#Geometry"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ApproximatePointCloudHull::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters ApproximatePointCloudHull::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ApproximatePointCloudHull::clone() const
 {
   return std::make_unique<ApproximatePointCloudHull>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ApproximatePointCloudHull::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -66,6 +79,7 @@ Result<OutputActions> ApproximatePointCloudHull::preflightImpl(const DataStructu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ApproximatePointCloudHull::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

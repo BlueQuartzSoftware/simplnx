@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ExtractAttributeArraysFromGeometry::name() const
 {
   return FilterTraits<ExtractAttributeArraysFromGeometry>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ExtractAttributeArraysFromGeometry::className() const
 {
   return FilterTraits<ExtractAttributeArraysFromGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ExtractAttributeArraysFromGeometry::uuid() const
 {
   return FilterTraits<ExtractAttributeArraysFromGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ExtractAttributeArraysFromGeometry::humanName() const
 {
   return "Extract Attribute Arrays from Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ExtractAttributeArraysFromGeometry::defaultTags() const
+{
+  return {"#Core", "#Geometry"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ExtractAttributeArraysFromGeometry::parameters() const
 {
   Parameters params;
@@ -51,11 +62,13 @@ Parameters ExtractAttributeArraysFromGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExtractAttributeArraysFromGeometry::clone() const
 {
   return std::make_unique<ExtractAttributeArraysFromGeometry>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ExtractAttributeArraysFromGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -86,6 +99,7 @@ Result<OutputActions> ExtractAttributeArraysFromGeometry::preflightImpl(const Da
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ExtractAttributeArraysFromGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

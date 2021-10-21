@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ExtractTripleLinesFromTriangleGeometry::name() const
 {
   return FilterTraits<ExtractTripleLinesFromTriangleGeometry>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ExtractTripleLinesFromTriangleGeometry::className() const
 {
   return FilterTraits<ExtractTripleLinesFromTriangleGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ExtractTripleLinesFromTriangleGeometry::uuid() const
 {
   return FilterTraits<ExtractTripleLinesFromTriangleGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ExtractTripleLinesFromTriangleGeometry::humanName() const
 {
   return "Extract Triple Lines from Triangle Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ExtractTripleLinesFromTriangleGeometry::defaultTags() const
+{
+  return {"#Sampling", "#Geometry"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ExtractTripleLinesFromTriangleGeometry::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters ExtractTripleLinesFromTriangleGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExtractTripleLinesFromTriangleGeometry::clone() const
 {
   return std::make_unique<ExtractTripleLinesFromTriangleGeometry>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ExtractTripleLinesFromTriangleGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> ExtractTripleLinesFromTriangleGeometry::preflightImpl(cons
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ExtractTripleLinesFromTriangleGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

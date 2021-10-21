@@ -16,26 +16,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GeneratePrecipitateStatsData::name() const
 {
   return FilterTraits<GeneratePrecipitateStatsData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GeneratePrecipitateStatsData::className() const
 {
   return FilterTraits<GeneratePrecipitateStatsData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GeneratePrecipitateStatsData::uuid() const
 {
   return FilterTraits<GeneratePrecipitateStatsData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GeneratePrecipitateStatsData::humanName() const
 {
   return "Generate Precipitate StatsData";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GeneratePrecipitateStatsData::defaultTags() const
+{
+  return {"#Unsupported", "#StatsGenerator"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GeneratePrecipitateStatsData::parameters() const
 {
   Parameters params;
@@ -70,11 +81,13 @@ Parameters GeneratePrecipitateStatsData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GeneratePrecipitateStatsData::clone() const
 {
   return std::make_unique<GeneratePrecipitateStatsData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GeneratePrecipitateStatsData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -112,6 +125,7 @@ Result<OutputActions> GeneratePrecipitateStatsData::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GeneratePrecipitateStatsData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

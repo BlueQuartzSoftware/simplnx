@@ -15,26 +15,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ExportCLIFile::name() const
 {
   return FilterTraits<ExportCLIFile>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ExportCLIFile::className() const
 {
   return FilterTraits<ExportCLIFile>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ExportCLIFile::uuid() const
 {
   return FilterTraits<ExportCLIFile>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ExportCLIFile::humanName() const
 {
   return "Export CLI File(s)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ExportCLIFile::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ExportCLIFile::parameters() const
 {
   Parameters params;
@@ -55,11 +66,13 @@ Parameters ExportCLIFile::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExportCLIFile::clone() const
 {
   return std::make_unique<ExportCLIFile>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ExportCLIFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -83,6 +96,7 @@ Result<OutputActions> ExportCLIFile::preflightImpl(const DataStructure& ds, cons
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ExportCLIFile::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

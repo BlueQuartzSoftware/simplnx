@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindBoundaryElementFractions::name() const
 {
   return FilterTraits<FindBoundaryElementFractions>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindBoundaryElementFractions::className() const
 {
   return FilterTraits<FindBoundaryElementFractions>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindBoundaryElementFractions::uuid() const
 {
   return FilterTraits<FindBoundaryElementFractions>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindBoundaryElementFractions::humanName() const
 {
   return "Find Feature Boundary Element Fractions";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindBoundaryElementFractions::defaultTags() const
+{
+  return {"#Statistics", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindBoundaryElementFractions::parameters() const
 {
   Parameters params;
@@ -41,11 +52,13 @@ Parameters FindBoundaryElementFractions::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindBoundaryElementFractions::clone() const
 {
   return std::make_unique<FindBoundaryElementFractions>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindBoundaryElementFractions::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -64,6 +77,7 @@ Result<OutputActions> FindBoundaryElementFractions::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindBoundaryElementFractions::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

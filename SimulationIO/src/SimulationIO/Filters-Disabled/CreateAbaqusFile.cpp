@@ -14,26 +14,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CreateAbaqusFile::name() const
 {
   return FilterTraits<CreateAbaqusFile>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CreateAbaqusFile::className() const
 {
   return FilterTraits<CreateAbaqusFile>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CreateAbaqusFile::uuid() const
 {
   return FilterTraits<CreateAbaqusFile>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CreateAbaqusFile::humanName() const
 {
   return "Create Abaqus File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CreateAbaqusFile::defaultTags() const
+{
+  return {"#Unsupported", "#SimulationIO"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CreateAbaqusFile::parameters() const
 {
   Parameters params;
@@ -52,11 +63,13 @@ Parameters CreateAbaqusFile::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateAbaqusFile::clone() const
 {
   return std::make_unique<CreateAbaqusFile>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CreateAbaqusFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -81,6 +94,7 @@ Result<OutputActions> CreateAbaqusFile::preflightImpl(const DataStructure& ds, c
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CreateAbaqusFile::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

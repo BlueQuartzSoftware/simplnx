@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindAvgScalarValueForFeatures::name() const
 {
   return FilterTraits<FindAvgScalarValueForFeatures>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindAvgScalarValueForFeatures::className() const
 {
   return FilterTraits<FindAvgScalarValueForFeatures>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindAvgScalarValueForFeatures::uuid() const
 {
   return FilterTraits<FindAvgScalarValueForFeatures>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindAvgScalarValueForFeatures::humanName() const
 {
   return "Find Average Value of Scalars For Feature";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindAvgScalarValueForFeatures::defaultTags() const
+{
+  return {"#Statistics", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindAvgScalarValueForFeatures::parameters() const
 {
   Parameters params;
@@ -41,11 +52,13 @@ Parameters FindAvgScalarValueForFeatures::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindAvgScalarValueForFeatures::clone() const
 {
   return std::make_unique<FindAvgScalarValueForFeatures>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindAvgScalarValueForFeatures::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -64,6 +77,7 @@ Result<OutputActions> FindAvgScalarValueForFeatures::preflightImpl(const DataStr
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindAvgScalarValueForFeatures::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

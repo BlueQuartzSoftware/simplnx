@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CreateGeometry::name() const
 {
   return FilterTraits<CreateGeometry>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CreateGeometry::className() const
 {
   return FilterTraits<CreateGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CreateGeometry::uuid() const
 {
   return FilterTraits<CreateGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CreateGeometry::humanName() const
 {
   return "Create Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CreateGeometry::defaultTags() const
+{
+  return {"#Core", "#Geometry"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CreateGeometry::parameters() const
 {
   Parameters params;
@@ -109,11 +120,13 @@ Parameters CreateGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateGeometry::clone() const
 {
   return std::make_unique<CreateGeometry>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CreateGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -164,6 +177,7 @@ Result<OutputActions> CreateGeometry::preflightImpl(const DataStructure& ds, con
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CreateGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

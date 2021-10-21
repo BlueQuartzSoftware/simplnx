@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string RemoveFlaggedFeatures::name() const
 {
   return FilterTraits<RemoveFlaggedFeatures>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string RemoveFlaggedFeatures::className() const
 {
   return FilterTraits<RemoveFlaggedFeatures>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid RemoveFlaggedFeatures::uuid() const
 {
   return FilterTraits<RemoveFlaggedFeatures>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string RemoveFlaggedFeatures::humanName() const
 {
   return "Remove Flagged Features";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> RemoveFlaggedFeatures::defaultTags() const
+{
+  return {"#Processing", "#Cleanup"};
+}
+
+//------------------------------------------------------------------------------
 Parameters RemoveFlaggedFeatures::parameters() const
 {
   Parameters params;
@@ -44,11 +55,13 @@ Parameters RemoveFlaggedFeatures::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RemoveFlaggedFeatures::clone() const
 {
   return std::make_unique<RemoveFlaggedFeatures>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> RemoveFlaggedFeatures::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -68,6 +81,7 @@ Result<OutputActions> RemoveFlaggedFeatures::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> RemoveFlaggedFeatures::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

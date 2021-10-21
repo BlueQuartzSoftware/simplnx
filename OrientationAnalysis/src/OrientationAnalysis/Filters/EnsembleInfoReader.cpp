@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string EnsembleInfoReader::name() const
 {
   return FilterTraits<EnsembleInfoReader>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string EnsembleInfoReader::className() const
 {
   return FilterTraits<EnsembleInfoReader>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid EnsembleInfoReader::uuid() const
 {
   return FilterTraits<EnsembleInfoReader>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string EnsembleInfoReader::humanName() const
 {
   return "Import Ensemble Info File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> EnsembleInfoReader::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters EnsembleInfoReader::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters EnsembleInfoReader::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer EnsembleInfoReader::clone() const
 {
   return std::make_unique<EnsembleInfoReader>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> EnsembleInfoReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -71,6 +84,7 @@ Result<OutputActions> EnsembleInfoReader::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> EnsembleInfoReader::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

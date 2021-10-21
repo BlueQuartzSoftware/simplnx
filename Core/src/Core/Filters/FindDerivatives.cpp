@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindDerivatives::name() const
 {
   return FilterTraits<FindDerivatives>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindDerivatives::className() const
 {
   return FilterTraits<FindDerivatives>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindDerivatives::uuid() const
 {
   return FilterTraits<FindDerivatives>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindDerivatives::humanName() const
 {
   return "Find Derivatives";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindDerivatives::defaultTags() const
+{
+  return {"#Core", "#Geometry"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindDerivatives::parameters() const
 {
   Parameters params;
@@ -38,11 +49,13 @@ Parameters FindDerivatives::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindDerivatives::clone() const
 {
   return std::make_unique<FindDerivatives>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindDerivatives::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -60,6 +73,7 @@ Result<OutputActions> FindDerivatives::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindDerivatives::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

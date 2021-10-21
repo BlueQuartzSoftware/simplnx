@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string NearestPointFuseRegularGrids::name() const
 {
   return FilterTraits<NearestPointFuseRegularGrids>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string NearestPointFuseRegularGrids::className() const
 {
   return FilterTraits<NearestPointFuseRegularGrids>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid NearestPointFuseRegularGrids::uuid() const
 {
   return FilterTraits<NearestPointFuseRegularGrids>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string NearestPointFuseRegularGrids::humanName() const
 {
   return "Fuse Regular Grids (Nearest Point)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> NearestPointFuseRegularGrids::defaultTags() const
+{
+  return {"#Sampling", "#Spacing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters NearestPointFuseRegularGrids::parameters() const
 {
   Parameters params;
@@ -38,11 +49,13 @@ Parameters NearestPointFuseRegularGrids::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer NearestPointFuseRegularGrids::clone() const
 {
   return std::make_unique<NearestPointFuseRegularGrids>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> NearestPointFuseRegularGrids::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -60,6 +73,7 @@ Result<OutputActions> NearestPointFuseRegularGrids::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> NearestPointFuseRegularGrids::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

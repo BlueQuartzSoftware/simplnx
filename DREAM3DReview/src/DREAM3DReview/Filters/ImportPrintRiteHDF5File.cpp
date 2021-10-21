@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportPrintRiteHDF5File::name() const
 {
   return FilterTraits<ImportPrintRiteHDF5File>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ImportPrintRiteHDF5File::className() const
 {
   return FilterTraits<ImportPrintRiteHDF5File>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportPrintRiteHDF5File::uuid() const
 {
   return FilterTraits<ImportPrintRiteHDF5File>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportPrintRiteHDF5File::humanName() const
 {
   return "Import PrintRite HDF5 File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportPrintRiteHDF5File::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportPrintRiteHDF5File::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters ImportPrintRiteHDF5File::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportPrintRiteHDF5File::clone() const
 {
   return std::make_unique<ImportPrintRiteHDF5File>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ImportPrintRiteHDF5File::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -71,6 +84,7 @@ Result<OutputActions> ImportPrintRiteHDF5File::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ImportPrintRiteHDF5File::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

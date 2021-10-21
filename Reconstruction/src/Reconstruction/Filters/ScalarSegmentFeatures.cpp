@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ScalarSegmentFeatures::name() const
 {
   return FilterTraits<ScalarSegmentFeatures>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ScalarSegmentFeatures::className() const
 {
   return FilterTraits<ScalarSegmentFeatures>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ScalarSegmentFeatures::uuid() const
 {
   return FilterTraits<ScalarSegmentFeatures>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ScalarSegmentFeatures::humanName() const
 {
   return "Segment Features (Scalar)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ScalarSegmentFeatures::defaultTags() const
+{
+  return {"#Reconstruction", "#Segmentation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ScalarSegmentFeatures::parameters() const
 {
   Parameters params;
@@ -50,11 +61,13 @@ Parameters ScalarSegmentFeatures::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ScalarSegmentFeatures::clone() const
 {
   return std::make_unique<ScalarSegmentFeatures>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ScalarSegmentFeatures::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -77,6 +90,7 @@ Result<OutputActions> ScalarSegmentFeatures::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ScalarSegmentFeatures::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

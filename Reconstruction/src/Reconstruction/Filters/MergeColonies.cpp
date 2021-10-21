@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string MergeColonies::name() const
 {
   return FilterTraits<MergeColonies>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string MergeColonies::className() const
 {
   return FilterTraits<MergeColonies>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid MergeColonies::uuid() const
 {
   return FilterTraits<MergeColonies>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string MergeColonies::humanName() const
 {
   return "Merge Colonies";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> MergeColonies::defaultTags() const
+{
+  return {"#Reconstruction", "#Grouping"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MergeColonies::parameters() const
 {
   Parameters params;
@@ -62,11 +73,13 @@ Parameters MergeColonies::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MergeColonies::clone() const
 {
   return std::make_unique<MergeColonies>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> MergeColonies::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -98,6 +111,7 @@ Result<OutputActions> MergeColonies::preflightImpl(const DataStructure& ds, cons
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> MergeColonies::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

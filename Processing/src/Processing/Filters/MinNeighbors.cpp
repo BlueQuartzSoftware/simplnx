@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string MinNeighbors::name() const
 {
   return FilterTraits<MinNeighbors>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string MinNeighbors::className() const
 {
   return FilterTraits<MinNeighbors>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid MinNeighbors::uuid() const
 {
   return FilterTraits<MinNeighbors>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string MinNeighbors::humanName() const
 {
   return "Minimum Number of Neighbors";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> MinNeighbors::defaultTags() const
+{
+  return {"#Processing", "#Cleanup"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MinNeighbors::parameters() const
 {
   Parameters params;
@@ -51,11 +62,13 @@ Parameters MinNeighbors::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MinNeighbors::clone() const
 {
   return std::make_unique<MinNeighbors>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> MinNeighbors::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -78,6 +91,7 @@ Result<OutputActions> MinNeighbors::preflightImpl(const DataStructure& ds, const
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> MinNeighbors::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

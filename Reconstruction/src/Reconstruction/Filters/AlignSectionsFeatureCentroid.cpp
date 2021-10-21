@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AlignSectionsFeatureCentroid::name() const
 {
   return FilterTraits<AlignSectionsFeatureCentroid>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AlignSectionsFeatureCentroid::className() const
 {
   return FilterTraits<AlignSectionsFeatureCentroid>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AlignSectionsFeatureCentroid::uuid() const
 {
   return FilterTraits<AlignSectionsFeatureCentroid>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AlignSectionsFeatureCentroid::humanName() const
 {
   return "Align Sections (Feature Centroid)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AlignSectionsFeatureCentroid::defaultTags() const
+{
+  return {"#Reconstruction", "#Alignment"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AlignSectionsFeatureCentroid::parameters() const
 {
   Parameters params;
@@ -51,11 +62,13 @@ Parameters AlignSectionsFeatureCentroid::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AlignSectionsFeatureCentroid::clone() const
 {
   return std::make_unique<AlignSectionsFeatureCentroid>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AlignSectionsFeatureCentroid::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -76,6 +89,7 @@ Result<OutputActions> AlignSectionsFeatureCentroid::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AlignSectionsFeatureCentroid::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

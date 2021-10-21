@@ -14,26 +14,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string InterpolatePointCloudToRegularGrid::name() const
 {
   return FilterTraits<InterpolatePointCloudToRegularGrid>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string InterpolatePointCloudToRegularGrid::className() const
 {
   return FilterTraits<InterpolatePointCloudToRegularGrid>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid InterpolatePointCloudToRegularGrid::uuid() const
 {
   return FilterTraits<InterpolatePointCloudToRegularGrid>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string InterpolatePointCloudToRegularGrid::humanName() const
 {
   return "Interpolate Point Cloud to Regular Grid";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> InterpolatePointCloudToRegularGrid::defaultTags() const
+{
+  return {"#Sampling", "#InterpolationFilters"};
+}
+
+//------------------------------------------------------------------------------
 Parameters InterpolatePointCloudToRegularGrid::parameters() const
 {
   Parameters params;
@@ -64,11 +75,13 @@ Parameters InterpolatePointCloudToRegularGrid::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer InterpolatePointCloudToRegularGrid::clone() const
 {
   return std::make_unique<InterpolatePointCloudToRegularGrid>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> InterpolatePointCloudToRegularGrid::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -99,6 +112,7 @@ Result<OutputActions> InterpolatePointCloudToRegularGrid::preflightImpl(const Da
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> InterpolatePointCloudToRegularGrid::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

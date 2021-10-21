@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GenerateTiltSeries::name() const
 {
   return FilterTraits<GenerateTiltSeries>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateTiltSeries::className() const
 {
   return FilterTraits<GenerateTiltSeries>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GenerateTiltSeries::uuid() const
 {
   return FilterTraits<GenerateTiltSeries>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateTiltSeries::humanName() const
 {
   return "Generate Tilt Series";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GenerateTiltSeries::defaultTags() const
+{
+  return {"#Core", "#Croping Cutting"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GenerateTiltSeries::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters GenerateTiltSeries::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GenerateTiltSeries::clone() const
 {
   return std::make_unique<GenerateTiltSeries>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GenerateTiltSeries::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -68,6 +81,7 @@ Result<OutputActions> GenerateTiltSeries::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GenerateTiltSeries::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

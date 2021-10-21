@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindNeighbors::name() const
 {
   return FilterTraits<FindNeighbors>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindNeighbors::className() const
 {
   return FilterTraits<FindNeighbors>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindNeighbors::uuid() const
 {
   return FilterTraits<FindNeighbors>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindNeighbors::humanName() const
 {
   return "Find Feature Neighbors";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindNeighbors::defaultTags() const
+{
+  return {"#Statistics", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindNeighbors::parameters() const
 {
   Parameters params;
@@ -54,11 +65,13 @@ Parameters FindNeighbors::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindNeighbors::clone() const
 {
   return std::make_unique<FindNeighbors>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindNeighbors::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -83,6 +96,7 @@ Result<OutputActions> FindNeighbors::preflightImpl(const DataStructure& ds, cons
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindNeighbors::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

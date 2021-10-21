@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ExtractFlaggedFeatures::name() const
 {
   return FilterTraits<ExtractFlaggedFeatures>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ExtractFlaggedFeatures::className() const
 {
   return FilterTraits<ExtractFlaggedFeatures>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ExtractFlaggedFeatures::uuid() const
 {
   return FilterTraits<ExtractFlaggedFeatures>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ExtractFlaggedFeatures::humanName() const
 {
   return "Extract Flagged Features (Rogues Gallery)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ExtractFlaggedFeatures::defaultTags() const
+{
+  return {"#Sampling", "#Croping Cutting"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ExtractFlaggedFeatures::parameters() const
 {
   Parameters params;
@@ -39,11 +50,13 @@ Parameters ExtractFlaggedFeatures::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExtractFlaggedFeatures::clone() const
 {
   return std::make_unique<ExtractFlaggedFeatures>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ExtractFlaggedFeatures::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -61,6 +74,7 @@ Result<OutputActions> ExtractFlaggedFeatures::preflightImpl(const DataStructure&
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ExtractFlaggedFeatures::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

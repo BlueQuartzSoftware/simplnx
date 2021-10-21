@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string PhReader::name() const
 {
   return FilterTraits<PhReader>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string PhReader::className() const
 {
   return FilterTraits<PhReader>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid PhReader::uuid() const
 {
   return FilterTraits<PhReader>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string PhReader::humanName() const
 {
   return "Import Ph File (Feature Ids)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> PhReader::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters PhReader::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters PhReader::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer PhReader::clone() const
 {
   return std::make_unique<PhReader>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> PhReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -74,6 +87,7 @@ Result<OutputActions> PhReader::preflightImpl(const DataStructure& ds, const Arg
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> PhReader::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

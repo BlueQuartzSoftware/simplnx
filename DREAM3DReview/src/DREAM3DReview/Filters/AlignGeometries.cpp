@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AlignGeometries::name() const
 {
   return FilterTraits<AlignGeometries>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AlignGeometries::className() const
 {
   return FilterTraits<AlignGeometries>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AlignGeometries::uuid() const
 {
   return FilterTraits<AlignGeometries>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AlignGeometries::humanName() const
 {
   return "Align Geometries";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AlignGeometries::defaultTags() const
+{
+  return {"#Reconstruction", "#Alignment"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AlignGeometries::parameters() const
 {
   Parameters params;
@@ -39,11 +50,13 @@ Parameters AlignGeometries::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AlignGeometries::clone() const
 {
   return std::make_unique<AlignGeometries>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AlignGeometries::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> AlignGeometries::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AlignGeometries::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string EbsdToH5Ebsd::name() const
 {
   return FilterTraits<EbsdToH5Ebsd>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string EbsdToH5Ebsd::className() const
 {
   return FilterTraits<EbsdToH5Ebsd>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid EbsdToH5Ebsd::uuid() const
 {
   return FilterTraits<EbsdToH5Ebsd>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string EbsdToH5Ebsd::humanName() const
 {
   return "Import Orientation File(s) to H5EBSD";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> EbsdToH5Ebsd::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters EbsdToH5Ebsd::parameters() const
 {
   Parameters params;
@@ -36,11 +47,13 @@ Parameters EbsdToH5Ebsd::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer EbsdToH5Ebsd::clone() const
 {
   return std::make_unique<EbsdToH5Ebsd>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> EbsdToH5Ebsd::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -57,6 +70,7 @@ Result<OutputActions> EbsdToH5Ebsd::preflightImpl(const DataStructure& ds, const
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> EbsdToH5Ebsd::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

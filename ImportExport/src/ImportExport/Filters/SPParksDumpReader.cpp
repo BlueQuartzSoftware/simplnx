@@ -14,26 +14,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string SPParksDumpReader::name() const
 {
   return FilterTraits<SPParksDumpReader>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string SPParksDumpReader::className() const
 {
   return FilterTraits<SPParksDumpReader>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid SPParksDumpReader::uuid() const
 {
   return FilterTraits<SPParksDumpReader>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string SPParksDumpReader::humanName() const
 {
   return "Import SPParks Dump File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> SPParksDumpReader::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters SPParksDumpReader::parameters() const
 {
   Parameters params;
@@ -50,11 +61,13 @@ Parameters SPParksDumpReader::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer SPParksDumpReader::clone() const
 {
   return std::make_unique<SPParksDumpReader>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> SPParksDumpReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -77,6 +90,7 @@ Result<OutputActions> SPParksDumpReader::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> SPParksDumpReader::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

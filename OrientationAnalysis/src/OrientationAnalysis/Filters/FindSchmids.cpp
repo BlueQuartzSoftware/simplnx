@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindSchmids::name() const
 {
   return FilterTraits<FindSchmids>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindSchmids::className() const
 {
   return FilterTraits<FindSchmids>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindSchmids::uuid() const
 {
   return FilterTraits<FindSchmids>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindSchmids::humanName() const
 {
   return "Find Schmid Factors";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindSchmids::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindSchmids::parameters() const
 {
   Parameters params;
@@ -59,11 +70,13 @@ Parameters FindSchmids::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindSchmids::clone() const
 {
   return std::make_unique<FindSchmids>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindSchmids::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -92,6 +105,7 @@ Result<OutputActions> FindSchmids::preflightImpl(const DataStructure& ds, const 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindSchmids::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

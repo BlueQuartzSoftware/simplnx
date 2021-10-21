@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string TriangleAreaFilter::name() const
 {
   return FilterTraits<TriangleAreaFilter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string TriangleAreaFilter::className() const
 {
   return FilterTraits<TriangleAreaFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid TriangleAreaFilter::uuid() const
 {
   return FilterTraits<TriangleAreaFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string TriangleAreaFilter::humanName() const
 {
   return "Generate Triangle Areas";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> TriangleAreaFilter::defaultTags() const
+{
+  return {"#Surface Meshing", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters TriangleAreaFilter::parameters() const
 {
   Parameters params;
@@ -37,11 +48,13 @@ Parameters TriangleAreaFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer TriangleAreaFilter::clone() const
 {
   return std::make_unique<TriangleAreaFilter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> TriangleAreaFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -58,6 +71,7 @@ Result<OutputActions> TriangleAreaFilter::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> TriangleAreaFilter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindBoundaryStrengths::name() const
 {
   return FilterTraits<FindBoundaryStrengths>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindBoundaryStrengths::className() const
 {
   return FilterTraits<FindBoundaryStrengths>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindBoundaryStrengths::uuid() const
 {
   return FilterTraits<FindBoundaryStrengths>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindBoundaryStrengths::humanName() const
 {
   return "Find Feature Boundary Strength Metrics";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindBoundaryStrengths::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindBoundaryStrengths::parameters() const
 {
   Parameters params;
@@ -50,11 +61,13 @@ Parameters FindBoundaryStrengths::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindBoundaryStrengths::clone() const
 {
   return std::make_unique<FindBoundaryStrengths>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindBoundaryStrengths::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -79,6 +92,7 @@ Result<OutputActions> FindBoundaryStrengths::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindBoundaryStrengths::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

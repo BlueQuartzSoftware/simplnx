@@ -17,26 +17,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportZenInfoMontage::name() const
 {
   return FilterTraits<ImportZenInfoMontage>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ImportZenInfoMontage::className() const
 {
   return FilterTraits<ImportZenInfoMontage>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportZenInfoMontage::uuid() const
 {
   return FilterTraits<ImportZenInfoMontage>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportZenInfoMontage::humanName() const
 {
   return "ITK::Zeiss Zen Import";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportZenInfoMontage::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportZenInfoMontage::parameters() const
 {
   Parameters params;
@@ -62,11 +73,13 @@ Parameters ImportZenInfoMontage::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportZenInfoMontage::clone() const
 {
   return std::make_unique<ImportZenInfoMontage>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ImportZenInfoMontage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -95,6 +108,7 @@ Result<OutputActions> ImportZenInfoMontage::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ImportZenInfoMontage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

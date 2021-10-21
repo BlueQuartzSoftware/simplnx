@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string LosAlamosFFTWriter::name() const
 {
   return FilterTraits<LosAlamosFFTWriter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string LosAlamosFFTWriter::className() const
 {
   return FilterTraits<LosAlamosFFTWriter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid LosAlamosFFTWriter::uuid() const
 {
   return FilterTraits<LosAlamosFFTWriter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string LosAlamosFFTWriter::humanName() const
 {
   return "Export Los Alamos FFT File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> LosAlamosFFTWriter::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters LosAlamosFFTWriter::parameters() const
 {
   Parameters params;
@@ -44,11 +55,13 @@ Parameters LosAlamosFFTWriter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer LosAlamosFFTWriter::clone() const
 {
   return std::make_unique<LosAlamosFFTWriter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> LosAlamosFFTWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -68,6 +81,7 @@ Result<OutputActions> LosAlamosFFTWriter::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> LosAlamosFFTWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

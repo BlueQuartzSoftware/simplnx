@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AddBadData::name() const
 {
   return FilterTraits<AddBadData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AddBadData::className() const
 {
   return FilterTraits<AddBadData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AddBadData::uuid() const
 {
   return FilterTraits<AddBadData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AddBadData::humanName() const
 {
   return "Add Bad Data";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AddBadData::defaultTags() const
+{
+  return {"#Synthetic Building", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AddBadData::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters AddBadData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AddBadData::clone() const
 {
   return std::make_unique<AddBadData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AddBadData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -71,6 +84,7 @@ Result<OutputActions> AddBadData::preflightImpl(const DataStructure& ds, const A
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AddBadData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

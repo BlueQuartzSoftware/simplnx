@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ApplyTransformationToGeometry::name() const
 {
   return FilterTraits<ApplyTransformationToGeometry>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ApplyTransformationToGeometry::className() const
 {
   return FilterTraits<ApplyTransformationToGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ApplyTransformationToGeometry::uuid() const
 {
   return FilterTraits<ApplyTransformationToGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ApplyTransformationToGeometry::humanName() const
 {
   return "Apply Transformation to Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ApplyTransformationToGeometry::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Rotation/Transforming"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ApplyTransformationToGeometry::parameters() const
 {
   Parameters params;
@@ -57,11 +68,13 @@ Parameters ApplyTransformationToGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ApplyTransformationToGeometry::clone() const
 {
   return std::make_unique<ApplyTransformationToGeometry>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ApplyTransformationToGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -85,6 +98,7 @@ Result<OutputActions> ApplyTransformationToGeometry::preflightImpl(const DataStr
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ApplyTransformationToGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

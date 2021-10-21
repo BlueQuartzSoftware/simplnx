@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string WriteTriangleGeometry::name() const
 {
   return FilterTraits<WriteTriangleGeometry>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string WriteTriangleGeometry::className() const
 {
   return FilterTraits<WriteTriangleGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid WriteTriangleGeometry::uuid() const
 {
   return FilterTraits<WriteTriangleGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string WriteTriangleGeometry::humanName() const
 {
   return "Export Triangle Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> WriteTriangleGeometry::defaultTags() const
+{
+  return {"#Core", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters WriteTriangleGeometry::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters WriteTriangleGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteTriangleGeometry::clone() const
 {
   return std::make_unique<WriteTriangleGeometry>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> WriteTriangleGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -66,6 +79,7 @@ Result<OutputActions> WriteTriangleGeometry::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> WriteTriangleGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

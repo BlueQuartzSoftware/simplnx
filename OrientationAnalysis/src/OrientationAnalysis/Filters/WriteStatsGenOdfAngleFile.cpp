@@ -14,26 +14,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string WriteStatsGenOdfAngleFile::name() const
 {
   return FilterTraits<WriteStatsGenOdfAngleFile>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string WriteStatsGenOdfAngleFile::className() const
 {
   return FilterTraits<WriteStatsGenOdfAngleFile>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid WriteStatsGenOdfAngleFile::uuid() const
 {
   return FilterTraits<WriteStatsGenOdfAngleFile>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string WriteStatsGenOdfAngleFile::humanName() const
 {
   return "Export StatsGenerator ODF Angle File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> WriteStatsGenOdfAngleFile::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters WriteStatsGenOdfAngleFile::parameters() const
 {
   Parameters params;
@@ -54,11 +65,13 @@ Parameters WriteStatsGenOdfAngleFile::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteStatsGenOdfAngleFile::clone() const
 {
   return std::make_unique<WriteStatsGenOdfAngleFile>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> WriteStatsGenOdfAngleFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -83,6 +96,7 @@ Result<OutputActions> WriteStatsGenOdfAngleFile::preflightImpl(const DataStructu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> WriteStatsGenOdfAngleFile::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

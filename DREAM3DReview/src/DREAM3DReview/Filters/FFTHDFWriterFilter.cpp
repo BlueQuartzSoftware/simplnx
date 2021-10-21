@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FFTHDFWriterFilter::name() const
 {
   return FilterTraits<FFTHDFWriterFilter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FFTHDFWriterFilter::className() const
 {
   return FilterTraits<FFTHDFWriterFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FFTHDFWriterFilter::uuid() const
 {
   return FilterTraits<FFTHDFWriterFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FFTHDFWriterFilter::humanName() const
 {
   return "Export MASSIF Data (HDF5)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FFTHDFWriterFilter::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FFTHDFWriterFilter::parameters() const
 {
   Parameters params;
@@ -52,11 +63,13 @@ Parameters FFTHDFWriterFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FFTHDFWriterFilter::clone() const
 {
   return std::make_unique<FFTHDFWriterFilter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FFTHDFWriterFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -79,6 +92,7 @@ Result<OutputActions> FFTHDFWriterFilter::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FFTHDFWriterFilter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkMultiOtsuThreshold::name() const
 {
   return FilterTraits<ItkMultiOtsuThreshold>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkMultiOtsuThreshold::className() const
 {
   return FilterTraits<ItkMultiOtsuThreshold>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkMultiOtsuThreshold::uuid() const
 {
   return FilterTraits<ItkMultiOtsuThreshold>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkMultiOtsuThreshold::humanName() const
 {
   return "Multi Level Otsu Threshold (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkMultiOtsuThreshold::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkMultiOtsuThreshold::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters ItkMultiOtsuThreshold::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkMultiOtsuThreshold::clone() const
 {
   return std::make_unique<ItkMultiOtsuThreshold>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkMultiOtsuThreshold::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> ItkMultiOtsuThreshold::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkMultiOtsuThreshold::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

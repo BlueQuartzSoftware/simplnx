@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string WarpRegularGrid::name() const
 {
   return FilterTraits<WarpRegularGrid>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string WarpRegularGrid::className() const
 {
   return FilterTraits<WarpRegularGrid>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid WarpRegularGrid::uuid() const
 {
   return FilterTraits<WarpRegularGrid>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string WarpRegularGrid::humanName() const
 {
   return "Warp Rectilinear Grid";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> WarpRegularGrid::defaultTags() const
+{
+  return {"#Sampling", "#Warping"};
+}
+
+//------------------------------------------------------------------------------
 Parameters WarpRegularGrid::parameters() const
 {
   Parameters params;
@@ -60,11 +71,13 @@ Parameters WarpRegularGrid::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WarpRegularGrid::clone() const
 {
   return std::make_unique<WarpRegularGrid>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> WarpRegularGrid::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -90,6 +103,7 @@ Result<OutputActions> WarpRegularGrid::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> WarpRegularGrid::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

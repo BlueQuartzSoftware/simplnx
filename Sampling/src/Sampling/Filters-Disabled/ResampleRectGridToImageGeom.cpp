@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ResampleRectGridToImageGeom::name() const
 {
   return FilterTraits<ResampleRectGridToImageGeom>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ResampleRectGridToImageGeom::className() const
 {
   return FilterTraits<ResampleRectGridToImageGeom>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ResampleRectGridToImageGeom::uuid() const
 {
   return FilterTraits<ResampleRectGridToImageGeom>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ResampleRectGridToImageGeom::humanName() const
 {
   return "Resample Rectilinear Grid to Image Geom";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ResampleRectGridToImageGeom::defaultTags() const
+{
+  return {"#Unsupported", "#Sampling"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ResampleRectGridToImageGeom::parameters() const
 {
   Parameters params;
@@ -50,11 +61,13 @@ Parameters ResampleRectGridToImageGeom::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ResampleRectGridToImageGeom::clone() const
 {
   return std::make_unique<ResampleRectGridToImageGeom>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ResampleRectGridToImageGeom::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -77,6 +90,7 @@ Result<OutputActions> ResampleRectGridToImageGeom::preflightImpl(const DataStruc
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ResampleRectGridToImageGeom::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ConvertOrientations::name() const
 {
   return FilterTraits<ConvertOrientations>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ConvertOrientations::className() const
 {
   return FilterTraits<ConvertOrientations>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ConvertOrientations::uuid() const
 {
   return FilterTraits<ConvertOrientations>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ConvertOrientations::humanName() const
 {
   return "Convert Orientation Representation";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ConvertOrientations::defaultTags() const
+{
+  return {"#Processing", "#Conversion"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ConvertOrientations::parameters() const
 {
   Parameters params;
@@ -41,11 +52,13 @@ Parameters ConvertOrientations::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ConvertOrientations::clone() const
 {
   return std::make_unique<ConvertOrientations>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ConvertOrientations::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -65,6 +78,7 @@ Result<OutputActions> ConvertOrientations::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ConvertOrientations::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

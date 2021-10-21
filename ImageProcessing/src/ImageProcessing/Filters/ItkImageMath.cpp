@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkImageMath::name() const
 {
   return FilterTraits<ItkImageMath>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkImageMath::className() const
 {
   return FilterTraits<ItkImageMath>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkImageMath::uuid() const
 {
   return FilterTraits<ItkImageMath>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkImageMath::humanName() const
 {
   return "Image Math (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkImageMath::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkImageMath::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters ItkImageMath::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkImageMath::clone() const
 {
   return std::make_unique<ItkImageMath>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkImageMath::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -73,6 +86,7 @@ Result<OutputActions> ItkImageMath::preflightImpl(const DataStructure& ds, const
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkImageMath::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ArrayCalculator::name() const
 {
   return FilterTraits<ArrayCalculator>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ArrayCalculator::className() const
 {
   return FilterTraits<ArrayCalculator>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ArrayCalculator::uuid() const
 {
   return FilterTraits<ArrayCalculator>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ArrayCalculator::humanName() const
 {
   return "Attribute Array Calculator";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ArrayCalculator::defaultTags() const
+{
+  return {"#Core", "#Generation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ArrayCalculator::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters ArrayCalculator::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ArrayCalculator::clone() const
 {
   return std::make_unique<ArrayCalculator>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ArrayCalculator::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -66,6 +79,7 @@ Result<OutputActions> ArrayCalculator::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ArrayCalculator::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

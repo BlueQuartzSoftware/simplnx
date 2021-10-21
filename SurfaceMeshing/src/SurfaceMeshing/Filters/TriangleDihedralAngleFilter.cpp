@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string TriangleDihedralAngleFilter::name() const
 {
   return FilterTraits<TriangleDihedralAngleFilter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string TriangleDihedralAngleFilter::className() const
 {
   return FilterTraits<TriangleDihedralAngleFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid TriangleDihedralAngleFilter::uuid() const
 {
   return FilterTraits<TriangleDihedralAngleFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string TriangleDihedralAngleFilter::humanName() const
 {
   return "Find Minimum Triangle Dihedral Angle";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> TriangleDihedralAngleFilter::defaultTags() const
+{
+  return {"#Surface Meshing", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters TriangleDihedralAngleFilter::parameters() const
 {
   Parameters params;
@@ -37,11 +48,13 @@ Parameters TriangleDihedralAngleFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer TriangleDihedralAngleFilter::clone() const
 {
   return std::make_unique<TriangleDihedralAngleFilter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> TriangleDihedralAngleFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -58,6 +71,7 @@ Result<OutputActions> TriangleDihedralAngleFilter::preflightImpl(const DataStruc
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

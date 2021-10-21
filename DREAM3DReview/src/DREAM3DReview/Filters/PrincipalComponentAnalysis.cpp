@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string PrincipalComponentAnalysis::name() const
 {
   return FilterTraits<PrincipalComponentAnalysis>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string PrincipalComponentAnalysis::className() const
 {
   return FilterTraits<PrincipalComponentAnalysis>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid PrincipalComponentAnalysis::uuid() const
 {
   return FilterTraits<PrincipalComponentAnalysis>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string PrincipalComponentAnalysis::humanName() const
 {
   return "Principal Component Analysis";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> PrincipalComponentAnalysis::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Dimensionality Reduction"};
+}
+
+//------------------------------------------------------------------------------
 Parameters PrincipalComponentAnalysis::parameters() const
 {
   Parameters params;
@@ -53,11 +64,13 @@ Parameters PrincipalComponentAnalysis::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer PrincipalComponentAnalysis::clone() const
 {
   return std::make_unique<PrincipalComponentAnalysis>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> PrincipalComponentAnalysis::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -81,6 +94,7 @@ Result<OutputActions> PrincipalComponentAnalysis::preflightImpl(const DataStruct
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> PrincipalComponentAnalysis::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

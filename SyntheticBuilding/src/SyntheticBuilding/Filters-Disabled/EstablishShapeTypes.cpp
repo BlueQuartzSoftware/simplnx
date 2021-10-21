@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string EstablishShapeTypes::name() const
 {
   return FilterTraits<EstablishShapeTypes>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string EstablishShapeTypes::className() const
 {
   return FilterTraits<EstablishShapeTypes>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid EstablishShapeTypes::uuid() const
 {
   return FilterTraits<EstablishShapeTypes>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string EstablishShapeTypes::humanName() const
 {
   return "Establish Shape Types";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> EstablishShapeTypes::defaultTags() const
+{
+  return {"#Synthetic Building", "#Generation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters EstablishShapeTypes::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters EstablishShapeTypes::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer EstablishShapeTypes::clone() const
 {
   return std::make_unique<EstablishShapeTypes>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> EstablishShapeTypes::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -65,6 +78,7 @@ Result<OutputActions> EstablishShapeTypes::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> EstablishShapeTypes::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

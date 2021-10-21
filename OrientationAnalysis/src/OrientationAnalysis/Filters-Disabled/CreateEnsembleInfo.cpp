@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CreateEnsembleInfo::name() const
 {
   return FilterTraits<CreateEnsembleInfo>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CreateEnsembleInfo::className() const
 {
   return FilterTraits<CreateEnsembleInfo>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CreateEnsembleInfo::uuid() const
 {
   return FilterTraits<CreateEnsembleInfo>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CreateEnsembleInfo::humanName() const
 {
   return "Create Ensemble Info";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CreateEnsembleInfo::defaultTags() const
+{
+  return {"#Processing", "#Generation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CreateEnsembleInfo::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters CreateEnsembleInfo::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateEnsembleInfo::clone() const
 {
   return std::make_unique<CreateEnsembleInfo>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CreateEnsembleInfo::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -69,6 +82,7 @@ Result<OutputActions> CreateEnsembleInfo::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CreateEnsembleInfo::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

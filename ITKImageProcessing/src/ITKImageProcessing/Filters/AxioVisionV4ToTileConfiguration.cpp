@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AxioVisionV4ToTileConfiguration::name() const
 {
   return FilterTraits<AxioVisionV4ToTileConfiguration>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AxioVisionV4ToTileConfiguration::className() const
 {
   return FilterTraits<AxioVisionV4ToTileConfiguration>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AxioVisionV4ToTileConfiguration::uuid() const
 {
   return FilterTraits<AxioVisionV4ToTileConfiguration>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AxioVisionV4ToTileConfiguration::humanName() const
 {
   return "ITK::Convert AxioVision To Tile Configuration file";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AxioVisionV4ToTileConfiguration::defaultTags() const
+{
+  return {"#Processing", "#Conversion"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AxioVisionV4ToTileConfiguration::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters AxioVisionV4ToTileConfiguration::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AxioVisionV4ToTileConfiguration::clone() const
 {
   return std::make_unique<AxioVisionV4ToTileConfiguration>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AxioVisionV4ToTileConfiguration::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> AxioVisionV4ToTileConfiguration::preflightImpl(const DataS
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AxioVisionV4ToTileConfiguration::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

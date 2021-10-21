@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindNeighborListStatistics::name() const
 {
   return FilterTraits<FindNeighborListStatistics>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindNeighborListStatistics::className() const
 {
   return FilterTraits<FindNeighborListStatistics>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindNeighborListStatistics::uuid() const
 {
   return FilterTraits<FindNeighborListStatistics>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindNeighborListStatistics::humanName() const
 {
   return "Find NeighborList Statistics";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindNeighborListStatistics::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Statistics"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindNeighborListStatistics::parameters() const
 {
   Parameters params;
@@ -62,11 +73,13 @@ Parameters FindNeighborListStatistics::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindNeighborListStatistics::clone() const
 {
   return std::make_unique<FindNeighborListStatistics>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindNeighborListStatistics::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -98,6 +111,7 @@ Result<OutputActions> FindNeighborListStatistics::preflightImpl(const DataStruct
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindNeighborListStatistics::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

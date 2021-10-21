@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string DxWriter::name() const
 {
   return FilterTraits<DxWriter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string DxWriter::className() const
 {
   return FilterTraits<DxWriter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid DxWriter::uuid() const
 {
   return FilterTraits<DxWriter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string DxWriter::humanName() const
 {
   return "Export Dx File (Feature Ids)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> DxWriter::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters DxWriter::parameters() const
 {
   Parameters params;
@@ -44,11 +55,13 @@ Parameters DxWriter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer DxWriter::clone() const
 {
   return std::make_unique<DxWriter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> DxWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -67,6 +80,7 @@ Result<OutputActions> DxWriter::preflightImpl(const DataStructure& ds, const Arg
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> DxWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

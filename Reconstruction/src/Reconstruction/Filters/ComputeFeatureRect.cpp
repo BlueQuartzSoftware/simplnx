@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ComputeFeatureRect::name() const
 {
   return FilterTraits<ComputeFeatureRect>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ComputeFeatureRect::className() const
 {
   return FilterTraits<ComputeFeatureRect>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ComputeFeatureRect::uuid() const
 {
   return FilterTraits<ComputeFeatureRect>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ComputeFeatureRect::humanName() const
 {
   return "Compute Feature Corners";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ComputeFeatureRect::defaultTags() const
+{
+  return {"#Statistics", "#Reconstruction"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ComputeFeatureRect::parameters() const
 {
   Parameters params;
@@ -39,11 +50,13 @@ Parameters ComputeFeatureRect::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeFeatureRect::clone() const
 {
   return std::make_unique<ComputeFeatureRect>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ComputeFeatureRect::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -61,6 +74,7 @@ Result<OutputActions> ComputeFeatureRect::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ComputeFeatureRect::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

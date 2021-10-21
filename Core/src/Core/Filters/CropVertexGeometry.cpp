@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CropVertexGeometry::name() const
 {
   return FilterTraits<CropVertexGeometry>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CropVertexGeometry::className() const
 {
   return FilterTraits<CropVertexGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CropVertexGeometry::uuid() const
 {
   return FilterTraits<CropVertexGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CropVertexGeometry::humanName() const
 {
   return "Crop Geometry (Vertex)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CropVertexGeometry::defaultTags() const
+{
+  return {"#Core", "#Croping Cutting"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CropVertexGeometry::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters CropVertexGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CropVertexGeometry::clone() const
 {
   return std::make_unique<CropVertexGeometry>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CropVertexGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -73,6 +86,7 @@ Result<OutputActions> CropVertexGeometry::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CropVertexGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

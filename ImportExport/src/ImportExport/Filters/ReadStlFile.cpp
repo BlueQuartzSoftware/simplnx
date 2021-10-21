@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ReadStlFile::name() const
 {
   return FilterTraits<ReadStlFile>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ReadStlFile::className() const
 {
   return FilterTraits<ReadStlFile>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ReadStlFile::uuid() const
 {
   return FilterTraits<ReadStlFile>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ReadStlFile::humanName() const
 {
   return "Import STL File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ReadStlFile::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ReadStlFile::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters ReadStlFile::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadStlFile::clone() const
 {
   return std::make_unique<ReadStlFile>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ReadStlFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -69,6 +82,7 @@ Result<OutputActions> ReadStlFile::preflightImpl(const DataStructure& ds, const 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ReadStlFile::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

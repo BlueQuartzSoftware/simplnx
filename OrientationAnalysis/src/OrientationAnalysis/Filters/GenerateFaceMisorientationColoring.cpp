@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GenerateFaceMisorientationColoring::name() const
 {
   return FilterTraits<GenerateFaceMisorientationColoring>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateFaceMisorientationColoring::className() const
 {
   return FilterTraits<GenerateFaceMisorientationColoring>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GenerateFaceMisorientationColoring::uuid() const
 {
   return FilterTraits<GenerateFaceMisorientationColoring>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateFaceMisorientationColoring::humanName() const
 {
   return "Generate Misorientation Colors (Face)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GenerateFaceMisorientationColoring::defaultTags() const
+{
+  return {"#Processing", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GenerateFaceMisorientationColoring::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters GenerateFaceMisorientationColoring::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GenerateFaceMisorientationColoring::clone() const
 {
   return std::make_unique<GenerateFaceMisorientationColoring>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GenerateFaceMisorientationColoring::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -70,6 +83,7 @@ Result<OutputActions> GenerateFaceMisorientationColoring::preflightImpl(const Da
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GenerateFaceMisorientationColoring::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

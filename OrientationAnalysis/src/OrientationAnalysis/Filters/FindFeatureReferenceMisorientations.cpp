@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindFeatureReferenceMisorientations::name() const
 {
   return FilterTraits<FindFeatureReferenceMisorientations>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindFeatureReferenceMisorientations::className() const
 {
   return FilterTraits<FindFeatureReferenceMisorientations>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindFeatureReferenceMisorientations::uuid() const
 {
   return FilterTraits<FindFeatureReferenceMisorientations>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindFeatureReferenceMisorientations::humanName() const
 {
   return "Find Feature Reference Misorientations";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindFeatureReferenceMisorientations::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindFeatureReferenceMisorientations::parameters() const
 {
   Parameters params;
@@ -55,11 +66,13 @@ Parameters FindFeatureReferenceMisorientations::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindFeatureReferenceMisorientations::clone() const
 {
   return std::make_unique<FindFeatureReferenceMisorientations>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindFeatureReferenceMisorientations::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -84,6 +97,7 @@ Result<OutputActions> FindFeatureReferenceMisorientations::preflightImpl(const D
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindFeatureReferenceMisorientations::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

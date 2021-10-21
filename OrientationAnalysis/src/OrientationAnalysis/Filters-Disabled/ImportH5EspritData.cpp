@@ -16,26 +16,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportH5EspritData::name() const
 {
   return FilterTraits<ImportH5EspritData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ImportH5EspritData::className() const
 {
   return FilterTraits<ImportH5EspritData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportH5EspritData::uuid() const
 {
   return FilterTraits<ImportH5EspritData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportH5EspritData::humanName() const
 {
   return "Import Bruker Nano Esprit Data (.h5)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportH5EspritData::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportH5EspritData::parameters() const
 {
   Parameters params;
@@ -56,11 +67,13 @@ Parameters ImportH5EspritData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportH5EspritData::clone() const
 {
   return std::make_unique<ImportH5EspritData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ImportH5EspritData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -86,6 +99,7 @@ Result<OutputActions> ImportH5EspritData::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ImportH5EspritData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

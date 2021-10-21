@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindVertexToTriangleDistances::name() const
 {
   return FilterTraits<FindVertexToTriangleDistances>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindVertexToTriangleDistances::className() const
 {
   return FilterTraits<FindVertexToTriangleDistances>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindVertexToTriangleDistances::uuid() const
 {
   return FilterTraits<FindVertexToTriangleDistances>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindVertexToTriangleDistances::humanName() const
 {
   return "Find Vertex to Triangle Distances";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindVertexToTriangleDistances::defaultTags() const
+{
+  return {"#Sampling", "#Spatial"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindVertexToTriangleDistances::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters FindVertexToTriangleDistances::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindVertexToTriangleDistances::clone() const
 {
   return std::make_unique<FindVertexToTriangleDistances>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindVertexToTriangleDistances::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -67,6 +80,7 @@ Result<OutputActions> FindVertexToTriangleDistances::preflightImpl(const DataStr
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindVertexToTriangleDistances::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

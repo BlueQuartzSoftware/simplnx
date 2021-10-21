@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindLargestCrossSections::name() const
 {
   return FilterTraits<FindLargestCrossSections>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindLargestCrossSections::className() const
 {
   return FilterTraits<FindLargestCrossSections>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindLargestCrossSections::uuid() const
 {
   return FilterTraits<FindLargestCrossSections>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindLargestCrossSections::humanName() const
 {
   return "Find Feature Largest Cross-Section Areas";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindLargestCrossSections::defaultTags() const
+{
+  return {"#Statistics", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindLargestCrossSections::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters FindLargestCrossSections::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindLargestCrossSections::clone() const
 {
   return std::make_unique<FindLargestCrossSections>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindLargestCrossSections::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -65,6 +78,7 @@ Result<OutputActions> FindLargestCrossSections::preflightImpl(const DataStructur
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindLargestCrossSections::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
