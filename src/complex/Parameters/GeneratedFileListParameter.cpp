@@ -50,15 +50,15 @@ nlohmann::json GeneratedFileListParameter::toJson(const std::any& value) const
 {
   auto data = std::any_cast<ValueType>(value);
   nlohmann::json json;
-  json[k_StartIndex.c_str()] = data.startIndex;
-  json[k_EndIndex.c_str()] = data.endIndex;
-  json[k_PaddingDigits.c_str()] = data.paddingDigits;
-  json[k_Ordering.c_str()] = static_cast<std::underlying_type_t<Ordering>>(data.ordering);
-  json[k_IncrementIndex.c_str()] = data.incrementIndex;
-  json[k_InputPath.c_str()] = data.inputPath;
-  json[k_FilePrefix.c_str()] = data.filePrefix;
-  json[k_FileSuffix.c_str()] = data.fileSuffix;
-  json[k_FileExtension.c_str()] = data.fileExtension;
+  json[k_StartIndex] = data.startIndex;
+  json[k_EndIndex] = data.endIndex;
+  json[k_PaddingDigits] = data.paddingDigits;
+  json[k_Ordering] = static_cast<std::underlying_type_t<Ordering>>(data.ordering);
+  json[k_IncrementIndex] = data.incrementIndex;
+  json[k_InputPath] = data.inputPath;
+  json[k_FilePrefix] = data.filePrefix;
+  json[k_FileSuffix] = data.fileSuffix;
+  json[k_FileExtension] = data.fileExtension;
   return json;
 }
 
@@ -78,7 +78,7 @@ Result<std::any> GeneratedFileListParameter::fromJson(const nlohmann::json& json
   }
 
   std::vector<const char*> keys = {k_StartIndex.c_str(), k_EndIndex.c_str(), k_PaddingDigits.c_str(), k_Ordering.c_str(), k_IncrementIndex.c_str()};
-  for(const auto& key : keys)
+  for(const char* key : keys)
   {
     if(!jsonValue.contains(key))
     {
@@ -103,29 +103,29 @@ Result<std::any> GeneratedFileListParameter::fromJson(const nlohmann::json& json
     }
   }
 
-  uint32 ordering_check = jsonValue[k_Ordering.c_str()].get<uint32>();
+  uint32 ordering_check = jsonValue[k_Ordering].get<uint32>();
   if(ordering_check != static_cast<uint32>(Ordering::LowToHigh) && ordering_check != static_cast<uint32>(Ordering::HighToLow))
   {
     return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration,
                                      fmt::format("{}JSON value for key \"{}\" was not a valid ordering Value. [{}|{}] allowed.", prefix, k_Ordering.view(), Ordering::LowToHigh, Ordering::HighToLow));
   }
 
-  if(!jsonValue[k_PaddingDigits.c_str()].is_number_unsigned())
+  if(!jsonValue[k_PaddingDigits].is_number_unsigned())
   {
     return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Unsigned, fmt::format("{}JSON value for key \"{}\" is not an unsigned int", prefix, k_PaddingDigits.view()));
   }
 
   ValueType value;
 
-  value.paddingDigits = jsonValue[k_PaddingDigits.c_str()].get<int32>();
-  value.ordering = static_cast<Ordering>(jsonValue[k_Ordering.c_str()].get<uint32>());
-  value.incrementIndex = jsonValue[k_IncrementIndex.c_str()].get<int32>();
-  value.inputPath = jsonValue[k_InputPath.c_str()].get<std::string>();
-  value.filePrefix = jsonValue[k_FilePrefix.c_str()].get<std::string>();
-  value.fileSuffix = jsonValue[k_FileSuffix.c_str()].get<std::string>();
-  value.fileExtension = jsonValue[k_FileExtension.c_str()].get<std::string>();
-  value.startIndex = jsonValue[k_StartIndex.c_str()].get<int32>();
-  value.endIndex = jsonValue[k_EndIndex.c_str()].get<int32>();
+  value.paddingDigits = jsonValue[k_PaddingDigits].get<int32>();
+  value.ordering = static_cast<Ordering>(jsonValue[k_Ordering].get<uint32>());
+  value.incrementIndex = jsonValue[k_IncrementIndex].get<int32>();
+  value.inputPath = jsonValue[k_InputPath].get<std::string>();
+  value.filePrefix = jsonValue[k_FilePrefix].get<std::string>();
+  value.fileSuffix = jsonValue[k_FileSuffix].get<std::string>();
+  value.fileExtension = jsonValue[k_FileExtension].get<std::string>();
+  value.startIndex = jsonValue[k_StartIndex].get<int32>();
+  value.endIndex = jsonValue[k_EndIndex].get<int32>();
 
   return {value};
 }
