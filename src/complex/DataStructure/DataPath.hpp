@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "complex/Common/Types.hpp"
@@ -20,8 +21,17 @@ namespace complex
 class COMPLEX_EXPORT DataPath
 {
 public:
+  /**
+   * @brief Attempts to create a DataPath from the given string by splitting it using the given delimiter.
+   * @param string
+   * @param delimter
+   * @return
+   */
   static std::optional<DataPath> FromString(std::string_view string, char delimter = '/');
 
+  /**
+   * @brief Default constructor.
+   */
   DataPath();
 
   /**
@@ -31,31 +41,34 @@ public:
   DataPath(std::vector<std::string> path);
 
   /**
-   * @brief Copy constructor
-   * @param other
+   * @brief Copy constructor.
+   * @param rhs
    */
-  DataPath(const DataPath& other);
+  DataPath(const DataPath& rhs);
 
   /**
-   * @brief Move constructor
-   * @param other
+   * @brief Move constructor.
+   * @param rhs
    */
-  DataPath(DataPath&& other) noexcept;
+  DataPath(DataPath&& rhs) noexcept;
 
   /**
-   * @brief Copy assignment
+   * @brief Copy assignment.
    * @param other
    * @return
    */
-  DataPath& operator=(const DataPath& other);
+  DataPath& operator=(const DataPath& rhs);
 
   /**
-   * @brief Move assignment
-   * @param other
+   * @brief Move assignment.
+   * @param rhs
    * @return
    */
-  DataPath& operator=(DataPath&& other) noexcept;
+  DataPath& operator=(DataPath&& rhs) noexcept;
 
+  /**
+   * @brief Destructor.
+   */
   ~DataPath() noexcept;
 
   /**
@@ -94,7 +107,7 @@ public:
    * @param name
    * @return DataPath
    */
-  DataPath createChildPath(const std::string& name) const;
+  DataPath createChildPath(std::string name) const;
 
   /**
    * @brief Creates and returns a DataPath by replacing the specified symbol with
@@ -103,7 +116,7 @@ public:
    * @param targetName
    * @return DataPath
    */
-  DataPath replace(const std::string& symbol, const std::string& targetName);
+  DataPath replace(std::string_view symbol, std::string_view targetName) const;
 
   /**
    * @brief Checks equality between two DataPaths.
@@ -128,12 +141,11 @@ public:
 
   /**
    * @brief Returns a string representation using a target divider.
-   * @param div = " / "
+   * @param div = "/"
    * @return std::string
    */
-  std::string toString(const std::string& div = " / ") const;
+  std::string toString(std::string_view div = "/") const;
 
-protected:
 private:
   std::vector<std::string> m_Path;
 };
