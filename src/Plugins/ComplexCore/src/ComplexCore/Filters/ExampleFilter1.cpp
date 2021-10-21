@@ -2,7 +2,7 @@
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/GeneratedFileListParameter.hpp"
+#include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
 using namespace complex;
@@ -12,6 +12,7 @@ namespace
 constexpr StringLiteral k_Param1 = "param1";
 constexpr StringLiteral k_Param2 = "param2";
 constexpr StringLiteral k_Param3 = "param3";
+constexpr StringLiteral k_Param4 = "param4";
 } // namespace
 
 namespace complex
@@ -39,9 +40,11 @@ std::string ExampleFilter1::humanName() const
 Parameters ExampleFilter1::parameters() const
 {
   Parameters params;
+
   params.insert(std::make_unique<Float32Parameter>(k_Param1, "Parameter 1", "The 1st parameter", 0.1234f));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Param2, "Use Value", "The 2nd parameter", true));
-  params.insert(std::make_unique<GeneratedFileListParameter>(k_Param3, "Input File List", "Data needed to generate the input file list", GeneratedFileListParameter::ValueType{}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_Param4, "Parameter 4", "MultiDataArraySelection Parameter", MultiArraySelectionParameter::ValueType{}));
+
   params.linkParameters(k_Param2, k_Param1, true);
   return params;
 }
