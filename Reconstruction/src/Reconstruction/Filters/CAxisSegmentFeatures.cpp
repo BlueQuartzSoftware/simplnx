@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CAxisSegmentFeatures::name() const
 {
   return FilterTraits<CAxisSegmentFeatures>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CAxisSegmentFeatures::className() const
 {
   return FilterTraits<CAxisSegmentFeatures>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CAxisSegmentFeatures::uuid() const
 {
   return FilterTraits<CAxisSegmentFeatures>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CAxisSegmentFeatures::humanName() const
 {
   return "Segment Features (C-Axis Misalignment)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CAxisSegmentFeatures::defaultTags() const
+{
+  return {"#Reconstruction", "#Segmentation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CAxisSegmentFeatures::parameters() const
 {
   Parameters params;
@@ -53,11 +64,13 @@ Parameters CAxisSegmentFeatures::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CAxisSegmentFeatures::clone() const
 {
   return std::make_unique<CAxisSegmentFeatures>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CAxisSegmentFeatures::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -82,6 +95,7 @@ Result<OutputActions> CAxisSegmentFeatures::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CAxisSegmentFeatures::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

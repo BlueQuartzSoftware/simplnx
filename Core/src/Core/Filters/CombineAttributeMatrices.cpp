@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CombineAttributeMatrices::name() const
 {
   return FilterTraits<CombineAttributeMatrices>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CombineAttributeMatrices::className() const
 {
   return FilterTraits<CombineAttributeMatrices>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CombineAttributeMatrices::uuid() const
 {
   return FilterTraits<CombineAttributeMatrices>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CombineAttributeMatrices::humanName() const
 {
   return "Combine Feature/Ensemble Attribute Matrices";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CombineAttributeMatrices::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CombineAttributeMatrices::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters CombineAttributeMatrices::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CombineAttributeMatrices::clone() const
 {
   return std::make_unique<CombineAttributeMatrices>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CombineAttributeMatrices::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> CombineAttributeMatrices::preflightImpl(const DataStructur
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CombineAttributeMatrices::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

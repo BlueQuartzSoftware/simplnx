@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ITKMedianImage::name() const
 {
   return FilterTraits<ITKMedianImage>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ITKMedianImage::className() const
 {
   return FilterTraits<ITKMedianImage>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ITKMedianImage::uuid() const
 {
   return FilterTraits<ITKMedianImage>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ITKMedianImage::humanName() const
 {
   return "ITK::Median Image Filter";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ITKMedianImage::defaultTags() const
+{
+  return {"#ITK Image Processing", "#ITK Smoothing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ITKMedianImage::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters ITKMedianImage::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKMedianImage::clone() const
 {
   return std::make_unique<ITKMedianImage>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ITKMedianImage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -65,6 +78,7 @@ Result<OutputActions> ITKMedianImage::preflightImpl(const DataStructure& ds, con
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ITKMedianImage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

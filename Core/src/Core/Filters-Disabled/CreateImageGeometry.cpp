@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CreateImageGeometry::name() const
 {
   return FilterTraits<CreateImageGeometry>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CreateImageGeometry::className() const
 {
   return FilterTraits<CreateImageGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CreateImageGeometry::uuid() const
 {
   return FilterTraits<CreateImageGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CreateImageGeometry::humanName() const
 {
   return "Create Geometry (Image)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CreateImageGeometry::defaultTags() const
+{
+  return {"#Core", "#Generation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CreateImageGeometry::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters CreateImageGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateImageGeometry::clone() const
 {
   return std::make_unique<CreateImageGeometry>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CreateImageGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -67,6 +80,7 @@ Result<OutputActions> CreateImageGeometry::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CreateImageGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

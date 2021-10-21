@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CreateLambertSphere::name() const
 {
   return FilterTraits<CreateLambertSphere>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CreateLambertSphere::className() const
 {
   return FilterTraits<CreateLambertSphere>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CreateLambertSphere::uuid() const
 {
   return FilterTraits<CreateLambertSphere>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CreateLambertSphere::humanName() const
 {
   return "Create Sphere (Lambert Projection Technique)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CreateLambertSphere::defaultTags() const
+{
+  return {"#Surface Meshing", "#Generation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CreateLambertSphere::parameters() const
 {
   Parameters params;
@@ -53,11 +64,13 @@ Parameters CreateLambertSphere::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateLambertSphere::clone() const
 {
   return std::make_unique<CreateLambertSphere>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CreateLambertSphere::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -83,6 +96,7 @@ Result<OutputActions> CreateLambertSphere::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CreateLambertSphere::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

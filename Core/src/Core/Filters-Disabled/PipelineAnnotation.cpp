@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string PipelineAnnotation::name() const
 {
   return FilterTraits<PipelineAnnotation>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string PipelineAnnotation::className() const
 {
   return FilterTraits<PipelineAnnotation>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid PipelineAnnotation::uuid() const
 {
   return FilterTraits<PipelineAnnotation>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string PipelineAnnotation::humanName() const
 {
   return "Pipeline Annotation";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> PipelineAnnotation::defaultTags() const
+{
+  return {"#Core", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters PipelineAnnotation::parameters() const
 {
   Parameters params;
@@ -36,11 +47,13 @@ Parameters PipelineAnnotation::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer PipelineAnnotation::clone() const
 {
   return std::make_unique<PipelineAnnotation>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> PipelineAnnotation::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -57,6 +70,7 @@ Result<OutputActions> PipelineAnnotation::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> PipelineAnnotation::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

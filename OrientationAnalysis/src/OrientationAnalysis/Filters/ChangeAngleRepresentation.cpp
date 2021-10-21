@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ChangeAngleRepresentation::name() const
 {
   return FilterTraits<ChangeAngleRepresentation>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ChangeAngleRepresentation::className() const
 {
   return FilterTraits<ChangeAngleRepresentation>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ChangeAngleRepresentation::uuid() const
 {
   return FilterTraits<ChangeAngleRepresentation>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ChangeAngleRepresentation::humanName() const
 {
   return "Convert Angles to Degrees or Radians";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ChangeAngleRepresentation::defaultTags() const
+{
+  return {"#Processing", "#Conversion"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ChangeAngleRepresentation::parameters() const
 {
   Parameters params;
@@ -38,11 +49,13 @@ Parameters ChangeAngleRepresentation::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ChangeAngleRepresentation::clone() const
 {
   return std::make_unique<ChangeAngleRepresentation>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ChangeAngleRepresentation::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -60,6 +73,7 @@ Result<OutputActions> ChangeAngleRepresentation::preflightImpl(const DataStructu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ChangeAngleRepresentation::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CombineStlFiles::name() const
 {
   return FilterTraits<CombineStlFiles>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CombineStlFiles::className() const
 {
   return FilterTraits<CombineStlFiles>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CombineStlFiles::uuid() const
 {
   return FilterTraits<CombineStlFiles>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CombineStlFiles::humanName() const
 {
   return "Combine STL Files";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CombineStlFiles::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CombineStlFiles::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters CombineStlFiles::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CombineStlFiles::clone() const
 {
   return std::make_unique<CombineStlFiles>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CombineStlFiles::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -69,6 +82,7 @@ Result<OutputActions> CombineStlFiles::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CombineStlFiles::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

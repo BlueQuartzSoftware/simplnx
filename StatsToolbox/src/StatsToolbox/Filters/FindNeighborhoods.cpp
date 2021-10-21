@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindNeighborhoods::name() const
 {
   return FilterTraits<FindNeighborhoods>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindNeighborhoods::className() const
 {
   return FilterTraits<FindNeighborhoods>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindNeighborhoods::uuid() const
 {
   return FilterTraits<FindNeighborhoods>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindNeighborhoods::humanName() const
 {
   return "Find Feature Neighborhoods";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindNeighborhoods::defaultTags() const
+{
+  return {"#Statistics", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindNeighborhoods::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters FindNeighborhoods::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindNeighborhoods::clone() const
 {
   return std::make_unique<FindNeighborhoods>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindNeighborhoods::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -71,6 +84,7 @@ Result<OutputActions> FindNeighborhoods::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindNeighborhoods::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

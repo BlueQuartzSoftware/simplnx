@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindFeaturePhasesBinary::name() const
 {
   return FilterTraits<FindFeaturePhasesBinary>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindFeaturePhasesBinary::className() const
 {
   return FilterTraits<FindFeaturePhasesBinary>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindFeaturePhasesBinary::uuid() const
 {
   return FilterTraits<FindFeaturePhasesBinary>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindFeaturePhasesBinary::humanName() const
 {
   return "Find Feature Phases Binary";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindFeaturePhasesBinary::defaultTags() const
+{
+  return {"#Generic", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindFeaturePhasesBinary::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters FindFeaturePhasesBinary::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindFeaturePhasesBinary::clone() const
 {
   return std::make_unique<FindFeaturePhasesBinary>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindFeaturePhasesBinary::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -67,6 +80,7 @@ Result<OutputActions> FindFeaturePhasesBinary::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindFeaturePhasesBinary::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

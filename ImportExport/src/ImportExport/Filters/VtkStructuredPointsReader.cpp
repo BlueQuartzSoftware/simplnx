@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string VtkStructuredPointsReader::name() const
 {
   return FilterTraits<VtkStructuredPointsReader>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string VtkStructuredPointsReader::className() const
 {
   return FilterTraits<VtkStructuredPointsReader>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid VtkStructuredPointsReader::uuid() const
 {
   return FilterTraits<VtkStructuredPointsReader>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string VtkStructuredPointsReader::humanName() const
 {
   return "VTK STRUCTURED_POINTS Importer";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> VtkStructuredPointsReader::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters VtkStructuredPointsReader::parameters() const
 {
   Parameters params;
@@ -54,11 +65,13 @@ Parameters VtkStructuredPointsReader::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer VtkStructuredPointsReader::clone() const
 {
   return std::make_unique<VtkStructuredPointsReader>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> VtkStructuredPointsReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -81,6 +94,7 @@ Result<OutputActions> VtkStructuredPointsReader::preflightImpl(const DataStructu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> VtkStructuredPointsReader::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

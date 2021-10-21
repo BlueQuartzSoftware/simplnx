@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string MultiThresholdObjects::name() const
 {
   return FilterTraits<MultiThresholdObjects>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string MultiThresholdObjects::className() const
 {
   return FilterTraits<MultiThresholdObjects>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid MultiThresholdObjects::uuid() const
 {
   return FilterTraits<MultiThresholdObjects>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string MultiThresholdObjects::humanName() const
 {
   return "Threshold Objects";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> MultiThresholdObjects::defaultTags() const
+{
+  return {"#Processing", "#Threshold"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MultiThresholdObjects::parameters() const
 {
   Parameters params;
@@ -38,11 +49,13 @@ Parameters MultiThresholdObjects::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MultiThresholdObjects::clone() const
 {
   return std::make_unique<MultiThresholdObjects>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> MultiThresholdObjects::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -60,6 +73,7 @@ Result<OutputActions> MultiThresholdObjects::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> MultiThresholdObjects::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

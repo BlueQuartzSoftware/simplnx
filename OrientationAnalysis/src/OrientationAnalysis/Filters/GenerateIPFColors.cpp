@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GenerateIPFColors::name() const
 {
   return FilterTraits<GenerateIPFColors>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateIPFColors::className() const
 {
   return FilterTraits<GenerateIPFColors>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GenerateIPFColors::uuid() const
 {
   return FilterTraits<GenerateIPFColors>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateIPFColors::humanName() const
 {
   return "Generate IPF Colors";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GenerateIPFColors::defaultTags() const
+{
+  return {"#Processing", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GenerateIPFColors::parameters() const
 {
   Parameters params;
@@ -50,11 +61,13 @@ Parameters GenerateIPFColors::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GenerateIPFColors::clone() const
 {
   return std::make_unique<GenerateIPFColors>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GenerateIPFColors::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -77,6 +90,7 @@ Result<OutputActions> GenerateIPFColors::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GenerateIPFColors::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

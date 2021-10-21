@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FitFeatureData::name() const
 {
   return FilterTraits<FitFeatureData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FitFeatureData::className() const
 {
   return FilterTraits<FitFeatureData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FitFeatureData::uuid() const
 {
   return FilterTraits<FitFeatureData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FitFeatureData::humanName() const
 {
   return "Fit Distribution to Feature Data";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FitFeatureData::defaultTags() const
+{
+  return {"#Statistics", "#Ensemble"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FitFeatureData::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters FitFeatureData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FitFeatureData::clone() const
 {
   return std::make_unique<FitFeatureData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FitFeatureData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -74,6 +87,7 @@ Result<OutputActions> FitFeatureData::preflightImpl(const DataStructure& ds, con
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FitFeatureData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

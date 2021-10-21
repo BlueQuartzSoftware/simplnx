@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkGrayToRGB::name() const
 {
   return FilterTraits<ItkGrayToRGB>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkGrayToRGB::className() const
 {
   return FilterTraits<ItkGrayToRGB>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkGrayToRGB::uuid() const
 {
   return FilterTraits<ItkGrayToRGB>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkGrayToRGB::humanName() const
 {
   return "Convert Grayscale to RGB (Merge Channels) (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkGrayToRGB::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkGrayToRGB::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters ItkGrayToRGB::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkGrayToRGB::clone() const
 {
   return std::make_unique<ItkGrayToRGB>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkGrayToRGB::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -66,6 +79,7 @@ Result<OutputActions> ItkGrayToRGB::preflightImpl(const DataStructure& ds, const
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkGrayToRGB::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

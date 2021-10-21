@@ -16,26 +16,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ReadBinaryCTNorthStar::name() const
 {
   return FilterTraits<ReadBinaryCTNorthStar>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ReadBinaryCTNorthStar::className() const
 {
   return FilterTraits<ReadBinaryCTNorthStar>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ReadBinaryCTNorthStar::uuid() const
 {
   return FilterTraits<ReadBinaryCTNorthStar>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ReadBinaryCTNorthStar::humanName() const
 {
   return "Import North Star Imaging CT (.nsihdr/.nsidat)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ReadBinaryCTNorthStar::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ReadBinaryCTNorthStar::parameters() const
 {
   Parameters params;
@@ -60,11 +71,13 @@ Parameters ReadBinaryCTNorthStar::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadBinaryCTNorthStar::clone() const
 {
   return std::make_unique<ReadBinaryCTNorthStar>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ReadBinaryCTNorthStar::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -91,6 +104,7 @@ Result<OutputActions> ReadBinaryCTNorthStar::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ReadBinaryCTNorthStar::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

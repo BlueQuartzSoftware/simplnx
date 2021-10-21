@@ -14,26 +14,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindTwinBoundarySchmidFactors::name() const
 {
   return FilterTraits<FindTwinBoundarySchmidFactors>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindTwinBoundarySchmidFactors::className() const
 {
   return FilterTraits<FindTwinBoundarySchmidFactors>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindTwinBoundarySchmidFactors::uuid() const
 {
   return FilterTraits<FindTwinBoundarySchmidFactors>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindTwinBoundarySchmidFactors::humanName() const
 {
   return "Find Twin Boundary Schmid Factors";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindTwinBoundarySchmidFactors::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindTwinBoundarySchmidFactors::parameters() const
 {
   Parameters params;
@@ -59,11 +70,13 @@ Parameters FindTwinBoundarySchmidFactors::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindTwinBoundarySchmidFactors::clone() const
 {
   return std::make_unique<FindTwinBoundarySchmidFactors>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindTwinBoundarySchmidFactors::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -89,6 +102,7 @@ Result<OutputActions> FindTwinBoundarySchmidFactors::preflightImpl(const DataStr
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindTwinBoundarySchmidFactors::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

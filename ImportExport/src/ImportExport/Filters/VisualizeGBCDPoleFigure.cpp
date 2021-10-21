@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string VisualizeGBCDPoleFigure::name() const
 {
   return FilterTraits<VisualizeGBCDPoleFigure>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string VisualizeGBCDPoleFigure::className() const
 {
   return FilterTraits<VisualizeGBCDPoleFigure>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid VisualizeGBCDPoleFigure::uuid() const
 {
   return FilterTraits<VisualizeGBCDPoleFigure>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string VisualizeGBCDPoleFigure::humanName() const
 {
   return "Export GBCD Pole Figure (VTK)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> VisualizeGBCDPoleFigure::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters VisualizeGBCDPoleFigure::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters VisualizeGBCDPoleFigure::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer VisualizeGBCDPoleFigure::clone() const
 {
   return std::make_unique<VisualizeGBCDPoleFigure>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> VisualizeGBCDPoleFigure::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -73,6 +86,7 @@ Result<OutputActions> VisualizeGBCDPoleFigure::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> VisualizeGBCDPoleFigure::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

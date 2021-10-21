@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ConvertHexGridToSquareGrid::name() const
 {
   return FilterTraits<ConvertHexGridToSquareGrid>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ConvertHexGridToSquareGrid::className() const
 {
   return FilterTraits<ConvertHexGridToSquareGrid>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ConvertHexGridToSquareGrid::uuid() const
 {
   return FilterTraits<ConvertHexGridToSquareGrid>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ConvertHexGridToSquareGrid::humanName() const
 {
   return "Convert Hexagonal Grid Data to Square Grid Data (TSL - .ang)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ConvertHexGridToSquareGrid::defaultTags() const
+{
+  return {"#Sampling", "#Spacing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ConvertHexGridToSquareGrid::parameters() const
 {
   Parameters params;
@@ -36,11 +47,13 @@ Parameters ConvertHexGridToSquareGrid::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ConvertHexGridToSquareGrid::clone() const
 {
   return std::make_unique<ConvertHexGridToSquareGrid>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ConvertHexGridToSquareGrid::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -57,6 +70,7 @@ Result<OutputActions> ConvertHexGridToSquareGrid::preflightImpl(const DataStruct
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ConvertHexGridToSquareGrid::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

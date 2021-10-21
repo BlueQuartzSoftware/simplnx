@@ -15,26 +15,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindGBCDMetricBased::name() const
 {
   return FilterTraits<FindGBCDMetricBased>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindGBCDMetricBased::className() const
 {
   return FilterTraits<FindGBCDMetricBased>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindGBCDMetricBased::uuid() const
 {
   return FilterTraits<FindGBCDMetricBased>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindGBCDMetricBased::humanName() const
 {
   return "Find GBCD (Metric-Based Approach)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindGBCDMetricBased::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindGBCDMetricBased::parameters() const
 {
   Parameters params;
@@ -66,11 +77,13 @@ Parameters FindGBCDMetricBased::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindGBCDMetricBased::clone() const
 {
   return std::make_unique<FindGBCDMetricBased>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindGBCDMetricBased::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -102,6 +115,7 @@ Result<OutputActions> FindGBCDMetricBased::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindGBCDMetricBased::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

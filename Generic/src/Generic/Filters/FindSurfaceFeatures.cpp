@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindSurfaceFeatures::name() const
 {
   return FilterTraits<FindSurfaceFeatures>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindSurfaceFeatures::className() const
 {
   return FilterTraits<FindSurfaceFeatures>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindSurfaceFeatures::uuid() const
 {
   return FilterTraits<FindSurfaceFeatures>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindSurfaceFeatures::humanName() const
 {
   return "Find Surface Features";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindSurfaceFeatures::defaultTags() const
+{
+  return {"#Generic", "#Spatial"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindSurfaceFeatures::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters FindSurfaceFeatures::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindSurfaceFeatures::clone() const
 {
   return std::make_unique<FindSurfaceFeatures>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindSurfaceFeatures::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> FindSurfaceFeatures::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindSurfaceFeatures::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

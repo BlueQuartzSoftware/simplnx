@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GenerateFeatureIDsbyBoundingBoxes::name() const
 {
   return FilterTraits<GenerateFeatureIDsbyBoundingBoxes>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateFeatureIDsbyBoundingBoxes::className() const
 {
   return FilterTraits<GenerateFeatureIDsbyBoundingBoxes>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GenerateFeatureIDsbyBoundingBoxes::uuid() const
 {
   return FilterTraits<GenerateFeatureIDsbyBoundingBoxes>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateFeatureIDsbyBoundingBoxes::humanName() const
 {
   return "Generate FeatureIDs by Bounding Boxes";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GenerateFeatureIDsbyBoundingBoxes::defaultTags() const
+{
+  return {"#Unsupported", "#DREAM3DReview"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GenerateFeatureIDsbyBoundingBoxes::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters GenerateFeatureIDsbyBoundingBoxes::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GenerateFeatureIDsbyBoundingBoxes::clone() const
 {
   return std::make_unique<GenerateFeatureIDsbyBoundingBoxes>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GenerateFeatureIDsbyBoundingBoxes::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -67,6 +80,7 @@ Result<OutputActions> GenerateFeatureIDsbyBoundingBoxes::preflightImpl(const Dat
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GenerateFeatureIDsbyBoundingBoxes::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

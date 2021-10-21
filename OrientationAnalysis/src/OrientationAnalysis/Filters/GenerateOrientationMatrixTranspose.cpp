@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GenerateOrientationMatrixTranspose::name() const
 {
   return FilterTraits<GenerateOrientationMatrixTranspose>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateOrientationMatrixTranspose::className() const
 {
   return FilterTraits<GenerateOrientationMatrixTranspose>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GenerateOrientationMatrixTranspose::uuid() const
 {
   return FilterTraits<GenerateOrientationMatrixTranspose>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateOrientationMatrixTranspose::humanName() const
 {
   return "Generate Orientation Matrix Transpose";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GenerateOrientationMatrixTranspose::defaultTags() const
+{
+  return {"#Processing", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GenerateOrientationMatrixTranspose::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters GenerateOrientationMatrixTranspose::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GenerateOrientationMatrixTranspose::clone() const
 {
   return std::make_unique<GenerateOrientationMatrixTranspose>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GenerateOrientationMatrixTranspose::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -63,6 +76,7 @@ Result<OutputActions> GenerateOrientationMatrixTranspose::preflightImpl(const Da
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GenerateOrientationMatrixTranspose::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

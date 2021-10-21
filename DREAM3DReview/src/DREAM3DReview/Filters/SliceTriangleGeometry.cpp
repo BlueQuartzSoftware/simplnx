@@ -14,26 +14,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string SliceTriangleGeometry::name() const
 {
   return FilterTraits<SliceTriangleGeometry>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string SliceTriangleGeometry::className() const
 {
   return FilterTraits<SliceTriangleGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid SliceTriangleGeometry::uuid() const
 {
   return FilterTraits<SliceTriangleGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string SliceTriangleGeometry::humanName() const
 {
   return "Slice Triangle Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> SliceTriangleGeometry::defaultTags() const
+{
+  return {"#Sampling", "#Geometry"};
+}
+
+//------------------------------------------------------------------------------
 Parameters SliceTriangleGeometry::parameters() const
 {
   Parameters params;
@@ -58,11 +69,13 @@ Parameters SliceTriangleGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer SliceTriangleGeometry::clone() const
 {
   return std::make_unique<SliceTriangleGeometry>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> SliceTriangleGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -90,6 +103,7 @@ Result<OutputActions> SliceTriangleGeometry::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> SliceTriangleGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

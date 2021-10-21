@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindBoundingBoxFeatures::name() const
 {
   return FilterTraits<FindBoundingBoxFeatures>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindBoundingBoxFeatures::className() const
 {
   return FilterTraits<FindBoundingBoxFeatures>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindBoundingBoxFeatures::uuid() const
 {
   return FilterTraits<FindBoundingBoxFeatures>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindBoundingBoxFeatures::humanName() const
 {
   return "Find Biased Features (Bounding Box)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindBoundingBoxFeatures::defaultTags() const
+{
+  return {"#Generic", "#Spatial"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindBoundingBoxFeatures::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters FindBoundingBoxFeatures::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindBoundingBoxFeatures::clone() const
 {
   return std::make_unique<FindBoundingBoxFeatures>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindBoundingBoxFeatures::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -71,6 +84,7 @@ Result<OutputActions> FindBoundingBoxFeatures::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindBoundingBoxFeatures::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string SampleSurfaceMeshSpecifiedPoints::name() const
 {
   return FilterTraits<SampleSurfaceMeshSpecifiedPoints>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string SampleSurfaceMeshSpecifiedPoints::className() const
 {
   return FilterTraits<SampleSurfaceMeshSpecifiedPoints>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid SampleSurfaceMeshSpecifiedPoints::uuid() const
 {
   return FilterTraits<SampleSurfaceMeshSpecifiedPoints>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string SampleSurfaceMeshSpecifiedPoints::humanName() const
 {
   return "Sample Triangle Geometry at Specified Points";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> SampleSurfaceMeshSpecifiedPoints::defaultTags() const
+{
+  return {"#Sampling", "#Spacing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters SampleSurfaceMeshSpecifiedPoints::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters SampleSurfaceMeshSpecifiedPoints::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer SampleSurfaceMeshSpecifiedPoints::clone() const
 {
   return std::make_unique<SampleSurfaceMeshSpecifiedPoints>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> SampleSurfaceMeshSpecifiedPoints::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -68,6 +81,7 @@ Result<OutputActions> SampleSurfaceMeshSpecifiedPoints::preflightImpl(const Data
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> SampleSurfaceMeshSpecifiedPoints::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

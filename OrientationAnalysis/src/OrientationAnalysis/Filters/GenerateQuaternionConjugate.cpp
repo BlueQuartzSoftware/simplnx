@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GenerateQuaternionConjugate::name() const
 {
   return FilterTraits<GenerateQuaternionConjugate>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateQuaternionConjugate::className() const
 {
   return FilterTraits<GenerateQuaternionConjugate>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GenerateQuaternionConjugate::uuid() const
 {
   return FilterTraits<GenerateQuaternionConjugate>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateQuaternionConjugate::humanName() const
 {
   return "Generate Quaternion Conjugate";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GenerateQuaternionConjugate::defaultTags() const
+{
+  return {"#Processing", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GenerateQuaternionConjugate::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters GenerateQuaternionConjugate::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GenerateQuaternionConjugate::clone() const
 {
   return std::make_unique<GenerateQuaternionConjugate>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GenerateQuaternionConjugate::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -63,6 +76,7 @@ Result<OutputActions> GenerateQuaternionConjugate::preflightImpl(const DataStruc
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GenerateQuaternionConjugate::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

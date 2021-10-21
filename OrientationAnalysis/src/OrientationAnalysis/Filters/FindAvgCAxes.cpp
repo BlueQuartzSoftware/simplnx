@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindAvgCAxes::name() const
 {
   return FilterTraits<FindAvgCAxes>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindAvgCAxes::className() const
 {
   return FilterTraits<FindAvgCAxes>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindAvgCAxes::uuid() const
 {
   return FilterTraits<FindAvgCAxes>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindAvgCAxes::humanName() const
 {
   return "Find Average C-Axis Orientations";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindAvgCAxes::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindAvgCAxes::parameters() const
 {
   Parameters params;
@@ -41,11 +52,13 @@ Parameters FindAvgCAxes::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindAvgCAxes::clone() const
 {
   return std::make_unique<FindAvgCAxes>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindAvgCAxes::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -64,6 +77,7 @@ Result<OutputActions> FindAvgCAxes::preflightImpl(const DataStructure& ds, const
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindAvgCAxes::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

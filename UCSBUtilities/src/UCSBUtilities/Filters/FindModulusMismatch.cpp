@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindModulusMismatch::name() const
 {
   return FilterTraits<FindModulusMismatch>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindModulusMismatch::className() const
 {
   return FilterTraits<FindModulusMismatch>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindModulusMismatch::uuid() const
 {
   return FilterTraits<FindModulusMismatch>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindModulusMismatch::humanName() const
 {
   return "Find Elastic Modulus Mismatch";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindModulusMismatch::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindModulusMismatch::parameters() const
 {
   Parameters params;
@@ -39,11 +50,13 @@ Parameters FindModulusMismatch::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindModulusMismatch::clone() const
 {
   return std::make_unique<FindModulusMismatch>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindModulusMismatch::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> FindModulusMismatch::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindModulusMismatch::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

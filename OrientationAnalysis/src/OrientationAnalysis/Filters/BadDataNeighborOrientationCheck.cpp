@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string BadDataNeighborOrientationCheck::name() const
 {
   return FilterTraits<BadDataNeighborOrientationCheck>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string BadDataNeighborOrientationCheck::className() const
 {
   return FilterTraits<BadDataNeighborOrientationCheck>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid BadDataNeighborOrientationCheck::uuid() const
 {
   return FilterTraits<BadDataNeighborOrientationCheck>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string BadDataNeighborOrientationCheck::humanName() const
 {
   return "Neighbor Orientation Comparison (Bad Data)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> BadDataNeighborOrientationCheck::defaultTags() const
+{
+  return {"#Processing", "#Cleanup"};
+}
+
+//------------------------------------------------------------------------------
 Parameters BadDataNeighborOrientationCheck::parameters() const
 {
   Parameters params;
@@ -44,11 +55,13 @@ Parameters BadDataNeighborOrientationCheck::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer BadDataNeighborOrientationCheck::clone() const
 {
   return std::make_unique<BadDataNeighborOrientationCheck>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> BadDataNeighborOrientationCheck::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -70,6 +83,7 @@ Result<OutputActions> BadDataNeighborOrientationCheck::preflightImpl(const DataS
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> BadDataNeighborOrientationCheck::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

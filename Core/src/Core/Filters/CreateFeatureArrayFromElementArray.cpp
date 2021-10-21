@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CreateFeatureArrayFromElementArray::name() const
 {
   return FilterTraits<CreateFeatureArrayFromElementArray>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CreateFeatureArrayFromElementArray::className() const
 {
   return FilterTraits<CreateFeatureArrayFromElementArray>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CreateFeatureArrayFromElementArray::uuid() const
 {
   return FilterTraits<CreateFeatureArrayFromElementArray>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CreateFeatureArrayFromElementArray::humanName() const
 {
   return "Create Feature Array from Element Array";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CreateFeatureArrayFromElementArray::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CreateFeatureArrayFromElementArray::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters CreateFeatureArrayFromElementArray::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateFeatureArrayFromElementArray::clone() const
 {
   return std::make_unique<CreateFeatureArrayFromElementArray>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CreateFeatureArrayFromElementArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -67,6 +80,7 @@ Result<OutputActions> CreateFeatureArrayFromElementArray::preflightImpl(const Da
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CreateFeatureArrayFromElementArray::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

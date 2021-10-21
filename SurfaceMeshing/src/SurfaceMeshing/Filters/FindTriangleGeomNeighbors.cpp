@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindTriangleGeomNeighbors::name() const
 {
   return FilterTraits<FindTriangleGeomNeighbors>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindTriangleGeomNeighbors::className() const
 {
   return FilterTraits<FindTriangleGeomNeighbors>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindTriangleGeomNeighbors::uuid() const
 {
   return FilterTraits<FindTriangleGeomNeighbors>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindTriangleGeomNeighbors::humanName() const
 {
   return "Find Feature Neighbors from Triangle Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindTriangleGeomNeighbors::defaultTags() const
+{
+  return {"#Statistics", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindTriangleGeomNeighbors::parameters() const
 {
   Parameters params;
@@ -44,11 +55,13 @@ Parameters FindTriangleGeomNeighbors::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindTriangleGeomNeighbors::clone() const
 {
   return std::make_unique<FindTriangleGeomNeighbors>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindTriangleGeomNeighbors::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -68,6 +81,7 @@ Result<OutputActions> FindTriangleGeomNeighbors::preflightImpl(const DataStructu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindTriangleGeomNeighbors::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

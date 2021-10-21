@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkFindMaxima::name() const
 {
   return FilterTraits<ItkFindMaxima>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkFindMaxima::className() const
 {
   return FilterTraits<ItkFindMaxima>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkFindMaxima::uuid() const
 {
   return FilterTraits<ItkFindMaxima>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkFindMaxima::humanName() const
 {
   return "Find Maxima (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkFindMaxima::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkFindMaxima::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters ItkFindMaxima::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkFindMaxima::clone() const
 {
   return std::make_unique<ItkFindMaxima>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkFindMaxima::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -65,6 +78,7 @@ Result<OutputActions> ItkFindMaxima::preflightImpl(const DataStructure& ds, cons
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkFindMaxima::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

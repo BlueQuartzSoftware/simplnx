@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkWatershed::name() const
 {
   return FilterTraits<ItkWatershed>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkWatershed::className() const
 {
   return FilterTraits<ItkWatershed>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkWatershed::uuid() const
 {
   return FilterTraits<ItkWatershed>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkWatershed::humanName() const
 {
   return "Watershed Filter (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkWatershed::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkWatershed::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters ItkWatershed::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkWatershed::clone() const
 {
   return std::make_unique<ItkWatershed>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkWatershed::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -67,6 +80,7 @@ Result<OutputActions> ItkWatershed::preflightImpl(const DataStructure& ds, const
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkWatershed::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

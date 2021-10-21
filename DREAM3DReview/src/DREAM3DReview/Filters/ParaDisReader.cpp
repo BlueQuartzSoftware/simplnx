@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ParaDisReader::name() const
 {
   return FilterTraits<ParaDisReader>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ParaDisReader::className() const
 {
   return FilterTraits<ParaDisReader>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ParaDisReader::uuid() const
 {
   return FilterTraits<ParaDisReader>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ParaDisReader::humanName() const
 {
   return "Import ParaDis File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ParaDisReader::defaultTags() const
+{
+  return {"#Unsupported", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ParaDisReader::parameters() const
 {
   Parameters params;
@@ -50,11 +61,13 @@ Parameters ParaDisReader::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ParaDisReader::clone() const
 {
   return std::make_unique<ParaDisReader>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ParaDisReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -79,6 +92,7 @@ Result<OutputActions> ParaDisReader::preflightImpl(const DataStructure& ds, cons
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ParaDisReader::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

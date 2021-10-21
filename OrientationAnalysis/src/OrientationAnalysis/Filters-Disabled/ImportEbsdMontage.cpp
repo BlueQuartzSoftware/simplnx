@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportEbsdMontage::name() const
 {
   return FilterTraits<ImportEbsdMontage>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ImportEbsdMontage::className() const
 {
   return FilterTraits<ImportEbsdMontage>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportEbsdMontage::uuid() const
 {
   return FilterTraits<ImportEbsdMontage>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportEbsdMontage::humanName() const
 {
   return "Import EBSD Montage";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportEbsdMontage::defaultTags() const
+{
+  return {"#Unsupported", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportEbsdMontage::parameters() const
 {
   Parameters params;
@@ -54,11 +65,13 @@ Parameters ImportEbsdMontage::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportEbsdMontage::clone() const
 {
   return std::make_unique<ImportEbsdMontage>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ImportEbsdMontage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -83,6 +96,7 @@ Result<OutputActions> ImportEbsdMontage::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ImportEbsdMontage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

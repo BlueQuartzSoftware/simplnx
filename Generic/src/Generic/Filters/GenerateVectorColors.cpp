@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GenerateVectorColors::name() const
 {
   return FilterTraits<GenerateVectorColors>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateVectorColors::className() const
 {
   return FilterTraits<GenerateVectorColors>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GenerateVectorColors::uuid() const
 {
   return FilterTraits<GenerateVectorColors>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateVectorColors::humanName() const
 {
   return "Generate Vector Colors";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GenerateVectorColors::defaultTags() const
+{
+  return {"#Generic", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GenerateVectorColors::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters GenerateVectorColors::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GenerateVectorColors::clone() const
 {
   return std::make_unique<GenerateVectorColors>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GenerateVectorColors::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -69,6 +82,7 @@ Result<OutputActions> GenerateVectorColors::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GenerateVectorColors::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

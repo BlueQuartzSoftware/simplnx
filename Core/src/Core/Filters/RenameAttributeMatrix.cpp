@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string RenameAttributeMatrix::name() const
 {
   return FilterTraits<RenameAttributeMatrix>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string RenameAttributeMatrix::className() const
 {
   return FilterTraits<RenameAttributeMatrix>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid RenameAttributeMatrix::uuid() const
 {
   return FilterTraits<RenameAttributeMatrix>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string RenameAttributeMatrix::humanName() const
 {
   return "Rename Attribute Matrix";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> RenameAttributeMatrix::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters RenameAttributeMatrix::parameters() const
 {
   Parameters params;
@@ -38,11 +49,13 @@ Parameters RenameAttributeMatrix::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RenameAttributeMatrix::clone() const
 {
   return std::make_unique<RenameAttributeMatrix>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> RenameAttributeMatrix::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -60,6 +73,7 @@ Result<OutputActions> RenameAttributeMatrix::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> RenameAttributeMatrix::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

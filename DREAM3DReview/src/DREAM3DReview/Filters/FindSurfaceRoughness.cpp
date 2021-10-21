@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindSurfaceRoughness::name() const
 {
   return FilterTraits<FindSurfaceRoughness>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindSurfaceRoughness::className() const
 {
   return FilterTraits<FindSurfaceRoughness>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindSurfaceRoughness::uuid() const
 {
   return FilterTraits<FindSurfaceRoughness>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindSurfaceRoughness::humanName() const
 {
   return "Find Surface Roughness";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindSurfaceRoughness::defaultTags() const
+{
+  return {"#Statistics", "#Geometry"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindSurfaceRoughness::parameters() const
 {
   Parameters params;
@@ -39,11 +50,13 @@ Parameters FindSurfaceRoughness::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindSurfaceRoughness::clone() const
 {
   return std::make_unique<FindSurfaceRoughness>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindSurfaceRoughness::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> FindSurfaceRoughness::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindSurfaceRoughness::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

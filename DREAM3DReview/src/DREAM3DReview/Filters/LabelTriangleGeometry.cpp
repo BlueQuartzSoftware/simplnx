@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string LabelTriangleGeometry::name() const
 {
   return FilterTraits<LabelTriangleGeometry>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string LabelTriangleGeometry::className() const
 {
   return FilterTraits<LabelTriangleGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid LabelTriangleGeometry::uuid() const
 {
   return FilterTraits<LabelTriangleGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string LabelTriangleGeometry::humanName() const
 {
   return "Label CAD Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> LabelTriangleGeometry::defaultTags() const
+{
+  return {"#Reconstruction", "#Grouping"};
+}
+
+//------------------------------------------------------------------------------
 Parameters LabelTriangleGeometry::parameters() const
 {
   Parameters params;
@@ -39,11 +50,13 @@ Parameters LabelTriangleGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer LabelTriangleGeometry::clone() const
 {
   return std::make_unique<LabelTriangleGeometry>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> LabelTriangleGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> LabelTriangleGeometry::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> LabelTriangleGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

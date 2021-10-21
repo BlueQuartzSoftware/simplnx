@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GenerateColorTable::name() const
 {
   return FilterTraits<GenerateColorTable>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateColorTable::className() const
 {
   return FilterTraits<GenerateColorTable>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GenerateColorTable::uuid() const
 {
   return FilterTraits<GenerateColorTable>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateColorTable::humanName() const
 {
   return "Generate Color Table";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GenerateColorTable::defaultTags() const
+{
+  return {"#Core", "#Image"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GenerateColorTable::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters GenerateColorTable::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GenerateColorTable::clone() const
 {
   return std::make_unique<GenerateColorTable>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GenerateColorTable::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -63,6 +76,7 @@ Result<OutputActions> GenerateColorTable::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GenerateColorTable::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

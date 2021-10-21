@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string VMFillLevelSetWithTetrahedra::name() const
 {
   return FilterTraits<VMFillLevelSetWithTetrahedra>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string VMFillLevelSetWithTetrahedra::className() const
 {
   return FilterTraits<VMFillLevelSetWithTetrahedra>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid VMFillLevelSetWithTetrahedra::uuid() const
 {
   return FilterTraits<VMFillLevelSetWithTetrahedra>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string VMFillLevelSetWithTetrahedra::humanName() const
 {
   return "Fill Level Set with Tetrahedra (VolumeMeshing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> VMFillLevelSetWithTetrahedra::defaultTags() const
+{
+  return {"#Volume Meshing", "#Generation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters VMFillLevelSetWithTetrahedra::parameters() const
 {
   Parameters params;
@@ -54,11 +65,13 @@ Parameters VMFillLevelSetWithTetrahedra::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer VMFillLevelSetWithTetrahedra::clone() const
 {
   return std::make_unique<VMFillLevelSetWithTetrahedra>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> VMFillLevelSetWithTetrahedra::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -83,6 +96,7 @@ Result<OutputActions> VMFillLevelSetWithTetrahedra::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> VMFillLevelSetWithTetrahedra::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

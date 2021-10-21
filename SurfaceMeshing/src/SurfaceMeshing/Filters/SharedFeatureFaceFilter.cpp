@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string SharedFeatureFaceFilter::name() const
 {
   return FilterTraits<SharedFeatureFaceFilter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string SharedFeatureFaceFilter::className() const
 {
   return FilterTraits<SharedFeatureFaceFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid SharedFeatureFaceFilter::uuid() const
 {
   return FilterTraits<SharedFeatureFaceFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string SharedFeatureFaceFilter::humanName() const
 {
   return "Generate Triangle Face Ids";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> SharedFeatureFaceFilter::defaultTags() const
+{
+  return {"#Surface Meshing", "#Connectivity Arrangement"};
+}
+
+//------------------------------------------------------------------------------
 Parameters SharedFeatureFaceFilter::parameters() const
 {
   Parameters params;
@@ -44,11 +55,13 @@ Parameters SharedFeatureFaceFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer SharedFeatureFaceFilter::clone() const
 {
   return std::make_unique<SharedFeatureFaceFilter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> SharedFeatureFaceFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -69,6 +82,7 @@ Result<OutputActions> SharedFeatureFaceFilter::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> SharedFeatureFaceFilter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

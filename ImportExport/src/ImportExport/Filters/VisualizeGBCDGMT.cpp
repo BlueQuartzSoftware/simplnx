@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string VisualizeGBCDGMT::name() const
 {
   return FilterTraits<VisualizeGBCDGMT>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string VisualizeGBCDGMT::className() const
 {
   return FilterTraits<VisualizeGBCDGMT>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid VisualizeGBCDGMT::uuid() const
 {
   return FilterTraits<VisualizeGBCDGMT>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string VisualizeGBCDGMT::humanName() const
 {
   return "Export GBCD Pole Figure (GMT 5)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> VisualizeGBCDGMT::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters VisualizeGBCDGMT::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters VisualizeGBCDGMT::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer VisualizeGBCDGMT::clone() const
 {
   return std::make_unique<VisualizeGBCDGMT>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> VisualizeGBCDGMT::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> VisualizeGBCDGMT::preflightImpl(const DataStructure& ds, c
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> VisualizeGBCDGMT::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

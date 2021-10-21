@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ReadCtfData::name() const
 {
   return FilterTraits<ReadCtfData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ReadCtfData::className() const
 {
   return FilterTraits<ReadCtfData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ReadCtfData::uuid() const
 {
   return FilterTraits<ReadCtfData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ReadCtfData::humanName() const
 {
   return "Import Oxford Instr. EBSD Data (.ctf)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ReadCtfData::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ReadCtfData::parameters() const
 {
   Parameters params;
@@ -49,11 +60,13 @@ Parameters ReadCtfData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadCtfData::clone() const
 {
   return std::make_unique<ReadCtfData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ReadCtfData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -75,6 +88,7 @@ Result<OutputActions> ReadCtfData::preflightImpl(const DataStructure& ds, const 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ReadCtfData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

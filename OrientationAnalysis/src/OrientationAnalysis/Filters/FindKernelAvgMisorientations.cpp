@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindKernelAvgMisorientations::name() const
 {
   return FilterTraits<FindKernelAvgMisorientations>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindKernelAvgMisorientations::className() const
 {
   return FilterTraits<FindKernelAvgMisorientations>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindKernelAvgMisorientations::uuid() const
 {
   return FilterTraits<FindKernelAvgMisorientations>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindKernelAvgMisorientations::humanName() const
 {
   return "Find Kernel Average Misorientations";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindKernelAvgMisorientations::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindKernelAvgMisorientations::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters FindKernelAvgMisorientations::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindKernelAvgMisorientations::clone() const
 {
   return std::make_unique<FindKernelAvgMisorientations>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindKernelAvgMisorientations::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> FindKernelAvgMisorientations::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindKernelAvgMisorientations::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

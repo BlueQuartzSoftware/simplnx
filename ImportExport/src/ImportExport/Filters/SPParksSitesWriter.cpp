@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string SPParksSitesWriter::name() const
 {
   return FilterTraits<SPParksSitesWriter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string SPParksSitesWriter::className() const
 {
   return FilterTraits<SPParksSitesWriter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid SPParksSitesWriter::uuid() const
 {
   return FilterTraits<SPParksSitesWriter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string SPParksSitesWriter::humanName() const
 {
   return "Export SPParks Sites File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> SPParksSitesWriter::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters SPParksSitesWriter::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters SPParksSitesWriter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer SPParksSitesWriter::clone() const
 {
   return std::make_unique<SPParksSitesWriter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> SPParksSitesWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -64,6 +77,7 @@ Result<OutputActions> SPParksSitesWriter::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> SPParksSitesWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

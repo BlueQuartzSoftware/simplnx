@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindMinkowskiBouligandDimension::name() const
 {
   return FilterTraits<FindMinkowskiBouligandDimension>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindMinkowskiBouligandDimension::className() const
 {
   return FilterTraits<FindMinkowskiBouligandDimension>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindMinkowskiBouligandDimension::uuid() const
 {
   return FilterTraits<FindMinkowskiBouligandDimension>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindMinkowskiBouligandDimension::humanName() const
 {
   return "Find Minkowski-Bouligand Dimension";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindMinkowskiBouligandDimension::defaultTags() const
+{
+  return {"#Statistics", "#Geometry"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindMinkowskiBouligandDimension::parameters() const
 {
   Parameters params;
@@ -39,11 +50,13 @@ Parameters FindMinkowskiBouligandDimension::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindMinkowskiBouligandDimension::clone() const
 {
   return std::make_unique<FindMinkowskiBouligandDimension>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindMinkowskiBouligandDimension::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> FindMinkowskiBouligandDimension::preflightImpl(const DataS
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindMinkowskiBouligandDimension::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

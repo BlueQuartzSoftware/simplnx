@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindDistsToCharactGBs::name() const
 {
   return FilterTraits<FindDistsToCharactGBs>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindDistsToCharactGBs::className() const
 {
   return FilterTraits<FindDistsToCharactGBs>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindDistsToCharactGBs::uuid() const
 {
   return FilterTraits<FindDistsToCharactGBs>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindDistsToCharactGBs::humanName() const
 {
   return "Find Distances to Characteristic Grain Boundaries";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindDistsToCharactGBs::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindDistsToCharactGBs::parameters() const
 {
   Parameters params;
@@ -49,11 +60,13 @@ Parameters FindDistsToCharactGBs::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindDistsToCharactGBs::clone() const
 {
   return std::make_unique<FindDistsToCharactGBs>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindDistsToCharactGBs::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -78,6 +91,7 @@ Result<OutputActions> FindDistsToCharactGBs::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindDistsToCharactGBs::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

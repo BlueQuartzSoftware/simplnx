@@ -6,26 +6,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string RequiredZThickness::name() const
 {
   return FilterTraits<RequiredZThickness>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string RequiredZThickness::className() const
 {
   return FilterTraits<RequiredZThickness>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid RequiredZThickness::uuid() const
 {
   return FilterTraits<RequiredZThickness>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string RequiredZThickness::humanName() const
 {
   return "Required Z Dimension (Image Geometry)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> RequiredZThickness::defaultTags() const
+{
+  return {"#Core", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters RequiredZThickness::parameters() const
 {
   Parameters params;
@@ -34,11 +45,13 @@ Parameters RequiredZThickness::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RequiredZThickness::clone() const
 {
   return std::make_unique<RequiredZThickness>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> RequiredZThickness::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -54,6 +67,7 @@ Result<OutputActions> RequiredZThickness::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> RequiredZThickness::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

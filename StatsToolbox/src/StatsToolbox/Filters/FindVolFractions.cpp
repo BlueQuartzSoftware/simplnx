@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindVolFractions::name() const
 {
   return FilterTraits<FindVolFractions>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindVolFractions::className() const
 {
   return FilterTraits<FindVolFractions>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindVolFractions::uuid() const
 {
   return FilterTraits<FindVolFractions>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindVolFractions::humanName() const
 {
   return "Find Volume Fractions of Ensembles";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindVolFractions::defaultTags() const
+{
+  return {"#Statistics", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindVolFractions::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters FindVolFractions::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindVolFractions::clone() const
 {
   return std::make_unique<FindVolFractions>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindVolFractions::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> FindVolFractions::preflightImpl(const DataStructure& ds, c
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindVolFractions::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

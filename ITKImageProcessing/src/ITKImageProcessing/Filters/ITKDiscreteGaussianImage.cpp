@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ITKDiscreteGaussianImage::name() const
 {
   return FilterTraits<ITKDiscreteGaussianImage>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ITKDiscreteGaussianImage::className() const
 {
   return FilterTraits<ITKDiscreteGaussianImage>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ITKDiscreteGaussianImage::uuid() const
 {
   return FilterTraits<ITKDiscreteGaussianImage>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ITKDiscreteGaussianImage::humanName() const
 {
   return "ITK::Discrete Gaussian Image Filter";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ITKDiscreteGaussianImage::defaultTags() const
+{
+  return {"#ITK Image Processing", "#ITK Smoothing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ITKDiscreteGaussianImage::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters ITKDiscreteGaussianImage::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKDiscreteGaussianImage::clone() const
 {
   return std::make_unique<ITKDiscreteGaussianImage>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ITKDiscreteGaussianImage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -73,6 +86,7 @@ Result<OutputActions> ITKDiscreteGaussianImage::preflightImpl(const DataStructur
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ITKDiscreteGaussianImage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

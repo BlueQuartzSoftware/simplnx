@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ErodeDilateBadData::name() const
 {
   return FilterTraits<ErodeDilateBadData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ErodeDilateBadData::className() const
 {
   return FilterTraits<ErodeDilateBadData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ErodeDilateBadData::uuid() const
 {
   return FilterTraits<ErodeDilateBadData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ErodeDilateBadData::humanName() const
 {
   return "Erode/Dilate Bad Data";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ErodeDilateBadData::defaultTags() const
+{
+  return {"#Processing", "#Cleanup"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ErodeDilateBadData::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters ErodeDilateBadData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ErodeDilateBadData::clone() const
 {
   return std::make_unique<ErodeDilateBadData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ErodeDilateBadData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -75,6 +88,7 @@ Result<OutputActions> ErodeDilateBadData::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ErodeDilateBadData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

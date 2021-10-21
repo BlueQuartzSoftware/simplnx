@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CreateAttributeMatrix::name() const
 {
   return FilterTraits<CreateAttributeMatrix>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CreateAttributeMatrix::className() const
 {
   return FilterTraits<CreateAttributeMatrix>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CreateAttributeMatrix::uuid() const
 {
   return FilterTraits<CreateAttributeMatrix>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CreateAttributeMatrix::humanName() const
 {
   return "Create Attribute Matrix";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CreateAttributeMatrix::defaultTags() const
+{
+  return {"#Core", "#Generation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CreateAttributeMatrix::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters CreateAttributeMatrix::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateAttributeMatrix::clone() const
 {
   return std::make_unique<CreateAttributeMatrix>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CreateAttributeMatrix::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -63,6 +76,7 @@ Result<OutputActions> CreateAttributeMatrix::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CreateAttributeMatrix::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

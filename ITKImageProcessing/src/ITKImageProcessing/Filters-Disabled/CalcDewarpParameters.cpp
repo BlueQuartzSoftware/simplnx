@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CalcDewarpParameters::name() const
 {
   return FilterTraits<CalcDewarpParameters>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CalcDewarpParameters::className() const
 {
   return FilterTraits<CalcDewarpParameters>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CalcDewarpParameters::uuid() const
 {
   return FilterTraits<CalcDewarpParameters>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CalcDewarpParameters::humanName() const
 {
   return "Calculate Dewarp Parameters";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CalcDewarpParameters::defaultTags() const
+{
+  return {"#Processing", "#Processing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CalcDewarpParameters::parameters() const
 {
   Parameters params;
@@ -57,11 +68,13 @@ Parameters CalcDewarpParameters::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CalcDewarpParameters::clone() const
 {
   return std::make_unique<CalcDewarpParameters>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CalcDewarpParameters::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -89,6 +102,7 @@ Result<OutputActions> CalcDewarpParameters::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CalcDewarpParameters::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

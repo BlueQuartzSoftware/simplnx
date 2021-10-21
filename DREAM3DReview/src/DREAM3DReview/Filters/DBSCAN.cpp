@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string DBSCAN::name() const
 {
   return FilterTraits<DBSCAN>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string DBSCAN::className() const
 {
   return FilterTraits<DBSCAN>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid DBSCAN::uuid() const
 {
   return FilterTraits<DBSCAN>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string DBSCAN::humanName() const
 {
   return "DBSCAN";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> DBSCAN::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Clustering"};
+}
+
+//------------------------------------------------------------------------------
 Parameters DBSCAN::parameters() const
 {
   Parameters params;
@@ -49,11 +60,13 @@ Parameters DBSCAN::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer DBSCAN::clone() const
 {
   return std::make_unique<DBSCAN>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> DBSCAN::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -77,6 +90,7 @@ Result<OutputActions> DBSCAN::preflightImpl(const DataStructure& ds, const Argum
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> DBSCAN::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

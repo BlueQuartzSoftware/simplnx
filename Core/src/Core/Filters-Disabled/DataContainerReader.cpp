@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string DataContainerReader::name() const
 {
   return FilterTraits<DataContainerReader>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string DataContainerReader::className() const
 {
   return FilterTraits<DataContainerReader>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid DataContainerReader::uuid() const
 {
   return FilterTraits<DataContainerReader>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string DataContainerReader::humanName() const
 {
   return "Read DREAM.3D Data File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> DataContainerReader::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters DataContainerReader::parameters() const
 {
   Parameters params;
@@ -38,11 +49,13 @@ Parameters DataContainerReader::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer DataContainerReader::clone() const
 {
   return std::make_unique<DataContainerReader>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> DataContainerReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -60,6 +73,7 @@ Result<OutputActions> DataContainerReader::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> DataContainerReader::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

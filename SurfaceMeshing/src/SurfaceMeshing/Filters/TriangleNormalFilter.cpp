@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string TriangleNormalFilter::name() const
 {
   return FilterTraits<TriangleNormalFilter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string TriangleNormalFilter::className() const
 {
   return FilterTraits<TriangleNormalFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid TriangleNormalFilter::uuid() const
 {
   return FilterTraits<TriangleNormalFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string TriangleNormalFilter::humanName() const
 {
   return "Generate Triangle Normals";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> TriangleNormalFilter::defaultTags() const
+{
+  return {"#Surface Meshing", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters TriangleNormalFilter::parameters() const
 {
   Parameters params;
@@ -37,11 +48,13 @@ Parameters TriangleNormalFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer TriangleNormalFilter::clone() const
 {
   return std::make_unique<TriangleNormalFilter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> TriangleNormalFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -58,6 +71,7 @@ Result<OutputActions> TriangleNormalFilter::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> TriangleNormalFilter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

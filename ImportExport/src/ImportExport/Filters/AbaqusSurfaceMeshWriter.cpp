@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AbaqusSurfaceMeshWriter::name() const
 {
   return FilterTraits<AbaqusSurfaceMeshWriter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AbaqusSurfaceMeshWriter::className() const
 {
   return FilterTraits<AbaqusSurfaceMeshWriter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AbaqusSurfaceMeshWriter::uuid() const
 {
   return FilterTraits<AbaqusSurfaceMeshWriter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AbaqusSurfaceMeshWriter::humanName() const
 {
   return "Export Abaqus Surface Mesh";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AbaqusSurfaceMeshWriter::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AbaqusSurfaceMeshWriter::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters AbaqusSurfaceMeshWriter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AbaqusSurfaceMeshWriter::clone() const
 {
   return std::make_unique<AbaqusSurfaceMeshWriter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AbaqusSurfaceMeshWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -64,6 +77,7 @@ Result<OutputActions> AbaqusSurfaceMeshWriter::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AbaqusSurfaceMeshWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

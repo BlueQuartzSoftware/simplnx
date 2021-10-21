@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ConvertData::name() const
 {
   return FilterTraits<ConvertData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ConvertData::className() const
 {
   return FilterTraits<ConvertData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ConvertData::uuid() const
 {
   return FilterTraits<ConvertData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ConvertData::humanName() const
 {
   return "Convert AttributeArray Data Type";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ConvertData::defaultTags() const
+{
+  return {"#Core", "#Conversion"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ConvertData::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters ConvertData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ConvertData::clone() const
 {
   return std::make_unique<ConvertData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ConvertData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -63,6 +76,7 @@ Result<OutputActions> ConvertData::preflightImpl(const DataStructure& ds, const 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ConvertData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

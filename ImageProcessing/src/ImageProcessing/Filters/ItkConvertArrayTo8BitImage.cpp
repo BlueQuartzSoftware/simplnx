@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkConvertArrayTo8BitImage::name() const
 {
   return FilterTraits<ItkConvertArrayTo8BitImage>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkConvertArrayTo8BitImage::className() const
 {
   return FilterTraits<ItkConvertArrayTo8BitImage>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkConvertArrayTo8BitImage::uuid() const
 {
   return FilterTraits<ItkConvertArrayTo8BitImage>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkConvertArrayTo8BitImage::humanName() const
 {
   return "Convert Array to 8 Bit Image (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkConvertArrayTo8BitImage::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkConvertArrayTo8BitImage::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters ItkConvertArrayTo8BitImage::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkConvertArrayTo8BitImage::clone() const
 {
   return std::make_unique<ItkConvertArrayTo8BitImage>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkConvertArrayTo8BitImage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> ItkConvertArrayTo8BitImage::preflightImpl(const DataStruct
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkConvertArrayTo8BitImage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

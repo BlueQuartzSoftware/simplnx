@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ITKProxTVImage::name() const
 {
   return FilterTraits<ITKProxTVImage>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ITKProxTVImage::className() const
 {
   return FilterTraits<ITKProxTVImage>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ITKProxTVImage::uuid() const
 {
   return FilterTraits<ITKProxTVImage>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ITKProxTVImage::humanName() const
 {
   return "ITK::Prox T V Image Filter";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ITKProxTVImage::defaultTags() const
+{
+  return {"#ITK Image Processing", "#ITK NoModule"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ITKProxTVImage::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters ITKProxTVImage::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKProxTVImage::clone() const
 {
   return std::make_unique<ITKProxTVImage>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ITKProxTVImage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -70,6 +83,7 @@ Result<OutputActions> ITKProxTVImage::preflightImpl(const DataStructure& ds, con
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ITKProxTVImage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

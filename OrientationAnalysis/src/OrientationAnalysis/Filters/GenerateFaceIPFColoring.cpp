@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GenerateFaceIPFColoring::name() const
 {
   return FilterTraits<GenerateFaceIPFColoring>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateFaceIPFColoring::className() const
 {
   return FilterTraits<GenerateFaceIPFColoring>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GenerateFaceIPFColoring::uuid() const
 {
   return FilterTraits<GenerateFaceIPFColoring>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateFaceIPFColoring::humanName() const
 {
   return "Generate IPF Colors (Face)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GenerateFaceIPFColoring::defaultTags() const
+{
+  return {"#Processing", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GenerateFaceIPFColoring::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters GenerateFaceIPFColoring::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GenerateFaceIPFColoring::clone() const
 {
   return std::make_unique<GenerateFaceIPFColoring>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GenerateFaceIPFColoring::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> GenerateFaceIPFColoring::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GenerateFaceIPFColoring::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

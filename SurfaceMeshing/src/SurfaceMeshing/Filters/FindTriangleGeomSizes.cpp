@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindTriangleGeomSizes::name() const
 {
   return FilterTraits<FindTriangleGeomSizes>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindTriangleGeomSizes::className() const
 {
   return FilterTraits<FindTriangleGeomSizes>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindTriangleGeomSizes::uuid() const
 {
   return FilterTraits<FindTriangleGeomSizes>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindTriangleGeomSizes::humanName() const
 {
   return "Find Feature Volumes from Triangle Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindTriangleGeomSizes::defaultTags() const
+{
+  return {"#Statistics", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindTriangleGeomSizes::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters FindTriangleGeomSizes::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindTriangleGeomSizes::clone() const
 {
   return std::make_unique<FindTriangleGeomSizes>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindTriangleGeomSizes::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -66,6 +79,7 @@ Result<OutputActions> FindTriangleGeomSizes::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindTriangleGeomSizes::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

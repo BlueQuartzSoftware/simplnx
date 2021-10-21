@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string DiscretizeDDDomain::name() const
 {
   return FilterTraits<DiscretizeDDDomain>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string DiscretizeDDDomain::className() const
 {
   return FilterTraits<DiscretizeDDDomain>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid DiscretizeDDDomain::uuid() const
 {
   return FilterTraits<DiscretizeDDDomain>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string DiscretizeDDDomain::humanName() const
 {
   return "Discretize DDD Domain";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> DiscretizeDDDomain::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters DiscretizeDDDomain::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters DiscretizeDDDomain::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer DiscretizeDDDomain::clone() const
 {
   return std::make_unique<DiscretizeDDDomain>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> DiscretizeDDDomain::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -68,6 +81,7 @@ Result<OutputActions> DiscretizeDDDomain::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> DiscretizeDDDomain::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

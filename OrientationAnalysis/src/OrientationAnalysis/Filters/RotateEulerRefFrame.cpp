@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string RotateEulerRefFrame::name() const
 {
   return FilterTraits<RotateEulerRefFrame>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string RotateEulerRefFrame::className() const
 {
   return FilterTraits<RotateEulerRefFrame>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid RotateEulerRefFrame::uuid() const
 {
   return FilterTraits<RotateEulerRefFrame>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string RotateEulerRefFrame::humanName() const
 {
   return "Rotate Euler Reference Frame";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> RotateEulerRefFrame::defaultTags() const
+{
+  return {"#Processing", "#Conversion"};
+}
+
+//------------------------------------------------------------------------------
 Parameters RotateEulerRefFrame::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters RotateEulerRefFrame::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RotateEulerRefFrame::clone() const
 {
   return std::make_unique<RotateEulerRefFrame>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> RotateEulerRefFrame::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -63,6 +76,7 @@ Result<OutputActions> RotateEulerRefFrame::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> RotateEulerRefFrame::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

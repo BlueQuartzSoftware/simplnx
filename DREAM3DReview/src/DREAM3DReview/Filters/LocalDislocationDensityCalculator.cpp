@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string LocalDislocationDensityCalculator::name() const
 {
   return FilterTraits<LocalDislocationDensityCalculator>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string LocalDislocationDensityCalculator::className() const
 {
   return FilterTraits<LocalDislocationDensityCalculator>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid LocalDislocationDensityCalculator::uuid() const
 {
   return FilterTraits<LocalDislocationDensityCalculator>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string LocalDislocationDensityCalculator::humanName() const
 {
   return "Calculate Local Dislocation Densities";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> LocalDislocationDensityCalculator::defaultTags() const
+{
+  return {"#Unsupported", "#Statistics"};
+}
+
+//------------------------------------------------------------------------------
 Parameters LocalDislocationDensityCalculator::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters LocalDislocationDensityCalculator::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer LocalDislocationDensityCalculator::clone() const
 {
   return std::make_unique<LocalDislocationDensityCalculator>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> LocalDislocationDensityCalculator::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -75,6 +88,7 @@ Result<OutputActions> LocalDislocationDensityCalculator::preflightImpl(const Dat
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> LocalDislocationDensityCalculator::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

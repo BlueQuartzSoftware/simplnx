@@ -15,26 +15,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportAxioVisionV4Montage::name() const
 {
   return FilterTraits<ImportAxioVisionV4Montage>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ImportAxioVisionV4Montage::className() const
 {
   return FilterTraits<ImportAxioVisionV4Montage>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportAxioVisionV4Montage::uuid() const
 {
   return FilterTraits<ImportAxioVisionV4Montage>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportAxioVisionV4Montage::humanName() const
 {
   return "ITK::Zeiss AxioVision Import (V4)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportAxioVisionV4Montage::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportAxioVisionV4Montage::parameters() const
 {
   Parameters params;
@@ -64,11 +75,13 @@ Parameters ImportAxioVisionV4Montage::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportAxioVisionV4Montage::clone() const
 {
   return std::make_unique<ImportAxioVisionV4Montage>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ImportAxioVisionV4Montage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -100,6 +113,7 @@ Result<OutputActions> ImportAxioVisionV4Montage::preflightImpl(const DataStructu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ImportAxioVisionV4Montage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

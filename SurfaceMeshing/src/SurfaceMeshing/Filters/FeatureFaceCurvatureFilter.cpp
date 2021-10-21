@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FeatureFaceCurvatureFilter::name() const
 {
   return FilterTraits<FeatureFaceCurvatureFilter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FeatureFaceCurvatureFilter::className() const
 {
   return FilterTraits<FeatureFaceCurvatureFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FeatureFaceCurvatureFilter::uuid() const
 {
   return FilterTraits<FeatureFaceCurvatureFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FeatureFaceCurvatureFilter::humanName() const
 {
   return "Find Feature Face Curvature";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FeatureFaceCurvatureFilter::defaultTags() const
+{
+  return {"#Surface Meshing", "#Curvature"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FeatureFaceCurvatureFilter::parameters() const
 {
   Parameters params;
@@ -65,11 +76,13 @@ Parameters FeatureFaceCurvatureFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FeatureFaceCurvatureFilter::clone() const
 {
   return std::make_unique<FeatureFaceCurvatureFilter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FeatureFaceCurvatureFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -101,6 +114,7 @@ Result<OutputActions> FeatureFaceCurvatureFilter::preflightImpl(const DataStruct
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FeatureFaceCurvatureFilter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

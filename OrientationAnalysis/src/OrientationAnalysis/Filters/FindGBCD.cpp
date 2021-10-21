@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindGBCD::name() const
 {
   return FilterTraits<FindGBCD>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindGBCD::className() const
 {
   return FilterTraits<FindGBCD>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindGBCD::uuid() const
 {
   return FilterTraits<FindGBCD>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindGBCD::humanName() const
 {
   return "Find GBCD";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindGBCD::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindGBCD::parameters() const
 {
   Parameters params;
@@ -50,11 +61,13 @@ Parameters FindGBCD::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindGBCD::clone() const
 {
   return std::make_unique<FindGBCD>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindGBCD::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -79,6 +92,7 @@ Result<OutputActions> FindGBCD::preflightImpl(const DataStructure& ds, const Arg
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindGBCD::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

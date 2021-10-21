@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportQMMeltpoolTDMSFile::name() const
 {
   return FilterTraits<ImportQMMeltpoolTDMSFile>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ImportQMMeltpoolTDMSFile::className() const
 {
   return FilterTraits<ImportQMMeltpoolTDMSFile>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportQMMeltpoolTDMSFile::uuid() const
 {
   return FilterTraits<ImportQMMeltpoolTDMSFile>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportQMMeltpoolTDMSFile::humanName() const
 {
   return "Import QM Meltpool TDMS File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportQMMeltpoolTDMSFile::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportQMMeltpoolTDMSFile::parameters() const
 {
   Parameters params;
@@ -41,11 +52,13 @@ Parameters ImportQMMeltpoolTDMSFile::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportQMMeltpoolTDMSFile::clone() const
 {
   return std::make_unique<ImportQMMeltpoolTDMSFile>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ImportQMMeltpoolTDMSFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -63,6 +76,7 @@ Result<OutputActions> ImportQMMeltpoolTDMSFile::preflightImpl(const DataStructur
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ImportQMMeltpoolTDMSFile::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ITKImageReader::name() const
 {
   return FilterTraits<ITKImageReader>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ITKImageReader::className() const
 {
   return FilterTraits<ITKImageReader>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ITKImageReader::uuid() const
 {
   return FilterTraits<ITKImageReader>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ITKImageReader::humanName() const
 {
   return "ITK::Image Reader";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ITKImageReader::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ITKImageReader::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters ITKImageReader::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKImageReader::clone() const
 {
   return std::make_unique<ITKImageReader>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ITKImageReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -69,6 +82,7 @@ Result<OutputActions> ITKImageReader::preflightImpl(const DataStructure& ds, con
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ITKImageReader::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

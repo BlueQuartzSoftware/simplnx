@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AlignSectionsFeature::name() const
 {
   return FilterTraits<AlignSectionsFeature>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AlignSectionsFeature::className() const
 {
   return FilterTraits<AlignSectionsFeature>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AlignSectionsFeature::uuid() const
 {
   return FilterTraits<AlignSectionsFeature>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AlignSectionsFeature::humanName() const
 {
   return "Align Sections (Feature)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AlignSectionsFeature::defaultTags() const
+{
+  return {"#Reconstruction", "#Alignment"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AlignSectionsFeature::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters AlignSectionsFeature::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AlignSectionsFeature::clone() const
 {
   return std::make_unique<AlignSectionsFeature>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AlignSectionsFeature::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -70,6 +83,7 @@ Result<OutputActions> AlignSectionsFeature::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AlignSectionsFeature::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

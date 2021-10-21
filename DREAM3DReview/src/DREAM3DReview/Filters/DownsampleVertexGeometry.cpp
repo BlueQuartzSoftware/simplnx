@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string DownsampleVertexGeometry::name() const
 {
   return FilterTraits<DownsampleVertexGeometry>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string DownsampleVertexGeometry::className() const
 {
   return FilterTraits<DownsampleVertexGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid DownsampleVertexGeometry::uuid() const
 {
   return FilterTraits<DownsampleVertexGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string DownsampleVertexGeometry::humanName() const
 {
   return "Downsample Vertex Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> DownsampleVertexGeometry::defaultTags() const
+{
+  return {"#Sampling", "#Geometry"};
+}
+
+//------------------------------------------------------------------------------
 Parameters DownsampleVertexGeometry::parameters() const
 {
   Parameters params;
@@ -49,11 +60,13 @@ Parameters DownsampleVertexGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer DownsampleVertexGeometry::clone() const
 {
   return std::make_unique<DownsampleVertexGeometry>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> DownsampleVertexGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -74,6 +87,7 @@ Result<OutputActions> DownsampleVertexGeometry::preflightImpl(const DataStructur
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> DownsampleVertexGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

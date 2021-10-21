@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindProjectedImageStatistics::name() const
 {
   return FilterTraits<FindProjectedImageStatistics>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindProjectedImageStatistics::className() const
 {
   return FilterTraits<FindProjectedImageStatistics>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindProjectedImageStatistics::uuid() const
 {
   return FilterTraits<FindProjectedImageStatistics>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindProjectedImageStatistics::humanName() const
 {
   return "Find Projected Image Statistics";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindProjectedImageStatistics::defaultTags() const
+{
+  return {"#Processing", "#Image"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindProjectedImageStatistics::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters FindProjectedImageStatistics::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindProjectedImageStatistics::clone() const
 {
   return std::make_unique<FindProjectedImageStatistics>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindProjectedImageStatistics::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -73,6 +86,7 @@ Result<OutputActions> FindProjectedImageStatistics::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindProjectedImageStatistics::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

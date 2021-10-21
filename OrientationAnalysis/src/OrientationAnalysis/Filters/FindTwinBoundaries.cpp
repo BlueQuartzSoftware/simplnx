@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindTwinBoundaries::name() const
 {
   return FilterTraits<FindTwinBoundaries>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindTwinBoundaries::className() const
 {
   return FilterTraits<FindTwinBoundaries>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindTwinBoundaries::uuid() const
 {
   return FilterTraits<FindTwinBoundaries>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindTwinBoundaries::humanName() const
 {
   return "Find Twin Boundaries";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindTwinBoundaries::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindTwinBoundaries::parameters() const
 {
   Parameters params;
@@ -55,11 +66,13 @@ Parameters FindTwinBoundaries::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindTwinBoundaries::clone() const
 {
   return std::make_unique<FindTwinBoundaries>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindTwinBoundaries::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -85,6 +98,7 @@ Result<OutputActions> FindTwinBoundaries::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindTwinBoundaries::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string JumbleOrientations::name() const
 {
   return FilterTraits<JumbleOrientations>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string JumbleOrientations::className() const
 {
   return FilterTraits<JumbleOrientations>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid JumbleOrientations::uuid() const
 {
   return FilterTraits<JumbleOrientations>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string JumbleOrientations::humanName() const
 {
   return "Jumble Orientations";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> JumbleOrientations::defaultTags() const
+{
+  return {"#Synthetic Building", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters JumbleOrientations::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters JumbleOrientations::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer JumbleOrientations::clone() const
 {
   return std::make_unique<JumbleOrientations>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> JumbleOrientations::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -70,6 +83,7 @@ Result<OutputActions> JumbleOrientations::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> JumbleOrientations::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

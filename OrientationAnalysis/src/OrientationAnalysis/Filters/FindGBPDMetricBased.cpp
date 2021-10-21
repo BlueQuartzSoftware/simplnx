@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindGBPDMetricBased::name() const
 {
   return FilterTraits<FindGBPDMetricBased>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindGBPDMetricBased::className() const
 {
   return FilterTraits<FindGBPDMetricBased>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindGBPDMetricBased::uuid() const
 {
   return FilterTraits<FindGBPDMetricBased>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindGBPDMetricBased::humanName() const
 {
   return "Find GBPD (Metric-Based Approach)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindGBPDMetricBased::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindGBPDMetricBased::parameters() const
 {
   Parameters params;
@@ -63,11 +74,13 @@ Parameters FindGBPDMetricBased::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindGBPDMetricBased::clone() const
 {
   return std::make_unique<FindGBPDMetricBased>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindGBPDMetricBased::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -98,6 +111,7 @@ Result<OutputActions> FindGBPDMetricBased::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindGBPDMetricBased::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindFeatureClustering::name() const
 {
   return FilterTraits<FindFeatureClustering>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindFeatureClustering::className() const
 {
   return FilterTraits<FindFeatureClustering>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindFeatureClustering::uuid() const
 {
   return FilterTraits<FindFeatureClustering>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindFeatureClustering::humanName() const
 {
   return "Find Feature Clustering";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindFeatureClustering::defaultTags() const
+{
+  return {"#Statistics", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindFeatureClustering::parameters() const
 {
   Parameters params;
@@ -56,11 +67,13 @@ Parameters FindFeatureClustering::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindFeatureClustering::clone() const
 {
   return std::make_unique<FindFeatureClustering>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindFeatureClustering::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -87,6 +100,7 @@ Result<OutputActions> FindFeatureClustering::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindFeatureClustering::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

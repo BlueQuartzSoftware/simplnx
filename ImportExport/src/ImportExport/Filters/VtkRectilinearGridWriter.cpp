@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string VtkRectilinearGridWriter::name() const
 {
   return FilterTraits<VtkRectilinearGridWriter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string VtkRectilinearGridWriter::className() const
 {
   return FilterTraits<VtkRectilinearGridWriter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid VtkRectilinearGridWriter::uuid() const
 {
   return FilterTraits<VtkRectilinearGridWriter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string VtkRectilinearGridWriter::humanName() const
 {
   return "Vtk Rectilinear Grid Exporter";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> VtkRectilinearGridWriter::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters VtkRectilinearGridWriter::parameters() const
 {
   Parameters params;
@@ -44,11 +55,13 @@ Parameters VtkRectilinearGridWriter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer VtkRectilinearGridWriter::clone() const
 {
   return std::make_unique<VtkRectilinearGridWriter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> VtkRectilinearGridWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -67,6 +80,7 @@ Result<OutputActions> VtkRectilinearGridWriter::preflightImpl(const DataStructur
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> VtkRectilinearGridWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

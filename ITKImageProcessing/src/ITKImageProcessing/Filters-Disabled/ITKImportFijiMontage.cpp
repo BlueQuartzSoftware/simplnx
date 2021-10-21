@@ -17,26 +17,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ITKImportFijiMontage::name() const
 {
   return FilterTraits<ITKImportFijiMontage>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ITKImportFijiMontage::className() const
 {
   return FilterTraits<ITKImportFijiMontage>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ITKImportFijiMontage::uuid() const
 {
   return FilterTraits<ITKImportFijiMontage>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ITKImportFijiMontage::humanName() const
 {
   return "ITK::Import Fiji Montage";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ITKImportFijiMontage::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ITKImportFijiMontage::parameters() const
 {
   Parameters params;
@@ -61,11 +72,13 @@ Parameters ITKImportFijiMontage::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKImportFijiMontage::clone() const
 {
   return std::make_unique<ITKImportFijiMontage>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ITKImportFijiMontage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -94,6 +107,7 @@ Result<OutputActions> ITKImportFijiMontage::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ITKImportFijiMontage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

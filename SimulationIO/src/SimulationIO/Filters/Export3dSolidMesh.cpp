@@ -15,26 +15,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string Export3dSolidMesh::name() const
 {
   return FilterTraits<Export3dSolidMesh>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string Export3dSolidMesh::className() const
 {
   return FilterTraits<Export3dSolidMesh>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid Export3dSolidMesh::uuid() const
 {
   return FilterTraits<Export3dSolidMesh>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string Export3dSolidMesh::humanName() const
 {
   return "Export 3d Solid Mesh";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> Export3dSolidMesh::defaultTags() const
+{
+  return {"#Unsupported", "#SimulationIO"};
+}
+
+//------------------------------------------------------------------------------
 Parameters Export3dSolidMesh::parameters() const
 {
   Parameters params;
@@ -94,11 +105,13 @@ Parameters Export3dSolidMesh::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer Export3dSolidMesh::clone() const
 {
   return std::make_unique<Export3dSolidMesh>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> Export3dSolidMesh::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -136,6 +149,7 @@ Result<OutputActions> Export3dSolidMesh::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> Export3dSolidMesh::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

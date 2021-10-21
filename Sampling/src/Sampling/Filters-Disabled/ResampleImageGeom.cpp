@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ResampleImageGeom::name() const
 {
   return FilterTraits<ResampleImageGeom>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ResampleImageGeom::className() const
 {
   return FilterTraits<ResampleImageGeom>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ResampleImageGeom::uuid() const
 {
   return FilterTraits<ResampleImageGeom>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ResampleImageGeom::humanName() const
 {
   return "Resample Data (Image Geometry)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ResampleImageGeom::defaultTags() const
+{
+  return {"#Sampling", "#Spacing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ResampleImageGeom::parameters() const
 {
   Parameters params;
@@ -55,11 +66,13 @@ Parameters ResampleImageGeom::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ResampleImageGeom::clone() const
 {
   return std::make_unique<ResampleImageGeom>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ResampleImageGeom::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -84,6 +97,7 @@ Result<OutputActions> ResampleImageGeom::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ResampleImageGeom::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

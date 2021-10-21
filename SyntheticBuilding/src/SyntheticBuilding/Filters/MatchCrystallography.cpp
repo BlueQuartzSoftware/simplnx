@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string MatchCrystallography::name() const
 {
   return FilterTraits<MatchCrystallography>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string MatchCrystallography::className() const
 {
   return FilterTraits<MatchCrystallography>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid MatchCrystallography::uuid() const
 {
   return FilterTraits<MatchCrystallography>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string MatchCrystallography::humanName() const
 {
   return "Match Crystallography";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> MatchCrystallography::defaultTags() const
+{
+  return {"#Synthetic Building", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MatchCrystallography::parameters() const
 {
   Parameters params;
@@ -56,11 +67,13 @@ Parameters MatchCrystallography::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MatchCrystallography::clone() const
 {
   return std::make_unique<MatchCrystallography>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> MatchCrystallography::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -90,6 +103,7 @@ Result<OutputActions> MatchCrystallography::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> MatchCrystallography::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

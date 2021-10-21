@@ -16,26 +16,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string EstablishFoamMorphology::name() const
 {
   return FilterTraits<EstablishFoamMorphology>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string EstablishFoamMorphology::className() const
 {
   return FilterTraits<EstablishFoamMorphology>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid EstablishFoamMorphology::uuid() const
 {
   return FilterTraits<EstablishFoamMorphology>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string EstablishFoamMorphology::humanName() const
 {
   return "Establish Foam Morphology";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> EstablishFoamMorphology::defaultTags() const
+{
+  return {"#Synthetic Building", "#Packing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters EstablishFoamMorphology::parameters() const
 {
   Parameters params;
@@ -78,11 +89,13 @@ Parameters EstablishFoamMorphology::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer EstablishFoamMorphology::clone() const
 {
   return std::make_unique<EstablishFoamMorphology>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> EstablishFoamMorphology::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -120,6 +133,7 @@ Result<OutputActions> EstablishFoamMorphology::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> EstablishFoamMorphology::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

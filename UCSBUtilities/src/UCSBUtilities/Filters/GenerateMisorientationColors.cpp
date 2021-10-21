@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GenerateMisorientationColors::name() const
 {
   return FilterTraits<GenerateMisorientationColors>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateMisorientationColors::className() const
 {
   return FilterTraits<GenerateMisorientationColors>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GenerateMisorientationColors::uuid() const
 {
   return FilterTraits<GenerateMisorientationColors>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateMisorientationColors::humanName() const
 {
   return "Generate Misorientation Colors";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GenerateMisorientationColors::defaultTags() const
+{
+  return {"#Processing", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GenerateMisorientationColors::parameters() const
 {
   Parameters params;
@@ -52,11 +63,13 @@ Parameters GenerateMisorientationColors::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GenerateMisorientationColors::clone() const
 {
   return std::make_unique<GenerateMisorientationColors>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GenerateMisorientationColors::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -80,6 +93,7 @@ Result<OutputActions> GenerateMisorientationColors::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GenerateMisorientationColors::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

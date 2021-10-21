@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string NeighborOrientationCorrelation::name() const
 {
   return FilterTraits<NeighborOrientationCorrelation>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string NeighborOrientationCorrelation::className() const
 {
   return FilterTraits<NeighborOrientationCorrelation>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid NeighborOrientationCorrelation::uuid() const
 {
   return FilterTraits<NeighborOrientationCorrelation>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string NeighborOrientationCorrelation::humanName() const
 {
   return "Neighbor Orientation Correlation";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> NeighborOrientationCorrelation::defaultTags() const
+{
+  return {"#Processing", "#Cleanup"};
+}
+
+//------------------------------------------------------------------------------
 Parameters NeighborOrientationCorrelation::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters NeighborOrientationCorrelation::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer NeighborOrientationCorrelation::clone() const
 {
   return std::make_unique<NeighborOrientationCorrelation>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> NeighborOrientationCorrelation::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -76,6 +89,7 @@ Result<OutputActions> NeighborOrientationCorrelation::preflightImpl(const DataSt
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> NeighborOrientationCorrelation::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

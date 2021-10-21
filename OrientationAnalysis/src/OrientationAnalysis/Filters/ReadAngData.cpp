@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ReadAngData::name() const
 {
   return FilterTraits<ReadAngData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ReadAngData::className() const
 {
   return FilterTraits<ReadAngData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ReadAngData::uuid() const
 {
   return FilterTraits<ReadAngData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ReadAngData::humanName() const
 {
   return "Import EDAX EBSD Data (.ang)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ReadAngData::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ReadAngData::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters ReadAngData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadAngData::clone() const
 {
   return std::make_unique<ReadAngData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ReadAngData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -70,6 +83,7 @@ Result<OutputActions> ReadAngData::preflightImpl(const DataStructure& ds, const 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ReadAngData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

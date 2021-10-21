@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindFeaturePhases::name() const
 {
   return FilterTraits<FindFeaturePhases>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindFeaturePhases::className() const
 {
   return FilterTraits<FindFeaturePhases>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindFeaturePhases::uuid() const
 {
   return FilterTraits<FindFeaturePhases>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindFeaturePhases::humanName() const
 {
   return "Find Feature Phases";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindFeaturePhases::defaultTags() const
+{
+  return {"#Generic", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindFeaturePhases::parameters() const
 {
   Parameters params;
@@ -41,11 +52,13 @@ Parameters FindFeaturePhases::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindFeaturePhases::clone() const
 {
   return std::make_unique<FindFeaturePhases>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindFeaturePhases::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -64,6 +77,7 @@ Result<OutputActions> FindFeaturePhases::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindFeaturePhases::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

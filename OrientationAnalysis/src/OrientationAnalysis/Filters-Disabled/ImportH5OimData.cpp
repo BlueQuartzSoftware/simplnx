@@ -16,26 +16,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportH5OimData::name() const
 {
   return FilterTraits<ImportH5OimData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ImportH5OimData::className() const
 {
   return FilterTraits<ImportH5OimData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportH5OimData::uuid() const
 {
   return FilterTraits<ImportH5OimData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportH5OimData::humanName() const
 {
   return "Import EDAX OIMAnalysis Data (.h5)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportH5OimData::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportH5OimData::parameters() const
 {
   Parameters params;
@@ -54,11 +65,13 @@ Parameters ImportH5OimData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportH5OimData::clone() const
 {
   return std::make_unique<ImportH5OimData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ImportH5OimData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -82,6 +95,7 @@ Result<OutputActions> ImportH5OimData::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ImportH5OimData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

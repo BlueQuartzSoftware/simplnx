@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GenerateVertexCoordinates::name() const
 {
   return FilterTraits<GenerateVertexCoordinates>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateVertexCoordinates::className() const
 {
   return FilterTraits<GenerateVertexCoordinates>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GenerateVertexCoordinates::uuid() const
 {
   return FilterTraits<GenerateVertexCoordinates>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateVertexCoordinates::humanName() const
 {
   return "Generate Cell Center Coords";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GenerateVertexCoordinates::defaultTags() const
+{
+  return {"#Core", "#Conversion"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GenerateVertexCoordinates::parameters() const
 {
   Parameters params;
@@ -38,11 +49,13 @@ Parameters GenerateVertexCoordinates::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GenerateVertexCoordinates::clone() const
 {
   return std::make_unique<GenerateVertexCoordinates>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GenerateVertexCoordinates::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -60,6 +73,7 @@ Result<OutputActions> GenerateVertexCoordinates::preflightImpl(const DataStructu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GenerateVertexCoordinates::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

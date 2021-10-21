@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ExtractComponentAsArray::name() const
 {
   return FilterTraits<ExtractComponentAsArray>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ExtractComponentAsArray::className() const
 {
   return FilterTraits<ExtractComponentAsArray>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ExtractComponentAsArray::uuid() const
 {
   return FilterTraits<ExtractComponentAsArray>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ExtractComponentAsArray::humanName() const
 {
   return "Extract Component as Attribute Array";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ExtractComponentAsArray::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ExtractComponentAsArray::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters ExtractComponentAsArray::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExtractComponentAsArray::clone() const
 {
   return std::make_unique<ExtractComponentAsArray>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ExtractComponentAsArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -63,6 +76,7 @@ Result<OutputActions> ExtractComponentAsArray::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ExtractComponentAsArray::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

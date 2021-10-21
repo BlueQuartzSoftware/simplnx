@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string MapPointCloudToRegularGrid::name() const
 {
   return FilterTraits<MapPointCloudToRegularGrid>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string MapPointCloudToRegularGrid::className() const
 {
   return FilterTraits<MapPointCloudToRegularGrid>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid MapPointCloudToRegularGrid::uuid() const
 {
   return FilterTraits<MapPointCloudToRegularGrid>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string MapPointCloudToRegularGrid::humanName() const
 {
   return "Map Point Cloud to Regular Grid";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> MapPointCloudToRegularGrid::defaultTags() const
+{
+  return {"#Sampling", "#Mapping"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MapPointCloudToRegularGrid::parameters() const
 {
   Parameters params;
@@ -56,11 +67,13 @@ Parameters MapPointCloudToRegularGrid::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MapPointCloudToRegularGrid::clone() const
 {
   return std::make_unique<MapPointCloudToRegularGrid>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> MapPointCloudToRegularGrid::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -84,6 +97,7 @@ Result<OutputActions> MapPointCloudToRegularGrid::preflightImpl(const DataStruct
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> MapPointCloudToRegularGrid::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

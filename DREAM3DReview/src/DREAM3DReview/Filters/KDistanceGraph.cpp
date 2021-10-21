@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string KDistanceGraph::name() const
 {
   return FilterTraits<KDistanceGraph>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string KDistanceGraph::className() const
 {
   return FilterTraits<KDistanceGraph>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid KDistanceGraph::uuid() const
 {
   return FilterTraits<KDistanceGraph>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string KDistanceGraph::humanName() const
 {
   return "K Distance Graph";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> KDistanceGraph::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Clustering"};
+}
+
+//------------------------------------------------------------------------------
 Parameters KDistanceGraph::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters KDistanceGraph::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer KDistanceGraph::clone() const
 {
   return std::make_unique<KDistanceGraph>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> KDistanceGraph::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -73,6 +86,7 @@ Result<OutputActions> KDistanceGraph::preflightImpl(const DataStructure& ds, con
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> KDistanceGraph::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -7,26 +7,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string OrientationUtility::name() const
 {
   return FilterTraits<OrientationUtility>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string OrientationUtility::className() const
 {
   return FilterTraits<OrientationUtility>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid OrientationUtility::uuid() const
 {
   return FilterTraits<OrientationUtility>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string OrientationUtility::humanName() const
 {
   return "Orientation Utility";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> OrientationUtility::defaultTags() const
+{
+  return {"#Utilities", "#OrientationAnalysis"};
+}
+
+//------------------------------------------------------------------------------
 Parameters OrientationUtility::parameters() const
 {
   Parameters params;
@@ -36,11 +47,13 @@ Parameters OrientationUtility::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer OrientationUtility::clone() const
 {
   return std::make_unique<OrientationUtility>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> OrientationUtility::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -56,6 +69,7 @@ Result<OutputActions> OrientationUtility::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> OrientationUtility::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

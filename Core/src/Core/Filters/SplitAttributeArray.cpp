@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string SplitAttributeArray::name() const
 {
   return FilterTraits<SplitAttributeArray>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string SplitAttributeArray::className() const
 {
   return FilterTraits<SplitAttributeArray>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid SplitAttributeArray::uuid() const
 {
   return FilterTraits<SplitAttributeArray>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string SplitAttributeArray::humanName() const
 {
   return "Split Multicomponent Attribute Array";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> SplitAttributeArray::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters SplitAttributeArray::parameters() const
 {
   Parameters params;
@@ -38,11 +49,13 @@ Parameters SplitAttributeArray::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer SplitAttributeArray::clone() const
 {
   return std::make_unique<SplitAttributeArray>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> SplitAttributeArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -60,6 +73,7 @@ Result<OutputActions> SplitAttributeArray::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> SplitAttributeArray::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

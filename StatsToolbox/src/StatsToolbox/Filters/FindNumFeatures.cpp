@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindNumFeatures::name() const
 {
   return FilterTraits<FindNumFeatures>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindNumFeatures::className() const
 {
   return FilterTraits<FindNumFeatures>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindNumFeatures::uuid() const
 {
   return FilterTraits<FindNumFeatures>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindNumFeatures::humanName() const
 {
   return "Find Number of Features";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindNumFeatures::defaultTags() const
+{
+  return {"#Statistics", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindNumFeatures::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters FindNumFeatures::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindNumFeatures::clone() const
 {
   return std::make_unique<FindNumFeatures>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindNumFeatures::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> FindNumFeatures::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindNumFeatures::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

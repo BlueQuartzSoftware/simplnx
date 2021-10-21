@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string LaplacianSmoothing::name() const
 {
   return FilterTraits<LaplacianSmoothing>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string LaplacianSmoothing::className() const
 {
   return FilterTraits<LaplacianSmoothing>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid LaplacianSmoothing::uuid() const
 {
   return FilterTraits<LaplacianSmoothing>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string LaplacianSmoothing::humanName() const
 {
   return "Laplacian Smoothing";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> LaplacianSmoothing::defaultTags() const
+{
+  return {"#Surface Meshing", "#Smoothing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters LaplacianSmoothing::parameters() const
 {
   Parameters params;
@@ -52,11 +63,13 @@ Parameters LaplacianSmoothing::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer LaplacianSmoothing::clone() const
 {
   return std::make_unique<LaplacianSmoothing>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> LaplacianSmoothing::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -83,6 +96,7 @@ Result<OutputActions> LaplacianSmoothing::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> LaplacianSmoothing::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

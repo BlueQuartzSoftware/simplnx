@@ -14,26 +14,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportFEAData::name() const
 {
   return FilterTraits<ImportFEAData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ImportFEAData::className() const
 {
   return FilterTraits<ImportFEAData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportFEAData::uuid() const
 {
   return FilterTraits<ImportFEAData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportFEAData::humanName() const
 {
   return "Import FEA Data";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportFEAData::defaultTags() const
+{
+  return {"#Unsupported", "#SimulationIO"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportFEAData::parameters() const
 {
   Parameters params;
@@ -74,11 +85,13 @@ Parameters ImportFEAData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportFEAData::clone() const
 {
   return std::make_unique<ImportFEAData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ImportFEAData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -110,6 +123,7 @@ Result<OutputActions> ImportFEAData::preflightImpl(const DataStructure& ds, cons
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ImportFEAData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

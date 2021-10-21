@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string RobustAutomaticThreshold::name() const
 {
   return FilterTraits<RobustAutomaticThreshold>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string RobustAutomaticThreshold::className() const
 {
   return FilterTraits<RobustAutomaticThreshold>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid RobustAutomaticThreshold::uuid() const
 {
   return FilterTraits<RobustAutomaticThreshold>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string RobustAutomaticThreshold::humanName() const
 {
   return "Robust Automatic Threshold";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> RobustAutomaticThreshold::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Threshold"};
+}
+
+//------------------------------------------------------------------------------
 Parameters RobustAutomaticThreshold::parameters() const
 {
   Parameters params;
@@ -39,11 +50,13 @@ Parameters RobustAutomaticThreshold::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RobustAutomaticThreshold::clone() const
 {
   return std::make_unique<RobustAutomaticThreshold>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> RobustAutomaticThreshold::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> RobustAutomaticThreshold::preflightImpl(const DataStructur
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> RobustAutomaticThreshold::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

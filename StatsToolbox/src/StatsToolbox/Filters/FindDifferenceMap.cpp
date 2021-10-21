@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindDifferenceMap::name() const
 {
   return FilterTraits<FindDifferenceMap>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindDifferenceMap::className() const
 {
   return FilterTraits<FindDifferenceMap>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindDifferenceMap::uuid() const
 {
   return FilterTraits<FindDifferenceMap>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindDifferenceMap::humanName() const
 {
   return "Find Difference Map";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindDifferenceMap::defaultTags() const
+{
+  return {"#Statistics", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindDifferenceMap::parameters() const
 {
   Parameters params;
@@ -39,11 +50,13 @@ Parameters FindDifferenceMap::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindDifferenceMap::clone() const
 {
   return std::make_unique<FindDifferenceMap>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindDifferenceMap::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> FindDifferenceMap::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindDifferenceMap::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

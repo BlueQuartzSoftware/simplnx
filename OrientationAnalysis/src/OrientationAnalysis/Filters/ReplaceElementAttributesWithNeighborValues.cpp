@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ReplaceElementAttributesWithNeighborValues::name() const
 {
   return FilterTraits<ReplaceElementAttributesWithNeighborValues>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ReplaceElementAttributesWithNeighborValues::className() const
 {
   return FilterTraits<ReplaceElementAttributesWithNeighborValues>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ReplaceElementAttributesWithNeighborValues::uuid() const
 {
   return FilterTraits<ReplaceElementAttributesWithNeighborValues>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ReplaceElementAttributesWithNeighborValues::humanName() const
 {
   return "Replace Element Attributes with Neighbor (Threshold)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ReplaceElementAttributesWithNeighborValues::defaultTags() const
+{
+  return {"#Processing", "#Cleanup"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ReplaceElementAttributesWithNeighborValues::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters ReplaceElementAttributesWithNeighborValues::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReplaceElementAttributesWithNeighborValues::clone() const
 {
   return std::make_unique<ReplaceElementAttributesWithNeighborValues>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ReplaceElementAttributesWithNeighborValues::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -67,6 +80,7 @@ Result<OutputActions> ReplaceElementAttributesWithNeighborValues::preflightImpl(
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ReplaceElementAttributesWithNeighborValues::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

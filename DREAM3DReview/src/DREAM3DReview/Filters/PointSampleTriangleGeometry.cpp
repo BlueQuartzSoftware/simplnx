@@ -14,26 +14,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string PointSampleTriangleGeometry::name() const
 {
   return FilterTraits<PointSampleTriangleGeometry>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string PointSampleTriangleGeometry::className() const
 {
   return FilterTraits<PointSampleTriangleGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid PointSampleTriangleGeometry::uuid() const
 {
   return FilterTraits<PointSampleTriangleGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string PointSampleTriangleGeometry::humanName() const
 {
   return "Point Sample Triangle Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> PointSampleTriangleGeometry::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Geometry"};
+}
+
+//------------------------------------------------------------------------------
 Parameters PointSampleTriangleGeometry::parameters() const
 {
   Parameters params;
@@ -58,11 +69,13 @@ Parameters PointSampleTriangleGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer PointSampleTriangleGeometry::clone() const
 {
   return std::make_unique<PointSampleTriangleGeometry>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> PointSampleTriangleGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -88,6 +101,7 @@ Result<OutputActions> PointSampleTriangleGeometry::preflightImpl(const DataStruc
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> PointSampleTriangleGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -14,26 +14,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string RawBinaryReader::name() const
 {
   return FilterTraits<RawBinaryReader>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string RawBinaryReader::className() const
 {
   return FilterTraits<RawBinaryReader>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid RawBinaryReader::uuid() const
 {
   return FilterTraits<RawBinaryReader>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string RawBinaryReader::humanName() const
 {
   return "Raw Binary Importer";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> RawBinaryReader::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters RawBinaryReader::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters RawBinaryReader::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RawBinaryReader::clone() const
 {
   return std::make_unique<RawBinaryReader>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> RawBinaryReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -74,6 +87,7 @@ Result<OutputActions> RawBinaryReader::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> RawBinaryReader::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

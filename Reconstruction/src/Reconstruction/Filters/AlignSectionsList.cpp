@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AlignSectionsList::name() const
 {
   return FilterTraits<AlignSectionsList>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AlignSectionsList::className() const
 {
   return FilterTraits<AlignSectionsList>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AlignSectionsList::uuid() const
 {
   return FilterTraits<AlignSectionsList>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AlignSectionsList::humanName() const
 {
   return "Align Sections (List)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AlignSectionsList::defaultTags() const
+{
+  return {"#Reconstruction", "#Alignment"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AlignSectionsList::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters AlignSectionsList::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AlignSectionsList::clone() const
 {
   return std::make_unique<AlignSectionsList>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AlignSectionsList::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -66,6 +79,7 @@ Result<OutputActions> AlignSectionsList::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AlignSectionsList::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

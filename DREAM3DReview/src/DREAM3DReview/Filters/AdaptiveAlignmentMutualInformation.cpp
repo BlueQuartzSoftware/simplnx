@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AdaptiveAlignmentMutualInformation::name() const
 {
   return FilterTraits<AdaptiveAlignmentMutualInformation>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AdaptiveAlignmentMutualInformation::className() const
 {
   return FilterTraits<AdaptiveAlignmentMutualInformation>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AdaptiveAlignmentMutualInformation::uuid() const
 {
   return FilterTraits<AdaptiveAlignmentMutualInformation>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AdaptiveAlignmentMutualInformation::humanName() const
 {
   return "Adaptive Alignment (Mutual Information)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AdaptiveAlignmentMutualInformation::defaultTags() const
+{
+  return {"#Reconstruction", "#Anisotropic Alignment"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AdaptiveAlignmentMutualInformation::parameters() const
 {
   Parameters params;
@@ -59,11 +70,13 @@ Parameters AdaptiveAlignmentMutualInformation::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AdaptiveAlignmentMutualInformation::clone() const
 {
   return std::make_unique<AdaptiveAlignmentMutualInformation>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AdaptiveAlignmentMutualInformation::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -90,6 +103,7 @@ Result<OutputActions> AdaptiveAlignmentMutualInformation::preflightImpl(const Da
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AdaptiveAlignmentMutualInformation::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

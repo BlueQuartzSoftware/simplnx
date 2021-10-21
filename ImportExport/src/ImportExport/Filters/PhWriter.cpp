@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string PhWriter::name() const
 {
   return FilterTraits<PhWriter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string PhWriter::className() const
 {
   return FilterTraits<PhWriter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid PhWriter::uuid() const
 {
   return FilterTraits<PhWriter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string PhWriter::humanName() const
 {
   return "Export Ph File (Feature Ids)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> PhWriter::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters PhWriter::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters PhWriter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer PhWriter::clone() const
 {
   return std::make_unique<PhWriter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> PhWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -64,6 +77,7 @@ Result<OutputActions> PhWriter::preflightImpl(const DataStructure& ds, const Arg
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> PhWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

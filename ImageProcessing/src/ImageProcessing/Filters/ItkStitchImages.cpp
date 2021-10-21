@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkStitchImages::name() const
 {
   return FilterTraits<ItkStitchImages>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkStitchImages::className() const
 {
   return FilterTraits<ItkStitchImages>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkStitchImages::uuid() const
 {
   return FilterTraits<ItkStitchImages>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkStitchImages::humanName() const
 {
   return "Stitch Images (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkStitchImages::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkStitchImages::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters ItkStitchImages::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkStitchImages::clone() const
 {
   return std::make_unique<ItkStitchImages>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkStitchImages::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> ItkStitchImages::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkStitchImages::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

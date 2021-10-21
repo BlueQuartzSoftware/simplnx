@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkImageCalculator::name() const
 {
   return FilterTraits<ItkImageCalculator>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkImageCalculator::className() const
 {
   return FilterTraits<ItkImageCalculator>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkImageCalculator::uuid() const
 {
   return FilterTraits<ItkImageCalculator>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkImageCalculator::humanName() const
 {
   return "Image Calculator (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkImageCalculator::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkImageCalculator::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters ItkImageCalculator::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkImageCalculator::clone() const
 {
   return std::make_unique<ItkImageCalculator>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkImageCalculator::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -67,6 +80,7 @@ Result<OutputActions> ItkImageCalculator::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkImageCalculator::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

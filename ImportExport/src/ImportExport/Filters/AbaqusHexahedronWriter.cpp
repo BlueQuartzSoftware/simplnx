@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AbaqusHexahedronWriter::name() const
 {
   return FilterTraits<AbaqusHexahedronWriter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AbaqusHexahedronWriter::className() const
 {
   return FilterTraits<AbaqusHexahedronWriter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AbaqusHexahedronWriter::uuid() const
 {
   return FilterTraits<AbaqusHexahedronWriter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AbaqusHexahedronWriter::humanName() const
 {
   return "Abaqus Hexahedron Exporter";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AbaqusHexahedronWriter::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AbaqusHexahedronWriter::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters AbaqusHexahedronWriter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AbaqusHexahedronWriter::clone() const
 {
   return std::make_unique<AbaqusHexahedronWriter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AbaqusHexahedronWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> AbaqusHexahedronWriter::preflightImpl(const DataStructure&
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AbaqusHexahedronWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

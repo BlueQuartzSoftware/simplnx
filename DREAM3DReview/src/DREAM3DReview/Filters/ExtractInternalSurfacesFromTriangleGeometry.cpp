@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ExtractInternalSurfacesFromTriangleGeometry::name() const
 {
   return FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ExtractInternalSurfacesFromTriangleGeometry::className() const
 {
   return FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ExtractInternalSurfacesFromTriangleGeometry::uuid() const
 {
   return FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ExtractInternalSurfacesFromTriangleGeometry::humanName() const
 {
   return "Extract Internal Surfaces from Triangle Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ExtractInternalSurfacesFromTriangleGeometry::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Geometry"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
 {
   Parameters params;
@@ -41,11 +52,13 @@ Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExtractInternalSurfacesFromTriangleGeometry::clone() const
 {
   return std::make_unique<ExtractInternalSurfacesFromTriangleGeometry>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ExtractInternalSurfacesFromTriangleGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -64,6 +77,7 @@ Result<OutputActions> ExtractInternalSurfacesFromTriangleGeometry::preflightImpl
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

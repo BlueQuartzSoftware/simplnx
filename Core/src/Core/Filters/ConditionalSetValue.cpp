@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ConditionalSetValue::name() const
 {
   return FilterTraits<ConditionalSetValue>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ConditionalSetValue::className() const
 {
   return FilterTraits<ConditionalSetValue>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ConditionalSetValue::uuid() const
 {
   return FilterTraits<ConditionalSetValue>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ConditionalSetValue::humanName() const
 {
   return "Replace Value in Array (Conditional)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ConditionalSetValue::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ConditionalSetValue::parameters() const
 {
   Parameters params;
@@ -39,11 +50,13 @@ Parameters ConditionalSetValue::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ConditionalSetValue::clone() const
 {
   return std::make_unique<ConditionalSetValue>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ConditionalSetValue::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> ConditionalSetValue::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ConditionalSetValue::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -15,26 +15,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ExportDAMASKFiles::name() const
 {
   return FilterTraits<ExportDAMASKFiles>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ExportDAMASKFiles::className() const
 {
   return FilterTraits<ExportDAMASKFiles>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ExportDAMASKFiles::uuid() const
 {
   return FilterTraits<ExportDAMASKFiles>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ExportDAMASKFiles::humanName() const
 {
   return "Export DAMASK Files";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ExportDAMASKFiles::defaultTags() const
+{
+  return {"#Unsupported", "#SimulationIO"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ExportDAMASKFiles::parameters() const
 {
   Parameters params;
@@ -54,11 +65,13 @@ Parameters ExportDAMASKFiles::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExportDAMASKFiles::clone() const
 {
   return std::make_unique<ExportDAMASKFiles>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ExportDAMASKFiles::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -82,6 +95,7 @@ Result<OutputActions> ExportDAMASKFiles::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ExportDAMASKFiles::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

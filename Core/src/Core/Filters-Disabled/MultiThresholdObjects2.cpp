@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string MultiThresholdObjects2::name() const
 {
   return FilterTraits<MultiThresholdObjects2>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string MultiThresholdObjects2::className() const
 {
   return FilterTraits<MultiThresholdObjects2>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid MultiThresholdObjects2::uuid() const
 {
   return FilterTraits<MultiThresholdObjects2>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string MultiThresholdObjects2::humanName() const
 {
   return "Threshold Objects (Advanced)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> MultiThresholdObjects2::defaultTags() const
+{
+  return {"#Processing", "#Threshold"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MultiThresholdObjects2::parameters() const
 {
   Parameters params;
@@ -38,11 +49,13 @@ Parameters MultiThresholdObjects2::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MultiThresholdObjects2::clone() const
 {
   return std::make_unique<MultiThresholdObjects2>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> MultiThresholdObjects2::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -60,6 +73,7 @@ Result<OutputActions> MultiThresholdObjects2::preflightImpl(const DataStructure&
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> MultiThresholdObjects2::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

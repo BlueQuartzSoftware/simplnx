@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ScaleVolume::name() const
 {
   return FilterTraits<ScaleVolume>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ScaleVolume::className() const
 {
   return FilterTraits<ScaleVolume>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ScaleVolume::uuid() const
 {
   return FilterTraits<ScaleVolume>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ScaleVolume::humanName() const
 {
   return "Change Scaling of Volume";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ScaleVolume::defaultTags() const
+{
+  return {"#Core", "#Spatial"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ScaleVolume::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters ScaleVolume::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ScaleVolume::clone() const
 {
   return std::make_unique<ScaleVolume>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ScaleVolume::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -70,6 +83,7 @@ Result<OutputActions> ScaleVolume::preflightImpl(const DataStructure& ds, const 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ScaleVolume::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

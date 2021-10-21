@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string SteinerCompact::name() const
 {
   return FilterTraits<SteinerCompact>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string SteinerCompact::className() const
 {
   return FilterTraits<SteinerCompact>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid SteinerCompact::uuid() const
 {
   return FilterTraits<SteinerCompact>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string SteinerCompact::humanName() const
 {
   return "Steiner Compact";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> SteinerCompact::defaultTags() const
+{
+  return {"#Reconstruction", "#Anisotropic Alignment"};
+}
+
+//------------------------------------------------------------------------------
 Parameters SteinerCompact::parameters() const
 {
   Parameters params;
@@ -53,11 +64,13 @@ Parameters SteinerCompact::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer SteinerCompact::clone() const
 {
   return std::make_unique<SteinerCompact>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> SteinerCompact::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -81,6 +94,7 @@ Result<OutputActions> SteinerCompact::preflightImpl(const DataStructure& ds, con
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> SteinerCompact::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

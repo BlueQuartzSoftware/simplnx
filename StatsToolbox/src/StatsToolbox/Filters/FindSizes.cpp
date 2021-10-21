@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindSizes::name() const
 {
   return FilterTraits<FindSizes>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindSizes::className() const
 {
   return FilterTraits<FindSizes>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindSizes::uuid() const
 {
   return FilterTraits<FindSizes>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindSizes::humanName() const
 {
   return "Find Feature Sizes";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindSizes::defaultTags() const
+{
+  return {"#Statistics", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindSizes::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters FindSizes::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindSizes::clone() const
 {
   return std::make_unique<FindSizes>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindSizes::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -73,6 +86,7 @@ Result<OutputActions> FindSizes::preflightImpl(const DataStructure& ds, const Ar
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindSizes::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

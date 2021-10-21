@@ -15,26 +15,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string WritePoleFigure::name() const
 {
   return FilterTraits<WritePoleFigure>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string WritePoleFigure::className() const
 {
   return FilterTraits<WritePoleFigure>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid WritePoleFigure::uuid() const
 {
   return FilterTraits<WritePoleFigure>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string WritePoleFigure::humanName() const
 {
   return "Export Pole Figure Images";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> WritePoleFigure::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters WritePoleFigure::parameters() const
 {
   Parameters params;
@@ -64,11 +75,13 @@ Parameters WritePoleFigure::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WritePoleFigure::clone() const
 {
   return std::make_unique<WritePoleFigure>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> WritePoleFigure::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -99,6 +112,7 @@ Result<OutputActions> WritePoleFigure::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> WritePoleFigure::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

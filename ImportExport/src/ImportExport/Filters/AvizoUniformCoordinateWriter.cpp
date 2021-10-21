@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AvizoUniformCoordinateWriter::name() const
 {
   return FilterTraits<AvizoUniformCoordinateWriter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AvizoUniformCoordinateWriter::className() const
 {
   return FilterTraits<AvizoUniformCoordinateWriter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AvizoUniformCoordinateWriter::uuid() const
 {
   return FilterTraits<AvizoUniformCoordinateWriter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AvizoUniformCoordinateWriter::humanName() const
 {
   return "Avizo Uniform Coordinate Exporter";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AvizoUniformCoordinateWriter::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AvizoUniformCoordinateWriter::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters AvizoUniformCoordinateWriter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AvizoUniformCoordinateWriter::clone() const
 {
   return std::make_unique<AvizoUniformCoordinateWriter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AvizoUniformCoordinateWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -69,6 +82,7 @@ Result<OutputActions> AvizoUniformCoordinateWriter::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AvizoUniformCoordinateWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

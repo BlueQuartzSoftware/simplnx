@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ITKPCMTileRegistration::name() const
 {
   return FilterTraits<ITKPCMTileRegistration>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ITKPCMTileRegistration::className() const
 {
   return FilterTraits<ITKPCMTileRegistration>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ITKPCMTileRegistration::uuid() const
 {
   return FilterTraits<ITKPCMTileRegistration>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ITKPCMTileRegistration::humanName() const
 {
   return "ITK::Compute Tile Transformations (PCM Method)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ITKPCMTileRegistration::defaultTags() const
+{
+  return {"#IO", "#Generation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ITKPCMTileRegistration::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters ITKPCMTileRegistration::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKPCMTileRegistration::clone() const
 {
   return std::make_unique<ITKPCMTileRegistration>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ITKPCMTileRegistration::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -69,6 +82,7 @@ Result<OutputActions> ITKPCMTileRegistration::preflightImpl(const DataStructure&
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ITKPCMTileRegistration::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

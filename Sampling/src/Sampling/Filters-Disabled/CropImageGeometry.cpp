@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CropImageGeometry::name() const
 {
   return FilterTraits<CropImageGeometry>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CropImageGeometry::className() const
 {
   return FilterTraits<CropImageGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CropImageGeometry::uuid() const
 {
   return FilterTraits<CropImageGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CropImageGeometry::humanName() const
 {
   return "Crop Geometry (Image)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CropImageGeometry::defaultTags() const
+{
+  return {"#Sampling", "#Croping Cutting"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CropImageGeometry::parameters() const
 {
   Parameters params;
@@ -61,11 +72,13 @@ Parameters CropImageGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CropImageGeometry::clone() const
 {
   return std::make_unique<CropImageGeometry>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CropImageGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -96,6 +109,7 @@ Result<OutputActions> CropImageGeometry::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CropImageGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindLayerStatistics::name() const
 {
   return FilterTraits<FindLayerStatistics>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindLayerStatistics::className() const
 {
   return FilterTraits<FindLayerStatistics>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindLayerStatistics::uuid() const
 {
   return FilterTraits<FindLayerStatistics>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindLayerStatistics::humanName() const
 {
   return "Find Layer Statistics";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindLayerStatistics::defaultTags() const
+{
+  return {"#Statistics", "#Image"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindLayerStatistics::parameters() const
 {
   Parameters params;
@@ -49,11 +60,13 @@ Parameters FindLayerStatistics::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindLayerStatistics::clone() const
 {
   return std::make_unique<FindLayerStatistics>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindLayerStatistics::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -78,6 +91,7 @@ Result<OutputActions> FindLayerStatistics::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindLayerStatistics::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

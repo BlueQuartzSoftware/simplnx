@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ComputeFeatureEigenstrains::name() const
 {
   return FilterTraits<ComputeFeatureEigenstrains>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ComputeFeatureEigenstrains::className() const
 {
   return FilterTraits<ComputeFeatureEigenstrains>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ComputeFeatureEigenstrains::uuid() const
 {
   return FilterTraits<ComputeFeatureEigenstrains>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ComputeFeatureEigenstrains::humanName() const
 {
   return "Compute Eigenstrains by Feature (Grain/Inclusion)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ComputeFeatureEigenstrains::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Registration"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ComputeFeatureEigenstrains::parameters() const
 {
   Parameters params;
@@ -62,11 +73,13 @@ Parameters ComputeFeatureEigenstrains::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeFeatureEigenstrains::clone() const
 {
   return std::make_unique<ComputeFeatureEigenstrains>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ComputeFeatureEigenstrains::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -95,6 +108,7 @@ Result<OutputActions> ComputeFeatureEigenstrains::preflightImpl(const DataStruct
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ComputeFeatureEigenstrains::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

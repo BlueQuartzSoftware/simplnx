@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string RemoveFlaggedVertices::name() const
 {
   return FilterTraits<RemoveFlaggedVertices>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string RemoveFlaggedVertices::className() const
 {
   return FilterTraits<RemoveFlaggedVertices>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid RemoveFlaggedVertices::uuid() const
 {
   return FilterTraits<RemoveFlaggedVertices>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string RemoveFlaggedVertices::humanName() const
 {
   return "Remove Flagged Vertices";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> RemoveFlaggedVertices::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Geometry"};
+}
+
+//------------------------------------------------------------------------------
 Parameters RemoveFlaggedVertices::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters RemoveFlaggedVertices::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RemoveFlaggedVertices::clone() const
 {
   return std::make_unique<RemoveFlaggedVertices>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> RemoveFlaggedVertices::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -63,6 +76,7 @@ Result<OutputActions> RemoveFlaggedVertices::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> RemoveFlaggedVertices::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

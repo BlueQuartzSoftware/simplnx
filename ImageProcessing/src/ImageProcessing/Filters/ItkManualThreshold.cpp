@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkManualThreshold::name() const
 {
   return FilterTraits<ItkManualThreshold>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkManualThreshold::className() const
 {
   return FilterTraits<ItkManualThreshold>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkManualThreshold::uuid() const
 {
   return FilterTraits<ItkManualThreshold>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkManualThreshold::humanName() const
 {
   return "Threshold Image (Manual - Single Level) (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkManualThreshold::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkManualThreshold::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters ItkManualThreshold::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkManualThreshold::clone() const
 {
   return std::make_unique<ItkManualThreshold>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkManualThreshold::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -70,6 +83,7 @@ Result<OutputActions> ItkManualThreshold::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkManualThreshold::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

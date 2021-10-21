@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string RegularizeZSpacing::name() const
 {
   return FilterTraits<RegularizeZSpacing>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string RegularizeZSpacing::className() const
 {
   return FilterTraits<RegularizeZSpacing>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid RegularizeZSpacing::uuid() const
 {
   return FilterTraits<RegularizeZSpacing>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string RegularizeZSpacing::humanName() const
 {
   return "Regularize Z Spacing";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> RegularizeZSpacing::defaultTags() const
+{
+  return {"#Sampling", "#Spacing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters RegularizeZSpacing::parameters() const
 {
   Parameters params;
@@ -44,11 +55,13 @@ Parameters RegularizeZSpacing::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RegularizeZSpacing::clone() const
 {
   return std::make_unique<RegularizeZSpacing>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> RegularizeZSpacing::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -67,6 +80,7 @@ Result<OutputActions> RegularizeZSpacing::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> RegularizeZSpacing::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

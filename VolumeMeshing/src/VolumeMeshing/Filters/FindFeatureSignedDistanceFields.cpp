@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindFeatureSignedDistanceFields::name() const
 {
   return FilterTraits<FindFeatureSignedDistanceFields>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindFeatureSignedDistanceFields::className() const
 {
   return FilterTraits<FindFeatureSignedDistanceFields>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindFeatureSignedDistanceFields::uuid() const
 {
   return FilterTraits<FindFeatureSignedDistanceFields>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindFeatureSignedDistanceFields::humanName() const
 {
   return "Find Feature Signed Distance Fields";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindFeatureSignedDistanceFields::defaultTags() const
+{
+  return {"#Volume Meshing", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindFeatureSignedDistanceFields::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters FindFeatureSignedDistanceFields::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindFeatureSignedDistanceFields::clone() const
 {
   return std::make_unique<FindFeatureSignedDistanceFields>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindFeatureSignedDistanceFields::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -65,6 +78,7 @@ Result<OutputActions> FindFeatureSignedDistanceFields::preflightImpl(const DataS
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindFeatureSignedDistanceFields::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

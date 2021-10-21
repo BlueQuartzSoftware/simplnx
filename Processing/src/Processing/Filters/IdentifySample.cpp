@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string IdentifySample::name() const
 {
   return FilterTraits<IdentifySample>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string IdentifySample::className() const
 {
   return FilterTraits<IdentifySample>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid IdentifySample::uuid() const
 {
   return FilterTraits<IdentifySample>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string IdentifySample::humanName() const
 {
   return "Isolate Largest Feature (Identify Sample)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> IdentifySample::defaultTags() const
+{
+  return {"#Processing", "#Cleanup"};
+}
+
+//------------------------------------------------------------------------------
 Parameters IdentifySample::parameters() const
 {
   Parameters params;
@@ -39,11 +50,13 @@ Parameters IdentifySample::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer IdentifySample::clone() const
 {
   return std::make_unique<IdentifySample>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> IdentifySample::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -61,6 +74,7 @@ Result<OutputActions> IdentifySample::preflightImpl(const DataStructure& ds, con
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> IdentifySample::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

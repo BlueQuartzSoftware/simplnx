@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string StatsGeneratorFilter::name() const
 {
   return FilterTraits<StatsGeneratorFilter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string StatsGeneratorFilter::className() const
 {
   return FilterTraits<StatsGeneratorFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid StatsGeneratorFilter::uuid() const
 {
   return FilterTraits<StatsGeneratorFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string StatsGeneratorFilter::humanName() const
 {
   return "StatsGenerator";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> StatsGeneratorFilter::defaultTags() const
+{
+  return {"#Synthetic Building", "#Generation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters StatsGeneratorFilter::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters StatsGeneratorFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer StatsGeneratorFilter::clone() const
 {
   return std::make_unique<StatsGeneratorFilter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> StatsGeneratorFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -74,6 +87,7 @@ Result<OutputActions> StatsGeneratorFilter::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> StatsGeneratorFilter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

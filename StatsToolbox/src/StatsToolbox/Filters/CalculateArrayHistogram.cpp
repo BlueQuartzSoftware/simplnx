@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CalculateArrayHistogram::name() const
 {
   return FilterTraits<CalculateArrayHistogram>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CalculateArrayHistogram::className() const
 {
   return FilterTraits<CalculateArrayHistogram>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CalculateArrayHistogram::uuid() const
 {
   return FilterTraits<CalculateArrayHistogram>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CalculateArrayHistogram::humanName() const
 {
   return "Calculate Frequency Histogram";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CalculateArrayHistogram::defaultTags() const
+{
+  return {"#Statistics", "#Ensemble"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CalculateArrayHistogram::parameters() const
 {
   Parameters params;
@@ -52,11 +63,13 @@ Parameters CalculateArrayHistogram::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CalculateArrayHistogram::clone() const
 {
   return std::make_unique<CalculateArrayHistogram>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CalculateArrayHistogram::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -81,6 +94,7 @@ Result<OutputActions> CalculateArrayHistogram::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CalculateArrayHistogram::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

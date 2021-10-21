@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string SetOriginResolutionImageGeom::name() const
 {
   return FilterTraits<SetOriginResolutionImageGeom>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string SetOriginResolutionImageGeom::className() const
 {
   return FilterTraits<SetOriginResolutionImageGeom>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid SetOriginResolutionImageGeom::uuid() const
 {
   return FilterTraits<SetOriginResolutionImageGeom>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string SetOriginResolutionImageGeom::humanName() const
 {
   return "Set Origin & Spacing (Image)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> SetOriginResolutionImageGeom::defaultTags() const
+{
+  return {"#Core", "#Spatial"};
+}
+
+//------------------------------------------------------------------------------
 Parameters SetOriginResolutionImageGeom::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters SetOriginResolutionImageGeom::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer SetOriginResolutionImageGeom::clone() const
 {
   return std::make_unique<SetOriginResolutionImageGeom>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> SetOriginResolutionImageGeom::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -70,6 +83,7 @@ Result<OutputActions> SetOriginResolutionImageGeom::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> SetOriginResolutionImageGeom::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

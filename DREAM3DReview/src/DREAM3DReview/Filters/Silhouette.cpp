@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string Silhouette::name() const
 {
   return FilterTraits<Silhouette>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string Silhouette::className() const
 {
   return FilterTraits<Silhouette>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid Silhouette::uuid() const
 {
   return FilterTraits<Silhouette>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string Silhouette::humanName() const
 {
   return "Silhouette";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> Silhouette::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Clustering"};
+}
+
+//------------------------------------------------------------------------------
 Parameters Silhouette::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters Silhouette::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer Silhouette::clone() const
 {
   return std::make_unique<Silhouette>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> Silhouette::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> Silhouette::preflightImpl(const DataStructure& ds, const A
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> Silhouette::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

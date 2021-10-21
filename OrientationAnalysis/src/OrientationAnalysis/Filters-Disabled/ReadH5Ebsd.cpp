@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ReadH5Ebsd::name() const
 {
   return FilterTraits<ReadH5Ebsd>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ReadH5Ebsd::className() const
 {
   return FilterTraits<ReadH5Ebsd>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ReadH5Ebsd::uuid() const
 {
   return FilterTraits<ReadH5Ebsd>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ReadH5Ebsd::humanName() const
 {
   return "Import H5EBSD File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ReadH5Ebsd::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ReadH5Ebsd::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters ReadH5Ebsd::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadH5Ebsd::clone() const
 {
   return std::make_unique<ReadH5Ebsd>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ReadH5Ebsd::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -67,6 +80,7 @@ Result<OutputActions> ReadH5Ebsd::preflightImpl(const DataStructure& ds, const A
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ReadH5Ebsd::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

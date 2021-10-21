@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ReplaceValueInArray::name() const
 {
   return FilterTraits<ReplaceValueInArray>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ReplaceValueInArray::className() const
 {
   return FilterTraits<ReplaceValueInArray>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ReplaceValueInArray::uuid() const
 {
   return FilterTraits<ReplaceValueInArray>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ReplaceValueInArray::humanName() const
 {
   return "Replace Value in Array";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ReplaceValueInArray::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ReplaceValueInArray::parameters() const
 {
   Parameters params;
@@ -39,11 +50,13 @@ Parameters ReplaceValueInArray::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReplaceValueInArray::clone() const
 {
   return std::make_unique<ReplaceValueInArray>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ReplaceValueInArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> ReplaceValueInArray::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ReplaceValueInArray::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

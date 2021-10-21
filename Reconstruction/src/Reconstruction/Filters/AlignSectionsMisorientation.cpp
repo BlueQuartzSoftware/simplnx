@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AlignSectionsMisorientation::name() const
 {
   return FilterTraits<AlignSectionsMisorientation>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AlignSectionsMisorientation::className() const
 {
   return FilterTraits<AlignSectionsMisorientation>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AlignSectionsMisorientation::uuid() const
 {
   return FilterTraits<AlignSectionsMisorientation>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AlignSectionsMisorientation::humanName() const
 {
   return "Align Sections (Misorientation)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AlignSectionsMisorientation::defaultTags() const
+{
+  return {"#Reconstruction", "#Alignment"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AlignSectionsMisorientation::parameters() const
 {
   Parameters params;
@@ -55,11 +66,13 @@ Parameters AlignSectionsMisorientation::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AlignSectionsMisorientation::clone() const
 {
   return std::make_unique<AlignSectionsMisorientation>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AlignSectionsMisorientation::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -83,6 +96,7 @@ Result<OutputActions> AlignSectionsMisorientation::preflightImpl(const DataStruc
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AlignSectionsMisorientation::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

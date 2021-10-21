@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string PostSlackMessage::name() const
 {
   return FilterTraits<PostSlackMessage>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string PostSlackMessage::className() const
 {
   return FilterTraits<PostSlackMessage>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid PostSlackMessage::uuid() const
 {
   return FilterTraits<PostSlackMessage>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string PostSlackMessage::humanName() const
 {
   return "Post Slack Message";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> PostSlackMessage::defaultTags() const
+{
+  return {"#Core", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters PostSlackMessage::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters PostSlackMessage::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer PostSlackMessage::clone() const
 {
   return std::make_unique<PostSlackMessage>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> PostSlackMessage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -64,6 +77,7 @@ Result<OutputActions> PostSlackMessage::preflightImpl(const DataStructure& ds, c
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> PostSlackMessage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string DxReader::name() const
 {
   return FilterTraits<DxReader>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string DxReader::className() const
 {
   return FilterTraits<DxReader>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid DxReader::uuid() const
 {
   return FilterTraits<DxReader>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string DxReader::humanName() const
 {
   return "Import Dx File (Feature Ids)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> DxReader::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters DxReader::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters DxReader::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer DxReader::clone() const
 {
   return std::make_unique<DxReader>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> DxReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -74,6 +87,7 @@ Result<OutputActions> DxReader::preflightImpl(const DataStructure& ds, const Arg
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> DxReader::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

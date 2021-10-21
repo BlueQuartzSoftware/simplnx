@@ -13,26 +13,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FeatureDataCSVWriter::name() const
 {
   return FilterTraits<FeatureDataCSVWriter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FeatureDataCSVWriter::className() const
 {
   return FilterTraits<FeatureDataCSVWriter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FeatureDataCSVWriter::uuid() const
 {
   return FilterTraits<FeatureDataCSVWriter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FeatureDataCSVWriter::humanName() const
 {
   return "Export Feature Data as CSV File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FeatureDataCSVWriter::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FeatureDataCSVWriter::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters FeatureDataCSVWriter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FeatureDataCSVWriter::clone() const
 {
   return std::make_unique<FeatureDataCSVWriter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FeatureDataCSVWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -72,6 +85,7 @@ Result<OutputActions> FeatureDataCSVWriter::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FeatureDataCSVWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

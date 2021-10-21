@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string RegularGridSampleSurfaceMesh::name() const
 {
   return FilterTraits<RegularGridSampleSurfaceMesh>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string RegularGridSampleSurfaceMesh::className() const
 {
   return FilterTraits<RegularGridSampleSurfaceMesh>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid RegularGridSampleSurfaceMesh::uuid() const
 {
   return FilterTraits<RegularGridSampleSurfaceMesh>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string RegularGridSampleSurfaceMesh::humanName() const
 {
   return "Sample Triangle Geometry on Regular Grid";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> RegularGridSampleSurfaceMesh::defaultTags() const
+{
+  return {"#Sampling", "#Spacing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters RegularGridSampleSurfaceMesh::parameters() const
 {
   Parameters params;
@@ -51,11 +62,13 @@ Parameters RegularGridSampleSurfaceMesh::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RegularGridSampleSurfaceMesh::clone() const
 {
   return std::make_unique<RegularGridSampleSurfaceMesh>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> RegularGridSampleSurfaceMesh::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -80,6 +93,7 @@ Result<OutputActions> RegularGridSampleSurfaceMesh::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> RegularGridSampleSurfaceMesh::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

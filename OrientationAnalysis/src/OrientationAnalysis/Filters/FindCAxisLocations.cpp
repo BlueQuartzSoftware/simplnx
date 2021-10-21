@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindCAxisLocations::name() const
 {
   return FilterTraits<FindCAxisLocations>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindCAxisLocations::className() const
 {
   return FilterTraits<FindCAxisLocations>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindCAxisLocations::uuid() const
 {
   return FilterTraits<FindCAxisLocations>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindCAxisLocations::humanName() const
 {
   return "Find C-Axis Locations";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindCAxisLocations::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindCAxisLocations::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters FindCAxisLocations::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindCAxisLocations::clone() const
 {
   return std::make_unique<FindCAxisLocations>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindCAxisLocations::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> FindCAxisLocations::preflightImpl(const DataStructure& ds,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindCAxisLocations::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

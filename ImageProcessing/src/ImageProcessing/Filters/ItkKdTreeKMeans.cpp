@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkKdTreeKMeans::name() const
 {
   return FilterTraits<ItkKdTreeKMeans>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkKdTreeKMeans::className() const
 {
   return FilterTraits<ItkKdTreeKMeans>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkKdTreeKMeans::uuid() const
 {
   return FilterTraits<ItkKdTreeKMeans>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkKdTreeKMeans::humanName() const
 {
   return "K-d Tree K Means (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkKdTreeKMeans::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkKdTreeKMeans::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters ItkKdTreeKMeans::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkKdTreeKMeans::clone() const
 {
   return std::make_unique<ItkKdTreeKMeans>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkKdTreeKMeans::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -63,6 +76,7 @@ Result<OutputActions> ItkKdTreeKMeans::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkKdTreeKMeans::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

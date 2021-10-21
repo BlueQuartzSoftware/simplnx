@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string MinSize::name() const
 {
   return FilterTraits<MinSize>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string MinSize::className() const
 {
   return FilterTraits<MinSize>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid MinSize::uuid() const
 {
   return FilterTraits<MinSize>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string MinSize::humanName() const
 {
   return "Minimum Size";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> MinSize::defaultTags() const
+{
+  return {"#Processing", "#Cleanup"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MinSize::parameters() const
 {
   Parameters params;
@@ -51,11 +62,13 @@ Parameters MinSize::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MinSize::clone() const
 {
   return std::make_unique<MinSize>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> MinSize::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -78,6 +91,7 @@ Result<OutputActions> MinSize::preflightImpl(const DataStructure& ds, const Argu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> MinSize::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

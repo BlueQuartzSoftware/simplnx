@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string InsertAtoms::name() const
 {
   return FilterTraits<InsertAtoms>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string InsertAtoms::className() const
 {
   return FilterTraits<InsertAtoms>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid InsertAtoms::uuid() const
 {
   return FilterTraits<InsertAtoms>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string InsertAtoms::humanName() const
 {
   return "Insert Atoms";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> InsertAtoms::defaultTags() const
+{
+  return {"#Synthetic Building", "#Packing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters InsertAtoms::parameters() const
 {
   Parameters params;
@@ -49,11 +60,13 @@ Parameters InsertAtoms::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer InsertAtoms::clone() const
 {
   return std::make_unique<InsertAtoms>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> InsertAtoms::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -76,6 +89,7 @@ Result<OutputActions> InsertAtoms::preflightImpl(const DataStructure& ds, const 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> InsertAtoms::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

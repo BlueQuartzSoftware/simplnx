@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CreateBsamFile::name() const
 {
   return FilterTraits<CreateBsamFile>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CreateBsamFile::className() const
 {
   return FilterTraits<CreateBsamFile>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CreateBsamFile::uuid() const
 {
   return FilterTraits<CreateBsamFile>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CreateBsamFile::humanName() const
 {
   return "Create BSAM File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CreateBsamFile::defaultTags() const
+{
+  return {"#Unsupported", "#SimulationIO"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CreateBsamFile::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters CreateBsamFile::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateBsamFile::clone() const
 {
   return std::make_unique<CreateBsamFile>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CreateBsamFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -66,6 +79,7 @@ Result<OutputActions> CreateBsamFile::preflightImpl(const DataStructure& ds, con
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CreateBsamFile::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

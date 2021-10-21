@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string MergeTwins::name() const
 {
   return FilterTraits<MergeTwins>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string MergeTwins::className() const
 {
   return FilterTraits<MergeTwins>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid MergeTwins::uuid() const
 {
   return FilterTraits<MergeTwins>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string MergeTwins::humanName() const
 {
   return "Merge Twins";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> MergeTwins::defaultTags() const
+{
+  return {"#Reconstruction", "#Grouping"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MergeTwins::parameters() const
 {
   Parameters params;
@@ -58,11 +69,13 @@ Parameters MergeTwins::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MergeTwins::clone() const
 {
   return std::make_unique<MergeTwins>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> MergeTwins::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -91,6 +104,7 @@ Result<OutputActions> MergeTwins::preflightImpl(const DataStructure& ds, const A
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> MergeTwins::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

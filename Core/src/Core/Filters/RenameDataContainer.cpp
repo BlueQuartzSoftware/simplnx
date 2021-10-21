@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string RenameDataContainer::name() const
 {
   return FilterTraits<RenameDataContainer>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string RenameDataContainer::className() const
 {
   return FilterTraits<RenameDataContainer>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid RenameDataContainer::uuid() const
 {
   return FilterTraits<RenameDataContainer>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string RenameDataContainer::humanName() const
 {
   return "Rename Data Container";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> RenameDataContainer::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters RenameDataContainer::parameters() const
 {
   Parameters params;
@@ -38,11 +49,13 @@ Parameters RenameDataContainer::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RenameDataContainer::clone() const
 {
   return std::make_unique<RenameDataContainer>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> RenameDataContainer::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -60,6 +73,7 @@ Result<OutputActions> RenameDataContainer::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> RenameDataContainer::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

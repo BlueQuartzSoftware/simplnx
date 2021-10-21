@@ -15,26 +15,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FeatureInfoReader::name() const
 {
   return FilterTraits<FeatureInfoReader>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FeatureInfoReader::className() const
 {
   return FilterTraits<FeatureInfoReader>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FeatureInfoReader::uuid() const
 {
   return FilterTraits<FeatureInfoReader>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FeatureInfoReader::humanName() const
 {
   return "Import Feature Info File";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FeatureInfoReader::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FeatureInfoReader::parameters() const
 {
   Parameters params;
@@ -60,11 +71,13 @@ Parameters FeatureInfoReader::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FeatureInfoReader::clone() const
 {
   return std::make_unique<FeatureInfoReader>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FeatureInfoReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -91,6 +104,7 @@ Result<OutputActions> FeatureInfoReader::preflightImpl(const DataStructure& ds, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FeatureInfoReader::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

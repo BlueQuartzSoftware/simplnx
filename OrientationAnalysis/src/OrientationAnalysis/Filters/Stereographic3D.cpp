@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string Stereographic3D::name() const
 {
   return FilterTraits<Stereographic3D>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string Stereographic3D::className() const
 {
   return FilterTraits<Stereographic3D>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid Stereographic3D::uuid() const
 {
   return FilterTraits<Stereographic3D>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string Stereographic3D::humanName() const
 {
   return "Stereographic 3D Coordinates";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> Stereographic3D::defaultTags() const
+{
+  return {"#Utilities", "#Conversion"};
+}
+
+//------------------------------------------------------------------------------
 Parameters Stereographic3D::parameters() const
 {
   Parameters params;
@@ -40,11 +51,13 @@ Parameters Stereographic3D::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer Stereographic3D::clone() const
 {
   return std::make_unique<Stereographic3D>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> Stereographic3D::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -62,6 +75,7 @@ Result<OutputActions> Stereographic3D::preflightImpl(const DataStructure& ds, co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> Stereographic3D::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

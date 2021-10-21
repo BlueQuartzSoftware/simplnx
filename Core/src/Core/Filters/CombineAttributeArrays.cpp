@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CombineAttributeArrays::name() const
 {
   return FilterTraits<CombineAttributeArrays>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string CombineAttributeArrays::className() const
 {
   return FilterTraits<CombineAttributeArrays>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CombineAttributeArrays::uuid() const
 {
   return FilterTraits<CombineAttributeArrays>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CombineAttributeArrays::humanName() const
 {
   return "Combine Attribute Arrays";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CombineAttributeArrays::defaultTags() const
+{
+  return {"#Core", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CombineAttributeArrays::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters CombineAttributeArrays::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CombineAttributeArrays::clone() const
 {
   return std::make_unique<CombineAttributeArrays>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> CombineAttributeArrays::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -66,6 +79,7 @@ Result<OutputActions> CombineAttributeArrays::preflightImpl(const DataStructure&
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CombineAttributeArrays::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

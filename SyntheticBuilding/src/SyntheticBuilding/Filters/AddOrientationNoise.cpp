@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string AddOrientationNoise::name() const
 {
   return FilterTraits<AddOrientationNoise>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string AddOrientationNoise::className() const
 {
   return FilterTraits<AddOrientationNoise>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AddOrientationNoise::uuid() const
 {
   return FilterTraits<AddOrientationNoise>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AddOrientationNoise::humanName() const
 {
   return "Add Orientation Noise";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AddOrientationNoise::defaultTags() const
+{
+  return {"#Synthetic Building", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AddOrientationNoise::parameters() const
 {
   Parameters params;
@@ -39,11 +50,13 @@ Parameters AddOrientationNoise::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AddOrientationNoise::clone() const
 {
   return std::make_unique<AddOrientationNoise>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> AddOrientationNoise::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -61,6 +74,7 @@ Result<OutputActions> AddOrientationNoise::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AddOrientationNoise::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

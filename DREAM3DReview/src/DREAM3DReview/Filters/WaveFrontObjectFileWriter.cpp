@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string WaveFrontObjectFileWriter::name() const
 {
   return FilterTraits<WaveFrontObjectFileWriter>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string WaveFrontObjectFileWriter::className() const
 {
   return FilterTraits<WaveFrontObjectFileWriter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid WaveFrontObjectFileWriter::uuid() const
 {
   return FilterTraits<WaveFrontObjectFileWriter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string WaveFrontObjectFileWriter::humanName() const
 {
   return "Surface Mesh To Wavefront";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> WaveFrontObjectFileWriter::defaultTags() const
+{
+  return {"#Unsupported", "#DREAM3DReview"};
+}
+
+//------------------------------------------------------------------------------
 Parameters WaveFrontObjectFileWriter::parameters() const
 {
   Parameters params;
@@ -42,11 +53,13 @@ Parameters WaveFrontObjectFileWriter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WaveFrontObjectFileWriter::clone() const
 {
   return std::make_unique<WaveFrontObjectFileWriter>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> WaveFrontObjectFileWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -64,6 +77,7 @@ Result<OutputActions> WaveFrontObjectFileWriter::preflightImpl(const DataStructu
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> WaveFrontObjectFileWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

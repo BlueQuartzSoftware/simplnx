@@ -12,26 +12,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ExtractVertexGeometry::name() const
 {
   return FilterTraits<ExtractVertexGeometry>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ExtractVertexGeometry::className() const
 {
   return FilterTraits<ExtractVertexGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ExtractVertexGeometry::uuid() const
 {
   return FilterTraits<ExtractVertexGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ExtractVertexGeometry::humanName() const
 {
   return "Extract Vertex Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ExtractVertexGeometry::defaultTags() const
+{
+  return {"#Core", "#Conversion"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ExtractVertexGeometry::parameters() const
 {
   Parameters params;
@@ -49,11 +60,13 @@ Parameters ExtractVertexGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExtractVertexGeometry::clone() const
 {
   return std::make_unique<ExtractVertexGeometry>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ExtractVertexGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -75,6 +88,7 @@ Result<OutputActions> ExtractVertexGeometry::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ExtractVertexGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

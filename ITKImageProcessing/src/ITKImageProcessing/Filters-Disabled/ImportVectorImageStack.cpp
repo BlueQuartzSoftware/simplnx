@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportVectorImageStack::name() const
 {
   return FilterTraits<ImportVectorImageStack>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ImportVectorImageStack::className() const
 {
   return FilterTraits<ImportVectorImageStack>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportVectorImageStack::uuid() const
 {
   return FilterTraits<ImportVectorImageStack>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportVectorImageStack::humanName() const
 {
   return "Import Images (3D Vector Stack)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportVectorImageStack::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportVectorImageStack::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters ImportVectorImageStack::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportVectorImageStack::clone() const
 {
   return std::make_unique<ImportVectorImageStack>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ImportVectorImageStack::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -74,6 +87,7 @@ Result<OutputActions> ImportVectorImageStack::preflightImpl(const DataStructure&
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ImportVectorImageStack::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

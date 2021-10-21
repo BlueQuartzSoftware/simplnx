@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ITKImportImageStack::name() const
 {
   return FilterTraits<ITKImportImageStack>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ITKImportImageStack::className() const
 {
   return FilterTraits<ITKImportImageStack>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ITKImportImageStack::uuid() const
 {
   return FilterTraits<ITKImportImageStack>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ITKImportImageStack::humanName() const
 {
   return "ITK::Import Images (3D Stack)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ITKImportImageStack::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ITKImportImageStack::parameters() const
 {
   Parameters params;
@@ -45,11 +56,13 @@ Parameters ITKImportImageStack::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKImportImageStack::clone() const
 {
   return std::make_unique<ITKImportImageStack>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ITKImportImageStack::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -71,6 +84,7 @@ Result<OutputActions> ITKImportImageStack::preflightImpl(const DataStructure& ds
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ITKImportImageStack::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

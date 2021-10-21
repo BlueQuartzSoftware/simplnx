@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ItkDiscreteGaussianBlur::name() const
 {
   return FilterTraits<ItkDiscreteGaussianBlur>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ItkDiscreteGaussianBlur::className() const
 {
   return FilterTraits<ItkDiscreteGaussianBlur>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ItkDiscreteGaussianBlur::uuid() const
 {
   return FilterTraits<ItkDiscreteGaussianBlur>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ItkDiscreteGaussianBlur::humanName() const
 {
   return "Discrete Gaussian Blur (ImageProcessing)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ItkDiscreteGaussianBlur::defaultTags() const
+{
+  return {"#Unsupported", "#Misc"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ItkDiscreteGaussianBlur::parameters() const
 {
   Parameters params;
@@ -46,11 +57,13 @@ Parameters ItkDiscreteGaussianBlur::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ItkDiscreteGaussianBlur::clone() const
 {
   return std::make_unique<ItkDiscreteGaussianBlur>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ItkDiscreteGaussianBlur::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -70,6 +83,7 @@ Result<OutputActions> ItkDiscreteGaussianBlur::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ItkDiscreteGaussianBlur::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

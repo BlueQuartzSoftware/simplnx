@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string KMedoids::name() const
 {
   return FilterTraits<KMedoids>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string KMedoids::className() const
 {
   return FilterTraits<KMedoids>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid KMedoids::uuid() const
 {
   return FilterTraits<KMedoids>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string KMedoids::humanName() const
 {
   return "K Medoids";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> KMedoids::defaultTags() const
+{
+  return {"#DREAM3D Review", "#Clustering"};
+}
+
+//------------------------------------------------------------------------------
 Parameters KMedoids::parameters() const
 {
   Parameters params;
@@ -49,11 +60,13 @@ Parameters KMedoids::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer KMedoids::clone() const
 {
   return std::make_unique<KMedoids>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> KMedoids::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -77,6 +90,7 @@ Result<OutputActions> KMedoids::preflightImpl(const DataStructure& ds, const Arg
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> KMedoids::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

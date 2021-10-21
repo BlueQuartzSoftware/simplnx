@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindRelativeMotionBetweenSlices::name() const
 {
   return FilterTraits<FindRelativeMotionBetweenSlices>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindRelativeMotionBetweenSlices::className() const
 {
   return FilterTraits<FindRelativeMotionBetweenSlices>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindRelativeMotionBetweenSlices::uuid() const
 {
   return FilterTraits<FindRelativeMotionBetweenSlices>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindRelativeMotionBetweenSlices::humanName() const
 {
   return "Find Relative Motion Between Slices";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindRelativeMotionBetweenSlices::defaultTags() const
+{
+  return {"#Processing", "#Image"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindRelativeMotionBetweenSlices::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters FindRelativeMotionBetweenSlices::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindRelativeMotionBetweenSlices::clone() const
 {
   return std::make_unique<FindRelativeMotionBetweenSlices>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindRelativeMotionBetweenSlices::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -76,6 +89,7 @@ Result<OutputActions> FindRelativeMotionBetweenSlices::preflightImpl(const DataS
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindRelativeMotionBetweenSlices::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

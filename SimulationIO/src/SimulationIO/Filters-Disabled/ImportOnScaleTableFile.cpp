@@ -14,26 +14,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportOnScaleTableFile::name() const
 {
   return FilterTraits<ImportOnScaleTableFile>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ImportOnScaleTableFile::className() const
 {
   return FilterTraits<ImportOnScaleTableFile>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportOnScaleTableFile::uuid() const
 {
   return FilterTraits<ImportOnScaleTableFile>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportOnScaleTableFile::humanName() const
 {
   return "Import Onscale Table File (.flxtbl)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportOnScaleTableFile::defaultTags() const
+{
+  return {"#Unsupported", "#SimulationIO"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportOnScaleTableFile::parameters() const
 {
   Parameters params;
@@ -53,11 +64,13 @@ Parameters ImportOnScaleTableFile::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportOnScaleTableFile::clone() const
 {
   return std::make_unique<ImportOnScaleTableFile>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> ImportOnScaleTableFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -82,6 +95,7 @@ Result<OutputActions> ImportOnScaleTableFile::preflightImpl(const DataStructure&
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ImportOnScaleTableFile::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindFeatureReferenceCAxisMisorientations::name() const
 {
   return FilterTraits<FindFeatureReferenceCAxisMisorientations>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindFeatureReferenceCAxisMisorientations::className() const
 {
   return FilterTraits<FindFeatureReferenceCAxisMisorientations>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindFeatureReferenceCAxisMisorientations::uuid() const
 {
   return FilterTraits<FindFeatureReferenceCAxisMisorientations>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindFeatureReferenceCAxisMisorientations::humanName() const
 {
   return "Find Feature Reference C-Axis Misalignments";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindFeatureReferenceCAxisMisorientations::defaultTags() const
+{
+  return {"#Statistics", "#Crystallography"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindFeatureReferenceCAxisMisorientations::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters FindFeatureReferenceCAxisMisorientations::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindFeatureReferenceCAxisMisorientations::clone() const
 {
   return std::make_unique<FindFeatureReferenceCAxisMisorientations>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindFeatureReferenceCAxisMisorientations::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -74,6 +87,7 @@ Result<OutputActions> FindFeatureReferenceCAxisMisorientations::preflightImpl(co
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindFeatureReferenceCAxisMisorientations::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

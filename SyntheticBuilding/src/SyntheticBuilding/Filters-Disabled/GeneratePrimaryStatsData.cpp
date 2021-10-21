@@ -15,26 +15,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string GeneratePrimaryStatsData::name() const
 {
   return FilterTraits<GeneratePrimaryStatsData>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string GeneratePrimaryStatsData::className() const
 {
   return FilterTraits<GeneratePrimaryStatsData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid GeneratePrimaryStatsData::uuid() const
 {
   return FilterTraits<GeneratePrimaryStatsData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string GeneratePrimaryStatsData::humanName() const
 {
   return "Generate Primary StatsData";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> GeneratePrimaryStatsData::defaultTags() const
+{
+  return {"#Unsupported", "#StatsGenerator"};
+}
+
+//------------------------------------------------------------------------------
 Parameters GeneratePrimaryStatsData::parameters() const
 {
   Parameters params;
@@ -66,11 +77,13 @@ Parameters GeneratePrimaryStatsData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer GeneratePrimaryStatsData::clone() const
 {
   return std::make_unique<GeneratePrimaryStatsData>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> GeneratePrimaryStatsData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -105,6 +118,7 @@ Result<OutputActions> GeneratePrimaryStatsData::preflightImpl(const DataStructur
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> GeneratePrimaryStatsData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

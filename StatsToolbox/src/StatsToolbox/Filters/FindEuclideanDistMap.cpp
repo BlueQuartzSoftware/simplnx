@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindEuclideanDistMap::name() const
 {
   return FilterTraits<FindEuclideanDistMap>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string FindEuclideanDistMap::className() const
 {
   return FilterTraits<FindEuclideanDistMap>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindEuclideanDistMap::uuid() const
 {
   return FilterTraits<FindEuclideanDistMap>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindEuclideanDistMap::humanName() const
 {
   return "Find Euclidean Distance Map";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindEuclideanDistMap::defaultTags() const
+{
+  return {"#Statistics", "#Morphological"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindEuclideanDistMap::parameters() const
 {
   Parameters params;
@@ -54,11 +65,13 @@ Parameters FindEuclideanDistMap::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindEuclideanDistMap::clone() const
 {
   return std::make_unique<FindEuclideanDistMap>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> FindEuclideanDistMap::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -84,6 +97,7 @@ Result<OutputActions> FindEuclideanDistMap::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindEuclideanDistMap::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************

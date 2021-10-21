@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string DetectEllipsoids::name() const
 {
   return FilterTraits<DetectEllipsoids>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string DetectEllipsoids::className() const
 {
   return FilterTraits<DetectEllipsoids>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid DetectEllipsoids::uuid() const
 {
   return FilterTraits<DetectEllipsoids>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string DetectEllipsoids::humanName() const
 {
   return "Detect 2D Ellipses";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> DetectEllipsoids::defaultTags() const
+{
+  return {"#Processing", "#Generation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters DetectEllipsoids::parameters() const
 {
   Parameters params;
@@ -52,11 +63,13 @@ Parameters DetectEllipsoids::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer DetectEllipsoids::clone() const
 {
   return std::make_unique<DetectEllipsoids>();
 }
 
+//------------------------------------------------------------------------------
 Result<OutputActions> DetectEllipsoids::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
@@ -85,6 +98,7 @@ Result<OutputActions> DetectEllipsoids::preflightImpl(const DataStructure& ds, c
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> DetectEllipsoids::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
