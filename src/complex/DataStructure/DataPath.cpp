@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include <fmt/format.h>
+
 #include "complex/Common/Types.hpp"
 
 using namespace complex;
@@ -63,6 +65,8 @@ std::vector<T> split(std::string_view string, char delimiter, bool ignoreEmpty =
 }
 } // namespace
 
+namespace complex
+{
 DataPath::DataPath() = default;
 
 DataPath::DataPath(std::vector<std::string> path)
@@ -70,13 +74,13 @@ DataPath::DataPath(std::vector<std::string> path)
 {
 }
 
-DataPath::DataPath(const DataPath& other) = default;
+DataPath::DataPath(const DataPath& rhs) = default;
 
-DataPath::DataPath(DataPath&& other) noexcept = default;
+DataPath::DataPath(DataPath&& rhs) noexcept = default;
 
-DataPath& DataPath::operator=(const DataPath& other) = default;
+DataPath& DataPath::operator=(const DataPath& rhs) = default;
 
-DataPath& DataPath::operator=(DataPath&& other) noexcept = default;
+DataPath& DataPath::operator=(DataPath&& rhs) noexcept = default;
 
 DataPath::~DataPath() noexcept = default;
 
@@ -87,7 +91,7 @@ std::optional<DataPath> DataPath::FromString(std::string_view string, char delim
   {
     return {};
   }
-  return DataPath(parts);
+  return DataPath(std::move(parts));
 }
 
 usize DataPath::getLength() const
@@ -106,7 +110,7 @@ std::string DataPath::getTargetName() const
   {
     return "";
   }
-  return m_Path.at(getLength() - 1);
+  return m_Path.back();
 }
 
 std::vector<std::string> DataPath::getPathVector() const
@@ -123,76 +127,40 @@ DataPath DataPath::getParent() const
 
   std::vector<std::string> parentPath = m_Path;
   parentPath.pop_back();
-  return DataPath(parentPath);
+  return DataPath(std::move(parentPath));
 }
 
-DataPath DataPath::createChildPath(const std::string& name) const
+DataPath DataPath::createChildPath(std::string name) const
 {
-  std::vector<std::string> path(m_Path);
-  path.push_back(name);
-  return DataPath(path);
+  std::vector<std::string> path = m_Path;
+  path.push_back(std::move(name));
+  return DataPath(std::move(path));
 }
 
-DataPath DataPath::replace(const std::string& symbol, const std::string& targetName)
+DataPath DataPath::replace(std::string_view symbol, std::string_view targetName) const
 {
   std::vector<std::string> newPath = m_Path;
   std::replace(newPath.begin(), newPath.end(), symbol, targetName);
-  return DataPath(newPath);
+  return DataPath(std::move(newPath));
 }
 
 bool DataPath::operator==(const DataPath& rhs) const
 {
-  if(rhs.m_Path.size() != m_Path.size())
-  {
-    return false;
-  }
-
-  for(usize i = 0; i < m_Path.size(); i++)
-  {
-    if(rhs.m_Path[i] != m_Path[i])
-    {
-      return false;
-    }
-  }
-  return true;
+  return m_Path == rhs.m_Path;
 }
 
 bool DataPath::operator!=(const DataPath& rhs) const
 {
-  if(rhs.m_Path.size() != m_Path.size())
-  {
-    return true;
-  }
-
-  for(usize i = 0; i < m_Path.size(); i++)
-  {
-    if(rhs.m_Path[i] != m_Path[i])
-    {
-      return true;
-    }
-  }
-  return false;
+  return !(*this == rhs);
 }
 
 const std::string& DataPath::operator[](usize index) const
 {
-  if(index >= m_Path.size())
-  {
-    throw std::runtime_error("");
-  }
-  return m_Path[index];
+  return m_Path.at(index);
 }
 
-std::string DataPath::toString(const std::string& div) const
+std::string DataPath::toString(std::string_view div) const
 {
-  std::string output;
-  for(usize i = 0; i < getLength(); i++)
-  {
-    if(i != 0)
-    {
-      output += div;
-    }
-    output += m_Path[i];
-  }
-  return output;
+  return fmt::format("{}", fmt::join(m_Path, div));
 }
+} // namespace complex
