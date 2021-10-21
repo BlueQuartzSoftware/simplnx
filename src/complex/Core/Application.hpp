@@ -83,11 +83,12 @@ public:
   std::unordered_set<AbstractPlugin*> getPluginList() const;
 
   /**
-   * @brief
+   * @brief Returns the loaded plugin with the given uuid.
+   * Returns nullptr if no match.
    * @param pluginName
    * @return
    */
-  AbstractPlugin* getPlugin(const std::string& pluginName) const;
+  const AbstractPlugin* getPlugin(const Uuid& uuid) const;
 
   /**
    * @brief Returns a pointer to the JsonPipelineBuilder. It is the caller's
@@ -129,7 +130,7 @@ private:
    * FilterList with the new IFilters.
    * @param path
    */
-  void loadPlugin(const std::string& path, bool verbose = false);
+  void loadPlugin(const std::filesystem::path& path, bool verbose = false);
 
   //////////////////
   // Static Variable

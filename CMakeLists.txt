@@ -15,32 +15,13 @@ project(complex
   LANGUAGES CXX
 )
 
-# ---------- Setup output Directories -------------------------
-if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
-    ${complex_BINARY_DIR}/Bin
-    CACHE PATH
-    "Single Directory for all Libraries"
-    )
-endif()
+set(COMPLEX_BIN_DIR ${PROJECT_BINARY_DIR}/bin)
 
-# --------- Setup the Executable output Directory -------------
-if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
-    ${complex_BINARY_DIR}/Bin
-    CACHE PATH
-    "Single Directory for all Executables."
-    )
-endif()
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${COMPLEX_BIN_DIR} CACHE PATH "Single Directory for all Libraries")
 
-# --------- Setup the Executable output Directory -------------
-if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
-    ${complex_BINARY_DIR}/Bin
-    CACHE PATH
-    "Single Directory for all static libraries."
-    )
-endif()
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${COMPLEX_BIN_DIR} CACHE PATH "Single Directory for all Executables.")
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${COMPLEX_BIN_DIR} CACHE PATH "Single Directory for all static libraries.")
 
 list(APPEND CMAKE_MODULE_PATH ${complex_SOURCE_DIR}/cmake)
 

@@ -8,30 +8,26 @@
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
 
-#include "complex/unit_test/complex_test_dirs.h"
+#include "complex/unit_test/complex_test_dirs.hpp"
 
 using namespace complex;
 namespace fs = std::filesystem;
 
-namespace PluginTest
+namespace
 {
-namespace UnitTest
-{
-constexpr StringLiteral k_TestOnePluginId = "01ff618b-781f-4ac0-b9ac-43f26ce1854f";
-constexpr StringLiteral k_TestFilterId = "5502c3f7-37a8-4a86-b003-1c856be02491";
-const FilterHandle k_TestFilterHandle(Uuid::FromString(k_TestFilterId.str()).value(), Uuid::FromString(k_TestOnePluginId.str()).value());
+constexpr Uuid k_TestOnePluginId = *Uuid::FromString("01ff618b-781f-4ac0-b9ac-43f26ce1854f");
+constexpr Uuid k_TestFilterId = *Uuid::FromString("5502c3f7-37a8-4a86-b003-1c856be02491");
+const FilterHandle k_TestFilterHandle(k_TestFilterId, k_TestOnePluginId);
 
-constexpr StringLiteral k_TestTwoPluginId = "05cc618b-781f-4ac0-b9ac-43f33ce1854e";
-constexpr StringLiteral k_Test2FilterId = "ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04";
-const FilterHandle k_Test2FilterHandle(Uuid::FromString(k_Test2FilterId.str()).value(), Uuid::FromString(k_TestTwoPluginId.str()).value());
-} // namespace UnitTest
-} // namespace PluginTest
+constexpr Uuid k_TestTwoPluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f33ce1854e");
+constexpr Uuid k_Test2FilterId = *Uuid::FromString("ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04");
+const FilterHandle k_Test2FilterHandle(k_Test2FilterId, k_TestTwoPluginId);
+} // namespace
 
 TEST_CASE("Test Loading Plugins")
 {
   Application app;
-  fs::path pluginPath = fmt::format("{}/{}/", complex::unit_test::k_BuildDir, complex::unit_test::k_BuildTypeDir);
-  app.loadPlugins(pluginPath, false);
+  app.loadPlugins(unit_test::k_BuildDir.view());
 
   auto* filterList = Application::Instance()->getFilterList();
   const auto& filterHandles = filterList->getFilterHandles();
@@ -43,13 +39,13 @@ TEST_CASE("Test Loading Plugins")
   DataStructure ds;
   {
 
-    IFilter::UniquePointer filter = filterList->createFilter(PluginTest::UnitTest::k_TestFilterHandle);
+    IFilter::UniquePointer filter = filterList->createFilter(k_TestFilterHandle);
     REQUIRE(filter != nullptr);
     REQUIRE(filter->humanName() == "Test Filter");
     filter->execute(ds, {});
   }
   {
-    IFilter::UniquePointer filter2 = filterList->createFilter(PluginTest::UnitTest::k_Test2FilterHandle);
+    IFilter::UniquePointer filter2 = filterList->createFilter(k_Test2FilterHandle);
     REQUIRE(filter2 != nullptr);
     REQUIRE(filter2->humanName() == "Test Filter 2");
     filter2->execute(ds, {});
@@ -59,8 +55,7 @@ TEST_CASE("Test Loading Plugins")
 TEST_CASE("Test Singleton")
 {
   Application* app = new Application();
-  fs::path pluginPath = fmt::format("{}/{}/", complex::unit_test::k_BuildDir, complex::unit_test::k_BuildTypeDir);
-  app->loadPlugins(pluginPath, false);
+  app->loadPlugins(unit_test::k_BuildDir.view());
 
   REQUIRE(app != nullptr);
 
@@ -77,13 +72,13 @@ TEST_CASE("Test Singleton")
   // Create and execute filters
   DataStructure ds;
   {
-    IFilter::UniquePointer filter = filterList->createFilter(PluginTest::UnitTest::k_TestFilterHandle);
+    IFilter::UniquePointer filter = filterList->createFilter(k_TestFilterHandle);
     REQUIRE(filter != nullptr);
     REQUIRE(filter->humanName() == "Test Filter");
     filter->execute(ds, {});
   }
   {
-    IFilter::UniquePointer filter2 = filterList->createFilter(PluginTest::UnitTest::k_Test2FilterHandle);
+    IFilter::UniquePointer filter2 = filterList->createFilter(k_Test2FilterHandle);
     REQUIRE(filter2 != nullptr);
     REQUIRE(filter2->humanName() == "Test Filter 2");
     filter2->execute(ds, {});
