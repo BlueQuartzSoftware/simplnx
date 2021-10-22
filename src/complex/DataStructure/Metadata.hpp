@@ -40,7 +40,7 @@ public:
    * @brief Move constructor.
    * @param rhs
    */
-  Metadata(Metadata&& other) noexcept;
+  Metadata(Metadata&& other);
 
   /**
    * @brief Copy assignment.

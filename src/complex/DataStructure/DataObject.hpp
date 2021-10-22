@@ -71,7 +71,7 @@ public:
    * @brief Move constructor.
    * @param rhs
    */
-  DataObject(DataObject&& rhs) noexcept;
+  DataObject(DataObject&& rhs);
 
   /**
    * @brief Copy assignment.
