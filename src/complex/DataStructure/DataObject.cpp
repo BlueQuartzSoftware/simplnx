@@ -35,7 +35,7 @@ DataObject::DataObject(DataStructure& ds, std::string name, IdType importId)
 
 DataObject::DataObject(const DataObject& rhs) = default;
 
-DataObject::DataObject(DataObject&& rhs) noexcept = default;
+DataObject::DataObject(DataObject&& rhs) = default;
 
 DataObject& DataObject::operator=(const DataObject& rhs) = default;
 

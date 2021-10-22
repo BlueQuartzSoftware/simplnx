@@ -10,7 +10,7 @@ Metadata::Metadata() = default;
 
 Metadata::Metadata(const Metadata& rhs) = default;
 
-Metadata::Metadata(Metadata&& rhs) noexcept = default;
+Metadata::Metadata(Metadata&& rhs) = default;
 
 Metadata& Metadata::operator=(const Metadata& rhs) = default;
 
