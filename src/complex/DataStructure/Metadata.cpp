@@ -4,21 +4,19 @@
 
 using namespace complex;
 
-Metadata::Metadata()
+namespace complex
 {
-}
+Metadata::Metadata() = default;
 
-Metadata::Metadata(const Metadata& other)
-: m_Map(other.m_Map)
-{
-}
+Metadata::Metadata(const Metadata& rhs) = default;
 
-Metadata::Metadata(Metadata&& other) noexcept
-: m_Map(std::move(other.m_Map))
-{
-}
+Metadata::Metadata(Metadata&& rhs) noexcept = default;
 
-Metadata::~Metadata() = default;
+Metadata& Metadata::operator=(const Metadata& rhs) = default;
+
+Metadata& Metadata::operator=(Metadata&& rhs) noexcept = default;
+
+Metadata::~Metadata() noexcept = default;
 
 Metadata::ValueType Metadata::getData(const KeyType& key) const
 {
@@ -64,15 +62,4 @@ Metadata::ConstIterator Metadata::end() const
 {
   return m_Map.end();
 }
-
-Metadata& Metadata::operator=(const Metadata& rhs)
-{
-  m_Map = rhs.m_Map;
-  return *this;
-}
-
-Metadata& Metadata::operator=(Metadata&& rhs) noexcept
-{
-  m_Map = std::move(rhs.m_Map);
-  return *this;
-}
+} // namespace complex

@@ -55,18 +55,42 @@ public:
   friend class DataStructure;
 
   /**
-   * @brief Copy constructor
-   * @param other
+   * @brief Returns true if the given string is a valid name for a DataObject.
+   * @param name
+   * @return
    */
-  DataObject(const DataObject& other);
+  static bool IsValidName(std::string_view name);
 
   /**
-   * @brief Move constructor
-   * @param other
+   * @brief Copy constructor.
+   * @param rhs
    */
-  DataObject(DataObject&& other) noexcept;
+  DataObject(const DataObject& rhs);
 
-  virtual ~DataObject();
+  /**
+   * @brief Move constructor.
+   * @param rhs
+   */
+  DataObject(DataObject&& rhs) noexcept;
+
+  /**
+   * @brief Copy assignment.
+   * @param rhs
+   * @return
+   */
+  DataObject& operator=(const DataObject& rhs);
+
+  /**
+   * @brief Move assignment.
+   * @param rhs
+   * @return
+   */
+  DataObject& operator=(DataObject&& rhs) noexcept;
+
+  /**
+   * @brief Destructor.
+   */
+  virtual ~DataObject() noexcept;
 
   /**
    * @brief Returns a deep copy of the DataObject.
@@ -139,10 +163,16 @@ public:
   std::vector<DataPath> getDataPaths() const;
 
   /**
-   * @brief Returns a pointer to the object's Metadata.
-   * @return Metadata*
+   * @brief Returns a reference to the object's Metadata.
+   * @return Metadata&
    */
-  Metadata* getMetadata() const;
+  Metadata& getMetadata();
+
+  /**
+   * @brief Returns a reference to the object's Metadata.
+   * @return const Metadata&
+   */
+  const Metadata& getMetadata() const;
 
   /**
    * @brief Checks if the DataObject has an HDF5 ID assigned to it.
@@ -234,9 +264,9 @@ protected:
 private:
   DataStructure* m_DataStructure = nullptr;
   ParentCollectionType m_ParentList;
-  IdType m_Id;
+  IdType m_Id = 0;
   std::string m_Name;
-  std::unique_ptr<Metadata> m_Metadata = nullptr;
-  H5::IdType m_H5Id;
+  Metadata m_Metadata;
+  H5::IdType m_H5Id = -1;
 };
 } // namespace complex
