@@ -175,6 +175,13 @@ function(create_complex_plugin)
 
   target_link_libraries(${PLUGIN_NAME} PUBLIC complex)
 
+  if(MSVC)
+    target_compile_options(${PLUGIN_NAME}
+      PRIVATE
+        /MP
+    )
+  endif()
+
   generate_export_header(${PLUGIN_NAME}
     EXPORT_FILE_NAME ${PLUGIN_EXPORT_HEADER}
   )
