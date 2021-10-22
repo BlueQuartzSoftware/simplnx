@@ -26,23 +26,40 @@ public:
   using ConstIterator = std::map<KeyType, ValueType>::const_iterator;
 
   /**
-   * @brief Constructs an empty Metadata.
+   * @brief Default constructor.
    */
   Metadata();
 
   /**
-   * @brief Creates a copy of the specified Metadata.
-   * @param other
+   * @brief Copy constructor.
+   * @param rhs
    */
   Metadata(const Metadata& other);
 
   /**
-   * @brief Creates a new Metadata object and moves values from the target.
-   * @param other
+   * @brief Move constructor.
+   * @param rhs
    */
   Metadata(Metadata&& other) noexcept;
 
-  virtual ~Metadata();
+  /**
+   * @brief Copy assignment.
+   * @param rhs
+   * @return
+   */
+  Metadata& operator=(const Metadata& rhs);
+
+  /**
+   * @brief Move assignment.
+   * @param rhs
+   * @return
+   */
+  Metadata& operator=(Metadata&& rhs) noexcept;
+
+  /**
+   * @brief Destructor.
+   */
+  ~Metadata() noexcept;
 
   /**
    * @brief Returns the ValueType for the target key. Returns an empty std::any
@@ -102,20 +119,6 @@ public:
    * @return ConstIterator
    */
   ConstIterator end() const;
-
-  /**
-   * @brief Copies data from the specified Metadata.
-   * @param rhs
-   * @return Metadata&
-   */
-  Metadata& operator=(const Metadata& rhs);
-
-  /**
-   * @brief Moves data from the specified Metadata.
-   * @param rhs
-   * @return Metadata&
-   */
-  Metadata& operator=(Metadata&& rhs) noexcept;
 
 private:
   std::map<KeyType, ValueType> m_Map;

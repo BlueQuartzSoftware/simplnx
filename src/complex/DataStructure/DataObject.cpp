@@ -2,50 +2,46 @@
 
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/Metadata.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5ObjectWriter.hpp"
 
 #include <algorithm>
-#include <exception>
+#include <stdexcept>
 
 using namespace complex;
 
+namespace complex
+{
+bool DataObject::IsValidName(std::string_view name)
+{
+  return name.find('/') == std::string_view::npos;
+}
+
 DataObject::DataObject(DataStructure& ds, std::string name)
-: m_Name(std::move(name))
-, m_DataStructure(&ds)
-, m_Id(ds.generateId())
-, m_H5Id(-1)
+: DataObject(ds, std::move(name), ds.generateId())
 {
 }
 
 DataObject::DataObject(DataStructure& ds, std::string name, IdType importId)
-: m_Name(std::move(name))
-, m_DataStructure(&ds)
+: m_DataStructure(&ds)
 , m_Id(importId)
-, m_H5Id(-1)
+, m_Name(std::move(name))
 {
+  if(!IsValidName(m_Name))
+  {
+    throw std::invalid_argument("DataObject names cannot contain \"/\"");
+  }
 }
 
-DataObject::DataObject(const DataObject& other)
-: m_Name(other.m_Name)
-, m_DataStructure(other.m_DataStructure)
-, m_ParentList(other.m_ParentList)
-, m_Id(other.m_Id)
-, m_H5Id(other.m_H5Id)
-{
-}
+DataObject::DataObject(const DataObject& rhs) = default;
 
-DataObject::DataObject(DataObject&& other) noexcept
-: m_Name(std::move(other.m_Name))
-, m_DataStructure(other.m_DataStructure)
-, m_ParentList(std::move(other.m_ParentList))
-, m_Id(std::move(other.m_Id))
-, m_H5Id(std::move(other.m_H5Id))
-{
-}
+DataObject::DataObject(DataObject&& rhs) noexcept = default;
 
-DataObject::~DataObject()
+DataObject& DataObject::operator=(const DataObject& rhs) = default;
+
+DataObject& DataObject::operator=(DataObject&& rhs) noexcept = default;
+
+DataObject::~DataObject() noexcept
 {
   getDataStructure()->dataDeleted(getId(), getName());
 }
@@ -82,6 +78,11 @@ std::string DataObject::getName() const
 
 bool DataObject::canRename(const std::string& name) const
 {
+  if(!IsValidName(name))
+  {
+    return false;
+  }
+
   auto dataStruct = getDataStructure();
   return !std::any_of(m_ParentList.cbegin(), m_ParentList.cend(), [dataStruct, name](IdType parentId) { return dataStruct->getDataAs<BaseGroup>(parentId)->contains(name); });
 }
@@ -102,9 +103,14 @@ DataObject::ParentCollectionType DataObject::getParentIds() const
   return m_ParentList;
 }
 
-Metadata* DataObject::getMetadata() const
+Metadata& DataObject::getMetadata()
 {
-  return m_Metadata.get();
+  return m_Metadata;
+}
+
+const Metadata& DataObject::getMetadata() const
+{
+  return m_Metadata;
 }
 
 void DataObject::addParent(BaseGroup* parent)
@@ -149,7 +155,7 @@ std::vector<DataPath> DataObject::getDataPaths() const
 
 bool DataObject::hasH5Id() const
 {
-  return -1 != m_H5Id;
+  return m_H5Id != -1;
 }
 
 H5::IdType DataObject::getH5Id() const
@@ -174,3 +180,4 @@ H5::ErrorType DataObject::writeH5ObjectAttributes(H5::DataStructureWriter& dataS
 
   return error;
 }
+} // namespace complex
