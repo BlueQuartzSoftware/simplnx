@@ -1,35 +1,37 @@
-#include "ImportH5DataFilter.hpp"
+#include "ImportDREAM3DFilter.hpp"
 
+#include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Filter/Actions/ImportObjectAction.hpp"
 #include "complex/Parameters/H5DataStructureImportParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DataStructureReader.hpp"
+#include "complex/Pipeline/Pipeline.hpp"
+#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 
 namespace complex
 {
-std::string ImportH5DataFilter::name() const
+std::string ImportDREAM3DFilter::name() const
 {
-  return FilterTraits<ImportH5DataFilter>::name;
+  return FilterTraits<ImportDREAM3DFilter>::name;
 }
 
-std::string ImportH5DataFilter::className() const
+std::string ImportDREAM3DFilter::className() const
 {
-  return FilterTraits<ImportH5DataFilter>::className;
+  return FilterTraits<ImportDREAM3DFilter>::className;
 }
 
-Uuid ImportH5DataFilter::uuid() const
+Uuid ImportDREAM3DFilter::uuid() const
 {
-  return FilterTraits<ImportH5DataFilter>::uuid;
+  return FilterTraits<ImportDREAM3DFilter>::uuid;
 }
 
-std::string ImportH5DataFilter::humanName() const
+std::string ImportDREAM3DFilter::humanName() const
 {
   return "Export HDF5 Data Filter";
 }
 
-Parameters ImportH5DataFilter::parameters() const
+Parameters ImportDREAM3DFilter::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<H5DataStructureImportParameter>(k_ImportFileData, "Import File Path", "The HDF5 file path the DataStructure should be imported from.",
@@ -37,9 +39,9 @@ Parameters ImportH5DataFilter::parameters() const
   return params;
 }
 
-IFilter::UniquePointer ImportH5DataFilter::clone() const
+IFilter::UniquePointer ImportDREAM3DFilter::clone() const
 {
-  return std::make_unique<ImportH5DataFilter>();
+  return std::make_unique<ImportDREAM3DFilter>();
 }
 
 void createDataAction(const DataStructure& dataStructure, const DataPath& targetPath, OutputActions& actions)
@@ -64,48 +66,49 @@ Result<OutputActions> getDataCreationResults(const DataStructure& importDataStru
   return {std::move(actions)};
 }
 
-Result<OutputActions> ImportH5DataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
+Result<OutputActions> ImportDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  auto h5ImportData = args.value<H5DataStructureImportParameter::ImportData>(k_ImportFileData);
-  if(h5ImportData.FilePath.empty())
+  auto importData = args.value<H5DataStructureImportParameter::ImportData>(k_ImportFileData);
+  if(importData.FilePath.empty())
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{-1, "Import file path not provided."}})};
   }
-  H5::FileReader fileReader(h5ImportData.FilePath);
+  H5::FileReader fileReader(importData.FilePath);
   if(!fileReader.isValid())
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{-64, "Failed to open the HDF5 file at the specified path."}})};
   }
 
   // Import DataStructure
-  H5::DataStructureReader dataReader;
   H5::ErrorType errorCode;
-  auto importDataStructure = dataReader.readH5Group(fileReader, errorCode);
+  auto [pipeline, importDataStructure] = DREAM3D::ReadFile(fileReader, errorCode);
   if(errorCode < 0)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, "Failed to import a DataStructure from the target HDF5 file."}})};
   }
 
   // Create target DataPaths for the output DataStructure
-  return getDataCreationResults(importDataStructure, h5ImportData.DataPaths);
+  auto importDataPaths = importData.DataPaths;
+  // Import shortest paths first
+  std::sort(importDataPaths.begin(), importDataPaths.end(), [](const DataPath& first, const DataPath& second) { return first.getLength() < second.getLength(); });
+  return getDataCreationResults(importDataStructure, importDataPaths);
 }
 
-Result<> ImportH5DataFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
+Result<> ImportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  auto h5ImportData = args.value<H5DataStructureImportParameter::ImportData>(k_ImportFileData);
-  H5::FileReader fileReader(h5ImportData.FilePath);
+  auto importData = args.value<H5DataStructureImportParameter::ImportData>(k_ImportFileData);
+  H5::FileReader fileReader(importData.FilePath);
   if(!fileReader.isValid())
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{-64, "Failed to open the HDF5 file at the specified path."}})};
   }
 
   // Import DataStructure
-  H5::DataStructureReader dataReader;
   H5::ErrorType errorCode;
-  auto importDataStructure = dataReader.readH5Group(fileReader, errorCode);
+  auto [pipeline, importedDataStructure] = DREAM3D::ReadFile(fileReader, errorCode);
   if(errorCode < 0)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, "Failed to import a DataStructure from the target HDF5 file."}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, "Failed to import .dream3d file data."}})};
   }
 
   // Add target DataObjects to the output DataStructure

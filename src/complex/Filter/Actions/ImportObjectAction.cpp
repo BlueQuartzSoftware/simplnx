@@ -2,6 +2,7 @@
 
 #include <fmt/core.h>
 
+#include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
@@ -73,6 +74,12 @@ ImportObjectAction::~ImportObjectAction() noexcept = default;
 Result<> ImportObjectAction::apply(DataStructure& dataStructure, Mode mode) const
 {
   auto importData = std::shared_ptr<DataObject>(m_ImportData->deepCopy());
+  // Clear all children before inserting into the DataStructure
+  if(auto importGroup = std::dynamic_pointer_cast<BaseGroup>(importData))
+  {
+    importGroup->clear();
+  }
+
   if(!dataStructure.insert(importData, m_Path))
   {
     return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("Unable to import DataObject at \"{}\"", m_Path.toString())}})};

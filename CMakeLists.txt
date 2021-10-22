@@ -194,12 +194,6 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
   ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
   
-  ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/StringUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
-
   ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/AbstractMontage.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/AbstractTileIndex.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/GridMontage.hpp
@@ -254,6 +248,16 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
   ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
 
+  ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/StringUtilities.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.hpp
+
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5AttributeReader.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5AttributeWriter.hpp
@@ -271,12 +275,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectWriter.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
-
-  ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.hpp
 )
 
 set(COMPLEX_GENERATED_HEADERS
@@ -369,7 +368,13 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
   ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.cpp
 
+  ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
+
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5AttributeReader.cpp
@@ -387,10 +392,6 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectReader.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectWriter.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.cpp
-
-  ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
 )
 
 

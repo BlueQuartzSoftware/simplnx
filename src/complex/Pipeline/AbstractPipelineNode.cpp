@@ -5,6 +5,7 @@
 
 #include "complex/Pipeline/Messaging/NodeStatusMessage.hpp"
 #include "complex/Pipeline/Messaging/PipelineNodeObserver.hpp"
+#include "complex/Pipeline/Pipeline.hpp"
 
 using namespace complex;
 
@@ -94,4 +95,27 @@ void AbstractPipelineNode::notify(const std::shared_ptr<AbstractPipelineMessage>
 AbstractPipelineNode::SignalType& AbstractPipelineNode::getSignal()
 {
   return m_Signal;
+}
+
+std::shared_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipeline() const
+{
+  auto currentPipeline = this;
+  auto pipeline = getPrecedingPipelineSegment();
+  if(pipeline == nullptr)
+  {
+    return nullptr;
+  }
+
+  while((currentPipeline = currentPipeline->getParentPipeline()) != nullptr)
+  {
+    pipeline->push_front(currentPipeline->getPrecedingPipelineSegment());
+  }
+  return pipeline;
+}
+
+std::shared_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipelineSegment() const
+{
+  Pipeline* parentPipeline = getParentPipeline();
+  auto iter = parentPipeline->find(this);
+  return parentPipeline->copySegment(parentPipeline->begin(), iter);
 }

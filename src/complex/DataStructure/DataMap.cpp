@@ -82,6 +82,11 @@ bool DataMap::erase(const Iterator& iter)
   return true;
 }
 
+void DataMap::clear()
+{
+  m_Map.clear();
+}
+
 std::vector<DataMap::IdType> DataMap::getKeys() const
 {
   std::vector<IdType> keys(m_Map.size());

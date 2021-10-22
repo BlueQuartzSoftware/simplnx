@@ -1,4 +1,4 @@
-#include "ExportH5DataFilter.hpp"
+#include "ExportDREAM3DFilter.hpp"
 
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
@@ -7,27 +7,27 @@
 
 namespace complex
 {
-std::string ExportH5DataFilter::name() const
+std::string ExportDREAM3DFilter::name() const
 {
-  return FilterTraits<ExportH5DataFilter>::name;
+  return FilterTraits<ExportDREAM3DFilter>::name;
 }
 
-std::string ExportH5DataFilter::className() const
+std::string ExportDREAM3DFilter::className() const
 {
-  return FilterTraits<ExportH5DataFilter>::className;
+  return FilterTraits<ExportDREAM3DFilter>::className;
 }
 
-Uuid ExportH5DataFilter::uuid() const
+Uuid ExportDREAM3DFilter::uuid() const
 {
-  return FilterTraits<ExportH5DataFilter>::uuid;
+  return FilterTraits<ExportDREAM3DFilter>::uuid;
 }
 
-std::string ExportH5DataFilter::humanName() const
+std::string ExportDREAM3DFilter::humanName() const
 {
   return "Write DREAM.3D File (V7)";
 }
 
-Parameters ExportH5DataFilter::parameters() const
+Parameters ExportDREAM3DFilter::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<FileSystemPathParameter>(k_ExportFilePath, "Export File Path", "The file path the DataStructure should be written to as an HDF5 file.", "",
@@ -35,12 +35,12 @@ Parameters ExportH5DataFilter::parameters() const
   return params;
 }
 
-IFilter::UniquePointer ExportH5DataFilter::clone() const
+IFilter::UniquePointer ExportDREAM3DFilter::clone() const
 {
-  return std::make_unique<ExportH5DataFilter>();
+  return std::make_unique<ExportDREAM3DFilter>();
 }
 
-Result<OutputActions> ExportH5DataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
+Result<OutputActions> ExportDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
 {
   auto h5FilePath = args.value<std::filesystem::path>(k_ExportFilePath);
   if(h5FilePath.empty())
@@ -55,7 +55,7 @@ Result<OutputActions> ExportH5DataFilter::preflightImpl(const DataStructure& dat
   return {};
 }
 
-Result<> ExportH5DataFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
+Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
 {
   auto h5FilePath = args.value<std::filesystem::path>(k_ExportFilePath);
   H5::FileWriter fileWriter(h5FilePath);

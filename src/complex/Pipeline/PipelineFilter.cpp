@@ -17,7 +17,7 @@ constexpr StringLiteral k_FilterNameKey = "name";
 constexpr StringLiteral k_FilterUuidKey = "uuid";
 } // namespace
 
-PipelineFilter* PipelineFilter::Create(const FilterHandle& handle, const Arguments& args, FilterList* filterList)
+std::unique_ptr<PipelineFilter> PipelineFilter::Create(const FilterHandle& handle, const Arguments& args, FilterList* filterList)
 {
   // Use current Application FilterList if one is not provided.
   if(filterList == nullptr)
@@ -30,7 +30,7 @@ PipelineFilter* PipelineFilter::Create(const FilterHandle& handle, const Argumen
   {
     return nullptr;
   }
-  return new PipelineFilter(std::move(filter), args);
+  return std::make_unique<PipelineFilter>(std::move(filter), args);
 }
 
 PipelineFilter::PipelineFilter(IFilter::UniquePointer&& filter, const Arguments& args)
@@ -47,7 +47,7 @@ AbstractPipelineNode::NodeType PipelineFilter::getType() const
   return NodeType::Filter;
 }
 
-std::string PipelineFilter::getName()
+std::string PipelineFilter::getName() const
 {
   return m_Filter->humanName();
 }
@@ -145,6 +145,11 @@ std::vector<complex::Warning> PipelineFilter::getWarnings() const
 std::vector<complex::Error> PipelineFilter::getErrors() const
 {
   return m_Errors;
+}
+
+std::unique_ptr<AbstractPipelineNode> PipelineFilter::deepCopy() const
+{
+  return std::make_unique<PipelineFilter>(m_Filter->clone(), m_Arguments);
 }
 
 void PipelineFilter::notifyFilterMessage(const IFilter::Message& message)

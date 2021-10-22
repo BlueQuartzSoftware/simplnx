@@ -29,6 +29,7 @@ add_executable(complex_test
   PluginTest.cpp
   FilePathGeneratorTest.cpp
   DataArrayTest.cpp
+  DREAM3DFileTest.cpp
   GeometryTestUtilities.hpp
   ParametersTest.cpp
 )

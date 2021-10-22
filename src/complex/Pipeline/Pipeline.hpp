@@ -77,7 +77,7 @@ public:
    * @brief Returns the pipeline's name.
    * @return std::string
    */
-  std::string getName() override;
+  std::string getName() const override;
 
   /**
    * @brief Sets the pipeline's name.
@@ -321,7 +321,7 @@ public:
    * segment.
    * @param node
    */
-  bool push_front(AbstractPipelineNode* node);
+  bool push_front(const std::shared_ptr<AbstractPipelineNode>& node);
 
   /**
    * @brief Inserts a PipelineFilter at the front of the pipeline segment based
@@ -351,7 +351,7 @@ public:
    * @param node
    * @return bool
    */
-  bool push_back(AbstractPipelineNode* node);
+  bool push_back(const std::shared_ptr<AbstractPipelineNode>& node);
 
   /**
    * @brief Inserts a pipeline node at the back of the pipeline segment based
@@ -388,7 +388,29 @@ public:
    * @param node
    * @return const_iterator
    */
-  const_iterator find(AbstractPipelineNode* node) const;
+  const_iterator find(const AbstractPipelineNode* node) const;
+
+  /**
+   * @brief Creates and returns a copy of the Pipeline.
+   * @return std::unique_ptr<AbstractPipelineNode>
+   */
+  std::unique_ptr<AbstractPipelineNode> deepCopy() const override;
+
+  /**
+   * @brief Creates and returns a pipeline cooying the nodes between two iterators.
+   * @param start
+   * @param end
+   * @return std::unique_ptr<Pipeline>
+   */
+  std::unique_ptr<Pipeline> copySegment(const iterator& start, const iterator& end);
+
+  /**
+   * @brief Creates and returns a pipeline cooying the nodes between two iterators.
+   * @param start
+   * @param end
+   * @return std::unique_ptr<Pipeline>
+   */
+  std::unique_ptr<Pipeline> copySegment(const const_iterator& start, const const_iterator& end) const;
 
   /**
    * @brief Returns an iterator to the beginning of the collection.

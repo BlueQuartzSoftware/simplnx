@@ -92,7 +92,7 @@ AbstractPipelineNode::NodeType Pipeline::getType() const
   return NodeType::Pipeline;
 }
 
-std::string Pipeline::getName()
+std::string Pipeline::getName() const
 {
   return m_Name;
 }
@@ -369,13 +369,13 @@ bool Pipeline::contains(IFilter* filter) const
   return false;
 }
 
-bool Pipeline::push_front(AbstractPipelineNode* node)
+bool Pipeline::push_front(const std::shared_ptr<AbstractPipelineNode>& node)
 {
   if(node == nullptr)
   {
     return false;
   }
-  return insertAt(begin(), std::shared_ptr<AbstractPipelineNode>(node));
+  return insertAt(begin(), node);
 }
 
 bool Pipeline::push_front(const FilterHandle& handle, const Arguments& args)
@@ -390,12 +390,12 @@ bool Pipeline::push_front(IFilter::UniquePointer&& filter, const Arguments& args
     return false;
   }
 
-  auto filterNode = new PipelineFilter(std::move(filter));
+  auto filterNode = std::make_shared<PipelineFilter>(std::move(filter));
   filterNode->setArguments(args);
   return push_front(filterNode);
 }
 
-bool Pipeline::push_back(AbstractPipelineNode* node)
+bool Pipeline::push_back(const std::shared_ptr<AbstractPipelineNode>& node)
 {
   if(node == nullptr)
   {
@@ -416,7 +416,7 @@ bool Pipeline::push_back(IFilter::UniquePointer&& filter, const Arguments& args)
     return false;
   }
 
-  auto filterNode = new PipelineFilter(std::move(filter));
+  auto filterNode = std::make_shared<PipelineFilter>(std::move(filter));
   filterNode->setArguments(args);
   return push_back(filterNode);
 }
@@ -426,9 +426,49 @@ Pipeline::iterator Pipeline::find(AbstractPipelineNode* targetNode)
   return std::find_if(begin(), end(), [=](const std::shared_ptr<AbstractPipelineNode>& node) { return node.get() == targetNode; });
 }
 
-Pipeline::const_iterator Pipeline::find(AbstractPipelineNode* targetNode) const
+Pipeline::const_iterator Pipeline::find(const AbstractPipelineNode* targetNode) const
 {
   return std::find_if(begin(), end(), [=](const std::shared_ptr<AbstractPipelineNode>& node) { return node.get() == targetNode; });
+}
+
+std::unique_ptr<AbstractPipelineNode> Pipeline::deepCopy() const
+{
+  auto pipelineCopy = std::make_unique<Pipeline>(getName(), m_FilterList);
+  for(auto childNode : *this)
+  {
+    pipelineCopy->push_back(childNode->deepCopy());
+  }
+  return std::move(pipelineCopy);
+}
+
+std::unique_ptr<Pipeline> Pipeline::copySegment(const iterator& startIter, const iterator& endIter)
+{
+  if(endIter == end())
+  {
+    return nullptr;
+  }
+
+  auto pipelineCopy = std::make_unique<Pipeline>(getName(), m_FilterList);
+  for(auto iter = startIter; iter != endIter; iter++)
+  {
+    pipelineCopy->push_back(iter->get()->deepCopy());
+  }
+  return std::move(pipelineCopy);
+}
+
+std::unique_ptr<Pipeline> Pipeline::copySegment(const const_iterator& startIter, const const_iterator& endIter) const
+{
+  if(endIter == end())
+  {
+    return nullptr;
+  }
+
+  auto pipelineCopy = std::make_unique<Pipeline>(getName(), m_FilterList);
+  for(auto iter = startIter; iter != endIter; iter++)
+  {
+    pipelineCopy->push_back(iter->get()->deepCopy());
+  }
+  return std::move(pipelineCopy);
 }
 
 Pipeline::iterator Pipeline::begin()
@@ -486,7 +526,7 @@ Pipeline Pipeline::FromJson(const nlohmann::json& json, FilterList* filterList)
       throw std::runtime_error("Invalid filter json");
     }
 
-    pipeline.push_back(pipelineFilter.release());
+    pipeline.push_back(std::move(pipelineFilter));
   }
 
   return pipeline;

@@ -10,21 +10,21 @@
 namespace complex
 {
 /**
- * @class ImportH5DataFilter
- * @brief The ImportH5DataFilter is an IFilter class designed to import the
- * DataStructure from a target HDF5 file.
+ * @class ImportDREAM3DFilter
+ * @brief The ImportDREAM3DFilter is an IFilter class designed to import data
+ * from a target DREAM.3D file.
  */
-class COMPLEXCORE_EXPORT ImportH5DataFilter : public IFilter
+class COMPLEXCORE_EXPORT ImportDREAM3DFilter : public IFilter
 {
 public:
-  ImportH5DataFilter() = default;
-  ~ImportH5DataFilter() noexcept override = default;
+  ImportDREAM3DFilter() = default;
+  ~ImportDREAM3DFilter() noexcept override = default;
 
-  ImportH5DataFilter(const ImportH5DataFilter&) = delete;
-  ImportH5DataFilter(ImportH5DataFilter&&) noexcept = delete;
+  ImportDREAM3DFilter(const ImportDREAM3DFilter&) = delete;
+  ImportDREAM3DFilter(ImportDREAM3DFilter&&) noexcept = delete;
 
-  ImportH5DataFilter& operator=(const ImportH5DataFilter&) = delete;
-  ImportH5DataFilter& operator=(ImportH5DataFilter&&) noexcept = delete;
+  ImportDREAM3DFilter& operator=(const ImportDREAM3DFilter&) = delete;
+  ImportDREAM3DFilter& operator=(ImportDREAM3DFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_ImportFileData = "Import_File_Data";
@@ -42,7 +42,7 @@ public:
   std::string className() const override;
 
   /**
-   * @brief Returns the ImportH5DataFilter class's UUID.
+   * @brief Returns the ImportDREAM3DFilter class's UUID.
    * @return Uuid
    */
   Uuid uuid() const override;
@@ -88,4 +88,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ImportH5DataFilter, "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d");
+COMPLEX_DEF_FILTER_TRAITS(complex, ImportDREAM3DFilter, "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d");
