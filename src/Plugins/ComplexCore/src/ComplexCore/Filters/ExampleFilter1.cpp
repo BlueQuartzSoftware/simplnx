@@ -12,7 +12,6 @@ namespace
 constexpr StringLiteral k_Param1 = "param1";
 constexpr StringLiteral k_Param2 = "param2";
 constexpr StringLiteral k_Param3 = "param3";
-constexpr StringLiteral k_Param4 = "param4";
 } // namespace
 
 namespace complex
@@ -43,7 +42,7 @@ Parameters ExampleFilter1::parameters() const
 
   params.insert(std::make_unique<Float32Parameter>(k_Param1, "Parameter 1", "The 1st parameter", 0.1234f));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Param2, "Use Value", "The 2nd parameter", true));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_Param4, "Parameter 4", "MultiDataArraySelection Parameter", MultiArraySelectionParameter::ValueType{}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_Param3, "Parameter 3", "MultiDataArraySelection Parameter", MultiArraySelectionParameter::ValueType{}));
 
   params.linkParameters(k_Param2, k_Param1, true);
   return params;

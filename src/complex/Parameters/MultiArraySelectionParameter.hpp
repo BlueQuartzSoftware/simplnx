@@ -8,7 +8,7 @@ namespace complex
 /**
  * @brief This Filter Parameter represents multiple DataArrays as input.
  */
-class MultiArraySelectionParameter : public MutableDataParameter
+class COMPLEX_EXPORT MultiArraySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = std::vector<DataPath>;
