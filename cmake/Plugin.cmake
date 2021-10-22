@@ -187,9 +187,8 @@ function(create_complex_plugin)
   )
 
   target_sources(${PLUGIN_NAME}
-    PUBLIC
-      ${${PLUGIN_NAME}_ALL_HDRS}
     PRIVATE
+      ${${PLUGIN_NAME}_ALL_HDRS}
       ${${PLUGIN_NAME}_Plugin_SRCS}
   )
 
