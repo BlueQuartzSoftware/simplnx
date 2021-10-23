@@ -3,7 +3,9 @@
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
+#include "complex/Pipeline/Pipeline.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
 namespace complex
 {
@@ -24,7 +26,7 @@ Uuid ExportDREAM3DFilter::uuid() const
 
 std::string ExportDREAM3DFilter::humanName() const
 {
-  return "Write DREAM.3D File (V7)";
+  return "Write DREAM.3D File";
 }
 
 Parameters ExportDREAM3DFilter::parameters() const
@@ -42,12 +44,12 @@ IFilter::UniquePointer ExportDREAM3DFilter::clone() const
 
 Result<OutputActions> ExportDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  auto h5FilePath = args.value<std::filesystem::path>(k_ExportFilePath);
-  if(h5FilePath.empty())
+  auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
+  if(exportFilePath.empty())
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{-1, "Export file path not provided."}})};
   }
-  auto exportDirectoryPath = h5FilePath.parent_path();
+  auto exportDirectoryPath = exportFilePath.parent_path();
   if(std::filesystem::exists(exportDirectoryPath) == false)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{-3, "Export parent directory does not exist."}})};
@@ -57,12 +59,17 @@ Result<OutputActions> ExportDREAM3DFilter::preflightImpl(const DataStructure& da
 
 Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  auto h5FilePath = args.value<std::filesystem::path>(k_ExportFilePath);
-  H5::FileWriter fileWriter(h5FilePath);
-  auto errorCode = dataStructure.writeHdf5(fileWriter);
+  auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
+  H5::FileWriter fileWriter(exportFilePath);
+  if(!fileWriter.isValid())
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-14, "Failed to initialize H5:FileWriter."}})};
+  }
+
+  auto errorCode = DREAM3D::WriteFile(fileWriter, {Pipeline(), dataStructure});
   if(errorCode < 0)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, "Failed to write DataStructure to HDF5 file."}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, "Failed to write .dream3d file."}})};
   }
 
   return {};

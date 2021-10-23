@@ -80,7 +80,7 @@ Result<> ImportObjectAction::apply(DataStructure& dataStructure, Mode mode) cons
     importGroup->clear();
   }
 
-  if(!dataStructure.insert(importData, m_Path))
+  if(!dataStructure.insert(importData, m_Path.getParent()))
   {
     return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("Unable to import DataObject at \"{}\"", m_Path.toString())}})};
   }

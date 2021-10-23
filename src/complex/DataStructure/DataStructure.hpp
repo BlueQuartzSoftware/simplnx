@@ -473,6 +473,27 @@ protected:
    */
   void setNextId(DataObject::IdType nextDataId);
 
+  /**
+   * @brief Adds the DataObject to the list of known DataObjects if it is missing.
+   * @param dataObject
+   */
+  void trackDataObject(const std::shared_ptr<DataObject>& dataObject);
+
+  /**
+   * @brief Inserts the provided DataObject into the root DataMap.
+   * @param dataObject
+   * @return bool
+   */
+  bool insertIntoRoot(const std::shared_ptr<DataObject>& dataObject);
+
+  /**
+   * @brief Inserts the provided DataObject under the target parent group.
+   * @param dataObject
+   * @param parentGroup
+   * @return bool
+   */
+  bool insertIntoParent(const std::shared_ptr<DataObject>& dataObject, BaseGroup* parentGroup);
+
 private:
   /**
    * @brief Inserts the target DataObject to the top of the DataStructure.

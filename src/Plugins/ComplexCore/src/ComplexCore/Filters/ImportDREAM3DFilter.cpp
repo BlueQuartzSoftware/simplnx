@@ -3,7 +3,7 @@
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Filter/Actions/ImportObjectAction.hpp"
-#include "complex/Parameters/H5DataStructureImportParameter.hpp"
+#include "complex/Parameters/Dream3dImportParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
@@ -34,8 +34,8 @@ std::string ImportDREAM3DFilter::humanName() const
 Parameters ImportDREAM3DFilter::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<H5DataStructureImportParameter>(k_ImportFileData, "Import File Path", "The HDF5 file path the DataStructure should be imported from.",
-                                                                 H5DataStructureImportParameter::ImportData()));
+  params.insert(
+      std::make_unique<Dream3dImportParameter>(k_ImportFileData, "Import File Path", "The HDF5 file path the DataStructure should be imported from.", Dream3dImportParameter::ImportData()));
   return params;
 }
 
@@ -59,7 +59,7 @@ void createDataAction(const DataStructure& dataStructure, const DataPath& target
 Result<OutputActions> getDataCreationResults(const DataStructure& importDataStructure, const nonstd::span<DataPath>& importPaths)
 {
   OutputActions actions;
-  for(const auto dataPath : importPaths)
+  for(const auto& dataPath : importPaths)
   {
     createDataAction(importDataStructure, dataPath, actions);
   }
@@ -68,7 +68,7 @@ Result<OutputActions> getDataCreationResults(const DataStructure& importDataStru
 
 Result<OutputActions> ImportDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  auto importData = args.value<H5DataStructureImportParameter::ImportData>(k_ImportFileData);
+  auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
   if(importData.FilePath.empty())
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{-1, "Import file path not provided."}})};
@@ -96,7 +96,7 @@ Result<OutputActions> ImportDREAM3DFilter::preflightImpl(const DataStructure& da
 
 Result<> ImportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  auto importData = args.value<H5DataStructureImportParameter::ImportData>(k_ImportFileData);
+  auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
   H5::FileReader fileReader(importData.FilePath);
   if(!fileReader.isValid())
   {

@@ -15,26 +15,26 @@ namespace complex
  * @brief This FilterParameter allows for the selection of both an HDF5 file
  * to import a DataStructure from and the DataPaths to import.
  */
-class COMPLEX_EXPORT H5DataStructureImportParameter : public ValueParameter
+class COMPLEX_EXPORT Dream3dImportParameter : public ValueParameter
 {
 public:
   struct ImportData
   {
     std::filesystem::path FilePath;
-    nonstd::span<complex::DataPath> DataPaths = {};
+    std::vector<complex::DataPath> DataPaths = {};
   };
 
   using ValueType = ImportData;
 
-  H5DataStructureImportParameter() = delete;
-  H5DataStructureImportParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
-  ~H5DataStructureImportParameter() override = default;
+  Dream3dImportParameter() = delete;
+  Dream3dImportParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  ~Dream3dImportParameter() override = default;
 
-  H5DataStructureImportParameter(const H5DataStructureImportParameter&) = delete;
-  H5DataStructureImportParameter(H5DataStructureImportParameter&&) noexcept = delete;
+  Dream3dImportParameter(const Dream3dImportParameter&) = delete;
+  Dream3dImportParameter(Dream3dImportParameter&&) noexcept = delete;
 
-  H5DataStructureImportParameter& operator=(const H5DataStructureImportParameter&) = delete;
-  H5DataStructureImportParameter& operator=(H5DataStructureImportParameter&&) noexcept = delete;
+  Dream3dImportParameter& operator=(const Dream3dImportParameter&) = delete;
+  Dream3dImportParameter& operator=(Dream3dImportParameter&&) noexcept = delete;
 
   /**
    * @brief
@@ -91,4 +91,4 @@ private:
 };
 } // namespace complex
 
-COMPLEX_DEF_PARAMETER_TRAITS(complex::H5DataStructureImportParameter, "170a257d-5952-4854-9a91-4281cd06f4f5");
+COMPLEX_DEF_PARAMETER_TRAITS(complex::Dream3dImportParameter, "170a257d-5952-4854-9a91-4281cd06f4f5");

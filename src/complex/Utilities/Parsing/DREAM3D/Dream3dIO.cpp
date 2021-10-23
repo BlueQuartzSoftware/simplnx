@@ -169,5 +169,6 @@ H5::ErrorType complex::DREAM3D::WriteFile(H5::FileWriter& fileWriter, const File
   {
     return errorCode;
   }
-  return WriteDataStructure(fileWriter, fileData.second);
+  errorCode = WriteDataStructure(fileWriter, fileData.second);
+  return errorCode;
 }

@@ -1,4 +1,4 @@
-#include "H5DataStructureImportParameter.hpp"
+#include "Dream3dImportParameter.hpp"
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
@@ -20,26 +20,26 @@ constexpr StringLiteral k_DataPathsKey = "datapaths";
 namespace complex
 {
 //-----------------------------------------------------------------------------
-H5DataStructureImportParameter::H5DataStructureImportParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+Dream3dImportParameter::Dream3dImportParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 {
 }
 
 //-----------------------------------------------------------------------------
-Uuid H5DataStructureImportParameter::uuid() const
+Uuid Dream3dImportParameter::uuid() const
 {
-  return ParameterTraits<H5DataStructureImportParameter>::uuid;
+  return ParameterTraits<Dream3dImportParameter>::uuid;
 }
 
 //-----------------------------------------------------------------------------
-IParameter::AcceptedTypes H5DataStructureImportParameter::acceptedTypes() const
+IParameter::AcceptedTypes Dream3dImportParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
 
 //-----------------------------------------------------------------------------
-nlohmann::json H5DataStructureImportParameter::toJson(const std::any& value) const
+nlohmann::json Dream3dImportParameter::toJson(const std::any& value) const
 {
   ValueType importData = std::any_cast<ValueType>(value);
   nlohmann::json json;
@@ -58,7 +58,7 @@ nlohmann::json H5DataStructureImportParameter::toJson(const std::any& value) con
 }
 
 //-----------------------------------------------------------------------------
-Result<std::any> H5DataStructureImportParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> Dream3dImportParameter::fromJson(const nlohmann::json& json) const
 {
   const std::string key = name();
   if(!json.contains(key))
@@ -108,26 +108,26 @@ Result<std::any> H5DataStructureImportParameter::fromJson(const nlohmann::json& 
 }
 
 //-----------------------------------------------------------------------------
-IParameter::UniquePointer H5DataStructureImportParameter::clone() const
+IParameter::UniquePointer Dream3dImportParameter::clone() const
 {
-  return std::make_unique<H5DataStructureImportParameter>(name(), humanName(), helpText(), m_DefaultValue);
+  return std::make_unique<Dream3dImportParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
 
 //-----------------------------------------------------------------------------
-std::any H5DataStructureImportParameter::defaultValue() const
+std::any Dream3dImportParameter::defaultValue() const
 {
   return ImportData();
 }
 
 //-----------------------------------------------------------------------------
-Result<> H5DataStructureImportParameter::validate(const std::any& value) const
+Result<> Dream3dImportParameter::validate(const std::any& value) const
 {
   auto importData = std::any_cast<ValueType>(value);
   return validatePath(importData);
 }
 
 //-----------------------------------------------------------------------------
-Result<> H5DataStructureImportParameter::validatePath(const ValueType& importData) const
+Result<> Dream3dImportParameter::validatePath(const ValueType& importData) const
 {
   std::filesystem::path path = importData.FilePath;
   if(!fs::exists(path))

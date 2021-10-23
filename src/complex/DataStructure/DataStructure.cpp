@@ -413,23 +413,23 @@ bool DataStructure::removeTopLevel(DataObject* data)
   return true;
 }
 
-bool DataStructure::finishAddingObject(const std::shared_ptr<DataObject>& obj, const std::optional<DataObject::IdType>& parent)
+bool DataStructure::finishAddingObject(const std::shared_ptr<DataObject>& dataObject, const std::optional<DataObject::IdType>& parent)
 {
   if(parent.has_value() && containsData(*parent))
   {
     auto parentContainer = dynamic_cast<BaseGroup*>(getData(*parent));
-    if(!parentContainer->insert(obj))
+    if(!parentContainer->insert(dataObject))
     {
       return false;
     }
   }
-  else if(!insertTopLevel(obj))
+  else if(!insertTopLevel(dataObject))
   {
     return false;
   }
 
-  m_DataObjects[obj->getId()] = obj;
-  auto msg = std::make_shared<DataAddedMessage>(this, obj->getId());
+  trackDataObject(dataObject);
+  auto msg = std::make_shared<DataAddedMessage>(this, dataObject->getId());
   notify(msg);
   return true;
 }
@@ -458,15 +458,50 @@ bool DataStructure::insert(const std::shared_ptr<DataObject>& dataObject, const 
 {
   if(dataPath.empty())
   {
-    return m_RootGroup.insert(dataObject);
+    return insertIntoRoot(dataObject);
   }
 
-  auto parentData = dynamic_cast<BaseGroup*>(getData(dataPath));
-  if(parentData == nullptr)
+  auto parentGroup = getDataAs<BaseGroup>(dataPath);
+  return insertIntoParent(dataObject, parentGroup);
+}
+
+bool DataStructure::insertIntoRoot(const std::shared_ptr<DataObject>& dataObject)
+{
+  if(dataObject == nullptr)
   {
     return false;
   }
-  return parentData->insert(dataObject);
+
+  if(!m_RootGroup.insert(dataObject))
+  {
+    return false;
+  }
+  trackDataObject(dataObject);
+  return true;
+}
+bool DataStructure::insertIntoParent(const std::shared_ptr<DataObject>& dataObject, BaseGroup* parentGroup)
+{
+  if(parentGroup == nullptr)
+  {
+    return false;
+  }
+
+  if(!parentGroup->insert(dataObject))
+  {
+    return false;
+  }
+  trackDataObject(dataObject);
+  return true;
+}
+
+void DataStructure::trackDataObject(const std::shared_ptr<DataObject>& dataObject)
+{
+  if(dataObject == nullptr)
+  {
+    return;
+  }
+
+  m_DataObjects[dataObject->getId()] = dataObject;
 }
 
 bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject::IdType newParentId)

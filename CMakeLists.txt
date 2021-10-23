@@ -126,7 +126,7 @@ set(CoreParameters
   DataGroupSelectionParameter
   FileSystemPathParameter
   GeneratedFileListParameter
-  H5DataStructureImportParameter
+  Dream3dImportParameter
   MultiArraySelectionParameter
   NumberParameter
   NumericTypeParameter
