@@ -51,7 +51,7 @@ Result<std::any> DataGroupCreationParameter::fromJson(const nlohmann::json& json
   {
     return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix, name(), valueString));
   }
-  return {path};
+  return {path.value()};
 }
 
 IParameter::UniquePointer DataGroupCreationParameter::clone() const

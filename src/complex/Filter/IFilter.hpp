@@ -143,7 +143,7 @@ public:
    * @param args
    * @return nlohmann::json
    */
-  nlohmann::json toJson(const Arguments& args) const;
+  virtual nlohmann::json toJson(const Arguments& args) const;
 
   /**
    * @brief Converts JSON to arguments based on the filter's parameters.

@@ -1,5 +1,7 @@
 #include "ImportDREAM3DFilter.hpp"
 
+#include "nlohmann/json.hpp"
+
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Filter/Actions/ImportObjectAction.hpp"
@@ -8,6 +10,11 @@
 #include "complex/Pipeline/Pipeline.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
+
+namespace
+{
+constexpr complex::StringLiteral k_ImportedPipeline = "Imported Pipeline";
+}
 
 namespace complex
 {
@@ -34,8 +41,7 @@ std::string ImportDREAM3DFilter::humanName() const
 Parameters ImportDREAM3DFilter::parameters() const
 {
   Parameters params;
-  params.insert(
-      std::make_unique<Dream3dImportParameter>(k_ImportFileData, "Import File Path", "The HDF5 file path the DataStructure should be imported from.", Dream3dImportParameter::ImportData()));
+  params.insert(std::make_unique<Dream3dImportParameter>(k_ImportFileData, "Import File Path", "The HDF5 file path the DataStructure should be imported from.", Dream3dImportParameter::ImportData()));
   return params;
 }
 
@@ -114,5 +120,20 @@ Result<> ImportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Ar
   // Add target DataObjects to the output DataStructure
 
   return {};
+}
+
+nlohmann::json ImportDREAM3DFilter::toJson(const Arguments& args) const
+{
+  auto json = IFilter::toJson(args);
+
+  auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
+  H5::FileReader fileReader(importData.FilePath);
+  if(fileReader.isValid())
+  {
+    H5::ErrorType errorCode;
+    auto [importedPipeline, importedDataStructure] = DREAM3D::ReadFile(fileReader, errorCode);
+    json[k_ImportedPipeline] = std::move(importedPipeline.toJson());
+  }
+  return json;
 }
 } // namespace complex

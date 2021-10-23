@@ -65,6 +65,13 @@ public:
    */
   UniquePointer clone() const override;
 
+  /**
+   * @brief Converts the given arguments to a JSON representation using the filter's parameters.
+   * @param args
+   * @return nlohmann::json
+   */
+  nlohmann::json toJson(const Arguments& args) const override;
+
 protected:
   /**
    * @brief Classes that implement IFilter must provide this function for preflight.

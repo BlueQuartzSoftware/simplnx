@@ -500,8 +500,10 @@ void DataStructure::trackDataObject(const std::shared_ptr<DataObject>& dataObjec
   {
     return;
   }
-
-  m_DataObjects[dataObject->getId()] = dataObject;
+  if(m_DataObjects.find(dataObject->getId()) == m_DataObjects.end())
+  {
+    m_DataObjects[dataObject->getId()] = dataObject;
+  }
 }
 
 bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject::IdType newParentId)

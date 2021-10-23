@@ -1,8 +1,11 @@
 #include <catch2/catch.hpp>
 
 #include <filesystem>
+#include <iostream>
 #include <mutex>
 #include <vector>
+
+#include "nlohmann/json.hpp"
 
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
@@ -25,7 +28,8 @@ namespace
 const fs::path k_DataDir = "test/data";
 const fs::path k_LegacyFilepath = "SmallN100.dream3d";
 const fs::path k_Dream3dFilename = "newFile.dream3d";
-const fs::path k_ExportFilename = "export.dream3d";
+const fs::path k_ExportFilename1 = "export.dream3d";
+const fs::path k_ExportFilename2 = "export2.dream3d";
 
 std::mutex m_DataMutex;
 
@@ -72,7 +76,18 @@ fs::path GetExportDataPath()
     throw std::runtime_error("complex::Application instance not found");
   }
 
-  return GetDataDir(*app) / k_ExportFilename;
+  return GetDataDir(*app) / k_ExportFilename1;
+}
+
+fs::path GetReExportDataPath()
+{
+  auto app = Application::Instance();
+  if(app == nullptr)
+  {
+    throw std::runtime_error("complex::Application instance not found");
+  }
+
+  return GetDataDir(*app) / k_ExportFilename2;
 }
 
 DataStructure CreateTestDataStructure()
@@ -110,6 +125,11 @@ Pipeline CreateImportPipeline()
     importData.DataPaths = std::vector<DataPath>{DataPath({DataNames::k_Group1Name})};
     args.insert("Import_File_Data", importData);
     pipeline.push_back(k_ImportD3DHandle, args);
+  }
+  {
+    Arguments args;
+    args.insert("Export_File_Path", GetReExportDataPath());
+    pipeline.push_back(k_ExportD3DHandle, args);
   }
   return pipeline;
 }
