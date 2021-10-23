@@ -4,6 +4,7 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
+#include "complex/Pipeline/PipelineFilter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
@@ -57,7 +58,7 @@ Result<OutputActions> ExportDREAM3DFilter::preflightImpl(const DataStructure& da
   return {};
 }
 
-Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
+Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
   H5::FileWriter fileWriter(exportFilePath);
@@ -66,7 +67,14 @@ Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Ar
     return {nonstd::make_unexpected(std::vector<Error>{Error{-14, "Failed to initialize H5:FileWriter."}})};
   }
 
-  auto errorCode = DREAM3D::WriteFile(fileWriter, {Pipeline(), dataStructure});
+  auto pipelinePtr = pipelineNode->getPrecedingPipeline();
+  if(pipelinePtr == nullptr)
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-15, "Failed to retrieve pipeline."}})};
+  }
+  Pipeline pipeline = *pipelinePtr.get();
+
+  auto errorCode = DREAM3D::WriteFile(fileWriter, {pipeline, dataStructure});
   if(errorCode < 0)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, "Failed to write .dream3d file."}})};

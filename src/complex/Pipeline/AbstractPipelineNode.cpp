@@ -97,7 +97,7 @@ AbstractPipelineNode::SignalType& AbstractPipelineNode::getSignal()
   return m_Signal;
 }
 
-std::shared_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipeline() const
+std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipeline() const
 {
   auto currentPipeline = this;
   auto pipeline = getPrecedingPipelineSegment();
@@ -108,14 +108,30 @@ std::shared_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipeline() const
 
   while((currentPipeline = currentPipeline->getParentPipeline()) != nullptr)
   {
-    pipeline->push_front(currentPipeline->getPrecedingPipelineSegment());
+    auto segment = currentPipeline->getPrecedingPipelineSegment();
+    if(segment == nullptr)
+    {
+      break;
+    }
+    pipeline->push_front(std::move(segment));
   }
-  return pipeline;
+  return std::move(pipeline);
 }
 
-std::shared_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipelineSegment() const
+std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipelineSegment() const
 {
   Pipeline* parentPipeline = getParentPipeline();
+  if(parentPipeline == nullptr)
+  {
+    return nullptr;
+  }
+  if(parentPipeline->isEmpty())
+  {
+    auto name = parentPipeline->getName();
+    auto filterList = parentPipeline->getFilterList();
+    return std::make_unique<Pipeline>(name, filterList);
+  }
+
   auto iter = parentPipeline->find(this);
-  return parentPipeline->copySegment(parentPipeline->begin(), iter);
+  return std::move(parentPipeline->copySegment(parentPipeline->begin(), iter));
 }

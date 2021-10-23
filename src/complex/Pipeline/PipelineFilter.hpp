@@ -30,14 +30,14 @@ public:
    * @param handle
    * @param args = {}
    * @param filterList = nullptr
-   * @return PipelineFilter*
+   * @return std::unique_ptr<PipelineFilter>
    */
   static std::unique_ptr<PipelineFilter> Create(const FilterHandle& handle, const Arguments& args = {}, FilterList* filterList = nullptr);
 
   /**
    * @brief Constructs a PipelineFilter from json. Returns nullptr on failure.
    * @param json
-   * @return
+   * @return std::unique_ptr<PipelineFilter>
    */
   static std::unique_ptr<PipelineFilter> FromJson(const nlohmann::json& json);
 
@@ -45,7 +45,7 @@ public:
    * @brief Constructs a PipelineFilter from json using the given filter list. Returns nullptr on failure.
    * @param json
    * @param filterList
-   * @return
+   * @return std::unique_ptr<PipelineFilter>
    */
   static std::unique_ptr<PipelineFilter> FromJson(const nlohmann::json& json, const FilterList& filterList);
 

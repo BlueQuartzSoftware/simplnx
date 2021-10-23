@@ -116,7 +116,7 @@ bool PipelineFilter::execute(DataStructure& data)
 {
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
-  auto results = m_Filter->execute(data, getArguments(), messageHandler);
+  auto results = m_Filter->execute(data, getArguments(), this, messageHandler);
   if(!results.valid())
   {
     m_Warnings = results.warnings();

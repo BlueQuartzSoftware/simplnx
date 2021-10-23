@@ -32,6 +32,7 @@ Pipeline::Pipeline(const Pipeline& other)
 , m_Collection(other.m_Collection)
 , m_FilterList(other.m_FilterList)
 {
+  resetCollectionParent();
 }
 
 Pipeline::Pipeline(Pipeline&& other) noexcept
@@ -40,15 +41,23 @@ Pipeline::Pipeline(Pipeline&& other) noexcept
 , m_Collection(std::move(other.m_Collection))
 , m_FilterList(std::move(other.m_FilterList))
 {
+  resetCollectionParent();
 }
 
-Pipeline::~Pipeline() = default;
+Pipeline::~Pipeline()
+{
+  for(auto& node : m_Collection)
+  {
+    node->setParentPipeline(nullptr);
+  }
+}
 
 Pipeline& Pipeline::operator=(const Pipeline& rhs) noexcept
 {
   m_Name = rhs.m_Name;
   m_Collection = rhs.m_Collection;
   m_FilterList = rhs.m_FilterList;
+  resetCollectionParent();
   return *this;
 }
 
@@ -57,7 +66,16 @@ Pipeline& Pipeline::operator=(Pipeline&& rhs) noexcept
   m_Name = std::move(rhs.m_Name);
   m_Collection = std::move(rhs.m_Collection);
   m_FilterList = std::move(rhs.m_FilterList);
+  resetCollectionParent();
   return *this;
+}
+
+void Pipeline::resetCollectionParent()
+{
+  for(auto& node : m_Collection)
+  {
+    node->setParentPipeline(this);
+  }
 }
 
 bool Pipeline::hasFilterList() const
@@ -221,6 +239,11 @@ bool Pipeline::executeFrom(const index_type& index)
 usize Pipeline::size() const
 {
   return m_Collection.size();
+}
+
+bool Pipeline::isEmpty() const
+{
+  return size() == 0;
 }
 
 AbstractPipelineNode* Pipeline::operator[](index_type index)
@@ -423,11 +446,21 @@ bool Pipeline::push_back(IFilter::UniquePointer&& filter, const Arguments& args)
 
 Pipeline::iterator Pipeline::find(AbstractPipelineNode* targetNode)
 {
+  if(size() == 0)
+  {
+    return end();
+  }
+
   return std::find_if(begin(), end(), [=](const std::shared_ptr<AbstractPipelineNode>& node) { return node.get() == targetNode; });
 }
 
 Pipeline::const_iterator Pipeline::find(const AbstractPipelineNode* targetNode) const
 {
+  if(size() == 0)
+  {
+    return end();
+  }
+
   return std::find_if(begin(), end(), [=](const std::shared_ptr<AbstractPipelineNode>& node) { return node.get() == targetNode; });
 }
 
@@ -443,11 +476,6 @@ std::unique_ptr<AbstractPipelineNode> Pipeline::deepCopy() const
 
 std::unique_ptr<Pipeline> Pipeline::copySegment(const iterator& startIter, const iterator& endIter)
 {
-  if(endIter == end())
-  {
-    return nullptr;
-  }
-
   auto pipelineCopy = std::make_unique<Pipeline>(getName(), m_FilterList);
   for(auto iter = startIter; iter != endIter; iter++)
   {
@@ -458,11 +486,6 @@ std::unique_ptr<Pipeline> Pipeline::copySegment(const iterator& startIter, const
 
 std::unique_ptr<Pipeline> Pipeline::copySegment(const const_iterator& startIter, const const_iterator& endIter) const
 {
-  if(endIter == end())
-  {
-    return nullptr;
-  }
-
   auto pipelineCopy = std::make_unique<Pipeline>(getName(), m_FilterList);
   for(auto iter = startIter; iter != endIter; iter++)
   {

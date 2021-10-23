@@ -193,6 +193,12 @@ public:
   usize size() const;
 
   /**
+   * @brief Returns true if the pipeline is empty. Returns false otherwise.
+   * @return bool
+   */
+  bool isEmpty() const;
+
+  /**
    * @brief Returns a pointer to the pipeline node at the given index.
    * This function does not include bounds checking.
    * @param index
@@ -397,7 +403,7 @@ public:
   std::unique_ptr<AbstractPipelineNode> deepCopy() const override;
 
   /**
-   * @brief Creates and returns a pipeline cooying the nodes between two iterators.
+   * @brief Creates and returns a pipeline copying the nodes between two iterators.
    * @param start
    * @param end
    * @return std::unique_ptr<Pipeline>
@@ -405,7 +411,7 @@ public:
   std::unique_ptr<Pipeline> copySegment(const iterator& start, const iterator& end);
 
   /**
-   * @brief Creates and returns a pipeline cooying the nodes between two iterators.
+   * @brief Creates and returns a pipeline copying the nodes between two iterators.
    * @param start
    * @param end
    * @return std::unique_ptr<Pipeline>
@@ -486,6 +492,11 @@ private:
    * @return complex::FilterList*
    */
   complex::FilterList* getActiveFilterList() const;
+
+  /**
+   * @brief Resets all collection nodes' parent pipeline. 
+   */
+  void resetCollectionParent();
 
   ////////////
   // Variables

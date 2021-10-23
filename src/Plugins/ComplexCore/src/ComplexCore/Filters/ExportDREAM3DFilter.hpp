@@ -81,10 +81,11 @@ protected:
    * Runs after the filter applies the OutputActions from preflight.
    * @param dataStructure
    * @param args
+   * @param pipelineNode
    * @param messageHandler
    * @return Result<>
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const override;
 };
 } // namespace complex
 

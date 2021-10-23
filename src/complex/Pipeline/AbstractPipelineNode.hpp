@@ -154,6 +154,13 @@ public:
    */
   virtual nlohmann::json toJson() const = 0;
 
+  /**
+   * @brief Returns a Pipeline containing the entire pipeline up to the current
+   * node. This will expand DREAM3D files as their own Pipeline.
+   * @return std::unique_ptr<Pipeline>
+   */
+  std::unique_ptr<Pipeline> getPrecedingPipeline() const;
+
 protected:
   /**
    * @brief Sets the current node status.
@@ -189,22 +196,15 @@ protected:
   void setPreflightStructure(const DataStructure& ds);
 
   /**
-   * @brief Returns a Pipeline containing the entire pipeline up to the current
-   * node. This will expand DREAM3D files as their own Pipeline.
-   * @return std::shared_ptr<Pipeline>
-   */
-  std::shared_ptr<Pipeline> getPrecedingPipeline() const;
-
-  /**
    * @brief Returns a Pipeline containing the parent pipeline up to the current
    * node. This will expand DREAM3D files as their own Pipeline.
-   * @return std::shared_ptr<Pipeline>
+   * @return std::unique_ptr<Pipeline>
    */
-  std::shared_ptr<Pipeline> getPrecedingPipelineSegment() const;
+  std::unique_ptr<Pipeline> getPrecedingPipelineSegment() const;
 
 private:
   Status m_Status = Status::Dirty;
-  Pipeline* m_Parent;
+  Pipeline* m_Parent = nullptr;
   DataStructure m_DataStructure;
   DataStructure m_PreflightStructure;
   bool m_IsPreflighted = false;

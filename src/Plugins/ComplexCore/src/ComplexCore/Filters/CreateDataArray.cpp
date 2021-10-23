@@ -74,7 +74,7 @@ Result<OutputActions> CreateDataArray::preflightImpl(const DataStructure& data, 
   return {std::move(actions)};
 }
 
-Result<> CreateDataArray::executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+Result<> CreateDataArray::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   auto numericType = args.value<NumericType>(k_NumericType_Key);
   auto components = args.value<uint64>(k_NumComps_Key);

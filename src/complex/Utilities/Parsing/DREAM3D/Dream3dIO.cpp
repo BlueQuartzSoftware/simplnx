@@ -124,6 +124,7 @@ H5::ErrorType WritePipeline(H5::FileWriter& fileWriter, const complex::Pipeline&
   {
     return -1;
   }
+
   auto pipelineGroupWriter = fileWriter.createGroupWriter(k_PipelineJsonTag);
   auto versionAttribute = pipelineGroupWriter.createAttribute(k_PipelineVersionTag);
   auto errorCode = versionAttribute.writeValue<DREAM3D::PipelineVersionType>(k_CurrentPipelineVersion);

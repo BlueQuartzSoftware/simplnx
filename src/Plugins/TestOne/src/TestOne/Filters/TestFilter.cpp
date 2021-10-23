@@ -57,7 +57,7 @@ complex::Result<OutputActions> TestFilter::preflightImpl(const DataStructure& da
   return {};
 }
 
-complex::Result<> TestFilter::executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+complex::Result<> TestFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   return {};
 }

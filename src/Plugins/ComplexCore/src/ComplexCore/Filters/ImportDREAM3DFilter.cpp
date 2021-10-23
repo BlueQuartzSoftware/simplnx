@@ -94,7 +94,7 @@ Result<OutputActions> ImportDREAM3DFilter::preflightImpl(const DataStructure& da
   return getDataCreationResults(importDataStructure, importDataPaths);
 }
 
-Result<> ImportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
+Result<> ImportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
   H5::FileReader fileReader(importData.FilePath);

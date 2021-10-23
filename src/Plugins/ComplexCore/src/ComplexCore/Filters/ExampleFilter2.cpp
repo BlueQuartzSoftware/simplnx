@@ -62,7 +62,7 @@ Result<OutputActions> ExampleFilter2::preflightImpl(const DataStructure& data, c
   return {};
 }
 
-Result<> ExampleFilter2::executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+Result<> ExampleFilter2::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler) const
 {
   return {};
 }
