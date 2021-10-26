@@ -8,6 +8,14 @@
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
+namespace
+{
+constexpr complex::int32 k_NoExportPathError = -1;
+constexpr complex::int32 k_NoParentPathError = -2;
+constexpr complex::int32 k_FailedFileWriterError = -14;
+constexpr complex::int32 k_FailedFindPipelineError = -15;
+} // namespace
+
 namespace complex
 {
 std::string ExportDREAM3DFilter::name() const
@@ -48,12 +56,12 @@ Result<OutputActions> ExportDREAM3DFilter::preflightImpl(const DataStructure& da
   auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
   if(exportFilePath.empty())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-1, "Export file path not provided."}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_NoExportPathError, "Export file path not provided."}})};
   }
   auto exportDirectoryPath = exportFilePath.parent_path();
   if(std::filesystem::exists(exportDirectoryPath) == false)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-3, "Export parent directory does not exist."}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_NoParentPathError, "Export parent directory does not exist."}})};
   }
   return {};
 }
@@ -64,13 +72,13 @@ Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Ar
   H5::FileWriter fileWriter(exportFilePath);
   if(!fileWriter.isValid())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-14, "Failed to initialize H5:FileWriter."}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedFileWriterError, "Failed to initialize H5:FileWriter."}})};
   }
 
   auto pipelinePtr = pipelineNode->getPrecedingPipeline();
   if(pipelinePtr == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-15, "Failed to retrieve pipeline."}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedFindPipelineError, "Failed to retrieve pipeline."}})};
   }
   Pipeline pipeline = *pipelinePtr.get();
 

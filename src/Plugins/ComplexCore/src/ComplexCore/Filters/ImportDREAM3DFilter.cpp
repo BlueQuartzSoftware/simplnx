@@ -14,7 +14,9 @@
 namespace
 {
 constexpr complex::StringLiteral k_ImportedPipeline = "Imported Pipeline";
-}
+constexpr complex::int32 k_NoImportPathError = -1;
+constexpr complex::int32 k_FailedOpenFileReaderError = -25;
+} // namespace
 
 namespace complex
 {
@@ -77,12 +79,12 @@ Result<OutputActions> ImportDREAM3DFilter::preflightImpl(const DataStructure& da
   auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
   if(importData.FilePath.empty())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-1, "Import file path not provided."}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_NoImportPathError, "Import file path not provided."}})};
   }
   H5::FileReader fileReader(importData.FilePath);
   if(!fileReader.isValid())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-64, "Failed to open the HDF5 file at the specified path."}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedOpenFileReaderError, "Failed to open the HDF5 file at the specified path."}})};
   }
 
   // Import DataStructure
@@ -106,7 +108,7 @@ Result<> ImportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Ar
   H5::FileReader fileReader(importData.FilePath);
   if(!fileReader.isValid())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-64, "Failed to open the HDF5 file at the specified path."}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedOpenFileReaderError, "Failed to open the HDF5 file at the specified path."}})};
   }
 
   // Import DataStructure
