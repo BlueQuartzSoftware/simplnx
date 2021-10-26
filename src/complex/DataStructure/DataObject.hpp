@@ -175,18 +175,6 @@ public:
   const Metadata& getMetadata() const;
 
   /**
-   * @brief Checks if the DataObject has an HDF5 ID assigned to it.
-   * @return bool
-   */
-  bool hasH5Id() const;
-
-  /**
-   * @brief Returns the H5 ID used by the DataObject.
-   * @return H5::IdType
-   */
-  H5::IdType getH5Id() const;
-
-  /**
    * @brief Writes the DataObject to the target HDF5 group.
    * @param dataStructureWriter
    * @param parentGroupWriter
@@ -267,6 +255,5 @@ private:
   IdType m_Id = 0;
   std::string m_Name;
   Metadata m_Metadata;
-  H5::IdType m_H5Id = -1;
 };
 } // namespace complex

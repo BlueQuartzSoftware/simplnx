@@ -156,16 +156,6 @@ std::vector<DataPath> DataObject::getDataPaths() const
   return paths;
 }
 
-bool DataObject::hasH5Id() const
-{
-  return m_H5Id != -1;
-}
-
-H5::IdType DataObject::getH5Id() const
-{
-  return m_H5Id;
-}
-
 H5::ErrorType DataObject::writeH5ObjectAttributes(H5::DataStructureWriter& dataStructureWriter, H5::ObjectWriter& objectWriter) const
 {
   // Add to DataStructureWriter for use in linking
