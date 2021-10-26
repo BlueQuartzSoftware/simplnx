@@ -51,7 +51,7 @@ const inline FilterHandle k_ImportD3DHandle(Uuid::FromString("0dbd31c7-19e0-4077
 fs::path GetDataDir(const Application& app)
 {
 #if __APPLE__
-  return app.getCurrentDir().parent_path().parent_path().parent_path() / Constants::k_DataDir;
+  return app.getCurrentDir().parent_path().parent_path().parent_path() / k_DataDir;
 #else
   return app.getCurrentDir() / k_DataDir;
 #endif
