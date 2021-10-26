@@ -36,68 +36,68 @@
 
 ## Pipeline 1 ##
 
-    "Filter_Name": "DataContainerReader",
-    "Filter_Name": "ITKGradientMagnitudeImage",
-    "Filter_Name": "RobustAutomaticThreshold",
-    "Filter_Name": "CreateDataArray",
-    "Filter_Name": "ConditionalSetValue",
-    "Filter_Name": "RemoveArrays",
-    "Filter_Name": "ITKMaskImage",
-    "Filter_Name": "ITKGrayscaleFillholeImage",
-    "Filter_Name": "FindDifferenceMap",
-    "Filter_Name": "ITKNormalizeImage",
-    "Filter_Name": "ITKBinaryThresholdImage",
-    "Filter_Name": "MultiThresholdObjects",
-    "Filter_Name": "ScalarSegmentFeatures",
-    "Filter_Name": "RemoveArrays",
-    "Filter_Name": "FindSizes",
-    "Filter_Name": "MinSize",
-    "Filter_Name": "DataContainerWriter",
+    "DataContainerReader"
+    "ITKGradientMagnitudeImage"
+    "RobustAutomaticThreshold"
+    "CreateDataArray"
+    "ConditionalSetValue"
+    "RemoveArrays"
+    "ITKMaskImage"
+    "ITKGrayscaleFillholeImage"
+    "FindDifferenceMap"
+    "ITKNormalizeImage"
+    "ITKBinaryThresholdImage"
+    "MultiThresholdObjects"
+    "ScalarSegmentFeatures"
+    "RemoveArrays"
+    "FindSizes"
+    "MinSize"
+    "DataContainerWriter"
 
 
 ## Pipeline 2 ##
 
-    "Filter_Name": "DataContainerReader",
-    "Filter_Name": "ITKGradientMagnitudeImage",
-    "Filter_Name": "RobustAutomaticThreshold",
-    "Filter_Name": "CreateDataArray",
-    "Filter_Name": "ConditionalSetValue",
-    "Filter_Name": "RemoveArrays",
-    "Filter_Name": "QuickSurfaceMesh",
-    "Filter_Name": "ExtractInternalSurfacesFromTriangleGeometry",
-    "Filter_Name": "RemoveArrays",
-    "Filter_Name": "LaplacianSmoothing",
-    "Filter_Name": "TriangleAreaFilter",
-    "Filter_Name": "PointSampleTriangleGeometry",
-    "Filter_Name": "DataContainerWriter",
+    "DataContainerReader"
+    "ITKGradientMagnitudeImage"
+    "RobustAutomaticThreshold"
+    "CreateDataArray"
+    "ConditionalSetValue"
+    "RemoveArrays"
+    "QuickSurfaceMesh"
+    "ExtractInternalSurfacesFromTriangleGeometry"
+    "RemoveArrays"
+    "LaplacianSmoothing"
+    "TriangleAreaFilter"
+    "PointSampleTriangleGeometry"
+    "DataContainerWriter"
 
 ## Pipeline 3 ##
 
-    "Filter_Name": "ReadStlFile",
-    "Filter_Name": "TriangleAreaFilter",
-    "Filter_Name": "PointSampleTriangleGeometry",
-    "Filter_Name": "DataContainerWriter",
+    "ReadStlFile"
+    "TriangleAreaFilter"
+    "PointSampleTriangleGeometry"
+    "DataContainerWriter"
 
 ## Pipeline 4 ##
 
-    "Filter_Name": "DataContainerReader",
-    "Filter_Name": "MultiThresholdObjects",
-    "Filter_Name": "RemoveFlaggedVertices",
-    "Filter_Name": "RemoveArrays",
-    "Filter_Name": "ApproximatePointCloudHull",
-    "Filter_Name": "DataContainerWriter",
+    "DataContainerReader"
+    "MultiThresholdObjects"
+    "RemoveFlaggedVertices"
+    "RemoveArrays"
+    "ApproximatePointCloudHull"
+    "DataContainerWriter"
 
 ## Pipeline 5 ##
 
-    "Filter_Name": "DataContainerReader",
-    "Filter_Name": "DataContainerReader",
-    "Filter_Name": "DataContainerReader",
-    "Filter_Name": "IterativeClosestPoint",
-    "Filter_Name": "IterativeClosestPoint",
-    "Filter_Name": "ApplyTransformationToGeometry",
-    "Filter_Name": "ApplyTransformationToGeometry",
-    "Filter_Name": "MapPointCloudToRegularGrid",
-    "Filter_Name": "InterpolatePointCloudToRegularGrid",
-    "Filter_Name": "FindNeighborListStatistics",
-    "Filter_Name": "FindNeighborListStatistics",
-    "Filter_Name": "DataContainerWriter",
+    "DataContainerReader"
+    "DataContainerReader"
+    "DataContainerReader"
+    "IterativeClosestPoint"
+    "IterativeClosestPoint"
+    "ApplyTransformationToGeometry"
+    "ApplyTransformationToGeometry"
+    "MapPointCloudToRegularGrid"
+    "InterpolatePointCloudToRegularGrid"
+    "FindNeighborListStatistics"
+    "FindNeighborListStatistics"
+    "DataContainerWriter"
