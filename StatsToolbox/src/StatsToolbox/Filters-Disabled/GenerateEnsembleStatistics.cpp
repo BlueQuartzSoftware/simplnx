@@ -47,7 +47,7 @@ Parameters GenerateEnsembleStatistics::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<PhaseTypeSelectionFilterParameter>(k_PhaseTypeArray_Key, "Phase Types", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PhaseTypeSelectionFilterParameter>(k_PhaseTypeArray_Key, "Phase Types", "", {}));
   params.insert(std::make_unique<Float32Parameter>(k_SizeCorrelationResolution_Key, "Size Correlation Spacing", "", 1.23345f));
   params.insertSeparator(Parameters::Separator{"Cell Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "", DataPath{}));

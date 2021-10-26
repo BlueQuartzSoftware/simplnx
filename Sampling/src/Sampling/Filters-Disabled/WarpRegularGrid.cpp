@@ -49,12 +49,12 @@ Parameters WarpRegularGrid::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_PolyOrder_Key, "Polynomial Order", "", 0, ChoicesParameter::Choices{"2nd", "3rd", "4th"}));
-  params.insert(std::make_unique<SecondOrderPolynomialFilterParameter>(k_SecondOrderACoeff_Key, "Second Order A Coefficients", "", {}));
-  params.insert(std::make_unique<SecondOrderPolynomialFilterParameter>(k_SecondOrderBCoeff_Key, "Second Order B Coefficients", "", {}));
-  params.insert(std::make_unique<ThirdOrderPolynomialFilterParameter>(k_ThirdOrderACoeff_Key, "Third Order A Coefficients", "", {}));
-  params.insert(std::make_unique<ThirdOrderPolynomialFilterParameter>(k_ThirdOrderBCoeff_Key, "Third Order B Coefficients", "", {}));
-  params.insert(std::make_unique<FourthOrderPolynomialFilterParameter>(k_FourthOrderACoeff_Key, "Fourth Order A Coefficients", "", {}));
-  params.insert(std::make_unique<FourthOrderPolynomialFilterParameter>(k_FourthOrderBCoeff_Key, "Fourth Order B Coefficients", "", {}));
+  /*[x]*/ params.insert(std::make_unique<SecondOrderPolynomialFilterParameter>(k_SecondOrderACoeff_Key, "Second Order A Coefficients", "", {}));
+  /*[x]*/ params.insert(std::make_unique<SecondOrderPolynomialFilterParameter>(k_SecondOrderBCoeff_Key, "Second Order B Coefficients", "", {}));
+  /*[x]*/ params.insert(std::make_unique<ThirdOrderPolynomialFilterParameter>(k_ThirdOrderACoeff_Key, "Third Order A Coefficients", "", {}));
+  /*[x]*/ params.insert(std::make_unique<ThirdOrderPolynomialFilterParameter>(k_ThirdOrderBCoeff_Key, "Third Order B Coefficients", "", {}));
+  /*[x]*/ params.insert(std::make_unique<FourthOrderPolynomialFilterParameter>(k_FourthOrderACoeff_Key, "Fourth Order A Coefficients", "", {}));
+  /*[x]*/ params.insert(std::make_unique<FourthOrderPolynomialFilterParameter>(k_FourthOrderBCoeff_Key, "Fourth Order B Coefficients", "", {}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveAsNewDataContainer_Key, "Save as New Data Container", "", false));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewDataContainerName_Key, "Data Container", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});

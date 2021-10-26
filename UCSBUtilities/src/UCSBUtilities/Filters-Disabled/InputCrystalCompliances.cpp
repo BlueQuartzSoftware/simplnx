@@ -43,7 +43,7 @@ Parameters InputCrystalCompliances::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<Symmetric6x6FilterParameter>(k_Compliances_Key, "Compliance Values (10^-11 Pa^-1)", "", {}));
+  /*[x]*/ params.insert(std::make_unique<Symmetric6x6FilterParameter>(k_Compliances_Key, "Compliance Values (10^-11 Pa^-1)", "", {}));
   params.insertSeparator(Parameters::Separator{"Ensemble Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CrystalCompliancesArrayPath_Key, "Crystal Compliances", "", DataPath{}));
 

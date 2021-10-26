@@ -61,7 +61,7 @@ Parameters CreateGeometry::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_YBoundsArrayPath_Key, "Y Bounds", "", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ZBoundsArrayPath_Key, "Z Bounds", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_RectGridCellAttributeMatrixName_Key, "Cell Attribute Matrix", "", DataPath{}));
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_BoxDimensions_Key, "Box Size in Length Units", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_BoxDimensions_Key, "Box Size in Length Units", "", {}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SharedVertexListArrayPath0_Key, "Vertex List", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_VertexAttributeMatrixName0_Key, "Vertex Attribute Matrix", "", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SharedVertexListArrayPath1_Key, "Shared Vertex List", "", DataPath{}));

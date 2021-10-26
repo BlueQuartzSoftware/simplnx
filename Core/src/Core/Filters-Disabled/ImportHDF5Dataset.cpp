@@ -43,7 +43,7 @@ Parameters ImportHDF5Dataset::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ImportHDF5DatasetFilterParameter>(k_ImportHDF5File_Key, "Select HDF5 File", "", {}));
+  /*[x]*/ params.insert(std::make_unique<ImportHDF5DatasetFilterParameter>(k_ImportHDF5File_Key, "Select HDF5 File", "", {}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedAttributeMatrix_Key, "Attribute Matrix", "", DataPath{}));
 
   return params;

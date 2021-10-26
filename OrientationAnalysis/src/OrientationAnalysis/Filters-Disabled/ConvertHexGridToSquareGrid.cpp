@@ -42,7 +42,7 @@ Parameters ConvertHexGridToSquareGrid::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ConvertHexGridToSquareGridFilterParameter>(k_HexGridStack_Key, "Convert Hex Grid ANG Files", "", {}));
+  /*[x]*/ params.insert(std::make_unique<ConvertHexGridToSquareGridFilterParameter>(k_HexGridStack_Key, "Convert Hex Grid ANG Files", "", {}));
 
   return params;
 }

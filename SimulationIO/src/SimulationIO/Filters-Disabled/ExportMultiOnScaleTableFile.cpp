@@ -55,7 +55,7 @@ Parameters ExportMultiOnScaleTableFile::parameters() const
   params.insert(std::make_unique<StringParameter>(k_ArrayName_Key, "Array Name", "", "SomeString"));
   params.insert(std::make_unique<VectorInt32Parameter>(k_NumKeypoints_Key, "Number of Keypoints", "", std::vector<int32>(3), std::vector<std::string>(3)));
   params.insertSeparator(Parameters::Separator{"Ensemble Data"});
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_SelectedArrays_Key, "Selected Arrays", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_SelectedArrays_Key, "Selected Arrays", "", {}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_PhaseNamesArrayPath_Key, "Phase Names", "", DataPath{}));
 
   return params;

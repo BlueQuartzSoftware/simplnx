@@ -54,7 +54,7 @@ Parameters ITKRefineTileCoordinates::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_TileOverlap_Key, "Tile Overlap (Percent)", "", 1.23345f));
   params.insert(std::make_unique<BoolParameter>(k_ApplyRefinedOrigin_Key, "Apply Refined Origin to Geometries", "", false));
   params.insertSeparator(Parameters::Separator{"Input Image Setup"});
-  params.insert(std::make_unique<MultiDataContainerSelectionFilterParameter>(k_DataContainers_Key, "Select Image Data Containers", "", {}));
+  /*[x]*/ params.insert(std::make_unique<MultiDataContainerSelectionFilterParameter>(k_DataContainers_Key, "Select Image Data Containers", "", {}));
   params.insert(std::make_unique<StringParameter>(k_CommonAttributeMatrixName_Key, "Common Attribute Matrix", "", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_CommonDataArrayName_Key, "Common Data Array", "", "SomeString"));
 

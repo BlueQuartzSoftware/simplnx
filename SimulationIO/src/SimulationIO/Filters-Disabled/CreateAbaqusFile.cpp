@@ -54,7 +54,7 @@ Parameters CreateAbaqusFile::parameters() const
   params.insert(std::make_unique<StringParameter>(k_JobName_Key, "Job Name", "", "SomeString"));
   params.insert(std::make_unique<Int32Parameter>(k_NumDepvar_Key, "Number of Solution Dependent State Variables", "", 1234356));
   params.insert(std::make_unique<Int32Parameter>(k_NumUserOutVar_Key, "Number of User Output Variables", "", 1234356));
-  params.insert(std::make_unique<DynamicTableFilterParameter>(k_MatConst_Key, "Material Constants", "", {}));
+  /*[x]*/ params.insert(std::make_unique<DynamicTableFilterParameter>(k_MatConst_Key, "Material Constants", "", {}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_AbqFeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "", DataPath{}));

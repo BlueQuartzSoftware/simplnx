@@ -50,7 +50,7 @@ Parameters InitializeSyntheticVolume::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_EstimateNumberOfFeatures_Key, "Estimate Number of Features", "", false));
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_EstimatedPrimaryFeatures_Key, "Estimated Primary Features", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_EstimatedPrimaryFeatures_Key, "Estimated Primary Features", "", {}));
   params.insertSeparator(Parameters::Separator{"Geometry Selection"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_GeometryDataContainer_Key, "Existing Geometry", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Cell Ensemble Data"});
@@ -64,7 +64,7 @@ Parameters InitializeSyntheticVolume::parameters() const
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Units (For Description Only)", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_BoxDimensions_Key, "Box Size in Length Units", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_BoxDimensions_Key, "Box Size in Length Units", "", {}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_EstimateNumberOfFeatures_Key, k_EstimatedPrimaryFeatures_Key, true);
   params.linkParameters(k_EstimateNumberOfFeatures_Key, k_InputPhaseTypesArrayPath_Key, true);

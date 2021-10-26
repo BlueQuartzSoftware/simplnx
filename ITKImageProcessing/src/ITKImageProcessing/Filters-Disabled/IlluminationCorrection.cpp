@@ -52,7 +52,7 @@ Parameters IlluminationCorrection::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<MontageSelectionFilterParameter>(k_MontageSelection_Key, "Montage Selection", "", {}));
+  /*[x]*/ params.insert(std::make_unique<MontageSelectionFilterParameter>(k_MontageSelection_Key, "Montage Selection", "", {}));
   params.insert(std::make_unique<StringParameter>(k_CellAttributeMatrixName_Key, "Input Attribute Matrix Name", "", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_ImageDataArrayName_Key, "Input Image Array Name", "", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_CorrectedImageDataArrayName_Key, "Corrected Image Name", "", "SomeString"));

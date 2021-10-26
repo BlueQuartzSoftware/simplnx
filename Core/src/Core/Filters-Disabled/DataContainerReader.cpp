@@ -44,7 +44,7 @@ Parameters DataContainerReader::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<BoolParameter>(k_OverwriteExistingDataContainers_Key, "Overwrite Existing Data Containers", "", false));
-  params.insert(std::make_unique<DataContainerReaderFilterParameter>(k_InputFileDataContainerArrayProxy_Key, "Select Arrays from Input File", "", {}));
+  /*[x]*/ params.insert(std::make_unique<DataContainerReaderFilterParameter>(k_InputFileDataContainerArrayProxy_Key, "Select Arrays from Input File", "", {}));
 
   return params;
 }

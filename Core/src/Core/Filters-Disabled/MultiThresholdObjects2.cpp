@@ -43,7 +43,7 @@ Parameters MultiThresholdObjects2::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ComparisonSelectionAdvancedFilterParameter>(k_SelectedThresholds_Key, "Select Arrays to Threshold", "", {}));
+  /*[x]*/ params.insert(std::make_unique<ComparisonSelectionAdvancedFilterParameter>(k_SelectedThresholds_Key, "Select Arrays to Threshold", "", {}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_DestinationArrayName_Key, "Output Attribute Array", "", DataPath{}));
 
   return params;

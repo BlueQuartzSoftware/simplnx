@@ -47,11 +47,11 @@ Parameters CreateDataArray::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ScalarTypeFilterParameter>(k_ScalarType_Key, "Scalar Type", "", {}));
+  /*[x]*/ params.insert(std::make_unique<ScalarTypeFilterParameter>(k_ScalarType_Key, "Scalar Type", "", {}));
   params.insert(std::make_unique<Int32Parameter>(k_NumberOfComponents_Key, "Number of Components", "", 1234356));
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitializationType_Key, "Initialization Type", "", 0, ChoicesParameter::Choices{"Manual", "Random With Range"}));
   params.insert(std::make_unique<StringParameter>(k_InitializationValue_Key, "Initialization Value", "", "SomeString"));
-  params.insert(std::make_unique<RangeFilterParameter>(k_InitializationRange_Key, "Initialization Range", "", {}));
+  /*[x]*/ params.insert(std::make_unique<RangeFilterParameter>(k_InitializationRange_Key, "Initialization Range", "", {}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_NewArray_Key, "Created Attribute Array", "", DataPath{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_InitializationType_Key, k_InitializationValue_Key, 0);

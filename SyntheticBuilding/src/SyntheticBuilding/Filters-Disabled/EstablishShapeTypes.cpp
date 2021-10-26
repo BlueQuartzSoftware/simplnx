@@ -48,7 +48,7 @@ Parameters EstablishShapeTypes::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputPhaseTypesArrayPath_Key, "Phase Types", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Cell Ensemble Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_ShapeTypesArrayName_Key, "Shape Types", "", DataPath{}));
-  params.insert(std::make_unique<ShapeTypeSelectionFilterParameter>(k_ShapeTypeData_Key, "Shape Types", "", {}));
+  /*[x]*/ params.insert(std::make_unique<ShapeTypeSelectionFilterParameter>(k_ShapeTypeData_Key, "Shape Types", "", {}));
 
   return params;
 }

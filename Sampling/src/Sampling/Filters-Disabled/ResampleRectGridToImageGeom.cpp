@@ -50,10 +50,10 @@ Parameters ResampleRectGridToImageGeom::parameters() const
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_RectilinearGridPath_Key, "Input Rectilinear Grid", "", DataPath{}));
   params.insert(
       std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Copy", "", MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_RectGridGeometryDesc_Key, "Rect Grid Geom Info.", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_RectGridGeometryDesc_Key, "Rect Grid Geom Info.", "", {}));
   params.insertSeparator(Parameters::Separator{"Output Image Geometry Parameters"});
   params.insert(std::make_unique<VectorInt32Parameter>(k_Dimensions_Key, "Dimensions (Voxels)", "", std::vector<int32>(3), std::vector<std::string>(3)));
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_CreatedGeometryDescription_Key, "Created Volume Info.", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_CreatedGeometryDescription_Key, "Created Volume Info.", "", {}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Data Container", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_ImageGeomCellAttributeMatrix_Key, "Cell Attribute Matrix", "", DataPath{}));

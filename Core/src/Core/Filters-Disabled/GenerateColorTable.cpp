@@ -44,7 +44,7 @@ Parameters GenerateColorTable::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<GenerateColorTableFilterParameter>(k_SelectedPresetName_Key, "Select Preset...", "", {}));
+  /*[x]*/ params.insert(std::make_unique<GenerateColorTableFilterParameter>(k_SelectedPresetName_Key, "Select Preset...", "", {}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_RgbArrayName_Key, "RGB Array Name", "", DataPath{}));
 

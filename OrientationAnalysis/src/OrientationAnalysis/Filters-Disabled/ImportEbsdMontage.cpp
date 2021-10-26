@@ -46,7 +46,7 @@ Parameters ImportEbsdMontage::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<EbsdMontageImportFilterParameter>(k_InputFileListInfo_Key, "Input File List", "", {}));
+  /*[x]*/ params.insert(std::make_unique<EbsdMontageImportFilterParameter>(k_InputFileListInfo_Key, "Input File List", "", {}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<StringParameter>(k_MontageName_Key, "Name of Created Montage", "", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix Name", "", "SomeString"));

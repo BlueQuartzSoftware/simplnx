@@ -42,7 +42,7 @@ Parameters EbsdToH5Ebsd::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<EbsdToH5EbsdFilterParameter>(k_OrientationData_Key, "Import Orientation Data", "", {}));
+  /*[x]*/ params.insert(std::make_unique<EbsdToH5EbsdFilterParameter>(k_OrientationData_Key, "Import Orientation Data", "", {}));
 
   return params;
 }

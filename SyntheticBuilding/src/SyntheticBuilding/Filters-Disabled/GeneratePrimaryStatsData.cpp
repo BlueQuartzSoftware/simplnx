@@ -59,11 +59,11 @@ Parameters GeneratePrimaryStatsData::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_MinCutOff_Key, "Min.Cut Off", "", 2.3456789));
   params.insert(std::make_unique<Float64Parameter>(k_MaxCutOff_Key, "Max Cut Off", "", 2.3456789));
   params.insert(std::make_unique<Float64Parameter>(k_BinStepSize_Key, "Bin Step Size", "", 2.3456789));
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_NumberOfBins_Key, "Bins Created:", "", {}));
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_FeatureESD_Key, "Feature ESD:", "", {}));
-  params.insert(std::make_unique<DynamicTableFilterParameter>(k_OdfData_Key, "ODF", "", {}));
-  params.insert(std::make_unique<DynamicTableFilterParameter>(k_MdfData_Key, "MDF", "", {}));
-  params.insert(std::make_unique<DynamicTableFilterParameter>(k_AxisOdfData_Key, "Axis ODF", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_NumberOfBins_Key, "Bins Created:", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_FeatureESD_Key, "Feature ESD:", "", {}));
+  /*[x]*/ params.insert(std::make_unique<DynamicTableFilterParameter>(k_OdfData_Key, "ODF", "", {}));
+  /*[x]*/ params.insert(std::make_unique<DynamicTableFilterParameter>(k_MdfData_Key, "MDF", "", {}));
+  /*[x]*/ params.insert(std::make_unique<DynamicTableFilterParameter>(k_AxisOdfData_Key, "Axis ODF", "", {}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_CreateEnsembleAttributeMatrix_Key, "Create Data Container & Ensemble AttributeMatrix", "", false));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerName_Key, "Data Container", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_CellEnsembleAttributeMatrixName_Key, "Cell Ensemble Attribute Matrix", "", DataPath{}));

@@ -46,14 +46,14 @@ Parameters CalcDewarpParameters::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<MontageStructureSelectionFilterParameter>(k_MontageName_Key, "Montage Name", "", {}));
+  /*[x]*/ params.insert(std::make_unique<MontageStructureSelectionFilterParameter>(k_MontageName_Key, "Montage Name", "", {}));
   params.insertSeparator(Parameters::Separator{"Amoeba Optimizer"});
   params.insert(std::make_unique<Int32Parameter>(k_MaxIterations_Key, "Max Iterations", "", 1234356));
   params.insert(std::make_unique<Int32Parameter>(k_Delta_Key, "Delta", "", 1234356));
   params.insert(std::make_unique<Float64Parameter>(k_FractionalTolerance_Key, "Fractional Convergence Tolerance", "", 2.3456789));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SpecifyInitialSimplex_Key, "Specify Initial Simplex", "", false));
-  params.insert(std::make_unique<EbsdWarpPolynomialFilterParameter>(k_XFactors_Key, "X Factors", "", {}));
-  params.insert(std::make_unique<EbsdWarpPolynomialFilterParameter>(k_YFactors_Key, "Y Factors", "", {}));
+  /*[x]*/ params.insert(std::make_unique<EbsdWarpPolynomialFilterParameter>(k_XFactors_Key, "X Factors", "", {}));
+  /*[x]*/ params.insert(std::make_unique<EbsdWarpPolynomialFilterParameter>(k_YFactors_Key, "Y Factors", "", {}));
   params.insertSeparator(Parameters::Separator{"Montage Data Path"});
   params.insert(std::make_unique<StringParameter>(k_AttributeMatrixName_Key, "Attribute Matrix Name", "", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_IPFColorsArrayName_Key, "IPF Colors Array Name", "", "SomeString"));
