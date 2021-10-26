@@ -62,6 +62,13 @@ DataStructure::DataStructure(DataStructure&& ds) noexcept
 DataStructure::~DataStructure()
 {
   m_IsValid = false;
+  for(auto& [id, weakDataPtr] : m_DataObjects)
+  {
+    if(auto sharedDataPtr = weakDataPtr.lock())
+    {
+      sharedDataPtr->setDataStructure(nullptr);
+    }
+  }
 }
 
 DataObject::IdType DataStructure::generateId()
@@ -543,6 +550,10 @@ DataStructure::SignalType& DataStructure::getSignal()
 
 void DataStructure::notify(const std::shared_ptr<AbstractDataStructureMessage>& msg)
 {
+  if(!m_IsValid || msg == nullptr)
+  {
+    return;
+  }
   m_Signal(this, msg);
 }
 

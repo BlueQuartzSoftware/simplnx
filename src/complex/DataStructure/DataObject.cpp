@@ -43,7 +43,11 @@ DataObject& DataObject::operator=(DataObject&& rhs) noexcept = default;
 
 DataObject::~DataObject() noexcept
 {
-  if(m_DataStructure != nullptr)
+  if(m_DataStructure == nullptr)
+  {
+    return;
+  }
+  if(m_DataStructure->m_IsValid)
   {
     m_DataStructure->dataDeleted(getId(), getName());
   }

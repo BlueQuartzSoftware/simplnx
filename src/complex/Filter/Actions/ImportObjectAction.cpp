@@ -26,7 +26,7 @@ ImportObjectAction::~ImportObjectAction() noexcept = default;
 
 Result<> ImportObjectAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  auto importData = std::shared_ptr<DataObject>(m_ImportData->deepCopy());
+  auto importData = std::shared_ptr<DataObject>(getImportObject()->deepCopy());
   // Clear all children before inserting into the DataStructure
   if(auto importGroup = std::dynamic_pointer_cast<BaseGroup>(importData))
   {
