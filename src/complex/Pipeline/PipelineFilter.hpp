@@ -30,14 +30,14 @@ public:
    * @param handle
    * @param args = {}
    * @param filterList = nullptr
-   * @return PipelineFilter*
+   * @return std::unique_ptr<PipelineFilter>
    */
-  static PipelineFilter* Create(const FilterHandle& handle, const Arguments& args = {}, FilterList* filterList = nullptr);
+  static std::unique_ptr<PipelineFilter> Create(const FilterHandle& handle, const Arguments& args = {}, FilterList* filterList = nullptr);
 
   /**
    * @brief Constructs a PipelineFilter from json. Returns nullptr on failure.
    * @param json
-   * @return
+   * @return std::unique_ptr<PipelineFilter>
    */
   static std::unique_ptr<PipelineFilter> FromJson(const nlohmann::json& json);
 
@@ -45,7 +45,7 @@ public:
    * @brief Constructs a PipelineFilter from json using the given filter list. Returns nullptr on failure.
    * @param json
    * @param filterList
-   * @return
+   * @return std::unique_ptr<PipelineFilter>
    */
   static std::unique_ptr<PipelineFilter> FromJson(const nlohmann::json& json, const FilterList& filterList);
 
@@ -71,7 +71,7 @@ public:
    * @brief Returns the filter's human label.
    * @return std::string
    */
-  std::string getName() override;
+  std::string getName() const override;
 
   /**
    * @brief Returns a pointer to the wrapped filter.
@@ -126,6 +126,12 @@ public:
    * @return std::vector<complex::Error>
    */
   std::vector<Error> getErrors() const;
+
+  /**
+   * @brief Creates and returns a unique pointer to a copy of the node.
+   * @return std::unique_ptr<AbstractPipelineNode>
+   */
+  std::unique_ptr<AbstractPipelineNode> deepCopy() const override;
 
   /**
    * @brief Converts the current node to json.

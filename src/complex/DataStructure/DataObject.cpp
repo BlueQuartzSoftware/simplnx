@@ -43,7 +43,14 @@ DataObject& DataObject::operator=(DataObject&& rhs) noexcept = default;
 
 DataObject::~DataObject() noexcept
 {
-  getDataStructure()->dataDeleted(getId(), getName());
+  if(m_DataStructure == nullptr)
+  {
+    return;
+  }
+  if(m_DataStructure->m_IsValid)
+  {
+    m_DataStructure->dataDeleted(getId(), getName());
+  }
 }
 
 bool DataObject::AttemptToAddObject(DataStructure& ds, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId)
@@ -151,16 +158,6 @@ std::vector<DataPath> DataObject::getDataPaths() const
     }
   }
   return paths;
-}
-
-bool DataObject::hasH5Id() const
-{
-  return m_H5Id != -1;
-}
-
-H5::IdType DataObject::getH5Id() const
-{
-  return m_H5Id;
 }
 
 H5::ErrorType DataObject::writeH5ObjectAttributes(H5::DataStructureWriter& dataStructureWriter, H5::ObjectWriter& objectWriter) const

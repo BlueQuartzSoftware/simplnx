@@ -5,6 +5,7 @@
 
 #include "complex/Pipeline/Messaging/NodeStatusMessage.hpp"
 #include "complex/Pipeline/Messaging/PipelineNodeObserver.hpp"
+#include "complex/Pipeline/Pipeline.hpp"
 
 using namespace complex;
 
@@ -94,4 +95,43 @@ void AbstractPipelineNode::notify(const std::shared_ptr<AbstractPipelineMessage>
 AbstractPipelineNode::SignalType& AbstractPipelineNode::getSignal()
 {
   return m_Signal;
+}
+
+std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipeline() const
+{
+  auto currentPipeline = this;
+  auto pipeline = getPrecedingPipelineSegment();
+  if(pipeline == nullptr)
+  {
+    return nullptr;
+  }
+
+  while((currentPipeline = currentPipeline->getParentPipeline()) != nullptr)
+  {
+    auto segment = currentPipeline->getPrecedingPipelineSegment();
+    if(segment == nullptr)
+    {
+      break;
+    }
+    pipeline->push_front(std::move(segment));
+  }
+  return std::move(pipeline);
+}
+
+std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipelineSegment() const
+{
+  Pipeline* parentPipeline = getParentPipeline();
+  if(parentPipeline == nullptr)
+  {
+    return nullptr;
+  }
+  if(parentPipeline->isEmpty())
+  {
+    auto name = parentPipeline->getName();
+    auto filterList = parentPipeline->getFilterList();
+    return std::make_unique<Pipeline>(name, filterList);
+  }
+
+  auto iter = parentPipeline->find(this);
+  return std::move(parentPipeline->copySegment(parentPipeline->begin(), iter));
 }

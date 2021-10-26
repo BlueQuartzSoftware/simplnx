@@ -114,6 +114,7 @@ bool BaseGroup::insert(const std::weak_ptr<DataObject>& obj)
   }
   return false;
 }
+
 bool BaseGroup::remove(DataObject* obj)
 {
   if(obj == nullptr)
@@ -122,6 +123,7 @@ bool BaseGroup::remove(DataObject* obj)
   }
   return m_DataMap.remove(obj->getId());
 }
+
 bool BaseGroup::remove(const std::string& name)
 {
   for(auto iter = m_DataMap.begin(); iter != m_DataMap.end(); iter++)
@@ -135,6 +137,12 @@ bool BaseGroup::remove(const std::string& name)
   }
   return false;
 }
+
+void BaseGroup::clear()
+{
+  m_DataMap.clear();
+}
+
 BaseGroup::Iterator BaseGroup::begin()
 {
   return m_DataMap.begin();

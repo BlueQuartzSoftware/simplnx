@@ -105,6 +105,11 @@ public:
   bool erase(const Iterator& iter);
 
   /**
+   * @brief Removes all DataObjects from the map.
+   */
+  void clear();
+
+  /**
    * @brief Returns a vector of the IdTypes contained in the map.
    * @return std::vector<IdType>
    */

@@ -39,10 +39,10 @@ Result<std::any> DataGroupCreationParameter::fromJson(const nlohmann::json& json
   }
 
   auto jsonValue = json.at(name());
-  if(!jsonValue.is_object())
+  if(!jsonValue.is_string())
   {
     return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Value_Not_Object,
-                                              fmt::format("{}}The JSON data entry for key \"{}\" is not in the form of a JSON Object.", prefix, name()));
+                                              fmt::format("{}The JSON data entry for key \"{}\" is not in the form of a JSON Object.", prefix, name()));
   }
 
   auto valueString = jsonValue.get<std::string>();
@@ -51,7 +51,7 @@ Result<std::any> DataGroupCreationParameter::fromJson(const nlohmann::json& json
   {
     return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix, name(), valueString));
   }
-  return {path};
+  return {path.value()};
 }
 
 IParameter::UniquePointer DataGroupCreationParameter::clone() const

@@ -10,24 +10,24 @@
 namespace complex
 {
 /**
- * @class ExportH5DataFilter
- * @brief The ExportH5DataFilter is an IFilter class designed to export the
- * DataStructure to a target HDF5 file.
+ * @class ImportDREAM3DFilter
+ * @brief The ImportDREAM3DFilter is an IFilter class designed to import data
+ * from a target DREAM.3D file.
  */
-class COMPLEXCORE_EXPORT ExportH5DataFilter : public IFilter
+class COMPLEXCORE_EXPORT ImportDREAM3DFilter : public IFilter
 {
 public:
-  ExportH5DataFilter() = default;
-  ~ExportH5DataFilter() noexcept override = default;
+  ImportDREAM3DFilter() = default;
+  ~ImportDREAM3DFilter() noexcept override = default;
 
-  ExportH5DataFilter(const ExportH5DataFilter&) = delete;
-  ExportH5DataFilter(ExportH5DataFilter&&) noexcept = delete;
+  ImportDREAM3DFilter(const ImportDREAM3DFilter&) = delete;
+  ImportDREAM3DFilter(ImportDREAM3DFilter&&) noexcept = delete;
 
-  ExportH5DataFilter& operator=(const ExportH5DataFilter&) = delete;
-  ExportH5DataFilter& operator=(ExportH5DataFilter&&) noexcept = delete;
+  ImportDREAM3DFilter& operator=(const ImportDREAM3DFilter&) = delete;
+  ImportDREAM3DFilter& operator=(ImportDREAM3DFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ExportFilePath = "Export_File_Path";
+  static inline constexpr StringLiteral k_ImportFileData = "Import_File_Data";
 
   /**
    * @brief Returns the name of the filter class.
@@ -37,12 +37,12 @@ public:
 
   /**
    * @brief Returns the C++ classname of this filter.
-   * @return
+   * @return std::string
    */
   std::string className() const override;
 
   /**
-   * @brief Returns the ExportH5DataFilter class's UUID.
+   * @brief Returns the ImportDREAM3DFilter class's UUID.
    * @return Uuid
    */
   Uuid uuid() const override;
@@ -65,6 +65,13 @@ public:
    */
   UniquePointer clone() const override;
 
+  /**
+   * @brief Converts the given arguments to a JSON representation using the filter's parameters.
+   * @param args
+   * @return nlohmann::json
+   */
+  nlohmann::json toJson(const Arguments& args) const override;
+
 protected:
   /**
    * @brief Classes that implement IFilter must provide this function for preflight.
@@ -81,11 +88,12 @@ protected:
    * Runs after the filter applies the OutputActions from preflight.
    * @param dataStructure
    * @param args
+   * @param pipelineNode
    * @param messageHandler
    * @return Result<>
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const override;
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ExportH5DataFilter, "b3a95784-2ced-11ec-8d3d-0242ac130003");
+COMPLEX_DEF_FILTER_TRAITS(complex, ImportDREAM3DFilter, "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d");

@@ -62,6 +62,13 @@ DataStructure::DataStructure(DataStructure&& ds) noexcept
 DataStructure::~DataStructure()
 {
   m_IsValid = false;
+  for(auto& [id, weakDataPtr] : m_DataObjects)
+  {
+    if(auto sharedDataPtr = weakDataPtr.lock())
+    {
+      sharedDataPtr->setDataStructure(nullptr);
+    }
+  }
 }
 
 DataObject::IdType DataStructure::generateId()
@@ -298,6 +305,16 @@ std::shared_ptr<DataObject> DataStructure::getSharedData(DataObject::IdType id) 
   return m_DataObjects.at(id).lock();
 }
 
+std::shared_ptr<DataObject> DataStructure::getSharedData(const DataPath& path) const
+{
+  auto dataObject = getData(path);
+  if(dataObject == nullptr)
+  {
+    return nullptr;
+  }
+  return m_DataObjects.at(dataObject->getId()).lock();
+}
+
 bool DataStructure::removeData(DataObject::IdType id)
 {
   DataObject* data = getData(id);
@@ -403,23 +420,23 @@ bool DataStructure::removeTopLevel(DataObject* data)
   return true;
 }
 
-bool DataStructure::finishAddingObject(const std::shared_ptr<DataObject>& obj, const std::optional<DataObject::IdType>& parent)
+bool DataStructure::finishAddingObject(const std::shared_ptr<DataObject>& dataObject, const std::optional<DataObject::IdType>& parent)
 {
   if(parent.has_value() && containsData(*parent))
   {
     auto parentContainer = dynamic_cast<BaseGroup*>(getData(*parent));
-    if(!parentContainer->insert(obj))
+    if(!parentContainer->insert(dataObject))
     {
       return false;
     }
   }
-  else if(!insertTopLevel(obj))
+  else if(!insertTopLevel(dataObject))
   {
     return false;
   }
 
-  m_DataObjects[obj->getId()] = obj;
-  auto msg = std::make_shared<DataAddedMessage>(this, obj->getId());
+  trackDataObject(dataObject);
+  auto msg = std::make_shared<DataAddedMessage>(this, dataObject->getId());
   notify(msg);
   return true;
 }
@@ -442,6 +459,58 @@ DataStructure::ConstIterator DataStructure::begin() const
 DataStructure::ConstIterator DataStructure::end() const
 {
   return m_RootGroup.end();
+}
+
+bool DataStructure::insert(const std::shared_ptr<DataObject>& dataObject, const DataPath& dataPath)
+{
+  if(dataPath.empty())
+  {
+    return insertIntoRoot(dataObject);
+  }
+
+  auto parentGroup = getDataAs<BaseGroup>(dataPath);
+  return insertIntoParent(dataObject, parentGroup);
+}
+
+bool DataStructure::insertIntoRoot(const std::shared_ptr<DataObject>& dataObject)
+{
+  if(dataObject == nullptr)
+  {
+    return false;
+  }
+
+  if(!m_RootGroup.insert(dataObject))
+  {
+    return false;
+  }
+  trackDataObject(dataObject);
+  return true;
+}
+bool DataStructure::insertIntoParent(const std::shared_ptr<DataObject>& dataObject, BaseGroup* parentGroup)
+{
+  if(parentGroup == nullptr)
+  {
+    return false;
+  }
+
+  if(!parentGroup->insert(dataObject))
+  {
+    return false;
+  }
+  trackDataObject(dataObject);
+  return true;
+}
+
+void DataStructure::trackDataObject(const std::shared_ptr<DataObject>& dataObject)
+{
+  if(dataObject == nullptr)
+  {
+    return;
+  }
+  if(m_DataObjects.find(dataObject->getId()) == m_DataObjects.end())
+  {
+    m_DataObjects[dataObject->getId()] = dataObject;
+  }
 }
 
 bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject::IdType newParentId)
@@ -481,6 +550,10 @@ DataStructure::SignalType& DataStructure::getSignal()
 
 void DataStructure::notify(const std::shared_ptr<AbstractDataStructureMessage>& msg)
 {
+  if(!m_IsValid || msg == nullptr)
+  {
+    return;
+  }
   m_Signal(this, msg);
 }
 
@@ -502,7 +575,7 @@ DataStructure& DataStructure::operator=(const DataStructure& rhs)
   }
   // Updates all DataMaps with the corresponding m_DataObjects pointers.
   // Updates all DataObjects with their new DataStructure
-  m_RootGroup.setDataStructure(this);
+  applyAllDataStructure();
   return *this;
 }
 
@@ -512,8 +585,14 @@ DataStructure& DataStructure::operator=(DataStructure&& rhs) noexcept
   m_RootGroup = std::move(rhs.m_RootGroup);
   m_IsValid = std::move(rhs.m_IsValid);
   m_NextId = std::move(rhs.m_NextId);
-  m_RootGroup.setDataStructure(this);
+
+  applyAllDataStructure();
   return *this;
+}
+
+void DataStructure::applyAllDataStructure()
+{
+  m_RootGroup.setDataStructure(this);
 }
 
 H5::ErrorType DataStructure::writeHdf5(H5::GroupWriter& parentGroupWriter) const

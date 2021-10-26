@@ -57,7 +57,7 @@ public:
    * @brief Returns the pipeline node's name.
    * @return std::string
    */
-  virtual std::string getName() = 0;
+  virtual std::string getName() const = 0;
 
   /**
    * @brief Returns a pointer to the parent Pipeline. Returns nullptr if no
@@ -87,6 +87,12 @@ public:
    * @return bool
    */
   virtual bool execute(DataStructure& data) = 0;
+
+  /**
+   * @brief Creates and returns a unique pointer to a copy of the node.
+   * @return std::unique_ptr<AbstractPipelineNode>
+   */
+  virtual std::unique_ptr<AbstractPipelineNode> deepCopy() const = 0;
 
   /**
    * @brief Marks the node and all of its dependents as dirty.
@@ -148,6 +154,13 @@ public:
    */
   virtual nlohmann::json toJson() const = 0;
 
+  /**
+   * @brief Returns a Pipeline containing the entire pipeline up to the current
+   * node. This will expand DREAM3D files as their own Pipeline.
+   * @return std::unique_ptr<Pipeline>
+   */
+  std::unique_ptr<Pipeline> getPrecedingPipeline() const;
+
 protected:
   /**
    * @brief Sets the current node status.
@@ -182,9 +195,16 @@ protected:
    */
   void setPreflightStructure(const DataStructure& ds);
 
+  /**
+   * @brief Returns a Pipeline containing the parent pipeline up to the current
+   * node. This will expand DREAM3D files as their own Pipeline.
+   * @return std::unique_ptr<Pipeline>
+   */
+  std::unique_ptr<Pipeline> getPrecedingPipelineSegment() const;
+
 private:
   Status m_Status = Status::Dirty;
-  Pipeline* m_Parent;
+  Pipeline* m_Parent = nullptr;
   DataStructure m_DataStructure;
   DataStructure m_PreflightStructure;
   bool m_IsPreflighted = false;

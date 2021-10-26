@@ -51,7 +51,7 @@ Result<OutputActions> CreateDataGroup::preflightImpl(const DataStructure& dataSt
   return {std::move(actions)};
 }
 
-Result<> CreateDataGroup::executeImpl(DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
+Result<> CreateDataGroup::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   return {};
 }
