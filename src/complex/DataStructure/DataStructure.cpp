@@ -564,7 +564,7 @@ DataStructure& DataStructure::operator=(const DataStructure& rhs)
   }
   // Updates all DataMaps with the corresponding m_DataObjects pointers.
   // Updates all DataObjects with their new DataStructure
-  m_RootGroup.setDataStructure(this);
+  applyAllDataStructure();
   return *this;
 }
 
@@ -574,8 +574,14 @@ DataStructure& DataStructure::operator=(DataStructure&& rhs) noexcept
   m_RootGroup = std::move(rhs.m_RootGroup);
   m_IsValid = std::move(rhs.m_IsValid);
   m_NextId = std::move(rhs.m_NextId);
-  m_RootGroup.setDataStructure(this);
+
+  applyAllDataStructure();
   return *this;
+}
+
+void DataStructure::applyAllDataStructure()
+{
+  m_RootGroup.setDataStructure(this);
 }
 
 H5::ErrorType DataStructure::writeHdf5(H5::GroupWriter& parentGroupWriter) const

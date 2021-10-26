@@ -101,7 +101,7 @@ DataStructure CreateTestDataStructure()
 
 Pipeline CreateExportPipeline()
 {
-  Pipeline pipeline;
+  Pipeline pipeline("Export DREAM3D Pipeline 1");
   {
     Arguments args;
     args.insert("Data_Object_Path", DataPath({DataNames::k_Group1Name}));
@@ -117,7 +117,7 @@ Pipeline CreateExportPipeline()
 
 Pipeline CreateImportPipeline()
 {
-  Pipeline pipeline;
+  Pipeline pipeline("Import DREAM3D Pipeline");
   {
     Arguments args;
     Dream3dImportParameter::ImportData importData;

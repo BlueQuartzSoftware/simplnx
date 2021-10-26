@@ -242,11 +242,17 @@ DataMap::ConstIterator DataMap::find(const std::string& name) const
 
 void DataMap::setDataStructure(DataStructure* dataStr)
 {
+  if(dataStr == nullptr)
+  {
+    return;
+  }
+
   for(auto& [key, ptr] : *this)
   {
     // Replace shared_ptr with the corresponding object from the target DataStructure
     auto shareData = dataStr->getSharedData(key);
     shareData->setDataStructure(dataStr);
+    m_Map[key]->setDataStructure(nullptr);
     m_Map[key] = shareData;
   }
 }

@@ -43,7 +43,10 @@ DataObject& DataObject::operator=(DataObject&& rhs) noexcept = default;
 
 DataObject::~DataObject() noexcept
 {
-  getDataStructure()->dataDeleted(getId(), getName());
+  if(m_DataStructure != nullptr)
+  {
+    m_DataStructure->dataDeleted(getId(), getName());
+  }
 }
 
 bool DataObject::AttemptToAddObject(DataStructure& ds, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId)

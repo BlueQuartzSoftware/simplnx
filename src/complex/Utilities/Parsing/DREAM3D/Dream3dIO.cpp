@@ -46,9 +46,8 @@ complex::DREAM3D::PipelineVersionType complex::DREAM3D::GetPipelineVersion(const
 
 DataStructure ImportDataStructureV8(const H5::FileReader& fileReader, H5::ErrorType& errorCode)
 {
-  auto dataStructureGroup = fileReader.openGroup(k_DataStructureGroupTag);
   complex::H5::DataStructureReader dataStructureReader;
-  auto dataStructure = dataStructureReader.readH5Group(dataStructureGroup, errorCode);
+  auto dataStructure = dataStructureReader.readH5Group(fileReader, errorCode);
   if(errorCode < 0)
   {
     return {};
@@ -147,8 +146,7 @@ H5::ErrorType WritePipeline(H5::FileWriter& fileWriter, const complex::Pipeline&
 
 H5::ErrorType WriteDataStructure(H5::FileWriter& fileWriter, const complex::DataStructure& dataStructure)
 {
-  auto dataStructureGroup = fileWriter.createGroupWriter(k_DataStructureGroupTag);
-  return dataStructure.writeHdf5(dataStructureGroup);
+  return dataStructure.writeHdf5(fileWriter);
 }
 
 H5::ErrorType WriteFileVersion(H5::FileWriter& fileWriter)

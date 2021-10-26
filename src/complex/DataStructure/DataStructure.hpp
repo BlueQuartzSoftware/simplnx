@@ -512,16 +512,23 @@ private:
   /**
    * @brief Removes the specified DataObject from the entire DataStructure.
    * @param data
-   * @return
+   * @return bool
    */
   bool removeData(DataObject* data);
 
   /**
-   * @brief Called when a DataObject is deleted from the DataStructure. This notifies observers to the change.
+   * @brief Called when a DataObject is deleted from the DataStructure. This
+   * notifies observers to the change.
    * @param id
    * @param name
    */
   void dataDeleted(DataObject::IdType id, const std::string& name);
+
+  /**
+   * @brief Resets the DataStructure for all known DataObjecs in the DataStructure.
+   * This method exists for methods that copy or move another DataStructure.
+   */
+  void applyAllDataStructure();
 
   /**
    * @brief Notifies observers to the provided message.
