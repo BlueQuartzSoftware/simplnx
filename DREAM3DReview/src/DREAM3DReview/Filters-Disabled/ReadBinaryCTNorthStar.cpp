@@ -57,12 +57,12 @@ Parameters ReadBinaryCTNorthStar::parameters() const
   params.insert(std::make_unique<ArrayCreationParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_DensityArrayName_Key, "Density", "", DataPath{}));
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_VolumeDescription_Key, "Original Volume", "", {}));
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_DataFileInfo_Key, "Dat Files", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_VolumeDescription_Key, "Original Volume", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_DataFileInfo_Key, "Dat Files", "", {}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ImportSubvolume_Key, "Import Subvolume", "", false));
   params.insert(std::make_unique<VectorInt32Parameter>(k_StartVoxelCoord_Key, "Starting XYZ Voxel", "", std::vector<int32>(3), std::vector<std::string>(3)));
   params.insert(std::make_unique<VectorInt32Parameter>(k_EndVoxelCoord_Key, "Ending XYZ Voxel", "", std::vector<int32>(3), std::vector<std::string>(3)));
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_ImportedVolumeDescription_Key, "Imported Volume", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_ImportedVolumeDescription_Key, "Imported Volume", "", {}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_ImportSubvolume_Key, k_StartVoxelCoord_Key, true);
   params.linkParameters(k_ImportSubvolume_Key, k_EndVoxelCoord_Key, true);

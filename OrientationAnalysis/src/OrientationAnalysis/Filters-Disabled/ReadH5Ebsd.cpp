@@ -44,7 +44,7 @@ Parameters ReadH5Ebsd::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ReadH5EbsdFilterParameter>(k_ReadH5Ebsd_Key, "Import H5Ebsd File", "", {}));
+  /*[x]*/ params.insert(std::make_unique<ReadH5EbsdFilterParameter>(k_ReadH5Ebsd_Key, "Import H5Ebsd File", "", {}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerName_Key, "Data Container", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "", DataPath{}));

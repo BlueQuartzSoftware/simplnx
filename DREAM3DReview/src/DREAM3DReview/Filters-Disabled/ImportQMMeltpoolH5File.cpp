@@ -47,8 +47,8 @@ Parameters ImportQMMeltpoolH5File::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<MultiInputFileFilterParameter>(k_InputFiles_Key, "Input File(s)", "", {}));
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_PossibleIndices_Key, "Possible Slice Indices", "", {}));
+  /*[x]*/ params.insert(std::make_unique<MultiInputFileFilterParameter>(k_InputFiles_Key, "Input File(s)", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_PossibleIndices_Key, "Possible Slice Indices", "", {}));
   params.insert(std::make_unique<VectorInt32Parameter>(k_SliceRange_Key, "Slice Index Start/End [Inclusive]", "", std::vector<int32>(2), std::vector<std::string>(2)));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerPath_Key, "Data Container Name", "", DataPath{}));
   params.insert(std::make_unique<StringParameter>(k_VertexAttributeMatrixName_Key, "Vertex Attribute Matrix Name", "", "SomeString"));

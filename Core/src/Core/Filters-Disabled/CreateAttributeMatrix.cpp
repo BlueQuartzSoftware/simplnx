@@ -45,7 +45,7 @@ Parameters CreateAttributeMatrix::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<ChoicesParameter>(k_AttributeMatrixType_Key, "Attribute Matrix Type", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
-  params.insert(std::make_unique<DynamicTableFilterParameter>(k_TupleDimensions_Key, "Tuple Dimensions", "", {}));
+  /*[x]*/ params.insert(std::make_unique<DynamicTableFilterParameter>(k_TupleDimensions_Key, "Tuple Dimensions", "", {}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedAttributeMatrix_Key, "Created Attribute Matrix", "", DataPath{}));
 
   return params;

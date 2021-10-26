@@ -42,7 +42,7 @@ Parameters PipelineAnnotation::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ParagraphFilterParameter>(k_Summary_Key, "", "", {}));
+  /*[x]*/ params.insert(std::make_unique<ParagraphFilterParameter>(k_Summary_Key, "", "", {}));
 
   return params;
 }

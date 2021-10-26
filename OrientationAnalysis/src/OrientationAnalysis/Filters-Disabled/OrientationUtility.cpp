@@ -42,7 +42,7 @@ Parameters OrientationUtility::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<OrientationUtilityFilterParameter>(k__Key, "", "", {}));
+  /*[x]*/ params.insert(std::make_unique<OrientationUtilityFilterParameter>(k__Key, "", "", {}));
 
   return params;
 }

@@ -49,7 +49,7 @@ Parameters RotateSampleRefFrame::parameters() const
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_RotationRepresentationChoice_Key, "Rotation Representation", "", 0, ChoicesParameter::Choices{"Axis Angle", "Rotation Matrix"}));
   params.insert(std::make_unique<Float32Parameter>(k_RotationAngle_Key, "Rotation Angle (Degrees)", "", 1.23345f));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationAxis_Key, "Rotation Axis (ijk)", "", std::vector<float32>(3), std::vector<std::string>(3)));
-  params.insert(std::make_unique<DynamicTableFilterParameter>(k_RotationTable_Key, "Rotation Matrix", "", {}));
+  /*[x]*/ params.insert(std::make_unique<DynamicTableFilterParameter>(k_RotationTable_Key, "Rotation Matrix", "", {}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellAttributeMatrixPath_Key, "Cell Attribute Matrix", "", DataPath{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control

@@ -53,8 +53,8 @@ Parameters CropImageGeometry::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_XMax_Key, "X Max Voxel (Column) [Inclusive]", "", 1234356));
   params.insert(std::make_unique<Int32Parameter>(k_YMax_Key, "Y Max Voxel (Row) [Inclusive]", "", 1234356));
   params.insert(std::make_unique<Int32Parameter>(k_ZMax_Key, "Z Max Voxel (Plane) [Inclusive]", "", 1234356));
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_OldBoxDimensions_Key, "Old Box Size in Length Units", "", {}));
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_NewBoxDimensions_Key, "New Box Size in Length Units", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_OldBoxDimensions_Key, "Old Box Size in Length Units", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_NewBoxDimensions_Key, "New Box Size in Length Units", "", {}));
   params.insert(std::make_unique<BoolParameter>(k_UpdateOrigin_Key, "Update Origin", "", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveAsNewDataContainer_Key, "Save As New Data Container", "", false));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewDataContainerName_Key, "Data Container", "", DataPath{}));

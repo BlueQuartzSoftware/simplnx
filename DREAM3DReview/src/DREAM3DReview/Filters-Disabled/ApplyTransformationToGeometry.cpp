@@ -50,7 +50,7 @@ Parameters ApplyTransformationToGeometry::parameters() const
   params.insertLinkableParameter(
       std::make_unique<ChoicesParameter>(k_TransformationMatrixType_Key, "Transformation Type", "", 0,
                                          ChoicesParameter::Choices{"No Transformation", "Pre-Computed Transformation Matrix", "Manual Transformation Matrix", "Rotation", "Translation", "Scale"}));
-  params.insert(std::make_unique<DynamicTableFilterParameter>(k_ManualTransformationMatrix_Key, "Transformation Matrix", "", {}));
+  /*[x]*/ params.insert(std::make_unique<DynamicTableFilterParameter>(k_ManualTransformationMatrix_Key, "Transformation Matrix", "", {}));
   params.insert(std::make_unique<Float32Parameter>(k_RotationAngle_Key, "Rotation Angle (Degrees)", "", 1.23345f));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationAxis_Key, "Rotation Axis (ijk)", "", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Translation_Key, "Translation", "", std::vector<float32>(3), std::vector<std::string>(3)));

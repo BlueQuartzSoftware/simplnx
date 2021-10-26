@@ -46,7 +46,7 @@ Parameters MoveMultiData::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_WhatToMove_Key, "Object to Move", "", 0, ChoicesParameter::Choices{"Attribute Matrix", "Attribute Array"}));
-  params.insert(std::make_unique<MultiAttributeMatrixSelectionFilterParameter>(k_AttributeMatrixSources_Key, "Attribute Matrix Sources", "", {}));
+  /*[x]*/ params.insert(std::make_unique<MultiAttributeMatrixSelectionFilterParameter>(k_AttributeMatrixSources_Key, "Attribute Matrix Sources", "", {}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataContainerDestination_Key, "Data Container Destination", "", DataPath{}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_DataArraySources_Key, "Attribute Array Sources", "", MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_AttributeMatrixDestination_Key, "Attribute Matrix Destination", "", DataPath{}));

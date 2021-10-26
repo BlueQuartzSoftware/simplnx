@@ -52,7 +52,7 @@ Parameters ImportH5EspritData::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<OEMEbsdScanSelectionFilterParameter>(k_SelectedScanNames_Key, "Scan Names", "", {}));
+  /*[x]*/ params.insert(std::make_unique<OEMEbsdScanSelectionFilterParameter>(k_SelectedScanNames_Key, "Scan Names", "", {}));
   params.insert(std::make_unique<Float64Parameter>(k_ZSpacing_Key, "Z Spacing (Microns)", "", 2.3456789));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin (XYZ)", "", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insert(std::make_unique<BoolParameter>(k_CombineEulerAngles_Key, "Combine phi1, PHI, phi2 into Single Euler Angles Attribute Array", "", false));

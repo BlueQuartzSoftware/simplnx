@@ -42,7 +42,7 @@ Parameters ReadASCIIData::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ReadASCIIDataFilterParameter>(k_WizardData_Key, "ASCII Wizard Data", "", {}));
+  /*[x]*/ params.insert(std::make_unique<ReadASCIIDataFilterParameter>(k_WizardData_Key, "ASCII Wizard Data", "", {}));
 
   return params;
 }

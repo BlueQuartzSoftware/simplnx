@@ -58,7 +58,7 @@ Parameters ITKImportRoboMetMontage::parameters() const
   params.insert(std::make_unique<VectorInt32Parameter>(k_ColumnMontageLimits_Key, "Montage Column Start/End [Inclusive, Zero Based]", "", std::vector<int32>(2), std::vector<std::string>(2)));
   params.insert(std::make_unique<VectorInt32Parameter>(k_RowMontageLimits_Key, "Montage Row Start/End [Inclusive, Zero Based]", "", std::vector<int32>(2), std::vector<std::string>(2)));
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_MontageInformation_Key, "Montage Information", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_MontageInformation_Key, "Montage Information", "", {}));
   params.insert(std::make_unique<Int32Parameter>(k_SliceNumber_Key, "Slice Number", "", 1234356));
   params.insert(std::make_unique<StringParameter>(k_ImageFilePrefix_Key, "Image File Prefix", "", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_ImageFileExtension_Key, "Image File Extension", "", "SomeString"));

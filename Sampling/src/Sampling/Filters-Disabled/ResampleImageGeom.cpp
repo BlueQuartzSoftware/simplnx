@@ -47,9 +47,9 @@ Parameters ResampleImageGeom::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_CurrentGeomtryInfo_Key, "Current Image Geometry", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_CurrentGeomtryInfo_Key, "Current Image Geometry", "", {}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "", std::vector<float32>(3), std::vector<std::string>(3)));
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_NewGeomtryInfo_Key, "Created/Updated Image Geometry", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_NewGeomtryInfo_Key, "Created/Updated Image Geometry", "", {}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveAsNewDataContainer_Key, "Save as New Data Container", "", false));
   params.insertSeparator(Parameters::Separator{"Cell Data"});

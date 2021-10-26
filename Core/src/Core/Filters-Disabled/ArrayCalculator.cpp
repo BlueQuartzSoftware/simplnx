@@ -46,8 +46,8 @@ Parameters ArrayCalculator::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedAttributeMatrix_Key, "Cell Attribute Matrix", "", DataPath{}));
-  params.insert(std::make_unique<CalculatorFilterParameter>(k_InfixEquation_Key, "Infix Expression", "", {}));
-  params.insert(std::make_unique<ScalarTypeFilterParameter>(k_ScalarType_Key, "Scalar Type", "", {}));
+  /*[x]*/ params.insert(std::make_unique<CalculatorFilterParameter>(k_InfixEquation_Key, "Infix Expression", "", {}));
+  /*[x]*/ params.insert(std::make_unique<ScalarTypeFilterParameter>(k_ScalarType_Key, "Scalar Type", "", {}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_CalculatedArray_Key, "Calculated Array", "", DataPath{}));
 
   return params;

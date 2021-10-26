@@ -46,7 +46,7 @@ Parameters ImportVectorImageStack::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ImportVectorImageStackFilterParameter>(k_InputFileListInfo_Key, "Input File List", "", {}));
+  /*[x]*/ params.insert(std::make_unique<ImportVectorImageStackFilterParameter>(k_InputFileListInfo_Key, "Input File List", "", {}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insert(std::make_unique<BoolParameter>(k_ConvertToGrayscale_Key, "Convert Color To Grayscale", "", false));

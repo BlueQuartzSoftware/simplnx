@@ -55,7 +55,7 @@ Parameters InitializeData::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_ZMax_Key, "Z Max (Plane)", "", 1234356));
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "", 0, ChoicesParameter::Choices{"Manual", "Random", "Random With Range"}));
   params.insert(std::make_unique<Float64Parameter>(k_InitValue_Key, "Initialization Value", "", 2.3456789));
-  params.insert(std::make_unique<RangeFilterParameter>(k_InitRange_Key, "Initialization Range", "", {}));
+  /*[x]*/ params.insert(std::make_unique<RangeFilterParameter>(k_InitRange_Key, "Initialization Range", "", {}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_InitType_Key, k_InitValue_Key, 0);
   params.linkParameters(k_InitType_Key, k_InitRange_Key, 1);

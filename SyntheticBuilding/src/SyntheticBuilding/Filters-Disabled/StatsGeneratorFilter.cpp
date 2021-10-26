@@ -44,7 +44,7 @@ Parameters StatsGeneratorFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<StatsGeneratorFilterParameter>(k_StatsGenerator_Key, "StatsGenerator", "", {}));
+  /*[x]*/ params.insert(std::make_unique<StatsGeneratorFilterParameter>(k_StatsGenerator_Key, "StatsGenerator", "", {}));
   params.insertSeparator(Parameters::Separator{"Created Data Container"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_StatsGeneratorDataContainerName_Key, "Statistics Data Container Name", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Created Ensemble AttributeMatrix"});

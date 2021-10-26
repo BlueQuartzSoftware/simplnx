@@ -56,7 +56,7 @@ Parameters ImportAsciDataArray::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_SkipHeaderLines_Key, "Skip Header Lines", "", 1234356));
   params.insert(std::make_unique<ChoicesParameter>(k_Delimiter_Key, "Delimiter", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedAttributeArrayPath_Key, "Output Attribute Array", "", DataPath{}));
-  params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_FirstLine_Key, "First Line of Data:", "", {}));
+  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_FirstLine_Key, "First Line of Data:", "", {}));
 
   return params;
 }
