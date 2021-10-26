@@ -491,6 +491,11 @@ std::unique_ptr<Pipeline> Pipeline::copySegment(const const_iterator& startIter,
   {
     pipelineCopy->push_back(iter->get()->deepCopy());
   }
+  // Include the end iterator if it is a valid value
+  if(endIter != end())
+  {
+    pipelineCopy->push_back(endIter->get()->deepCopy());
+  }
   return std::move(pipelineCopy);
 }
 
