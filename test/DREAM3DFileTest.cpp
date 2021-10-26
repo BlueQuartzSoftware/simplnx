@@ -18,7 +18,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
-#include "complex/unit_test/complex_test_dirs.h"
+#include "complex/unit_test/complex_test_dirs.hpp"
 
 using namespace complex;
 namespace fs = std::filesystem;
@@ -142,7 +142,7 @@ DREAM3D::FileData CreateFileData()
 TEST_CASE("DREAM3D File IO Test")
 {
   Application app;
-  fs::path pluginPath = fmt::format("{}/{}/", complex::unit_test::k_BuildDir, complex::unit_test::k_BuildTypeDir);
+  fs::path pluginPath = complex::unit_test::k_BuildDir.str();
   app.loadPlugins(pluginPath, false);
 
   std::lock_guard<std::mutex> lock(m_DataMutex);
@@ -176,7 +176,7 @@ TEST_CASE("DREAM3D File IO Test")
 TEST_CASE("Import/Export DREAM3D Filter Test")
 {
   Application app;
-  fs::path pluginPath = fmt::format("{}/{}/", complex::unit_test::k_BuildDir, complex::unit_test::k_BuildTypeDir);
+  fs::path pluginPath = complex::unit_test::k_BuildDir.str();
   app.loadPlugins(pluginPath, false);
 
   std::lock_guard<std::mutex> lock(m_DataMutex);
