@@ -494,7 +494,7 @@ private:
   complex::FilterList* getActiveFilterList() const;
 
   /**
-   * @brief Resets all collection nodes' parent pipeline. 
+   * @brief Resets all collection nodes' parent pipeline.
    */
   void resetCollectionParent();
 

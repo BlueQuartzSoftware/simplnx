@@ -33,7 +33,7 @@ public:
   /**
    * @brief Returns a shared_ptr to the DataObject being imported into the DataStructure.
    * @return std::shared_ptr<DataObject>
-  */
+   */
   std::shared_ptr<DataObject> getImportObject() const;
 
   /**
