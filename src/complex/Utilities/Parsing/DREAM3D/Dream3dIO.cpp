@@ -57,7 +57,7 @@ DataStructure ImportDataStructureV8(const H5::FileReader& fileReader, H5::ErrorT
 
 DataStructure ImportLegacyDataStructure(const H5::FileReader& fileReader, H5::ErrorType& errorCode)
 {
-  //auto dataStructureGroup = fileReader.openGroup(k_LegacyDataStructureGroupTag);
+  // auto dataStructureGroup = fileReader.openGroup(k_LegacyDataStructureGroupTag);
 
   throw std::runtime_error("Not implemented: ImportLegacyDataStructure from dream3d file");
 }
@@ -101,7 +101,7 @@ complex::Pipeline complex::DREAM3D::ImportPipelineFromFile(const H5::FileReader&
 complex::DREAM3D::FileData complex::DREAM3D::ReadFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode)
 {
   errorCode = 0;
-  //Pipeline pipeline;
+  // Pipeline pipeline;
   auto pipeline = ImportPipelineFromFile(fileReader, errorCode);
   if(errorCode < 0)
   {
