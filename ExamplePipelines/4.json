@@ -1,0 +1,769 @@
+{
+  "0": {
+    "FilterVersion": "2.0.371",
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Read DREAM.3D Data File",
+    "Filter_Name": "DataContainerReader",
+    "Filter_Uuid": "{043cbde5-3878-5718-958f-ae75714df0df}",
+    "InputFile": "G:\\Data\\gc1\\GC1.dream3d",
+    "InputFileDataContainerArrayProxy": {
+      "Data Containers": [
+        {
+          "Attribute Matricies": [
+            {
+              "Data Arrays": [
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 2,
+                  "Name": "NumNeighbors",
+                  "Object Type": "DataArray<int32_t>",
+                  "Path": "/DataContainers/HF_VertexDataContainer/HF_SliceAttributeMatrix",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 2,
+                  "Name": "data_layer_times",
+                  "Object Type": "DataArray<double>",
+                  "Path": "/DataContainers/HF_VertexDataContainer/HF_SliceAttributeMatrix",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 2,
+                  "Name": "file_layer_times",
+                  "Object Type": "DataArray<double>",
+                  "Path": "/DataContainers/HF_VertexDataContainer/HF_SliceAttributeMatrix",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 2,
+                  "Name": "hf_time_res",
+                  "Object Type": "DataArray<double>",
+                  "Path": "/DataContainers/HF_VertexDataContainer/HF_SliceAttributeMatrix",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 2,
+                  "Name": "layer_height",
+                  "Object Type": "DataArray<double>",
+                  "Path": "/DataContainers/HF_VertexDataContainer/HF_SliceAttributeMatrix",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 2,
+                  "Name": "layer_thickness",
+                  "Object Type": "DataArray<double>",
+                  "Path": "/DataContainers/HF_VertexDataContainer/HF_SliceAttributeMatrix",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 2,
+                  "Name": "lf_time_res",
+                  "Object Type": "DataArray<double>",
+                  "Path": "/DataContainers/HF_VertexDataContainer/HF_SliceAttributeMatrix",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                }
+              ],
+              "Flag": 2,
+              "Name": "HF_SliceAttributeMatrix",
+              "Type": 4
+            },
+            {
+              "Data Arrays": [
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 2,
+                  "Name": "Audio",
+                  "Object Type": "DataArray<int16_t>",
+                  "Path": "/DataContainers/HF_VertexDataContainer/HF_VertexAttributeMatrix",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 2,
+                  "Name": "HF Temperature",
+                  "Object Type": "DataArray<float>",
+                  "Path": "/DataContainers/HF_VertexDataContainer/HF_VertexAttributeMatrix",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 2,
+                  "Name": "HF Time",
+                  "Object Type": "DataArray<double>",
+                  "Path": "/DataContainers/HF_VertexDataContainer/HF_VertexAttributeMatrix",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 2,
+                  "Name": "HF_SliceIds",
+                  "Object Type": "DataArray<int32_t>",
+                  "Path": "/DataContainers/HF_VertexDataContainer/HF_VertexAttributeMatrix",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 2,
+                  "Name": "Laser Drive",
+                  "Object Type": "DataArray<uint8_t>",
+                  "Path": "/DataContainers/HF_VertexDataContainer/HF_VertexAttributeMatrix",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 2,
+                  "Name": "Laser Power",
+                  "Object Type": "DataArray<float>",
+                  "Path": "/DataContainers/HF_VertexDataContainer/HF_VertexAttributeMatrix",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 2,
+                  "Name": "Off-Axis PD",
+                  "Object Type": "DataArray<float>",
+                  "Path": "/DataContainers/HF_VertexDataContainer/HF_VertexAttributeMatrix",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 2,
+                  "Name": "Photodiode",
+                  "Object Type": "DataArray<float>",
+                  "Path": "/DataContainers/HF_VertexDataContainer/HF_VertexAttributeMatrix",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                }
+              ],
+              "Flag": 2,
+              "Name": "HF_VertexAttributeMatrix",
+              "Type": 0
+            }
+          ],
+          "Flag": 2,
+          "Name": "HF_VertexDataContainer",
+          "Type": 1
+        }
+      ]
+    },
+    "OverwriteExistingDataContainers": 0
+  },
+  "1": {
+    "DestinationArrayName": "Beam Off",
+    "FilterVersion": "2.0.371",
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Threshold Objects",
+    "Filter_Name": "MultiThresholdObjects",
+    "Filter_Uuid": "{014b7300-cf36-5ede-a751-5faf9b119dae}",
+    "SelectedThresholds": [
+      {
+        "Attribute Array Name": "Laser Drive",
+        "Attribute Matrix Name": "HF_VertexAttributeMatrix",
+        "Comparison Operator": 2,
+        "Comparison Value": 0,
+        "Data Container Name": "HF_VertexDataContainer"
+      }
+    ]
+  },
+  "2": {
+    "FilterVersion": "1.0.1163",
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Remove Flagged Vertices",
+    "Filter_Name": "RemoveFlaggedVertices",
+    "Filter_Uuid": "{379ccc67-16dd-530a-984f-177db2314bac}",
+    "MaskArrayPath": {
+      "Attribute Matrix Name": "HF_VertexAttributeMatrix",
+      "Data Array Name": "Beam Off",
+      "Data Container Name": "HF_VertexDataContainer"
+    },
+    "ReducedVertexGeometry": "TDMS Beam On",
+    "VertexGeometry": {
+      "Attribute Matrix Name": "",
+      "Data Array Name": "",
+      "Data Container Name": "HF_VertexDataContainer"
+    }
+  },
+  "3": {
+    "DataArraysToRemove": {
+      "Data Containers": [
+        {
+          "Attribute Matricies": [
+            {
+              "Data Arrays": [
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "NumNeighbors",
+                  "Object Type": "int32_t",
+                  "Path": "HF_VertexDataContainer/HF_SliceAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "data_layer_times",
+                  "Object Type": "double",
+                  "Path": "HF_VertexDataContainer/HF_SliceAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "file_layer_times",
+                  "Object Type": "double",
+                  "Path": "HF_VertexDataContainer/HF_SliceAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "hf_time_res",
+                  "Object Type": "double",
+                  "Path": "HF_VertexDataContainer/HF_SliceAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "layer_height",
+                  "Object Type": "double",
+                  "Path": "HF_VertexDataContainer/HF_SliceAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "layer_thickness",
+                  "Object Type": "double",
+                  "Path": "HF_VertexDataContainer/HF_SliceAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "lf_time_res",
+                  "Object Type": "double",
+                  "Path": "HF_VertexDataContainer/HF_SliceAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                }
+              ],
+              "Flag": 0,
+              "Name": "HF_SliceAttributeMatrix",
+              "Type": 4
+            },
+            {
+              "Data Arrays": [
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "Audio",
+                  "Object Type": "int16_t",
+                  "Path": "HF_VertexDataContainer/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "Beam Off",
+                  "Object Type": "bool",
+                  "Path": "HF_VertexDataContainer/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "HF Temperature",
+                  "Object Type": "float",
+                  "Path": "HF_VertexDataContainer/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "HF Time",
+                  "Object Type": "double",
+                  "Path": "HF_VertexDataContainer/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "HF_SliceIds",
+                  "Object Type": "int32_t",
+                  "Path": "HF_VertexDataContainer/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "Laser Drive",
+                  "Object Type": "uint8_t",
+                  "Path": "HF_VertexDataContainer/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "Laser Power",
+                  "Object Type": "float",
+                  "Path": "HF_VertexDataContainer/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "Off-Axis PD",
+                  "Object Type": "float",
+                  "Path": "HF_VertexDataContainer/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "Photodiode",
+                  "Object Type": "float",
+                  "Path": "HF_VertexDataContainer/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    26735084
+                  ],
+                  "Version": 2
+                }
+              ],
+              "Flag": 0,
+              "Name": "HF_VertexAttributeMatrix",
+              "Type": 0
+            }
+          ],
+          "Flag": 2,
+          "Name": "HF_VertexDataContainer",
+          "Type": 2
+        },
+        {
+          "Attribute Matricies": [
+            {
+              "Data Arrays": [
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "NumNeighbors",
+                  "Object Type": "int32_t",
+                  "Path": "TDMS Beam On/HF_SliceAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "data_layer_times",
+                  "Object Type": "double",
+                  "Path": "TDMS Beam On/HF_SliceAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "file_layer_times",
+                  "Object Type": "double",
+                  "Path": "TDMS Beam On/HF_SliceAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "hf_time_res",
+                  "Object Type": "double",
+                  "Path": "TDMS Beam On/HF_SliceAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "layer_height",
+                  "Object Type": "double",
+                  "Path": "TDMS Beam On/HF_SliceAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "layer_thickness",
+                  "Object Type": "double",
+                  "Path": "TDMS Beam On/HF_SliceAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "lf_time_res",
+                  "Object Type": "double",
+                  "Path": "TDMS Beam On/HF_SliceAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    845
+                  ],
+                  "Version": 2
+                }
+              ],
+              "Flag": 0,
+              "Name": "HF_SliceAttributeMatrix",
+              "Type": 4
+            },
+            {
+              "Data Arrays": [
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "Audio",
+                  "Object Type": "int16_t",
+                  "Path": "TDMS Beam On/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    0
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "Beam Off",
+                  "Object Type": "bool",
+                  "Path": "TDMS Beam On/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    0
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "HF Temperature",
+                  "Object Type": "float",
+                  "Path": "TDMS Beam On/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    0
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "HF Time",
+                  "Object Type": "double",
+                  "Path": "TDMS Beam On/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    0
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "HF_SliceIds",
+                  "Object Type": "int32_t",
+                  "Path": "TDMS Beam On/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    0
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "Laser Drive",
+                  "Object Type": "uint8_t",
+                  "Path": "TDMS Beam On/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    0
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "Laser Power",
+                  "Object Type": "float",
+                  "Path": "TDMS Beam On/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    0
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "Off-Axis PD",
+                  "Object Type": "float",
+                  "Path": "TDMS Beam On/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    0
+                  ],
+                  "Version": 2
+                },
+                {
+                  "Component Dimensions": [
+                    1
+                  ],
+                  "Flag": 0,
+                  "Name": "Photodiode",
+                  "Object Type": "float",
+                  "Path": "TDMS Beam On/HF_VertexAttributeMatrix/",
+                  "Tuple Dimensions": [
+                    0
+                  ],
+                  "Version": 2
+                }
+              ],
+              "Flag": 0,
+              "Name": "HF_VertexAttributeMatrix",
+              "Type": 0
+            }
+          ],
+          "Flag": 0,
+          "Name": "TDMS Beam On",
+          "Type": 2
+        }
+      ]
+    },
+    "FilterVersion": "2.0.371",
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Delete Data",
+    "Filter_Name": "RemoveArrays",
+    "Filter_Uuid": "{7b1c8f46-90dd-584a-b3ba-34e16958a7d0}"
+  },
+  "4": {
+    "FilterVersion": "1.0.1163",
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Approximate Point Cloud Hull",
+    "Filter_Name": "ApproximatePointCloudHull",
+    "Filter_Uuid": "{fab669ad-66c6-5a39-bdb7-fc47b94311ed}",
+    "GridResolution": {
+      "x": 0.10000000149011612,
+      "y": 0.10000000149011612,
+      "z": 0.10000000149011612
+    },
+    "HullDataContainerName": "TDMS Keypoints",
+    "NumberOfEmptyNeighbors": 4,
+    "VertexDataContainerName": {
+      "Attribute Matrix Name": "",
+      "Data Array Name": "",
+      "Data Container Name": "TDMS Beam On"
+    }
+  },
+  "5": {
+    "FilterVersion": "2.0.371",
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Write DREAM.3D Data File",
+    "Filter_Name": "DataContainerWriter",
+    "Filter_Uuid": "{3fcd4c43-9d75-5b86-aad4-4441bc914f37}",
+    "OutputFile": "G:\\Data\\gc1\\GC1_InSituKeypoints.dream3d",
+    "WriteTimeSeries": 0,
+    "WriteXdmfFile": 1
+  },
+  "PipelineBuilder": {
+    "Name": "InSitu_Keypoints",
+    "Number_Filters": 6,
+    "Version": 6
+  }
+}
