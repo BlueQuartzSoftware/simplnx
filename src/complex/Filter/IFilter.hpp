@@ -17,6 +17,8 @@
 
 namespace complex
 {
+class PipelineFilter;
+
 /**
  * @class IFilter
  * @brief IFilter is the interface for filters providing access to both metadata (e.g. name, uuid, etc.)
@@ -74,43 +76,43 @@ public:
 
   /**
    * @brief Returns the name of the filter.
-   * @return
+   * @return std::string
    */
   virtual std::string name() const = 0;
 
   /**
    * @brief Returns the C++ classname of this filter.
-   * @return
+   * @return std::string
    */
   virtual std::string className() const = 0;
 
   /**
    * @brief Returns the uuid of the filter.
-   * @return
+   * @return Uuid
    */
   virtual Uuid uuid() const = 0;
 
   /**
    * @brief Returns the human readable name of the filter.
-   * @return
+   * @return std::string
    */
   virtual std::string humanName() const = 0;
 
   /**
    * @brief Returns the default tags for this filter.
-   * @return
+   * @return std::vector<std::string>
    */
   virtual std::vector<std::string> defaultTags() const;
 
   /**
    * @brief Returns the parameters of the filter (i.e. its inputs)
-   * @return
+   * @return Parameters
    */
   virtual Parameters parameters() const = 0;
 
   /**
    * @brief Returns a copy of the filter.
-   * @return
+   * @return UniquePointer
    */
   virtual UniquePointer clone() const = 0;
 
@@ -120,8 +122,8 @@ public:
    * Some parts of the actions may not be completely filled out if all the required information is not available at preflight time.
    * @param data
    * @param args
-   * @param messageHandler
-   * @return
+   * @param messageHandler = {}
+   * @return Result<OutputActions>
    */
   Result<OutputActions> preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
 
@@ -130,22 +132,23 @@ public:
    * On failure, there is no guarentee that the DataStructure is in a correct state.
    * @param data
    * @param args
-   * @param messageHandler
-   * @return
+   * @param pipelineNode = nullptr
+   * @param messageHandler = {}
+   * @return Result<>
    */
-  Result<> execute(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
+  Result<> execute(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode = nullptr, const MessageHandler& messageHandler = {}) const;
 
   /**
    * @brief Converts the given arguments to a JSON representation using the filter's parameters.
    * @param args
-   * @return
+   * @return nlohmann::json
    */
-  nlohmann::json toJson(const Arguments& args) const;
+  virtual nlohmann::json toJson(const Arguments& args) const;
 
   /**
    * @brief Converts JSON to arguments based on the filter's parameters.
    * @param json
-   * @return
+   * @return Result<Arguments>
    */
   Result<Arguments> fromJson(const nlohmann::json& json) const;
 
@@ -158,7 +161,7 @@ protected:
    * @param data
    * @param args
    * @param messageHandler
-   * @return
+   * @return Result<OutputActions>
    */
   virtual Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const = 0;
 
@@ -167,10 +170,11 @@ protected:
    * Runs after the filter applies the OutputActions from preflight.
    * @param data
    * @param args
+   * @param pipelineNode
    * @param messageHandler
-   * @return
+   * @return Result<>
    */
-  virtual Result<> executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const = 0;
+  virtual Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const = 0;
 };
 
 using FilterCreationFunc = IFilter::UniquePointer (*)();

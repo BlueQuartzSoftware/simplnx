@@ -54,7 +54,7 @@ protected:
    * @param data
    * @param args
    * @param messageHandler
-   * @return DataCheckResult
+   * @return Result<OutputActions>
    */
   complex::Result<complex::OutputActions> preflightImpl(const complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const override;
 
@@ -62,10 +62,11 @@ protected:
    * @brief Filter-specifics for performing execute.
    * @param data
    * @param args
+   * @param pipelineNode
    * @param messageHandler
-   * @return ExecuteResult
+   * @return Result<>
    */
-  complex::Result<> executeImpl(complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const override;
+  complex::Result<> executeImpl(complex::DataStructure& data, const complex::Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const override;
 };
 } // namespace complex
 

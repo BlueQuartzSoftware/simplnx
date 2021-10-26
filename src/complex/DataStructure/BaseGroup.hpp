@@ -169,6 +169,11 @@ public:
   bool remove(const std::string& name);
 
   /**
+   * @brief Clears the group of all children.
+   */
+  void clear();
+
+  /**
    * @brief Returns an iterator to the beginning of the container.
    *
    * BaseGroups found among the container's children are not expanded during

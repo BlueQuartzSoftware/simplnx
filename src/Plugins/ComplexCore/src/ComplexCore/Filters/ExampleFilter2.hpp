@@ -61,7 +61,7 @@ protected:
    * @param data
    * @param args
    * @param messageHandler
-   * @return
+   * @return Result<OutputActions>
    */
   Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const override;
 
@@ -69,10 +69,11 @@ protected:
    * @brief
    * @param data
    * @param args
+   * @param pipelineNode
    * @param messageHandler
-   * @return
+   * @return Result<>
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const override;
+  Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const override;
 };
 } // namespace complex
 

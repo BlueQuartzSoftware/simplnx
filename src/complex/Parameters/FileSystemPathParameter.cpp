@@ -91,8 +91,7 @@ IParameter::AcceptedTypes FileSystemPathParameter::acceptedTypes() const
 nlohmann::json FileSystemPathParameter::toJson(const std::any& value) const
 {
   ValueType path = std::any_cast<ValueType>(value);
-  nlohmann::json json;
-  json[k_PathKey] = path.string();
+  nlohmann::json json = path.string();
   return json;
 }
 

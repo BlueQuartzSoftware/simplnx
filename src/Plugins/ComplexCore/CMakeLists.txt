@@ -7,10 +7,11 @@ set(PLUGIN_NAME "ComplexCore")
 set(FilterList
   CreateDataArray
   CreateDataGroup
+  ExportDREAM3DFilter
+  ImportDREAM3DFilter
   ImportTextFilter
   ExampleFilter1
   ExampleFilter2
-  ExportH5DataFilter
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}

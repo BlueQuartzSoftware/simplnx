@@ -77,12 +77,12 @@ TEST_CASE("Complex Pipeline")
   FilterHandle tf1Handle(testFilter1->uuid(), test1Plugin->getId());
 
   Pipeline pipeline;
-  PipelineFilter* node = PipelineFilter::Create(tf1Handle);
+  std::unique_ptr<PipelineFilter> node = PipelineFilter::Create(tf1Handle);
   REQUIRE(node != nullptr);
   REQUIRE(node->getParameters().empty() == false);
-  REQUIRE(pipeline.push_back(node));
+  REQUIRE(pipeline.push_back(std::move(node)));
 
-  auto segment2 = new Pipeline();
+  auto segment2 = std::make_shared<Pipeline>();
   segment2->push_back(tf1Handle);
   REQUIRE(pipeline.push_back(segment2));
 }

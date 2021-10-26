@@ -113,7 +113,7 @@ Result<OutputActions> IFilter::preflight(const DataStructure& data, const Argume
   return implResult;
 }
 
-Result<> IFilter::execute(DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+Result<> IFilter::execute(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler) const
 {
   // determine required parameters
 
@@ -136,7 +136,7 @@ Result<> IFilter::execute(DataStructure& data, const Arguments& args, const Mess
     }
   }
 
-  return executeImpl(data, args, messageHandler);
+  return executeImpl(data, args, pipelineFilter, messageHandler);
 }
 
 nlohmann::json IFilter::toJson(const Arguments& args) const

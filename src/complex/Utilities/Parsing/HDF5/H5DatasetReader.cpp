@@ -104,7 +104,7 @@ std::string H5::DatasetReader::readAsString() const
   std::string data;
 
   // Test if the string is variable length
-  const hid_t typeID = H5Aget_type(getId());
+  const hid_t typeID = H5Dget_type(getId());
   const htri_t isVariableString = H5Tis_variable_str(typeID);
 
   if(isVariableString == 1)

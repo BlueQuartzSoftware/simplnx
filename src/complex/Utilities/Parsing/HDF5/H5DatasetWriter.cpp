@@ -89,7 +89,7 @@ bool H5::DatasetWriter::tryCreatingDataset(const std::string& datasetName, H5::T
 
 void H5::DatasetWriter::closeHdf5()
 {
-  if(isValid())
+  if(m_DatasetId > 0)
   {
     H5Dclose(m_DatasetId);
     m_DatasetId = 0;
