@@ -88,17 +88,12 @@ Result<std::any> NumericTypeParameter::fromJson(const nlohmann::json& json) cons
     return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("JSON does not contain key \"{}\"", key)}})};
   }
   auto jsonValue = json.at(key);
-  if(!jsonValue.is_string())
+  if(!jsonValue.is_number())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("JSON value for key \"{}\" is not a string", key)}})};
+    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("JSON value for key \"{}\" is not a number", key)}})};
   }
-  auto numbericTypeString = jsonValue.get<std::string>();
-  std::optional<NumericType> type = NumericTypefromString(numbericTypeString);
-  if(!type.has_value())
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{{-3, fmt::format("JSON value for key \"{}\" is not a valid NumericType", key)}})};
-  }
-  return {*type};
+  auto type = jsonValue.get<ValueType>();
+  return {type};
 }
 
 IParameter::UniquePointer NumericTypeParameter::clone() const
