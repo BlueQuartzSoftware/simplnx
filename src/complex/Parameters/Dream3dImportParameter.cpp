@@ -116,7 +116,7 @@ IParameter::UniquePointer Dream3dImportParameter::clone() const
 //-----------------------------------------------------------------------------
 std::any Dream3dImportParameter::defaultValue() const
 {
-  return ImportData();
+  return m_DefaultValue;
 }
 
 //-----------------------------------------------------------------------------
