@@ -37,7 +37,7 @@ Uuid ImportDREAM3DFilter::uuid() const
 
 std::string ImportDREAM3DFilter::humanName() const
 {
-  return "Export HDF5 Data Filter";
+  return "Read DREAM.3D File";
 }
 
 Parameters ImportDREAM3DFilter::parameters() const
