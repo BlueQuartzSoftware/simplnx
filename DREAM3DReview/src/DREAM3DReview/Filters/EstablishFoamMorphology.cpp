@@ -134,7 +134,7 @@ Result<OutputActions> EstablishFoamMorphology::preflightImpl(const DataStructure
 }
 
 //------------------------------------------------------------------------------
-Result<> EstablishFoamMorphology::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> EstablishFoamMorphology::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

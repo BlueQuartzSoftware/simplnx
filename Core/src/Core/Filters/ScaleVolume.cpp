@@ -84,7 +84,7 @@ Result<OutputActions> ScaleVolume::preflightImpl(const DataStructure& ds, const 
 }
 
 //------------------------------------------------------------------------------
-Result<> ScaleVolume::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ScaleVolume::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

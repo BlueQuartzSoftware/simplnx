@@ -78,7 +78,7 @@ Result<OutputActions> FindFeaturePhases::preflightImpl(const DataStructure& ds, 
 }
 
 //------------------------------------------------------------------------------
-Result<> FindFeaturePhases::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> FindFeaturePhases::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

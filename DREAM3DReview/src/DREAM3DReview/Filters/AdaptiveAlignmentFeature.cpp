@@ -91,7 +91,7 @@ Result<OutputActions> AdaptiveAlignmentFeature::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> AdaptiveAlignmentFeature::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> AdaptiveAlignmentFeature::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

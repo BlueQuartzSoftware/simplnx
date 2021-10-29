@@ -80,7 +80,7 @@ Result<OutputActions> ConvertQuaternion::preflightImpl(const DataStructure& ds, 
 }
 
 //------------------------------------------------------------------------------
-Result<> ConvertQuaternion::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ConvertQuaternion::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

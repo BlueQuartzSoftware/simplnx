@@ -104,7 +104,7 @@ Result<OutputActions> AdaptiveAlignmentMutualInformation::preflightImpl(const Da
 }
 
 //------------------------------------------------------------------------------
-Result<> AdaptiveAlignmentMutualInformation::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> AdaptiveAlignmentMutualInformation::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

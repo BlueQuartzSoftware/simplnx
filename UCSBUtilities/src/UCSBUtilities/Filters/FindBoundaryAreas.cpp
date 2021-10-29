@@ -76,7 +76,7 @@ Result<OutputActions> FindBoundaryAreas::preflightImpl(const DataStructure& ds, 
 }
 
 //------------------------------------------------------------------------------
-Result<> FindBoundaryAreas::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> FindBoundaryAreas::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

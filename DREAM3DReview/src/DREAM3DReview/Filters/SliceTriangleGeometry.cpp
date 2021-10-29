@@ -104,7 +104,7 @@ Result<OutputActions> SliceTriangleGeometry::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> SliceTriangleGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> SliceTriangleGeometry::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

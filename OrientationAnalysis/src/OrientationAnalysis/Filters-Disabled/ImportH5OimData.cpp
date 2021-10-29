@@ -96,7 +96,7 @@ Result<OutputActions> ImportH5OimData::preflightImpl(const DataStructure& ds, co
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportH5OimData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ImportH5OimData::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -83,7 +83,7 @@ Result<OutputActions> AvizoRectilinearCoordinateWriter::preflightImpl(const Data
 }
 
 //------------------------------------------------------------------------------
-Result<> AvizoRectilinearCoordinateWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> AvizoRectilinearCoordinateWriter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

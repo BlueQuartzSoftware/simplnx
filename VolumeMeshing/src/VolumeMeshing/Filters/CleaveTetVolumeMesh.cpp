@@ -86,7 +86,7 @@ Result<OutputActions> CleaveTetVolumeMesh::preflightImpl(const DataStructure& ds
 }
 
 //------------------------------------------------------------------------------
-Result<> CleaveTetVolumeMesh::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> CleaveTetVolumeMesh::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

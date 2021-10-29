@@ -74,7 +74,7 @@ Result<OutputActions> MultiThresholdObjects2::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> MultiThresholdObjects2::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> MultiThresholdObjects2::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

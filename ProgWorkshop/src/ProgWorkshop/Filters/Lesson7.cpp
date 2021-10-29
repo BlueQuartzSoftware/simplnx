@@ -71,7 +71,7 @@ Result<OutputActions> Lesson7::preflightImpl(const DataStructure& ds, const Argu
 }
 
 //------------------------------------------------------------------------------
-Result<> Lesson7::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> Lesson7::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

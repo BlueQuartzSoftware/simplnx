@@ -74,7 +74,7 @@ Result<OutputActions> ImportHDF5Dataset::preflightImpl(const DataStructure& ds, 
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportHDF5Dataset::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ImportHDF5Dataset::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

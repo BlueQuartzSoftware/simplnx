@@ -79,7 +79,7 @@ Result<OutputActions> FindLargestCrossSections::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> FindLargestCrossSections::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> FindLargestCrossSections::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

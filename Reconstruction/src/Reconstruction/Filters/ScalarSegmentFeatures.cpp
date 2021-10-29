@@ -91,7 +91,7 @@ Result<OutputActions> ScalarSegmentFeatures::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> ScalarSegmentFeatures::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ScalarSegmentFeatures::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -87,7 +87,7 @@ Result<OutputActions> VisualizeGBCDPoleFigure::preflightImpl(const DataStructure
 }
 
 //------------------------------------------------------------------------------
-Result<> VisualizeGBCDPoleFigure::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> VisualizeGBCDPoleFigure::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

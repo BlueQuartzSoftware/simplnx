@@ -98,7 +98,7 @@ Result<OutputActions> FindEuclideanDistMap::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> FindEuclideanDistMap::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> FindEuclideanDistMap::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

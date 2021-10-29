@@ -96,7 +96,7 @@ Result<OutputActions> CAxisSegmentFeatures::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> CAxisSegmentFeatures::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> CAxisSegmentFeatures::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

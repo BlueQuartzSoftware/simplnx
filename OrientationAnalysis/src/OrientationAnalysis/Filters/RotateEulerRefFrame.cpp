@@ -77,7 +77,7 @@ Result<OutputActions> RotateEulerRefFrame::preflightImpl(const DataStructure& ds
 }
 
 //------------------------------------------------------------------------------
-Result<> RotateEulerRefFrame::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> RotateEulerRefFrame::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

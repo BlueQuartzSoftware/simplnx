@@ -91,7 +91,7 @@ Result<OutputActions> DBSCAN::preflightImpl(const DataStructure& ds, const Argum
 }
 
 //------------------------------------------------------------------------------
-Result<> DBSCAN::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> DBSCAN::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

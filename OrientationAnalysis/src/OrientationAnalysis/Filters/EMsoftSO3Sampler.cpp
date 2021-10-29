@@ -101,7 +101,7 @@ Result<OutputActions> EMsoftSO3Sampler::preflightImpl(const DataStructure& ds, c
 }
 
 //------------------------------------------------------------------------------
-Result<> EMsoftSO3Sampler::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> EMsoftSO3Sampler::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

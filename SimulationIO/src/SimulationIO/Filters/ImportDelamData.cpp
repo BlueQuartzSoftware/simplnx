@@ -87,7 +87,7 @@ Result<OutputActions> ImportDelamData::preflightImpl(const DataStructure& ds, co
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportDelamData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ImportDelamData::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

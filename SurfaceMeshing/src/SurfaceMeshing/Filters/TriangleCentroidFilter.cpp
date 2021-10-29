@@ -72,7 +72,7 @@ Result<OutputActions> TriangleCentroidFilter::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> TriangleCentroidFilter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> TriangleCentroidFilter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -71,7 +71,7 @@ Result<OutputActions> EbsdToH5Ebsd::preflightImpl(const DataStructure& ds, const
 }
 
 //------------------------------------------------------------------------------
-Result<> EbsdToH5Ebsd::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> EbsdToH5Ebsd::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

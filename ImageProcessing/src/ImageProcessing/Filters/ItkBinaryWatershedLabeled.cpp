@@ -79,7 +79,7 @@ Result<OutputActions> ItkBinaryWatershedLabeled::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> ItkBinaryWatershedLabeled::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ItkBinaryWatershedLabeled::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

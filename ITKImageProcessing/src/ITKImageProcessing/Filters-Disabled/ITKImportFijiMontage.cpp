@@ -108,7 +108,7 @@ Result<OutputActions> ITKImportFijiMontage::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKImportFijiMontage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ITKImportFijiMontage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

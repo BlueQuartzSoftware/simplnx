@@ -103,7 +103,7 @@ Result<OutputActions> CalcDewarpParameters::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> CalcDewarpParameters::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> CalcDewarpParameters::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

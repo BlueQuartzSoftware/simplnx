@@ -71,7 +71,7 @@ Result<OutputActions> CreateArrayofIndices::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateArrayofIndices::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> CreateArrayofIndices::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

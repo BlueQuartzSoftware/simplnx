@@ -101,7 +101,7 @@ Result<OutputActions> FindFeatureClustering::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> FindFeatureClustering::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> FindFeatureClustering::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

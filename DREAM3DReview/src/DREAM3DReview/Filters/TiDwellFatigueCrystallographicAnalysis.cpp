@@ -145,7 +145,7 @@ Result<OutputActions> TiDwellFatigueCrystallographicAnalysis::preflightImpl(cons
 }
 
 //------------------------------------------------------------------------------
-Result<> TiDwellFatigueCrystallographicAnalysis::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> TiDwellFatigueCrystallographicAnalysis::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

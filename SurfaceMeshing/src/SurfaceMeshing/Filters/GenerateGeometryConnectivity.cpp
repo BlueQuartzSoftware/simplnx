@@ -76,7 +76,7 @@ Result<OutputActions> GenerateGeometryConnectivity::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> GenerateGeometryConnectivity::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> GenerateGeometryConnectivity::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

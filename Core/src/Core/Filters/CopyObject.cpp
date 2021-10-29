@@ -87,7 +87,7 @@ Result<OutputActions> CopyObject::preflightImpl(const DataStructure& ds, const A
 }
 
 //------------------------------------------------------------------------------
-Result<> CopyObject::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> CopyObject::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

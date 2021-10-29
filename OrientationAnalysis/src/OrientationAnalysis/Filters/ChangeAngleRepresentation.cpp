@@ -74,7 +74,7 @@ Result<OutputActions> ChangeAngleRepresentation::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> ChangeAngleRepresentation::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ChangeAngleRepresentation::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

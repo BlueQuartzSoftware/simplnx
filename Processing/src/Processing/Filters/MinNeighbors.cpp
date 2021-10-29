@@ -92,7 +92,7 @@ Result<OutputActions> MinNeighbors::preflightImpl(const DataStructure& ds, const
 }
 
 //------------------------------------------------------------------------------
-Result<> MinNeighbors::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> MinNeighbors::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

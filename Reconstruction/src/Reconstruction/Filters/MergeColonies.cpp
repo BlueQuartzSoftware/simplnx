@@ -112,7 +112,7 @@ Result<OutputActions> MergeColonies::preflightImpl(const DataStructure& ds, cons
 }
 
 //------------------------------------------------------------------------------
-Result<> MergeColonies::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> MergeColonies::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

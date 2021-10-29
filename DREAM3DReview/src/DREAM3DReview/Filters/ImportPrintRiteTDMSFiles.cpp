@@ -134,7 +134,7 @@ Result<OutputActions> ImportPrintRiteTDMSFiles::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportPrintRiteTDMSFiles::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ImportPrintRiteTDMSFiles::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

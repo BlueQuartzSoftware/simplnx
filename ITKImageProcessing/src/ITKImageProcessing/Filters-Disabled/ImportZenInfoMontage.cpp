@@ -109,7 +109,7 @@ Result<OutputActions> ImportZenInfoMontage::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportZenInfoMontage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ImportZenInfoMontage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

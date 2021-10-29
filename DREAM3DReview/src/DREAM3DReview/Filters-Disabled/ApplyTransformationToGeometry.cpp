@@ -99,7 +99,7 @@ Result<OutputActions> ApplyTransformationToGeometry::preflightImpl(const DataStr
 }
 
 //------------------------------------------------------------------------------
-Result<> ApplyTransformationToGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ApplyTransformationToGeometry::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

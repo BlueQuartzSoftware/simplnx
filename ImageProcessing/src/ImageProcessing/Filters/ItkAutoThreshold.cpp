@@ -86,7 +86,7 @@ Result<OutputActions> ItkAutoThreshold::preflightImpl(const DataStructure& ds, c
 }
 
 //------------------------------------------------------------------------------
-Result<> ItkAutoThreshold::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ItkAutoThreshold::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

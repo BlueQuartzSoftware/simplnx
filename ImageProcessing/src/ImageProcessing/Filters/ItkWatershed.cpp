@@ -81,7 +81,7 @@ Result<OutputActions> ItkWatershed::preflightImpl(const DataStructure& ds, const
 }
 
 //------------------------------------------------------------------------------
-Result<> ItkWatershed::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ItkWatershed::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

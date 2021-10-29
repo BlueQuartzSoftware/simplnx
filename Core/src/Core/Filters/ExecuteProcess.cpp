@@ -71,7 +71,7 @@ Result<OutputActions> ExecuteProcess::preflightImpl(const DataStructure& ds, con
 }
 
 //------------------------------------------------------------------------------
-Result<> ExecuteProcess::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ExecuteProcess::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
