@@ -31,17 +31,11 @@ nlohmann::json BoolParameter::toJson(const std::any& value) const
 
 Result<std::any> BoolParameter::fromJson(const nlohmann::json& json) const
 {
-  const std::string key = name();
-  if(!json.contains(key))
+  if(!json.is_boolean())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("JSON does not contain key \"{}\"", key)}})};
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not a bool", name()));
   }
-  auto jsonValue = json.at(key);
-  if(!jsonValue.is_boolean())
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("JSON value for key \"{}\" is not a bool", key)}})};
-  }
-  auto boolValue = jsonValue.get<ValueType>();
+  auto boolValue = json.get<ValueType>();
   return {boolValue};
 }
 

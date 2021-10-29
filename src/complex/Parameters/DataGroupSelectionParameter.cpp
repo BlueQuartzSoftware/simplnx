@@ -33,27 +33,20 @@ nlohmann::json DataGroupSelectionParameter::toJson(const std::any& value) const
 
 Result<std::any> DataGroupSelectionParameter::fromJson(const nlohmann::json& json) const
 {
-  const std::string prefix("FilterParameter 'DataGroupSelectionParameter' JSON Error: ");
+  static constexpr StringLiteral prefix = "FilterParameter 'DataGroupSelectionParameter' JSON Error: ";
 
-  if(!json.contains(name()))
+  if(!json.is_string())
   {
-    return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}JSON Data does not contain an entry with a key of \"{}\"", prefix, name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}The JSON data entry for key \"{}\" is not a string.", prefix.view(), name()));
   }
 
-  auto jsonValue = json.at(name());
-  if(!jsonValue.is_object())
-  {
-    return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Value_Not_Object,
-                                              fmt::format("{}}The JSON data entry for key \"{}\" is not in the form of a JSON Object.", prefix, name()));
-  }
-
-  auto valueString = jsonValue.get<std::string>();
+  auto valueString = json.get<std::string>();
   auto path = DataPath::FromString(valueString);
   if(!path.has_value())
   {
-    return complex::MakeErrorResult<std::any>(complex::FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix, name(), valueString));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse \"{}\" as DataPath for key \"{}\"", prefix, name(), valueString));
   }
-  return {path};
+  return {std::move(*path)};
 }
 
 IParameter::UniquePointer DataGroupSelectionParameter::clone() const

@@ -143,7 +143,7 @@ nlohmann::json IFilter::toJson(const Arguments& args) const
 {
   nlohmann::json json;
   Parameters params = parameters();
-  for(auto&& [name, param] : params)
+  for(const auto& [name, param] : params)
   {
     nlohmann::json parameterJson = param->toJson(args.at(name));
     json[name] = std::move(parameterJson);
@@ -157,24 +157,29 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
   Arguments args;
   std::vector<Error> errors;
   std::vector<Warning> warnings;
-  for(auto&& [name, param] : params)
+  for(const auto& [name, param] : params)
   {
-    auto jsonResult = param->fromJson(json);
+    if(!json.contains(name))
+    {
+      warnings.push_back(Warning{-1, fmt::format("JSON does not contain key \"{}\". Falling back to default value.", name)});
+      args.insert(name, param->defaultValue());
+      continue;
+    }
+    const auto& jsonValue = json[name];
+    Result<std::any> jsonResult = param->fromJson(jsonValue);
     moveResult(jsonResult, errors, warnings);
-    if(!jsonResult.valid())
+    if(jsonResult.invalid())
     {
       continue;
     }
     args.insert(name, std::move(jsonResult.value()));
   }
-  if(errors.empty())
-  {
-    return {std::move(args), std::move(warnings)};
-  }
-  else
+  if(!errors.empty())
   {
     return {nonstd::make_unexpected(std::move(errors))};
   }
+
+  return {std::move(args), std::move(warnings)};
 }
 
 std::vector<std::string> IFilter::defaultTags() const

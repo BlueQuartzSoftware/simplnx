@@ -75,24 +75,18 @@ IParameter::AcceptedTypes NumericTypeParameter::acceptedTypes() const
 
 nlohmann::json NumericTypeParameter::toJson(const std::any& value) const
 {
-  auto boolValue = std::any_cast<ValueType>(value);
-  nlohmann::json json = boolValue;
+  auto enumValue = std::any_cast<ValueType>(value);
+  nlohmann::json json = enumValue;
   return json;
 }
 
 Result<std::any> NumericTypeParameter::fromJson(const nlohmann::json& json) const
 {
-  const std::string key = name();
-  if(!json.contains(key))
+  if(!json.is_number())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("JSON does not contain key \"{}\"", key)}})};
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not a number", name()));
   }
-  auto jsonValue = json.at(key);
-  if(!jsonValue.is_number())
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("JSON value for key \"{}\" is not a number", key)}})};
-  }
-  auto type = jsonValue.get<ValueType>();
+  auto type = json.get<ValueType>();
   return {type};
 }
 
