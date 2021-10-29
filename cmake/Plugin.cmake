@@ -125,6 +125,10 @@ function(create_complex_plugin)
       ${${PLUGIN_NAME}_SOURCE_DIR}/${PLUGIN_NAME}Plugin.cpp
   )
 
+  #------------------------------------------------------------------------------
+  # Plugin Filter Files
+  set(${PLUGIN_NAME}_PLUGIN_FILTER_FILES)
+
   set(Filter_Registration_Include_String "")
   set(Filter_Registration_Code "")
 
@@ -136,6 +140,10 @@ function(create_complex_plugin)
       "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${filter}.hpp"
     )
     list(APPEND ${PLUGIN_NAME}_Plugin_SRCS
+      "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${filter}.cpp"
+    )
+    list(APPEND ${PLUGIN_NAME}_PLUGIN_FILTER_FILES
+      "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${filter}.hpp"
       "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${filter}.cpp"
     )
 
@@ -198,6 +206,8 @@ function(create_complex_plugin)
       ${${PLUGIN_NAME}_ALL_HDRS}
       ${${PLUGIN_NAME}_Plugin_SRCS}
   )
+
+  source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} FILES ${${PLUGIN_NAME}_PLUGIN_FILTER_FILES})
 
   target_include_directories(${PLUGIN_NAME}
       PUBLIC
