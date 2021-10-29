@@ -35,32 +35,34 @@ nlohmann::json MultiArraySelectionParameter::toJson(const std::any& value) const
 
 Result<std::any> MultiArraySelectionParameter::fromJson(const nlohmann::json& json) const
 {
-  const std::string key = name();
-  if(!json.contains(key))
+  if(!json.is_array())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("JSON does not contain key \"{}\"", key)}})};
-  }
-  auto jsonValue = json.at(key);
-  if(!jsonValue.is_array())
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("JSON value for key \"{}\" is not an array", key)}})};
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not an array", name()));
   }
 
   ValueType paths;
 
-  for(const auto& item : jsonValue)
+  std::vector<Error> errors;
+
+  for(const auto& item : json)
   {
     if(!item.is_string())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{{-3, "JSON value in array is not a string"}})};
+      return MakeErrorResult<std::any>(-3, fmt::format("JSON value in array is not a string"));
     }
-    auto string = jsonValue.get<std::string>();
+    auto string = item.get<std::string>();
     auto path = DataPath::FromString(string);
     if(!path.has_value())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{{-4, fmt::format("Failed to parse \"{}\" as DataPath", string)}})};
+      errors.push_back(Error{-4, fmt::format("Failed to parse \"{}\" as DataPath", string)});
+      continue;
     }
     paths.push_back(std::move(*path));
+  }
+
+  if(!errors.empty())
+  {
+    return {nonstd::make_unexpected(std::move(errors))};
   }
 
   return {std::move(paths)};

@@ -36,17 +36,11 @@ nlohmann::json NumberParameter<T>::toJson(const std::any& value) const
 template <class T>
 Result<std::any> NumberParameter<T>::fromJson(const nlohmann::json& json) const
 {
-  const std::string key = name();
-  if(!json.contains(key))
+  if(!json.is_number())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("JSON does not contain key \"{}\"", key)}})};
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not a number", name()));
   }
-  auto jsonValue = json.at(key);
-  if(!jsonValue.is_number())
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("JSON value for key \"{}\" is not a number", key)}})};
-  }
-  auto number = jsonValue.get<ValueType>();
+  auto number = json.get<ValueType>();
   return {number};
 }
 

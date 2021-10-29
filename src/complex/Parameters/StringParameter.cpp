@@ -31,17 +31,11 @@ nlohmann::json StringParameter::toJson(const std::any& value) const
 
 Result<std::any> StringParameter::fromJson(const nlohmann::json& json) const
 {
-  const std::string key = name();
-  if(!json.contains(key))
+  if(!json.is_string())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("JSON does not contain key \"{}\"", key)}})};
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not a string", name()));
   }
-  auto jsonValue = json.at(key);
-  if(!jsonValue.is_string())
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("JSON value for key \"{}\" is not a string", key)}})};
-  }
-  auto string = jsonValue.get<ValueType>();
+  auto string = json.get<ValueType>();
   return {string};
 }
 

@@ -57,25 +57,19 @@ nlohmann::json VectorParameter<T>::toJson(const std::any& value) const
 template <class T>
 Result<std::any> VectorParameter<T>::fromJson(const nlohmann::json& json) const
 {
-  const std::string key = name();
-  if(!json.contains(key))
+  if(!json.is_array())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("JSON does not contain key \"{}\"", key)}})};
-  }
-  auto jsonValue = json.at(key);
-  if(!jsonValue.is_array())
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("JSON value for key \"{}\" is not an array", key)}})};
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not an array", name()));
   }
   ValueType vec;
-  for(usize i = 0; i < jsonValue.size(); i++)
+  for(usize i = 0; i < json.size(); i++)
   {
-    const auto& element = jsonValue[i];
+    const auto& element = json[i];
     if constexpr(std::is_arithmetic_v<T>)
     {
       if(!element.is_number())
       {
-        return {nonstd::make_unexpected(std::vector<Error>{{-3, fmt::format("JSON value for array index \"{}\" is not a number", i)}})};
+        return MakeErrorResult<std::any>(-3, fmt::format("JSON value for array index \"{}\" is not a number", i));
       }
     }
     else
@@ -84,7 +78,7 @@ Result<std::any> VectorParameter<T>::fromJson(const nlohmann::json& json) const
     }
     vec.push_back(element.get<T>());
   }
-  return {vec};
+  return {std::move(vec)};
 }
 
 template <class T>

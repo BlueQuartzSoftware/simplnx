@@ -33,23 +33,17 @@ nlohmann::json ArraySelectionParameter::toJson(const std::any& value) const
 
 Result<std::any> ArraySelectionParameter::fromJson(const nlohmann::json& json) const
 {
-  const std::string key = name();
-  if(!json.contains(key))
+  if(!json.is_string())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("JSON does not contain key \"{}\"", key)}})};
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not a string", name()));
   }
-  auto jsonValue = json.at(key);
-  if(!jsonValue.is_string())
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("JSON value for key \"{}\" is not a string", key)}})};
-  }
-  auto string = jsonValue.get<std::string>();
-  auto path = DataPath::FromString(string);
+  auto string = json.get<std::string>();
+  std::optional<DataPath> path = DataPath::FromString(string);
   if(!path.has_value())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-3, fmt::format("Failed to parse \"{}\" as DataPath", string)}})};
+    return MakeErrorResult<std::any>(-3, fmt::format("Failed to parse \"{}\" as DataPath", string));
   }
-  return {path};
+  return {std::move(*path)};
 }
 
 IParameter::UniquePointer ArraySelectionParameter::clone() const

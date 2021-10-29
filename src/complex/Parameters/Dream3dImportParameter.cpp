@@ -44,7 +44,7 @@ nlohmann::json Dream3dImportParameter::toJson(const std::any& value) const
   ValueType importData = std::any_cast<ValueType>(value);
   nlohmann::json json;
   // File path
-  json[k_FilePathKey.c_str()] = importData.FilePath.string();
+  json[k_FilePathKey] = importData.FilePath.string();
 
   // DataPaths
   nlohmann::json dataPathsJson = nlohmann::json::array();
@@ -52,7 +52,7 @@ nlohmann::json Dream3dImportParameter::toJson(const std::any& value) const
   {
     dataPathsJson.push_back(dataPath.toString());
   }
-  json[k_DataPathsKey.c_str()] = dataPathsJson;
+  json[k_DataPathsKey] = std::move(dataPathsJson);
 
   return json;
 }
@@ -60,51 +60,55 @@ nlohmann::json Dream3dImportParameter::toJson(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<std::any> Dream3dImportParameter::fromJson(const nlohmann::json& json) const
 {
-  const std::string key = name();
-  if(!json.contains(key))
+  if(!json.is_object())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("JSON does not contain key \"{}\"", key)}})};
-  }
-  auto jsonObject = json.at(key);
-  if(!jsonObject.is_object())
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("JSON value for key \"{}\" is not an object", key)}})};
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not an object", name()));
   }
 
-  if(!jsonObject.contains(k_FilePathKey.str()))
+  if(!json.contains(k_FilePathKey.view()))
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("JSON does not contain key \"{} \\ {}\"", key, k_FilePathKey)}})};
+    return MakeErrorResult<std::any>(-3, fmt::format("JSON does not contain key \"{} / {}\"", name(), k_FilePathKey.view()));
   }
-  if(!jsonObject.contains(k_DataPathsKey.str()))
+
+  if(!json.contains(k_DataPathsKey.view()))
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("JSON does not contain key \"{} \\ {}\"", key, k_DataPathsKey)}})};
+    return MakeErrorResult<std::any>(-4, fmt::format("JSON does not contain key \"{} / {}\"", name(), k_DataPathsKey.view()));
   }
 
   ImportData importData;
-  auto jsonFilePath = jsonObject.at(k_FilePathKey.str());
+  const auto& jsonFilePath = json[k_FilePathKey];
   if(!jsonFilePath.is_string())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("JSON value for key \"{} \\ {}\" is not an string", key, k_FilePathKey)}})};
+    return MakeErrorResult<std::any>(-5, fmt::format("JSON value for key \"{} / {}\" is not an string", name(), k_FilePathKey));
   }
   importData.FilePath = jsonFilePath.get<std::string>();
 
-  auto jsonDataPaths = jsonObject.at(k_DataPathsKey.c_str());
+  const auto& jsonDataPaths = json[k_DataPathsKey];
   if(!jsonDataPaths.is_array())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("JSON value for key \"{} \\ {}\" is not an array", key)}})};
+    return MakeErrorResult<std::any>(-6, fmt::format("JSON value for key \"{} / {}\" is not an array", name()));
   }
   auto dataPathStrings = jsonDataPaths.get<std::vector<std::string>>();
   std::vector<DataPath> dataPaths;
+  std::vector<Error> errors;
   for(const auto& dataPathString : dataPathStrings)
   {
-    auto dataPath = DataPath::FromString(dataPathString);
-    if(dataPath.has_value())
+    std::optional<DataPath> dataPath = DataPath::FromString(dataPathString);
+    if(!dataPath.has_value())
     {
-      dataPaths.push_back(dataPath.value());
+      errors.push_back(Error{-7, fmt::format("Failed to parse \"{}\" as DataPath", dataPathString)});
+      continue;
     }
+    dataPaths.push_back(std::move(*dataPath));
   }
-  importData.DataPaths = dataPaths;
-  return {importData};
+
+  if(!errors.empty())
+  {
+    return {nonstd::make_unexpected(std::move(errors))};
+  }
+
+  importData.DataPaths = std::move(dataPaths);
+  return {std::move(importData)};
 }
 
 //-----------------------------------------------------------------------------
