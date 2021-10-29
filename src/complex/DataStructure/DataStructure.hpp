@@ -300,7 +300,7 @@ public:
    * @param id
    * @return std::shared_ptr<DataObject>
    */
-  template<class T>
+  template <class T>
   std::shared_ptr<T> getSharedDataAs(DataObject::IdType id) const
   {
     return std::dynamic_pointer_cast<T>(getSharedData(id));
@@ -328,7 +328,7 @@ public:
    * @param path
    * @return std::shared_ptr<DataObject>
    */
-  template<class T>
+  template <class T>
   std::shared_ptr<T> getSharedDataAs(const DataPath& path) const
   {
     return std::dynamic_pointer_cast<T>(getSharedData(path));
