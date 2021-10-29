@@ -95,7 +95,7 @@ Result<OutputActions> VtkStructuredPointsReader::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> VtkStructuredPointsReader::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> VtkStructuredPointsReader::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

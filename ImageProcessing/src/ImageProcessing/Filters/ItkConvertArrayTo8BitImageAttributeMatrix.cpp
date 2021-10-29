@@ -72,7 +72,7 @@ Result<OutputActions> ItkConvertArrayTo8BitImageAttributeMatrix::preflightImpl(c
 }
 
 //------------------------------------------------------------------------------
-Result<> ItkConvertArrayTo8BitImageAttributeMatrix::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ItkConvertArrayTo8BitImageAttributeMatrix::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -78,7 +78,7 @@ Result<OutputActions> LinkFeatureMapToElementArray::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> LinkFeatureMapToElementArray::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> LinkFeatureMapToElementArray::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

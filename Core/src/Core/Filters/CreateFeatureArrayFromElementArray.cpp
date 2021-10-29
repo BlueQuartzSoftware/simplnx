@@ -81,7 +81,7 @@ Result<OutputActions> CreateFeatureArrayFromElementArray::preflightImpl(const Da
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateFeatureArrayFromElementArray::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> CreateFeatureArrayFromElementArray::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

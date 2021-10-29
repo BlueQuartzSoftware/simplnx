@@ -85,7 +85,7 @@ Result<OutputActions> EnsembleInfoReader::preflightImpl(const DataStructure& ds,
 }
 
 //------------------------------------------------------------------------------
-Result<> EnsembleInfoReader::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> EnsembleInfoReader::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

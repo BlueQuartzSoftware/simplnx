@@ -83,7 +83,7 @@ Result<OutputActions> GenerateVectorColors::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> GenerateVectorColors::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> GenerateVectorColors::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

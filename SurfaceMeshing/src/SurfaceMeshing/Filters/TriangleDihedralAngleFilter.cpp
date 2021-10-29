@@ -72,7 +72,7 @@ Result<OutputActions> TriangleDihedralAngleFilter::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

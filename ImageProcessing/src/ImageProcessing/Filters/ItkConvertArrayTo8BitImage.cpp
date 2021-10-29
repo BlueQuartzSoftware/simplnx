@@ -76,7 +76,7 @@ Result<OutputActions> ItkConvertArrayTo8BitImage::preflightImpl(const DataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> ItkConvertArrayTo8BitImage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ItkConvertArrayTo8BitImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

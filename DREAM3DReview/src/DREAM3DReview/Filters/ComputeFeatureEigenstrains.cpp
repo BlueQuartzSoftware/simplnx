@@ -109,7 +109,7 @@ Result<OutputActions> ComputeFeatureEigenstrains::preflightImpl(const DataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFeatureEigenstrains::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ComputeFeatureEigenstrains::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

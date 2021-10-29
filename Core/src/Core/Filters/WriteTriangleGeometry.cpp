@@ -80,7 +80,7 @@ Result<OutputActions> WriteTriangleGeometry::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteTriangleGeometry::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> WriteTriangleGeometry::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

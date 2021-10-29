@@ -87,7 +87,7 @@ Result<OutputActions> ItkImageMath::preflightImpl(const DataStructure& ds, const
 }
 
 //------------------------------------------------------------------------------
-Result<> ItkImageMath::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ItkImageMath::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

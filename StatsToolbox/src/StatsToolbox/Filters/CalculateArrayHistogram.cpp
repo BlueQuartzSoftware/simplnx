@@ -95,7 +95,7 @@ Result<OutputActions> CalculateArrayHistogram::preflightImpl(const DataStructure
 }
 
 //------------------------------------------------------------------------------
-Result<> CalculateArrayHistogram::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> CalculateArrayHistogram::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

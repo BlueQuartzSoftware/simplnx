@@ -95,7 +95,7 @@ Result<OutputActions> SteinerCompact::preflightImpl(const DataStructure& ds, con
 }
 
 //------------------------------------------------------------------------------
-Result<> SteinerCompact::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> SteinerCompact::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

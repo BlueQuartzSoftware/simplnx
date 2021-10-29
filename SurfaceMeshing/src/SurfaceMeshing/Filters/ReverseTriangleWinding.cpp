@@ -71,7 +71,7 @@ Result<OutputActions> ReverseTriangleWinding::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> ReverseTriangleWinding::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ReverseTriangleWinding::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

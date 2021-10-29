@@ -78,7 +78,7 @@ Result<OutputActions> SPParksSitesWriter::preflightImpl(const DataStructure& ds,
 }
 
 //------------------------------------------------------------------------------
-Result<> SPParksSitesWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> SPParksSitesWriter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

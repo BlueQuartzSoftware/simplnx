@@ -76,7 +76,7 @@ Result<OutputActions> FindSurfaceRoughness::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> FindSurfaceRoughness::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> FindSurfaceRoughness::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

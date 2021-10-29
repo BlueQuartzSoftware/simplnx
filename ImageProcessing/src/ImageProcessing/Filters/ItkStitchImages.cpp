@@ -86,7 +86,7 @@ Result<OutputActions> ItkStitchImages::preflightImpl(const DataStructure& ds, co
 }
 
 //------------------------------------------------------------------------------
-Result<> ItkStitchImages::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ItkStitchImages::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

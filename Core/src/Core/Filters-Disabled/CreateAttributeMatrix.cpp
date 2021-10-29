@@ -77,7 +77,7 @@ Result<OutputActions> CreateAttributeMatrix::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateAttributeMatrix::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> CreateAttributeMatrix::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

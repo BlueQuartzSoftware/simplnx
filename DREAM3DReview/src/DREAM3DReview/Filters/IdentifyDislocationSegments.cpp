@@ -83,7 +83,7 @@ Result<OutputActions> IdentifyDislocationSegments::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> IdentifyDislocationSegments::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> IdentifyDislocationSegments::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

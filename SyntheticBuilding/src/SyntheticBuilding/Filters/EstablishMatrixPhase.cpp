@@ -103,7 +103,7 @@ Result<OutputActions> EstablishMatrixPhase::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> EstablishMatrixPhase::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> EstablishMatrixPhase::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

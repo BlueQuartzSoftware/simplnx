@@ -95,7 +95,7 @@ Result<OutputActions> CreateAbaqusFile::preflightImpl(const DataStructure& ds, c
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateAbaqusFile::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> CreateAbaqusFile::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

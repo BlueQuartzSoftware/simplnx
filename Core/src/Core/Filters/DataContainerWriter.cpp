@@ -79,7 +79,7 @@ Result<OutputActions> DataContainerWriter::preflightImpl(const DataStructure& ds
 }
 
 //------------------------------------------------------------------------------
-Result<> DataContainerWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> DataContainerWriter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

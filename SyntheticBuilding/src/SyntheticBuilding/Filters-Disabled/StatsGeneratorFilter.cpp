@@ -88,7 +88,7 @@ Result<OutputActions> StatsGeneratorFilter::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> StatsGeneratorFilter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> StatsGeneratorFilter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

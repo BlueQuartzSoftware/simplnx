@@ -113,7 +113,7 @@ Result<OutputActions> InterpolatePointCloudToRegularGrid::preflightImpl(const Da
 }
 
 //------------------------------------------------------------------------------
-Result<> InterpolatePointCloudToRegularGrid::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> InterpolatePointCloudToRegularGrid::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

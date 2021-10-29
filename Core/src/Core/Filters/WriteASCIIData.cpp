@@ -96,7 +96,7 @@ Result<OutputActions> WriteASCIIData::preflightImpl(const DataStructure& ds, con
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteASCIIData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> WriteASCIIData::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

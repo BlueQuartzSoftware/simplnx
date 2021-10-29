@@ -106,7 +106,7 @@ Result<OutputActions> FindSchmids::preflightImpl(const DataStructure& ds, const 
 }
 
 //------------------------------------------------------------------------------
-Result<> FindSchmids::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> FindSchmids::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

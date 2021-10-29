@@ -83,7 +83,7 @@ Result<OutputActions> AvizoUniformCoordinateWriter::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> AvizoUniformCoordinateWriter::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> AvizoUniformCoordinateWriter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -88,7 +88,7 @@ Result<OutputActions> PhReader::preflightImpl(const DataStructure& ds, const Arg
 }
 
 //------------------------------------------------------------------------------
-Result<> PhReader::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> PhReader::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

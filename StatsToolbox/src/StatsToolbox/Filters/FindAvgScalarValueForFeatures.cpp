@@ -78,7 +78,7 @@ Result<OutputActions> FindAvgScalarValueForFeatures::preflightImpl(const DataStr
 }
 
 //------------------------------------------------------------------------------
-Result<> FindAvgScalarValueForFeatures::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> FindAvgScalarValueForFeatures::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

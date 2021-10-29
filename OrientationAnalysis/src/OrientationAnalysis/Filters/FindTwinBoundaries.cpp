@@ -99,7 +99,7 @@ Result<OutputActions> FindTwinBoundaries::preflightImpl(const DataStructure& ds,
 }
 
 //------------------------------------------------------------------------------
-Result<> FindTwinBoundaries::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> FindTwinBoundaries::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

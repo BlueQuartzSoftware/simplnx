@@ -77,7 +77,7 @@ Result<OutputActions> RodriguesConvertor::preflightImpl(const DataStructure& ds,
 }
 
 //------------------------------------------------------------------------------
-Result<> RodriguesConvertor::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> RodriguesConvertor::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

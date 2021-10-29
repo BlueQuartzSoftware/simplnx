@@ -105,7 +105,7 @@ Result<OutputActions> ReadBinaryCTNorthStar::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadBinaryCTNorthStar::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ReadBinaryCTNorthStar::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

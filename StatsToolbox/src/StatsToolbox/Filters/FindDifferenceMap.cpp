@@ -76,7 +76,7 @@ Result<OutputActions> FindDifferenceMap::preflightImpl(const DataStructure& ds, 
 }
 
 //------------------------------------------------------------------------------
-Result<> FindDifferenceMap::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> FindDifferenceMap::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

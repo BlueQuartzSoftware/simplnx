@@ -126,7 +126,7 @@ Result<OutputActions> GeneratePrecipitateStatsData::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> GeneratePrecipitateStatsData::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> GeneratePrecipitateStatsData::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

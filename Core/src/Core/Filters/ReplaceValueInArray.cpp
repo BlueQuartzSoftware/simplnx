@@ -76,7 +76,7 @@ Result<OutputActions> ReplaceValueInArray::preflightImpl(const DataStructure& ds
 }
 
 //------------------------------------------------------------------------------
-Result<> ReplaceValueInArray::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ReplaceValueInArray::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

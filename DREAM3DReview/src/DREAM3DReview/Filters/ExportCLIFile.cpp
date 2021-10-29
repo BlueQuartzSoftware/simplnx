@@ -97,7 +97,7 @@ Result<OutputActions> ExportCLIFile::preflightImpl(const DataStructure& ds, cons
 }
 
 //------------------------------------------------------------------------------
-Result<> ExportCLIFile::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+Result<> ExportCLIFile::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
