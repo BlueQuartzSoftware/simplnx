@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "complex/Common/Result.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Pipeline/AbstractPipelineNode.hpp"
@@ -36,7 +37,7 @@ public:
    * @param json
    * @return
    */
-  static Pipeline FromJson(const nlohmann::json& json);
+  static Result<Pipeline> FromJson(const nlohmann::json& json);
 
   /**
    * @brief Constructs a Pipeline from json and the given filter list.
@@ -44,7 +45,7 @@ public:
    * @param filterList
    * @return
    */
-  static Pipeline FromJson(const nlohmann::json& json, FilterList* filterList);
+  static Result<Pipeline> FromJson(const nlohmann::json& json, FilterList* filterList);
 
   /**
    * @brief Constructs a pipeline with the specified name. If no name is

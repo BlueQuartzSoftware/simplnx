@@ -39,7 +39,7 @@ public:
    * @param json
    * @return std::unique_ptr<PipelineFilter>
    */
-  static std::unique_ptr<PipelineFilter> FromJson(const nlohmann::json& json);
+  static Result<std::unique_ptr<PipelineFilter>> FromJson(const nlohmann::json& json);
 
   /**
    * @brief Constructs a PipelineFilter from json using the given filter list. Returns nullptr on failure.
@@ -47,7 +47,7 @@ public:
    * @param filterList
    * @return std::unique_ptr<PipelineFilter>
    */
-  static std::unique_ptr<PipelineFilter> FromJson(const nlohmann::json& json, const FilterList& filterList);
+  static Result<std::unique_ptr<PipelineFilter>> FromJson(const nlohmann::json& json, const FilterList& filterList);
 
   /**
    * @brief Constructs a PipelineFilter with the provided filter and arguments.

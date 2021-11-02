@@ -174,24 +174,47 @@ nlohmann::json PipelineFilter::toJson() const
   return json;
 }
 
-std::unique_ptr<PipelineFilter> PipelineFilter::FromJson(const nlohmann::json& json)
+Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann::json& json)
 {
   return FromJson(json, *Application::Instance()->getFilterList());
 }
 
-std::unique_ptr<PipelineFilter> PipelineFilter::FromJson(const nlohmann::json& json, const FilterList& filterList)
+Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann::json& json, const FilterList& filterList)
 {
+  if(!json.contains(k_FilterKey.view()))
+  {
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-1, fmt::format("JSON does not contain key \"{}\"", k_FilterKey.view()));
+  }
+
   const auto& filterObject = json[k_FilterKey];
-  auto uuidString = filterObject[k_FilterUuidKey].get<std::string>();
+
+  if(!filterObject.contains(k_FilterUuidKey.view()))
+  {
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-2, fmt::format("Filter JSON does not contain key \"{}\"", k_FilterUuidKey.view()));
+  }
+
+  const auto& uuidObject = filterObject[k_FilterUuidKey];
+
+  if(!uuidObject.is_string())
+  {
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-3, "UUID value is not a string");
+  }
+
+  auto uuidString = uuidObject.get<std::string>();
   std::optional<Uuid> uuid = Uuid::FromString(uuidString);
   if(!uuid.has_value())
   {
-    return nullptr;
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-4, fmt::format("\"{}\" is not a valid UUID", uuidString));
   }
   IFilter::UniquePointer filter = filterList.createFilter(*uuid);
   if(filter == nullptr)
   {
-    return nullptr;
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-5, fmt::format("Failed to create filter with UUID \"{}\"", uuidString));
+  }
+
+  if(!json.contains(k_ArgsKey.view()))
+  {
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-6, fmt::format("JSON does not contain key \"{}\"", k_ArgsKey.view()));
   }
 
   const auto& argsJson = json[k_ArgsKey];
@@ -200,8 +223,12 @@ std::unique_ptr<PipelineFilter> PipelineFilter::FromJson(const nlohmann::json& j
 
   if(argsResult.invalid())
   {
-    return nullptr;
+    Result<std::unique_ptr<PipelineFilter>> result{nonstd::make_unexpected(std::move(argsResult.errors()))};
+    result.warnings() = std::move(argsResult.warnings());
+    return result;
   }
 
-  return std::make_unique<PipelineFilter>(std::move(filter), std::move(argsResult.value()));
+  Result<std::unique_ptr<PipelineFilter>> result{std::make_unique<PipelineFilter>(std::move(filter), std::move(argsResult.value()))};
+  result.warnings() = std::move(argsResult.warnings());
+  return result;
 }
