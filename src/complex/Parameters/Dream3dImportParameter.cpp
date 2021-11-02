@@ -47,12 +47,19 @@ nlohmann::json Dream3dImportParameter::toJson(const std::any& value) const
   json[k_FilePathKey] = importData.FilePath.string();
 
   // DataPaths
-  nlohmann::json dataPathsJson = nlohmann::json::array();
-  for(const auto& dataPath : importData.DataPaths)
+  if(importData.DataPaths.has_value())
   {
-    dataPathsJson.push_back(dataPath.toString());
+    nlohmann::json dataPathsJson = nlohmann::json::array();
+    for(const auto& dataPath : importData.DataPaths.value())
+    {
+      dataPathsJson.push_back(dataPath.toString());
+    }
+    json[k_DataPathsKey] = std::move(dataPathsJson);
   }
-  json[k_DataPathsKey] = std::move(dataPathsJson);
+  else
+  {
+    json[k_DataPathsKey] = nullptr;
+  }
 
   return json;
 }

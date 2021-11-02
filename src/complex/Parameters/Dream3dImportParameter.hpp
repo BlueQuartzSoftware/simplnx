@@ -6,6 +6,7 @@
 #include "complex/complex_export.hpp"
 
 #include <filesystem>
+#include <optional>
 
 #include "nonstd/span.hpp"
 
@@ -20,8 +21,17 @@ class COMPLEX_EXPORT Dream3dImportParameter : public ValueParameter
 public:
   struct ImportData
   {
+    /**
+     * @brief The path to the .dream3d file to import.
+     */
     std::filesystem::path FilePath;
-    std::vector<complex::DataPath> DataPaths = {};
+
+    /**
+     * @brief Holds an optional vector of the DataPaths to import. If this
+     * value is missing, all available DataPaths will be imported. Otherwise,
+     * only the paths provided will be imported.
+     */
+    std::optional<std::vector<complex::DataPath>> DataPaths = std::nullopt;
   };
 
   using ValueType = ImportData;
@@ -37,32 +47,32 @@ public:
   Dream3dImportParameter& operator=(Dream3dImportParameter&&) noexcept = delete;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the parameter class's Uuid.
+   * @return Uuid
    */
   Uuid uuid() const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns a vector of accepted value types.
+   * @return AcceptedTypes
    */
   AcceptedTypes acceptedTypes() const override;
 
   /**
-   * @brief
+   * @brief Writes the provided value to JSON.
    * @param value
    */
   nlohmann::json toJson(const std::any& value) const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Reads and returns the parameter's values from JSON.
+   * @return Result<std::any>
    */
   Result<std::any> fromJson(const nlohmann::json& json) const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Creates and returns a copy of the parameter.
+   * @return UniquePointer
    */
   UniquePointer clone() const override;
 
