@@ -232,7 +232,7 @@ public:
    * @param node
    * @return bool
    */
-  bool insertAt(index_type index, AbstractPipelineNode* node);
+  bool insertAt(index_type index, std::shared_ptr<AbstractPipelineNode> node);
 
   /**
    * @brief Moves and inserts the provided filter at the specified index.
@@ -265,10 +265,10 @@ public:
    *
    * This will always fail if the provided AbstractPipelineNode is null.
    * @param pos
-   * @param ptr
+   * @param node
    * @return bool
    */
-  bool insertAt(iterator pos, const std::shared_ptr<AbstractPipelineNode>& ptr);
+  bool insertAt(iterator pos, std::shared_ptr<AbstractPipelineNode> node);
 
   /**
    * @brief Removes the specified pipeline node from the pipeline segment.
@@ -328,7 +328,7 @@ public:
    * segment.
    * @param node
    */
-  bool push_front(const std::shared_ptr<AbstractPipelineNode>& node);
+  bool push_front(std::shared_ptr<AbstractPipelineNode> node);
 
   /**
    * @brief Inserts a PipelineFilter at the front of the pipeline segment based
@@ -358,7 +358,7 @@ public:
    * @param node
    * @return bool
    */
-  bool push_back(const std::shared_ptr<AbstractPipelineNode>& node);
+  bool push_back(std::shared_ptr<AbstractPipelineNode> node);
 
   /**
    * @brief Inserts a pipeline node at the back of the pipeline segment based
