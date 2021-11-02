@@ -271,14 +271,13 @@ const AbstractPipelineNode* Pipeline::at(index_type index) const
   return m_Collection[index].get();
 }
 
-bool Pipeline::insertAt(index_type index, AbstractPipelineNode* node)
+bool Pipeline::insertAt(index_type index, std::shared_ptr<AbstractPipelineNode> node)
 {
   if(index > size())
   {
     return false;
   }
-  auto ptr = std::shared_ptr<AbstractPipelineNode>(node);
-  return insertAt(begin() + index, ptr);
+  return insertAt(begin() + index, std::move(node));
 }
 
 bool Pipeline::insertAt(index_type index, IFilter::UniquePointer&& filter, const Arguments& args)
@@ -288,7 +287,7 @@ bool Pipeline::insertAt(index_type index, IFilter::UniquePointer&& filter, const
     return false;
   }
 
-  return insertAt(index, new PipelineFilter(std::move(filter), args));
+  return insertAt(index, std::make_shared<PipelineFilter>(std::move(filter), args));
 }
 
 bool Pipeline::insertAt(index_type index, const FilterHandle& handle, const Arguments& args)
@@ -298,9 +297,9 @@ bool Pipeline::insertAt(index_type index, const FilterHandle& handle, const Argu
   return insertAt(index, std::move(filter), args);
 }
 
-bool Pipeline::insertAt(iterator pos, const std::shared_ptr<AbstractPipelineNode>& ptr)
+bool Pipeline::insertAt(iterator pos, std::shared_ptr<AbstractPipelineNode> node)
 {
-  if(ptr == nullptr)
+  if(node == nullptr)
   {
     return false;
   }
@@ -310,9 +309,11 @@ bool Pipeline::insertAt(iterator pos, const std::shared_ptr<AbstractPipelineNode
   {
     index = size();
   }
+  // Get raw pointer before move
+  AbstractPipelineNode* ptr = node.get();
+  m_Collection.insert(pos, std::move(node));
   ptr->setParentPipeline(this);
-  m_Collection.insert(pos, ptr);
-  notify(std::make_shared<NodeAddedMessage>(this, ptr.get(), index));
+  notify(std::make_shared<NodeAddedMessage>(this, ptr, index));
   return true;
 }
 
@@ -392,13 +393,9 @@ bool Pipeline::contains(IFilter* filter) const
   return false;
 }
 
-bool Pipeline::push_front(const std::shared_ptr<AbstractPipelineNode>& node)
+bool Pipeline::push_front(std::shared_ptr<AbstractPipelineNode> node)
 {
-  if(node == nullptr)
-  {
-    return false;
-  }
-  return insertAt(begin(), node);
+  return insertAt(begin(), std::move(node));
 }
 
 bool Pipeline::push_front(const FilterHandle& handle, const Arguments& args)
@@ -418,13 +415,9 @@ bool Pipeline::push_front(IFilter::UniquePointer&& filter, const Arguments& args
   return push_front(filterNode);
 }
 
-bool Pipeline::push_back(const std::shared_ptr<AbstractPipelineNode>& node)
+bool Pipeline::push_back(std::shared_ptr<AbstractPipelineNode> node)
 {
-  if(node == nullptr)
-  {
-    return false;
-  }
-  return insertAt(end(), std::shared_ptr<AbstractPipelineNode>(node));
+  return insertAt(end(), std::move(node));
 }
 
 bool Pipeline::push_back(const FilterHandle& handle, const Arguments& args)
