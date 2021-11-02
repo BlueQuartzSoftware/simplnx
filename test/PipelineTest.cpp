@@ -108,7 +108,11 @@ TEST_CASE("PipelineJson")
 
   nlohmann::json pipelineJson = pipeline.toJson();
 
-  Pipeline pipeline2 = Pipeline::FromJson(pipelineJson);
+  Result<Pipeline> pipeline2Result = Pipeline::FromJson(pipelineJson);
+
+  REQUIRE(pipeline2Result.valid());
+
+  Pipeline pipeline2 = std::move(pipeline2Result.value());
 
   REQUIRE(pipeline2.getName() == pipeline.getName());
   REQUIRE(pipeline2.size() == pipeline.size());

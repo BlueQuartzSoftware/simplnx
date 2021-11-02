@@ -535,27 +535,48 @@ nlohmann::json Pipeline::toJson() const
   return jsonObject;
 }
 
-Pipeline Pipeline::FromJson(const nlohmann::json& json)
+Result<Pipeline> Pipeline::FromJson(const nlohmann::json& json)
 {
   return FromJson(json, Application::Instance()->getFilterList());
 }
 
-Pipeline Pipeline::FromJson(const nlohmann::json& json, FilterList* filterList)
+Result<Pipeline> Pipeline::FromJson(const nlohmann::json& json, FilterList* filterList)
 {
+  if(!json.contains(k_PipelineNameKey.view()))
+  {
+    return MakeErrorResult<Pipeline>(-1, fmt::format("Pipeline JSON did not contain key \"{}\"", k_PipelineNameKey.view()));
+  }
+
+  if(!json.contains(k_PipelineItemsKey.view()))
+  {
+    return MakeErrorResult<Pipeline>(-2, fmt::format("Pipeline JSON did not contain key \"{}\"", k_PipelineItemsKey.view()));
+  }
+
   auto name = json[k_PipelineNameKey].get<std::string>();
 
   Pipeline pipeline(name, filterList);
 
+  std::vector<Warning> warnings;
+
   for(const auto& item : json[k_PipelineItemsKey])
   {
-    std::unique_ptr<PipelineFilter> pipelineFilter = PipelineFilter::FromJson(item, *filterList);
-    if(pipelineFilter == nullptr)
+    Result<std::unique_ptr<PipelineFilter>> filterResult = PipelineFilter::FromJson(item, *filterList);
+    for(auto& warning : filterResult.warnings())
     {
-      throw std::runtime_error("Invalid filter json");
+      warnings.push_back(std::move(warning));
+    }
+    if(filterResult.invalid())
+    {
+      Result<Pipeline> result{nonstd::make_unexpected(std::move(filterResult.errors()))};
+      result.warnings() = std::move(warnings);
+      return result;
     }
 
-    pipeline.push_back(std::move(pipelineFilter));
+    pipeline.push_back(std::move(filterResult.value()));
   }
 
-  return pipeline;
+  Result<Pipeline> result{std::move(pipeline)};
+  result.warnings() = std::move(warnings);
+
+  return result;
 }

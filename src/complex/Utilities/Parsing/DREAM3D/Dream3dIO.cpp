@@ -439,7 +439,12 @@ complex::Pipeline complex::DREAM3D::ImportPipelineFromFile(const H5::FileReader&
 
   auto pipelineJsonString = pipelineDatasetReader.readAsString();
   auto pipelineJson = nlohmann::json::parse(pipelineJsonString);
-  return Pipeline::FromJson(pipelineJson);
+  Result<Pipeline> pipelineResult = Pipeline::FromJson(pipelineJson);
+  if(pipelineResult.invalid())
+  {
+    throw std::runtime_error("Failed to parse pipeline json");
+  }
+  return std::move(pipelineResult.value());
 }
 
 complex::DREAM3D::FileData complex::DREAM3D::ReadFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode)
