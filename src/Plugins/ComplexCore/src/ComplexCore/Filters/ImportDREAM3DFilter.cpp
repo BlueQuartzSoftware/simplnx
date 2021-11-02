@@ -16,6 +16,7 @@ namespace
 constexpr complex::StringLiteral k_ImportedPipeline = "Imported Pipeline";
 constexpr complex::int32 k_NoImportPathError = -1;
 constexpr complex::int32 k_FailedOpenFileReaderError = -25;
+constexpr complex::int32 k_NoSelectedPaths = -26;
 } // namespace
 
 namespace complex
@@ -74,6 +75,14 @@ Result<OutputActions> getDataCreationResults(const DataStructure& importDataStru
   return {std::move(actions)};
 }
 
+Result<OutputActions> getDataCreationResults(const DataStructure& importDataStructure)
+{
+  auto importPaths = importDataStructure.getAllDataPaths();
+  // Import shortest paths first
+  std::sort(importPaths.begin(), importPaths.end(), [](const DataPath& first, const DataPath& second) { return first.getLength() < second.getLength(); });
+  return std::move(getDataCreationResults(importDataStructure, importPaths));
+}
+
 Result<OutputActions> ImportDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
 {
   auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
@@ -96,10 +105,21 @@ Result<OutputActions> ImportDREAM3DFilter::preflightImpl(const DataStructure& da
   }
 
   // Create target DataPaths for the output DataStructure
-  auto importDataPaths = importData.DataPaths;
+  auto& importDataPaths = importData.DataPaths;
+  if(!importDataPaths.has_value())
+  {
+    return getDataCreationResults(importDataStructure);
+  }
+
+  // Require at least one DataPath to import.
+  if(importDataPaths->empty())
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_NoSelectedPaths, "No paths were selected for importing"}})};
+  }
+
   // Import shortest paths first
-  std::sort(importDataPaths.begin(), importDataPaths.end(), [](const DataPath& first, const DataPath& second) { return first.getLength() < second.getLength(); });
-  return getDataCreationResults(importDataStructure, importDataPaths);
+  std::sort(importDataPaths->begin(), importDataPaths->end(), [](const DataPath& first, const DataPath& second) { return first.getLength() < second.getLength(); });
+  return getDataCreationResults(importDataStructure, importDataPaths.value());
 }
 
 Result<> ImportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
