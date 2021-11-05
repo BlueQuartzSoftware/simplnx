@@ -65,9 +65,9 @@ protected:
    * @param data
    * @param args
    * @param messageHandler
-   * @return Result<OutputActions>
+   * @return PreflightResult
    */
-  Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const override;
+  PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const override;
 
   /**
    * @brief

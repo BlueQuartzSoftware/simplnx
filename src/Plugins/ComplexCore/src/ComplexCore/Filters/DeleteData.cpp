@@ -42,7 +42,7 @@ IFilter::UniquePointer DeleteData::clone() const
   return std::make_unique<DeleteData>();
 }
 
-Result<OutputActions> DeleteData::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   auto dataArrayPath = args.value<DataPath>(k_DataPath_Key);
 
