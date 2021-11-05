@@ -29,7 +29,7 @@ Result<> RemoveFromParent(DataStructure& dataStructure, const DataPath& path, ID
   }
   dataStructure.removeParent(targetObject->getId(), parentId);
 }
-}
+} // namespace
 
 namespace complex
 {
