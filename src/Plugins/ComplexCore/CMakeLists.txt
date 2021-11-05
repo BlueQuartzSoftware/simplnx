@@ -7,6 +7,7 @@ set(PLUGIN_NAME "ComplexCore")
 set(FilterList
   CreateDataArray
   CreateDataGroup
+  DeleteData
   ExportDREAM3DFilter
   ImportDREAM3DFilter
   ImportTextFilter
