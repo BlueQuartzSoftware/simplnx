@@ -32,7 +32,7 @@ namespace complex
 {
 IFilter::~IFilter() noexcept = default;
 
-Result<OutputActions> IFilter::preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   Parameters params = parameters();
 
@@ -103,17 +103,17 @@ Result<OutputActions> IFilter::preflight(const DataStructure& data, const Argume
     return {nonstd::make_unexpected(std::move(errors)), std::move(warnings)};
   }
 
-  auto implResult = preflightImpl(data, args, messageHandler);
+  PreflightResult implResult = preflightImpl(data, args, messageHandler);
 
   for(auto&& warning : warnings)
   {
-    implResult.warnings().push_back(std::move(warning));
+    implResult.outputActions.warnings().push_back(std::move(warning));
   }
 
   return implResult;
 }
 
-Result<> IFilter::execute(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler) const
+IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler) const
 {
   // determine required parameters
 
@@ -121,22 +121,24 @@ Result<> IFilter::execute(DataStructure& data, const Arguments& args, const Pipe
 
   // resolve dependencies
 
-  auto result = preflight(data, args);
-  if(!result.valid())
+  PreflightResult preflightResult = preflight(data, args);
+  if(!preflightResult.outputActions.valid())
   {
-    return convertResult(std::move(result));
+    return ExecuteResult{convertResult(std::move(preflightResult.outputActions)), std::move(preflightResult.outputValues)};
   }
 
-  for(const auto& action : result.value().actions)
+  for(const auto& action : preflightResult.outputActions.value().actions)
   {
     Result<> actionResult = action->apply(data, IDataAction::Mode::Execute);
-    if(!result.valid())
+    if(!preflightResult.outputActions.valid())
     {
-      return actionResult;
+      return ExecuteResult{std::move(actionResult), std::move(preflightResult.outputValues)};
     }
   }
 
-  return executeImpl(data, args, pipelineFilter, messageHandler);
+  Result<> executeImplResult = executeImpl(data, args, pipelineFilter, messageHandler);
+
+  return ExecuteResult{std::move(executeImplResult), std::move(preflightResult.outputValues)};
 }
 
 nlohmann::json IFilter::toJson(const Arguments& args) const

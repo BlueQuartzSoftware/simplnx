@@ -74,7 +74,7 @@ protected:
    * @param messageHandler
    * @return Result<OutputActions>
    */
-  Result<OutputActions> preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const override;
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const override;
 
   /**
    * @brief Classes that implement IFilter must provide this function for execute.

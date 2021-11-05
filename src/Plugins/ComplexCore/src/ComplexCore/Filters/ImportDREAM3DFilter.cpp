@@ -83,7 +83,7 @@ Result<OutputActions> getDataCreationResults(const DataStructure& importDataStru
   return std::move(getDataCreationResults(importDataStructure, importPaths));
 }
 
-Result<OutputActions> ImportDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ImportDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
 {
   auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
   if(importData.FilePath.empty())
@@ -108,7 +108,7 @@ Result<OutputActions> ImportDREAM3DFilter::preflightImpl(const DataStructure& da
   auto& importDataPaths = importData.DataPaths;
   if(!importDataPaths.has_value())
   {
-    return getDataCreationResults(importDataStructure);
+    return {getDataCreationResults(importDataStructure)};
   }
 
   // Require at least one DataPath to import.
@@ -119,7 +119,7 @@ Result<OutputActions> ImportDREAM3DFilter::preflightImpl(const DataStructure& da
 
   // Import shortest paths first
   std::sort(importDataPaths->begin(), importDataPaths->end(), [](const DataPath& first, const DataPath& second) { return first.getLength() < second.getLength(); });
-  return getDataCreationResults(importDataStructure, importDataPaths.value());
+  return {getDataCreationResults(importDataStructure, importDataPaths.value())};
 }
 
 Result<> ImportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const

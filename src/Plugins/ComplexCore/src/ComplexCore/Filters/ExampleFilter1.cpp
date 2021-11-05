@@ -53,7 +53,7 @@ IFilter::UniquePointer ExampleFilter1::clone() const
   return std::make_unique<ExampleFilter1>();
 }
 
-Result<OutputActions> ExampleFilter1::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ExampleFilter1::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   return {};
 }

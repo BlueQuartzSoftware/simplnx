@@ -39,7 +39,7 @@ IFilter::UniquePointer CreateDataGroup::clone() const
   return std::make_unique<CreateDataGroup>();
 }
 
-Result<OutputActions> CreateDataGroup::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult CreateDataGroup::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
 {
   DataPath dataObjectPath = args.value<DataPath>(k_DataObjectPath);
 

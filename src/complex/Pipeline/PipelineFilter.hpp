@@ -128,6 +128,13 @@ public:
   std::vector<Error> getErrors() const;
 
   /**
+   * @brief Returns a collection of preflight values emitted by the target filter.
+   * This collection is cleared when the node is preflighted or executed.
+   * @return std::vector<complex::Error>
+   */
+  const std::vector<IFilter::PreflightValue>& getPreflightValues() const;
+
+  /**
    * @brief Creates and returns a unique pointer to a copy of the node.
    * @return std::unique_ptr<AbstractPipelineNode>
    */
@@ -152,6 +159,7 @@ private:
   Arguments m_Arguments;
   std::vector<Warning> m_Warnings;
   std::vector<Error> m_Errors;
+  std::vector<IFilter::PreflightValue> m_PreflightValues;
   WarningsChangedSignal m_WarningsSignal;
   ErrorsChangedSignal m_ErrorsSignal;
 };
