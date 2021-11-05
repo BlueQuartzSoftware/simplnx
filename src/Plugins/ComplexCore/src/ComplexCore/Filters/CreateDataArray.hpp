@@ -70,7 +70,7 @@ protected:
    * @param messageHandler
    * @return Result<OutputActions>
    */
-  Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const override;
+  PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const override;
 
   /**
    * @brief

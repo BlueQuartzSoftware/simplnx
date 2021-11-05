@@ -77,11 +77,12 @@ bool PipelineFilter::preflight(DataStructure& data)
 {
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
-  Result<OutputActions> result = m_Filter->preflight(data, getArguments(), messageHandler);
-  m_Warnings = std::move(result.warnings());
-  if(result.invalid())
+  IFilter::PreflightResult result = m_Filter->preflight(data, getArguments(), messageHandler);
+  m_Warnings = std::move(result.outputActions.warnings());
+  m_PreflightValues = std::move(result.outputValues);
+  if(result.outputActions.invalid())
   {
-    m_Errors = std::move(result.errors());
+    m_Errors = std::move(result.outputActions.errors());
 
     clearPreflightStructure();
     notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
@@ -90,7 +91,7 @@ bool PipelineFilter::preflight(DataStructure& data)
 
   m_Errors.clear();
 
-  for(const auto& action : result.value().actions)
+  for(const auto& action : result.outputActions.value().actions)
   {
     Result<> actionResult = action->apply(data, IDataAction::Mode::Preflight);
     for(auto&& warning : actionResult.warnings())
@@ -116,11 +117,12 @@ bool PipelineFilter::execute(DataStructure& data)
 {
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
-  auto results = m_Filter->execute(data, getArguments(), this, messageHandler);
-  if(!results.valid())
+  IFilter::ExecuteResult result = m_Filter->execute(data, getArguments(), this, messageHandler);
+  m_PreflightValues = std::move(result.outputValues);
+  if(result.result.invalid())
   {
-    m_Warnings = results.warnings();
-    m_Errors = results.errors();
+    m_Warnings = result.result.warnings();
+    m_Errors = result.result.errors();
 
     clearPreflightStructure();
     markDirty();
@@ -128,7 +130,7 @@ bool PipelineFilter::execute(DataStructure& data)
   }
   else
   {
-    m_Warnings = results.warnings();
+    m_Warnings = result.result.warnings();
     m_Errors.clear();
 
     setDataStructure(data);
@@ -145,6 +147,11 @@ std::vector<complex::Warning> PipelineFilter::getWarnings() const
 std::vector<complex::Error> PipelineFilter::getErrors() const
 {
   return m_Errors;
+}
+
+const std::vector<IFilter::PreflightValue>& PipelineFilter::getPreflightValues() const
+{
+  return m_PreflightValues;
 }
 
 std::unique_ptr<AbstractPipelineNode> PipelineFilter::deepCopy() const

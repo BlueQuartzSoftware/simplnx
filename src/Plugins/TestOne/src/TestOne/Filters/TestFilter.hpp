@@ -50,7 +50,7 @@ public:
   UniquePointer clone() const override;
 
 protected:
-  complex::Result<complex::OutputActions> preflightImpl(const complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const override;
+  PreflightResult preflightImpl(const complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const override;
   complex::Result<> executeImpl(complex::DataStructure& data, const complex::Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const override;
 };
 } // namespace complex

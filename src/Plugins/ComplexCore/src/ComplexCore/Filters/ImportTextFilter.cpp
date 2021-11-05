@@ -145,7 +145,7 @@ IFilter::UniquePointer ImportTextFilter::clone() const
   return std::make_unique<ImportTextFilter>();
 }
 
-Result<OutputActions> ImportTextFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ImportTextFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   auto numericType = args.value<NumericType>(k_ScalarTypeKey);
   auto arrayPath = args.value<DataPath>(k_DataArrayKey);

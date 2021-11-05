@@ -66,6 +66,24 @@ public:
     Callback m_Callback;
   };
 
+  struct PreflightValue
+  {
+    std::string name;
+    std::string value;
+  };
+
+  struct PreflightResult
+  {
+    Result<OutputActions> outputActions;
+    std::vector<PreflightValue> outputValues;
+  };
+
+  struct ExecuteResult
+  {
+    Result<> result;
+    std::vector<PreflightValue> outputValues;
+  };
+
   virtual ~IFilter() noexcept;
 
   IFilter(const IFilter&) = delete;
@@ -122,10 +140,10 @@ public:
    * Some parts of the actions may not be completely filled out if all the required information is not available at preflight time.
    * @param data
    * @param args
-   * @param messageHandler = {}
-   * @return Result<OutputActions>
+   * @param messageHandler
+   * @return PreflightResult
    */
-  Result<OutputActions> preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
+  PreflightResult preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
 
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
@@ -134,9 +152,9 @@ public:
    * @param args
    * @param pipelineNode = nullptr
    * @param messageHandler = {}
-   * @return Result<>
+   * @return ExecuteResult
    */
-  Result<> execute(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode = nullptr, const MessageHandler& messageHandler = {}) const;
+  ExecuteResult execute(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode = nullptr, const MessageHandler& messageHandler = {}) const;
 
   /**
    * @brief Converts the given arguments to a JSON representation using the filter's parameters.
@@ -161,9 +179,9 @@ protected:
    * @param data
    * @param args
    * @param messageHandler
-   * @return Result<OutputActions>
+   * @return PreflightResult
    */
-  virtual Result<OutputActions> preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const = 0;
+  virtual PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const = 0;
 
   /**
    * @brief Classes that implement IFilter must provide this function for execute.

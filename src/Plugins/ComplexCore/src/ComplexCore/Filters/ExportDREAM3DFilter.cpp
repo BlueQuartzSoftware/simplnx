@@ -51,7 +51,7 @@ IFilter::UniquePointer ExportDREAM3DFilter::clone() const
   return std::make_unique<ExportDREAM3DFilter>();
 }
 
-Result<OutputActions> ExportDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ExportDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
 {
   auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
   if(exportFilePath.empty())

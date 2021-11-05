@@ -96,24 +96,24 @@ TEST_CASE("RunCoreFilter")
 
     // auto callback = [](const IFilter::Message& message) { fmt::print("{}: {}\n", message.type, message.message); };
     // Result<> result = filter.execute(ds, args, IFilter::MessageHandler{callback});
-    Result<> result = filter.execute(ds, args);
-    for(const auto& warning : result.warnings())
+    IFilter::ExecuteResult result = filter.execute(ds, args);
+    for(const auto& warning : result.result.warnings())
     {
       // fmt::print("Warning {}: {}\n", warning.code, warning.message);
       UNSCOPED_INFO(fmt::format("Warning {}: {}", warning.code, warning.message));
     }
     // std::vector<Error> errors = result.valid() ? std::vector<Error>{} : result.errors();
-    if(!result.valid())
+    if(!result.result.valid())
     {
-      for(const auto& error : result.errors())
+      for(const auto& error : result.result.errors())
       {
         // fmt::print("Error {}: {}\n", error.code, error.message);
         UNSCOPED_INFO(fmt::format("Error {}: {}", error.code, error.message));
       }
     }
-    CAPTURE(result.warnings());
+    CAPTURE(result.result.warnings());
     // CAPTURE(errors);
-    REQUIRE(result.valid());
+    REQUIRE(result.result.valid());
     const auto* dataArrayPtr = dynamic_cast<DataArray<int32>*>(ds.getData(dataPath));
     REQUIRE(dataArrayPtr != nullptr);
     const auto& dataArray = *dataArrayPtr;
@@ -135,7 +135,7 @@ TEST_CASE("CreateDataGroup")
   const DataPath path({"foo", "bar", "baz"});
   args.insert(CreateDataGroup::k_DataObjectPath, path);
   auto result = filter.execute(data, args);
-  REQUIRE(result.valid());
+  REQUIRE(result.result.valid());
   DataObject* object = data.getData(path);
   REQUIRE(object != nullptr);
   auto* group = dynamic_cast<DataGroup*>(object);

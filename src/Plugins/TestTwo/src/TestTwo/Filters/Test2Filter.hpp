@@ -56,7 +56,7 @@ protected:
    * @param messageHandler
    * @return Result<OutputActions>
    */
-  complex::Result<complex::OutputActions> preflightImpl(const complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const override;
+  PreflightResult preflightImpl(const complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const override;
 
   /**
    * @brief Filter-specifics for performing execute.
