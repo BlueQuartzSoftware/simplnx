@@ -4,6 +4,7 @@
 
 #include "complex/Filter/MutableDataParameter.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
+#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -11,7 +12,7 @@ namespace complex
  * @brief This Filter Parameter describes a specific DataPath where the last DataObject in
  * the path is a DataArray Object.
  */
-class ArraySelectionParameter : public MutableDataParameter
+class COMPLEX_EXPORT ArraySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
