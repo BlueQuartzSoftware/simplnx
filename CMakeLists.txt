@@ -124,6 +124,7 @@ set(CoreParameters
   ChoicesParameter
   DataGroupCreationParameter
   DataGroupSelectionParameter
+  DataPathSelectionParameter
   FileSystemPathParameter
   GeneratedFileListParameter
   Dream3dImportParameter
@@ -230,6 +231,7 @@ set(COMPLEX_HDRS
 
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.hpp
 
   ${COMPLEX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.hpp
@@ -350,6 +352,7 @@ set(COMPLEX_SRCS
 
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.cpp
 
   ${COMPLEX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.cpp
