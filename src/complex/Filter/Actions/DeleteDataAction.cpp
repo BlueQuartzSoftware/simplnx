@@ -28,6 +28,7 @@ Result<> RemoveFromParent(DataStructure& dataStructure, const DataPath& path, ID
     parentId = parentObject->getId();
   }
   dataStructure.removeParent(targetObject->getId(), parentId);
+  return {};
 }
 } // namespace
 
