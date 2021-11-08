@@ -91,30 +91,38 @@ Result<std::any> Dream3dImportParameter::fromJson(const nlohmann::json& json) co
   importData.FilePath = jsonFilePath.get<std::string>();
 
   const auto& jsonDataPaths = json[k_DataPathsKey];
-  if(!jsonDataPaths.is_array())
+  if(jsonDataPaths.is_null())
   {
-    return MakeErrorResult<std::any>(-6, fmt::format("JSON value for key \"{} / {}\" is not an array", name()));
+    importData.DataPaths = std::nullopt;
   }
-  auto dataPathStrings = jsonDataPaths.get<std::vector<std::string>>();
-  std::vector<DataPath> dataPaths;
-  std::vector<Error> errors;
-  for(const auto& dataPathString : dataPathStrings)
+  else
   {
-    std::optional<DataPath> dataPath = DataPath::FromString(dataPathString);
-    if(!dataPath.has_value())
+    if(!jsonDataPaths.is_array())
     {
-      errors.push_back(Error{-7, fmt::format("Failed to parse \"{}\" as DataPath", dataPathString)});
-      continue;
+      return MakeErrorResult<std::any>(-6, fmt::format("JSON value for key \"{} / {}\" is not an array", name()));
     }
-    dataPaths.push_back(std::move(*dataPath));
+    auto dataPathStrings = jsonDataPaths.get<std::vector<std::string>>();
+    std::vector<DataPath> dataPaths;
+    std::vector<Error> errors;
+    for(const auto& dataPathString : dataPathStrings)
+    {
+      std::optional<DataPath> dataPath = DataPath::FromString(dataPathString);
+      if(!dataPath.has_value())
+      {
+        errors.push_back(Error{-7, fmt::format("Failed to parse \"{}\" as DataPath", dataPathString)});
+        continue;
+      }
+      dataPaths.push_back(std::move(*dataPath));
+    }
+
+    if(!errors.empty())
+    {
+      return {nonstd::make_unexpected(std::move(errors))};
+    }
+
+    importData.DataPaths = std::move(dataPaths);
   }
 
-  if(!errors.empty())
-  {
-    return {nonstd::make_unexpected(std::move(errors))};
-  }
-
-  importData.DataPaths = std::move(dataPaths);
   return {std::move(importData)};
 }
 

@@ -98,7 +98,7 @@ IFilter::PreflightResult ImportDREAM3DFilter::preflightImpl(const DataStructure&
 
   // Import DataStructure
   H5::ErrorType errorCode;
-  auto [pipeline, importDataStructure] = DREAM3D::ReadFile(fileReader, errorCode);
+  const DREAM3D::FileData fileData = DREAM3D::ReadFile(fileReader, errorCode);
   if(errorCode < 0)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, "Failed to import a DataStructure from the target HDF5 file."}})};
@@ -108,7 +108,7 @@ IFilter::PreflightResult ImportDREAM3DFilter::preflightImpl(const DataStructure&
   auto& importDataPaths = importData.DataPaths;
   if(!importDataPaths.has_value())
   {
-    return {getDataCreationResults(importDataStructure)};
+    return {getDataCreationResults(fileData.second)};
   }
 
   // Require at least one DataPath to import.
@@ -119,7 +119,7 @@ IFilter::PreflightResult ImportDREAM3DFilter::preflightImpl(const DataStructure&
 
   // Import shortest paths first
   std::sort(importDataPaths->begin(), importDataPaths->end(), [](const DataPath& first, const DataPath& second) { return first.getLength() < second.getLength(); });
-  return {getDataCreationResults(importDataStructure, importDataPaths.value())};
+  return {getDataCreationResults(fileData.second, importDataPaths.value())};
 }
 
 Result<> ImportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
