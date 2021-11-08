@@ -303,6 +303,16 @@ public:
   bool removeAt(index_type pos);
 
   /**
+   * @brief Attempts to move a pipeline node at the specified index to a new
+   * index in the pipeline. Returns true if the node was moved. Returns false
+   * otherwise.
+   * @param fromIndex
+   * @param toIndex
+   * @return bool
+   */
+  bool move(index_type fromIndex, index_type toIndex);
+
+  /**
    * @brief Clears the pipeline of all nodes.
    */
   void clear();

@@ -4,9 +4,11 @@
 #include "complex/Filter/FilterHandle.hpp"
 #include "complex/Filter/FilterList.hpp"
 #include "complex/Pipeline/Messaging/NodeAddedMessage.hpp"
+#include "complex/Pipeline/Messaging/NodeMovedMessage.hpp"
 #include "complex/Pipeline/Messaging/NodeRemovedMessage.hpp"
 #include "complex/Pipeline/PipelineFilter.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 
 #include <nlohmann/json.hpp>
@@ -361,6 +363,33 @@ bool Pipeline::removeAt(index_type pos)
   }
 
   return remove(begin() + pos);
+}
+
+bool Pipeline::move(index_type fromIndex, index_type toIndex)
+{
+  if(fromIndex >= size() || toIndex >= size())
+  {
+    return false;
+  }
+  if(fromIndex == toIndex)
+  {
+    return true;
+  }
+
+  auto fromIter = m_Collection.begin() + fromIndex;
+  auto toIter = m_Collection.begin() + toIndex;
+
+  if(fromIndex < toIndex)
+  {
+    std::rotate(fromIter, fromIter + 1, toIter + 1);
+  }
+  else
+  {
+    std::rotate(toIter, fromIter, fromIter + 1);
+  }
+
+  notify(std::make_shared<NodeMovedMessage>(this, fromIndex, toIndex));
+  return true;
 }
 
 void Pipeline::clear()
