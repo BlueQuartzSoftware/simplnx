@@ -266,7 +266,8 @@ public:
   IDataStore<T>* deepCopy() const override
   {
     auto copy = new DataStore(*this);
-    for(usize i = 0; i < getSize(); i++)
+    auto size = this->getSize();
+    for(usize i = 0; i < size; i++)
     {
       copy->setValue(i, getValue(i));
     }
