@@ -321,6 +321,17 @@ bool DataStructure::removeData(DataObject::IdType id)
   return removeData(data);
 }
 
+void DataStructure::setData(DataObject::IdType id, std::shared_ptr<DataObject> dataObject)
+{
+  if(dataObject == nullptr)
+  {
+    removeData(id);
+    return;
+  }
+
+  m_DataObjects[id] = dataObject;
+}
+
 bool DataStructure::removeData(const std::optional<DataObject::IdType>& id)
 {
   if(!id)
@@ -510,6 +521,10 @@ void DataStructure::trackDataObject(const std::shared_ptr<DataObject>& dataObjec
   if(m_DataObjects.find(dataObject->getId()) == m_DataObjects.end())
   {
     m_DataObjects[dataObject->getId()] = dataObject;
+    if(m_NextId <= dataObject->getId())
+    {
+      m_NextId = dataObject->getId() + 1;
+    }
   }
 }
 
