@@ -65,7 +65,7 @@ IFilter::UniquePointer StatsGeneratorFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> StatsGeneratorFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult StatsGeneratorFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

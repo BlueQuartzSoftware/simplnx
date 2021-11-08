@@ -60,7 +60,7 @@ IFilter::UniquePointer EstablishShapeTypes::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> EstablishShapeTypes::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult EstablishShapeTypes::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

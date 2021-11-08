@@ -57,7 +57,7 @@ IFilter::UniquePointer FindMinkowskiBouligandDimension::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FindMinkowskiBouligandDimension::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindMinkowskiBouligandDimension::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

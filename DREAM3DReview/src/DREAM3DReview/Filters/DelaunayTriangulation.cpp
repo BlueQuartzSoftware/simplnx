@@ -69,7 +69,7 @@ IFilter::UniquePointer DelaunayTriangulation::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> DelaunayTriangulation::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult DelaunayTriangulation::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

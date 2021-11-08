@@ -58,7 +58,7 @@ IFilter::UniquePointer ItkKdTreeKMeans::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ItkKdTreeKMeans::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ItkKdTreeKMeans::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

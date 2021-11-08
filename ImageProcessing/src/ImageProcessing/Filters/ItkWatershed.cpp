@@ -61,7 +61,7 @@ IFilter::UniquePointer ItkWatershed::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ItkWatershed::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ItkWatershed::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

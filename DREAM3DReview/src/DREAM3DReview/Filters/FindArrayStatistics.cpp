@@ -103,7 +103,7 @@ IFilter::UniquePointer FindArrayStatistics::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FindArrayStatistics::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindArrayStatistics::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

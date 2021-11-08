@@ -67,7 +67,7 @@ IFilter::UniquePointer FindMisorientations::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FindMisorientations::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindMisorientations::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

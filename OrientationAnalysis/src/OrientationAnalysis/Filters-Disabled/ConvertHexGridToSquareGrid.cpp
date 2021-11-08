@@ -54,7 +54,7 @@ IFilter::UniquePointer ConvertHexGridToSquareGrid::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ConvertHexGridToSquareGrid::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ConvertHexGridToSquareGrid::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

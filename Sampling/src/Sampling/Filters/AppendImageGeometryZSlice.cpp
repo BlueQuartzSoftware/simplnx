@@ -57,7 +57,7 @@ IFilter::UniquePointer AppendImageGeometryZSlice::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> AppendImageGeometryZSlice::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult AppendImageGeometryZSlice::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

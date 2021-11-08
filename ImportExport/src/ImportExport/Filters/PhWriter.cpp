@@ -60,7 +60,7 @@ IFilter::UniquePointer PhWriter::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> PhWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult PhWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

@@ -65,7 +65,7 @@ IFilter::UniquePointer FeatureDataCSVWriter::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FeatureDataCSVWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FeatureDataCSVWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

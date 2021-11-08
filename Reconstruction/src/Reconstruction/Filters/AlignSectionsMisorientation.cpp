@@ -73,7 +73,7 @@ IFilter::UniquePointer AlignSectionsMisorientation::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> AlignSectionsMisorientation::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult AlignSectionsMisorientation::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

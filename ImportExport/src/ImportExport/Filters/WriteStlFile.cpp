@@ -63,7 +63,7 @@ IFilter::UniquePointer WriteStlFile::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> WriteStlFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult WriteStlFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

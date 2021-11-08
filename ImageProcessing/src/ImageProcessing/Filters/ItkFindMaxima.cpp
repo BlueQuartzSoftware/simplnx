@@ -60,7 +60,7 @@ IFilter::UniquePointer ItkFindMaxima::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ItkFindMaxima::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ItkFindMaxima::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

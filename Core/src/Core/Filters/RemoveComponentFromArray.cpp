@@ -63,7 +63,7 @@ IFilter::UniquePointer RemoveComponentFromArray::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> RemoveComponentFromArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult RemoveComponentFromArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

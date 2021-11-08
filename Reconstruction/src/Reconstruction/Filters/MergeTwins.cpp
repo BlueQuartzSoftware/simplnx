@@ -76,7 +76,7 @@ IFilter::UniquePointer MergeTwins::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> MergeTwins::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult MergeTwins::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

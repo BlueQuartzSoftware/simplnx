@@ -78,7 +78,7 @@ IFilter::UniquePointer FeatureInfoReader::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FeatureInfoReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FeatureInfoReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

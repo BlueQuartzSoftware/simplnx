@@ -69,7 +69,7 @@ IFilter::UniquePointer AlignSectionsFeatureCentroid::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> AlignSectionsFeatureCentroid::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult AlignSectionsFeatureCentroid::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

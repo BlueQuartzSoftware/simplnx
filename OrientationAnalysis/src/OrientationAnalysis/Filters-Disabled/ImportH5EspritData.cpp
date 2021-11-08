@@ -74,7 +74,7 @@ IFilter::UniquePointer ImportH5EspritData::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ImportH5EspritData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ImportH5EspritData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

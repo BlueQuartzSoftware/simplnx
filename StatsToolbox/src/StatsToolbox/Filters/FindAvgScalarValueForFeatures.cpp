@@ -59,7 +59,7 @@ IFilter::UniquePointer FindAvgScalarValueForFeatures::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FindAvgScalarValueForFeatures::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindAvgScalarValueForFeatures::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

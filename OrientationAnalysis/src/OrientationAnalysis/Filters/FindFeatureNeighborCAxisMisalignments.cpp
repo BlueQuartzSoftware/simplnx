@@ -67,7 +67,7 @@ IFilter::UniquePointer FindFeatureNeighborCAxisMisalignments::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FindFeatureNeighborCAxisMisalignments::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindFeatureNeighborCAxisMisalignments::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

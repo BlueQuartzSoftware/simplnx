@@ -66,7 +66,7 @@ IFilter::UniquePointer CopyObject::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> CopyObject::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult CopyObject::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

@@ -77,7 +77,7 @@ IFilter::UniquePointer AdaptiveAlignmentMutualInformation::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> AdaptiveAlignmentMutualInformation::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult AdaptiveAlignmentMutualInformation::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

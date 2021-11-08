@@ -78,7 +78,7 @@ IFilter::UniquePointer ReadBinaryCTNorthStar::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ReadBinaryCTNorthStar::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ReadBinaryCTNorthStar::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

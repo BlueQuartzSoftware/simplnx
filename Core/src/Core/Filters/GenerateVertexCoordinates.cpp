@@ -56,7 +56,7 @@ IFilter::UniquePointer GenerateVertexCoordinates::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> GenerateVertexCoordinates::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult GenerateVertexCoordinates::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

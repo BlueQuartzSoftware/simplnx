@@ -85,7 +85,7 @@ IFilter::UniquePointer InitializeSyntheticVolume::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> InitializeSyntheticVolume::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult InitializeSyntheticVolume::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

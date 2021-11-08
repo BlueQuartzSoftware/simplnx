@@ -54,7 +54,7 @@ IFilter::UniquePointer ReadASCIIData::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ReadASCIIData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ReadASCIIData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

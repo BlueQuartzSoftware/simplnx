@@ -70,7 +70,7 @@ IFilter::UniquePointer FFTHDFWriterFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FFTHDFWriterFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FFTHDFWriterFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

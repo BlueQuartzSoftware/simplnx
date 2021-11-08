@@ -69,7 +69,7 @@ IFilter::UniquePointer MinNeighbors::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> MinNeighbors::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

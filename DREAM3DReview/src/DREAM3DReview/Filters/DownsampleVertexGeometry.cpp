@@ -67,7 +67,7 @@ IFilter::UniquePointer DownsampleVertexGeometry::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> DownsampleVertexGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult DownsampleVertexGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

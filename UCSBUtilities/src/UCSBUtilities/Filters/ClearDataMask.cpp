@@ -54,7 +54,7 @@ IFilter::UniquePointer ClearDataMask::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ClearDataMask::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ClearDataMask::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

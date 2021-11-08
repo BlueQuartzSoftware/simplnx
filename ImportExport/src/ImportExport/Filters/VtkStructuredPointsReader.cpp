@@ -72,7 +72,7 @@ IFilter::UniquePointer VtkStructuredPointsReader::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> VtkStructuredPointsReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult VtkStructuredPointsReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

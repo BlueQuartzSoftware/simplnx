@@ -112,7 +112,7 @@ IFilter::UniquePointer Export3dSolidMesh::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> Export3dSolidMesh::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult Export3dSolidMesh::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

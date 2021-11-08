@@ -60,7 +60,7 @@ IFilter::UniquePointer ApplyDewarpParameters::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ApplyDewarpParameters::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ApplyDewarpParameters::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

@@ -70,7 +70,7 @@ IFilter::UniquePointer CalculateArrayHistogram::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> CalculateArrayHistogram::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult CalculateArrayHistogram::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

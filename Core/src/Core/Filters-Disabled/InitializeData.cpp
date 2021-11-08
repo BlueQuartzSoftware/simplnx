@@ -70,7 +70,7 @@ IFilter::UniquePointer InitializeData::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> InitializeData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

@@ -61,7 +61,7 @@ IFilter::UniquePointer CreateFeatureArrayFromElementArray::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> CreateFeatureArrayFromElementArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult CreateFeatureArrayFromElementArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

@@ -64,7 +64,7 @@ IFilter::UniquePointer ExtractTripleLinesFromTriangleGeometry::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ExtractTripleLinesFromTriangleGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ExtractTripleLinesFromTriangleGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

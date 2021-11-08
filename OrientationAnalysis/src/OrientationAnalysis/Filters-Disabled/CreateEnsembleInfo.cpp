@@ -61,7 +61,7 @@ IFilter::UniquePointer CreateEnsembleInfo::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> CreateEnsembleInfo::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult CreateEnsembleInfo::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

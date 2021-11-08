@@ -66,7 +66,7 @@ IFilter::UniquePointer FindRelativeMotionBetweenSlices::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FindRelativeMotionBetweenSlices::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindRelativeMotionBetweenSlices::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

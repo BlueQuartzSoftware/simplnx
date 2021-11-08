@@ -56,7 +56,7 @@ IFilter::UniquePointer SplitAttributeArray::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> SplitAttributeArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult SplitAttributeArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

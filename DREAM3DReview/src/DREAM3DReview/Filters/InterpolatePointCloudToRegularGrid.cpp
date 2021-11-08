@@ -82,7 +82,7 @@ IFilter::UniquePointer InterpolatePointCloudToRegularGrid::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> InterpolatePointCloudToRegularGrid::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult InterpolatePointCloudToRegularGrid::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

@@ -54,7 +54,7 @@ IFilter::UniquePointer Lesson6::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> Lesson6::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult Lesson6::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

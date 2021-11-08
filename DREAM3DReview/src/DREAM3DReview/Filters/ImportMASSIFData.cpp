@@ -61,7 +61,7 @@ IFilter::UniquePointer ImportMASSIFData::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ImportMASSIFData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ImportMASSIFData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
