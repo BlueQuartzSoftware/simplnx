@@ -81,10 +81,38 @@ TEST_CASE("Complex Pipeline")
   REQUIRE(node != nullptr);
   REQUIRE(node->getParameters().empty() == false);
   REQUIRE(pipeline.push_back(std::move(node)));
+  REQUIRE(pipeline.push_back(k_Test1FilterHandle));
+  REQUIRE(pipeline.push_back(k_Test2FilterHandle));
 
   auto segment2 = std::make_shared<Pipeline>();
   segment2->push_back(tf1Handle);
   REQUIRE(pipeline.push_back(segment2));
+
+  // Test Moving nodex
+  {
+    constexpr Pipeline::index_type fromIndex = 1;
+    constexpr Pipeline::index_type toIndex = 3;
+
+    auto movedNode = pipeline.at(fromIndex);
+
+    REQUIRE(pipeline.move(fromIndex, toIndex));
+
+    // Check node index
+    {
+      auto nodeIter = pipeline.find(movedNode);
+      const auto nodeIndex = nodeIter - pipeline.begin();
+      REQUIRE(nodeIndex == toIndex);
+    }
+
+    REQUIRE(pipeline.move(toIndex, fromIndex));
+
+    // Check node index
+    {
+      auto nodeIter = pipeline.find(movedNode);
+      const auto nodeIndex = nodeIter - pipeline.begin();
+      REQUIRE(nodeIndex == fromIndex);
+    }
+  }
 }
 
 TEST_CASE("PipelineJson")
