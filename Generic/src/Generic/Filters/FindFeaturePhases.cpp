@@ -59,7 +59,7 @@ IFilter::UniquePointer FindFeaturePhases::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FindFeaturePhases::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindFeaturePhases::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

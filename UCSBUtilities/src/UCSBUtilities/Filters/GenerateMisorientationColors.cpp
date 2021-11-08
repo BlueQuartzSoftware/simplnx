@@ -70,7 +70,7 @@ IFilter::UniquePointer GenerateMisorientationColors::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> GenerateMisorientationColors::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult GenerateMisorientationColors::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

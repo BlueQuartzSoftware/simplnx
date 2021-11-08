@@ -71,7 +71,7 @@ IFilter::UniquePointer CreateLambertSphere::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> CreateLambertSphere::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult CreateLambertSphere::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

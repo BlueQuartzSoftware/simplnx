@@ -74,7 +74,7 @@ IFilter::UniquePointer MapPointCloudToRegularGrid::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> MapPointCloudToRegularGrid::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult MapPointCloudToRegularGrid::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

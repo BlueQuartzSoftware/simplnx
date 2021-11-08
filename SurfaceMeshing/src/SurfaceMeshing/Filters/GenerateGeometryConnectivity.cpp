@@ -57,7 +57,7 @@ IFilter::UniquePointer GenerateGeometryConnectivity::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> GenerateGeometryConnectivity::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult GenerateGeometryConnectivity::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

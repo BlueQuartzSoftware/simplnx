@@ -61,7 +61,7 @@ IFilter::UniquePointer FindFeaturePhasesBinary::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FindFeaturePhasesBinary::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindFeaturePhasesBinary::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

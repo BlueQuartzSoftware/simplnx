@@ -54,7 +54,7 @@ IFilter::UniquePointer CreateDataContainer::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> CreateDataContainer::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult CreateDataContainer::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

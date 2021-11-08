@@ -76,7 +76,7 @@ IFilter::UniquePointer PointSampleTriangleGeometry::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> PointSampleTriangleGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult PointSampleTriangleGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

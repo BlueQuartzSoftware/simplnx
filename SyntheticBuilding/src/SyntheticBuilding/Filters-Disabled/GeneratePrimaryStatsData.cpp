@@ -84,7 +84,7 @@ IFilter::UniquePointer GeneratePrimaryStatsData::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> GeneratePrimaryStatsData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult GeneratePrimaryStatsData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

@@ -59,7 +59,7 @@ IFilter::UniquePointer ExportLAMMPSFile::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ExportLAMMPSFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ExportLAMMPSFile::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

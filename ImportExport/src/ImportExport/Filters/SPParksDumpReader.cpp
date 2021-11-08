@@ -68,7 +68,7 @@ IFilter::UniquePointer SPParksDumpReader::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> SPParksDumpReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult SPParksDumpReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

@@ -60,7 +60,7 @@ IFilter::UniquePointer ItkGrayToRGB::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ItkGrayToRGB::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ItkGrayToRGB::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

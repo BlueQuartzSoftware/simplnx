@@ -54,7 +54,7 @@ IFilter::UniquePointer EbsdToH5Ebsd::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> EbsdToH5Ebsd::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult EbsdToH5Ebsd::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

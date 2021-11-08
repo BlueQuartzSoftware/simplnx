@@ -64,7 +64,7 @@ IFilter::UniquePointer ItkManualThreshold::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ItkManualThreshold::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ItkManualThreshold::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

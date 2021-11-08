@@ -60,7 +60,7 @@ IFilter::UniquePointer SPParksSitesWriter::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> SPParksSitesWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult SPParksSitesWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

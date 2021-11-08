@@ -68,7 +68,7 @@ IFilter::UniquePointer ScalarSegmentFeatures::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ScalarSegmentFeatures::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ScalarSegmentFeatures::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

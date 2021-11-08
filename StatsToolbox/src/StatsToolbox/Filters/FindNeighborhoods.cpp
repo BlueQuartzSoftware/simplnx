@@ -63,7 +63,7 @@ IFilter::UniquePointer FindNeighborhoods::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FindNeighborhoods::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindNeighborhoods::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

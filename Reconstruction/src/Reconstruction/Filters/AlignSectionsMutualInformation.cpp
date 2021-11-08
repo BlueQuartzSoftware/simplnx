@@ -73,7 +73,7 @@ IFilter::UniquePointer AlignSectionsMutualInformation::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> AlignSectionsMutualInformation::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult AlignSectionsMutualInformation::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

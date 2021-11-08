@@ -61,7 +61,7 @@ IFilter::UniquePointer FindTriangleGeomCentroids::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FindTriangleGeomCentroids::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindTriangleGeomCentroids::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

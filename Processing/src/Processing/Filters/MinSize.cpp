@@ -69,7 +69,7 @@ IFilter::UniquePointer MinSize::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> MinSize::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult MinSize::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

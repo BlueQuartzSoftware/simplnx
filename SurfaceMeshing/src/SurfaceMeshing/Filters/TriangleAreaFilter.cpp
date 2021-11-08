@@ -55,7 +55,7 @@ IFilter::UniquePointer TriangleAreaFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> TriangleAreaFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult TriangleAreaFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

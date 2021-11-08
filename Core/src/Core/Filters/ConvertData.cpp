@@ -58,7 +58,7 @@ IFilter::UniquePointer ConvertData::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ConvertData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ConvertData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

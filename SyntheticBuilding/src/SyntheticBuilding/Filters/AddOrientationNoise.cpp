@@ -57,7 +57,7 @@ IFilter::UniquePointer AddOrientationNoise::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> AddOrientationNoise::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult AddOrientationNoise::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

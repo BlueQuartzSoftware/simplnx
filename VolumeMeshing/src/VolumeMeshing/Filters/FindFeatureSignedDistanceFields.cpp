@@ -60,7 +60,7 @@ IFilter::UniquePointer FindFeatureSignedDistanceFields::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FindFeatureSignedDistanceFields::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindFeatureSignedDistanceFields::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

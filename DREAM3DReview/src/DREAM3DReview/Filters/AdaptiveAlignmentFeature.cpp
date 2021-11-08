@@ -69,7 +69,7 @@ IFilter::UniquePointer AdaptiveAlignmentFeature::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> AdaptiveAlignmentFeature::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult AdaptiveAlignmentFeature::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

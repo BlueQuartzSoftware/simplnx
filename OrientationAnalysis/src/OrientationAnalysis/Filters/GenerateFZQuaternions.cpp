@@ -66,7 +66,7 @@ IFilter::UniquePointer GenerateFZQuaternions::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> GenerateFZQuaternions::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult GenerateFZQuaternions::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

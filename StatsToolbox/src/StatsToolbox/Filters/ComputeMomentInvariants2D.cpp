@@ -65,7 +65,7 @@ IFilter::UniquePointer ComputeMomentInvariants2D::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ComputeMomentInvariants2D::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ComputeMomentInvariants2D::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

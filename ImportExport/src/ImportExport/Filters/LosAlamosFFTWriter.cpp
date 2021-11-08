@@ -62,7 +62,7 @@ IFilter::UniquePointer LosAlamosFFTWriter::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> LosAlamosFFTWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult LosAlamosFFTWriter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

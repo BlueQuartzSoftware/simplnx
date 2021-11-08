@@ -65,7 +65,7 @@ IFilter::UniquePointer KDistanceGraph::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> KDistanceGraph::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult KDistanceGraph::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

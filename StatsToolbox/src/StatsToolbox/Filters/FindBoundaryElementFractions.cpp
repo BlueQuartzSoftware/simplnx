@@ -59,7 +59,7 @@ IFilter::UniquePointer FindBoundaryElementFractions::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FindBoundaryElementFractions::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindBoundaryElementFractions::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

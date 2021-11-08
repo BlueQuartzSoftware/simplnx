@@ -54,7 +54,7 @@ IFilter::UniquePointer ReverseTriangleWinding::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ReverseTriangleWinding::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ReverseTriangleWinding::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

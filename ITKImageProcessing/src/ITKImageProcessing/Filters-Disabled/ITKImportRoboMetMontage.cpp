@@ -86,7 +86,7 @@ IFilter::UniquePointer ITKImportRoboMetMontage::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ITKImportRoboMetMontage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ITKImportRoboMetMontage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

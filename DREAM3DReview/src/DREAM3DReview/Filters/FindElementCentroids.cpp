@@ -63,7 +63,7 @@ IFilter::UniquePointer FindElementCentroids::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FindElementCentroids::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindElementCentroids::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

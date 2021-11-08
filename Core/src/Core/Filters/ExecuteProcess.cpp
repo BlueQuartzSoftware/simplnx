@@ -54,7 +54,7 @@ IFilter::UniquePointer ExecuteProcess::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ExecuteProcess::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ExecuteProcess::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

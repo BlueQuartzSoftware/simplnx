@@ -56,7 +56,7 @@ IFilter::UniquePointer CopyAttributeMatrix::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> CopyAttributeMatrix::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult CopyAttributeMatrix::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

@@ -66,7 +66,7 @@ IFilter::UniquePointer MoveMultiData::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> MoveMultiData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult MoveMultiData::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

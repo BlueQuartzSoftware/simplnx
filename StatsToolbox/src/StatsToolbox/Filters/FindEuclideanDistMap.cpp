@@ -72,7 +72,7 @@ IFilter::UniquePointer FindEuclideanDistMap::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FindEuclideanDistMap::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindEuclideanDistMap::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

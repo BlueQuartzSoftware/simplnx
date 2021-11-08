@@ -71,7 +71,7 @@ IFilter::UniquePointer SteinerCompact::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> SteinerCompact::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult SteinerCompact::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

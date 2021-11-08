@@ -64,7 +64,7 @@ IFilter::UniquePointer FindBoundingBoxFeatures::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FindBoundingBoxFeatures::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindBoundingBoxFeatures::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

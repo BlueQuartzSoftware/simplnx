@@ -81,7 +81,7 @@ IFilter::UniquePointer FindGBPDMetricBased::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> FindGBPDMetricBased::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindGBPDMetricBased::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
