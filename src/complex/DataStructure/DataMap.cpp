@@ -251,9 +251,15 @@ void DataMap::setDataStructure(DataStructure* dataStr)
   {
     // Replace shared_ptr with the corresponding object from the target DataStructure
     auto shareData = dataStr->getSharedData(key);
+    if(shareData == nullptr)
+    {
+      continue;
+    }
+
     shareData->setDataStructure(dataStr);
     m_Map[key]->setDataStructure(nullptr);
     m_Map[key] = shareData;
+    dataStr->setData(key, shareData);
   }
 }
 

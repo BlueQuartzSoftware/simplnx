@@ -526,6 +526,14 @@ protected:
    */
   bool insertIntoParent(const std::shared_ptr<DataObject>& dataObject, BaseGroup* parentGroup);
 
+  /**
+   * @brief Applies a new pointer to the DataObject at a specified ID. Removes
+   * the data from the DataMap if no DataObject was provided.
+   * @param id
+   * @param dataObject
+   */
+  void setData(DataObject::IdType id, std::shared_ptr<DataObject> dataObject);
+
 private:
   /**
    * @brief Inserts the target DataObject to the top of the DataStructure.
