@@ -1,0 +1,13 @@
+#pragma once
+
+#include "complex/Common/StringLiteral.hpp"
+
+namespace complex
+{
+namespace unit_test
+{
+constexpr StringLiteral k_SourceDir = "@PLUGIN_SOURCE_DIR_NORM@";
+constexpr StringLiteral k_BinaryDir = "@complex_BINARY_DIR@/Plugins/@PLUGIN_NAME@";
+constexpr StringLiteral k_BuildDir = COMPLEX_BUILD_DIR;
+}
+} // namespace complex
