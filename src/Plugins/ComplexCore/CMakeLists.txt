@@ -15,6 +15,7 @@ set(FilterList
   ImportDREAM3DFilter
   ImportTextFilter
   MultiThresholdObjects
+  RobustAutomaticThreshold
   ExampleFilter1
   ExampleFilter2
 )
