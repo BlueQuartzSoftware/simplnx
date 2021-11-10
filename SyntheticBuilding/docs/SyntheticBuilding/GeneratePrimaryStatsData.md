@@ -11,8 +11,6 @@
 | YES | MinCutOff | Min.Cut Off | float64 | Float64Parameter |
 | YES | MaxCutOff | Max Cut Off | float64 | Float64Parameter |
 | YES | BinStepSize | Bin Step Size | float64 | Float64Parameter |
-| NO | NumberOfBins | Bins Created: | <<<NOT_IMPLEMENTED>>> | PreflightUpdatedValueFilterParameter |
-| NO | FeatureESD | Feature ESD: | <<<NOT_IMPLEMENTED>>> | PreflightUpdatedValueFilterParameter |
 | NO | OdfData | ODF | <<<NOT_IMPLEMENTED>>> | DynamicTableFilterParameter |
 | NO | MdfData | MDF | <<<NOT_IMPLEMENTED>>> | DynamicTableFilterParameter |
 | NO | AxisOdfData | Axis ODF | <<<NOT_IMPLEMENTED>>> | DynamicTableFilterParameter |

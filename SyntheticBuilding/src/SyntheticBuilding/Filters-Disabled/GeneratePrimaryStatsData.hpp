@@ -33,8 +33,6 @@ public:
   static inline constexpr StringLiteral k_MinCutOff_Key = "MinCutOff";
   static inline constexpr StringLiteral k_MaxCutOff_Key = "MaxCutOff";
   static inline constexpr StringLiteral k_BinStepSize_Key = "BinStepSize";
-  static inline constexpr StringLiteral k_NumberOfBins_Key = "NumberOfBins";
-  static inline constexpr StringLiteral k_FeatureESD_Key = "FeatureESD";
   static inline constexpr StringLiteral k_OdfData_Key = "OdfData";
   static inline constexpr StringLiteral k_MdfData_Key = "MdfData";
   static inline constexpr StringLiteral k_AxisOdfData_Key = "AxisOdfData";

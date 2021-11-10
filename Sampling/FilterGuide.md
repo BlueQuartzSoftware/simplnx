@@ -3,13 +3,13 @@
 |  Filter Name | All Parameters Working | DataCheck Implemented | Execute Implemented | Documentation Implemented |
 |--------------|------------------------|-----------------------|---------------------|---------------------------|
 | AppendImageGeometryZSlice | TRUE  | | | |
-| CropImageGeometry | FALSE  | | | |
+| CropImageGeometry | TRUE  | | | |
 | ExtractFlaggedFeatures | TRUE  | | | |
 | NearestPointFuseRegularGrids | TRUE  | | | |
-| RegularGridSampleSurfaceMesh | FALSE  | | | |
+| RegularGridSampleSurfaceMesh | TRUE  | | | |
 | RegularizeZSpacing | TRUE  | | | |
-| ResampleImageGeom | FALSE  | | | |
-| ResampleRectGridToImageGeom | FALSE  | | | |
+| ResampleImageGeom | TRUE  | | | |
+| ResampleRectGridToImageGeom | TRUE  | | | |
 | SampleSurfaceMeshSpecifiedPoints | TRUE  | | | |
 | UncertainRegularGridSampleSurfaceMesh | TRUE  | | | |
 | WarpRegularGrid | FALSE  | | | |
@@ -17,5 +17,5 @@
 
 ## Summary ##
 
-+ Filters Ready to be Ported: 6
-+ Filters Needing more Parameters Implemented: 5
++ Filters Ready to be Ported: 10
++ Filters Needing more Parameters Implemented: 1

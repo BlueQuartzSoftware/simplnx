@@ -85,6 +85,12 @@ IFilter::PreflightResult ComputeFeatureEigenstrains::preflightImpl(const DataStr
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
    ***************************************************************************/
+
+  /**
+   * These are the values that were gathered from the UI or the pipeline file or
+   * otherwise passed into the filter. These are here for your convenience. If you
+   * do not need some of them remove them.
+   */
   auto pPoissonRatioValue = filterArgs.value<float32>(k_PoissonRatio_Key);
   auto pUseEllipsoidalGrainsValue = filterArgs.value<bool>(k_UseEllipsoidalGrains_Key);
   auto pUseCorrectionalMatrixValue = filterArgs.value<bool>(k_UseCorrectionalMatrix_Key);
@@ -99,13 +105,26 @@ IFilter::PreflightResult ComputeFeatureEigenstrains::preflightImpl(const DataStr
   auto pElasticStrainsArrayPathValue = filterArgs.value<DataPath>(k_ElasticStrainsArrayPath_Key);
   auto pEigenstrainsArrayNameValue = filterArgs.value<DataPath>(k_EigenstrainsArrayName_Key);
 
-  OutputActions actions;
+  // Declare the preflightResult variable that will be populated with the results
+  // of the preflight. The PreflightResult type contains the output Actions and
+  // any preflight updated values that you want to be displayed to the user, typically
+  // through a user interface (UI).
+  PreflightResult preflightResult;
+
 #if 0
+  // Define the OutputActions Object that will hold the actions that would take
+  // place if the filter were to execute. This is mainly what would happen to the
+  // DataStructure during this filter, i.e., what modificationst to the DataStructure
+  // would take place.
+  OutputActions actions;
   // Define a custom class that generates the changes to the DataStructure.
   auto action = std::make_unique<ComputeFeatureEigenstrainsAction>();
   actions.actions.push_back(std::move(action));
+  // Assign the generated outputActions to the PreflightResult::OutputActions property
+  preflightResult.outputActions = std::move(actions);
 #endif
-  return {std::move(actions)};
+
+  return preflightResult;
 }
 
 //------------------------------------------------------------------------------

@@ -7,5 +7,4 @@
 | YES | MatrixName | Matrix Name | StringParameter::ValueType | StringParameter |
 | YES | ArrayName | Array Name | StringParameter::ValueType | StringParameter |
 | YES | NumKeypoints | Number of Keypoints | VectorInt32Parameter::ValueType | VectorInt32Parameter |
-| NO | SelectedArrays | Selected Arrays | <<<NOT_IMPLEMENTED>>> | PreflightUpdatedValueFilterParameter |
 | YES | PhaseNamesArrayPath | Phase Names | DataPath | ArraySelectionParameter |

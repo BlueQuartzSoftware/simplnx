@@ -14,9 +14,9 @@
 | CreateDataArray | FALSE  | | | |
 | CreateDataContainer | TRUE  | | | |
 | CreateFeatureArrayFromElementArray | TRUE  | | | |
-| CreateGeometry | FALSE  | | | |
+| CreateGeometry | TRUE  | | | |
 | CreateGridMontage | TRUE  | | | |
-| CreateImageGeometry | FALSE  | | | |
+| CreateImageGeometry | TRUE  | | | |
 | CreateStringArray | TRUE  | | | |
 | CropVertexGeometry | TRUE  | | | |
 | DataContainerReader | FALSE  | | | |
@@ -31,7 +31,7 @@
 | GenerateColorTable | FALSE  | | | |
 | GenerateTiltSeries | TRUE  | | | |
 | GenerateVertexCoordinates | TRUE  | | | |
-| ImportAsciDataArray | FALSE  | | | |
+| ImportAsciDataArray | TRUE  | | | |
 | ImportHDF5Dataset | FALSE  | | | |
 | InitializeData | FALSE  | | | |
 | LinkFeatureMapToElementArray | TRUE  | | | |
@@ -61,5 +61,5 @@
 
 ## Summary ##
 
-+ Filters Ready to be Ported: 38
-+ Filters Needing more Parameters Implemented: 17
++ Filters Ready to be Ported: 41
++ Filters Needing more Parameters Implemented: 14

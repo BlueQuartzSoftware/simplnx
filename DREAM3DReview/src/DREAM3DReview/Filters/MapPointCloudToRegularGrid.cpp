@@ -60,8 +60,8 @@ Parameters MapPointCloudToRegularGrid::parameters() const
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageDataContainerName_Key, "Created Image DataContainer", "", DataPath{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_SamplingGridType_Key, k_GridDimensions_Key, 0);
-  params.linkParameters(k_SamplingGridType_Key, k_CreatedImageDataContainerName_Key, 1);
-  params.linkParameters(k_SamplingGridType_Key, k_ImageDataContainerPath_Key, 2);
+  params.linkParameters(k_SamplingGridType_Key, k_CreatedImageDataContainerName_Key, 0);
+  params.linkParameters(k_SamplingGridType_Key, k_ImageDataContainerPath_Key, 1);
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
   return params;
@@ -79,6 +79,12 @@ IFilter::PreflightResult MapPointCloudToRegularGrid::preflightImpl(const DataStr
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
    ***************************************************************************/
+
+  /**
+   * These are the values that were gathered from the UI or the pipeline file or
+   * otherwise passed into the filter. These are here for your convenience. If you
+   * do not need some of them remove them.
+   */
   auto pSamplingGridTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_SamplingGridType_Key);
   auto pGridDimensionsValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_GridDimensions_Key);
   auto pImageDataContainerPathValue = filterArgs.value<DataPath>(k_ImageDataContainerPath_Key);
@@ -88,13 +94,26 @@ IFilter::PreflightResult MapPointCloudToRegularGrid::preflightImpl(const DataStr
   auto pVoxelIndicesArrayPathValue = filterArgs.value<DataPath>(k_VoxelIndicesArrayPath_Key);
   auto pCreatedImageDataContainerNameValue = filterArgs.value<DataPath>(k_CreatedImageDataContainerName_Key);
 
-  OutputActions actions;
+  // Declare the preflightResult variable that will be populated with the results
+  // of the preflight. The PreflightResult type contains the output Actions and
+  // any preflight updated values that you want to be displayed to the user, typically
+  // through a user interface (UI).
+  PreflightResult preflightResult;
+
 #if 0
+  // Define the OutputActions Object that will hold the actions that would take
+  // place if the filter were to execute. This is mainly what would happen to the
+  // DataStructure during this filter, i.e., what modificationst to the DataStructure
+  // would take place.
+  OutputActions actions;
   // Define a custom class that generates the changes to the DataStructure.
   auto action = std::make_unique<MapPointCloudToRegularGridAction>();
   actions.actions.push_back(std::move(action));
+  // Assign the generated outputActions to the PreflightResult::OutputActions property
+  preflightResult.outputActions = std::move(actions);
 #endif
-  return {std::move(actions)};
+
+  return preflightResult;
 }
 
 //------------------------------------------------------------------------------

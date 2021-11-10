@@ -17,9 +17,9 @@ set(FilterList
   #CreateDataArray # MISSING 1 or more Parameter Implementations
   CreateDataContainer
   CreateFeatureArrayFromElementArray
-  #CreateGeometry # MISSING 1 or more Parameter Implementations
+  CreateGeometry
   CreateGridMontage
-  #CreateImageGeometry # MISSING 1 or more Parameter Implementations
+  CreateImageGeometry
   CreateStringArray
   CropVertexGeometry
   #DataContainerReader # MISSING 1 or more Parameter Implementations
@@ -34,7 +34,7 @@ set(FilterList
   #GenerateColorTable # MISSING 1 or more Parameter Implementations
   GenerateTiltSeries
   GenerateVertexCoordinates
-  #ImportAsciDataArray # MISSING 1 or more Parameter Implementations
+  ImportAsciDataArray
   #ImportHDF5Dataset # MISSING 1 or more Parameter Implementations
   #InitializeData # MISSING 1 or more Parameter Implementations
   LinkFeatureMapToElementArray
@@ -70,7 +70,7 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 )
 
 #------------------------------------------------------------------------------
-# If there are additional library packages that need to be found, there is where
+# If there are additional library packages that need to be found, this is where
 # to do that using the usual find_package(....) call
 # find_package(....)
 
@@ -97,3 +97,8 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 #     PUBLIC
 #     additional include directories here
 # )
+
+#------------------------------------------------------------------------------
+# Add in the unit tests for the filters included in this plugin
+enable_testing()
+add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)

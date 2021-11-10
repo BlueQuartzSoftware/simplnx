@@ -8,4 +8,3 @@
 | YES | SkipHeaderLines | Skip Header Lines | int32 | Int32Parameter |
 | YES | Delimiter | Delimiter | ChoicesParameter::ValueType | ChoicesParameter |
 | YES | CreatedAttributeArrayPath | Output Attribute Array | DataPath | ArrayCreationParameter |
-| NO | FirstLine | First Line of Data: | <<<NOT_IMPLEMENTED>>> | PreflightUpdatedValueFilterParameter |

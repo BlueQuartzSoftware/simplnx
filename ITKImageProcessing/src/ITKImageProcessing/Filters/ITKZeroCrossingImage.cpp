@@ -9,26 +9,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ITKZeroCrossingImage::name() const
 {
   return FilterTraits<ITKZeroCrossingImage>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ITKZeroCrossingImage::className() const
 {
   return FilterTraits<ITKZeroCrossingImage>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ITKZeroCrossingImage::uuid() const
 {
   return FilterTraits<ITKZeroCrossingImage>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ITKZeroCrossingImage::humanName() const
 {
   return "ITK::Zero Crossing Image Filter";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ITKZeroCrossingImage::defaultTags() const
+{
+  return {"#ITK Image Processing", "#ITK Smoothing"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ITKZeroCrossingImage::parameters() const
 {
   Parameters params;
@@ -43,31 +54,53 @@ Parameters ITKZeroCrossingImage::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKZeroCrossingImage::clone() const
 {
   return std::make_unique<ITKZeroCrossingImage>();
 }
 
-Result<OutputActions> ITKZeroCrossingImage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+//------------------------------------------------------------------------------
+IFilter::PreflightResult ITKZeroCrossingImage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
    ***************************************************************************/
+
+  /**
+   * These are the values that were gathered from the UI or the pipeline file or
+   * otherwise passed into the filter. These are here for your convenience. If you
+   * do not need some of them remove them.
+   */
   auto pForegroundValueValue = filterArgs.value<int32>(k_ForegroundValue_Key);
   auto pBackgroundValueValue = filterArgs.value<int32>(k_BackgroundValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 
-  OutputActions actions;
+  // Declare the preflightResult variable that will be populated with the results
+  // of the preflight. The PreflightResult type contains the output Actions and
+  // any preflight updated values that you want to be displayed to the user, typically
+  // through a user interface (UI).
+  PreflightResult preflightResult;
+
 #if 0
+  // Define the OutputActions Object that will hold the actions that would take
+  // place if the filter were to execute. This is mainly what would happen to the
+  // DataStructure during this filter, i.e., what modificationst to the DataStructure
+  // would take place.
+  OutputActions actions;
   // Define a custom class that generates the changes to the DataStructure.
   auto action = std::make_unique<ITKZeroCrossingImageAction>();
   actions.actions.push_back(std::move(action));
+  // Assign the generated outputActions to the PreflightResult::OutputActions property
+  preflightResult.outputActions = std::move(actions);
 #endif
-  return {std::move(actions)};
+
+  return preflightResult;
 }
 
-Result<> ITKZeroCrossingImage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+//------------------------------------------------------------------------------
+Result<> ITKZeroCrossingImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -81,13 +81,13 @@ Parameters ImportPrintRiteTDMSFiles::parameters() const
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_ScaleLaserPower_Key, k_PowerScalingCoefficients_Key, true);
   params.linkParameters(k_ScalePyrometerTemperature_Key, k_TemperatureScalingCoefficients_Key, true);
-  params.linkParameters(k_SpatialTransformOption_Key, k_LayerForScaling_Key, 0);
+  params.linkParameters(k_SpatialTransformOption_Key, k_LayerForScaling_Key, 1);
   params.linkParameters(k_SpatialTransformOption_Key, k_SearchRadius_Key, 1);
-  params.linkParameters(k_SpatialTransformOption_Key, k_SplitRegions1_Key, 2);
-  params.linkParameters(k_SpatialTransformOption_Key, k_SplitRegions2_Key, 3);
-  params.linkParameters(k_SpatialTransformOption_Key, k_STLFilePath1_Key, 4);
-  params.linkParameters(k_SpatialTransformOption_Key, k_STLFilePath2_Key, 5);
-  params.linkParameters(k_SpatialTransformOption_Key, k_InputSpatialTransformFilePath_Key, 6);
+  params.linkParameters(k_SpatialTransformOption_Key, k_SplitRegions1_Key, 1);
+  params.linkParameters(k_SpatialTransformOption_Key, k_SplitRegions2_Key, 2);
+  params.linkParameters(k_SpatialTransformOption_Key, k_STLFilePath1_Key, 1);
+  params.linkParameters(k_SpatialTransformOption_Key, k_STLFilePath2_Key, 2);
+  params.linkParameters(k_SpatialTransformOption_Key, k_InputSpatialTransformFilePath_Key, 2);
 
   return params;
 }
@@ -104,6 +104,12 @@ IFilter::PreflightResult ImportPrintRiteTDMSFiles::preflightImpl(const DataStruc
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
    ***************************************************************************/
+
+  /**
+   * These are the values that were gathered from the UI or the pipeline file or
+   * otherwise passed into the filter. These are here for your convenience. If you
+   * do not need some of them remove them.
+   */
   auto pLayerThicknessValue = filterArgs.value<float32>(k_LayerThickness_Key);
   auto pLaserOnArrayOptionValue = filterArgs.value<ChoicesParameter::ValueType>(k_LaserOnArrayOption_Key);
   auto pLaserOnThresholdValue = filterArgs.value<float32>(k_LaserOnThreshold_Key);
@@ -124,13 +130,26 @@ IFilter::PreflightResult ImportPrintRiteTDMSFiles::preflightImpl(const DataStruc
   auto pOutputDirectoryValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputDirectory_Key);
   auto pOutputFilePrefixValue = filterArgs.value<StringParameter::ValueType>(k_OutputFilePrefix_Key);
 
-  OutputActions actions;
+  // Declare the preflightResult variable that will be populated with the results
+  // of the preflight. The PreflightResult type contains the output Actions and
+  // any preflight updated values that you want to be displayed to the user, typically
+  // through a user interface (UI).
+  PreflightResult preflightResult;
+
 #if 0
+  // Define the OutputActions Object that will hold the actions that would take
+  // place if the filter were to execute. This is mainly what would happen to the
+  // DataStructure during this filter, i.e., what modificationst to the DataStructure
+  // would take place.
+  OutputActions actions;
   // Define a custom class that generates the changes to the DataStructure.
   auto action = std::make_unique<ImportPrintRiteTDMSFilesAction>();
   actions.actions.push_back(std::move(action));
+  // Assign the generated outputActions to the PreflightResult::OutputActions property
+  preflightResult.outputActions = std::move(actions);
 #endif
-  return {std::move(actions)};
+
+  return preflightResult;
 }
 
 //------------------------------------------------------------------------------

@@ -32,7 +32,7 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 )
 
 #------------------------------------------------------------------------------
-# If there are additional library packages that need to be found, there is where
+# If there are additional library packages that need to be found, this is where
 # to do that using the usual find_package(....) call
 # find_package(....)
 
@@ -59,3 +59,8 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 #     PUBLIC
 #     additional include directories here
 # )
+
+#------------------------------------------------------------------------------
+# Add in the unit tests for the filters included in this plugin
+enable_testing()
+add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)

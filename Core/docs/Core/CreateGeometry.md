@@ -14,7 +14,6 @@
 | YES | YBoundsArrayPath | Y Bounds | DataPath | ArraySelectionParameter |
 | YES | ZBoundsArrayPath | Z Bounds | DataPath | ArraySelectionParameter |
 | YES | RectGridCellAttributeMatrixName | Cell Attribute Matrix | DataPath | ArrayCreationParameter |
-| NO | BoxDimensions | Box Size in Length Units | <<<NOT_IMPLEMENTED>>> | PreflightUpdatedValueFilterParameter |
 | YES | SharedVertexListArrayPath0 | Vertex List | DataPath | ArraySelectionParameter |
 | YES | VertexAttributeMatrixName0 | Vertex Attribute Matrix | DataPath | ArrayCreationParameter |
 | YES | SharedVertexListArrayPath1 | Shared Vertex List | DataPath | ArraySelectionParameter |

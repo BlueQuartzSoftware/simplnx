@@ -7,7 +7,6 @@
 | YES | ColumnMontageLimits | Montage Column Start/End [Inclusive, Zero Based] | VectorInt32Parameter::ValueType | VectorInt32Parameter |
 | YES | RowMontageLimits | Montage Row Start/End [Inclusive, Zero Based] | VectorInt32Parameter::ValueType | VectorInt32Parameter |
 | YES | LengthUnit | Length Unit | ChoicesParameter::ValueType | ChoicesParameter |
-| NO | MontageInformation | Montage Information | <<<NOT_IMPLEMENTED>>> | PreflightUpdatedValueFilterParameter |
 | YES | ChangeOrigin | Change Origin | bool | BoolParameter |
 | YES | Origin | Origin | VectorFloat32Parameter::ValueType | VectorFloat32Parameter |
 | YES | ConvertToGrayScale | Convert To GrayScale | bool | BoolParameter |

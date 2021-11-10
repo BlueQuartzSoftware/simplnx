@@ -1,0 +1,136 @@
+#include "ImportAsciDataArray.hpp"
+
+#include "complex/DataStructure/DataPath.hpp"
+#include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Parameters/NumericTypeParameter.hpp"
+
+#include <filesystem>
+namespace fs = std::filesystem;
+
+using namespace complex;
+
+namespace complex
+{
+//------------------------------------------------------------------------------
+std::string ImportAsciDataArray::name() const
+{
+  return FilterTraits<ImportAsciDataArray>::name.str();
+}
+
+//------------------------------------------------------------------------------
+std::string ImportAsciDataArray::className() const
+{
+  return FilterTraits<ImportAsciDataArray>::className;
+}
+
+//------------------------------------------------------------------------------
+Uuid ImportAsciDataArray::uuid() const
+{
+  return FilterTraits<ImportAsciDataArray>::uuid;
+}
+
+//------------------------------------------------------------------------------
+std::string ImportAsciDataArray::humanName() const
+{
+  return "Import ASCII Attribute Array";
+}
+
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportAsciDataArray::defaultTags() const
+{
+  return {"#Core", "#Input", "#Read", "#Import"};
+}
+
+//------------------------------------------------------------------------------
+Parameters ImportAsciDataArray::parameters() const
+{
+  Parameters params;
+  // Create the parameter descriptors that are needed for this filter
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Scalar Type", "", NumericType::int8));
+  params.insert(std::make_unique<Int32Parameter>(k_NumberOfComponents_Key, "Number of Components", "", 1234356));
+  params.insert(std::make_unique<Int32Parameter>(k_SkipHeaderLines_Key, "Skip Header Lines", "", 1234356));
+  params.insert(std::make_unique<ChoicesParameter>(k_Delimiter_Key, "Delimiter", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedAttributeArrayPath_Key, "Output Attribute Array", "", DataPath{}));
+
+  return params;
+}
+
+//------------------------------------------------------------------------------
+IFilter::UniquePointer ImportAsciDataArray::clone() const
+{
+  return std::make_unique<ImportAsciDataArray>();
+}
+
+//------------------------------------------------------------------------------
+IFilter::PreflightResult ImportAsciDataArray::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+{
+  /****************************************************************************
+   * Write any preflight sanity checking codes in this function
+   ***************************************************************************/
+
+  /**
+   * These are the values that were gathered from the UI or the pipeline file or
+   * otherwise passed into the filter. These are here for your convenience. If you
+   * do not need some of them remove them.
+   */
+  auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
+  auto pScalarTypeValue = filterArgs.value<NumericType>(k_ScalarType_Key);
+  auto pNumberOfComponentsValue = filterArgs.value<int32>(k_NumberOfComponents_Key);
+  auto pSkipHeaderLinesValue = filterArgs.value<int32>(k_SkipHeaderLines_Key);
+  auto pDelimiterValue = filterArgs.value<ChoicesParameter::ValueType>(k_Delimiter_Key);
+  auto pCreatedAttributeArrayPathValue = filterArgs.value<DataPath>(k_CreatedAttributeArrayPath_Key);
+
+  // These variables should be updated with the latest data generated for each variable during preflight.
+  // These will be returned through the preflightResult variable to the
+  // user interface. You could make these member variables instead if needed.
+  std::string firstLine;
+
+  // Declare the preflightResult variable that will be populated with the results
+  // of the preflight. The PreflightResult type contains the output Actions and
+  // any preflight updated values that you want to be displayed to the user, typically
+  // through a user interface (UI).
+  PreflightResult preflightResult;
+
+#if 0
+  // Define the OutputActions Object that will hold the actions that would take
+  // place if the filter were to execute. This is mainly what would happen to the
+  // DataStructure during this filter, i.e., what modificationst to the DataStructure
+  // would take place.
+  OutputActions actions;
+  // Define a custom class that generates the changes to the DataStructure.
+  auto action = std::make_unique<ImportAsciDataArrayAction>();
+  actions.actions.push_back(std::move(action));
+  // Assign the generated outputActions to the PreflightResult::OutputActions property
+  preflightResult.outputActions = std::move(actions);
+#endif
+
+  // These values should have been updated during the preflightImpl(...) method
+  preflightResult.outputValues.push_back({"FirstLine", firstLine});
+
+  return preflightResult;
+}
+
+//------------------------------------------------------------------------------
+Result<> ImportAsciDataArray::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+{
+  /****************************************************************************
+   * Extract the actual input values from the 'filterArgs' object
+   ***************************************************************************/
+  auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
+  auto pScalarTypeValue = filterArgs.value<NumericType>(k_ScalarType_Key);
+  auto pNumberOfComponentsValue = filterArgs.value<int32>(k_NumberOfComponents_Key);
+  auto pSkipHeaderLinesValue = filterArgs.value<int32>(k_SkipHeaderLines_Key);
+  auto pDelimiterValue = filterArgs.value<ChoicesParameter::ValueType>(k_Delimiter_Key);
+  auto pCreatedAttributeArrayPathValue = filterArgs.value<DataPath>(k_CreatedAttributeArrayPath_Key);
+
+  /****************************************************************************
+   * Write your algorithm implementation in this function
+   ***************************************************************************/
+
+  return {};
+}
+} // namespace complex

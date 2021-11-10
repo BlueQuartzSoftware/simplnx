@@ -69,7 +69,7 @@ Parameters WritePoleFigure::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaterialNameArrayPath_Key, "Material Name", "", DataPath{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_GenerationAlgorithm_Key, k_LambertSize_Key, 0);
-  params.linkParameters(k_GenerationAlgorithm_Key, k_NumColors_Key, 1);
+  params.linkParameters(k_GenerationAlgorithm_Key, k_NumColors_Key, 0);
   params.linkParameters(k_UseGoodVoxels_Key, k_GoodVoxelsArrayPath_Key, true);
 
   return params;
@@ -87,6 +87,12 @@ IFilter::PreflightResult WritePoleFigure::preflightImpl(const DataStructure& ds,
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
    ***************************************************************************/
+
+  /**
+   * These are the values that were gathered from the UI or the pipeline file or
+   * otherwise passed into the filter. These are here for your convenience. If you
+   * do not need some of them remove them.
+   */
   auto pTitleValue = filterArgs.value<StringParameter::ValueType>(k_Title_Key);
   auto pGenerationAlgorithmValue = filterArgs.value<ChoicesParameter::ValueType>(k_GenerationAlgorithm_Key);
   auto pLambertSizeValue = filterArgs.value<int32>(k_LambertSize_Key);
@@ -103,13 +109,26 @@ IFilter::PreflightResult WritePoleFigure::preflightImpl(const DataStructure& ds,
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   auto pMaterialNameArrayPathValue = filterArgs.value<DataPath>(k_MaterialNameArrayPath_Key);
 
-  OutputActions actions;
+  // Declare the preflightResult variable that will be populated with the results
+  // of the preflight. The PreflightResult type contains the output Actions and
+  // any preflight updated values that you want to be displayed to the user, typically
+  // through a user interface (UI).
+  PreflightResult preflightResult;
+
 #if 0
+  // Define the OutputActions Object that will hold the actions that would take
+  // place if the filter were to execute. This is mainly what would happen to the
+  // DataStructure during this filter, i.e., what modificationst to the DataStructure
+  // would take place.
+  OutputActions actions;
   // Define a custom class that generates the changes to the DataStructure.
   auto action = std::make_unique<WritePoleFigureAction>();
   actions.actions.push_back(std::move(action));
+  // Assign the generated outputActions to the PreflightResult::OutputActions property
+  preflightResult.outputActions = std::move(actions);
 #endif
-  return {std::move(actions)};
+
+  return preflightResult;
 }
 
 //------------------------------------------------------------------------------
