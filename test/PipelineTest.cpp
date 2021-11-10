@@ -57,6 +57,17 @@ TEST_CASE("Execute Pipeline")
   Pipeline pipeline;
   REQUIRE(pipeline.execute());
   REQUIRE(pipeline.push_front(tf1Handle));
+
+  PipelineFilter* filterNode = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+  REQUIRE(filterNode != nullptr);
+
+  Arguments args;
+  GeneratedFileListParameter::ValueType defaultValue;
+  defaultValue.startIndex = 0;
+  defaultValue.endIndex = 1;
+  args.insert("param3", std::move(defaultValue));
+  filterNode->setArguments(args);
+
   REQUIRE(pipeline.execute());
   REQUIRE(pipeline.push_back(tf2Handle));
 }

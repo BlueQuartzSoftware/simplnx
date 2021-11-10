@@ -142,27 +142,28 @@ std::any GeneratedFileListParameter::defaultValue() const
 //-----------------------------------------------------------------------------
 Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
 {
-  Result<> result;
-
   auto value = std::any_cast<ValueType>(valueRef);
-  if(value.startIndex < value.endIndex)
+  if(value.startIndex >= value.endIndex)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, "startIndex must be greater than endIndex"}})};
-  }
-  if(value.ordering != Ordering::LowToHigh && value.ordering != Ordering::HighToLow)
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, "ordering must be ZERO (0: Low To High) or ONE (1: High To Low)"}})};
+    return MakeErrorResult(-1, "startIndex must be less than endIndex");
   }
   // Generate the file lsit
   auto&& [fileList, missingFiles] = value.generate();
   // Validate that they all exist
-  for(auto& currentFilePath : fileList)
+  std::vector<Error> errors;
+  for(const auto& currentFilePath : fileList)
   {
     if(!fs::exists(currentFilePath))
     {
-      result.errors().push_back({-2, fmt::format("FILE DOES NOT EXIST:{}", currentFilePath)});
+      errors.push_back({-2, fmt::format("FILE DOES NOT EXIST: \"{}\"", currentFilePath)});
     }
   }
-  return result;
+
+  if(!errors.empty())
+  {
+    return {nonstd::make_unexpected(std::move(errors))};
+  }
+
+  return {};
 }
 } // namespace complex
