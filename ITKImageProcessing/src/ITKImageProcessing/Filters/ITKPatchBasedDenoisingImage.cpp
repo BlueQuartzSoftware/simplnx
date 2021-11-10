@@ -11,26 +11,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ITKPatchBasedDenoisingImage::name() const
 {
   return FilterTraits<ITKPatchBasedDenoisingImage>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ITKPatchBasedDenoisingImage::className() const
 {
   return FilterTraits<ITKPatchBasedDenoisingImage>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ITKPatchBasedDenoisingImage::uuid() const
 {
   return FilterTraits<ITKPatchBasedDenoisingImage>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ITKPatchBasedDenoisingImage::humanName() const
 {
   return "ITK::Patch Based Denoising Image Filter";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ITKPatchBasedDenoisingImage::defaultTags() const
+{
+  return {"#ITK Image Processing", "#ITK Denoising"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ITKPatchBasedDenoisingImage::parameters() const
 {
   Parameters params;
@@ -56,16 +67,24 @@ Parameters ITKPatchBasedDenoisingImage::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKPatchBasedDenoisingImage::clone() const
 {
   return std::make_unique<ITKPatchBasedDenoisingImage>();
 }
 
-Result<OutputActions> ITKPatchBasedDenoisingImage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+//------------------------------------------------------------------------------
+IFilter::PreflightResult ITKPatchBasedDenoisingImage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
    ***************************************************************************/
+
+  /**
+   * These are the values that were gathered from the UI or the pipeline file or
+   * otherwise passed into the filter. These are here for your convenience. If you
+   * do not need some of them remove them.
+   */
   auto pNoiseModelValue = filterArgs.value<ChoicesParameter::ValueType>(k_NoiseModel_Key);
   auto pKernelBandwidthSigmaValue = filterArgs.value<float64>(k_KernelBandwidthSigma_Key);
   auto pPatchRadiusValue = filterArgs.value<float64>(k_PatchRadius_Key);
@@ -82,16 +101,30 @@ Result<OutputActions> ITKPatchBasedDenoisingImage::preflightImpl(const DataStruc
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 
-  OutputActions actions;
+  // Declare the preflightResult variable that will be populated with the results
+  // of the preflight. The PreflightResult type contains the output Actions and
+  // any preflight updated values that you want to be displayed to the user, typically
+  // through a user interface (UI).
+  PreflightResult preflightResult;
+
 #if 0
+  // Define the OutputActions Object that will hold the actions that would take
+  // place if the filter were to execute. This is mainly what would happen to the
+  // DataStructure during this filter, i.e., what modificationst to the DataStructure
+  // would take place.
+  OutputActions actions;
   // Define a custom class that generates the changes to the DataStructure.
   auto action = std::make_unique<ITKPatchBasedDenoisingImageAction>();
   actions.actions.push_back(std::move(action));
+  // Assign the generated outputActions to the PreflightResult::OutputActions property
+  preflightResult.outputActions = std::move(actions);
 #endif
-  return {std::move(actions)};
+
+  return preflightResult;
 }
 
-Result<> ITKPatchBasedDenoisingImage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+//------------------------------------------------------------------------------
+Result<> ITKPatchBasedDenoisingImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

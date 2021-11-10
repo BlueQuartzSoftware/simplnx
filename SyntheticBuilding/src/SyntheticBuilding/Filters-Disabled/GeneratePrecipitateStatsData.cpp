@@ -8,7 +8,6 @@
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DynamicTableFilterParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/PreflightUpdatedValueFilterParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
@@ -60,8 +59,6 @@ Parameters GeneratePrecipitateStatsData::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_MinCutOff_Key, "Min.Cut Off", "", 2.3456789));
   params.insert(std::make_unique<Float64Parameter>(k_MaxCutOff_Key, "Max Cut Off", "", 2.3456789));
   params.insert(std::make_unique<Float64Parameter>(k_BinStepSize_Key, "Bin Step Size", "", 2.3456789));
-  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_NumberOfBins_Key, "Bins Created:", "", {}));
-  /*[x]*/ params.insert(std::make_unique<PreflightUpdatedValueFilterParameter>(k_FeatureESD_Key, "Feature ESD:", "", {}));
   /*[x]*/ params.insert(std::make_unique<DynamicTableFilterParameter>(k_OdfData_Key, "ODF", "", {}));
   /*[x]*/ params.insert(std::make_unique<DynamicTableFilterParameter>(k_MdfData_Key, "MDF", "", {}));
   /*[x]*/ params.insert(std::make_unique<DynamicTableFilterParameter>(k_AxisOdfData_Key, "Axis ODF", "", {}));
@@ -93,6 +90,12 @@ IFilter::PreflightResult GeneratePrecipitateStatsData::preflightImpl(const DataS
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
    ***************************************************************************/
+
+  /**
+   * These are the values that were gathered from the UI or the pipeline file or
+   * otherwise passed into the filter. These are here for your convenience. If you
+   * do not need some of them remove them.
+   */
   auto pPhaseNameValue = filterArgs.value<StringParameter::ValueType>(k_PhaseName_Key);
   auto pCrystalSymmetryValue = filterArgs.value<ChoicesParameter::ValueType>(k_CrystalSymmetry_Key);
   auto pMicroPresetModelValue = filterArgs.value<ChoicesParameter::ValueType>(k_MicroPresetModel_Key);
@@ -102,8 +105,6 @@ IFilter::PreflightResult GeneratePrecipitateStatsData::preflightImpl(const DataS
   auto pMinCutOffValue = filterArgs.value<float64>(k_MinCutOff_Key);
   auto pMaxCutOffValue = filterArgs.value<float64>(k_MaxCutOff_Key);
   auto pBinStepSizeValue = filterArgs.value<float64>(k_BinStepSize_Key);
-  auto pNumberOfBinsValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_NumberOfBins_Key);
-  auto pFeatureESDValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_FeatureESD_Key);
   auto pOdfDataValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_OdfData_Key);
   auto pMdfDataValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_MdfData_Key);
   auto pAxisOdfDataValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_AxisOdfData_Key);
@@ -116,13 +117,36 @@ IFilter::PreflightResult GeneratePrecipitateStatsData::preflightImpl(const DataS
   auto pAppendToExistingAttributeMatrixValue = filterArgs.value<bool>(k_AppendToExistingAttributeMatrix_Key);
   auto pSelectedEnsembleAttributeMatrixValue = filterArgs.value<DataPath>(k_SelectedEnsembleAttributeMatrix_Key);
 
-  OutputActions actions;
+  // These variables should be updated with the latest data generated for each variable during preflight.
+  // These will be returned through the preflightResult variable to the
+  // user interface. You could make these member variables instead if needed.
+  std::string numberOfBins;
+  std::string featureESD;
+
+  // Declare the preflightResult variable that will be populated with the results
+  // of the preflight. The PreflightResult type contains the output Actions and
+  // any preflight updated values that you want to be displayed to the user, typically
+  // through a user interface (UI).
+  PreflightResult preflightResult;
+
 #if 0
+  // Define the OutputActions Object that will hold the actions that would take
+  // place if the filter were to execute. This is mainly what would happen to the
+  // DataStructure during this filter, i.e., what modificationst to the DataStructure
+  // would take place.
+  OutputActions actions;
   // Define a custom class that generates the changes to the DataStructure.
   auto action = std::make_unique<GeneratePrecipitateStatsDataAction>();
   actions.actions.push_back(std::move(action));
+  // Assign the generated outputActions to the PreflightResult::OutputActions property
+  preflightResult.outputActions = std::move(actions);
 #endif
-  return {std::move(actions)};
+
+  // These values should have been updated during the preflightImpl(...) method
+  preflightResult.outputValues.push_back({"NumberOfBins", numberOfBins});
+  preflightResult.outputValues.push_back({"FeatureESD", featureESD});
+
+  return preflightResult;
 }
 
 //------------------------------------------------------------------------------
@@ -140,8 +164,6 @@ Result<> GeneratePrecipitateStatsData::executeImpl(DataStructure& data, const Ar
   auto pMinCutOffValue = filterArgs.value<float64>(k_MinCutOff_Key);
   auto pMaxCutOffValue = filterArgs.value<float64>(k_MaxCutOff_Key);
   auto pBinStepSizeValue = filterArgs.value<float64>(k_BinStepSize_Key);
-  auto pNumberOfBinsValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_NumberOfBins_Key);
-  auto pFeatureESDValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_FeatureESD_Key);
   auto pOdfDataValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_OdfData_Key);
   auto pMdfDataValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_MdfData_Key);
   auto pAxisOdfDataValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_AxisOdfData_Key);

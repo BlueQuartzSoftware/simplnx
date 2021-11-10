@@ -80,23 +80,23 @@ Parameters Export3dSolidMesh::parameters() const
   params.insert(std::make_unique<StringParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix Name", "", "SomeString"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_MeshingPackage_Key, k_SurfaceMeshFaceLabelsArrayPath_Key, 0);
-  params.linkParameters(k_MeshingPackage_Key, k_FeaturePhasesArrayPath_Key, 1);
-  params.linkParameters(k_MeshingPackage_Key, k_FeatureCentroidArrayPath_Key, 2);
-  params.linkParameters(k_MeshingPackage_Key, k_RefineMesh_Key, 3);
-  params.linkParameters(k_MeshingPackage_Key, k_MaxRadiusEdgeRatio_Key, 4);
-  params.linkParameters(k_MeshingPackage_Key, k_MinDihedralAngle_Key, 5);
-  params.linkParameters(k_MeshingPackage_Key, k_OptimizationLevel_Key, 6);
-  params.linkParameters(k_MeshingPackage_Key, k_LimitTetrahedraVolume_Key, 7);
-  params.linkParameters(k_MeshingPackage_Key, k_MaxTetrahedraVolume_Key, 8);
-  params.linkParameters(k_MeshingPackage_Key, k_IncludeHolesUsingPhaseID_Key, 9);
-  params.linkParameters(k_MeshingPackage_Key, k_PhaseID_Key, 10);
-  params.linkParameters(k_MeshingPackage_Key, k_TetDataContainerName_Key, 11);
-  params.linkParameters(k_MeshingPackage_Key, k_VertexAttributeMatrixName_Key, 12);
-  params.linkParameters(k_MeshingPackage_Key, k_CellAttributeMatrixName_Key, 13);
-  params.linkParameters(k_MeshingPackage_Key, k_GmshSTLFileName_Key, 14);
-  params.linkParameters(k_MeshingPackage_Key, k_NetgenSTLFileName_Key, 15);
-  params.linkParameters(k_MeshingPackage_Key, k_MeshSize_Key, 16);
-  params.linkParameters(k_MeshingPackage_Key, k_MeshFileFormat_Key, 17);
+  params.linkParameters(k_MeshingPackage_Key, k_FeaturePhasesArrayPath_Key, 0);
+  params.linkParameters(k_MeshingPackage_Key, k_FeatureCentroidArrayPath_Key, 0);
+  params.linkParameters(k_MeshingPackage_Key, k_RefineMesh_Key, 0);
+  params.linkParameters(k_MeshingPackage_Key, k_MaxRadiusEdgeRatio_Key, 0);
+  params.linkParameters(k_MeshingPackage_Key, k_MinDihedralAngle_Key, 0);
+  params.linkParameters(k_MeshingPackage_Key, k_OptimizationLevel_Key, 0);
+  params.linkParameters(k_MeshingPackage_Key, k_LimitTetrahedraVolume_Key, 0);
+  params.linkParameters(k_MeshingPackage_Key, k_MaxTetrahedraVolume_Key, 0);
+  params.linkParameters(k_MeshingPackage_Key, k_IncludeHolesUsingPhaseID_Key, 0);
+  params.linkParameters(k_MeshingPackage_Key, k_PhaseID_Key, 0);
+  params.linkParameters(k_MeshingPackage_Key, k_TetDataContainerName_Key, 0);
+  params.linkParameters(k_MeshingPackage_Key, k_VertexAttributeMatrixName_Key, 0);
+  params.linkParameters(k_MeshingPackage_Key, k_CellAttributeMatrixName_Key, 0);
+  params.linkParameters(k_MeshingPackage_Key, k_GmshSTLFileName_Key, 2);
+  params.linkParameters(k_MeshingPackage_Key, k_NetgenSTLFileName_Key, 1);
+  params.linkParameters(k_MeshingPackage_Key, k_MeshSize_Key, 1);
+  params.linkParameters(k_MeshingPackage_Key, k_MeshFileFormat_Key, 2);
   params.linkParameters(k_RefineMesh_Key, k_MaxRadiusEdgeRatio_Key, true);
   params.linkParameters(k_RefineMesh_Key, k_MinDihedralAngle_Key, true);
   params.linkParameters(k_LimitTetrahedraVolume_Key, k_MaxTetrahedraVolume_Key, true);
@@ -117,6 +117,12 @@ IFilter::PreflightResult Export3dSolidMesh::preflightImpl(const DataStructure& d
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
    ***************************************************************************/
+
+  /**
+   * These are the values that were gathered from the UI or the pipeline file or
+   * otherwise passed into the filter. These are here for your convenience. If you
+   * do not need some of them remove them.
+   */
   auto pMeshingPackageValue = filterArgs.value<ChoicesParameter::ValueType>(k_MeshingPackage_Key);
   auto poutputPathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_outputPath_Key);
   auto pPackageLocationValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_PackageLocation_Key);
@@ -140,13 +146,26 @@ IFilter::PreflightResult Export3dSolidMesh::preflightImpl(const DataStructure& d
   auto pVertexAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_VertexAttributeMatrixName_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_CellAttributeMatrixName_Key);
 
-  OutputActions actions;
+  // Declare the preflightResult variable that will be populated with the results
+  // of the preflight. The PreflightResult type contains the output Actions and
+  // any preflight updated values that you want to be displayed to the user, typically
+  // through a user interface (UI).
+  PreflightResult preflightResult;
+
 #if 0
+  // Define the OutputActions Object that will hold the actions that would take
+  // place if the filter were to execute. This is mainly what would happen to the
+  // DataStructure during this filter, i.e., what modificationst to the DataStructure
+  // would take place.
+  OutputActions actions;
   // Define a custom class that generates the changes to the DataStructure.
   auto action = std::make_unique<Export3dSolidMeshAction>();
   actions.actions.push_back(std::move(action));
+  // Assign the generated outputActions to the PreflightResult::OutputActions property
+  preflightResult.outputActions = std::move(actions);
 #endif
-  return {std::move(actions)};
+
+  return preflightResult;
 }
 
 //------------------------------------------------------------------------------

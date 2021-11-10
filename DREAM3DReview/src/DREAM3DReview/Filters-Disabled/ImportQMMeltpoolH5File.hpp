@@ -25,7 +25,6 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_InputFiles_Key = "InputFiles";
-  static inline constexpr StringLiteral k_PossibleIndices_Key = "PossibleIndices";
   static inline constexpr StringLiteral k_SliceRange_Key = "SliceRange";
   static inline constexpr StringLiteral k_DataContainerPath_Key = "DataContainerPath";
   static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";

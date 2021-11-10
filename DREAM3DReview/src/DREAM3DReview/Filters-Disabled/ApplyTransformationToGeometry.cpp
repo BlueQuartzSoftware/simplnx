@@ -58,9 +58,9 @@ Parameters ApplyTransformationToGeometry::parameters() const
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_GeometryToTransform_Key, "Geometry to Transform", "", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ComputedTransformationMatrix_Key, "Transformation Matrix", "", DataPath{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_TransformationMatrixType_Key, k_ComputedTransformationMatrix_Key, 0);
-  params.linkParameters(k_TransformationMatrixType_Key, k_ManualTransformationMatrix_Key, 1);
-  params.linkParameters(k_TransformationMatrixType_Key, k_RotationAngle_Key, 2);
+  params.linkParameters(k_TransformationMatrixType_Key, k_ComputedTransformationMatrix_Key, 1);
+  params.linkParameters(k_TransformationMatrixType_Key, k_ManualTransformationMatrix_Key, 2);
+  params.linkParameters(k_TransformationMatrixType_Key, k_RotationAngle_Key, 3);
   params.linkParameters(k_TransformationMatrixType_Key, k_RotationAxis_Key, 3);
   params.linkParameters(k_TransformationMatrixType_Key, k_Translation_Key, 4);
   params.linkParameters(k_TransformationMatrixType_Key, k_Scale_Key, 5);
@@ -80,6 +80,12 @@ IFilter::PreflightResult ApplyTransformationToGeometry::preflightImpl(const Data
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
    ***************************************************************************/
+
+  /**
+   * These are the values that were gathered from the UI or the pipeline file or
+   * otherwise passed into the filter. These are here for your convenience. If you
+   * do not need some of them remove them.
+   */
   auto pTransformationMatrixTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_TransformationMatrixType_Key);
   auto pManualTransformationMatrixValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_ManualTransformationMatrix_Key);
   auto pRotationAngleValue = filterArgs.value<float32>(k_RotationAngle_Key);
@@ -89,13 +95,26 @@ IFilter::PreflightResult ApplyTransformationToGeometry::preflightImpl(const Data
   auto pGeometryToTransformValue = filterArgs.value<DataPath>(k_GeometryToTransform_Key);
   auto pComputedTransformationMatrixValue = filterArgs.value<DataPath>(k_ComputedTransformationMatrix_Key);
 
-  OutputActions actions;
+  // Declare the preflightResult variable that will be populated with the results
+  // of the preflight. The PreflightResult type contains the output Actions and
+  // any preflight updated values that you want to be displayed to the user, typically
+  // through a user interface (UI).
+  PreflightResult preflightResult;
+
 #if 0
+  // Define the OutputActions Object that will hold the actions that would take
+  // place if the filter were to execute. This is mainly what would happen to the
+  // DataStructure during this filter, i.e., what modificationst to the DataStructure
+  // would take place.
+  OutputActions actions;
   // Define a custom class that generates the changes to the DataStructure.
   auto action = std::make_unique<ApplyTransformationToGeometryAction>();
   actions.actions.push_back(std::move(action));
+  // Assign the generated outputActions to the PreflightResult::OutputActions property
+  preflightResult.outputActions = std::move(actions);
 #endif
-  return {std::move(actions)};
+
+  return preflightResult;
 }
 
 //------------------------------------------------------------------------------

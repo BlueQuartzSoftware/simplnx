@@ -57,7 +57,7 @@
 | PointSampleTriangleGeometry | TRUE  | | | |
 | PottsModel | TRUE  | | | |
 | PrincipalComponentAnalysis | TRUE  | | | |
-| ReadBinaryCTNorthStar | FALSE  | | | |
+| ReadBinaryCTNorthStar | TRUE  | | | |
 | ReadMicData | TRUE  | | | |
 | RemoveFlaggedVertices | TRUE  | | | |
 | RobustAutomaticThreshold | TRUE  | | | |
@@ -71,5 +71,5 @@
 
 ## Summary ##
 
-+ Filters Ready to be Ported: 62
-+ Filters Needing more Parameters Implemented: 3
++ Filters Ready to be Ported: 63
++ Filters Needing more Parameters Implemented: 2

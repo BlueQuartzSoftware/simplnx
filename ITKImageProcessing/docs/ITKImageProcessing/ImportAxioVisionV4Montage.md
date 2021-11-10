@@ -6,7 +6,6 @@
 | YES | MontageName | Name of Created Montage | StringParameter::ValueType | StringParameter |
 | YES | ColumnMontageLimits | Montage Column Start/End [Inclusive, Zero Based] | VectorInt32Parameter::ValueType | VectorInt32Parameter |
 | YES | RowMontageLimits | Montage Row Start/End [Inclusive, Zero Based] | VectorInt32Parameter::ValueType | VectorInt32Parameter |
-| NO | MontageInformation | Montage Information | <<<NOT_IMPLEMENTED>>> | PreflightUpdatedValueFilterParameter |
 | YES | ImportAllMetaData | Import All MetaData | bool | BoolParameter |
 | YES | ChangeOrigin | Change Origin | bool | BoolParameter |
 | YES | Origin | Origin | VectorFloat32Parameter::ValueType | VectorFloat32Parameter |

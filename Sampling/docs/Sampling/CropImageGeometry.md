@@ -8,8 +8,6 @@
 | YES | XMax | X Max Voxel (Column) [Inclusive] | int32 | Int32Parameter |
 | YES | YMax | Y Max Voxel (Row) [Inclusive] | int32 | Int32Parameter |
 | YES | ZMax | Z Max Voxel (Plane) [Inclusive] | int32 | Int32Parameter |
-| NO | OldBoxDimensions | Old Box Size in Length Units | <<<NOT_IMPLEMENTED>>> | PreflightUpdatedValueFilterParameter |
-| NO | NewBoxDimensions | New Box Size in Length Units | <<<NOT_IMPLEMENTED>>> | PreflightUpdatedValueFilterParameter |
 | YES | UpdateOrigin | Update Origin | bool | BoolParameter |
 | YES | SaveAsNewDataContainer | Save As New Data Container | bool | BoolParameter |
 | YES | NewDataContainerName | Data Container | DataPath | DataGroupCreationParameter |

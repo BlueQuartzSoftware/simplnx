@@ -8,26 +8,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ITKNormalizeImage::name() const
 {
   return FilterTraits<ITKNormalizeImage>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ITKNormalizeImage::className() const
 {
   return FilterTraits<ITKNormalizeImage>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ITKNormalizeImage::uuid() const
 {
   return FilterTraits<ITKNormalizeImage>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ITKNormalizeImage::humanName() const
 {
   return "ITK::Normalize Image Filter";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ITKNormalizeImage::defaultTags() const
+{
+  return {"#ITK Image Processing", "#ITK IntensityTransformation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ITKNormalizeImage::parameters() const
 {
   Parameters params;
@@ -40,29 +51,51 @@ Parameters ITKNormalizeImage::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKNormalizeImage::clone() const
 {
   return std::make_unique<ITKNormalizeImage>();
 }
 
-Result<OutputActions> ITKNormalizeImage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+//------------------------------------------------------------------------------
+IFilter::PreflightResult ITKNormalizeImage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
    ***************************************************************************/
+
+  /**
+   * These are the values that were gathered from the UI or the pipeline file or
+   * otherwise passed into the filter. These are here for your convenience. If you
+   * do not need some of them remove them.
+   */
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 
-  OutputActions actions;
+  // Declare the preflightResult variable that will be populated with the results
+  // of the preflight. The PreflightResult type contains the output Actions and
+  // any preflight updated values that you want to be displayed to the user, typically
+  // through a user interface (UI).
+  PreflightResult preflightResult;
+
 #if 0
+  // Define the OutputActions Object that will hold the actions that would take
+  // place if the filter were to execute. This is mainly what would happen to the
+  // DataStructure during this filter, i.e., what modificationst to the DataStructure
+  // would take place.
+  OutputActions actions;
   // Define a custom class that generates the changes to the DataStructure.
   auto action = std::make_unique<ITKNormalizeImageAction>();
   actions.actions.push_back(std::move(action));
+  // Assign the generated outputActions to the PreflightResult::OutputActions property
+  preflightResult.outputActions = std::move(actions);
 #endif
-  return {std::move(actions)};
+
+  return preflightResult;
 }
 
-Result<> ITKNormalizeImage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+//------------------------------------------------------------------------------
+Result<> ITKNormalizeImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

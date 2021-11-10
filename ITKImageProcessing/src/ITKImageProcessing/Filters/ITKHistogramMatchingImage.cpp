@@ -10,26 +10,37 @@ using namespace complex;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ITKHistogramMatchingImage::name() const
 {
   return FilterTraits<ITKHistogramMatchingImage>::name.str();
 }
 
+//------------------------------------------------------------------------------
 std::string ITKHistogramMatchingImage::className() const
 {
   return FilterTraits<ITKHistogramMatchingImage>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ITKHistogramMatchingImage::uuid() const
 {
   return FilterTraits<ITKHistogramMatchingImage>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ITKHistogramMatchingImage::humanName() const
 {
   return "ITK::Histogram Matching Image Filter";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ITKHistogramMatchingImage::defaultTags() const
+{
+  return {"#ITK Image Processing", "#ITK IntensityTransformation"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ITKHistogramMatchingImage::parameters() const
 {
   Parameters params;
@@ -46,16 +57,24 @@ Parameters ITKHistogramMatchingImage::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKHistogramMatchingImage::clone() const
 {
   return std::make_unique<ITKHistogramMatchingImage>();
 }
 
-Result<OutputActions> ITKHistogramMatchingImage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+//------------------------------------------------------------------------------
+IFilter::PreflightResult ITKHistogramMatchingImage::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
    ***************************************************************************/
+
+  /**
+   * These are the values that were gathered from the UI or the pipeline file or
+   * otherwise passed into the filter. These are here for your convenience. If you
+   * do not need some of them remove them.
+   */
   auto pNumberOfHistogramLevelsValue = filterArgs.value<float64>(k_NumberOfHistogramLevels_Key);
   auto pNumberOfMatchPointsValue = filterArgs.value<float64>(k_NumberOfMatchPoints_Key);
   auto pThresholdAtMeanIntensityValue = filterArgs.value<bool>(k_ThresholdAtMeanIntensity_Key);
@@ -63,16 +82,30 @@ Result<OutputActions> ITKHistogramMatchingImage::preflightImpl(const DataStructu
   auto pReferenceCellArrayPathValue = filterArgs.value<DataPath>(k_ReferenceCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 
-  OutputActions actions;
+  // Declare the preflightResult variable that will be populated with the results
+  // of the preflight. The PreflightResult type contains the output Actions and
+  // any preflight updated values that you want to be displayed to the user, typically
+  // through a user interface (UI).
+  PreflightResult preflightResult;
+
 #if 0
+  // Define the OutputActions Object that will hold the actions that would take
+  // place if the filter were to execute. This is mainly what would happen to the
+  // DataStructure during this filter, i.e., what modificationst to the DataStructure
+  // would take place.
+  OutputActions actions;
   // Define a custom class that generates the changes to the DataStructure.
   auto action = std::make_unique<ITKHistogramMatchingImageAction>();
   actions.actions.push_back(std::move(action));
+  // Assign the generated outputActions to the PreflightResult::OutputActions property
+  preflightResult.outputActions = std::move(actions);
 #endif
-  return {std::move(actions)};
+
+  return preflightResult;
 }
 
-Result<> ITKHistogramMatchingImage::executeImpl(DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+//------------------------------------------------------------------------------
+Result<> ITKHistogramMatchingImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

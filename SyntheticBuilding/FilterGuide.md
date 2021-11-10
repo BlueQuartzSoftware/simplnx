@@ -8,7 +8,7 @@
 | EstablishShapeTypes | FALSE  | | | |
 | GeneratePrecipitateStatsData | FALSE  | | | |
 | GeneratePrimaryStatsData | FALSE  | | | |
-| InitializeSyntheticVolume | FALSE  | | | |
+| InitializeSyntheticVolume | TRUE  | | | |
 | InsertAtoms | TRUE  | | | |
 | InsertPrecipitatePhases | TRUE  | | | |
 | JumbleOrientations | TRUE  | | | |
@@ -19,5 +19,5 @@
 
 ## Summary ##
 
-+ Filters Ready to be Ported: 8
-+ Filters Needing more Parameters Implemented: 5
++ Filters Ready to be Ported: 9
++ Filters Needing more Parameters Implemented: 4

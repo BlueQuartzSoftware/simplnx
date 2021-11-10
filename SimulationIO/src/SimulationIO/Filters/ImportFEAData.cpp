@@ -69,17 +69,17 @@ Parameters ImportFEAData::parameters() const
   params.insert(std::make_unique<StringParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix Name", "", "SomeString"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_FEAPackage_Key, k_odbName_Key, 0);
-  params.linkParameters(k_FEAPackage_Key, k_odbFilePath_Key, 1);
-  params.linkParameters(k_FEAPackage_Key, k_ABQPythonCommand_Key, 2);
-  params.linkParameters(k_FEAPackage_Key, k_InstanceName_Key, 3);
-  params.linkParameters(k_FEAPackage_Key, k_Step_Key, 4);
-  params.linkParameters(k_FEAPackage_Key, k_FrameNumber_Key, 5);
-  params.linkParameters(k_FEAPackage_Key, k_DEFORMInputFile_Key, 6);
-  params.linkParameters(k_FEAPackage_Key, k_BSAMInputFile_Key, 7);
-  params.linkParameters(k_FEAPackage_Key, k_DEFORMPointTrackInputFile_Key, 8);
-  params.linkParameters(k_FEAPackage_Key, k_ImportSingleTimeStep_Key, 9);
-  params.linkParameters(k_FEAPackage_Key, k_SingleTimeStepValue_Key, 10);
-  params.linkParameters(k_FEAPackage_Key, k_TimeSeriesBundleName_Key, 11);
+  params.linkParameters(k_FEAPackage_Key, k_odbFilePath_Key, 0);
+  params.linkParameters(k_FEAPackage_Key, k_ABQPythonCommand_Key, 0);
+  params.linkParameters(k_FEAPackage_Key, k_InstanceName_Key, 0);
+  params.linkParameters(k_FEAPackage_Key, k_Step_Key, 0);
+  params.linkParameters(k_FEAPackage_Key, k_FrameNumber_Key, 0);
+  params.linkParameters(k_FEAPackage_Key, k_DEFORMInputFile_Key, 2);
+  params.linkParameters(k_FEAPackage_Key, k_BSAMInputFile_Key, 1);
+  params.linkParameters(k_FEAPackage_Key, k_DEFORMPointTrackInputFile_Key, 3);
+  params.linkParameters(k_FEAPackage_Key, k_ImportSingleTimeStep_Key, 3);
+  params.linkParameters(k_FEAPackage_Key, k_SingleTimeStepValue_Key, 3);
+  params.linkParameters(k_FEAPackage_Key, k_TimeSeriesBundleName_Key, 3);
   params.linkParameters(k_ImportSingleTimeStep_Key, k_SingleTimeStepValue_Key, true);
 
   return params;
@@ -97,6 +97,12 @@ IFilter::PreflightResult ImportFEAData::preflightImpl(const DataStructure& ds, c
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
    ***************************************************************************/
+
+  /**
+   * These are the values that were gathered from the UI or the pipeline file or
+   * otherwise passed into the filter. These are here for your convenience. If you
+   * do not need some of them remove them.
+   */
   auto pFEAPackageValue = filterArgs.value<ChoicesParameter::ValueType>(k_FEAPackage_Key);
   auto podbNameValue = filterArgs.value<StringParameter::ValueType>(k_odbName_Key);
   auto podbFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_odbFilePath_Key);
@@ -114,13 +120,26 @@ IFilter::PreflightResult ImportFEAData::preflightImpl(const DataStructure& ds, c
   auto pVertexAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_VertexAttributeMatrixName_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_CellAttributeMatrixName_Key);
 
-  OutputActions actions;
+  // Declare the preflightResult variable that will be populated with the results
+  // of the preflight. The PreflightResult type contains the output Actions and
+  // any preflight updated values that you want to be displayed to the user, typically
+  // through a user interface (UI).
+  PreflightResult preflightResult;
+
 #if 0
+  // Define the OutputActions Object that will hold the actions that would take
+  // place if the filter were to execute. This is mainly what would happen to the
+  // DataStructure during this filter, i.e., what modificationst to the DataStructure
+  // would take place.
+  OutputActions actions;
   // Define a custom class that generates the changes to the DataStructure.
   auto action = std::make_unique<ImportFEADataAction>();
   actions.actions.push_back(std::move(action));
+  // Assign the generated outputActions to the PreflightResult::OutputActions property
+  preflightResult.outputActions = std::move(actions);
 #endif
-  return {std::move(actions)};
+
+  return preflightResult;
 }
 
 //------------------------------------------------------------------------------

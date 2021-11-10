@@ -7,7 +7,6 @@
 | YES | ColumnMontageLimits | Montage Column Start/End [Inclusive, Zero Based] | VectorInt32Parameter::ValueType | VectorInt32Parameter |
 | YES | RowMontageLimits | Montage Row Start/End [Inclusive, Zero Based] | VectorInt32Parameter::ValueType | VectorInt32Parameter |
 | YES | LengthUnit | Length Unit | ChoicesParameter::ValueType | ChoicesParameter |
-| NO | MontageInformation | Montage Information | <<<NOT_IMPLEMENTED>>> | PreflightUpdatedValueFilterParameter |
 | YES | SliceNumber | Slice Number | int32 | Int32Parameter |
 | YES | ImageFilePrefix | Image File Prefix | StringParameter::ValueType | StringParameter |
 | YES | ImageFileExtension | Image File Extension | StringParameter::ValueType | StringParameter |

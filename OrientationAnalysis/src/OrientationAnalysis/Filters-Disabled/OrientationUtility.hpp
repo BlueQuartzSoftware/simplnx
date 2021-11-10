@@ -24,6 +24,7 @@ public:
   OrientationUtility& operator=(OrientationUtility&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k__Key = "";
 
   /**
    * @brief Returns the name of the filter.
