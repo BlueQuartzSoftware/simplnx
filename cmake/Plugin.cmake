@@ -228,3 +228,70 @@ function(create_complex_plugin)
   )
 
 endfunction()
+
+# -----------------------------------------------------------------------------
+# This function will create a unit test for the given PLUGIN_NAME that uses the
+# Catch2 unit testing framework
+# Arguments:
+# PLUGIN_NAME The name of the Plugin
+# FILTER_LIST The list of sources to compile.
+# 
+function(create_complex_plugin_unit_test)
+  set(options)
+  set(oneValueArgs PLUGIN_NAME)
+  set(multiValueArgs FILTER_LIST)
+  cmake_parse_arguments(UT "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+
+  #------------------------------------------------------------------------------
+  # Find the Catch2 unit testing package
+  find_package(Catch2 CONFIG REQUIRED)
+  include(Catch)
+
+  #------------------------------------------------------------------------------
+  # Convert the native path to a path that will be compatible with C++ source codes
+  file(TO_CMAKE_PATH "${${UT_PLUGIN_NAME}_SOURCE_DIR}" PLUGIN_SOURCE_DIR_NORM)
+
+  #------------------------------------------------------------------------------
+  # Set the generated directory in the build folder, set the path to the generated
+  # header, and finally configure the header file
+  set(${UT_PLUGIN_NAME}_GENERATED_DIR ${complex_BINARY_DIR}/Plugins/${UT_PLUGIN_NAME}/generated)
+  set(COMPLEX_TEST_DIRS_HEADER ${${UT_PLUGIN_NAME}_GENERATED_DIR}/${UT_PLUGIN_NAME}/${UT_PLUGIN_NAME}_test_dirs.hpp)
+  configure_file(${${UT_PLUGIN_NAME}_SOURCE_DIR}/test/test_dirs.hpp.in ${COMPLEX_TEST_DIRS_HEADER} @ONLY)
+
+  #------------------------------------------------------------------------------
+  # Create the unit test executable
+  add_executable(${UT_PLUGIN_NAME}UnitTest
+            ${COMPLEX_TEST_DIRS_HEADER}
+            ${UT_PLUGIN_NAME}_test_main.cpp
+            ${${UT_PLUGIN_NAME}UnitTest_SRCS}
+  )
+
+  target_link_libraries(${UT_PLUGIN_NAME}UnitTest
+    PRIVATE complex ${UT_PLUGIN_NAME} Catch2::Catch2
+  )
+
+  #------------------------------------------------------------------------------
+  # Require that the test plugins are built before tests because some tests
+  # require loading from those plugins but don't want to link to them.
+  add_dependencies(${UT_PLUGIN_NAME}UnitTest ${UT_PLUGIN_NAME})
+
+  set_target_properties(${UT_PLUGIN_NAME}UnitTest
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
+  )
+
+  target_compile_definitions(${UT_PLUGIN_NAME}UnitTest
+    PRIVATE
+    COMPLEX_BUILD_DIR="$<TARGET_FILE_DIR:complex_test>"
+  )
+
+  target_compile_options(${UT_PLUGIN_NAME}UnitTest
+    PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/MP>
+  )
+
+  target_include_directories(${UT_PLUGIN_NAME}UnitTest PRIVATE ${${UT_PLUGIN_NAME}_GENERATED_DIR})
+
+  catch_discover_tests(${UT_PLUGIN_NAME}UnitTest)
+
+endfunction()

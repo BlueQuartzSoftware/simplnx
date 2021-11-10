@@ -24,6 +24,9 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
                       VERSION "0.1.0"
 )
 
+#------------------------------------------------------------------------------
+# Add in the unit tests for the filters included in this plugin
+enable_testing()
 add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 
 #------------------------------------------------------------------------------

@@ -1,49 +1,37 @@
+#------------------------------------------------------------------------------
+# If there are additional library packages that need to be found, this is where
+# to do that using the usual find_package(....) call
+# find_package(....)
 
-file(TO_CMAKE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}" PLUGIN_SOURCE_DIR_NORM)
+#------------------------------------------------------------------------------
+# Define the list of unit test source files
+set(${PLUGIN_NAME}UnitTest_SRCS
+    CreateDataArrayTest.cpp
+)
 
-set(${PLUGIN_NAME}_GENERATED_DIR ${complex_BINARY_DIR}/Plugins/${PLUGIN_NAME}/generated)
-set(COMPLEX_TEST_DIRS_HEADER ${${PLUGIN_NAME}_GENERATED_DIR}/${PLUGIN_NAME}/${PLUGIN_NAME}_test_dirs.hpp)
-
-configure_file(${${PLUGIN_NAME}_SOURCE_DIR}/test/test_dirs.hpp.in ${COMPLEX_TEST_DIRS_HEADER} @ONLY)
-
-find_package(Catch2 CONFIG REQUIRED)
-
-include(Catch)
+create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
+                                FILTER_LIST ${${PLUGIN_NAME}UnitTest_SRCS})
 
 
-add_executable(${PLUGIN_NAME}UnitTest
-  ${COMPLEX_TEST_DIRS_HEADER}
-  ${PLUGIN_NAME}_test_main.cpp
-  CreateDataArrayTest.cpp
-  )
+#------------------------------------------------------------------------------
+# If there are additional libraries that this plugin needs to link against you
+# can use the target_link_libraries() cmake call
+# target_link_libraries(${PLUGIN_NAME}UnitTest PUBLIC [name of library])
 
-target_link_libraries(${PLUGIN_NAME}UnitTest
-  PRIVATE
-  complex
-  ComplexCore
-  Catch2::Catch2
-  )
+#------------------------------------------------------------------------------
+# If there are additional source files that need to be compiled for this plugin
+# can use the target_sources(...) cmake call
+# target_sources(${PLUGIN_NAME}UnitTest
+#   PUBLIC
+#     additional header files
+#   PRIVATE
+#     additional source files
+# )
 
-# Require that the test plugins are built before tests because some tests
-# require loading from those plugins but don't want to link to them.
-add_dependencies(${PLUGIN_NAME}UnitTest ${PLUGIN_NAME})
-
-set_target_properties(${PLUGIN_NAME}UnitTest
-  PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
-  )
-
-target_compile_definitions(${PLUGIN_NAME}UnitTest
-  PRIVATE
-  COMPLEX_BUILD_DIR="$<TARGET_FILE_DIR:complex_test>"
-  )
-
-target_compile_options(${PLUGIN_NAME}UnitTest
-  PRIVATE
-  $<$<CXX_COMPILER_ID:MSVC>:/MP>
-  )
-
-target_include_directories(${PLUGIN_NAME}UnitTest PRIVATE ${${PLUGIN_NAME}_GENERATED_DIR})
-
-catch_discover_tests(${PLUGIN_NAME}UnitTest)
-
+#------------------------------------------------------------------------------
+# If there are additional include directories that are needed for this plugin
+# you can use the target_include_directories(.....) cmake call
+target_include_directories(${PLUGIN_NAME}UnitTest
+    PUBLIC
+    ${complex_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME}/src
+)
