@@ -14,6 +14,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace complex
@@ -132,9 +133,10 @@ public:
    * @param id
    * @return T*
    */
-  template <typename T>
+  template <class T>
   T* getDataAs(DataObject::IdType id)
   {
+    static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T*>(getData(id));
   }
 
@@ -152,9 +154,10 @@ public:
    * @param id
    * @return T*
    */
-  template <typename T>
+  template <class T>
   T* getDataAs(const std::optional<DataObject::IdType>& id)
   {
+    static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T*>(getData(id));
   }
 
@@ -172,9 +175,10 @@ public:
    * @param path
    * @return T*
    */
-  template <typename T>
+  template <class T>
   T* getDataAs(const DataPath& path)
   {
+    static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T*>(getData(path));
   }
 
@@ -192,9 +196,10 @@ public:
    * @param path
    * @return T*
    */
-  template <typename T>
+  template <class T>
   T* getDataAs(const LinkedPath& path)
   {
+    static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T*>(getData(path));
   }
 
@@ -212,9 +217,10 @@ public:
    * @param id
    * @return const T*
    */
-  template <typename T>
+  template <class T>
   const T* getDataAs(DataObject::IdType id) const
   {
+    static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(id));
   }
 
@@ -232,9 +238,10 @@ public:
    * @param id
    * @return const T*
    */
-  template <typename T>
+  template <class T>
   const T* getDataAs(const std::optional<DataObject::IdType>& id) const
   {
+    static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(id));
   }
 
@@ -252,9 +259,10 @@ public:
    * @param path
    * @return const T*
    */
-  template <typename T>
+  template <class T>
   const T* getDataAs(const DataPath& path) const
   {
+    static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(path));
   }
 
@@ -272,9 +280,10 @@ public:
    * @param path
    * @return const T*
    */
-  template <typename T>
+  template <class T>
   const T* getDataAs(const LinkedPath& path) const
   {
+    static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(path));
   }
 
@@ -303,6 +312,7 @@ public:
   template <class T>
   std::shared_ptr<T> getSharedDataAs(DataObject::IdType id) const
   {
+    static_assert(std::is_base_of_v<DataObject, T>);
     return std::dynamic_pointer_cast<T>(getSharedData(id));
   }
 
@@ -331,6 +341,7 @@ public:
   template <class T>
   std::shared_ptr<T> getSharedDataAs(const DataPath& path) const
   {
+    static_assert(std::is_base_of_v<DataObject, T>);
     return std::dynamic_pointer_cast<T>(getSharedData(path));
   }
 
