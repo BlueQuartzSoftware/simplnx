@@ -170,6 +170,14 @@ public:
   DataObject* getData(const DataPath& path);
 
   /**
+   * @brief Returns a reference to the DataObject at the given DataPath. If no
+   * DataObject is found, this method throws std::out_of_range.
+   * @param path
+   * @return DataObject&
+   */
+  DataObject& getDataRef(const DataPath& path);
+
+  /**
    * @brief Returns a pointer to the DataObject at the given DataPath. If no
    * DataObject is found, this method returns nullptr.
    * @param path
@@ -252,6 +260,14 @@ public:
    * @return const DataObject*
    */
   const DataObject* getData(const DataPath& path) const;
+
+  /**
+   * @brief Returns a reference to the DataObject at the given DataPath. If no
+   * DataObject is found, this method throws std::out_of_range.
+   * @param path
+   * @return const DataObject&
+   */
+  const DataObject& getDataRef(const DataPath& path) const;
 
   /**
    * @brief Returns a pointer to the DataObject at the given DataPath. If no
