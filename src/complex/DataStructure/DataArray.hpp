@@ -265,6 +265,28 @@ public:
   }
 
   /**
+   * @brief Returns a reference to the DataStore cast as type StoreT.
+   * @return const StoreT&
+   */
+  template <class StoreT>
+  const StoreT& getDataStoreRefAs() const
+  {
+    static_assert(std::is_base_of_v<IDataStore<T>, StoreT>);
+    return dynamic_cast<const StoreT&>(*m_DataStore);
+  }
+
+  /**
+   * @brief Returns a reference to the DataStore cast as type StoreT.
+   * @return StoreT&
+   */
+  template <class StoreT>
+  StoreT& getDataStoreRefAs()
+  {
+    static_assert(std::is_base_of_v<IDataStore<T>, StoreT>);
+    return dynamic_cast<StoreT&>(*m_DataStore);
+  }
+
+  /**
    * @brief Returns a std::weak_ptr for the stored DataStore.
    * @return std::weak_ptr<DataStore<T>>
    */
