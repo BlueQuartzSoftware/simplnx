@@ -17,6 +17,8 @@
 #include <numeric>
 #include <stdexcept>
 
+#include <fmt/core.h>
+
 namespace complex
 {
 
@@ -239,6 +241,16 @@ DataObject* DataStructure::getData(const DataPath& path)
   return nullptr;
 }
 
+DataObject& DataStructure::getDataRef(const DataPath& path)
+{
+  DataObject* object = getData(path);
+  if(object == nullptr)
+  {
+    throw std::out_of_range(fmt::format("DataPath \"{}\" does not exist", path.toString()));
+  }
+  return *object;
+}
+
 DataObject* DataStructure::getData(const LinkedPath& path)
 {
   return getData(path.getId());
@@ -289,6 +301,16 @@ const DataObject* DataStructure::getData(const DataPath& path) const
     }
   }
   return nullptr;
+}
+
+const DataObject& DataStructure::getDataRef(const DataPath& path) const
+{
+  const DataObject* object = getData(path);
+  if(object == nullptr)
+  {
+    throw std::out_of_range(fmt::format("DataPath \"{}\" does not exist", path.toString()));
+  }
+  return *object;
 }
 
 const DataObject* DataStructure::getData(const LinkedPath& path) const
