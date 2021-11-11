@@ -191,6 +191,19 @@ public:
   }
 
   /**
+   * @brief Returns a reference to the DataObject at the given DataPath. If no
+   * DataObject is found, this method throws std::out_of_range.
+   * @param path
+   * @return T&
+   */
+  template <class T>
+  T& getDataRefAs(const DataPath& path)
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return dynamic_cast<T&>(getDataRef(path));
+  }
+
+  /**
    * @brief Returns a pointer to the DataObject found at the specified
    * LinkedPath. If no such DataObject is found, this method returns nullptr.
    * @param path
@@ -280,6 +293,19 @@ public:
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(path));
+  }
+
+  /**
+   * @brief Returns a reference to the DataObject at the given DataPath. If no
+   * DataObject is found, this method throws std::out_of_range.
+   * @param path
+   * @return const T&
+   */
+  template <class T>
+  const T& getDataRefAs(const DataPath& path) const
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return dynamic_cast<const T&>(getDataRef(path));
   }
 
   /**
