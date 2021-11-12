@@ -17,6 +17,8 @@ set(FilterList
   MinSize
   MultiThresholdObjects
   RobustAutomaticThreshold
+  ScalarSegmentFeatures
+  SegmentFeatures
   ExampleFilter1
   ExampleFilter2
 )
