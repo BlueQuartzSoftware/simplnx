@@ -14,7 +14,7 @@ namespace complex
 {
 bool DataObject::IsValidName(std::string_view name)
 {
-  return name.find('/') == std::string_view::npos;
+  return !name.empty() && name.find('/') == std::string_view::npos;
 }
 
 DataObject::DataObject(DataStructure& ds, std::string name)
