@@ -16,9 +16,11 @@
       "name": "eigen3"
     },
     {
-      "name": "hdf5"
-    }
-    ,
+      "name": "hdf5",
+      "features": [
+        "cpp"
+      ]
+    },
     {
       "name": "span-lite"
     }
