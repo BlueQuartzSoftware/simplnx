@@ -5,19 +5,10 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
-
-namespace H5Constants
-{
-const std::string VertexListTag = "Vertex List ID";
-const std::string EdgeListTag = "Edge List ID";
-const std::string EdgesContainingVertTag = "Edges Containing Vertex ID";
-const std::string EdgeNeighborsTag = "Edge Neighbors ID";
-const std::string EdgeCentroidTag = "Edge Centroids ID";
-const std::string EdgeSizesTag = "Edge Sizes ID";
-} // namespace H5Constants
 
 EdgeGeom::EdgeGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry(ds, name)
@@ -36,25 +27,16 @@ EdgeGeom::EdgeGeom(DataStructure& ds, const std::string& name, const SharedEdgeL
   setVertices(vertices);
 }
 
-EdgeGeom::EdgeGeom(const EdgeGeom& other)
-: AbstractGeometry(other)
+EdgeGeom::EdgeGeom(const EdgeGeom& other) = default;
+
+EdgeGeom::EdgeGeom(EdgeGeom&& other) noexcept
+: AbstractGeometry(std::move(other))
 , m_VertexListId(other.m_VertexListId)
 , m_EdgeListId(other.m_EdgeListId)
 , m_EdgesContainingVertId(other.m_EdgesContainingVertId)
 , m_EdgeNeighborsId(other.m_EdgeNeighborsId)
 , m_EdgeCentroidsId(other.m_EdgeCentroidsId)
 , m_EdgeSizesId(other.m_EdgeSizesId)
-{
-}
-
-EdgeGeom::EdgeGeom(EdgeGeom&& other) noexcept
-: AbstractGeometry(std::move(other))
-, m_VertexListId(std::move(other.m_VertexListId))
-, m_EdgeListId(std::move(other.m_EdgeListId))
-, m_EdgesContainingVertId(std::move(other.m_EdgesContainingVertId))
-, m_EdgeNeighborsId(std::move(other.m_EdgeNeighborsId))
-, m_EdgeCentroidsId(std::move(other.m_EdgeCentroidsId))
-, m_EdgeSizesId(std::move(other.m_EdgeSizesId))
 {
 }
 
@@ -115,7 +97,7 @@ std::string EdgeGeom::getGeometryTypeAsString() const
 
 void EdgeGeom::resizeVertexList(usize newNumVertices)
 {
-  if(!getVertices())
+  if(getVertices() == nullptr)
   {
     return;
   }
@@ -124,7 +106,7 @@ void EdgeGeom::resizeVertexList(usize newNumVertices)
 
 void EdgeGeom::setVertices(const SharedVertexList* vertices)
 {
-  if(!vertices)
+  if(vertices == nullptr)
   {
     return;
   }
@@ -144,7 +126,7 @@ const AbstractGeometry::SharedVertexList* EdgeGeom::getVertices() const
 void EdgeGeom::setCoords(usize vertId, const complex::Point3D<float32>& coords)
 {
   auto vertices = getVertices();
-  if(!vertices)
+  if(vertices == nullptr)
   {
     return;
   }
@@ -157,10 +139,10 @@ void EdgeGeom::setCoords(usize vertId, const complex::Point3D<float32>& coords)
 
 complex::Point3D<float32> EdgeGeom::getCoords(usize vertId) const
 {
-  auto vertices = getVertices();
-  if(!vertices)
+  const auto* vertices = getVertices();
+  if(vertices == nullptr)
   {
-    return Point3D<float32>();
+    return {};
   }
 
   Point3D<float32> coord;
@@ -174,7 +156,7 @@ complex::Point3D<float32> EdgeGeom::getCoords(usize vertId) const
 usize EdgeGeom::getNumberOfVertices() const
 {
   auto vertices = getVertices();
-  if(!vertices)
+  if(vertices == nullptr)
   {
     return 0;
   }
@@ -184,7 +166,7 @@ usize EdgeGeom::getNumberOfVertices() const
 void EdgeGeom::resizeEdgeList(usize newNumEdges)
 {
   auto edges = getEdges();
-  if(!edges)
+  if(edges == nullptr)
   {
     return;
   }
@@ -193,7 +175,7 @@ void EdgeGeom::resizeEdgeList(usize newNumEdges)
 
 void EdgeGeom::setEdges(const SharedEdgeList* edges)
 {
-  if(!edges)
+  if(edges == nullptr)
   {
     m_EdgeListId.reset();
     return;
@@ -214,7 +196,7 @@ const AbstractGeometry::SharedEdgeList* EdgeGeom::getEdges() const
 void EdgeGeom::setVertsAtEdge(usize edgeId, usize verts[2])
 {
   auto edges = getEdges();
-  if(!edges)
+  if(edges == nullptr)
   {
     return;
   }
@@ -234,7 +216,7 @@ void EdgeGeom::setVertsAtEdge(usize edgeId, usize verts[2])
 void EdgeGeom::getVertsAtEdge(usize edgeId, usize verts[2])
 {
   auto edges = getEdges();
-  if(!edges)
+  if(edges == nullptr)
   {
     return;
   }
@@ -254,7 +236,7 @@ void EdgeGeom::getVertsAtEdge(usize edgeId, usize verts[2])
 void EdgeGeom::getVertCoordsAtEdge(usize edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const
 {
   auto edges = getEdges();
-  if(!edges)
+  if(edges == nullptr)
   {
     return;
   }
@@ -266,7 +248,7 @@ void EdgeGeom::getVertCoordsAtEdge(usize edgeId, complex::Point3D<float32>& vert
   }
 
   auto vertices = getVertices();
-  if(!vertices)
+  if(vertices == nullptr)
   {
     return;
   }
@@ -281,7 +263,7 @@ void EdgeGeom::getVertCoordsAtEdge(usize edgeId, complex::Point3D<float32>& vert
 usize EdgeGeom::getNumberOfEdges() const
 {
   auto edges = getEdges();
-  if(!edges)
+  if(edges == nullptr)
   {
     return 0;
   }
@@ -291,12 +273,12 @@ usize EdgeGeom::getNumberOfEdges() const
 void EdgeGeom::initializeWithZeros()
 {
   auto vertices = getVertices();
-  if(vertices)
+  if(vertices != nullptr)
   {
     getVertices()->getDataStore()->fill(0.0f);
   }
   auto edges = getEdges();
-  if(!edges)
+  if(edges == nullptr)
   {
     getEdges()->getDataStore()->fill(0.0f);
   }
@@ -305,7 +287,7 @@ void EdgeGeom::initializeWithZeros()
 usize EdgeGeom::getNumberOfElements() const
 {
   auto edges = getEdges();
-  if(!edges)
+  if(edges == nullptr)
   {
     return 0;
   }
@@ -387,6 +369,7 @@ AbstractGeometry::StatusCode EdgeGeom::findElementNeighbors()
   if(edgeNeighbors == nullptr)
   {
     err = -1;
+    return err;
   }
   m_EdgeNeighborsId = edgeNeighbors->getId();
   err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getEdges(), getElementsContainingVert(), edgeNeighbors, AbstractGeometry::Type::Edge);
@@ -520,12 +503,12 @@ void EdgeGeom::setElementSizes(const Float32Array* elementSizes)
 
 H5::ErrorType EdgeGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  m_VertexListId = ReadH5DataId(groupReader, H5Constants::VertexListTag);
-  m_EdgeListId = ReadH5DataId(groupReader, H5Constants::EdgeListTag);
-  m_EdgesContainingVertId = ReadH5DataId(groupReader, H5Constants::EdgesContainingVertTag);
-  m_EdgeNeighborsId = ReadH5DataId(groupReader, H5Constants::EdgeNeighborsTag);
-  m_EdgeCentroidsId = ReadH5DataId(groupReader, H5Constants::EdgeCentroidTag);
-  m_EdgeSizesId = ReadH5DataId(groupReader, H5Constants::EdgeSizesTag);
+  m_VertexListId = ReadH5DataId(groupReader, H5Constants::k_VertexListTag);
+  m_EdgeListId = ReadH5DataId(groupReader, H5Constants::k_EdgeListTag);
+  m_EdgesContainingVertId = ReadH5DataId(groupReader, H5Constants::k_EdgesContainingVertTag);
+  m_EdgeNeighborsId = ReadH5DataId(groupReader, H5Constants::k_EdgeNeighborsTag);
+  m_EdgeCentroidsId = ReadH5DataId(groupReader, H5Constants::k_EdgeCentroidTag);
+  m_EdgeSizesId = ReadH5DataId(groupReader, H5Constants::k_EdgeSizesTag);
 
   return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
@@ -539,37 +522,37 @@ H5::ErrorType EdgeGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, 
     return err;
   }
 
-  auto errorCode = WriteH5DataId(groupWriter, m_VertexListId, H5Constants::VertexListTag);
+  auto errorCode = WriteH5DataId(groupWriter, m_VertexListId, H5Constants::k_VertexListTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_EdgeListId, H5Constants::EdgeListTag);
+  errorCode = WriteH5DataId(groupWriter, m_EdgeListId, H5Constants::k_EdgeListTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_EdgesContainingVertId, H5Constants::EdgesContainingVertTag);
+  errorCode = WriteH5DataId(groupWriter, m_EdgesContainingVertId, H5Constants::k_EdgesContainingVertTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_EdgeNeighborsId, H5Constants::EdgeNeighborsTag);
+  errorCode = WriteH5DataId(groupWriter, m_EdgeNeighborsId, H5Constants::k_EdgeNeighborsTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_EdgeCentroidsId, H5Constants::EdgeCentroidTag);
+  errorCode = WriteH5DataId(groupWriter, m_EdgeCentroidsId, H5Constants::k_EdgeCentroidTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_EdgeSizesId, H5Constants::EdgeSizesTag);
+  errorCode = WriteH5DataId(groupWriter, m_EdgeSizesId, H5Constants::k_EdgeSizesTag);
   if(errorCode < 0)
   {
     return errorCode;

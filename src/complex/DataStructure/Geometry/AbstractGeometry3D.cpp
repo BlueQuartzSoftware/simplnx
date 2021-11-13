@@ -2,6 +2,7 @@
 
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 
 using namespace complex;
 
@@ -294,4 +295,40 @@ void AbstractGeometry3D::setUnsharedFaces(const SharedFaceList* bFaceList)
     return;
   }
   m_UnsharedFaceListId = bFaceList->getId();
+}
+
+H5::ErrorType AbstractGeometry3D::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
+{
+  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
+  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+  errorCode = WriteH5DataId(groupWriter, m_VertexListId, H5Constants::k_VertexListTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+  errorCode = WriteH5DataId(groupWriter, m_EdgeListId, H5Constants::k_EdgeListTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+  errorCode = WriteH5DataId(groupWriter, m_UnsharedEdgeListId, H5Constants::k_UnsharedEdgeListTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+  errorCode = WriteH5DataId(groupWriter, m_FaceListId, H5Constants::k_FaceeListTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+  errorCode = WriteH5DataId(groupWriter, m_UnsharedFaceListId, H5Constants::k_UnsharedFaceeListTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+  return errorCode;
 }

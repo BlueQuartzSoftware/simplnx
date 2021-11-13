@@ -5,18 +5,10 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
-
-namespace H5Constants
-{
-const std::string HexListTag = "Hexahedral List ID";
-const std::string HexasContainingVertTag = "Hexahedrals Containing Vertex ID";
-const std::string HexNeighborsTag = "Hexahedral Neighbors ID";
-const std::string HexCentroidsTag = "Hexahedral Centroids ID";
-const std::string HexSizesTag = "Hexahedral Sizes ID";
-} // namespace H5Constants
 
 HexahedralGeom::HexahedralGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry3D(ds, name)
@@ -576,17 +568,23 @@ void HexahedralGeom::setElementSizes(const Float32Array* elementSizes)
 
 H5::ErrorType HexahedralGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  m_HexListId = ReadH5DataId(groupReader, H5Constants::HexListTag);
-  m_HexasContainingVertId = ReadH5DataId(groupReader, H5Constants::HexasContainingVertTag);
-  m_HexNeighborsId = ReadH5DataId(groupReader, H5Constants::HexNeighborsTag);
-  m_HexCentroidsId = ReadH5DataId(groupReader, H5Constants::HexCentroidsTag);
-  m_HexSizesId = ReadH5DataId(groupReader, H5Constants::HexSizesTag);
+  m_HexListId = ReadH5DataId(groupReader, H5Constants::k_HexListTag);
+  m_HexasContainingVertId = ReadH5DataId(groupReader, H5Constants::k_HexasContainingVertTag);
+  m_HexNeighborsId = ReadH5DataId(groupReader, H5Constants::k_HexNeighborsTag);
+  m_HexCentroidsId = ReadH5DataId(groupReader, H5Constants::k_HexCentroidsTag);
+  m_HexSizesId = ReadH5DataId(groupReader, H5Constants::k_HexSizesTag);
 
   return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
 H5::ErrorType HexahedralGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
+  auto errorCode = AbstractGeometry3D::writeHdf5(dataStructureWriter, parentGroupWriter);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
   auto err = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
   if(err < 0)
@@ -594,31 +592,31 @@ H5::ErrorType HexahedralGeom::writeHdf5(H5::DataStructureWriter& dataStructureWr
     return err;
   }
 
-  auto errorCode = WriteH5DataId(groupWriter, m_HexListId, H5Constants::HexListTag);
+  errorCode = WriteH5DataId(groupWriter, m_HexListId, H5Constants::k_HexListTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_HexasContainingVertId, H5Constants::HexasContainingVertTag);
+  errorCode = WriteH5DataId(groupWriter, m_HexasContainingVertId, H5Constants::k_HexasContainingVertTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_HexNeighborsId, H5Constants::HexNeighborsTag);
+  errorCode = WriteH5DataId(groupWriter, m_HexNeighborsId, H5Constants::k_HexNeighborsTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_HexCentroidsId, H5Constants::HexCentroidsTag);
+  errorCode = WriteH5DataId(groupWriter, m_HexCentroidsId, H5Constants::k_HexCentroidsTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_HexSizesId, H5Constants::HexSizesTag);
+  errorCode = WriteH5DataId(groupWriter, m_HexSizesId, H5Constants::k_HexSizesTag);
   if(errorCode < 0)
   {
     return errorCode;

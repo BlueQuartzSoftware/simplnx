@@ -1,5 +1,6 @@
 #include "AbstractGeometry2D.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 
 using namespace complex;
 
@@ -13,19 +14,13 @@ AbstractGeometry2D::AbstractGeometry2D(DataStructure& ds, const std::string& nam
 {
 }
 
-AbstractGeometry2D::AbstractGeometry2D(const AbstractGeometry2D& other)
-: AbstractGeometry(other)
-, m_VertexListId(other.m_VertexListId)
-, m_EdgeListId(other.m_EdgeListId)
-, m_UnsharedEdgeListId(other.m_UnsharedEdgeListId)
-{
-}
+AbstractGeometry2D::AbstractGeometry2D(const AbstractGeometry2D& other) = default;
 
 AbstractGeometry2D::AbstractGeometry2D(AbstractGeometry2D&& other) noexcept
 : AbstractGeometry(std::move(other))
-, m_VertexListId(std::move(other.m_VertexListId))
-, m_EdgeListId(std::move(other.m_EdgeListId))
-, m_UnsharedEdgeListId(std::move(other.m_UnsharedEdgeListId))
+, m_VertexListId(other.m_VertexListId)
+, m_EdgeListId(other.m_EdgeListId)
+, m_UnsharedEdgeListId(other.m_UnsharedEdgeListId)
 {
 }
 
@@ -135,4 +130,31 @@ void AbstractGeometry2D::setUnsharedEdges(const SharedEdgeList* bEdgeList)
     return;
   }
   m_UnsharedEdgeListId = bEdgeList->getId();
+}
+
+H5::ErrorType AbstractGeometry2D::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
+{
+  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
+  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+  errorCode = WriteH5DataId(groupWriter, m_VertexListId, H5Constants::k_VertexListTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+  errorCode = WriteH5DataId(groupWriter, m_EdgeListId, H5Constants::k_EdgeListTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+  errorCode = WriteH5DataId(groupWriter, m_UnsharedEdgeListId, H5Constants::k_UnsharedEdgeListTag);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
+  return errorCode;
 }

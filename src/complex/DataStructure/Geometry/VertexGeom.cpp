@@ -6,16 +6,11 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 using namespace complex;
-
-namespace H5Constants
-{
-const std::string VertexListTag = "Vertex List ID";
-const std::string VertexSizesTag = "Vertex Sizes ID";
-} // namespace H5Constants
 
 VertexGeom::VertexGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry(ds, name)
@@ -185,7 +180,7 @@ usize VertexGeom::getNumberOfVertices() const
   {
     return 0;
   }
-  return vertices->getId();
+  return vertices->getNumberOfTuples();
 }
 
 usize VertexGeom::getNumberOfElements() const
@@ -329,8 +324,8 @@ void VertexGeom::setElementSizes(const Float32Array* elementSizes)
 
 H5::ErrorType VertexGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  m_VertexListId = ReadH5DataId(groupReader, H5Constants::VertexListTag);
-  m_VertexSizesId = ReadH5DataId(groupReader, H5Constants::VertexSizesTag);
+  m_VertexListId = ReadH5DataId(groupReader, H5Constants::k_VertexListTag);
+  m_VertexSizesId = ReadH5DataId(groupReader, H5Constants::k_VertexSizesTag);
 
   return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
@@ -345,13 +340,13 @@ H5::ErrorType VertexGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter
   }
 
   // Write DataObject IDs
-  errorCode = WriteH5DataId(groupWriter, m_VertexListId, H5Constants::VertexListTag);
+  errorCode = WriteH5DataId(groupWriter, m_VertexListId, H5Constants::k_VertexListTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_VertexSizesId, H5Constants::VertexSizesTag);
+  errorCode = WriteH5DataId(groupWriter, m_VertexSizesId, H5Constants::k_VertexSizesTag);
   if(errorCode < 0)
   {
     return errorCode;
