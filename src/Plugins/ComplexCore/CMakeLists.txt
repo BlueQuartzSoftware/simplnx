@@ -1,6 +1,8 @@
 include("${complex_SOURCE_DIR}/cmake/Plugin.cmake")
 
 set(PLUGIN_NAME "ComplexCore")
+set(${PLUGIN_NAME}_SOURCE_DIR ${complex_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
+
 #------------------------------------------------------------------------------
 # These are all the filters in the plugin. All filters should be kept in the
 # PLUGIN_NAME/src/PLUGIN_NAME/Filters/ directory.
@@ -21,6 +23,11 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
                       DESCRIPTION "Plugin for ${PLUGIN_NAME}"
                       VERSION "0.1.0"
 )
+
+#------------------------------------------------------------------------------
+# Add in the unit tests for the filters included in this plugin
+enable_testing()
+add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 
 #------------------------------------------------------------------------------
 # If there are additional library packages that need to be found, there is where
