@@ -133,6 +133,20 @@ public:
   bool operator!=(const DataPath& rhs) const;
 
   /**
+   * @brief Checks if the string representation is less than the target DataPath's.
+   * @param rhs
+   * @return bool
+   */
+  bool operator<(const DataPath& rhs) const;
+
+  /**
+   * @brief Checks if the string representation is greater than the target DataPath's.
+   * @param rhs
+   * @return bool
+   */
+  bool operator>(const DataPath& rhs) const;
+
+  /**
    * @brief Returns the name at the target index.
    * @param index
    * @return std::string
