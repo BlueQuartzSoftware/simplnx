@@ -46,4 +46,4 @@ protected:
   {
   }
 };
-}
+} // namespace complex

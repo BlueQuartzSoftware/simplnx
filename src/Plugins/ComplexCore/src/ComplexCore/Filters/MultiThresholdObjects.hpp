@@ -20,7 +20,6 @@ public:
   MultiThresholdObjects& operator=(const MultiThresholdObjects&) = delete;
   MultiThresholdObjects& operator=(MultiThresholdObjects&&) noexcept = delete;
 
-
   /**
    * @brief
    * @return std::string

@@ -18,7 +18,7 @@ constexpr StringLiteral k_Thresholds_Tag = "thresholds";
 // Types
 constexpr StringLiteral k_ArrayType = "array";
 constexpr StringLiteral k_CollectionType = "collection";
-}
+} // namespace
 
 IArrayThreshold::IArrayThreshold()
 : m_IsInverted(false)
@@ -260,13 +260,11 @@ std::shared_ptr<ArrayThreshold> ArrayThreshold::FromJson(const nlohmann::json& j
     threshold->setComparisonValue(json[k_Value_Tag].get<ComparisonValue>());
 
     return threshold;
-  }
-  catch(std::exception& e)
+  } catch(std::exception& e)
   {
     return nullptr;
   }
 }
-
 
 ArrayThresholdSet::ArrayThresholdSet()
 : IArrayThreshold()
@@ -294,7 +292,7 @@ ArrayThresholdSet& ArrayThresholdSet::operator=(const ArrayThresholdSet& other)
   return *this;
 }
 
-ArrayThresholdSet& ArrayThresholdSet::operator=(ArrayThresholdSet && other) noexcept
+ArrayThresholdSet& ArrayThresholdSet::operator=(ArrayThresholdSet&& other) noexcept
 {
   setInverted(other.isInverted());
   setUnionOperator(other.getUnionOperator());
