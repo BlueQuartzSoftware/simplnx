@@ -161,7 +161,7 @@ public:
    * @brief Returns the tuple getSize.
    * @return usize
    */
-  size_t getNumberOfComponents() const
+  size_t getNumberOfComponents() const override
   {
     return m_DataStore->getNumberOfComponents();
   }
