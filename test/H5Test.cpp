@@ -48,11 +48,7 @@ const fs::path k_ComplexH5File = "new.h5";
 
 fs::path GetDataDir(const Application& app)
 {
-#if __APPLE__
   return COMPLEX_BUILD_DIR / Constants::k_DataDir;
-#else
-  return COMPLEX_BUILD_DIR / Constants::k_DataDir;
-#endif
 }
 
 fs::path GetLegacyFilepath(const Application& app)

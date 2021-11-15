@@ -53,11 +53,7 @@ const inline FilterHandle k_ImportD3DHandle(Uuid::FromString("0dbd31c7-19e0-4077
 
 fs::path GetDataDir(const Application& app)
 {
-#if __APPLE__
   return COMPLEX_BUILD_DIR / UnitTest::Constants::k_DataDir;
-#else
-  return app.getCurrentDir() / k_DataDir;
-#endif
 }
 
 fs::path GetIODataPath()
