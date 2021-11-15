@@ -6,18 +6,10 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
-
-namespace H5Constants
-{
-const std::string XBoundsTag = "X Bounds ID";
-const std::string YBoundsTag = "Y Bounds ID";
-const std::string ZBoundsTag = "Z Bounds ID";
-const std::string VoxelSizesTag = "Voxel Sizes ID";
-const std::string DimensionsTag = "Dimensions";
-} // namespace H5Constants
 
 RectGridGeom::RectGridGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometryGrid(ds, name)
@@ -632,10 +624,10 @@ H5::ErrorType RectGridGeom::readHdf5(H5::DataStructureReader& dataStructureReade
   setDimensions(volumeDimensions);
 
   // Read DataObject IDs
-  m_xBoundsId = ReadH5DataId(groupReader, H5Constants::XBoundsTag);
-  m_yBoundsId = ReadH5DataId(groupReader, H5Constants::YBoundsTag);
-  m_zBoundsId = ReadH5DataId(groupReader, H5Constants::ZBoundsTag);
-  m_VoxelSizesId = ReadH5DataId(groupReader, H5Constants::VoxelSizesTag);
+  m_xBoundsId = ReadH5DataId(groupReader, H5Constants::k_XBoundsTag);
+  m_yBoundsId = ReadH5DataId(groupReader, H5Constants::k_YBoundsTag);
+  m_zBoundsId = ReadH5DataId(groupReader, H5Constants::k_ZBoundsTag);
+  m_VoxelSizesId = ReadH5DataId(groupReader, H5Constants::k_VoxelSizesTag);
 
   return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
@@ -657,7 +649,7 @@ H5::ErrorType RectGridGeom::writeHdf5(H5::DataStructureWriter& dataStructureWrit
     dimsVector[i] = m_Dimensions[i];
   }
 
-  auto dimensionAttr = groupWriter.createAttribute(H5Constants::DimensionsTag);
+  auto dimensionAttr = groupWriter.createAttribute(H5Constants::k_DimensionsTag);
   errorCode = dimensionAttr.writeVector(dims, dimsVector);
   if(errorCode < 0)
   {
@@ -665,25 +657,25 @@ H5::ErrorType RectGridGeom::writeHdf5(H5::DataStructureWriter& dataStructureWrit
   }
 
   // Write DataObject IDs
-  errorCode = WriteH5DataId(groupWriter, m_xBoundsId, H5Constants::XBoundsTag);
+  errorCode = WriteH5DataId(groupWriter, m_xBoundsId, H5Constants::k_XBoundsTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_yBoundsId, H5Constants::YBoundsTag);
+  errorCode = WriteH5DataId(groupWriter, m_yBoundsId, H5Constants::k_YBoundsTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_zBoundsId, H5Constants::ZBoundsTag);
+  errorCode = WriteH5DataId(groupWriter, m_zBoundsId, H5Constants::k_ZBoundsTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_VoxelSizesId, H5Constants::VoxelSizesTag);
+  errorCode = WriteH5DataId(groupWriter, m_VoxelSizesId, H5Constants::k_VoxelSizesTag);
   if(errorCode < 0)
   {
     return errorCode;

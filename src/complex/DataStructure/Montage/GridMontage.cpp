@@ -1,20 +1,13 @@
 #include "GridMontage.hpp"
 
-#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 #include <stdexcept>
 
 using namespace complex;
-
-namespace H5Constants
-{
-inline const std::string RowCountTag = "Row Count";
-inline const std::string ColCountTag = "Column Count";
-inline const std::string DepthCountTag = "Depth Count";
-} // namespace H5Constants
 
 GridMontage::GridMontage(DataStructure& ds, const std::string& name)
 : AbstractMontage(ds, name)
@@ -110,11 +103,11 @@ void GridMontage::resizeTileDims(usize row, usize col, usize depth)
 
   // Update collection
   CollectionType newCollection(row * col * depth);
-  for(usize x = 0; x < m_ColumnCount && col; x++)
+  for(usize x = 0; x < m_ColumnCount && col != 0; x++)
   {
-    for(usize y = 0; y < m_RowCount && row; y++)
+    for(usize y = 0; y < m_RowCount && row != 0; y++)
     {
-      for(usize z = 0; z < m_DepthCount && depth; z++)
+      for(usize z = 0; z < m_DepthCount && depth != 0; z++)
       {
         const SizeVec3 pos = {x, y, z};
         auto oldOffset = getOffsetFromTilePos(pos);
@@ -248,7 +241,7 @@ SizeVec3 GridMontage::getTilePosFromOffset(usize offset) const
 {
   const usize numRows = getRowCount();
   const usize numCols = getColumnCount();
-  const usize numDeep = getDepth();
+  // const usize numDeep = getDepth();
 
   const usize depth = offset / (numRows * numCols);
   const usize xyOffset = offset % depth;
@@ -278,13 +271,13 @@ usize GridMontage::getOffsetFromTilePos(const SizeVec3& tilePos, const Dimension
 
 H5::ErrorType GridMontage::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  auto rowCountAttribute = groupReader.getAttribute(H5Constants::RowCountTag);
+  auto rowCountAttribute = groupReader.getAttribute(H5Constants::k_RowCountTag);
   m_RowCount = rowCountAttribute.readAsValue<uint64_t>();
 
-  auto colCountAttribute = groupReader.getAttribute(H5Constants::ColCountTag);
+  auto colCountAttribute = groupReader.getAttribute(H5Constants::k_ColCountTag);
   m_ColumnCount = colCountAttribute.readAsValue<uint64_t>();
 
-  auto depthCountAttribute = groupReader.getAttribute(H5Constants::DepthCountTag);
+  auto depthCountAttribute = groupReader.getAttribute(H5Constants::k_DepthCountTag);
   m_DepthCount = depthCountAttribute.readAsValue<uint64_t>();
 
   return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
@@ -299,21 +292,21 @@ H5::ErrorType GridMontage::writeHdf5(H5::DataStructureWriter& dataStructureWrite
     return errorCode;
   }
 
-  auto rowCountAttribute = groupWriter.createAttribute(H5Constants::RowCountTag);
+  auto rowCountAttribute = groupWriter.createAttribute(H5Constants::k_RowCountTag);
   errorCode = rowCountAttribute.writeValue<uint64_t>(m_RowCount);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  auto colCountAttribute = groupWriter.createAttribute(H5Constants::ColCountTag);
+  auto colCountAttribute = groupWriter.createAttribute(H5Constants::k_ColCountTag);
   errorCode = colCountAttribute.writeValue<uint64_t>(m_ColumnCount);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  auto depthCountAttribute = groupWriter.createAttribute(H5Constants::DepthCountTag);
+  auto depthCountAttribute = groupWriter.createAttribute(H5Constants::k_DepthCountTag);
   errorCode = depthCountAttribute.writeValue<uint64_t>(m_DepthCount);
   if(errorCode < 0)
   {

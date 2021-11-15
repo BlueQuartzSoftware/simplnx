@@ -6,18 +6,10 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/DynamicListArray.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
-
-namespace H5Constants
-{
-const std::string TriangleListTag = "Triangle List ID";
-const std::string TrianglesContainingVertTag = "Triangles Containing Vertex ID";
-const std::string TriangleNeighborsTag = "Triangle Neighbors ID";
-const std::string TriangleCentroidsTag = "Triangle Centroids ID";
-const std::string TriangleSizesTag = "Triangle Sizes ID";
-} // namespace H5Constants
 
 TriangleGeom::TriangleGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry2D(ds, name)
@@ -482,50 +474,56 @@ void TriangleGeom::setElementSizes(const Float32Array* elementSizes)
 
 H5::ErrorType TriangleGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  m_TriListId = ReadH5DataId(groupReader, H5Constants::TriangleListTag);
-  m_TrianglesContainingVertId = ReadH5DataId(groupReader, H5Constants::TrianglesContainingVertTag);
-  m_TriangleNeighborsId = ReadH5DataId(groupReader, H5Constants::TriangleNeighborsTag);
-  m_TriangleCentroidsId = ReadH5DataId(groupReader, H5Constants::TriangleCentroidsTag);
-  m_TriangleSizesId = ReadH5DataId(groupReader, H5Constants::TriangleSizesTag);
+  m_TriListId = ReadH5DataId(groupReader, H5Constants::k_TriangleListTag);
+  m_TrianglesContainingVertId = ReadH5DataId(groupReader, H5Constants::k_TrianglesContainingVertTag);
+  m_TriangleNeighborsId = ReadH5DataId(groupReader, H5Constants::k_TriangleNeighborsTag);
+  m_TriangleCentroidsId = ReadH5DataId(groupReader, H5Constants::k_TriangleCentroidsTag);
+  m_TriangleSizesId = ReadH5DataId(groupReader, H5Constants::k_TriangleSizesTag);
 
   return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
 H5::ErrorType TriangleGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
+  auto errorCode = AbstractGeometry2D::writeHdf5(dataStructureWriter, parentGroupWriter);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
   // Write DataObject IDs
-  errorCode = WriteH5DataId(groupWriter, m_TriListId, H5Constants::TriangleListTag);
+  errorCode = WriteH5DataId(groupWriter, m_TriListId, H5Constants::k_TriangleListTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_TrianglesContainingVertId, H5Constants::TrianglesContainingVertTag);
+  errorCode = WriteH5DataId(groupWriter, m_TrianglesContainingVertId, H5Constants::k_TrianglesContainingVertTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_TriangleNeighborsId, H5Constants::TriangleNeighborsTag);
+  errorCode = WriteH5DataId(groupWriter, m_TriangleNeighborsId, H5Constants::k_TriangleNeighborsTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_TriangleCentroidsId, H5Constants::TriangleCentroidsTag);
+  errorCode = WriteH5DataId(groupWriter, m_TriangleCentroidsId, H5Constants::k_TriangleCentroidsTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_TriangleSizesId, H5Constants::TriangleSizesTag);
+  errorCode = WriteH5DataId(groupWriter, m_TriangleSizesId, H5Constants::k_TriangleSizesTag);
   if(errorCode < 0)
   {
     return errorCode;

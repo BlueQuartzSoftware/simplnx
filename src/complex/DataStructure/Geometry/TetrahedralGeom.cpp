@@ -5,20 +5,10 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
-
-namespace H5Constants
-{
-const std::string TriListTag = "Triangle List ID";
-const std::string UnsharedTriListTag = "Unshared Triangle List ID";
-const std::string TetListTag = "Tetrahedral List ID";
-const std::string TetsContainingVertTag = "Tetrahedrals Containing Vertex ID";
-const std::string TetNeighborsTag = "Tetrahedral Neighbors ID";
-const std::string TetCentroidsTag = "Tetrahedral Centroids ID";
-const std::string TetSizesTag = "Tetrahedral Sizes ID";
-} // namespace H5Constants
 
 TetrahedralGeom::TetrahedralGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry3D(ds, name)
@@ -531,64 +521,70 @@ void TetrahedralGeom::setElementCentroids(const Float32Array* elementCentroids)
 
 H5::ErrorType TetrahedralGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  m_TriListId = ReadH5DataId(groupReader, H5Constants::TriListTag);
-  m_UnsharedTriListId = ReadH5DataId(groupReader, H5Constants::UnsharedTriListTag);
-  m_TetListId = ReadH5DataId(groupReader, H5Constants::TetListTag);
-  m_TetsContainingVertId = ReadH5DataId(groupReader, H5Constants::TetsContainingVertTag);
-  m_TetNeighborsId = ReadH5DataId(groupReader, H5Constants::TetNeighborsTag);
-  m_TetCentroidsId = ReadH5DataId(groupReader, H5Constants::TetCentroidsTag);
-  m_TetSizesId = ReadH5DataId(groupReader, H5Constants::TetSizesTag);
+  m_TriListId = ReadH5DataId(groupReader, H5Constants::k_TriListTag);
+  m_UnsharedTriListId = ReadH5DataId(groupReader, H5Constants::k_UnsharedTriListTag);
+  m_TetListId = ReadH5DataId(groupReader, H5Constants::k_TetListTag);
+  m_TetsContainingVertId = ReadH5DataId(groupReader, H5Constants::k_TetsContainingVertTag);
+  m_TetNeighborsId = ReadH5DataId(groupReader, H5Constants::k_TetNeighborsTag);
+  m_TetCentroidsId = ReadH5DataId(groupReader, H5Constants::k_TetCentroidsTag);
+  m_TetSizesId = ReadH5DataId(groupReader, H5Constants::k_TetSizesTag);
 
   return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
 H5::ErrorType TetrahedralGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
+  auto errorCode = AbstractGeometry3D::writeHdf5(dataStructureWriter, parentGroupWriter);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
   // Write DataObject IDs
-  errorCode = WriteH5DataId(groupWriter, m_TriListId, H5Constants::TriListTag);
+  errorCode = WriteH5DataId(groupWriter, m_TriListId, H5Constants::k_TriListTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_UnsharedTriListId, H5Constants::UnsharedTriListTag);
+  errorCode = WriteH5DataId(groupWriter, m_UnsharedTriListId, H5Constants::k_UnsharedTriListTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_TetListId, H5Constants::TetListTag);
+  errorCode = WriteH5DataId(groupWriter, m_TetListId, H5Constants::k_TetListTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_TetsContainingVertId, H5Constants::TetsContainingVertTag);
+  errorCode = WriteH5DataId(groupWriter, m_TetsContainingVertId, H5Constants::k_TetsContainingVertTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_TetNeighborsId, H5Constants::TetNeighborsTag);
+  errorCode = WriteH5DataId(groupWriter, m_TetNeighborsId, H5Constants::k_TetNeighborsTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_TetCentroidsId, H5Constants::TetCentroidsTag);
+  errorCode = WriteH5DataId(groupWriter, m_TetCentroidsId, H5Constants::k_TetCentroidsTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_TetSizesId, H5Constants::TetSizesTag);
+  errorCode = WriteH5DataId(groupWriter, m_TetSizesId, H5Constants::k_TetSizesTag);
   if(errorCode < 0)
   {
     return errorCode;

@@ -5,18 +5,10 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
-
-namespace H5Constants
-{
-const std::string QuadListTag = "Quad List ID";
-const std::string QuadsContainingVertTag = "Quads Containing Vertex ID";
-const std::string QuadNeighborsTag = "Quad Neighbors ID";
-const std::string QuadCentroidsTag = "Quad Centroids ID";
-const std::string QuadSizesTag = "Quad Sizes ID";
-} // namespace H5Constants
 
 QuadGeom::QuadGeom(DataStructure& ds, const std::string& name)
 : AbstractGeometry2D(ds, name)
@@ -498,50 +490,56 @@ void QuadGeom::setElementSizes(const Float32Array* elementSizes)
 
 H5::ErrorType QuadGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
 {
-  m_QuadListId = ReadH5DataId(groupReader, H5Constants::QuadListTag);
-  m_QuadsContainingVertId = ReadH5DataId(groupReader, H5Constants::QuadsContainingVertTag);
-  m_QuadNeighborsId = ReadH5DataId(groupReader, H5Constants::QuadNeighborsTag);
-  m_QuadCentroidsId = ReadH5DataId(groupReader, H5Constants::QuadCentroidsTag);
-  m_QuadSizesId = ReadH5DataId(groupReader, H5Constants::QuadSizesTag);
+  m_QuadListId = ReadH5DataId(groupReader, H5Constants::k_QuadListTag);
+  m_QuadsContainingVertId = ReadH5DataId(groupReader, H5Constants::k_QuadsContainingVertTag);
+  m_QuadNeighborsId = ReadH5DataId(groupReader, H5Constants::k_QuadNeighborsTag);
+  m_QuadCentroidsId = ReadH5DataId(groupReader, H5Constants::k_QuadCentroidsTag);
+  m_QuadSizesId = ReadH5DataId(groupReader, H5Constants::k_QuadSizesTag);
 
   return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
 H5::ErrorType QuadGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
+  auto errorCode = AbstractGeometry2D::writeHdf5(dataStructureWriter, parentGroupWriter);
+  if(errorCode < 0)
+  {
+    return errorCode;
+  }
+
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
   // Write DataObject IDs
-  errorCode = WriteH5DataId(groupWriter, m_QuadListId, H5Constants::QuadListTag);
+  errorCode = WriteH5DataId(groupWriter, m_QuadListId, H5Constants::k_QuadListTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_QuadsContainingVertId, H5Constants::QuadsContainingVertTag);
+  errorCode = WriteH5DataId(groupWriter, m_QuadsContainingVertId, H5Constants::k_QuadsContainingVertTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_QuadNeighborsId, H5Constants::QuadNeighborsTag);
+  errorCode = WriteH5DataId(groupWriter, m_QuadNeighborsId, H5Constants::k_QuadNeighborsTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_QuadCentroidsId, H5Constants::QuadCentroidsTag);
+  errorCode = WriteH5DataId(groupWriter, m_QuadCentroidsId, H5Constants::k_QuadCentroidsTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_QuadSizesId, H5Constants::QuadSizesTag);
+  errorCode = WriteH5DataId(groupWriter, m_QuadSizesId, H5Constants::k_QuadSizesTag);
   if(errorCode < 0)
   {
     return errorCode;

@@ -1,7 +1,6 @@
 #include "ImportTextFilter.hpp"
 
 #include <filesystem>
-#include <fstream>
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/DataArray.hpp"
@@ -11,6 +10,7 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
+#include "complex/Utilities/Parsing/Text/CsvParser.hpp"
 
 namespace fs = std::filesystem;
 using namespace complex;
@@ -25,82 +25,6 @@ constexpr StringLiteral k_NSkipLinesKey = "n_skip_lines";
 constexpr StringLiteral k_DelimiterChoiceKey = "delimiter_choice";
 constexpr StringLiteral k_DataArrayKey = "output_data_array";
 
-class DelimiterType : public std::ctype<char>
-{
-  mask my_table[table_size];
-
-public:
-  DelimiterType(char delimiter, usize refs = 0)
-  : std::ctype<char>(&my_table[0], false, refs)
-  {
-    std::copy_n(classic_table(), table_size, my_table);
-    my_table[static_cast<mask>(delimiter)] = (mask)space;
-  }
-};
-
-template <class T>
-Result<> ReadFile(const fs::path& inputPath, DataArray<T>& data, uint64 skipLines, char delimiter)
-{
-  std::ifstream inputFile(inputPath, std::ios_base::binary);
-
-  for(uint64 i = 0; i < skipLines; i++)
-  {
-    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-  }
-
-  inputFile.imbue(std::locale(std::locale(), new DelimiterType(delimiter)));
-
-  usize numTuples = data.getNumberOfTuples();
-  usize scalarNumComp = data.getNumberOfComponents();
-
-  usize totalSize = numTuples * scalarNumComp;
-  T value = {};
-  for(usize i = 0; i < totalSize; i++)
-  {
-    inputFile >> value;
-    if(inputFile.fail())
-    {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-1, "Unable to convert value"}})};
-    }
-    data[i] = value;
-  }
-
-  Result<> result;
-  result.warnings().push_back(Warning{-1, "Test Warning"});
-
-  return {};
-}
-
-template <class T>
-DataArray<T>& ArrayFromPath(DataStructure& data, const DataPath& path)
-{
-  DataObject* object = data.getData(path);
-  DataArray<T>* dataArray = dynamic_cast<DataArray<T>*>(object);
-  if(dataArray == nullptr)
-  {
-    throw std::runtime_error("Can't obtain DataArray");
-  }
-  return *dataArray;
-}
-
-char IndexToDelimiter(uint64 index)
-{
-  switch(index)
-  {
-  case 0:
-    return ',';
-  case 1:
-    return ';';
-  case 2:
-    return ' ';
-  case 3:
-    return ':';
-  case 4:
-    return '\t';
-  default:
-    throw std::runtime_error("Invalid index");
-  }
-}
 } // namespace
 
 namespace complex
@@ -163,59 +87,57 @@ Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& arg
 {
   auto inputFilePath = args.value<fs::path>(k_InputFileKey);
   auto numericType = args.value<NumericType>(k_ScalarTypeKey);
-  auto components = args.value<uint64>(k_NCompKey);
+  // auto components = args.value<uint64>(k_NCompKey);
   auto skipLines = args.value<uint64>(k_NSkipLinesKey);
   auto choiceIndex = args.value<uint64>(k_DelimiterChoiceKey);
   auto path = args.value<DataPath>(k_DataArrayKey);
 
-  char delimiter = IndexToDelimiter(choiceIndex);
+  char delimiter = complex::CsvParser::IndexToDelimiter(choiceIndex);
 
   switch(numericType)
   {
   case NumericType::int8: {
-    auto& dataArray = ArrayFromPath<int8>(data, path);
-    return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
+    auto& dataArray = complex::CsvParser::ArrayFromPath<int8>(data, path);
+    return CsvParser::ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::uint8: {
-    auto& dataArray = ArrayFromPath<uint8>(data, path);
-    return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
+    auto& dataArray = complex::CsvParser::ArrayFromPath<uint8>(data, path);
+    return CsvParser::ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::int16: {
-    auto& dataArray = ArrayFromPath<int16>(data, path);
-    return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
+    auto& dataArray = complex::CsvParser::ArrayFromPath<int16>(data, path);
+    return CsvParser::ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::uint16: {
-    auto& dataArray = ArrayFromPath<uint16>(data, path);
-    return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
+    auto& dataArray = complex::CsvParser::ArrayFromPath<uint16>(data, path);
+    return CsvParser::ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::int32: {
-    auto& dataArray = ArrayFromPath<int32>(data, path);
-    return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
+    auto& dataArray = complex::CsvParser::ArrayFromPath<int32>(data, path);
+    return CsvParser::ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::uint32: {
-    auto& dataArray = ArrayFromPath<uint32>(data, path);
-    return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
+    auto& dataArray = complex::CsvParser::ArrayFromPath<uint32>(data, path);
+    return CsvParser::ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::int64: {
-    auto& dataArray = ArrayFromPath<int64>(data, path);
-    return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
+    auto& dataArray = complex::CsvParser::ArrayFromPath<int64>(data, path);
+    return CsvParser::ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::uint64: {
-    auto& dataArray = ArrayFromPath<uint64>(data, path);
-    return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
+    auto& dataArray = complex::CsvParser::ArrayFromPath<uint64>(data, path);
+    return CsvParser::ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::float32: {
-    auto& dataArray = ArrayFromPath<float32>(data, path);
-    return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
+    auto& dataArray = complex::CsvParser::ArrayFromPath<float32>(data, path);
+    return CsvParser::ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   case NumericType::float64: {
-    auto& dataArray = ArrayFromPath<float64>(data, path);
-    return ReadFile(inputFilePath, dataArray, skipLines, delimiter);
+    auto& dataArray = complex::CsvParser::ArrayFromPath<float64>(data, path);
+    return CsvParser::ReadFile(inputFilePath, dataArray, skipLines, delimiter);
   }
   default:
     throw std::runtime_error("Invalid type");
   }
-
-  return {};
 }
 } // namespace complex
