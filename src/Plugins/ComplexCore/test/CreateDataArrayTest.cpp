@@ -8,7 +8,7 @@
 
 using namespace complex;
 
-TEST_CASE("Instantiate CreateDataArray Filter")
+TEST_CASE("Instantiate CreateDataArray Filter", "[CreateDataArray][.][UNIMPLEMENTED][!mayfail]")
 {
   //  static constexpr uint64 k_NComp = 3;
   //  static constexpr uint64 k_NLines = 25;
