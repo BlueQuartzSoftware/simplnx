@@ -154,6 +154,16 @@ bool DataPath::operator!=(const DataPath& rhs) const
   return !(*this == rhs);
 }
 
+bool DataPath::operator<(const DataPath& rhs) const
+{
+  return toString() < rhs.toString();
+}
+
+bool DataPath::operator>(const DataPath& rhs) const
+{
+  return toString() > rhs.toString();
+}
+
 const std::string& DataPath::operator[](usize index) const
 {
   return m_Path.at(index);
