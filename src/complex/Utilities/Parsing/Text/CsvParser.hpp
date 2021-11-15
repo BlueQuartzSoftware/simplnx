@@ -57,7 +57,7 @@ public:
 };
 
 template <class T>
-complex::Result<> ReadFile(const fs::path& inputPath, DataArray<T>& data, uint64 skipLines, char delimiter)
+Result<> ReadFile(const fs::path& inputPath, DataArray<T>& data, uint64 skipLines, char delimiter)
 {
 
   std::ifstream inputFile(inputPath, std::ios_base::binary);
