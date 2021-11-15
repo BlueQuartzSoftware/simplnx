@@ -14,6 +14,7 @@
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/DataStructure/Montage/GridMontage.hpp"
 #include "complex/DataStructure/ScalarData.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 #include "complex/Utilities/Parsing/Text/CsvParser.hpp"
@@ -47,11 +48,7 @@ const fs::path k_ComplexH5File = "new.h5";
 
 fs::path GetDataDir(const Application& app)
 {
-#if __APPLE__
-  return app.getCurrentDir().parent_path().parent_path().parent_path() / Constants::k_DataDir;
-#else
-  return app.getCurrentDir() / Constants::k_DataDir;
-#endif
+  return COMPLEX_BUILD_DIR / Constants::k_DataDir;
 }
 
 fs::path GetLegacyFilepath(const Application& app)
@@ -277,27 +274,162 @@ TEST_CASE("Image Geometry IO")
   }
 }
 
+const std::string k_TriangleGroupName = "TRIANGLE_GEOMETRY";
+const std::string k_TriangleFaceName = "SharedTriList";
+const std::string k_VertexListName = "SharedVertexList";
+const std::string k_VertexGroupName = "VERTEX_GEOMETRY";
+const std::string k_QuadGroupName = "QUAD_GEOMETRY";
+const std::string k_QuadFaceName = "SharedQuadList";
+const std::string k_EdgeFaceName = "SharedEdgeList";
+const std::string k_EdgeGroupName = "EDGE_GEOMETRY";
+
+void CreateVertexGeometry(DataStructure& dataGraph)
+{
+  DataGroup* geometryGroup = DataGroup::Create(dataGraph, k_VertexGroupName);
+  using MeshIndexType = AbstractGeometry::MeshIndexType;
+  auto vertexGeometry = VertexGeom::Create(dataGraph, "[Geometry] Vertex", geometryGroup->getId());
+
+  // DataGroup* scanData = DataGroup::Create(dataGraph, "AttributeMatrix", group->getId());
+  uint64 skipLines = 1;
+  char delimiter = ',';
+
+  // Create the Vertex Array with a component size of 3
+  DataPath path = DataPath({k_VertexGroupName, k_VertexListName});
+  std::string inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
+  uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
+  REQUIRE(vertexCount == 144);
+  complex::Result result = complex::CreateArray<float>(dataGraph, {vertexCount}, 3, path, IDataAction::Mode::Execute);
+  REQUIRE(result.valid());
+  auto& vertexArray = complex::CsvParser::ArrayFromPath<float>(dataGraph, path);
+  CsvParser::ReadFile(inputFile, vertexArray, skipLines, delimiter);
+  vertexGeometry->setVertices(&vertexArray);
+  REQUIRE(vertexGeometry->getNumberOfVertices() == 144);
+
+  // Now create some "Cell" data for the Vertex Geometry
+  std::vector<size_t> tupleShape = {vertexGeometry->getNumberOfVertices()};
+  size_t numComponents = 1;
+  Int16Array* ci_data = CreateTestDataArray<int16_t>("Area", dataGraph, tupleShape, {numComponents}, geometryGroup->getId());
+  Float32Array* power_data = CreateTestDataArray<float>("Power", dataGraph, tupleShape, {numComponents}, geometryGroup->getId());
+  UInt32Array* laserTTL_data = CreateTestDataArray<uint32_t>("LaserTTL", dataGraph, tupleShape, {numComponents}, geometryGroup->getId());
+  for(size_t i = 0; i < vertexGeometry->getNumberOfVertices(); i++)
+  {
+    ci_data->getDataStore()->setValue(i, static_cast<int16_t>(i * 10));
+    power_data->getDataStore()->setValue(i, static_cast<float>(i * 2.345f));
+    laserTTL_data->getDataStore()->setValue(i, static_cast<uint32_t>(i * 3421));
+  }
+}
+
+void CreateTriangleGeometry(DataStructure& dataGraph)
+{
+  // Create a Triangle Geometry
+  DataGroup* geometryGroup = DataGroup::Create(dataGraph, k_TriangleGroupName);
+  using MeshIndexType = AbstractGeometry::MeshIndexType;
+  auto triangleGeom = TriangleGeom::Create(dataGraph, "[Geometry] Triangle", geometryGroup->getId());
+
+  // Create a Path in the DataStructure to place the geometry
+  DataPath path = DataPath({k_TriangleGroupName, k_TriangleFaceName});
+  std::string inputFile = fmt::format("{}/test/Data/TriangleConnectivity.csv", unit_test::k_SourceDir.view());
+  uint64 skipLines = 1;
+  char delimiter = ',';
+  uint64 faceCount = CsvParser::LineCount(inputFile) - skipLines;
+  REQUIRE(faceCount == 242);
+  // Create the default DataArray that will hold the FaceList and Vertices. We
+  // size these to 1 because the Csv parser will resize them to the appropriate number of typles
+  complex::Result result = complex::CreateArray<MeshIndexType>(dataGraph, {faceCount}, 3, path, IDataAction::Mode::Execute);
+  REQUIRE(result.valid());
+  auto& dataArray = complex::CsvParser::ArrayFromPath<MeshIndexType>(dataGraph, path);
+  CsvParser::ReadFile(inputFile, dataArray, skipLines, delimiter);
+  triangleGeom->setTriangles(&dataArray);
+
+  // Create the Vertex Array with a component size of 3
+  path = DataPath({k_TriangleGroupName, k_VertexListName});
+  inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
+  uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
+  REQUIRE(vertexCount == 144);
+  result = complex::CreateArray<float>(dataGraph, {vertexCount}, 3, path, IDataAction::Mode::Execute);
+  REQUIRE(result.valid());
+  auto& vertexArray = complex::CsvParser::ArrayFromPath<float>(dataGraph, path);
+  CsvParser::ReadFile(inputFile, vertexArray, skipLines, delimiter);
+  triangleGeom->setVertices(&vertexArray);
+}
+
+void CreateQuadGeometry(DataStructure& dataGraph)
+{
+  // Create a Triangle Geometry
+  DataGroup* geometryGroup = DataGroup::Create(dataGraph, k_QuadGroupName);
+  using MeshIndexType = AbstractGeometry::MeshIndexType;
+  auto geometry = QuadGeom::Create(dataGraph, "[Geometry] Quad", geometryGroup->getId());
+
+  // Create a Path in the DataStructure to place the geometry
+  DataPath path = DataPath({k_QuadGroupName, k_QuadFaceName});
+  std::string inputFile = fmt::format("{}/test/Data/QuadConnectivity.csv", unit_test::k_SourceDir.view());
+  uint64 skipLines = 1;
+  char delimiter = ',';
+  uint64 faceCount = CsvParser::LineCount(inputFile) - skipLines;
+  REQUIRE(faceCount == 121);
+  // Create the default DataArray that will hold the FaceList and Vertices. We
+  // size these to 1 because the Csv parser will resize them to the appropriate number of typles
+  complex::Result result = complex::CreateArray<MeshIndexType>(dataGraph, {faceCount}, 4, path, IDataAction::Mode::Execute);
+  REQUIRE(result.valid());
+  auto& dataArray = complex::CsvParser::ArrayFromPath<MeshIndexType>(dataGraph, path);
+  CsvParser::ReadFile(inputFile, dataArray, skipLines, delimiter);
+  geometry->setQuads(&dataArray);
+
+  // Create the Vertex Array with a component size of 3
+  path = DataPath({k_QuadGroupName, k_VertexListName});
+  inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
+  uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
+  REQUIRE(vertexCount == 144);
+  result = complex::CreateArray<float>(dataGraph, {vertexCount}, 3, path, IDataAction::Mode::Execute);
+  REQUIRE(result.valid());
+  auto& vertexArray = complex::CsvParser::ArrayFromPath<float>(dataGraph, path);
+  CsvParser::ReadFile(inputFile, vertexArray, skipLines, delimiter);
+  geometry->setVertices(&vertexArray);
+}
+
+void CreateEdgeGeometry(DataStructure& dataGraph)
+{
+  // Create a Triangle Geometry
+  DataGroup* geometryGroup = DataGroup::Create(dataGraph, k_EdgeGroupName);
+  using MeshIndexType = AbstractGeometry::MeshIndexType;
+  auto geometry = EdgeGeom::Create(dataGraph, "[Geometry] Edge", geometryGroup->getId());
+
+  // Create a Path in the DataStructure to place the geometry
+  DataPath path = DataPath({k_EdgeGroupName, k_EdgeFaceName});
+  std::string inputFile = fmt::format("{}/test/Data/EdgeConnectivity.csv", unit_test::k_SourceDir.view());
+  uint64 skipLines = 1;
+  char delimiter = ',';
+  uint64 faceCount = CsvParser::LineCount(inputFile) - skipLines;
+  REQUIRE(faceCount == 264);
+  // Create the default DataArray that will hold the FaceList and Vertices. We
+  // size these to 1 because the Csv parser will resize them to the appropriate number of typles
+  complex::Result result = complex::CreateArray<MeshIndexType>(dataGraph, {faceCount}, 2, path, IDataAction::Mode::Execute);
+  REQUIRE(result.valid());
+  auto& dataArray = complex::CsvParser::ArrayFromPath<MeshIndexType>(dataGraph, path);
+  CsvParser::ReadFile(inputFile, dataArray, skipLines, delimiter);
+  geometry->setEdges(&dataArray);
+
+  // Create the Vertex Array with a component size of 3
+  path = DataPath({k_EdgeGroupName, k_VertexListName});
+  inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
+  uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
+  REQUIRE(vertexCount == 144);
+  result = complex::CreateArray<float>(dataGraph, {vertexCount}, 3, path, IDataAction::Mode::Execute);
+  REQUIRE(result.valid());
+  auto& vertexArray = complex::CsvParser::ArrayFromPath<float>(dataGraph, path);
+  CsvParser::ReadFile(inputFile, vertexArray, skipLines, delimiter);
+  geometry->setVertices(&vertexArray);
+}
+
 //------------------------------------------------------------------------------
 DataStructure CreateNodeBasedGeometries()
 {
   DataStructure dataGraph;
-  DataGroup* group = DataGroup::Create(dataGraph, "AM LPBF Experiment");
-  DataGroup* scanData = DataGroup::Create(dataGraph, "Melt Pool Data", group->getId());
 
-  // Read the vertices into a vector and then copy that into a VertexGeometry
-  std::string inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
-  std::vector<float> csvVerts = CsvParser::ParseVertices(inputFile, ",", true);
-  auto vertexGeom = VertexGeom::Create(dataGraph, "[Geometry] Vertex", scanData->getId());
-  vertexGeom->resizeVertexList(csvVerts.size() / 3);
-  AbstractGeometry::SharedVertexList* vertices = vertexGeom->getVertices();
-  std::copy_n(csvVerts.begin(), csvVerts.size(), vertices->getDataStore()->begin());
-
-  // Now create some "Cell" data for the Vertex Geometry
-  std::vector<size_t> tupleShape = {vertexGeom->getNumberOfVertices()};
-  size_t numComponents = 1;
-  Int16Array* ci_data = CreateTestDataArray<int16_t>("Area", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  Float32Array* power_data = CreateTestDataArray<float>("Power", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  UInt8Array* laserTTL_data = CreateTestDataArray<uint8_t>("LaserTTL", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  CreateVertexGeometry(dataGraph);
+  CreateTriangleGeometry(dataGraph);
+  CreateQuadGeometry(dataGraph);
+  CreateEdgeGeometry(dataGraph);
 
   return dataGraph;
 }
@@ -313,7 +445,7 @@ TEST_CASE("Node Based Geometry IO")
     REQUIRE(fs::create_directories(dataDir));
   }
 
-  fs::path filePath = GetDataDir(app) / "node_geometry_io.h5";
+  fs::path filePath = GetDataDir(app) / "NodeGeometryTest.dream3d";
 
   std::string filePathString = filePath.string();
 

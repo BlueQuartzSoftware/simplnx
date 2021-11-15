@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd"[]>
+<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">
+ <Domain>
+  <!-- *************** START OF Triangle Geometry *************** -->
+  <Grid Name="TriangleGeometry" GridType="Uniform">
+    <Topology TopologyType="Triangle" NumberOfElements="242">
+      <DataItem Format="HDF" NumberType="Int" Dimensions="242 3">
+        NodeGeometryTest.dream3d:/DataStructure/TRIANGLE_GEOMETRY/SharedTriList
+      </DataItem>
+    </Topology>
+    <Geometry Type="XYZ">
+      <DataItem Format="HDF"  Dimensions="144 3" NumberType="Float" Precision="4">
+        NodeGeometryTest.dream3d:/DataStructure/TRIANGLE_GEOMETRY/SharedVertexList
+      </DataItem>
+    </Geometry>
+
+    <Attribute Name="Vertices" AttributeType="Vector" Center="Cell">
+      <DataItem Format="HDF" Dimensions="144 3" NumberType="Float" Precision="4" >
+        NodeGeometryTest.dream3d:/DataStructure/TRIANGLE_GEOMETRY/SharedVertexList
+      </DataItem>
+    </Attribute>
+    <Attribute Name="Triangles [UInt64]" AttributeType="Vector" Center="Cell">
+      <DataItem Format="HDF" Dimensions="242 3" NumberType="UInt" Precision="8" >
+        NodeGeometryTest.dream3d:/DataStructure/TRIANGLE_GEOMETRY/SharedTriList
+      </DataItem>
+    </Attribute>
+  </Grid>
+  
+    <!-- *************** START OF Quad Geometry *************** -->
+  <Grid Name="Quad Geometry" GridType="Uniform">
+    <Topology TopologyType="Quadrilateral" NumberOfElements="121">
+      <DataItem Format="HDF" NumberType="Int" Dimensions="121 4">
+        NodeGeometryTest.dream3d:/DataStructure/QUAD_GEOMETRY/SharedQuadList
+      </DataItem>
+    </Topology>
+    <Geometry Type="XYZ">
+      <DataItem Format="HDF"  Dimensions="144 3" NumberType="Float" Precision="4">
+        NodeGeometryTest.dream3d:/DataStructure/QUAD_GEOMETRY/SharedVertexList
+      </DataItem>
+    </Geometry>
+  </Grid>
+  
+  <!-- *************** START OF Edge Geometry *************** -->
+  <Grid Name="Edge Geometry" GridType="Uniform">
+    <Topology TopologyType="Polyline" NodesPerElement="2" NumberOfElements="264">
+      <DataItem Format="HDF" NumberType="Int" Dimensions="264 2">
+        NodeGeometryTest.dream3d:/DataStructure/EDGE_GEOMETRY/SharedEdgeList
+      </DataItem>
+    </Topology>
+    <Geometry Type="XYZ">
+      <DataItem Format="HDF"  Dimensions="144 3" NumberType="Float" Precision="4">
+        NodeGeometryTest.dream3d:/DataStructure/EDGE_GEOMETRY/SharedVertexList
+      </DataItem>
+    </Geometry>
+  </Grid>
+ </Domain>
+</Xdmf>

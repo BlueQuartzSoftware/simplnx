@@ -259,6 +259,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/StringUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/DataArrayUtilities.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
 
@@ -280,6 +281,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectReader.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectWriter.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Constants.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.hpp
 )

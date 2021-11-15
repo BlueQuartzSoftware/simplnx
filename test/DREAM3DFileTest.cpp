@@ -25,11 +25,14 @@ namespace fs = std::filesystem;
 
 namespace
 {
+namespace Constants
+{
 const fs::path k_DataDir = "test/data";
 const fs::path k_LegacyFilepath = "SmallN100.dream3d";
 const fs::path k_Dream3dFilename = "newFile.dream3d";
 const fs::path k_ExportFilename1 = "export.dream3d";
 const fs::path k_ExportFilename2 = "export2.dream3d";
+} // namespace Constants
 
 std::mutex m_DataMutex;
 
@@ -43,18 +46,13 @@ constexpr StringLiteral k_CreateDataFilterName = "Create Data Group";
 constexpr StringLiteral k_ExportD3DFilterName = "Write DREAM.3D File";
 } // namespace DataNames
 
-const inline FilterHandle k_CreateDataGroupHandle(Uuid::FromString("e7d2f9b8-4131-4b28-a843-ea3c6950f101").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
-const inline FilterHandle k_ExportD3DHandle(Uuid::FromString("b3a95784-2ced-11ec-8d3d-0242ac130003").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
-const inline FilterHandle k_ImportD3DHandle(Uuid::FromString("0dbd31c7-19e0-4077-83ef-f4a6459a0e2d").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
-} // namespace
+const FilterHandle k_CreateDataGroupHandle(Uuid::FromString("e7d2f9b8-4131-4b28-a843-ea3c6950f101").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
+const FilterHandle k_ExportD3DHandle(Uuid::FromString("b3a95784-2ced-11ec-8d3d-0242ac130003").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
+const FilterHandle k_ImportD3DHandle(Uuid::FromString("0dbd31c7-19e0-4077-83ef-f4a6459a0e2d").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
 
 fs::path GetDataDir(const Application& app)
 {
-#if __APPLE__
-  return app.getCurrentDir().parent_path().parent_path().parent_path() / k_DataDir;
-#else
-  return app.getCurrentDir() / k_DataDir;
-#endif
+  return COMPLEX_BUILD_DIR / Constants::k_DataDir;
 }
 
 fs::path GetIODataPath()
@@ -65,7 +63,7 @@ fs::path GetIODataPath()
     throw std::runtime_error("complex::Application instance not found");
   }
 
-  return GetDataDir(*app) / k_Dream3dFilename;
+  return GetDataDir(*app) / Constants::k_Dream3dFilename;
 }
 
 fs::path GetExportDataPath()
@@ -76,7 +74,7 @@ fs::path GetExportDataPath()
     throw std::runtime_error("complex::Application instance not found");
   }
 
-  return GetDataDir(*app) / k_ExportFilename1;
+  return GetDataDir(*app) / Constants::k_ExportFilename1;
 }
 
 fs::path GetReExportDataPath()
@@ -87,7 +85,7 @@ fs::path GetReExportDataPath()
     throw std::runtime_error("complex::Application instance not found");
   }
 
-  return GetDataDir(*app) / k_ExportFilename2;
+  return GetDataDir(*app) / Constants::k_ExportFilename2;
 }
 
 DataStructure CreateTestDataStructure()
@@ -138,6 +136,8 @@ DREAM3D::FileData CreateFileData()
 {
   return {CreateExportPipeline(), CreateTestDataStructure()};
 }
+
+} // End Namespace
 
 TEST_CASE("DREAM3D File IO Test")
 {
