@@ -257,8 +257,7 @@ std::string RobustAutomaticThreshold::humanName() const
 Parameters RobustAutomaticThreshold::parameters() const
 {
   Parameters params;
-  params.insert(
-      std::make_unique<DataPathSelectionParameter>(k_InputArrayPath, "Input Array", "DataArray to Threshold", DataPath()));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_InputArrayPath, "Input Array", "DataArray to Threshold", DataPath()));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_GradientMagnitudePath, "Gradient Magnitude", "Type to interpret data as", DataPath()));
   params.insert(std::make_unique<ArrayCreationParameter>(k_ArrayCreationPath, "Mask", "Created mask based on Input Array and Gradient Magnitude", DataPath()));
 
@@ -275,7 +274,7 @@ IFilter::PreflightResult RobustAutomaticThreshold::preflightImpl(const DataStruc
   auto inputArrayPath = args.value<DataPath>(k_InputArrayPath);
   auto gradientArrayPath = args.value<DataPath>(k_GradientMagnitudePath);
   auto createdMaskPath = args.value<DataPath>(k_ArrayCreationPath);
-  
+
   auto inputArrayObject = data.getData(inputArrayPath);
   if(inputArrayObject == nullptr)
   {
