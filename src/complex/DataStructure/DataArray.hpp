@@ -1,7 +1,7 @@
 #pragma once
 
-#include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
+#include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 namespace complex
@@ -14,7 +14,7 @@ namespace complex
  * through the use of derived DataStore classes.
  */
 template <class T>
-class DataArray : public DataObject
+class DataArray : public IDataArray
 {
 public:
   using value_type = T;
@@ -99,7 +99,7 @@ public:
    * @param other
    */
   DataArray(const DataArray<T>& other)
-  : DataObject(other)
+  : IDataArray(other)
   , m_DataStore(other.m_DataStore)
   {
   }
@@ -109,7 +109,7 @@ public:
    * @param other
    */
   DataArray(DataArray<T>&& other) noexcept
-  : DataObject(std::move(other))
+  : IDataArray(std::move(other))
   , m_DataStore(std::move(other.m_DataStore))
   {
   }
@@ -140,19 +140,10 @@ public:
   }
 
   /**
-   * @brief Returns typename of the DataObject as a std::string.
-   * @return std::string
-   */
-  std::string getTypeName() const override
-  {
-    return "DataArray";
-  }
-
-  /**
    * @brief Returns the number of elements in the DataArray.
    * @return usize
    */
-  usize getSize() const
+  usize getSize() const override
   {
     return getNumberOfTuples() * getNumberOfComponents();
   }
@@ -161,7 +152,7 @@ public:
    * @brief Returns the number of tuples in the DataArray.
    * @return usize
    */
-  size_t getNumberOfTuples() const
+  size_t getNumberOfTuples() const override
   {
     return m_DataStore->getNumberOfTuples();
   }
@@ -402,7 +393,7 @@ protected:
    * @param store
    */
   DataArray(DataStructure& ds, const std::string& name, store_type* store = nullptr)
-  : DataObject(ds, name)
+  : IDataArray(ds, name)
   {
     setDataStore(store);
   }
@@ -417,7 +408,7 @@ protected:
    * @param dataStore
    */
   DataArray(DataStructure& ds, const std::string& name, const weak_store& store)
-  : DataObject(ds, name)
+  : IDataArray(ds, name)
   {
     setDataStore(store);
   }
@@ -433,7 +424,7 @@ protected:
    * @param store
    */
   DataArray(DataStructure& ds, const std::string& name, IdType importId, store_type* store = nullptr)
-  : DataObject(ds, name, importId)
+  : IDataArray(ds, name, importId)
   {
     setDataStore(store);
   }

@@ -118,6 +118,7 @@ generate_export_header(complex
 
 # Specify parameters here
 set(CoreParameters
+  ArrayThresholdsParameter
   ArrayCreationParameter
   ArraySelectionParameter
   BoolParameter
@@ -210,6 +211,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IDataArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/IDataStore.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.hpp
@@ -251,6 +253,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
   ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
 
+  ${COMPLEX_SOURCE_DIR}/Utilities/ArrayThreshold.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/StringUtilities.hpp
@@ -373,6 +376,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
   ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.cpp
 
+  ${COMPLEX_SOURCE_DIR}/Utilities/ArrayThreshold.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp

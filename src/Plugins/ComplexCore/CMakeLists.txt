@@ -11,6 +11,7 @@ set(FilterList
   ExportDREAM3DFilter
   ImportDREAM3DFilter
   ImportTextFilter
+  MultiThresholdObjects
   ExampleFilter1
   ExampleFilter2
 )
