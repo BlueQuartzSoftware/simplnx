@@ -186,6 +186,26 @@ public:
   }
 
   /**
+   * @brief Sets every value of a Tuple to the value
+   * @param tupleIndex Index of the Tuple
+   * @param value Value to set
+   */
+  void initializeTuple(usize tupleIndex, T value)
+  {
+    size_t offset = tupleIndex * getNumberOfComponents();
+    std::fill(begin() + offset, begin() + offset + getNumberOfComponents(), value);
+  }
+
+  /**
+   * @brief Sets ALL values in the DataArray to "value"
+   * @param value The value to set ALL elements of the array to.
+   */
+  void fill(T value)
+  {
+    m_DataStore->fill(value);
+  }
+
+  /**
    * @brief Returns const reference to the value found at the specified index
    * of the data array. This cannot be used to edit the value found at the
    * specified index.
@@ -526,6 +546,8 @@ using USizeArray = DataArray<usize>;
 
 using Float32Array = DataArray<float32>;
 using Float64Array = DataArray<float64>;
+
+using BoolArray = DataArray<bool>;
 
 using VectorOfFloat32Array = std::vector<std::shared_ptr<Float32Array>>;
 } // namespace complex
