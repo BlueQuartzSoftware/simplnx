@@ -32,14 +32,21 @@ public:
    * @param key
    * @param value
    */
-  void insert(std::string key, const std::any& value);
+  bool insert(std::string key, std::any value);
 
   /**
-   * @brief Insert the given key value pair.
+   * @brief Insert or assign if already present the given key value pair.
    * @param key
    * @param value
    */
-  void insert(std::string key, std::any&& value);
+  void insertOrAssign(const std::string& key, std::any value);
+
+  /**
+   * @brief Insert or assign if already present the given key value pair.
+   * @param key
+   * @param value
+   */
+  void insertOrAssign(std::string&& key, std::any value);
 
   /**
    * @brief Returns a const reference to the value at the given key.
