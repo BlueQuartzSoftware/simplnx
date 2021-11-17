@@ -40,16 +40,42 @@ public:
    * Returns a pointer to the created DataArray if the process succeeds.
    * Returns nullptr otherwise.
    *
-   * The created DataArray takes ownership of the provided DataStore.
-   * @param ds
-   * @param name
-   * @param store
+   * +++ The created DataArray takes ownership of the provided DataStore. +++
+   *
+   * @param ds The parent DataStructure that will own the DataArray
+   * @param name The name of the DataArray
+   * @param store The IDataStore instance to use. The DataArray instance WILL TAKE OWNERSHIP of that pointer.
    * @param parentId = {}
-   * @return DataArray<T>*
+   * @return DataArray<T>* Instance of the DataArray object that is owned and managed by the DataStructure
    */
   static DataArray* Create(DataStructure& ds, const std::string& name, store_type* store, const std::optional<IdType>& parentId = {})
   {
     auto data = std::shared_ptr<DataArray>(new DataArray(ds, name, store));
+    if(!AttemptToAddObject(ds, data, parentId))
+    {
+      return nullptr;
+    }
+    return data.get();
+  }
+
+  /**
+   * @brief Creates a DataArray instance backed by the IDataStore type from the template argument
+   * @tparam DataStoreType The concrete implementation of an IDataStore class
+   * @param ds The parent DataStructure that will own the DataArray
+   * @param name The name of the DataArray
+   * @param tupleShape  The tuple dimensions of the data. If you want to mimic an image then your shape should be {height, width} slowest to fastest dimension
+   * @param componentShape The component dimensions of the data. If you want to mimic an RGB image then your component would be {3},
+   * if you want to store a 3Rx4C matrix then it would be {3, 4}.
+   * @param parentId The DataObject that will own the DataArray instance.
+   * @return DataArray<T>* Instance of the DataArray object that is owned and managed by the DataStructure
+   */
+  template <typename DataStoreType>
+  static DataArray* CreateWithStore(DataStructure& ds, const std::string& name, const std::vector<size_t>& tupleShape, const std::vector<size_t>& componentShape,
+                                    const std::optional<IdType>& parentId = {})
+  {
+    DataStoreType* dataStore = new DataStoreType(tupleShape, componentShape);
+
+    auto data = std::shared_ptr<DataArray>(new DataArray(ds, name, dataStore));
     if(!AttemptToAddObject(ds, data, parentId))
     {
       return nullptr;
