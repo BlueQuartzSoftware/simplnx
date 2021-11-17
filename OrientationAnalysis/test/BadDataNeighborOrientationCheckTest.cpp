@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheck: Basic Instantiation and Parameter Check", "[BadDataNeighborOrientationCheck][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheck: Instantiation and Parameter Check", "[OrientationAnalysis][BadDataNeighborOrientationCheck][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   BadDataNeighborOrientationCheck filter;

@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("Reconstruction::CAxisSegmentFeatures: Basic Instantiation and Parameter Check", "[CAxisSegmentFeatures][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Reconstruction::CAxisSegmentFeatures: Instantiation and Parameter Check", "[Reconstruction][CAxisSegmentFeatures][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CAxisSegmentFeatures filter;

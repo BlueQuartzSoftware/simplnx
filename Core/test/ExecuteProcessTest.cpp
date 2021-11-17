@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::ExecuteProcess: Basic Instantiation and Parameter Check", "[ExecuteProcess][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::ExecuteProcess: Instantiation and Parameter Check", "[Core][ExecuteProcess][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExecuteProcess filter;

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::CreateEnsembleInfo: Basic Instantiation and Parameter Check", "[CreateEnsembleInfo][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::CreateEnsembleInfo: Instantiation and Parameter Check", "[OrientationAnalysis][CreateEnsembleInfo][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateEnsembleInfo filter;

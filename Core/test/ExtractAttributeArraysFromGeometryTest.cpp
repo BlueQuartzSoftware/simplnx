@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::ExtractAttributeArraysFromGeometry: Basic Instantiation and Parameter Check", "[ExtractAttributeArraysFromGeometry][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::ExtractAttributeArraysFromGeometry: Instantiation and Parameter Check", "[Core][ExtractAttributeArraysFromGeometry][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractAttributeArraysFromGeometry filter;

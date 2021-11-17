@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("StatsToolbox::FindNumFeatures: Basic Instantiation and Parameter Check", "[FindNumFeatures][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("StatsToolbox::FindNumFeatures: Instantiation and Parameter Check", "[StatsToolbox][FindNumFeatures][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindNumFeatures filter;

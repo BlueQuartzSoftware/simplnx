@@ -36,7 +36,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::SPParksDumpReader: Basic Instantiation and Parameter Check", "[SPParksDumpReader][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::SPParksDumpReader: Instantiation and Parameter Check", "[ImportExport][SPParksDumpReader][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   SPParksDumpReader filter;

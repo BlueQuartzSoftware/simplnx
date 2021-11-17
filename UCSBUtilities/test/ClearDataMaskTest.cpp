@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("UCSBUtilities::ClearDataMask: Basic Instantiation and Parameter Check", "[ClearDataMask][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("UCSBUtilities::ClearDataMask: Instantiation and Parameter Check", "[UCSBUtilities][ClearDataMask][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ClearDataMask filter;

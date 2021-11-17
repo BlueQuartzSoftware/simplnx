@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("Sampling::ExtractFlaggedFeatures: Basic Instantiation and Parameter Check", "[ExtractFlaggedFeatures][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Sampling::ExtractFlaggedFeatures: Instantiation and Parameter Check", "[Sampling][ExtractFlaggedFeatures][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractFlaggedFeatures filter;

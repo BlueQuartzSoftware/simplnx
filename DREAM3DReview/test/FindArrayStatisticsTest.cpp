@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::FindArrayStatistics: Basic Instantiation and Parameter Check", "[FindArrayStatistics][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::FindArrayStatistics: Instantiation and Parameter Check", "[DREAM3DReview][FindArrayStatistics][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindArrayStatistics filter;

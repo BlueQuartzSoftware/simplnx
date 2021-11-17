@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::GenerateFaceIPFColoring: Basic Instantiation and Parameter Check", "[GenerateFaceIPFColoring][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::GenerateFaceIPFColoring: Instantiation and Parameter Check", "[OrientationAnalysis][GenerateFaceIPFColoring][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateFaceIPFColoring filter;

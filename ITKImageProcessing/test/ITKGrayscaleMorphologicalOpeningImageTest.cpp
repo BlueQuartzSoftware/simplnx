@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKGrayscaleMorphologicalOpeningImage: Basic Instantiation and Parameter Check", "[ITKGrayscaleMorphologicalOpeningImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKGrayscaleMorphologicalOpeningImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKGrayscaleMorphologicalOpeningImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKGrayscaleMorphologicalOpeningImage filter;

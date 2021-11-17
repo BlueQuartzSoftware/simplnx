@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::EMsoftSO3Sampler: Basic Instantiation and Parameter Check", "[EMsoftSO3Sampler][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::EMsoftSO3Sampler: Instantiation and Parameter Check", "[OrientationAnalysis][EMsoftSO3Sampler][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   EMsoftSO3Sampler filter;

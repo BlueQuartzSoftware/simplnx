@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Processing::RemoveFlaggedFeatures: Basic Instantiation and Parameter Check", "[RemoveFlaggedFeatures][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Processing::RemoveFlaggedFeatures: Instantiation and Parameter Check", "[Processing][RemoveFlaggedFeatures][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   RemoveFlaggedFeatures filter;

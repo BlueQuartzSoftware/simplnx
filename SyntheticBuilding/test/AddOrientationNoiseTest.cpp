@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("SyntheticBuilding::AddOrientationNoise: Basic Instantiation and Parameter Check", "[AddOrientationNoise][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SyntheticBuilding::AddOrientationNoise: Instantiation and Parameter Check", "[SyntheticBuilding][AddOrientationNoise][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AddOrientationNoise filter;

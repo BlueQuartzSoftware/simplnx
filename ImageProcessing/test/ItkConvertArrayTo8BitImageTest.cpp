@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("ImageProcessing::ItkConvertArrayTo8BitImage: Basic Instantiation and Parameter Check", "[ItkConvertArrayTo8BitImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImageProcessing::ItkConvertArrayTo8BitImage: Instantiation and Parameter Check", "[ImageProcessing][ItkConvertArrayTo8BitImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ItkConvertArrayTo8BitImage filter;

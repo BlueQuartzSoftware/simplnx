@@ -33,7 +33,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::SPParksSitesWriter: Basic Instantiation and Parameter Check", "[SPParksSitesWriter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::SPParksSitesWriter: Instantiation and Parameter Check", "[ImportExport][SPParksSitesWriter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   SPParksSitesWriter filter;

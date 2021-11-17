@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::GenerateFaceMisorientationColoring: Basic Instantiation and Parameter Check", "[GenerateFaceMisorientationColoring][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::GenerateFaceMisorientationColoring: Instantiation and Parameter Check", "[OrientationAnalysis][GenerateFaceMisorientationColoring][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateFaceMisorientationColoring filter;

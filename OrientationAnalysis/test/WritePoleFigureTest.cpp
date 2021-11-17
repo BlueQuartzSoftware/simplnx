@@ -37,7 +37,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::WritePoleFigure: Basic Instantiation and Parameter Check", "[WritePoleFigure][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::WritePoleFigure: Instantiation and Parameter Check", "[OrientationAnalysis][WritePoleFigure][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WritePoleFigure filter;

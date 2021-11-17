@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("Core::FeatureDataCSVWriter: Basic Instantiation and Parameter Check", "[FeatureDataCSVWriter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::FeatureDataCSVWriter: Instantiation and Parameter Check", "[Core][FeatureDataCSVWriter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FeatureDataCSVWriter filter;

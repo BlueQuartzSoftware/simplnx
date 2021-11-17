@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("StatsToolbox::FindShapes: Basic Instantiation and Parameter Check", "[FindShapes][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("StatsToolbox::FindShapes: Instantiation and Parameter Check", "[StatsToolbox][FindShapes][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindShapes filter;

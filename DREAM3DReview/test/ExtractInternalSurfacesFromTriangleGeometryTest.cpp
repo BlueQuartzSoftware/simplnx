@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::ExtractInternalSurfacesFromTriangleGeometry: Basic Instantiation and Parameter Check", "[ExtractInternalSurfacesFromTriangleGeometry][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::ExtractInternalSurfacesFromTriangleGeometry: Instantiation and Parameter Check", "[DREAM3DReview][ExtractInternalSurfacesFromTriangleGeometry][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractInternalSurfacesFromTriangleGeometry filter;

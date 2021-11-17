@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::CreateDataArray: Basic Instantiation and Parameter Check", "[CreateDataArray][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::CreateDataArray: Instantiation and Parameter Check", "[Core][CreateDataArray][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateDataArray filter;

@@ -36,7 +36,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("SyntheticBuilding::InsertPrecipitatePhases: Basic Instantiation and Parameter Check", "[InsertPrecipitatePhases][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SyntheticBuilding::InsertPrecipitatePhases: Instantiation and Parameter Check", "[SyntheticBuilding][InsertPrecipitatePhases][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   InsertPrecipitatePhases filter;

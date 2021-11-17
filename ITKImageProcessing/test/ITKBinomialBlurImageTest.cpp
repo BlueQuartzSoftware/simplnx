@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKBinomialBlurImage: Basic Instantiation and Parameter Check", "[ITKBinomialBlurImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKBinomialBlurImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKBinomialBlurImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKBinomialBlurImage filter;

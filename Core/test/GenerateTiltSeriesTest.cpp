@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::GenerateTiltSeries: Basic Instantiation and Parameter Check", "[GenerateTiltSeries][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::GenerateTiltSeries: Instantiation and Parameter Check", "[Core][GenerateTiltSeries][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateTiltSeries filter;

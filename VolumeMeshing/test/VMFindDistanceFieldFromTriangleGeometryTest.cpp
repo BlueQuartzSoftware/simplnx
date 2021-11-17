@@ -34,7 +34,7 @@
 
 using namespace complex;
 
-TEST_CASE("VolumeMeshing::VMFindDistanceFieldFromTriangleGeometry: Basic Instantiation and Parameter Check", "[VMFindDistanceFieldFromTriangleGeometry][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("VolumeMeshing::VMFindDistanceFieldFromTriangleGeometry: Instantiation and Parameter Check", "[VolumeMeshing][VMFindDistanceFieldFromTriangleGeometry][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   VMFindDistanceFieldFromTriangleGeometry filter;

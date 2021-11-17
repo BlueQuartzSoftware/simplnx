@@ -34,7 +34,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::TiDwellFatigueCrystallographicAnalysis: Basic Instantiation and Parameter Check", "[TiDwellFatigueCrystallographicAnalysis][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::TiDwellFatigueCrystallographicAnalysis: Instantiation and Parameter Check", "[DREAM3DReview][TiDwellFatigueCrystallographicAnalysis][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   TiDwellFatigueCrystallographicAnalysis filter;

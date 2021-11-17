@@ -35,7 +35,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::SliceTriangleGeometry: Basic Instantiation and Parameter Check", "[SliceTriangleGeometry][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::SliceTriangleGeometry: Instantiation and Parameter Check", "[DREAM3DReview][SliceTriangleGeometry][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   SliceTriangleGeometry filter;

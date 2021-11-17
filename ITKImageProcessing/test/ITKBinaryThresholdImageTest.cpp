@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKBinaryThresholdImage: Basic Instantiation and Parameter Check", "[ITKBinaryThresholdImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKBinaryThresholdImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKBinaryThresholdImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKBinaryThresholdImage filter;

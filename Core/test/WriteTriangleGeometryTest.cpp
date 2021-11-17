@@ -33,7 +33,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("Core::WriteTriangleGeometry: Basic Instantiation and Parameter Check", "[WriteTriangleGeometry][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::WriteTriangleGeometry: Instantiation and Parameter Check", "[Core][WriteTriangleGeometry][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WriteTriangleGeometry filter;

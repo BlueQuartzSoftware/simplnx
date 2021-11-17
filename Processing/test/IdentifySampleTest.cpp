@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Processing::IdentifySample: Basic Instantiation and Parameter Check", "[IdentifySample][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Processing::IdentifySample: Instantiation and Parameter Check", "[Processing][IdentifySample][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   IdentifySample filter;

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ImageProcessing::ItkKdTreeKMeans: Basic Instantiation and Parameter Check", "[ItkKdTreeKMeans][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImageProcessing::ItkKdTreeKMeans: Instantiation and Parameter Check", "[ImageProcessing][ItkKdTreeKMeans][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ItkKdTreeKMeans filter;

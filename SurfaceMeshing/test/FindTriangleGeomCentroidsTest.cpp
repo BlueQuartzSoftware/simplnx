@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("SurfaceMeshing::FindTriangleGeomCentroids: Basic Instantiation and Parameter Check", "[FindTriangleGeomCentroids][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SurfaceMeshing::FindTriangleGeomCentroids: Instantiation and Parameter Check", "[SurfaceMeshing][FindTriangleGeomCentroids][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindTriangleGeomCentroids filter;

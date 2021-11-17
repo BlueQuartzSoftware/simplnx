@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKBoxMeanImage: Basic Instantiation and Parameter Check", "[ITKBoxMeanImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKBoxMeanImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKBoxMeanImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKBoxMeanImage filter;

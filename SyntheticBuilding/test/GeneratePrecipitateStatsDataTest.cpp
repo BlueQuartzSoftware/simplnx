@@ -37,7 +37,7 @@
 
 using namespace complex;
 
-TEST_CASE("SyntheticBuilding::GeneratePrecipitateStatsData: Basic Instantiation and Parameter Check", "[GeneratePrecipitateStatsData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SyntheticBuilding::GeneratePrecipitateStatsData: Instantiation and Parameter Check", "[SyntheticBuilding][GeneratePrecipitateStatsData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GeneratePrecipitateStatsData filter;

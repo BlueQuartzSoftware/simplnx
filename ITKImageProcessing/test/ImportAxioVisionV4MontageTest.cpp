@@ -36,7 +36,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ImportAxioVisionV4Montage: Basic Instantiation and Parameter Check", "[ImportAxioVisionV4Montage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ImportAxioVisionV4Montage: Instantiation and Parameter Check", "[ITKImageProcessing][ImportAxioVisionV4Montage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportAxioVisionV4Montage filter;

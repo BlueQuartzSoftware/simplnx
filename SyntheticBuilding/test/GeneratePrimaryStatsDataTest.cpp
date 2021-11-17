@@ -36,7 +36,7 @@
 
 using namespace complex;
 
-TEST_CASE("SyntheticBuilding::GeneratePrimaryStatsData: Basic Instantiation and Parameter Check", "[GeneratePrimaryStatsData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SyntheticBuilding::GeneratePrimaryStatsData: Instantiation and Parameter Check", "[SyntheticBuilding][GeneratePrimaryStatsData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GeneratePrimaryStatsData filter;

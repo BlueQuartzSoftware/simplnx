@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImage: Basic Instantiation and Parameter Check", "[ITKDiscreteGaussianImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKDiscreteGaussianImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKDiscreteGaussianImage filter;

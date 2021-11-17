@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::IterativeClosestPoint: Basic Instantiation and Parameter Check", "[IterativeClosestPoint][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::IterativeClosestPoint: Instantiation and Parameter Check", "[DREAM3DReview][IterativeClosestPoint][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   IterativeClosestPoint filter;

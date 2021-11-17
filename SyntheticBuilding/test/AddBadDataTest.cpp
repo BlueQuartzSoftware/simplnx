@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("SyntheticBuilding::AddBadData: Basic Instantiation and Parameter Check", "[AddBadData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SyntheticBuilding::AddBadData: Instantiation and Parameter Check", "[SyntheticBuilding][AddBadData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AddBadData filter;

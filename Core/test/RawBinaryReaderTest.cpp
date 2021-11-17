@@ -36,7 +36,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("Core::RawBinaryReader: Basic Instantiation and Parameter Check", "[RawBinaryReader][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::RawBinaryReader: Instantiation and Parameter Check", "[Core][RawBinaryReader][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   RawBinaryReader filter;

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKFFTNormalizedCorrelationImage: Basic Instantiation and Parameter Check", "[ITKFFTNormalizedCorrelationImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKFFTNormalizedCorrelationImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKFFTNormalizedCorrelationImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKFFTNormalizedCorrelationImage filter;

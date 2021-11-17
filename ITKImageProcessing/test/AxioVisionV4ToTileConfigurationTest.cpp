@@ -32,7 +32,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::AxioVisionV4ToTileConfiguration: Basic Instantiation and Parameter Check", "[AxioVisionV4ToTileConfiguration][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::AxioVisionV4ToTileConfiguration: Instantiation and Parameter Check", "[ITKImageProcessing][AxioVisionV4ToTileConfiguration][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AxioVisionV4ToTileConfiguration filter;

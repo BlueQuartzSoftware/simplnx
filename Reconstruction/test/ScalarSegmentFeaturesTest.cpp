@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("Reconstruction::ScalarSegmentFeatures: Basic Instantiation and Parameter Check", "[ScalarSegmentFeatures][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Reconstruction::ScalarSegmentFeatures: Instantiation and Parameter Check", "[Reconstruction][ScalarSegmentFeatures][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ScalarSegmentFeatures filter;

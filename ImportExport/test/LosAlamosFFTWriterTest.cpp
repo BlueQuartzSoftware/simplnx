@@ -33,7 +33,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::LosAlamosFFTWriter: Basic Instantiation and Parameter Check", "[LosAlamosFFTWriter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::LosAlamosFFTWriter: Instantiation and Parameter Check", "[ImportExport][LosAlamosFFTWriter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   LosAlamosFFTWriter filter;

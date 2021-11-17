@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("StatsToolbox::FindNeighborhoods: Basic Instantiation and Parameter Check", "[FindNeighborhoods][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("StatsToolbox::FindNeighborhoods: Instantiation and Parameter Check", "[StatsToolbox][FindNeighborhoods][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindNeighborhoods filter;

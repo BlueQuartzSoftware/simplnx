@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::GenerateOrientationMatrixTranspose: Basic Instantiation and Parameter Check", "[GenerateOrientationMatrixTranspose][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::GenerateOrientationMatrixTranspose: Instantiation and Parameter Check", "[OrientationAnalysis][GenerateOrientationMatrixTranspose][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateOrientationMatrixTranspose filter;

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::CombineAttributeArrays: Basic Instantiation and Parameter Check", "[CombineAttributeArrays][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::CombineAttributeArrays: Instantiation and Parameter Check", "[Core][CombineAttributeArrays][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CombineAttributeArrays filter;

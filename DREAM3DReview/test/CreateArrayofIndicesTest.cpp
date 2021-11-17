@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::CreateArrayofIndices: Basic Instantiation and Parameter Check", "[CreateArrayofIndices][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::CreateArrayofIndices: Instantiation and Parameter Check", "[DREAM3DReview][CreateArrayofIndices][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateArrayofIndices filter;

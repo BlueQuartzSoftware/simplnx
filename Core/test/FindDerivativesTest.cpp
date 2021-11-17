@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::FindDerivatives: Basic Instantiation and Parameter Check", "[FindDerivatives][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::FindDerivatives: Instantiation and Parameter Check", "[Core][FindDerivatives][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindDerivatives filter;

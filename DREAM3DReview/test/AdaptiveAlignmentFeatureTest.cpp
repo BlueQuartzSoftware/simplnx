@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::AdaptiveAlignmentFeature: Basic Instantiation and Parameter Check", "[AdaptiveAlignmentFeature][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::AdaptiveAlignmentFeature: Instantiation and Parameter Check", "[DREAM3DReview][AdaptiveAlignmentFeature][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AdaptiveAlignmentFeature filter;

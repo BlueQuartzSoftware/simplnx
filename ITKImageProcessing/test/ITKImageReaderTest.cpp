@@ -34,7 +34,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKImageReader: Basic Instantiation and Parameter Check", "[ITKImageReader][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKImageReader: Instantiation and Parameter Check", "[ITKImageProcessing][ITKImageReader][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKImageReader filter;

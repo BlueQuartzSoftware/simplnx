@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("SyntheticBuilding::InsertAtoms: Basic Instantiation and Parameter Check", "[InsertAtoms][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SyntheticBuilding::InsertAtoms: Instantiation and Parameter Check", "[SyntheticBuilding][InsertAtoms][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   InsertAtoms filter;

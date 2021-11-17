@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::ArrayCalculator: Basic Instantiation and Parameter Check", "[ArrayCalculator][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::ArrayCalculator: Instantiation and Parameter Check", "[Core][ArrayCalculator][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ArrayCalculator filter;

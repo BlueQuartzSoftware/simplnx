@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::ScaleVolume: Basic Instantiation and Parameter Check", "[ScaleVolume][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::ScaleVolume: Instantiation and Parameter Check", "[Core][ScaleVolume][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ScaleVolume filter;

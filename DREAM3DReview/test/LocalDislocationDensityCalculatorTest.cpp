@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::LocalDislocationDensityCalculator: Basic Instantiation and Parameter Check", "[LocalDislocationDensityCalculator][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::LocalDislocationDensityCalculator: Instantiation and Parameter Check", "[DREAM3DReview][LocalDislocationDensityCalculator][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   LocalDislocationDensityCalculator filter;

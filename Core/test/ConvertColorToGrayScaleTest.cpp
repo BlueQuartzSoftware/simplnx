@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::ConvertColorToGrayScale: Basic Instantiation and Parameter Check", "[ConvertColorToGrayScale][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::ConvertColorToGrayScale: Instantiation and Parameter Check", "[Core][ConvertColorToGrayScale][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ConvertColorToGrayScale filter;

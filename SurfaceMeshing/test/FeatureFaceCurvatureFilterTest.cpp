@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("SurfaceMeshing::FeatureFaceCurvatureFilter: Basic Instantiation and Parameter Check", "[FeatureFaceCurvatureFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SurfaceMeshing::FeatureFaceCurvatureFilter: Instantiation and Parameter Check", "[SurfaceMeshing][FeatureFaceCurvatureFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FeatureFaceCurvatureFilter filter;

@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("SurfaceMeshing::TriangleNormalFilter: Basic Instantiation and Parameter Check", "[TriangleNormalFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SurfaceMeshing::TriangleNormalFilter: Instantiation and Parameter Check", "[SurfaceMeshing][TriangleNormalFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   TriangleNormalFilter filter;

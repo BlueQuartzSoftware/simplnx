@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::FindCSLBoundaries: Basic Instantiation and Parameter Check", "[FindCSLBoundaries][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::FindCSLBoundaries: Instantiation and Parameter Check", "[DREAM3DReview][FindCSLBoundaries][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindCSLBoundaries filter;

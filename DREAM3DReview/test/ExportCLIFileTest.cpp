@@ -37,7 +37,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::ExportCLIFile: Basic Instantiation and Parameter Check", "[ExportCLIFile][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::ExportCLIFile: Instantiation and Parameter Check", "[DREAM3DReview][ExportCLIFile][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExportCLIFile filter;

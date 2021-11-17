@@ -33,7 +33,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::GBCDTriangleDumper: Basic Instantiation and Parameter Check", "[GBCDTriangleDumper][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::GBCDTriangleDumper: Instantiation and Parameter Check", "[ImportExport][GBCDTriangleDumper][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GBCDTriangleDumper filter;

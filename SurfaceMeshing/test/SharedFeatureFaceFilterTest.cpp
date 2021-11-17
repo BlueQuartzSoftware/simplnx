@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("SurfaceMeshing::SharedFeatureFaceFilter: Basic Instantiation and Parameter Check", "[SharedFeatureFaceFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SurfaceMeshing::SharedFeatureFaceFilter: Instantiation and Parameter Check", "[SurfaceMeshing][SharedFeatureFaceFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   SharedFeatureFaceFilter filter;

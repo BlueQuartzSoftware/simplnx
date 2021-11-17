@@ -34,7 +34,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::DxWriter: Basic Instantiation and Parameter Check", "[DxWriter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::DxWriter: Instantiation and Parameter Check", "[ImportExport][DxWriter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DxWriter filter;

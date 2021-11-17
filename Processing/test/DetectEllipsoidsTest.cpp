@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("Processing::DetectEllipsoids: Basic Instantiation and Parameter Check", "[DetectEllipsoids][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Processing::DetectEllipsoids: Instantiation and Parameter Check", "[Processing][DetectEllipsoids][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DetectEllipsoids filter;

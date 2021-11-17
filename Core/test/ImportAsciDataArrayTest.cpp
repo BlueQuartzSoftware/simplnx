@@ -36,7 +36,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("Core::ImportAsciDataArray: Basic Instantiation and Parameter Check", "[ImportAsciDataArray][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::ImportAsciDataArray: Instantiation and Parameter Check", "[Core][ImportAsciDataArray][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportAsciDataArray filter;

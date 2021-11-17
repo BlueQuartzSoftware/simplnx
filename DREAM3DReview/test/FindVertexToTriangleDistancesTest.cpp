@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::FindVertexToTriangleDistances: Basic Instantiation and Parameter Check", "[FindVertexToTriangleDistances][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::FindVertexToTriangleDistances: Instantiation and Parameter Check", "[DREAM3DReview][FindVertexToTriangleDistances][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindVertexToTriangleDistances filter;

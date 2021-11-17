@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::TesselateFarFieldGrains: Basic Instantiation and Parameter Check", "[TesselateFarFieldGrains][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::TesselateFarFieldGrains: Instantiation and Parameter Check", "[DREAM3DReview][TesselateFarFieldGrains][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   TesselateFarFieldGrains filter;

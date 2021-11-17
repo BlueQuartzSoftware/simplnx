@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKLabelContourImage: Basic Instantiation and Parameter Check", "[ITKLabelContourImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKLabelContourImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKLabelContourImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKLabelContourImage filter;

@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("Sampling::RegularGridSampleSurfaceMesh: Basic Instantiation and Parameter Check", "[RegularGridSampleSurfaceMesh][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Sampling::RegularGridSampleSurfaceMesh: Instantiation and Parameter Check", "[Sampling][RegularGridSampleSurfaceMesh][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   RegularGridSampleSurfaceMesh filter;

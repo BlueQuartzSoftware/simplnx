@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindSlipTransmissionMetrics: Basic Instantiation and Parameter Check", "[FindSlipTransmissionMetrics][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindSlipTransmissionMetrics: Instantiation and Parameter Check", "[OrientationAnalysis][FindSlipTransmissionMetrics][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindSlipTransmissionMetrics filter;

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKShotNoiseImage: Basic Instantiation and Parameter Check", "[ITKShotNoiseImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKShotNoiseImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKShotNoiseImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKShotNoiseImage filter;

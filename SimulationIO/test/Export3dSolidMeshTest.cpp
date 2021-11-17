@@ -37,7 +37,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("SimulationIO::Export3dSolidMesh: Basic Instantiation and Parameter Check", "[Export3dSolidMesh][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SimulationIO::Export3dSolidMesh: Instantiation and Parameter Check", "[SimulationIO][Export3dSolidMesh][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   Export3dSolidMesh filter;

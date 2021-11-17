@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::CreateFeatureArrayFromElementArray: Basic Instantiation and Parameter Check", "[CreateFeatureArrayFromElementArray][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::CreateFeatureArrayFromElementArray: Instantiation and Parameter Check", "[Core][CreateFeatureArrayFromElementArray][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateFeatureArrayFromElementArray filter;

@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::GenerateIPFColors: Basic Instantiation and Parameter Check", "[GenerateIPFColors][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::GenerateIPFColors: Instantiation and Parameter Check", "[OrientationAnalysis][GenerateIPFColors][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateIPFColors filter;

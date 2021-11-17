@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKBoundedReciprocalImage: Basic Instantiation and Parameter Check", "[ITKBoundedReciprocalImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKBoundedReciprocalImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKBoundedReciprocalImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKBoundedReciprocalImage filter;

@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::AdaptiveAlignmentMisorientation: Basic Instantiation and Parameter Check", "[AdaptiveAlignmentMisorientation][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::AdaptiveAlignmentMisorientation: Instantiation and Parameter Check", "[DREAM3DReview][AdaptiveAlignmentMisorientation][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AdaptiveAlignmentMisorientation filter;

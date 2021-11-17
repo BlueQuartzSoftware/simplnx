@@ -34,7 +34,7 @@
 
 using namespace complex;
 
-TEST_CASE("Sampling::WarpRegularGrid: Basic Instantiation and Parameter Check", "[WarpRegularGrid][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Sampling::WarpRegularGrid: Instantiation and Parameter Check", "[Sampling][WarpRegularGrid][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WarpRegularGrid filter;

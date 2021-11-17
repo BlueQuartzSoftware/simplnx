@@ -37,7 +37,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindGBCDMetricBased: Basic Instantiation and Parameter Check", "[FindGBCDMetricBased][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindGBCDMetricBased: Instantiation and Parameter Check", "[OrientationAnalysis][FindGBCDMetricBased][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindGBCDMetricBased filter;

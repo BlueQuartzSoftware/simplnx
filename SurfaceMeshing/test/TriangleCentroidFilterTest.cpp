@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("SurfaceMeshing::TriangleCentroidFilter: Basic Instantiation and Parameter Check", "[TriangleCentroidFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SurfaceMeshing::TriangleCentroidFilter: Instantiation and Parameter Check", "[SurfaceMeshing][TriangleCentroidFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   TriangleCentroidFilter filter;

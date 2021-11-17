@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKSignedMaurerDistanceMapImage: Basic Instantiation and Parameter Check", "[ITKSignedMaurerDistanceMapImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKSignedMaurerDistanceMapImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKSignedMaurerDistanceMapImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKSignedMaurerDistanceMapImage filter;

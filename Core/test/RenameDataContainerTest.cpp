@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::RenameDataContainer: Basic Instantiation and Parameter Check", "[RenameDataContainer][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::RenameDataContainer: Instantiation and Parameter Check", "[Core][RenameDataContainer][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   RenameDataContainer filter;

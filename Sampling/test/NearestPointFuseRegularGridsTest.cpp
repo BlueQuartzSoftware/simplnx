@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("Sampling::NearestPointFuseRegularGrids: Basic Instantiation and Parameter Check", "[NearestPointFuseRegularGrids][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Sampling::NearestPointFuseRegularGrids: Instantiation and Parameter Check", "[Sampling][NearestPointFuseRegularGrids][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   NearestPointFuseRegularGrids filter;

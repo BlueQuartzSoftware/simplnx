@@ -27,7 +27,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::CreateGridMontage: Basic Instantiation and Parameter Check", "[CreateGridMontage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::CreateGridMontage: Instantiation and Parameter Check", "[Core][CreateGridMontage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateGridMontage filter;

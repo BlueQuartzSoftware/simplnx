@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Sampling::AppendImageGeometryZSlice: Basic Instantiation and Parameter Check", "[AppendImageGeometryZSlice][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Sampling::AppendImageGeometryZSlice: Instantiation and Parameter Check", "[Sampling][AppendImageGeometryZSlice][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AppendImageGeometryZSlice filter;

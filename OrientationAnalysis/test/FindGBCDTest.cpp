@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindGBCD: Basic Instantiation and Parameter Check", "[FindGBCD][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindGBCD: Instantiation and Parameter Check", "[OrientationAnalysis][FindGBCD][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindGBCD filter;

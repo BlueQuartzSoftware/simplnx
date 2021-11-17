@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Basic Instantiation and Parameter Check", "[ReadH5Ebsd][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Instantiation and Parameter Check", "[OrientationAnalysis][ReadH5Ebsd][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadH5Ebsd filter;

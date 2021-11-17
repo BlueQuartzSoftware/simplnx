@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::AdaptiveAlignmentMutualInformation: Basic Instantiation and Parameter Check", "[AdaptiveAlignmentMutualInformation][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::AdaptiveAlignmentMutualInformation: Instantiation and Parameter Check", "[DREAM3DReview][AdaptiveAlignmentMutualInformation][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AdaptiveAlignmentMutualInformation filter;

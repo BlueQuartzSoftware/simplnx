@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::NormalizeArrays: Basic Instantiation and Parameter Check", "[NormalizeArrays][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::NormalizeArrays: Instantiation and Parameter Check", "[DREAM3DReview][NormalizeArrays][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   NormalizeArrays filter;

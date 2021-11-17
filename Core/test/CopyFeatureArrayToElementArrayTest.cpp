@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::CopyFeatureArrayToElementArray: Basic Instantiation and Parameter Check", "[CopyFeatureArrayToElementArray][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::CopyFeatureArrayToElementArray: Instantiation and Parameter Check", "[Core][CopyFeatureArrayToElementArray][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CopyFeatureArrayToElementArray filter;

@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("SurfaceMeshing::TriangleAreaFilter: Basic Instantiation and Parameter Check", "[TriangleAreaFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SurfaceMeshing::TriangleAreaFilter: Instantiation and Parameter Check", "[SurfaceMeshing][TriangleAreaFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   TriangleAreaFilter filter;

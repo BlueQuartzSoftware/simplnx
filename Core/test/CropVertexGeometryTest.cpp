@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::CropVertexGeometry: Basic Instantiation and Parameter Check", "[CropVertexGeometry][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::CropVertexGeometry: Instantiation and Parameter Check", "[Core][CropVertexGeometry][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CropVertexGeometry filter;

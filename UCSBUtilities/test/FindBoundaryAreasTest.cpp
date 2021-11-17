@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("UCSBUtilities::FindBoundaryAreas: Basic Instantiation and Parameter Check", "[FindBoundaryAreas][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("UCSBUtilities::FindBoundaryAreas: Instantiation and Parameter Check", "[UCSBUtilities][FindBoundaryAreas][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindBoundaryAreas filter;

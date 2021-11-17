@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ImageProcessing::ItkMedianKernel: Basic Instantiation and Parameter Check", "[ItkMedianKernel][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImageProcessing::ItkMedianKernel: Instantiation and Parameter Check", "[ImageProcessing][ItkMedianKernel][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ItkMedianKernel filter;

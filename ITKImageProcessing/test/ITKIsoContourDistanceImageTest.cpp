@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKIsoContourDistanceImage: Basic Instantiation and Parameter Check", "[ITKIsoContourDistanceImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKIsoContourDistanceImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKIsoContourDistanceImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKIsoContourDistanceImage filter;

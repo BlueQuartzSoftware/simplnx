@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::Stereographic3D: Basic Instantiation and Parameter Check", "[Stereographic3D][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::Stereographic3D: Instantiation and Parameter Check", "[OrientationAnalysis][Stereographic3D][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   Stereographic3D filter;

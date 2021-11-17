@@ -34,7 +34,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("SimulationIO::CreateBsamFile: Basic Instantiation and Parameter Check", "[CreateBsamFile][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SimulationIO::CreateBsamFile: Instantiation and Parameter Check", "[SimulationIO][CreateBsamFile][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateBsamFile filter;

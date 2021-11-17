@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("Processing::ErodeDilateCoordinationNumber: Basic Instantiation and Parameter Check", "[ErodeDilateCoordinationNumber][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Processing::ErodeDilateCoordinationNumber: Instantiation and Parameter Check", "[Processing][ErodeDilateCoordinationNumber][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ErodeDilateCoordinationNumber filter;

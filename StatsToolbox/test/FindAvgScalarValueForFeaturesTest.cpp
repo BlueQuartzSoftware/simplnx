@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("StatsToolbox::FindAvgScalarValueForFeatures: Basic Instantiation and Parameter Check", "[FindAvgScalarValueForFeatures][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("StatsToolbox::FindAvgScalarValueForFeatures: Instantiation and Parameter Check", "[StatsToolbox][FindAvgScalarValueForFeatures][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindAvgScalarValueForFeatures filter;

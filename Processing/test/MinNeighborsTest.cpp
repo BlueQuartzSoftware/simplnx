@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("Processing::MinNeighbors: Basic Instantiation and Parameter Check", "[MinNeighbors][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Processing::MinNeighbors: Instantiation and Parameter Check", "[Processing][MinNeighbors][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   MinNeighbors filter;

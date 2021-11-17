@@ -36,7 +36,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("SimulationIO::CreateAbaqusFile: Basic Instantiation and Parameter Check", "[CreateAbaqusFile][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SimulationIO::CreateAbaqusFile: Instantiation and Parameter Check", "[SimulationIO][CreateAbaqusFile][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateAbaqusFile filter;

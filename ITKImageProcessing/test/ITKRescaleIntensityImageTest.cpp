@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKRescaleIntensityImage: Basic Instantiation and Parameter Check", "[ITKRescaleIntensityImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKRescaleIntensityImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKRescaleIntensityImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKRescaleIntensityImage filter;

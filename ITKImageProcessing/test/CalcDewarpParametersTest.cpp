@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::CalcDewarpParameters: Basic Instantiation and Parameter Check", "[CalcDewarpParameters][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::CalcDewarpParameters: Instantiation and Parameter Check", "[ITKImageProcessing][CalcDewarpParameters][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CalcDewarpParameters filter;

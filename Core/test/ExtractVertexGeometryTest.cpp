@@ -34,7 +34,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::ExtractVertexGeometry: Basic Instantiation and Parameter Check", "[ExtractVertexGeometry][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::ExtractVertexGeometry: Instantiation and Parameter Check", "[Core][ExtractVertexGeometry][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometry filter;

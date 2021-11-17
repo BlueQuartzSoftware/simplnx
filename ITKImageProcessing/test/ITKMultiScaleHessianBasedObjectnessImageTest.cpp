@@ -32,7 +32,8 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKMultiScaleHessianBasedObjectnessImage: Basic Instantiation and Parameter Check", "[ITKMultiScaleHessianBasedObjectnessImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKMultiScaleHessianBasedObjectnessImage: Instantiation and Parameter Check",
+          "[ITKImageProcessing][ITKMultiScaleHessianBasedObjectnessImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKMultiScaleHessianBasedObjectnessImage filter;

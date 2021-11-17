@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKBlackTopHatImage: Basic Instantiation and Parameter Check", "[ITKBlackTopHatImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKBlackTopHatImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKBlackTopHatImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKBlackTopHatImage filter;

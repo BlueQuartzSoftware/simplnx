@@ -35,7 +35,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::InterpolatePointCloudToRegularGrid: Basic Instantiation and Parameter Check", "[InterpolatePointCloudToRegularGrid][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::InterpolatePointCloudToRegularGrid: Instantiation and Parameter Check", "[DREAM3DReview][InterpolatePointCloudToRegularGrid][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   InterpolatePointCloudToRegularGrid filter;

@@ -33,7 +33,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::ImportQMMeltpoolTDMSFile: Basic Instantiation and Parameter Check", "[ImportQMMeltpoolTDMSFile][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::ImportQMMeltpoolTDMSFile: Instantiation and Parameter Check", "[DREAM3DReview][ImportQMMeltpoolTDMSFile][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportQMMeltpoolTDMSFile filter;

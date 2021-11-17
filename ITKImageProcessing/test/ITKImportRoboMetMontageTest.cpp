@@ -38,7 +38,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKImportRoboMetMontage: Basic Instantiation and Parameter Check", "[ITKImportRoboMetMontage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKImportRoboMetMontage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKImportRoboMetMontage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKImportRoboMetMontage filter;

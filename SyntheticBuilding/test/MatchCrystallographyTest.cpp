@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("SyntheticBuilding::MatchCrystallography: Basic Instantiation and Parameter Check", "[MatchCrystallography][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SyntheticBuilding::MatchCrystallography: Instantiation and Parameter Check", "[SyntheticBuilding][MatchCrystallography][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   MatchCrystallography filter;

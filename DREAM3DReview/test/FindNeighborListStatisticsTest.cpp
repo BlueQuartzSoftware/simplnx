@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::FindNeighborListStatistics: Basic Instantiation and Parameter Check", "[FindNeighborListStatistics][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::FindNeighborListStatistics: Instantiation and Parameter Check", "[DREAM3DReview][FindNeighborListStatistics][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindNeighborListStatistics filter;

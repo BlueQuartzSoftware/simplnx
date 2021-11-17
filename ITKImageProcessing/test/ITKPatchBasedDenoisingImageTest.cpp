@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKPatchBasedDenoisingImage: Basic Instantiation and Parameter Check", "[ITKPatchBasedDenoisingImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKPatchBasedDenoisingImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKPatchBasedDenoisingImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKPatchBasedDenoisingImage filter;

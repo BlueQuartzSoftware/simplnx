@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::SplitAttributeArray: Basic Instantiation and Parameter Check", "[SplitAttributeArray][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::SplitAttributeArray: Instantiation and Parameter Check", "[Core][SplitAttributeArray][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   SplitAttributeArray filter;

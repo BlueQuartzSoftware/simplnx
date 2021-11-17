@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKProxTVImage: Basic Instantiation and Parameter Check", "[ITKProxTVImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKProxTVImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKProxTVImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKProxTVImage filter;

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::ConvertData: Basic Instantiation and Parameter Check", "[ConvertData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::ConvertData: Instantiation and Parameter Check", "[Core][ConvertData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ConvertData filter;

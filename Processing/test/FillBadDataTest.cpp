@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("Processing::FillBadData: Basic Instantiation and Parameter Check", "[FillBadData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Processing::FillBadData: Instantiation and Parameter Check", "[Processing][FillBadData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FillBadData filter;

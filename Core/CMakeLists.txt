@@ -8,7 +8,6 @@ set(FilterList
   #ArrayCalculator # MISSING 1 or more Parameter Implementations
   CombineAttributeArrays
   CombineAttributeMatrices
-  ConditionalSetValue
   ConvertColorToGrayScale
   ConvertData
   CopyFeatureArrayToElementArray

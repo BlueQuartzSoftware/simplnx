@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::CreateLambertSphere: Basic Instantiation and Parameter Check", "[CreateLambertSphere][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::CreateLambertSphere: Instantiation and Parameter Check", "[OrientationAnalysis][CreateLambertSphere][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateLambertSphere filter;

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::FindElementCentroids: Basic Instantiation and Parameter Check", "[FindElementCentroids][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::FindElementCentroids: Instantiation and Parameter Check", "[DREAM3DReview][FindElementCentroids][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindElementCentroids filter;

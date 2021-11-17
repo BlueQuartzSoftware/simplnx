@@ -34,7 +34,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::MapPointCloudToRegularGrid: Basic Instantiation and Parameter Check", "[MapPointCloudToRegularGrid][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::MapPointCloudToRegularGrid: Instantiation and Parameter Check", "[DREAM3DReview][MapPointCloudToRegularGrid][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   MapPointCloudToRegularGrid filter;

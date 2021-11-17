@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::PottsModel: Basic Instantiation and Parameter Check", "[PottsModel][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::PottsModel: Instantiation and Parameter Check", "[DREAM3DReview][PottsModel][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   PottsModel filter;

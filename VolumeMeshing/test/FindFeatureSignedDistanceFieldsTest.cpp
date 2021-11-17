@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("VolumeMeshing::FindFeatureSignedDistanceFields: Basic Instantiation and Parameter Check", "[FindFeatureSignedDistanceFields][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("VolumeMeshing::FindFeatureSignedDistanceFields: Instantiation and Parameter Check", "[VolumeMeshing][FindFeatureSignedDistanceFields][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindFeatureSignedDistanceFields filter;

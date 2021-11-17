@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Generic::FindBoundaryCells: Basic Instantiation and Parameter Check", "[FindBoundaryCells][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Generic::FindBoundaryCells: Instantiation and Parameter Check", "[Generic][FindBoundaryCells][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindBoundaryCells filter;

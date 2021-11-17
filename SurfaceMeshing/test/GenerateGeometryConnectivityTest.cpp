@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("SurfaceMeshing::GenerateGeometryConnectivity: Basic Instantiation and Parameter Check", "[GenerateGeometryConnectivity][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SurfaceMeshing::GenerateGeometryConnectivity: Instantiation and Parameter Check", "[SurfaceMeshing][GenerateGeometryConnectivity][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateGeometryConnectivity filter;

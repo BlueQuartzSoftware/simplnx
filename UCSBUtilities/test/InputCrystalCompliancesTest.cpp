@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("UCSBUtilities::InputCrystalCompliances: Basic Instantiation and Parameter Check", "[InputCrystalCompliances][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("UCSBUtilities::InputCrystalCompliances: Instantiation and Parameter Check", "[UCSBUtilities][InputCrystalCompliances][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   InputCrystalCompliances filter;

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKBilateralImage: Basic Instantiation and Parameter Check", "[ITKBilateralImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKBilateralImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKBilateralImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKBilateralImage filter;

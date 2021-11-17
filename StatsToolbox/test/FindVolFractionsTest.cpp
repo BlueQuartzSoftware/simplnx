@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("StatsToolbox::FindVolFractions: Basic Instantiation and Parameter Check", "[FindVolFractions][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("StatsToolbox::FindVolFractions: Instantiation and Parameter Check", "[StatsToolbox][FindVolFractions][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindVolFractions filter;

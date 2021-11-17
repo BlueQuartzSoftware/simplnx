@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::VisualizeGBCDGMT: Basic Instantiation and Parameter Check", "[VisualizeGBCDGMT][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::VisualizeGBCDGMT: Instantiation and Parameter Check", "[ImportExport][VisualizeGBCDGMT][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   VisualizeGBCDGMT filter;

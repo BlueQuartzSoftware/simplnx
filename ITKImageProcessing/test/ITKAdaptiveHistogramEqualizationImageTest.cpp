@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImage: Basic Instantiation and Parameter Check", "[ITKAdaptiveHistogramEqualizationImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKAdaptiveHistogramEqualizationImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKAdaptiveHistogramEqualizationImage filter;

@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKMorphologicalGradientImage: Basic Instantiation and Parameter Check", "[ITKMorphologicalGradientImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKMorphologicalGradientImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKMorphologicalGradientImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKMorphologicalGradientImage filter;

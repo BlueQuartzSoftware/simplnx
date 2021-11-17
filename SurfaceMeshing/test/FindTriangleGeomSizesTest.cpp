@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("SurfaceMeshing::FindTriangleGeomSizes: Basic Instantiation and Parameter Check", "[FindTriangleGeomSizes][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SurfaceMeshing::FindTriangleGeomSizes: Instantiation and Parameter Check", "[SurfaceMeshing][FindTriangleGeomSizes][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindTriangleGeomSizes filter;

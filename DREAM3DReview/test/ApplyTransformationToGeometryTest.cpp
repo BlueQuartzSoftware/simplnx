@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::ApplyTransformationToGeometry: Basic Instantiation and Parameter Check", "[ApplyTransformationToGeometry][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::ApplyTransformationToGeometry: Instantiation and Parameter Check", "[DREAM3DReview][ApplyTransformationToGeometry][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ApplyTransformationToGeometry filter;

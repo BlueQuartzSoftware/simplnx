@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImage: Basic Instantiation and Parameter Check", "[ITKCurvatureFlowImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKCurvatureFlowImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKCurvatureFlowImage filter;

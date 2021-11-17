@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Processing::FindProjectedImageStatistics: Basic Instantiation and Parameter Check", "[FindProjectedImageStatistics][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Processing::FindProjectedImageStatistics: Instantiation and Parameter Check", "[Processing][FindProjectedImageStatistics][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindProjectedImageStatistics filter;

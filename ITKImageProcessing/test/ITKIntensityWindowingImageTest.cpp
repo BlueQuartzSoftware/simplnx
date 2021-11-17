@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKIntensityWindowingImage: Basic Instantiation and Parameter Check", "[ITKIntensityWindowingImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKIntensityWindowingImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKIntensityWindowingImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKIntensityWindowingImage filter;

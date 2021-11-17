@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::CopyObject: Basic Instantiation and Parameter Check", "[CopyObject][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::CopyObject: Instantiation and Parameter Check", "[Core][CopyObject][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CopyObject filter;

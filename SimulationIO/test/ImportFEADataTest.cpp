@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("SimulationIO::ImportFEAData: Basic Instantiation and Parameter Check", "[ImportFEAData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SimulationIO::ImportFEAData: Instantiation and Parameter Check", "[SimulationIO][ImportFEAData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportFEAData filter;

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("StatsToolbox::ComputeMomentInvariants2D: Basic Instantiation and Parameter Check", "[ComputeMomentInvariants2D][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("StatsToolbox::ComputeMomentInvariants2D: Instantiation and Parameter Check", "[StatsToolbox][ComputeMomentInvariants2D][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeMomentInvariants2D filter;

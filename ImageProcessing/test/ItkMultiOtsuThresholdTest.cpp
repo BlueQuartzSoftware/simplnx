@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ImageProcessing::ItkMultiOtsuThreshold: Basic Instantiation and Parameter Check", "[ItkMultiOtsuThreshold][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImageProcessing::ItkMultiOtsuThreshold: Instantiation and Parameter Check", "[ImageProcessing][ItkMultiOtsuThreshold][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ItkMultiOtsuThreshold filter;

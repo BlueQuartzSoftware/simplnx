@@ -30,7 +30,8 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindFeatureReferenceCAxisMisorientations: Basic Instantiation and Parameter Check", "[FindFeatureReferenceCAxisMisorientations][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindFeatureReferenceCAxisMisorientations: Instantiation and Parameter Check",
+          "[OrientationAnalysis][FindFeatureReferenceCAxisMisorientations][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindFeatureReferenceCAxisMisorientations filter;

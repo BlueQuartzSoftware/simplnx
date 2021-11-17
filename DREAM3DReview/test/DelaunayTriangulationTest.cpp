@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::DelaunayTriangulation: Basic Instantiation and Parameter Check", "[DelaunayTriangulation][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::DelaunayTriangulation: Instantiation and Parameter Check", "[DREAM3DReview][DelaunayTriangulation][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DelaunayTriangulation filter;

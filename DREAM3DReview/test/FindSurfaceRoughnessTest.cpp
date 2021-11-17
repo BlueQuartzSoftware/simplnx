@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::FindSurfaceRoughness: Basic Instantiation and Parameter Check", "[FindSurfaceRoughness][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::FindSurfaceRoughness: Instantiation and Parameter Check", "[DREAM3DReview][FindSurfaceRoughness][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindSurfaceRoughness filter;

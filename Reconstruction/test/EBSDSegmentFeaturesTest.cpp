@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("Reconstruction::EBSDSegmentFeatures: Basic Instantiation and Parameter Check", "[EBSDSegmentFeatures][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Reconstruction::EBSDSegmentFeatures: Instantiation and Parameter Check", "[Reconstruction][EBSDSegmentFeatures][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   EBSDSegmentFeatures filter;

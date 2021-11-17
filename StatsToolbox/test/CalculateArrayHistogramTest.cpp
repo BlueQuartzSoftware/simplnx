@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("StatsToolbox::CalculateArrayHistogram: Basic Instantiation and Parameter Check", "[CalculateArrayHistogram][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("StatsToolbox::CalculateArrayHistogram: Instantiation and Parameter Check", "[StatsToolbox][CalculateArrayHistogram][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CalculateArrayHistogram filter;

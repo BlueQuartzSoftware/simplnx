@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("SurfaceMeshing::ReverseTriangleWinding: Basic Instantiation and Parameter Check", "[ReverseTriangleWinding][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SurfaceMeshing::ReverseTriangleWinding: Instantiation and Parameter Check", "[SurfaceMeshing][ReverseTriangleWinding][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReverseTriangleWinding filter;

@@ -35,7 +35,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::InsertTransformationPhases: Basic Instantiation and Parameter Check", "[InsertTransformationPhases][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::InsertTransformationPhases: Instantiation and Parameter Check", "[DREAM3DReview][InsertTransformationPhases][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   InsertTransformationPhases filter;

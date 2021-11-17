@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("Reconstruction::AlignSectionsMisorientation: Basic Instantiation and Parameter Check", "[AlignSectionsMisorientation][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Reconstruction::AlignSectionsMisorientation: Instantiation and Parameter Check", "[Reconstruction][AlignSectionsMisorientation][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AlignSectionsMisorientation filter;

@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("ImageProcessing::ItkGrayToRGB: Basic Instantiation and Parameter Check", "[ItkGrayToRGB][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImageProcessing::ItkGrayToRGB: Instantiation and Parameter Check", "[ImageProcessing][ItkGrayToRGB][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ItkGrayToRGB filter;

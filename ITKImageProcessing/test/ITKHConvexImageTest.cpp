@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKHConvexImage: Basic Instantiation and Parameter Check", "[ITKHConvexImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKHConvexImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKHConvexImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKHConvexImage filter;

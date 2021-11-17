@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKBinaryProjectionImage: Basic Instantiation and Parameter Check", "[ITKBinaryProjectionImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKBinaryProjectionImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKBinaryProjectionImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKBinaryProjectionImage filter;

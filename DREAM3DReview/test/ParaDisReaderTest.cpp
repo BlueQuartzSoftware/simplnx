@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::ParaDisReader: Basic Instantiation and Parameter Check", "[ParaDisReader][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::ParaDisReader: Instantiation and Parameter Check", "[DREAM3DReview][ParaDisReader][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ParaDisReader filter;

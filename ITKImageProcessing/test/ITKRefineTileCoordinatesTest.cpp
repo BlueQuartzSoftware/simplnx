@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKRefineTileCoordinates: Basic Instantiation and Parameter Check", "[ITKRefineTileCoordinates][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKRefineTileCoordinates: Instantiation and Parameter Check", "[ITKImageProcessing][ITKRefineTileCoordinates][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKRefineTileCoordinates filter;

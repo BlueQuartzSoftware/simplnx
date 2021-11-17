@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKGrayscaleGrindPeakImage: Basic Instantiation and Parameter Check", "[ITKGrayscaleGrindPeakImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKGrayscaleGrindPeakImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKGrayscaleGrindPeakImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKGrayscaleGrindPeakImage filter;

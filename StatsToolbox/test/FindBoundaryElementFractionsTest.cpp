@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("StatsToolbox::FindBoundaryElementFractions: Basic Instantiation and Parameter Check", "[FindBoundaryElementFractions][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("StatsToolbox::FindBoundaryElementFractions: Instantiation and Parameter Check", "[StatsToolbox][FindBoundaryElementFractions][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindBoundaryElementFractions filter;
