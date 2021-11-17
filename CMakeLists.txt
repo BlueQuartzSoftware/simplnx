@@ -15,7 +15,7 @@ project(complex
   LANGUAGES CXX
 )
 
-set(COMPLEX_BIN_DIR ${PROJECT_BINARY_DIR}/bin)
+set(COMPLEX_BIN_DIR ${PROJECT_BINARY_DIR}/Bin)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${COMPLEX_BIN_DIR} CACHE PATH "Single Directory for all Libraries")
 
