@@ -48,6 +48,21 @@ public:
   static Result<Pipeline> FromJson(const nlohmann::json& json, FilterList* filterList);
 
   /**
+   * @brief Constructs a Pipeline from a JSON file.
+   * @param path
+   * @return Result<Pipeline>
+   */
+  static Result<Pipeline> FromFile(const std::filesystem::path& path);
+
+  /**
+   * @brief Constructs a Pipeline from a JSON file with the given FilterList.
+   * @param path
+   * @param filterList
+   * @return Result<Pipeline>
+   */
+  static Result<Pipeline> FromFile(const std::filesystem::path& path, FilterList* filterList);
+
+  /**
    * @brief Constructs a pipeline with the specified name. If no name is
    * provided, a default name of "Unnamed Pipeline" will be used.
    * @param name = "Unnamed Pipeline"

@@ -9,6 +9,7 @@
 #include "complex/Pipeline/PipelineFilter.hpp"
 
 #include <algorithm>
+#include <fstream>
 #include <stdexcept>
 
 #include <nlohmann/json.hpp>
@@ -601,4 +602,33 @@ Result<Pipeline> Pipeline::FromJson(const nlohmann::json& json, FilterList* filt
   result.warnings() = std::move(warnings);
 
   return result;
+}
+
+Result<Pipeline> Pipeline::FromFile(const std::filesystem::path& path)
+{
+  auto* app = Application::Instance();
+
+  return FromFile(path, app->getFilterList());
+}
+
+Result<Pipeline> Pipeline::FromFile(const std::filesystem::path& path, FilterList* filterList)
+{
+  std::ifstream file(path);
+
+  if(!file.is_open())
+  {
+    return MakeErrorResult<Pipeline>(-1, fmt::format("Failed to open file \"{}\"", path.string()));
+  }
+
+  nlohmann::json pipelineJson;
+
+  try
+  {
+    pipelineJson = nlohmann::json::parse(file);
+  } catch(const nlohmann::json::parse_error& exception)
+  {
+    return MakeErrorResult<Pipeline>(-2, exception.what());
+  }
+
+  return FromJson(pipelineJson, filterList);
 }
