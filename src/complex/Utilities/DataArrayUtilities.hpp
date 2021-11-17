@@ -336,8 +336,18 @@ IDataStore<T>* CreateDataStore(const typename IDataStore<T>::ShapeType& tupleSha
   }
 }
 
+/**
+ * @brief Creates a DataArray with the given properties
+ * @tparam T Primitive Type (int, float, ...)
+ * @param dataStructure The DataStructure to use
+ * @param tupleShape The Tuple Dimensions
+ * @param nComp The number of components in the DataArray
+ * @param path The DataPath to where the data will be stored.
+ * @param mode The mode to assume: PREFLIGHT or EXECUTE. Preflight will NOT allocate any storage. EXECUTE will allocate the memory/storage
+ * @return
+ */
 template <class T>
-Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& dims, uint64 nComp, const DataPath& path, IDataAction::Mode mode)
+Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tupleShape, uint64 nComp, const DataPath& path, IDataAction::Mode mode)
 {
   auto parentPath = path.getParent();
 
@@ -345,24 +355,30 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& dim
 
   if(parentPath.getLength() != 0)
   {
-    auto parentObject = dataStructure.getData(parentPath);
+    auto* parentObject = dataStructure.getData(parentPath);
     if(parentObject == nullptr)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("Parent object \"{}\" does not exist", parentPath.toString())}})};
+      return MakeErrorResult(-262, fmt::format("Parent object \"{}\" does not exist", parentPath.toString()));
     }
 
     id = parentObject->getId();
+  }
+
+  // Validate Number of Components
+  if(nComp == 0)
+  {
+    return MakeErrorResult(-261, fmt::format("CreateArrayAction: Number of components is ZERO. Please set the number of components. Value being used:'{}'", nComp));
   }
 
   usize last = path.getLength() - 1;
 
   std::string name = path[last];
 
-  auto* store = CreateDataStore<T>(dims, {nComp}, mode);
+  auto* store = CreateDataStore<T>(tupleShape, {nComp}, mode);
   auto dataArray = DataArray<T>::Create(dataStructure, name, store, id);
   if(dataArray == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("Unable to create DataArray at \"{}\"", path.toString())}})};
+    return MakeErrorResult(-264, fmt::format("Unable to create DataArray at \"{}\"", path.toString()));
   }
 
   return {};

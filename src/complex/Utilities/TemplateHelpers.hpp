@@ -9,43 +9,43 @@
 #define VALIDATE_NUMERIC_TYPE(input_data, replace_value, result)                                                                                                                                       \
   if(TemplateHelpers::CanDynamicCast<Float32Array>()(input_data))                                                                                                                                      \
   {                                                                                                                                                                                                    \
-    (result) = checkValuesFloatDouble<float>(replace_value, complex::Constants::k_Float32);                                                                                                            \
+    (result) = CheckValuesFloatDouble<float>(replace_value, complex::Constants::k_Float32);                                                                                                            \
   }                                                                                                                                                                                                    \
   else if(TemplateHelpers::CanDynamicCast<Float64Array>()(input_data))                                                                                                                                 \
   {                                                                                                                                                                                                    \
-    (result) = checkValuesFloatDouble<double>(replace_value, complex::Constants::k_Float64);                                                                                                           \
+    (result) = CheckValuesFloatDouble<double>(replace_value, complex::Constants::k_Float64);                                                                                                           \
   }                                                                                                                                                                                                    \
   else if(TemplateHelpers::CanDynamicCast<Int8Array>()(input_data))                                                                                                                                    \
   {                                                                                                                                                                                                    \
-    (result) = checkValuesInt<int8_t>(replace_value, complex::Constants::k_Int8);                                                                                                                      \
+    (result) = CheckValuesInt<int8_t>(replace_value, complex::Constants::k_Int8);                                                                                                                      \
   }                                                                                                                                                                                                    \
   else if(TemplateHelpers::CanDynamicCast<UInt8Array>()(input_data))                                                                                                                                   \
   {                                                                                                                                                                                                    \
-    (result) = checkValuesInt<uint8_t>(replace_value, complex::Constants::k_UInt8);                                                                                                                    \
+    (result) = CheckValuesInt<uint8_t>(replace_value, complex::Constants::k_UInt8);                                                                                                                    \
   }                                                                                                                                                                                                    \
   else if(TemplateHelpers::CanDynamicCast<Int16Array>()(input_data))                                                                                                                                   \
   {                                                                                                                                                                                                    \
-    (result) = checkValuesInt<int16_t>(replace_value, complex::Constants::k_Int16);                                                                                                                    \
+    (result) = CheckValuesInt<int16_t>(replace_value, complex::Constants::k_Int16);                                                                                                                    \
   }                                                                                                                                                                                                    \
   else if(TemplateHelpers::CanDynamicCast<UInt16Array>()(input_data))                                                                                                                                  \
   {                                                                                                                                                                                                    \
-    (result) = checkValuesInt<uint16_t>(replace_value, complex::Constants::k_UInt16);                                                                                                                  \
+    (result) = CheckValuesInt<uint16_t>(replace_value, complex::Constants::k_UInt16);                                                                                                                  \
   }                                                                                                                                                                                                    \
   else if(TemplateHelpers::CanDynamicCast<Int32Array>()(input_data))                                                                                                                                   \
   {                                                                                                                                                                                                    \
-    (result) = checkValuesInt<int32_t>(replace_value, complex::Constants::k_Int32);                                                                                                                    \
+    (result) = CheckValuesInt<int32_t>(replace_value, complex::Constants::k_Int32);                                                                                                                    \
   }                                                                                                                                                                                                    \
   else if(TemplateHelpers::CanDynamicCast<UInt32Array>()(input_data))                                                                                                                                  \
   {                                                                                                                                                                                                    \
-    (result) = checkValuesInt<uint32_t>(replace_value, complex::Constants::k_UInt32);                                                                                                                  \
+    (result) = CheckValuesInt<uint32_t>(replace_value, complex::Constants::k_UInt32);                                                                                                                  \
   }                                                                                                                                                                                                    \
   else if(TemplateHelpers::CanDynamicCast<Int64Array>()(input_data))                                                                                                                                   \
   {                                                                                                                                                                                                    \
-    (result) = checkValuesInt<int64_t>(replace_value, complex::Constants::k_Int64);                                                                                                                    \
+    (result) = CheckValuesInt<int64_t>(replace_value, complex::Constants::k_Int64);                                                                                                                    \
   }                                                                                                                                                                                                    \
   else if(TemplateHelpers::CanDynamicCast<UInt64Array>()(input_data))                                                                                                                                  \
   {                                                                                                                                                                                                    \
-    (result) = checkValuesInt<uint64_t>(replace_value, complex::Constants::k_UInt64);                                                                                                                  \
+    (result) = CheckValuesInt<uint64_t>(replace_value, complex::Constants::k_UInt64);                                                                                                                  \
   }                                                                                                                                                                                                    \
   else if(TemplateHelpers::CanDynamicCast<BoolArray>()(input_data))                                                                                                                                    \
   {                                                                                                                                                                                                    \
@@ -53,7 +53,7 @@
   }                                                                                                                                                                                                    \
   else if(TemplateHelpers::CanDynamicCast<DataArray<size_t>>()(input_data))                                                                                                                            \
   {                                                                                                                                                                                                    \
-    (result) = checkValuesInt<size_t>(replace_value, complex::Constants::k_SizeT);                                                                                                                     \
+    (result) = CheckValuesInt<size_t>(replace_value, complex::Constants::k_SizeT);                                                                                                                     \
   }                                                                                                                                                                                                    \
   else                                                                                                                                                                                                 \
   {                                                                                                                                                                                                    \
