@@ -78,10 +78,10 @@ IFilter::PreflightResult Lesson5::preflightImpl(const DataStructure& ds, const A
    */
   auto pInputDataArrayPathValue = filterArgs.value<DataPath>(k_InputDataArrayPath_Key);
   auto pOutputDataArrayPathValue = filterArgs.value<DataPath>(k_OutputDataArrayPath_Key);
-  auto pValueValue = filterArgs.value<float32>(k_Value_Key);
+  auto pValue = filterArgs.value<float32>(k_Value_Key);
   auto pOperatorValue = filterArgs.value<ChoicesParameter::ValueType>(k_Operator_Key);
   auto pSelectionValue = filterArgs.value<bool>(k_Selection_Key);
-  auto pFloatValueValue = filterArgs.value<float32>(k_FloatValue_Key);
+  auto pFloatValue = filterArgs.value<float32>(k_FloatValue_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -113,10 +113,10 @@ Result<> Lesson5::executeImpl(DataStructure& data, const Arguments& filterArgs, 
    ***************************************************************************/
   auto pInputDataArrayPathValue = filterArgs.value<DataPath>(k_InputDataArrayPath_Key);
   auto pOutputDataArrayPathValue = filterArgs.value<DataPath>(k_OutputDataArrayPath_Key);
-  auto pValueValue = filterArgs.value<float32>(k_Value_Key);
+  auto pValue = filterArgs.value<float32>(k_Value_Key);
   auto pOperatorValue = filterArgs.value<ChoicesParameter::ValueType>(k_Operator_Key);
   auto pSelectionValue = filterArgs.value<bool>(k_Selection_Key);
-  auto pFloatValueValue = filterArgs.value<float32>(k_FloatValue_Key);
+  auto pFloatValue = filterArgs.value<float32>(k_FloatValue_Key);
 
   /****************************************************************************
    * Write your algorithm implementation in this function

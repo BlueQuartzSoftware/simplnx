@@ -114,7 +114,7 @@ IFilter::PreflightResult ImportFEAData::preflightImpl(const DataStructure& ds, c
   auto pDEFORMInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_DEFORMInputFile_Key);
   auto pDEFORMPointTrackInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_DEFORMPointTrackInputFile_Key);
   auto pImportSingleTimeStepValue = filterArgs.value<bool>(k_ImportSingleTimeStep_Key);
-  auto pSingleTimeStepValueValue = filterArgs.value<int32>(k_SingleTimeStepValue_Key);
+  auto pSingleTimeStepValue = filterArgs.value<int32>(k_SingleTimeStepValue_Key);
   auto pTimeSeriesBundleNameValue = filterArgs.value<StringParameter::ValueType>(k_TimeSeriesBundleName_Key);
   auto pDataContainerNameValue = filterArgs.value<StringParameter::ValueType>(k_DataContainerName_Key);
   auto pVertexAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_VertexAttributeMatrixName_Key);
@@ -159,7 +159,7 @@ Result<> ImportFEAData::executeImpl(DataStructure& data, const Arguments& filter
   auto pDEFORMInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_DEFORMInputFile_Key);
   auto pDEFORMPointTrackInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_DEFORMPointTrackInputFile_Key);
   auto pImportSingleTimeStepValue = filterArgs.value<bool>(k_ImportSingleTimeStep_Key);
-  auto pSingleTimeStepValueValue = filterArgs.value<int32>(k_SingleTimeStepValue_Key);
+  auto pSingleTimeStepValue = filterArgs.value<int32>(k_SingleTimeStepValue_Key);
   auto pTimeSeriesBundleNameValue = filterArgs.value<StringParameter::ValueType>(k_TimeSeriesBundleName_Key);
   auto pDataContainerNameValue = filterArgs.value<StringParameter::ValueType>(k_DataContainerName_Key);
   auto pVertexAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_VertexAttributeMatrixName_Key);

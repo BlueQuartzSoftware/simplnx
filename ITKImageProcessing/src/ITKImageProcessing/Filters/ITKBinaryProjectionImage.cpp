@@ -74,8 +74,8 @@ IFilter::PreflightResult ITKBinaryProjectionImage::preflightImpl(const DataStruc
    * do not need some of them remove them.
    */
   auto pProjectionDimensionValue = filterArgs.value<float64>(k_ProjectionDimension_Key);
-  auto pForegroundValueValue = filterArgs.value<float64>(k_ForegroundValue_Key);
-  auto pBackgroundValueValue = filterArgs.value<float64>(k_BackgroundValue_Key);
+  auto pForegroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
+  auto pBackgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 
@@ -108,8 +108,8 @@ Result<> ITKBinaryProjectionImage::executeImpl(DataStructure& data, const Argume
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
   auto pProjectionDimensionValue = filterArgs.value<float64>(k_ProjectionDimension_Key);
-  auto pForegroundValueValue = filterArgs.value<float64>(k_ForegroundValue_Key);
-  auto pBackgroundValueValue = filterArgs.value<float64>(k_BackgroundValue_Key);
+  auto pForegroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
+  auto pBackgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 

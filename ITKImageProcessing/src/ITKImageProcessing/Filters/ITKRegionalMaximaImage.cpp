@@ -75,8 +75,8 @@ IFilter::PreflightResult ITKRegionalMaximaImage::preflightImpl(const DataStructu
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pBackgroundValueValue = filterArgs.value<float64>(k_BackgroundValue_Key);
-  auto pForegroundValueValue = filterArgs.value<float64>(k_ForegroundValue_Key);
+  auto pBackgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
+  auto pForegroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
   auto pFullyConnectedValue = filterArgs.value<bool>(k_FullyConnected_Key);
   auto pFlatIsMaximaValue = filterArgs.value<bool>(k_FlatIsMaxima_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
@@ -110,8 +110,8 @@ Result<> ITKRegionalMaximaImage::executeImpl(DataStructure& data, const Argument
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pBackgroundValueValue = filterArgs.value<float64>(k_BackgroundValue_Key);
-  auto pForegroundValueValue = filterArgs.value<float64>(k_ForegroundValue_Key);
+  auto pBackgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
+  auto pForegroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
   auto pFullyConnectedValue = filterArgs.value<bool>(k_FullyConnected_Key);
   auto pFlatIsMaximaValue = filterArgs.value<bool>(k_FlatIsMaxima_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);

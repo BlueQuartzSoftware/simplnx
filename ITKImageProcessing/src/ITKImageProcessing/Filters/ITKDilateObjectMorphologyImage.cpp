@@ -76,7 +76,7 @@ IFilter::PreflightResult ITKDilateObjectMorphologyImage::preflightImpl(const Dat
    * do not need some of them remove them.
    */
   auto pKernelTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_KernelType_Key);
-  auto pObjectValueValue = filterArgs.value<float64>(k_ObjectValue_Key);
+  auto pObjectValue = filterArgs.value<float64>(k_ObjectValue_Key);
   auto pKernelRadiusValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_KernelRadius_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
@@ -110,7 +110,7 @@ Result<> ITKDilateObjectMorphologyImage::executeImpl(DataStructure& data, const 
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
   auto pKernelTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_KernelType_Key);
-  auto pObjectValueValue = filterArgs.value<float64>(k_ObjectValue_Key);
+  auto pObjectValue = filterArgs.value<float64>(k_ObjectValue_Key);
   auto pKernelRadiusValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_KernelRadius_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);

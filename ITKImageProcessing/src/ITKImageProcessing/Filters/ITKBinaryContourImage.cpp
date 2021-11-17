@@ -75,8 +75,8 @@ IFilter::PreflightResult ITKBinaryContourImage::preflightImpl(const DataStructur
    * do not need some of them remove them.
    */
   auto pFullyConnectedValue = filterArgs.value<bool>(k_FullyConnected_Key);
-  auto pBackgroundValueValue = filterArgs.value<float64>(k_BackgroundValue_Key);
-  auto pForegroundValueValue = filterArgs.value<float64>(k_ForegroundValue_Key);
+  auto pBackgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
+  auto pForegroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 
@@ -109,8 +109,8 @@ Result<> ITKBinaryContourImage::executeImpl(DataStructure& data, const Arguments
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
   auto pFullyConnectedValue = filterArgs.value<bool>(k_FullyConnected_Key);
-  auto pBackgroundValueValue = filterArgs.value<float64>(k_BackgroundValue_Key);
-  auto pForegroundValueValue = filterArgs.value<float64>(k_ForegroundValue_Key);
+  auto pBackgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
+  auto pForegroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 

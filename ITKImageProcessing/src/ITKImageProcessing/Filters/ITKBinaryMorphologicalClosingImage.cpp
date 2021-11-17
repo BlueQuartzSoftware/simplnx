@@ -78,7 +78,7 @@ IFilter::PreflightResult ITKBinaryMorphologicalClosingImage::preflightImpl(const
    * do not need some of them remove them.
    */
   auto pKernelTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_KernelType_Key);
-  auto pForegroundValueValue = filterArgs.value<float64>(k_ForegroundValue_Key);
+  auto pForegroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
   auto pSafeBorderValue = filterArgs.value<bool>(k_SafeBorder_Key);
   auto pKernelRadiusValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_KernelRadius_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
@@ -113,7 +113,7 @@ Result<> ITKBinaryMorphologicalClosingImage::executeImpl(DataStructure& data, co
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
   auto pKernelTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_KernelType_Key);
-  auto pForegroundValueValue = filterArgs.value<float64>(k_ForegroundValue_Key);
+  auto pForegroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
   auto pSafeBorderValue = filterArgs.value<bool>(k_SafeBorder_Key);
   auto pKernelRadiusValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_KernelRadius_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);

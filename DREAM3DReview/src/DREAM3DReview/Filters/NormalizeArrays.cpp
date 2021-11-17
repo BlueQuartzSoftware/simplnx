@@ -86,7 +86,7 @@ IFilter::PreflightResult NormalizeArrays::preflightImpl(const DataStructure& ds,
   auto pNormalizeTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_NormalizeType_Key);
   auto pPostfixValue = filterArgs.value<StringParameter::ValueType>(k_Postfix_Key);
   auto pUseMaskValue = filterArgs.value<bool>(k_UseMask_Key);
-  auto pDefaultValueValue = filterArgs.value<float64>(k_DefaultValue_Key);
+  auto pDefaultValue = filterArgs.value<float64>(k_DefaultValue_Key);
   auto pRangeMinValue = filterArgs.value<float64>(k_RangeMin_Key);
   auto pRangeMaxValue = filterArgs.value<float64>(k_RangeMax_Key);
   auto pSelectedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
@@ -123,7 +123,7 @@ Result<> NormalizeArrays::executeImpl(DataStructure& data, const Arguments& filt
   auto pNormalizeTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_NormalizeType_Key);
   auto pPostfixValue = filterArgs.value<StringParameter::ValueType>(k_Postfix_Key);
   auto pUseMaskValue = filterArgs.value<bool>(k_UseMask_Key);
-  auto pDefaultValueValue = filterArgs.value<float64>(k_DefaultValue_Key);
+  auto pDefaultValue = filterArgs.value<float64>(k_DefaultValue_Key);
   auto pRangeMinValue = filterArgs.value<float64>(k_RangeMin_Key);
   auto pRangeMaxValue = filterArgs.value<float64>(k_RangeMax_Key);
   auto pSelectedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);

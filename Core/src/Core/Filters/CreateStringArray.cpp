@@ -67,7 +67,7 @@ IFilter::PreflightResult CreateStringArray::preflightImpl(const DataStructure& d
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pInitializationValueValue = filterArgs.value<StringParameter::ValueType>(k_InitializationValue_Key);
+  auto pInitializationValue = filterArgs.value<StringParameter::ValueType>(k_InitializationValue_Key);
   auto pNewArrayValue = filterArgs.value<DataPath>(k_NewArray_Key);
 
   // Declare the preflightResult variable that will be populated with the results
@@ -98,7 +98,7 @@ Result<> CreateStringArray::executeImpl(DataStructure& data, const Arguments& fi
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pInitializationValueValue = filterArgs.value<StringParameter::ValueType>(k_InitializationValue_Key);
+  auto pInitializationValue = filterArgs.value<StringParameter::ValueType>(k_InitializationValue_Key);
   auto pNewArrayValue = filterArgs.value<DataPath>(k_NewArray_Key);
 
   /****************************************************************************

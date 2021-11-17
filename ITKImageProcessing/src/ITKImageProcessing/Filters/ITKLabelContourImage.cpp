@@ -74,7 +74,7 @@ IFilter::PreflightResult ITKLabelContourImage::preflightImpl(const DataStructure
    * do not need some of them remove them.
    */
   auto pFullyConnectedValue = filterArgs.value<bool>(k_FullyConnected_Key);
-  auto pBackgroundValueValue = filterArgs.value<float64>(k_BackgroundValue_Key);
+  auto pBackgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 
@@ -107,7 +107,7 @@ Result<> ITKLabelContourImage::executeImpl(DataStructure& data, const Arguments&
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
   auto pFullyConnectedValue = filterArgs.value<bool>(k_FullyConnected_Key);
-  auto pBackgroundValueValue = filterArgs.value<float64>(k_BackgroundValue_Key);
+  auto pBackgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 

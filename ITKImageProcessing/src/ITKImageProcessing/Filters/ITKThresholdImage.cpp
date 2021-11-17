@@ -75,7 +75,7 @@ IFilter::PreflightResult ITKThresholdImage::preflightImpl(const DataStructure& d
    */
   auto pLowerValue = filterArgs.value<float64>(k_Lower_Key);
   auto pUpperValue = filterArgs.value<float64>(k_Upper_Key);
-  auto pOutsideValueValue = filterArgs.value<float64>(k_OutsideValue_Key);
+  auto pOutsideValue = filterArgs.value<float64>(k_OutsideValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 
@@ -109,7 +109,7 @@ Result<> ITKThresholdImage::executeImpl(DataStructure& data, const Arguments& fi
    ***************************************************************************/
   auto pLowerValue = filterArgs.value<float64>(k_Lower_Key);
   auto pUpperValue = filterArgs.value<float64>(k_Upper_Key);
-  auto pOutsideValueValue = filterArgs.value<float64>(k_OutsideValue_Key);
+  auto pOutsideValue = filterArgs.value<float64>(k_OutsideValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 

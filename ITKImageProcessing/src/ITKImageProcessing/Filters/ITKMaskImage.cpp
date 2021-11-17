@@ -72,7 +72,7 @@ IFilter::PreflightResult ITKMaskImage::preflightImpl(const DataStructure& ds, co
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pOutsideValueValue = filterArgs.value<float64>(k_OutsideValue_Key);
+  auto pOutsideValue = filterArgs.value<float64>(k_OutsideValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pMaskCellArrayPathValue = filterArgs.value<DataPath>(k_MaskCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
@@ -105,7 +105,7 @@ Result<> ITKMaskImage::executeImpl(DataStructure& data, const Arguments& filterA
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pOutsideValueValue = filterArgs.value<float64>(k_OutsideValue_Key);
+  auto pOutsideValue = filterArgs.value<float64>(k_OutsideValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pMaskCellArrayPathValue = filterArgs.value<DataPath>(k_MaskCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);

@@ -77,8 +77,8 @@ IFilter::PreflightResult ITKErodeObjectMorphologyImage::preflightImpl(const Data
    * do not need some of them remove them.
    */
   auto pKernelTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_KernelType_Key);
-  auto pObjectValueValue = filterArgs.value<float64>(k_ObjectValue_Key);
-  auto pBackgroundValueValue = filterArgs.value<float64>(k_BackgroundValue_Key);
+  auto pObjectValue = filterArgs.value<float64>(k_ObjectValue_Key);
+  auto pBackgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   auto pKernelRadiusValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_KernelRadius_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
@@ -112,8 +112,8 @@ Result<> ITKErodeObjectMorphologyImage::executeImpl(DataStructure& data, const A
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
   auto pKernelTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_KernelType_Key);
-  auto pObjectValueValue = filterArgs.value<float64>(k_ObjectValue_Key);
-  auto pBackgroundValueValue = filterArgs.value<float64>(k_BackgroundValue_Key);
+  auto pObjectValue = filterArgs.value<float64>(k_ObjectValue_Key);
+  auto pBackgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   auto pKernelRadiusValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_KernelRadius_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
