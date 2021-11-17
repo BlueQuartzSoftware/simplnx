@@ -26,7 +26,7 @@ public:
    */
   PluginLoader(const std::filesystem::path& path);
 
-  ~PluginLoader();
+  ~PluginLoader() noexcept;
 
   /**
    * @brief Returns true if the plugin is loaded. Returns false otherwise.

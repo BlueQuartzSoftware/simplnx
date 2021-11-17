@@ -95,10 +95,7 @@ PluginLoader::PluginLoader(const std::filesystem::path& path)
   loadPlugin();
 }
 
-PluginLoader::~PluginLoader()
-{
-  unloadPlugin();
-}
+PluginLoader::~PluginLoader() noexcept = default;
 
 void PluginLoader::loadPlugin()
 {
