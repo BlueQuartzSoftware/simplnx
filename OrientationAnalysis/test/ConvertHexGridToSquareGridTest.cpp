@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGrid: Basic Instantiation and Parameter Check", "[ConvertHexGridToSquareGrid][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGrid: Instantiation and Parameter Check", "[OrientationAnalysis][ConvertHexGridToSquareGrid][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ConvertHexGridToSquareGrid filter;

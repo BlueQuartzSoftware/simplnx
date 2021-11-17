@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("StatsToolbox::FindFeatureClustering: Basic Instantiation and Parameter Check", "[FindFeatureClustering][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("StatsToolbox::FindFeatureClustering: Instantiation and Parameter Check", "[StatsToolbox][FindFeatureClustering][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindFeatureClustering filter;

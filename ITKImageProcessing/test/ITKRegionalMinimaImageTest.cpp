@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKRegionalMinimaImage: Basic Instantiation and Parameter Check", "[ITKRegionalMinimaImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKRegionalMinimaImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKRegionalMinimaImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKRegionalMinimaImage filter;

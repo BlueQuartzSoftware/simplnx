@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::GenerateVertexCoordinates: Basic Instantiation and Parameter Check", "[GenerateVertexCoordinates][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::GenerateVertexCoordinates: Instantiation and Parameter Check", "[Core][GenerateVertexCoordinates][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateVertexCoordinates filter;

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("SurfaceMeshing::FindTriangleGeomNeighbors: Basic Instantiation and Parameter Check", "[FindTriangleGeomNeighbors][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SurfaceMeshing::FindTriangleGeomNeighbors: Instantiation and Parameter Check", "[SurfaceMeshing][FindTriangleGeomNeighbors][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindTriangleGeomNeighbors filter;

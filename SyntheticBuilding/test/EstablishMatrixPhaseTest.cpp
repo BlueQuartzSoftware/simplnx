@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("SyntheticBuilding::EstablishMatrixPhase: Basic Instantiation and Parameter Check", "[EstablishMatrixPhase][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SyntheticBuilding::EstablishMatrixPhase: Instantiation and Parameter Check", "[SyntheticBuilding][EstablishMatrixPhase][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   EstablishMatrixPhase filter;

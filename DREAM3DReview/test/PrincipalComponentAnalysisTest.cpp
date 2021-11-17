@@ -34,7 +34,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::PrincipalComponentAnalysis: Basic Instantiation and Parameter Check", "[PrincipalComponentAnalysis][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::PrincipalComponentAnalysis: Instantiation and Parameter Check", "[DREAM3DReview][PrincipalComponentAnalysis][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   PrincipalComponentAnalysis filter;

@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("StatsToolbox::FitFeatureData: Basic Instantiation and Parameter Check", "[FitFeatureData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("StatsToolbox::FitFeatureData: Instantiation and Parameter Check", "[StatsToolbox][FitFeatureData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FitFeatureData filter;

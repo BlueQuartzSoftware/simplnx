@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKRelabelComponentImage: Basic Instantiation and Parameter Check", "[ITKRelabelComponentImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKRelabelComponentImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKRelabelComponentImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKRelabelComponentImage filter;

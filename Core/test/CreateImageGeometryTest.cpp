@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::CreateImageGeometry: Basic Instantiation and Parameter Check", "[CreateImageGeometry][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::CreateImageGeometry: Instantiation and Parameter Check", "[Core][CreateImageGeometry][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateImageGeometry filter;

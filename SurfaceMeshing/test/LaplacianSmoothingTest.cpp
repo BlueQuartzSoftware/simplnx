@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("SurfaceMeshing::LaplacianSmoothing: Basic Instantiation and Parameter Check", "[LaplacianSmoothing][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SurfaceMeshing::LaplacianSmoothing: Instantiation and Parameter Check", "[SurfaceMeshing][LaplacianSmoothing][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   LaplacianSmoothing filter;

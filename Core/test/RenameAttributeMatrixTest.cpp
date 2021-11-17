@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::RenameAttributeMatrix: Basic Instantiation and Parameter Check", "[RenameAttributeMatrix][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::RenameAttributeMatrix: Instantiation and Parameter Check", "[Core][RenameAttributeMatrix][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   RenameAttributeMatrix filter;

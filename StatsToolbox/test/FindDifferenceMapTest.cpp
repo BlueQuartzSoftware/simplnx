@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("StatsToolbox::FindDifferenceMap: Basic Instantiation and Parameter Check", "[FindDifferenceMap][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("StatsToolbox::FindDifferenceMap: Instantiation and Parameter Check", "[StatsToolbox][FindDifferenceMap][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindDifferenceMap filter;

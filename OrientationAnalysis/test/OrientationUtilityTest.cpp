@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::OrientationUtility: Basic Instantiation and Parameter Check", "[OrientationUtility][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::OrientationUtility: Instantiation and Parameter Check", "[OrientationAnalysis][OrientationUtility][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   OrientationUtility filter;

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::FindLayerStatistics: Basic Instantiation and Parameter Check", "[FindLayerStatistics][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::FindLayerStatistics: Instantiation and Parameter Check", "[DREAM3DReview][FindLayerStatistics][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindLayerStatistics filter;

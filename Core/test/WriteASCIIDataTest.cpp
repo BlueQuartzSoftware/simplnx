@@ -36,7 +36,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("Core::WriteASCIIData: Basic Instantiation and Parameter Check", "[WriteASCIIData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::WriteASCIIData: Instantiation and Parameter Check", "[Core][WriteASCIIData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WriteASCIIData filter;

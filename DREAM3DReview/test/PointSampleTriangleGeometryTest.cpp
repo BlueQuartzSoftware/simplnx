@@ -35,7 +35,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::PointSampleTriangleGeometry: Basic Instantiation and Parameter Check", "[PointSampleTriangleGeometry][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::PointSampleTriangleGeometry: Instantiation and Parameter Check", "[DREAM3DReview][PointSampleTriangleGeometry][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   PointSampleTriangleGeometry filter;

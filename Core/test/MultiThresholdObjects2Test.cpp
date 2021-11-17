@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::MultiThresholdObjects2: Basic Instantiation and Parameter Check", "[MultiThresholdObjects2][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::MultiThresholdObjects2: Instantiation and Parameter Check", "[Core][MultiThresholdObjects2][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   MultiThresholdObjects2 filter;

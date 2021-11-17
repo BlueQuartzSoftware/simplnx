@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKImportImageStack: Basic Instantiation and Parameter Check", "[ITKImportImageStack][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKImportImageStack: Instantiation and Parameter Check", "[ITKImageProcessing][ITKImportImageStack][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKImportImageStack filter;

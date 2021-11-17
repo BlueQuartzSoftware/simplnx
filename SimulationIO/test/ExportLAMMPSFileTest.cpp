@@ -33,7 +33,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("SimulationIO::ExportLAMMPSFile: Basic Instantiation and Parameter Check", "[ExportLAMMPSFile][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SimulationIO::ExportLAMMPSFile: Instantiation and Parameter Check", "[SimulationIO][ExportLAMMPSFile][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExportLAMMPSFile filter;

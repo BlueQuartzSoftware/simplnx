@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::VisualizeGBCDPoleFigure: Basic Instantiation and Parameter Check", "[VisualizeGBCDPoleFigure][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::VisualizeGBCDPoleFigure: Instantiation and Parameter Check", "[ImportExport][VisualizeGBCDPoleFigure][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   VisualizeGBCDPoleFigure filter;

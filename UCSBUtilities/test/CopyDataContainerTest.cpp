@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("UCSBUtilities::CopyDataContainer: Basic Instantiation and Parameter Check", "[CopyDataContainer][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("UCSBUtilities::CopyDataContainer: Instantiation and Parameter Check", "[UCSBUtilities][CopyDataContainer][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CopyDataContainer filter;

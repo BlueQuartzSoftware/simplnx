@@ -33,7 +33,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("Core::DataContainerWriter: Basic Instantiation and Parameter Check", "[DataContainerWriter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::DataContainerWriter: Instantiation and Parameter Check", "[Core][DataContainerWriter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataContainerWriter filter;

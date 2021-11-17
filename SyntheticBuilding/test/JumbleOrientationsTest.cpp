@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("SyntheticBuilding::JumbleOrientations: Basic Instantiation and Parameter Check", "[JumbleOrientations][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SyntheticBuilding::JumbleOrientations: Instantiation and Parameter Check", "[SyntheticBuilding][JumbleOrientations][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   JumbleOrientations filter;

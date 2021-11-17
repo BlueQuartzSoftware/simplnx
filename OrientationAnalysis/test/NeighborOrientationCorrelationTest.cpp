@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelation: Basic Instantiation and Parameter Check", "[NeighborOrientationCorrelation][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelation: Instantiation and Parameter Check", "[OrientationAnalysis][NeighborOrientationCorrelation][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   NeighborOrientationCorrelation filter;

@@ -33,7 +33,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::ImportPrintRiteHDF5File: Basic Instantiation and Parameter Check", "[ImportPrintRiteHDF5File][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::ImportPrintRiteHDF5File: Instantiation and Parameter Check", "[DREAM3DReview][ImportPrintRiteHDF5File][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportPrintRiteHDF5File filter;

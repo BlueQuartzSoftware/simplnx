@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::KMeans: Basic Instantiation and Parameter Check", "[KMeans][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::KMeans: Instantiation and Parameter Check", "[DREAM3DReview][KMeans][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   KMeans filter;

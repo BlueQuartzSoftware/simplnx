@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Generic::FindFeaturePhasesBinary: Basic Instantiation and Parameter Check", "[FindFeaturePhasesBinary][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Generic::FindFeaturePhasesBinary: Instantiation and Parameter Check", "[Generic][FindFeaturePhasesBinary][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindFeaturePhasesBinary filter;

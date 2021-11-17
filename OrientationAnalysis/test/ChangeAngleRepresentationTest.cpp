@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::ChangeAngleRepresentation: Basic Instantiation and Parameter Check", "[ChangeAngleRepresentation][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::ChangeAngleRepresentation: Instantiation and Parameter Check", "[OrientationAnalysis][ChangeAngleRepresentation][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ChangeAngleRepresentation filter;

@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::LabelTriangleGeometry: Basic Instantiation and Parameter Check", "[LabelTriangleGeometry][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::LabelTriangleGeometry: Instantiation and Parameter Check", "[DREAM3DReview][LabelTriangleGeometry][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   LabelTriangleGeometry filter;

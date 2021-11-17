@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::RotateEulerRefFrame: Basic Instantiation and Parameter Check", "[RotateEulerRefFrame][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::RotateEulerRefFrame: Instantiation and Parameter Check", "[OrientationAnalysis][RotateEulerRefFrame][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   RotateEulerRefFrame filter;

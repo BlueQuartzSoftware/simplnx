@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::AverageEdgeFaceCellArrayToVertexArray: Basic Instantiation and Parameter Check", "[AverageEdgeFaceCellArrayToVertexArray][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::AverageEdgeFaceCellArrayToVertexArray: Instantiation and Parameter Check", "[DREAM3DReview][AverageEdgeFaceCellArrayToVertexArray][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AverageEdgeFaceCellArrayToVertexArray filter;

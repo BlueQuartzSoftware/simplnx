@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ImageProcessing::ItkHoughCircles: Basic Instantiation and Parameter Check", "[ItkHoughCircles][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImageProcessing::ItkHoughCircles: Instantiation and Parameter Check", "[ImageProcessing][ItkHoughCircles][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ItkHoughCircles filter;

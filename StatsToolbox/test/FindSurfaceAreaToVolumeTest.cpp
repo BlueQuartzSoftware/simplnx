@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("StatsToolbox::FindSurfaceAreaToVolume: Basic Instantiation and Parameter Check", "[FindSurfaceAreaToVolume][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("StatsToolbox::FindSurfaceAreaToVolume: Instantiation and Parameter Check", "[StatsToolbox][FindSurfaceAreaToVolume][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindSurfaceAreaToVolume filter;

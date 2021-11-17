@@ -33,7 +33,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::AbaqusSurfaceMeshWriter: Basic Instantiation and Parameter Check", "[AbaqusSurfaceMeshWriter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::AbaqusSurfaceMeshWriter: Instantiation and Parameter Check", "[ImportExport][AbaqusSurfaceMeshWriter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AbaqusSurfaceMeshWriter filter;

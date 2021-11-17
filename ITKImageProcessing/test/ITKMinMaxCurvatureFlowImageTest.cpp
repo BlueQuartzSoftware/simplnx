@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKMinMaxCurvatureFlowImage: Basic Instantiation and Parameter Check", "[ITKMinMaxCurvatureFlowImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKMinMaxCurvatureFlowImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKMinMaxCurvatureFlowImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKMinMaxCurvatureFlowImage filter;

@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd: Basic Instantiation and Parameter Check", "[EbsdToH5Ebsd][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd: Instantiation and Parameter Check", "[OrientationAnalysis][EbsdToH5Ebsd][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   EbsdToH5Ebsd filter;

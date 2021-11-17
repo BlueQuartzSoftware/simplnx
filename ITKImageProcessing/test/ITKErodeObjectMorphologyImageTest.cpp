@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKErodeObjectMorphologyImage: Basic Instantiation and Parameter Check", "[ITKErodeObjectMorphologyImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKErodeObjectMorphologyImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKErodeObjectMorphologyImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKErodeObjectMorphologyImage filter;

@@ -34,7 +34,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::SteinerCompact: Basic Instantiation and Parameter Check", "[SteinerCompact][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::SteinerCompact: Instantiation and Parameter Check", "[DREAM3DReview][SteinerCompact][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   SteinerCompact filter;

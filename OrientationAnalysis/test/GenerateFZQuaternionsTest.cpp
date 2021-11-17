@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::GenerateFZQuaternions: Basic Instantiation and Parameter Check", "[GenerateFZQuaternions][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::GenerateFZQuaternions: Instantiation and Parameter Check", "[OrientationAnalysis][GenerateFZQuaternions][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateFZQuaternions filter;

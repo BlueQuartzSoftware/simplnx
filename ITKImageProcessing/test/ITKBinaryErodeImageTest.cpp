@@ -34,7 +34,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKBinaryErodeImage: Basic Instantiation and Parameter Check", "[ITKBinaryErodeImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKBinaryErodeImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKBinaryErodeImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKBinaryErodeImage filter;

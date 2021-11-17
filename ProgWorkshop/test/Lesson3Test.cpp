@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ProgWorkshop::Lesson3: Basic Instantiation and Parameter Check", "[Lesson3][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ProgWorkshop::Lesson3: Instantiation and Parameter Check", "[ProgWorkshop][Lesson3][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   Lesson3 filter;

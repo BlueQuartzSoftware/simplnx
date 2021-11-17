@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ImageProcessing::ItkSobelEdge: Basic Instantiation and Parameter Check", "[ItkSobelEdge][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImageProcessing::ItkSobelEdge: Instantiation and Parameter Check", "[ImageProcessing][ItkSobelEdge][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ItkSobelEdge filter;

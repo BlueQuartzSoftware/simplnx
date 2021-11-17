@@ -33,7 +33,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("Sampling::SampleSurfaceMeshSpecifiedPoints: Basic Instantiation and Parameter Check", "[SampleSurfaceMeshSpecifiedPoints][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Sampling::SampleSurfaceMeshSpecifiedPoints: Instantiation and Parameter Check", "[Sampling][SampleSurfaceMeshSpecifiedPoints][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   SampleSurfaceMeshSpecifiedPoints filter;

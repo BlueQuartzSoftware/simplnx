@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::ExtractComponentAsArray: Basic Instantiation and Parameter Check", "[ExtractComponentAsArray][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::ExtractComponentAsArray: Instantiation and Parameter Check", "[Core][ExtractComponentAsArray][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractComponentAsArray filter;

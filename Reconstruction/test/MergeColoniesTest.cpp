@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("Reconstruction::MergeColonies: Basic Instantiation and Parameter Check", "[MergeColonies][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Reconstruction::MergeColonies: Instantiation and Parameter Check", "[Reconstruction][MergeColonies][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   MergeColonies filter;

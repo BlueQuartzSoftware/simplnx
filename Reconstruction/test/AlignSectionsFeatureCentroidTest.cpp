@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("Reconstruction::AlignSectionsFeatureCentroid: Basic Instantiation and Parameter Check", "[AlignSectionsFeatureCentroid][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Reconstruction::AlignSectionsFeatureCentroid: Instantiation and Parameter Check", "[Reconstruction][AlignSectionsFeatureCentroid][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AlignSectionsFeatureCentroid filter;

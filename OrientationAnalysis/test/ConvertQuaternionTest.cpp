@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::ConvertQuaternion: Basic Instantiation and Parameter Check", "[ConvertQuaternion][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::ConvertQuaternion: Instantiation and Parameter Check", "[OrientationAnalysis][ConvertQuaternion][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ConvertQuaternion filter;

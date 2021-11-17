@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ImageProcessing::ItkGaussianBlur: Basic Instantiation and Parameter Check", "[ItkGaussianBlur][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImageProcessing::ItkGaussianBlur: Instantiation and Parameter Check", "[ImageProcessing][ItkGaussianBlur][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ItkGaussianBlur filter;

@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::ImportHDF5Dataset: Basic Instantiation and Parameter Check", "[ImportHDF5Dataset][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::ImportHDF5Dataset: Instantiation and Parameter Check", "[Core][ImportHDF5Dataset][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportHDF5Dataset filter;

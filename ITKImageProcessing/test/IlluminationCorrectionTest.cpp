@@ -39,7 +39,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::IlluminationCorrection: Basic Instantiation and Parameter Check", "[IlluminationCorrection][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::IlluminationCorrection: Instantiation and Parameter Check", "[ITKImageProcessing][IlluminationCorrection][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   IlluminationCorrection filter;

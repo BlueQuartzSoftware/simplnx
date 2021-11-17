@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::ExtractTripleLinesFromTriangleGeometry: Basic Instantiation and Parameter Check", "[ExtractTripleLinesFromTriangleGeometry][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::ExtractTripleLinesFromTriangleGeometry: Instantiation and Parameter Check", "[DREAM3DReview][ExtractTripleLinesFromTriangleGeometry][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractTripleLinesFromTriangleGeometry filter;

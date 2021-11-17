@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKCurvatureAnisotropicDiffusionImage: Basic Instantiation and Parameter Check", "[ITKCurvatureAnisotropicDiffusionImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKCurvatureAnisotropicDiffusionImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKCurvatureAnisotropicDiffusionImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKCurvatureAnisotropicDiffusionImage filter;

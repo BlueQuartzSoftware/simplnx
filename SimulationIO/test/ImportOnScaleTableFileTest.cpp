@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("SimulationIO::ImportOnScaleTableFile: Basic Instantiation and Parameter Check", "[ImportOnScaleTableFile][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SimulationIO::ImportOnScaleTableFile: Instantiation and Parameter Check", "[SimulationIO][ImportOnScaleTableFile][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportOnScaleTableFile filter;

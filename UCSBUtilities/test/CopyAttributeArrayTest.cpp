@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("UCSBUtilities::CopyAttributeArray: Basic Instantiation and Parameter Check", "[CopyAttributeArray][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("UCSBUtilities::CopyAttributeArray: Instantiation and Parameter Check", "[UCSBUtilities][CopyAttributeArray][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CopyAttributeArray filter;

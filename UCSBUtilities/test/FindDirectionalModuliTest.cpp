@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("UCSBUtilities::FindDirectionalModuli: Basic Instantiation and Parameter Check", "[FindDirectionalModuli][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("UCSBUtilities::FindDirectionalModuli: Instantiation and Parameter Check", "[UCSBUtilities][FindDirectionalModuli][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindDirectionalModuli filter;

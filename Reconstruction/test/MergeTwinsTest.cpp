@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("Reconstruction::MergeTwins: Basic Instantiation and Parameter Check", "[MergeTwins][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Reconstruction::MergeTwins: Instantiation and Parameter Check", "[Reconstruction][MergeTwins][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   MergeTwins filter;

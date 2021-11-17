@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKMedianProjectionImage: Basic Instantiation and Parameter Check", "[ITKMedianProjectionImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKMedianProjectionImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKMedianProjectionImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKMedianProjectionImage filter;

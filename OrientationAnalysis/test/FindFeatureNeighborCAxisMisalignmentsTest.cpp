@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignments: Basic Instantiation and Parameter Check", "[FindFeatureNeighborCAxisMisalignments][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignments: Instantiation and Parameter Check", "[OrientationAnalysis][FindFeatureNeighborCAxisMisalignments][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindFeatureNeighborCAxisMisalignments filter;

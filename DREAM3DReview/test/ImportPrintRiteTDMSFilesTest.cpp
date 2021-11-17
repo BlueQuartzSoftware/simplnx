@@ -38,7 +38,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::ImportPrintRiteTDMSFiles: Basic Instantiation and Parameter Check", "[ImportPrintRiteTDMSFiles][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::ImportPrintRiteTDMSFiles: Instantiation and Parameter Check", "[DREAM3DReview][ImportPrintRiteTDMSFiles][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportPrintRiteTDMSFiles filter;

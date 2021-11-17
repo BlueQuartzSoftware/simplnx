@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("Sampling::ResampleRectGridToImageGeom: Basic Instantiation and Parameter Check", "[ResampleRectGridToImageGeom][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Sampling::ResampleRectGridToImageGeom: Instantiation and Parameter Check", "[Sampling][ResampleRectGridToImageGeom][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ResampleRectGridToImageGeom filter;

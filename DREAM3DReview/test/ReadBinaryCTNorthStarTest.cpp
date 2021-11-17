@@ -37,7 +37,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::ReadBinaryCTNorthStar: Basic Instantiation and Parameter Check", "[ReadBinaryCTNorthStar][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::ReadBinaryCTNorthStar: Instantiation and Parameter Check", "[DREAM3DReview][ReadBinaryCTNorthStar][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadBinaryCTNorthStar filter;

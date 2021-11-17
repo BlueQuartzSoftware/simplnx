@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::AlignGeometries: Basic Instantiation and Parameter Check", "[AlignGeometries][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::AlignGeometries: Instantiation and Parameter Check", "[DREAM3DReview][AlignGeometries][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AlignGeometries filter;

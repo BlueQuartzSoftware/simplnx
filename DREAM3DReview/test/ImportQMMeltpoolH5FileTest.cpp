@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::ImportQMMeltpoolH5File: Basic Instantiation and Parameter Check", "[ImportQMMeltpoolH5File][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::ImportQMMeltpoolH5File: Instantiation and Parameter Check", "[DREAM3DReview][ImportQMMeltpoolH5File][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportQMMeltpoolH5File filter;

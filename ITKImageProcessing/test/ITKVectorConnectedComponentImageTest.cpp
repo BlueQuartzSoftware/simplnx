@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKVectorConnectedComponentImage: Basic Instantiation and Parameter Check", "[ITKVectorConnectedComponentImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKVectorConnectedComponentImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKVectorConnectedComponentImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKVectorConnectedComponentImage filter;

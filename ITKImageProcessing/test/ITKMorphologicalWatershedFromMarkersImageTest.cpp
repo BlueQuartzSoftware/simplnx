@@ -31,7 +31,8 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedFromMarkersImage: Basic Instantiation and Parameter Check", "[ITKMorphologicalWatershedFromMarkersImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedFromMarkersImage: Instantiation and Parameter Check",
+          "[ITKImageProcessing][ITKMorphologicalWatershedFromMarkersImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKMorphologicalWatershedFromMarkersImage filter;

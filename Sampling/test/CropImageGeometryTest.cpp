@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("Sampling::CropImageGeometry: Basic Instantiation and Parameter Check", "[CropImageGeometry][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Sampling::CropImageGeometry: Instantiation and Parameter Check", "[Sampling][CropImageGeometry][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CropImageGeometry filter;

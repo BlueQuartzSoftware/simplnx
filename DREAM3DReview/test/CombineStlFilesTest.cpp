@@ -34,7 +34,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::CombineStlFiles: Basic Instantiation and Parameter Check", "[CombineStlFiles][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::CombineStlFiles: Instantiation and Parameter Check", "[DREAM3DReview][CombineStlFiles][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CombineStlFiles filter;

@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindTwinBoundaries: Basic Instantiation and Parameter Check", "[FindTwinBoundaries][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindTwinBoundaries: Instantiation and Parameter Check", "[OrientationAnalysis][FindTwinBoundaries][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindTwinBoundaries filter;

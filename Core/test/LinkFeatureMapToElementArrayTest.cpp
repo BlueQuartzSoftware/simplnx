@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::LinkFeatureMapToElementArray: Basic Instantiation and Parameter Check", "[LinkFeatureMapToElementArray][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::LinkFeatureMapToElementArray: Instantiation and Parameter Check", "[Core][LinkFeatureMapToElementArray][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   LinkFeatureMapToElementArray filter;

@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("Reconstruction::AlignSectionsMutualInformation: Basic Instantiation and Parameter Check", "[AlignSectionsMutualInformation][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Reconstruction::AlignSectionsMutualInformation: Instantiation and Parameter Check", "[Reconstruction][AlignSectionsMutualInformation][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AlignSectionsMutualInformation filter;

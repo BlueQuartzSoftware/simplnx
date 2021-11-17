@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::PostSlackMessage: Basic Instantiation and Parameter Check", "[PostSlackMessage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::PostSlackMessage: Instantiation and Parameter Check", "[Core][PostSlackMessage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   PostSlackMessage filter;

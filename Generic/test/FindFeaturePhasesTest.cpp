@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Generic::FindFeaturePhases: Basic Instantiation and Parameter Check", "[FindFeaturePhases][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Generic::FindFeaturePhases: Instantiation and Parameter Check", "[Generic][FindFeaturePhases][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindFeaturePhases filter;

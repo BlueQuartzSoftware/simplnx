@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("UCSBUtilities::GenerateMisorientationColors: Basic Instantiation and Parameter Check", "[GenerateMisorientationColors][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("UCSBUtilities::GenerateMisorientationColors: Instantiation and Parameter Check", "[UCSBUtilities][GenerateMisorientationColors][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateMisorientationColors filter;

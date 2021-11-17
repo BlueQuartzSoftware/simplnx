@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKBinaryContourImage: Basic Instantiation and Parameter Check", "[ITKBinaryContourImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKBinaryContourImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKBinaryContourImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKBinaryContourImage filter;

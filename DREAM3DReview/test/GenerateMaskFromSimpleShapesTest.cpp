@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::GenerateMaskFromSimpleShapes: Basic Instantiation and Parameter Check", "[GenerateMaskFromSimpleShapes][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::GenerateMaskFromSimpleShapes: Instantiation and Parameter Check", "[DREAM3DReview][GenerateMaskFromSimpleShapes][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateMaskFromSimpleShapes filter;

@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ImageProcessing::ItkAutoThreshold: Basic Instantiation and Parameter Check", "[ItkAutoThreshold][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImageProcessing::ItkAutoThreshold: Instantiation and Parameter Check", "[ImageProcessing][ItkAutoThreshold][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ItkAutoThreshold filter;

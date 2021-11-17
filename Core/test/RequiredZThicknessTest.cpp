@@ -27,7 +27,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::RequiredZThickness: Basic Instantiation and Parameter Check", "[RequiredZThickness][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::RequiredZThickness: Instantiation and Parameter Check", "[Core][RequiredZThickness][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   RequiredZThickness filter;

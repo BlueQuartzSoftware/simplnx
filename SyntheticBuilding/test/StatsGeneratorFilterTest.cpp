@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("SyntheticBuilding::StatsGeneratorFilter: Basic Instantiation and Parameter Check", "[StatsGeneratorFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SyntheticBuilding::StatsGeneratorFilter: Instantiation and Parameter Check", "[SyntheticBuilding][StatsGeneratorFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   StatsGeneratorFilter filter;

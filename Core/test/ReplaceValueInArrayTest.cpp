@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::ReplaceValueInArray: Basic Instantiation and Parameter Check", "[ReplaceValueInArray][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::ReplaceValueInArray: Instantiation and Parameter Check", "[Core][ReplaceValueInArray][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReplaceValueInArray filter;

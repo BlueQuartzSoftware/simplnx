@@ -34,7 +34,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::ReadStlFile: Basic Instantiation and Parameter Check", "[ReadStlFile][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::ReadStlFile: Instantiation and Parameter Check", "[ImportExport][ReadStlFile][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadStlFile filter;

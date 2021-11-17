@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("StatsToolbox::FindLargestCrossSections: Basic Instantiation and Parameter Check", "[FindLargestCrossSections][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("StatsToolbox::FindLargestCrossSections: Instantiation and Parameter Check", "[StatsToolbox][FindLargestCrossSections][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindLargestCrossSections filter;

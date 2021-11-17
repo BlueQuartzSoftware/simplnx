@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("StatsToolbox::FindSizes: Basic Instantiation and Parameter Check", "[FindSizes][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("StatsToolbox::FindSizes: Instantiation and Parameter Check", "[StatsToolbox][FindSizes][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindSizes filter;

@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("UCSBUtilities::FindModulusMismatch: Basic Instantiation and Parameter Check", "[FindModulusMismatch][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("UCSBUtilities::FindModulusMismatch: Instantiation and Parameter Check", "[UCSBUtilities][FindModulusMismatch][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindModulusMismatch filter;

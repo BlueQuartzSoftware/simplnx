@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ImageProcessing::ItkDiscreteGaussianBlur: Basic Instantiation and Parameter Check", "[ItkDiscreteGaussianBlur][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImageProcessing::ItkDiscreteGaussianBlur: Instantiation and Parameter Check", "[ImageProcessing][ItkDiscreteGaussianBlur][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ItkDiscreteGaussianBlur filter;

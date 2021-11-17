@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("Processing::MinSize: Basic Instantiation and Parameter Check", "[MinSize][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Processing::MinSize: Instantiation and Parameter Check", "[Processing][MinSize][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   MinSize filter;

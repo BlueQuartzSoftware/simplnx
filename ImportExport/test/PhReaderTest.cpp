@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::PhReader: Basic Instantiation and Parameter Check", "[PhReader][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::PhReader: Instantiation and Parameter Check", "[ImportExport][PhReader][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   PhReader filter;

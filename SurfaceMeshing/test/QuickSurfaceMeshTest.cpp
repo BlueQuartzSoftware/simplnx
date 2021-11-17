@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("SurfaceMeshing::QuickSurfaceMesh: Basic Instantiation and Parameter Check", "[QuickSurfaceMesh][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SurfaceMeshing::QuickSurfaceMesh: Instantiation and Parameter Check", "[SurfaceMeshing][QuickSurfaceMesh][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   QuickSurfaceMesh filter;

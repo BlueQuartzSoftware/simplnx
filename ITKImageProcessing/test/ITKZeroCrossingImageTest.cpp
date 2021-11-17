@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKZeroCrossingImage: Basic Instantiation and Parameter Check", "[ITKZeroCrossingImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKZeroCrossingImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKZeroCrossingImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKZeroCrossingImage filter;

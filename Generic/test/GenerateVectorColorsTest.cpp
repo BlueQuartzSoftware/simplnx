@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Generic::GenerateVectorColors: Basic Instantiation and Parameter Check", "[GenerateVectorColors][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Generic::GenerateVectorColors: Instantiation and Parameter Check", "[Generic][GenerateVectorColors][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateVectorColors filter;

@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::AbaqusHexahedronWriter: Basic Instantiation and Parameter Check", "[AbaqusHexahedronWriter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::AbaqusHexahedronWriter: Instantiation and Parameter Check", "[ImportExport][AbaqusHexahedronWriter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AbaqusHexahedronWriter filter;

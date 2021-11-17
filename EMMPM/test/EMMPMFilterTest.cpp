@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("EMMPM::EMMPMFilter: Basic Instantiation and Parameter Check", "[EMMPMFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("EMMPM::EMMPMFilter: Instantiation and Parameter Check", "[EMMPM][EMMPMFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   EMMPMFilter filter;

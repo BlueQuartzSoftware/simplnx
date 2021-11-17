@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("VolumeMeshing::CleaveTetVolumeMesh: Basic Instantiation and Parameter Check", "[CleaveTetVolumeMesh][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("VolumeMeshing::CleaveTetVolumeMesh: Instantiation and Parameter Check", "[VolumeMeshing][CleaveTetVolumeMesh][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CleaveTetVolumeMesh filter;

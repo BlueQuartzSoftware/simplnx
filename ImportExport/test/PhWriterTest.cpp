@@ -33,7 +33,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::PhWriter: Basic Instantiation and Parameter Check", "[PhWriter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::PhWriter: Instantiation and Parameter Check", "[ImportExport][PhWriter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   PhWriter filter;

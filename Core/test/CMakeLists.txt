@@ -9,7 +9,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     #ArrayCalculatorTest.cpp    # MISSING 1 or more Parameter Implementations
     CombineAttributeArraysTest.cpp
     CombineAttributeMatricesTest.cpp
-    ConditionalSetValueTest.cpp
     ConvertColorToGrayScaleTest.cpp
     ConvertDataTest.cpp
     CopyFeatureArrayToElementArrayTest.cpp

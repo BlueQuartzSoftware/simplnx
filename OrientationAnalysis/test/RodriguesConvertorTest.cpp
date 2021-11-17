@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::RodriguesConvertor: Basic Instantiation and Parameter Check", "[RodriguesConvertor][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::RodriguesConvertor: Instantiation and Parameter Check", "[OrientationAnalysis][RodriguesConvertor][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   RodriguesConvertor filter;

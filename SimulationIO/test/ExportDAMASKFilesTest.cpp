@@ -36,7 +36,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("SimulationIO::ExportDAMASKFiles: Basic Instantiation and Parameter Check", "[ExportDAMASKFiles][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SimulationIO::ExportDAMASKFiles: Instantiation and Parameter Check", "[SimulationIO][ExportDAMASKFiles][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExportDAMASKFiles filter;

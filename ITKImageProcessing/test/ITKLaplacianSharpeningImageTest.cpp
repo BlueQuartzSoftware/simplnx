@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKLaplacianSharpeningImage: Basic Instantiation and Parameter Check", "[ITKLaplacianSharpeningImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKLaplacianSharpeningImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKLaplacianSharpeningImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKLaplacianSharpeningImage filter;

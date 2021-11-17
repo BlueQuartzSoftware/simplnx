@@ -34,7 +34,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::EnsembleInfoReader: Basic Instantiation and Parameter Check", "[EnsembleInfoReader][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::EnsembleInfoReader: Instantiation and Parameter Check", "[OrientationAnalysis][EnsembleInfoReader][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   EnsembleInfoReader filter;

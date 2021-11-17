@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKApproximateSignedDistanceMapImage: Basic Instantiation and Parameter Check", "[ITKApproximateSignedDistanceMapImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKApproximateSignedDistanceMapImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKApproximateSignedDistanceMapImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKApproximateSignedDistanceMapImage filter;

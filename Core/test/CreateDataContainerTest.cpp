@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::CreateDataContainer: Basic Instantiation and Parameter Check", "[CreateDataContainer][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::CreateDataContainer: Instantiation and Parameter Check", "[Core][CreateDataContainer][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateDataContainer filter;

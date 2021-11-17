@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::LaplacianSmoothPointCloud: Basic Instantiation and Parameter Check", "[LaplacianSmoothPointCloud][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::LaplacianSmoothPointCloud: Instantiation and Parameter Check", "[DREAM3DReview][LaplacianSmoothPointCloud][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   LaplacianSmoothPointCloud filter;

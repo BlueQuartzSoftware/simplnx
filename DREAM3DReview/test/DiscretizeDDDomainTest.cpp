@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::DiscretizeDDDomain: Basic Instantiation and Parameter Check", "[DiscretizeDDDomain][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::DiscretizeDDDomain: Instantiation and Parameter Check", "[DREAM3DReview][DiscretizeDDDomain][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DiscretizeDDDomain filter;

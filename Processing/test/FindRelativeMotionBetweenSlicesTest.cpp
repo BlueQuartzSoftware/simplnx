@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("Processing::FindRelativeMotionBetweenSlices: Basic Instantiation and Parameter Check", "[FindRelativeMotionBetweenSlices][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Processing::FindRelativeMotionBetweenSlices: Instantiation and Parameter Check", "[Processing][FindRelativeMotionBetweenSlices][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindRelativeMotionBetweenSlices filter;

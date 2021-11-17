@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Generic::FindSurfaceFeatures: Basic Instantiation and Parameter Check", "[FindSurfaceFeatures][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Generic::FindSurfaceFeatures: Instantiation and Parameter Check", "[Generic][FindSurfaceFeatures][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindSurfaceFeatures filter;

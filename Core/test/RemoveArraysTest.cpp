@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::RemoveArrays: Basic Instantiation and Parameter Check", "[RemoveArrays][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::RemoveArrays: Instantiation and Parameter Check", "[Core][RemoveArrays][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   RemoveArrays filter;

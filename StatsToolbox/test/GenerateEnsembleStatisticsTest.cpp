@@ -34,7 +34,7 @@
 
 using namespace complex;
 
-TEST_CASE("StatsToolbox::GenerateEnsembleStatistics: Basic Instantiation and Parameter Check", "[GenerateEnsembleStatistics][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("StatsToolbox::GenerateEnsembleStatistics: Instantiation and Parameter Check", "[StatsToolbox][GenerateEnsembleStatistics][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateEnsembleStatistics filter;

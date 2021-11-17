@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::DBSCAN: Basic Instantiation and Parameter Check", "[DBSCAN][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::DBSCAN: Instantiation and Parameter Check", "[DREAM3DReview][DBSCAN][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DBSCAN filter;

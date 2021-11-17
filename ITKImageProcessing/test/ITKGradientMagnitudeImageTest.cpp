@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKGradientMagnitudeImage: Basic Instantiation and Parameter Check", "[ITKGradientMagnitudeImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKGradientMagnitudeImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKGradientMagnitudeImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKGradientMagnitudeImage filter;

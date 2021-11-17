@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKSigmoidImage: Basic Instantiation and Parameter Check", "[ITKSigmoidImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKSigmoidImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKSigmoidImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKSigmoidImage filter;

@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("ImageProcessing::ItkConvertArrayTo8BitImageAttributeMatrix: Basic Instantiation and Parameter Check", "[ItkConvertArrayTo8BitImageAttributeMatrix][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImageProcessing::ItkConvertArrayTo8BitImageAttributeMatrix: Instantiation and Parameter Check", "[ImageProcessing][ItkConvertArrayTo8BitImageAttributeMatrix][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ItkConvertArrayTo8BitImageAttributeMatrix filter;

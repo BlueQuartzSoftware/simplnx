@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::CreateAttributeMatrix: Basic Instantiation and Parameter Check", "[CreateAttributeMatrix][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::CreateAttributeMatrix: Instantiation and Parameter Check", "[Core][CreateAttributeMatrix][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateAttributeMatrix filter;

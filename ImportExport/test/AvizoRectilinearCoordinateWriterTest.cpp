@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::AvizoRectilinearCoordinateWriter: Basic Instantiation and Parameter Check", "[AvizoRectilinearCoordinateWriter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::AvizoRectilinearCoordinateWriter: Instantiation and Parameter Check", "[ImportExport][AvizoRectilinearCoordinateWriter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AvizoRectilinearCoordinateWriter filter;

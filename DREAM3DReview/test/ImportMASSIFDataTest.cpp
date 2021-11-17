@@ -34,7 +34,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::ImportMASSIFData: Basic Instantiation and Parameter Check", "[ImportMASSIFData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::ImportMASSIFData: Instantiation and Parameter Check", "[DREAM3DReview][ImportMASSIFData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportMASSIFData filter;

@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Generic::FindFeatureCentroids: Basic Instantiation and Parameter Check", "[FindFeatureCentroids][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Generic::FindFeatureCentroids: Instantiation and Parameter Check", "[Generic][FindFeatureCentroids][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindFeatureCentroids filter;

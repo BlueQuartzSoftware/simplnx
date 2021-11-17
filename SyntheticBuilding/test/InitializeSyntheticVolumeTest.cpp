@@ -35,7 +35,7 @@
 
 using namespace complex;
 
-TEST_CASE("SyntheticBuilding::InitializeSyntheticVolume: Basic Instantiation and Parameter Check", "[InitializeSyntheticVolume][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SyntheticBuilding::InitializeSyntheticVolume: Instantiation and Parameter Check", "[SyntheticBuilding][InitializeSyntheticVolume][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   InitializeSyntheticVolume filter;

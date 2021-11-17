@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ImageProcessing::ItkWatershed: Basic Instantiation and Parameter Check", "[ItkWatershed][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImageProcessing::ItkWatershed: Instantiation and Parameter Check", "[ImageProcessing][ItkWatershed][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ItkWatershed filter;

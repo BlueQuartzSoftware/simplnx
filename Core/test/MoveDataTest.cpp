@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::MoveData: Basic Instantiation and Parameter Check", "[MoveData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::MoveData: Instantiation and Parameter Check", "[Core][MoveData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   MoveData filter;

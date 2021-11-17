@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("SyntheticBuilding::EstablishShapeTypes: Basic Instantiation and Parameter Check", "[EstablishShapeTypes][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SyntheticBuilding::EstablishShapeTypes: Instantiation and Parameter Check", "[SyntheticBuilding][EstablishShapeTypes][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   EstablishShapeTypes filter;

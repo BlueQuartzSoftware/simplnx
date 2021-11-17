@@ -34,7 +34,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("Sampling::RegularizeZSpacing: Basic Instantiation and Parameter Check", "[RegularizeZSpacing][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Sampling::RegularizeZSpacing: Instantiation and Parameter Check", "[Sampling][RegularizeZSpacing][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   RegularizeZSpacing filter;

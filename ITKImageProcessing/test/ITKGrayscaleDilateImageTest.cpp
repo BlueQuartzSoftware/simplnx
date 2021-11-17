@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKGrayscaleDilateImage: Basic Instantiation and Parameter Check", "[ITKGrayscaleDilateImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKGrayscaleDilateImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKGrayscaleDilateImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKGrayscaleDilateImage filter;

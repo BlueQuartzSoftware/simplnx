@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKPCMTileRegistration: Basic Instantiation and Parameter Check", "[ITKPCMTileRegistration][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKPCMTileRegistration: Instantiation and Parameter Check", "[ITKImageProcessing][ITKPCMTileRegistration][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKPCMTileRegistration filter;

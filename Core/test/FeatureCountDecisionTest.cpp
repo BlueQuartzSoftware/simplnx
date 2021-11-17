@@ -27,7 +27,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::FeatureCountDecision: Basic Instantiation and Parameter Check", "[FeatureCountDecision][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::FeatureCountDecision: Instantiation and Parameter Check", "[Core][FeatureCountDecision][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FeatureCountDecision filter;

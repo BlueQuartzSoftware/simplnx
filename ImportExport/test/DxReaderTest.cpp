@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::DxReader: Basic Instantiation and Parameter Check", "[DxReader][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::DxReader: Instantiation and Parameter Check", "[ImportExport][DxReader][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DxReader filter;

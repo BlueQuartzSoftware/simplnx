@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::RemoveFlaggedVertices: Basic Instantiation and Parameter Check", "[RemoveFlaggedVertices][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::RemoveFlaggedVertices: Instantiation and Parameter Check", "[DREAM3DReview][RemoveFlaggedVertices][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   RemoveFlaggedVertices filter;

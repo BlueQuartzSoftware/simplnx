@@ -27,7 +27,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::MaskCountDecision: Basic Instantiation and Parameter Check", "[MaskCountDecision][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::MaskCountDecision: Instantiation and Parameter Check", "[Core][MaskCountDecision][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   MaskCountDecision filter;

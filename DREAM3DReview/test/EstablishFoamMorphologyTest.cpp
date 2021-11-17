@@ -37,7 +37,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::EstablishFoamMorphology: Basic Instantiation and Parameter Check", "[EstablishFoamMorphology][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::EstablishFoamMorphology: Instantiation and Parameter Check", "[DREAM3DReview][EstablishFoamMorphology][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   EstablishFoamMorphology filter;

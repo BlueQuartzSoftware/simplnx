@@ -37,7 +37,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::FeatureInfoReader: Basic Instantiation and Parameter Check", "[FeatureInfoReader][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::FeatureInfoReader: Instantiation and Parameter Check", "[ImportExport][FeatureInfoReader][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FeatureInfoReader filter;

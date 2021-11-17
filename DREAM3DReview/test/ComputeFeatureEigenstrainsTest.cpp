@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::ComputeFeatureEigenstrains: Basic Instantiation and Parameter Check", "[ComputeFeatureEigenstrains][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::ComputeFeatureEigenstrains: Instantiation and Parameter Check", "[DREAM3DReview][ComputeFeatureEigenstrains][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeFeatureEigenstrains filter;

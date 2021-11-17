@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::GenerateQuaternionConjugate: Basic Instantiation and Parameter Check", "[GenerateQuaternionConjugate][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::GenerateQuaternionConjugate: Instantiation and Parameter Check", "[OrientationAnalysis][GenerateQuaternionConjugate][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateQuaternionConjugate filter;

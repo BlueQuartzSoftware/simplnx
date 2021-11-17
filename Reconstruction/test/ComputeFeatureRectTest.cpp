@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("Reconstruction::ComputeFeatureRect: Basic Instantiation and Parameter Check", "[ComputeFeatureRect][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Reconstruction::ComputeFeatureRect: Instantiation and Parameter Check", "[Reconstruction][ComputeFeatureRect][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeFeatureRect filter;

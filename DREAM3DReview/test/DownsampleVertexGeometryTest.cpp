@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::DownsampleVertexGeometry: Basic Instantiation and Parameter Check", "[DownsampleVertexGeometry][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::DownsampleVertexGeometry: Instantiation and Parameter Check", "[DREAM3DReview][DownsampleVertexGeometry][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DownsampleVertexGeometry filter;

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Generic::FindBoundingBoxFeatures: Basic Instantiation and Parameter Check", "[FindBoundingBoxFeatures][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Generic::FindBoundingBoxFeatures: Instantiation and Parameter Check", "[Generic][FindBoundingBoxFeatures][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindBoundingBoxFeatures filter;

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKHMaximaImage: Basic Instantiation and Parameter Check", "[ITKHMaximaImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKHMaximaImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKHMaximaImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKHMaximaImage filter;

@@ -31,7 +31,8 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKThresholdMaximumConnectedComponentsImage: Basic Instantiation and Parameter Check", "[ITKThresholdMaximumConnectedComponentsImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKThresholdMaximumConnectedComponentsImage: Instantiation and Parameter Check",
+          "[ITKImageProcessing][ITKThresholdMaximumConnectedComponentsImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKThresholdMaximumConnectedComponentsImage filter;

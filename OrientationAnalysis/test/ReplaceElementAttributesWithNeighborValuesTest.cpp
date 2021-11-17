@@ -32,7 +32,8 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::ReplaceElementAttributesWithNeighborValues: Basic Instantiation and Parameter Check", "[ReplaceElementAttributesWithNeighborValues][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::ReplaceElementAttributesWithNeighborValues: Instantiation and Parameter Check",
+          "[OrientationAnalysis][ReplaceElementAttributesWithNeighborValues][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReplaceElementAttributesWithNeighborValues filter;

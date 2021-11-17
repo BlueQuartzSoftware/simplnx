@@ -33,7 +33,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::WaveFrontObjectFileWriter: Basic Instantiation and Parameter Check", "[WaveFrontObjectFileWriter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::WaveFrontObjectFileWriter: Instantiation and Parameter Check", "[DREAM3DReview][WaveFrontObjectFileWriter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WaveFrontObjectFileWriter filter;

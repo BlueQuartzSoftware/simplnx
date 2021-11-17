@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::VtkStructuredPointsReader: Basic Instantiation and Parameter Check", "[VtkStructuredPointsReader][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::VtkStructuredPointsReader: Instantiation and Parameter Check", "[ImportExport][VtkStructuredPointsReader][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   VtkStructuredPointsReader filter;

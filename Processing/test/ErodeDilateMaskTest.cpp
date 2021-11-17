@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("Processing::ErodeDilateMask: Basic Instantiation and Parameter Check", "[ErodeDilateMask][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Processing::ErodeDilateMask: Instantiation and Parameter Check", "[Processing][ErodeDilateMask][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ErodeDilateMask filter;

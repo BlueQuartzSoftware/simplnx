@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKSmoothingRecursiveGaussianImage: Basic Instantiation and Parameter Check", "[ITKSmoothingRecursiveGaussianImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKSmoothingRecursiveGaussianImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKSmoothingRecursiveGaussianImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKSmoothingRecursiveGaussianImage filter;

@@ -34,7 +34,7 @@
 
 using namespace complex;
 
-TEST_CASE("VolumeMeshing::VMFillLevelSetWithTetrahedra: Basic Instantiation and Parameter Check", "[VMFillLevelSetWithTetrahedra][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("VolumeMeshing::VMFillLevelSetWithTetrahedra: Instantiation and Parameter Check", "[VolumeMeshing][VMFillLevelSetWithTetrahedra][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   VMFillLevelSetWithTetrahedra filter;

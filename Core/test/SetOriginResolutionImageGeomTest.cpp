@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::SetOriginResolutionImageGeom: Basic Instantiation and Parameter Check", "[SetOriginResolutionImageGeom][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::SetOriginResolutionImageGeom: Instantiation and Parameter Check", "[Core][SetOriginResolutionImageGeom][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   SetOriginResolutionImageGeom filter;

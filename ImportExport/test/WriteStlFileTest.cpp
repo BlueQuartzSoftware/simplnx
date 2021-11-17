@@ -34,7 +34,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ImportExport::WriteStlFile: Basic Instantiation and Parameter Check", "[WriteStlFile][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImportExport::WriteStlFile: Instantiation and Parameter Check", "[ImportExport][WriteStlFile][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WriteStlFile filter;

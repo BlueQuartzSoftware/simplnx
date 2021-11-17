@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::ReadCtfData: Basic Instantiation and Parameter Check", "[ReadCtfData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::ReadCtfData: Instantiation and Parameter Check", "[OrientationAnalysis][ReadCtfData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadCtfData filter;

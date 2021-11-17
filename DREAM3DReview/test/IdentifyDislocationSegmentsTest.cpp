@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::IdentifyDislocationSegments: Basic Instantiation and Parameter Check", "[IdentifyDislocationSegments][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::IdentifyDislocationSegments: Instantiation and Parameter Check", "[DREAM3DReview][IdentifyDislocationSegments][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   IdentifyDislocationSegments filter;

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::ComputeUmeyamaTransform: Basic Instantiation and Parameter Check", "[ComputeUmeyamaTransform][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::ComputeUmeyamaTransform: Instantiation and Parameter Check", "[DREAM3DReview][ComputeUmeyamaTransform][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeUmeyamaTransform filter;

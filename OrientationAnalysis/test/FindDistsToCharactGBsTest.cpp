@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindDistsToCharactGBs: Basic Instantiation and Parameter Check", "[FindDistsToCharactGBs][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindDistsToCharactGBs: Instantiation and Parameter Check", "[OrientationAnalysis][FindDistsToCharactGBs][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindDistsToCharactGBs filter;

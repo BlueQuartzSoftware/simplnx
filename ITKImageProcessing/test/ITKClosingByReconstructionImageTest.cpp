@@ -33,7 +33,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKClosingByReconstructionImage: Basic Instantiation and Parameter Check", "[ITKClosingByReconstructionImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKClosingByReconstructionImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKClosingByReconstructionImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKClosingByReconstructionImage filter;

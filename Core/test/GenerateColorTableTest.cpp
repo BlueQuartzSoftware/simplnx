@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::GenerateColorTable: Basic Instantiation and Parameter Check", "[GenerateColorTable][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::GenerateColorTable: Instantiation and Parameter Check", "[Core][GenerateColorTable][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateColorTable filter;

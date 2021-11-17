@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindAvgCAxes: Basic Instantiation and Parameter Check", "[FindAvgCAxes][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindAvgCAxes: Instantiation and Parameter Check", "[OrientationAnalysis][FindAvgCAxes][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindAvgCAxes filter;

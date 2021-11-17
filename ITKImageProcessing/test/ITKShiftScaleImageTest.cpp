@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKShiftScaleImage: Basic Instantiation and Parameter Check", "[ITKShiftScaleImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKShiftScaleImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKShiftScaleImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKShiftScaleImage filter;

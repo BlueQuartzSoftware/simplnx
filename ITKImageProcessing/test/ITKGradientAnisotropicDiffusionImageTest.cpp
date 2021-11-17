@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKGradientAnisotropicDiffusionImage: Basic Instantiation and Parameter Check", "[ITKGradientAnisotropicDiffusionImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKGradientAnisotropicDiffusionImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKGradientAnisotropicDiffusionImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKGradientAnisotropicDiffusionImage filter;

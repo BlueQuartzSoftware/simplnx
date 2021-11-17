@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKGrayscaleFillholeImage: Basic Instantiation and Parameter Check", "[ITKGrayscaleFillholeImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKGrayscaleFillholeImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKGrayscaleFillholeImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKGrayscaleFillholeImage filter;

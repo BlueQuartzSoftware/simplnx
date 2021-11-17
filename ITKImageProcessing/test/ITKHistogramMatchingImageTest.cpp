@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKHistogramMatchingImage: Basic Instantiation and Parameter Check", "[ITKHistogramMatchingImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKHistogramMatchingImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKHistogramMatchingImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKHistogramMatchingImage filter;

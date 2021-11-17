@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("ImageProcessing::ItkBinaryWatershedLabeled: Basic Instantiation and Parameter Check", "[ItkBinaryWatershedLabeled][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ImageProcessing::ItkBinaryWatershedLabeled: Instantiation and Parameter Check", "[ImageProcessing][ItkBinaryWatershedLabeled][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ItkBinaryWatershedLabeled filter;

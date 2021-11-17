@@ -37,7 +37,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("SyntheticBuilding::PackPrimaryPhases: Basic Instantiation and Parameter Check", "[PackPrimaryPhases][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SyntheticBuilding::PackPrimaryPhases: Instantiation and Parameter Check", "[SyntheticBuilding][PackPrimaryPhases][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   PackPrimaryPhases filter;

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::FindNorm: Basic Instantiation and Parameter Check", "[FindNorm][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::FindNorm: Instantiation and Parameter Check", "[DREAM3DReview][FindNorm][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindNorm filter;

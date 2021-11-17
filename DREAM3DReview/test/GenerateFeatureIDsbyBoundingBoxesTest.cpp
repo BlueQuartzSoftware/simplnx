@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("DREAM3DReview::GenerateFeatureIDsbyBoundingBoxes: Basic Instantiation and Parameter Check", "[GenerateFeatureIDsbyBoundingBoxes][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("DREAM3DReview::GenerateFeatureIDsbyBoundingBoxes: Instantiation and Parameter Check", "[DREAM3DReview][GenerateFeatureIDsbyBoundingBoxes][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateFeatureIDsbyBoundingBoxes filter;

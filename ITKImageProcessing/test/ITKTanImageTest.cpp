@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKTanImage: Basic Instantiation and Parameter Check", "[ITKTanImage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKTanImage: Instantiation and Parameter Check", "[ITKImageProcessing][ITKTanImage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKTanImage filter;

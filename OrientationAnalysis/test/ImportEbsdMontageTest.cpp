@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::ImportEbsdMontage: Basic Instantiation and Parameter Check", "[ImportEbsdMontage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::ImportEbsdMontage: Instantiation and Parameter Check", "[OrientationAnalysis][ImportEbsdMontage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportEbsdMontage filter;

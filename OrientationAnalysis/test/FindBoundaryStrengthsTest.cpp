@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindBoundaryStrengths: Basic Instantiation and Parameter Check", "[FindBoundaryStrengths][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindBoundaryStrengths: Instantiation and Parameter Check", "[OrientationAnalysis][FindBoundaryStrengths][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindBoundaryStrengths filter;
