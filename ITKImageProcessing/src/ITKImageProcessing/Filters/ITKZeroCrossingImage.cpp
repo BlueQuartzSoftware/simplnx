@@ -72,8 +72,8 @@ IFilter::PreflightResult ITKZeroCrossingImage::preflightImpl(const DataStructure
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pForegroundValueValue = filterArgs.value<int32>(k_ForegroundValue_Key);
-  auto pBackgroundValueValue = filterArgs.value<int32>(k_BackgroundValue_Key);
+  auto pForegroundValue = filterArgs.value<int32>(k_ForegroundValue_Key);
+  auto pBackgroundValue = filterArgs.value<int32>(k_BackgroundValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 
@@ -105,8 +105,8 @@ Result<> ITKZeroCrossingImage::executeImpl(DataStructure& data, const Arguments&
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pForegroundValueValue = filterArgs.value<int32>(k_ForegroundValue_Key);
-  auto pBackgroundValueValue = filterArgs.value<int32>(k_BackgroundValue_Key);
+  auto pForegroundValue = filterArgs.value<int32>(k_ForegroundValue_Key);
+  auto pBackgroundValue = filterArgs.value<int32>(k_BackgroundValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 

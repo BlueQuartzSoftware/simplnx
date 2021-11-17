@@ -82,8 +82,8 @@ IFilter::PreflightResult ITKDoubleThresholdImage::preflightImpl(const DataStruct
   auto pThreshold2Value = filterArgs.value<float64>(k_Threshold2_Key);
   auto pThreshold3Value = filterArgs.value<float64>(k_Threshold3_Key);
   auto pThreshold4Value = filterArgs.value<float64>(k_Threshold4_Key);
-  auto pInsideValueValue = filterArgs.value<int32>(k_InsideValue_Key);
-  auto pOutsideValueValue = filterArgs.value<int32>(k_OutsideValue_Key);
+  auto pInsideValue = filterArgs.value<int32>(k_InsideValue_Key);
+  auto pOutsideValue = filterArgs.value<int32>(k_OutsideValue_Key);
   auto pFullyConnectedValue = filterArgs.value<bool>(k_FullyConnected_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
@@ -120,8 +120,8 @@ Result<> ITKDoubleThresholdImage::executeImpl(DataStructure& data, const Argumen
   auto pThreshold2Value = filterArgs.value<float64>(k_Threshold2_Key);
   auto pThreshold3Value = filterArgs.value<float64>(k_Threshold3_Key);
   auto pThreshold4Value = filterArgs.value<float64>(k_Threshold4_Key);
-  auto pInsideValueValue = filterArgs.value<int32>(k_InsideValue_Key);
-  auto pOutsideValueValue = filterArgs.value<int32>(k_OutsideValue_Key);
+  auto pInsideValue = filterArgs.value<int32>(k_InsideValue_Key);
+  auto pOutsideValue = filterArgs.value<int32>(k_OutsideValue_Key);
   auto pFullyConnectedValue = filterArgs.value<bool>(k_FullyConnected_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);

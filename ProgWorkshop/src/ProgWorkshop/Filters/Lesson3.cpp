@@ -73,7 +73,7 @@ IFilter::PreflightResult Lesson3::preflightImpl(const DataStructure& ds, const A
    */
   auto pInputDataArrayPathValue = filterArgs.value<DataPath>(k_InputDataArrayPath_Key);
   auto pOutputDataArrayPathValue = filterArgs.value<DataPath>(k_OutputDataArrayPath_Key);
-  auto pValueValue = filterArgs.value<float32>(k_Value_Key);
+  auto pValue = filterArgs.value<float32>(k_Value_Key);
   auto pOperatorValue = filterArgs.value<ChoicesParameter::ValueType>(k_Operator_Key);
 
   // Declare the preflightResult variable that will be populated with the results
@@ -106,7 +106,7 @@ Result<> Lesson3::executeImpl(DataStructure& data, const Arguments& filterArgs, 
    ***************************************************************************/
   auto pInputDataArrayPathValue = filterArgs.value<DataPath>(k_InputDataArrayPath_Key);
   auto pOutputDataArrayPathValue = filterArgs.value<DataPath>(k_OutputDataArrayPath_Key);
-  auto pValueValue = filterArgs.value<float32>(k_Value_Key);
+  auto pValue = filterArgs.value<float32>(k_Value_Key);
   auto pOperatorValue = filterArgs.value<ChoicesParameter::ValueType>(k_Operator_Key);
 
   /****************************************************************************

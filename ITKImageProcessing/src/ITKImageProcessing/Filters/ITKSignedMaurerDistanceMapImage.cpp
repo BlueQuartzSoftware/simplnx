@@ -78,7 +78,7 @@ IFilter::PreflightResult ITKSignedMaurerDistanceMapImage::preflightImpl(const Da
   auto pInsideIsPositiveValue = filterArgs.value<bool>(k_InsideIsPositive_Key);
   auto pSquaredDistanceValue = filterArgs.value<bool>(k_SquaredDistance_Key);
   auto pUseImageSpacingValue = filterArgs.value<bool>(k_UseImageSpacing_Key);
-  auto pBackgroundValueValue = filterArgs.value<float64>(k_BackgroundValue_Key);
+  auto pBackgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 
@@ -113,7 +113,7 @@ Result<> ITKSignedMaurerDistanceMapImage::executeImpl(DataStructure& data, const
   auto pInsideIsPositiveValue = filterArgs.value<bool>(k_InsideIsPositive_Key);
   auto pSquaredDistanceValue = filterArgs.value<bool>(k_SquaredDistance_Key);
   auto pUseImageSpacingValue = filterArgs.value<bool>(k_UseImageSpacing_Key);
-  auto pBackgroundValueValue = filterArgs.value<float64>(k_BackgroundValue_Key);
+  auto pBackgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 

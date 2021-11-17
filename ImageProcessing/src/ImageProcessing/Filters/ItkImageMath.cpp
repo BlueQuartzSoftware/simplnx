@@ -80,7 +80,7 @@ IFilter::PreflightResult ItkImageMath::preflightImpl(const DataStructure& ds, co
   auto pSaveAsNewArrayValue = filterArgs.value<bool>(k_SaveAsNewArray_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pOperatorValue = filterArgs.value<ChoicesParameter::ValueType>(k_Operator_Key);
-  auto pValueValue = filterArgs.value<float64>(k_Value_Key);
+  auto pValue = filterArgs.value<float64>(k_Value_Key);
   auto pNewCellArrayNameValue = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
 
   // Declare the preflightResult variable that will be populated with the results
@@ -114,7 +114,7 @@ Result<> ItkImageMath::executeImpl(DataStructure& data, const Arguments& filterA
   auto pSaveAsNewArrayValue = filterArgs.value<bool>(k_SaveAsNewArray_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pOperatorValue = filterArgs.value<ChoicesParameter::ValueType>(k_Operator_Key);
-  auto pValueValue = filterArgs.value<float64>(k_Value_Key);
+  auto pValue = filterArgs.value<float64>(k_Value_Key);
   auto pNewCellArrayNameValue = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
 
   /****************************************************************************

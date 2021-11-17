@@ -89,7 +89,7 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& ds, 
   auto pYMaxValue = filterArgs.value<int32>(k_YMax_Key);
   auto pZMaxValue = filterArgs.value<int32>(k_ZMax_Key);
   auto pInitTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_InitType_Key);
-  auto pInitValueValue = filterArgs.value<float64>(k_InitValue_Key);
+  auto pInitValue = filterArgs.value<float64>(k_InitValue_Key);
   auto pInitRangeValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_InitRange_Key);
 
   // Declare the preflightResult variable that will be populated with the results
@@ -128,7 +128,7 @@ Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& filte
   auto pYMaxValue = filterArgs.value<int32>(k_YMax_Key);
   auto pZMaxValue = filterArgs.value<int32>(k_ZMax_Key);
   auto pInitTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_InitType_Key);
-  auto pInitValueValue = filterArgs.value<float64>(k_InitValue_Key);
+  auto pInitValue = filterArgs.value<float64>(k_InitValue_Key);
   auto pInitRangeValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_InitRange_Key);
 
   /****************************************************************************

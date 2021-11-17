@@ -72,8 +72,8 @@ IFilter::PreflightResult ITKIsoContourDistanceImage::preflightImpl(const DataStr
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pLevelSetValueValue = filterArgs.value<float64>(k_LevelSetValue_Key);
-  auto pFarValueValue = filterArgs.value<float64>(k_FarValue_Key);
+  auto pLevelSetValue = filterArgs.value<float64>(k_LevelSetValue_Key);
+  auto pFarValue = filterArgs.value<float64>(k_FarValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 
@@ -105,8 +105,8 @@ Result<> ITKIsoContourDistanceImage::executeImpl(DataStructure& data, const Argu
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pLevelSetValueValue = filterArgs.value<float64>(k_LevelSetValue_Key);
-  auto pFarValueValue = filterArgs.value<float64>(k_FarValue_Key);
+  auto pLevelSetValue = filterArgs.value<float64>(k_LevelSetValue_Key);
+  auto pFarValue = filterArgs.value<float64>(k_FarValue_Key);
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
 

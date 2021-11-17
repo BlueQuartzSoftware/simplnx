@@ -81,7 +81,7 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& ds,
   auto pScalarTypeValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_ScalarType_Key);
   auto pNumberOfComponentsValue = filterArgs.value<int32>(k_NumberOfComponents_Key);
   auto pInitializationTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_InitializationType_Key);
-  auto pInitializationValueValue = filterArgs.value<StringParameter::ValueType>(k_InitializationValue_Key);
+  auto pInitializationValue = filterArgs.value<StringParameter::ValueType>(k_InitializationValue_Key);
   auto pInitializationRangeValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_InitializationRange_Key);
   auto pNewArrayValue = filterArgs.value<DataPath>(k_NewArray_Key);
 
@@ -116,7 +116,7 @@ Result<> CreateDataArray::executeImpl(DataStructure& data, const Arguments& filt
   auto pScalarTypeValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_ScalarType_Key);
   auto pNumberOfComponentsValue = filterArgs.value<int32>(k_NumberOfComponents_Key);
   auto pInitializationTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_InitializationType_Key);
-  auto pInitializationValueValue = filterArgs.value<StringParameter::ValueType>(k_InitializationValue_Key);
+  auto pInitializationValue = filterArgs.value<StringParameter::ValueType>(k_InitializationValue_Key);
   auto pInitializationRangeValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_InitializationRange_Key);
   auto pNewArrayValue = filterArgs.value<DataPath>(k_NewArray_Key);
 

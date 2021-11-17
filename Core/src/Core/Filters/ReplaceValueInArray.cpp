@@ -68,8 +68,8 @@ IFilter::PreflightResult ReplaceValueInArray::preflightImpl(const DataStructure&
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pRemoveValueValue = filterArgs.value<float64>(k_RemoveValue_Key);
-  auto pReplaceValueValue = filterArgs.value<float64>(k_ReplaceValue_Key);
+  auto pRemoveValue = filterArgs.value<float64>(k_RemoveValue_Key);
+  auto pReplaceValue = filterArgs.value<float64>(k_ReplaceValue_Key);
   auto pSelectedArrayValue = filterArgs.value<DataPath>(k_SelectedArray_Key);
 
   // Declare the preflightResult variable that will be populated with the results
@@ -100,8 +100,8 @@ Result<> ReplaceValueInArray::executeImpl(DataStructure& data, const Arguments& 
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pRemoveValueValue = filterArgs.value<float64>(k_RemoveValue_Key);
-  auto pReplaceValueValue = filterArgs.value<float64>(k_ReplaceValue_Key);
+  auto pRemoveValue = filterArgs.value<float64>(k_RemoveValue_Key);
+  auto pReplaceValue = filterArgs.value<float64>(k_ReplaceValue_Key);
   auto pSelectedArrayValue = filterArgs.value<DataPath>(k_SelectedArray_Key);
 
   /****************************************************************************
