@@ -6,14 +6,20 @@
 
 namespace complex
 {
-void Arguments::insert(std::string key, const std::any& value)
+bool Arguments::insert(std::string key, std::any value)
 {
-  m_Args.insert({std::move(key), value});
+  auto [iter, result] = m_Args.insert({std::move(key), std::move(value)});
+  return result;
 }
 
-void Arguments::insert(std::string key, std::any&& value)
+void Arguments::insertOrAssign(const std::string& key, std::any value)
 {
-  m_Args.insert({std::move(key), value});
+  m_Args.insert_or_assign(key, std::move(value));
+}
+
+void Arguments::insertOrAssign(std::string&& key, std::any value)
+{
+  m_Args.insert_or_assign(std::move(key), std::move(value));
 }
 
 const std::any& Arguments::at(std::string_view key) const
