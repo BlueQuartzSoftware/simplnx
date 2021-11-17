@@ -50,7 +50,9 @@ CDA_CREATE_CONVERTOR(uint32_t, std::stoull)
 CDA_CREATE_CONVERTOR(int32_t, std::stoll)
 CDA_CREATE_CONVERTOR(uint64_t, std::stoull)
 CDA_CREATE_CONVERTOR(int64_t, std::stoll)
+#ifdef __APPLE__
 CDA_CREATE_CONVERTOR(size_t, std::stoull)
+#endif
 // CDA_CREATE_CONVERTOR(bool, toInt)
 CDA_CREATE_CONVERTOR(float, std::stof)
 CDA_CREATE_CONVERTOR(double, std::stod)

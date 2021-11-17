@@ -1,8 +1,9 @@
 #pragma once
 
+#include "ComplexCore/ComplexCore_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -10,7 +11,7 @@ namespace complex
  * @class ConditionalSetValue
  * @brief This filter will ....
  */
-class COMPLEX_EXPORT ConditionalSetValue : public IFilter
+class COMPLEXCORE_EXPORT ConditionalSetValue : public IFilter
 {
 public:
   ConditionalSetValue() = default;

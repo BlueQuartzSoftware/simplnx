@@ -1,9 +1,9 @@
 #pragma once
 
+#include "ComplexCore/ComplexCore_export.hpp"
+
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
-
-#include "ComplexCore/ComplexCore_export.hpp"
 
 namespace complex
 {
