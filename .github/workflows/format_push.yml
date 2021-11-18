@@ -1,0 +1,19 @@
+name: clang-format
+
+on:
+  push:
+    branches:
+      - develop
+      - master
+
+jobs:
+  clang_format:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Add Problem Matcher
+        uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
+      - name: Check Formatting
+        run: |
+          python3 scripts/clang_format.py --format-version 10

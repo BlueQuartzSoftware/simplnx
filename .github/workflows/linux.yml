@@ -1,0 +1,62 @@
+name: linux
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+  push:
+    branches:
+      - develop
+      - master
+
+jobs:
+  build:
+    env:
+      VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-20.04
+        cxx:
+          - g++-10
+          - clang++-10
+    runs-on: ${{matrix.os}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Checkout Complex Repo
+        uses: actions/checkout@v2
+        with:
+          repository: bluequartzsoftware/complex
+          path: complex
+          submodules: true     
+      - name: Add C++ Problem Matcher
+        uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
+      - name: Install Dependencies
+        run: |
+          sudo apt-get -y install ninja-build
+      - name: Setup NuGet Credentials
+        shell: bash
+        run: >
+          mono `vcpkg fetch nuget | tail -n 1`
+          sources add
+          -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
+          -storepasswordincleartext
+          -name "GitHub"
+          -username "BlueQuartzSoftware"
+          -password "${{secrets.GITHUB_TOKEN}}"
+      - name: Configure
+        env:
+          CXX: ${{matrix.cxx}}
+        run: |
+          cmake --preset ci ${{github.workspace}}
+      - name: Build
+        run: |
+          cmake --build --preset ci
+      - name: Test
+        run: |
+          ctest --preset ci

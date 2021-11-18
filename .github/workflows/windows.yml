@@ -1,0 +1,59 @@
+name: windows
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+  push:
+    branches:
+      - develop
+      - master
+
+jobs:
+  build:
+    env:
+      VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-2019
+        toolset:
+          - v141
+          - v142
+    runs-on: ${{matrix.os}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Checkout Complex Repo
+        uses: actions/checkout@v2
+        with:
+          repository: bluequartzsoftware/complex
+          path: complex
+          submodules: true
+      - name: Add C++ Problem Matcher
+        uses: ammaraskar/msvc-problem-matcher@0.1
+      - name: Setup Build Environment
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Setup NuGet Credentials
+        shell: bash
+        run: >
+          `vcpkg fetch nuget | tail -n 1`
+          sources add
+          -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
+          -storepasswordincleartext
+          -name "GitHub"
+          -username "BlueQuartzSoftware"
+          -password "${{secrets.GITHUB_TOKEN}}"
+      - name: Configure
+        run: |
+          cmake --preset ci ${{github.workspace}} -G "Visual Studio 16 2019" -T ${{matrix.toolset}}
+      - name: Build
+        run: |
+          cmake --build --preset ci
+      - name: Test
+        run: |
+          ctest --preset ci
