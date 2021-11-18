@@ -43,14 +43,14 @@ TEST_CASE("Reconstruction::AlignSectionsMisorientation: Instantiation and Parame
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(AlignSectionsMisorientation::k_WriteAlignmentShifts_Key, std::make_any<bool>(false));
-  args.insert(AlignSectionsMisorientation::k_AlignmentShiftFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(AlignSectionsMisorientation::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(AlignSectionsMisorientation::k_UseGoodVoxels_Key, std::make_any<bool>(false));
-  args.insert(AlignSectionsMisorientation::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AlignSectionsMisorientation::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AlignSectionsMisorientation::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AlignSectionsMisorientation::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AlignSectionsMisorientation::k_WriteAlignmentShifts_Key, std::make_any<bool>(false));
+  args.insertOrAssign(AlignSectionsMisorientation::k_AlignmentShiftFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(AlignSectionsMisorientation::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(AlignSectionsMisorientation::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(AlignSectionsMisorientation::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AlignSectionsMisorientation::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AlignSectionsMisorientation::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AlignSectionsMisorientation::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

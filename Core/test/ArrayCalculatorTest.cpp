@@ -40,10 +40,10 @@ TEST_CASE("Core::ArrayCalculator: Instantiation and Parameter Check", "[Core][Ar
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ArrayCalculator::k_SelectedAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
-  /*[x]*/ args.insert(ArrayCalculator::k_InfixEquation_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  /*[x]*/ args.insert(ArrayCalculator::k_ScalarType_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(ArrayCalculator::k_CalculatedArray_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ArrayCalculator::k_SelectedAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
+  /*[x]*/ args.insertOrAssign(ArrayCalculator::k_InfixEquation_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(ArrayCalculator::k_ScalarType_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(ArrayCalculator::k_CalculatedArray_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

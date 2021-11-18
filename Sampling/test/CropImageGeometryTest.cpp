@@ -41,19 +41,19 @@ TEST_CASE("Sampling::CropImageGeometry: Instantiation and Parameter Check", "[Sa
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CropImageGeometry::k_XMin_Key, std::make_any<int32>(1234356));
-  args.insert(CropImageGeometry::k_YMin_Key, std::make_any<int32>(1234356));
-  args.insert(CropImageGeometry::k_ZMin_Key, std::make_any<int32>(1234356));
-  args.insert(CropImageGeometry::k_XMax_Key, std::make_any<int32>(1234356));
-  args.insert(CropImageGeometry::k_YMax_Key, std::make_any<int32>(1234356));
-  args.insert(CropImageGeometry::k_ZMax_Key, std::make_any<int32>(1234356));
-  args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(false));
-  args.insert(CropImageGeometry::k_SaveAsNewDataContainer_Key, std::make_any<bool>(false));
-  args.insert(CropImageGeometry::k_NewDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CropImageGeometry::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));
-  args.insert(CropImageGeometry::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CropImageGeometry::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CropImageGeometry::k_XMin_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(CropImageGeometry::k_YMin_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(CropImageGeometry::k_ZMin_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(CropImageGeometry::k_XMax_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(CropImageGeometry::k_YMax_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(CropImageGeometry::k_ZMax_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CropImageGeometry::k_SaveAsNewDataContainer_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CropImageGeometry::k_NewDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CropImageGeometry::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CropImageGeometry::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CropImageGeometry::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -39,15 +39,16 @@ TEST_CASE("Core::InitializeData: Instantiation and Parameter Check", "[Core][Ini
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(InitializeData::k_CellAttributeMatrixPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(InitializeData::k_XMin_Key, std::make_any<int32>(1234356));
-  args.insert(InitializeData::k_YMin_Key, std::make_any<int32>(1234356));
-  args.insert(InitializeData::k_ZMin_Key, std::make_any<int32>(1234356));
-  args.insert(InitializeData::k_XMax_Key, std::make_any<int32>(1234356));
-  args.insert(InitializeData::k_YMax_Key, std::make_any<int32>(1234356));
-  args.insert(InitializeData::k_ZMax_Key, std::make_any<int32>(1234356));
-  args.insert(InitializeData::k_InitValue_Key, std::make_any<float64>(2.3456789));
-  /*[x]*/ args.insert(InitializeData::k_InitRange_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(InitializeData::k_CellAttributeMatrixPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(InitializeData::k_XMin_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(InitializeData::k_YMin_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(InitializeData::k_ZMin_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(InitializeData::k_XMax_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(InitializeData::k_YMax_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(InitializeData::k_ZMax_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<float64>(2.3456789));
+  /*[x]*/ args.insertOrAssign(InitializeData::k_InitRange_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

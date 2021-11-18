@@ -38,12 +38,12 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheck: Instantiation a
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(BadDataNeighborOrientationCheck::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(BadDataNeighborOrientationCheck::k_NumberOfNeighbors_Key, std::make_any<int32>(1234356));
-  args.insert(BadDataNeighborOrientationCheck::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(BadDataNeighborOrientationCheck::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(BadDataNeighborOrientationCheck::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(BadDataNeighborOrientationCheck::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(BadDataNeighborOrientationCheck::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(BadDataNeighborOrientationCheck::k_NumberOfNeighbors_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(BadDataNeighborOrientationCheck::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(BadDataNeighborOrientationCheck::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(BadDataNeighborOrientationCheck::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(BadDataNeighborOrientationCheck::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -40,22 +40,22 @@ TEST_CASE("Reconstruction::MergeColonies: Instantiation and Parameter Check", "[
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(MergeColonies::k_UseNonContiguousNeighbors_Key, std::make_any<bool>(false));
-  args.insert(MergeColonies::k_NonContiguousNeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeColonies::k_ContiguousNeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeColonies::k_AxisTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(MergeColonies::k_AngleTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(MergeColonies::k_IdentifyGlobAlpha_Key, std::make_any<bool>(false));
-  args.insert(MergeColonies::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeColonies::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeColonies::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeColonies::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeColonies::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeColonies::k_CellParentIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeColonies::k_GlobAlphaArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeColonies::k_NewCellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeColonies::k_FeatureParentIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeColonies::k_ActiveArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeColonies::k_UseNonContiguousNeighbors_Key, std::make_any<bool>(false));
+  args.insertOrAssign(MergeColonies::k_NonContiguousNeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeColonies::k_ContiguousNeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeColonies::k_AxisTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(MergeColonies::k_AngleTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(MergeColonies::k_IdentifyGlobAlpha_Key, std::make_any<bool>(false));
+  args.insertOrAssign(MergeColonies::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeColonies::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeColonies::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeColonies::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeColonies::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeColonies::k_CellParentIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeColonies::k_GlobAlphaArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeColonies::k_NewCellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeColonies::k_FeatureParentIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeColonies::k_ActiveArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

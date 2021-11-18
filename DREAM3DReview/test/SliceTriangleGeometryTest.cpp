@@ -43,17 +43,17 @@ TEST_CASE("DREAM3DReview::SliceTriangleGeometry: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(SliceTriangleGeometry::k_SliceDirection_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(SliceTriangleGeometry::k_Zstart_Key, std::make_any<float32>(1.23345f));
-  args.insert(SliceTriangleGeometry::k_Zend_Key, std::make_any<float32>(1.23345f));
-  args.insert(SliceTriangleGeometry::k_SliceResolution_Key, std::make_any<float32>(1.23345f));
-  args.insert(SliceTriangleGeometry::k_HaveRegionIds_Key, std::make_any<bool>(false));
-  args.insert(SliceTriangleGeometry::k_CADDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(SliceTriangleGeometry::k_RegionIdArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(SliceTriangleGeometry::k_SliceDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(SliceTriangleGeometry::k_EdgeAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(SliceTriangleGeometry::k_SliceIdArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(SliceTriangleGeometry::k_SliceAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SliceTriangleGeometry::k_SliceDirection_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(SliceTriangleGeometry::k_Zstart_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(SliceTriangleGeometry::k_Zend_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(SliceTriangleGeometry::k_SliceResolution_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(SliceTriangleGeometry::k_HaveRegionIds_Key, std::make_any<bool>(false));
+  args.insertOrAssign(SliceTriangleGeometry::k_CADDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SliceTriangleGeometry::k_RegionIdArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SliceTriangleGeometry::k_SliceDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(SliceTriangleGeometry::k_EdgeAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SliceTriangleGeometry::k_SliceIdArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SliceTriangleGeometry::k_SliceAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

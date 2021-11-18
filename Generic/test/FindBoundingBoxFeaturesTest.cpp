@@ -39,11 +39,11 @@ TEST_CASE("Generic::FindBoundingBoxFeatures: Instantiation and Parameter Check",
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindBoundingBoxFeatures::k_CalcByPhase_Key, std::make_any<bool>(false));
-  args.insert(FindBoundingBoxFeatures::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindBoundingBoxFeatures::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindBoundingBoxFeatures::k_PhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindBoundingBoxFeatures::k_BiasedFeaturesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundingBoxFeatures::k_CalcByPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindBoundingBoxFeatures::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundingBoxFeatures::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundingBoxFeatures::k_PhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundingBoxFeatures::k_BiasedFeaturesArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

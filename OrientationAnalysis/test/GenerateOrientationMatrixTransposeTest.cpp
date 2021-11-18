@@ -39,9 +39,9 @@ TEST_CASE("OrientationAnalysis::GenerateOrientationMatrixTranspose: Instantiatio
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(GenerateOrientationMatrixTranspose::k_OrientationMatrixDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateOrientationMatrixTranspose::k_OutputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateOrientationMatrixTranspose::k_DeleteOriginalData_Key, std::make_any<bool>(false));
+  args.insertOrAssign(GenerateOrientationMatrixTranspose::k_OrientationMatrixDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateOrientationMatrixTranspose::k_OutputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateOrientationMatrixTranspose::k_DeleteOriginalData_Key, std::make_any<bool>(false));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

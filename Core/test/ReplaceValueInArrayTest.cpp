@@ -38,9 +38,9 @@ TEST_CASE("Core::ReplaceValueInArray: Instantiation and Parameter Check", "[Core
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ReplaceValueInArray::k_RemoveValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ReplaceValueInArray::k_ReplaceValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ReplaceValueInArray::k_SelectedArray_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReplaceValueInArray::k_RemoveValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ReplaceValueInArray::k_ReplaceValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ReplaceValueInArray::k_SelectedArray_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

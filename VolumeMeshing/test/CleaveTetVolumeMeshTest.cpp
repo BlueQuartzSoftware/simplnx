@@ -39,13 +39,14 @@ TEST_CASE("VolumeMeshing::CleaveTetVolumeMesh: Instantiation and Parameter Check
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CleaveTetVolumeMesh::k_SignedDistanceArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(CleaveTetVolumeMesh::k_Lipschitz_Key, std::make_any<float32>(1.23345f));
-  args.insert(CleaveTetVolumeMesh::k_Scale_Key, std::make_any<float32>(1.23345f));
-  args.insert(CleaveTetVolumeMesh::k_Multiplier_Key, std::make_any<float32>(1.23345f));
-  args.insert(CleaveTetVolumeMesh::k_Alpha_Key, std::make_any<float32>(1.23345f));
-  args.insert(CleaveTetVolumeMesh::k_Padding_Key, std::make_any<int32>(1234356));
-  args.insert(CleaveTetVolumeMesh::k_AdaptiveSurface_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CleaveTetVolumeMesh::k_SignedDistanceArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(CleaveTetVolumeMesh::k_Lipschitz_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(CleaveTetVolumeMesh::k_Scale_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(CleaveTetVolumeMesh::k_Multiplier_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(CleaveTetVolumeMesh::k_Alpha_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(CleaveTetVolumeMesh::k_Padding_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(CleaveTetVolumeMesh::k_AdaptiveSurface_Key, std::make_any<bool>(false));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

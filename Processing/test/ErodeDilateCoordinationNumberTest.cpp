@@ -40,11 +40,11 @@ TEST_CASE("Processing::ErodeDilateCoordinationNumber: Instantiation and Paramete
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ErodeDilateCoordinationNumber::k_CoordinationNumber_Key, std::make_any<int32>(1234356));
-  args.insert(ErodeDilateCoordinationNumber::k_Loop_Key, std::make_any<bool>(false));
-  args.insert(ErodeDilateCoordinationNumber::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ErodeDilateCoordinationNumber::k_IgnoredDataArrayPaths_Key,
-              std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(ErodeDilateCoordinationNumber::k_CoordinationNumber_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ErodeDilateCoordinationNumber::k_Loop_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ErodeDilateCoordinationNumber::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ErodeDilateCoordinationNumber::k_IgnoredDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

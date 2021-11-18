@@ -40,11 +40,11 @@ TEST_CASE("DREAM3DReview::DiscretizeDDDomain: Instantiation and Parameter Check"
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(DiscretizeDDDomain::k_CellSize_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(DiscretizeDDDomain::k_EdgeDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(DiscretizeDDDomain::k_OutputDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(DiscretizeDDDomain::k_OutputAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(DiscretizeDDDomain::k_OutputArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DiscretizeDDDomain::k_CellSize_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(DiscretizeDDDomain::k_EdgeDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DiscretizeDDDomain::k_OutputDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DiscretizeDDDomain::k_OutputAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DiscretizeDDDomain::k_OutputArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -41,9 +41,9 @@ TEST_CASE("Core::WriteTriangleGeometry: Instantiation and Parameter Check", "[Co
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(WriteTriangleGeometry::k_OutputNodesFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(WriteTriangleGeometry::k_OutputTrianglesFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(WriteTriangleGeometry::k_DataContainerSelection_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(WriteTriangleGeometry::k_OutputNodesFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(WriteTriangleGeometry::k_OutputTrianglesFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(WriteTriangleGeometry::k_DataContainerSelection_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

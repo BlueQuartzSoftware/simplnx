@@ -38,8 +38,8 @@ TEST_CASE("OrientationAnalysis::ChangeAngleRepresentation: Instantiation and Par
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ChangeAngleRepresentation::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ChangeAngleRepresentation::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ChangeAngleRepresentation::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ChangeAngleRepresentation::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

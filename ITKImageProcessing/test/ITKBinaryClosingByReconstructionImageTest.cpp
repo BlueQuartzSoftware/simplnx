@@ -42,12 +42,12 @@ TEST_CASE("ITKImageProcessing::ITKBinaryClosingByReconstructionImage: Instantiat
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKBinaryClosingByReconstructionImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ITKBinaryClosingByReconstructionImage::k_ForegroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKBinaryClosingByReconstructionImage::k_FullyConnected_Key, std::make_any<bool>(false));
-  args.insert(ITKBinaryClosingByReconstructionImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKBinaryClosingByReconstructionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKBinaryClosingByReconstructionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKBinaryClosingByReconstructionImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ITKBinaryClosingByReconstructionImage::k_ForegroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKBinaryClosingByReconstructionImage::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKBinaryClosingByReconstructionImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKBinaryClosingByReconstructionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKBinaryClosingByReconstructionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -39,11 +39,11 @@ TEST_CASE("Core::SetOriginResolutionImageGeom: Instantiation and Parameter Check
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(SetOriginResolutionImageGeom::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(SetOriginResolutionImageGeom::k_ChangeOrigin_Key, std::make_any<bool>(false));
-  args.insert(SetOriginResolutionImageGeom::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(SetOriginResolutionImageGeom::k_ChangeResolution_Key, std::make_any<bool>(false));
-  args.insert(SetOriginResolutionImageGeom::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(SetOriginResolutionImageGeom::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SetOriginResolutionImageGeom::k_ChangeOrigin_Key, std::make_any<bool>(false));
+  args.insertOrAssign(SetOriginResolutionImageGeom::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(SetOriginResolutionImageGeom::k_ChangeResolution_Key, std::make_any<bool>(false));
+  args.insertOrAssign(SetOriginResolutionImageGeom::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

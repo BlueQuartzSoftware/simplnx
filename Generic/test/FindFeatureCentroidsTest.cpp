@@ -38,8 +38,8 @@ TEST_CASE("Generic::FindFeatureCentroids: Instantiation and Parameter Check", "[
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindFeatureCentroids::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureCentroids::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureCentroids::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureCentroids::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

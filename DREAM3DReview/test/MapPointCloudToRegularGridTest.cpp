@@ -42,13 +42,13 @@ TEST_CASE("DREAM3DReview::MapPointCloudToRegularGrid: Instantiation and Paramete
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(MapPointCloudToRegularGrid::k_GridDimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
-  args.insert(MapPointCloudToRegularGrid::k_ImageDataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MapPointCloudToRegularGrid::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MapPointCloudToRegularGrid::k_UseMask_Key, std::make_any<bool>(false));
-  args.insert(MapPointCloudToRegularGrid::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MapPointCloudToRegularGrid::k_VoxelIndicesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MapPointCloudToRegularGrid::k_CreatedImageDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MapPointCloudToRegularGrid::k_GridDimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
+  args.insertOrAssign(MapPointCloudToRegularGrid::k_ImageDataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MapPointCloudToRegularGrid::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MapPointCloudToRegularGrid::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(MapPointCloudToRegularGrid::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MapPointCloudToRegularGrid::k_VoxelIndicesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MapPointCloudToRegularGrid::k_CreatedImageDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

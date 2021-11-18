@@ -39,12 +39,12 @@ TEST_CASE("ITKImageProcessing::ITKPCMTileRegistration: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKPCMTileRegistration::k_ColumnMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
-  args.insert(ITKPCMTileRegistration::k_RowMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
-  args.insert(ITKPCMTileRegistration::k_DataContainerPaddingDigits_Key, std::make_any<int32>(1234356));
-  args.insert(ITKPCMTileRegistration::k_DataContainerPrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ITKPCMTileRegistration::k_CommonAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ITKPCMTileRegistration::k_CommonDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKPCMTileRegistration::k_ColumnMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
+  args.insertOrAssign(ITKPCMTileRegistration::k_RowMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
+  args.insertOrAssign(ITKPCMTileRegistration::k_DataContainerPaddingDigits_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ITKPCMTileRegistration::k_DataContainerPrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKPCMTileRegistration::k_CommonAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKPCMTileRegistration::k_CommonDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

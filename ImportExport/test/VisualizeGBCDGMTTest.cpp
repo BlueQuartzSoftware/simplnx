@@ -43,11 +43,11 @@ TEST_CASE("ImportExport::VisualizeGBCDGMT: Instantiation and Parameter Check", "
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(VisualizeGBCDGMT::k_PhaseOfInterest_Key, std::make_any<int32>(1234356));
-  args.insert(VisualizeGBCDGMT::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(4)));
-  args.insert(VisualizeGBCDGMT::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(VisualizeGBCDGMT::k_GBCDArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(VisualizeGBCDGMT::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(VisualizeGBCDGMT::k_PhaseOfInterest_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(VisualizeGBCDGMT::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(4)));
+  args.insertOrAssign(VisualizeGBCDGMT::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(VisualizeGBCDGMT::k_GBCDArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(VisualizeGBCDGMT::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

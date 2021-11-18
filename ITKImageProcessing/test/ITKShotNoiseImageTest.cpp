@@ -39,10 +39,10 @@ TEST_CASE("ITKImageProcessing::ITKShotNoiseImage: Instantiation and Parameter Ch
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKShotNoiseImage::k_Scale_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKShotNoiseImage::k_Seed_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKShotNoiseImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKShotNoiseImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKShotNoiseImage::k_Scale_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKShotNoiseImage::k_Seed_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKShotNoiseImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKShotNoiseImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

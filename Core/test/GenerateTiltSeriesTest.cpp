@@ -40,11 +40,11 @@ TEST_CASE("Core::GenerateTiltSeries: Instantiation and Parameter Check", "[Core]
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(GenerateTiltSeries::k_RotationAxis_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(GenerateTiltSeries::k_RotationLimits_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(GenerateTiltSeries::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(GenerateTiltSeries::k_InputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateTiltSeries::k_OutputPrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(GenerateTiltSeries::k_RotationAxis_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(GenerateTiltSeries::k_RotationLimits_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(GenerateTiltSeries::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(GenerateTiltSeries::k_InputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateTiltSeries::k_OutputPrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

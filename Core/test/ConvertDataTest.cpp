@@ -39,9 +39,9 @@ TEST_CASE("Core::ConvertData: Instantiation and Parameter Check", "[Core][Conver
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ConvertData::k_ScalarType_Key, std::make_any<NumericType>(NumericType::int8));
-  args.insert(ConvertData::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ConvertData::k_OutputArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ConvertData::k_ScalarType_Key, std::make_any<NumericType>(NumericType::int8));
+  args.insertOrAssign(ConvertData::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ConvertData::k_OutputArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -38,8 +38,8 @@ TEST_CASE("ITKImageProcessing::ITKLogImage: Instantiation and Parameter Check", 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKLogImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKLogImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKLogImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKLogImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

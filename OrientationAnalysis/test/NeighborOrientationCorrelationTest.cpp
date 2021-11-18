@@ -39,15 +39,15 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelation: Instantiation an
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(NeighborOrientationCorrelation::k_MinConfidence_Key, std::make_any<float32>(1.23345f));
-  args.insert(NeighborOrientationCorrelation::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(NeighborOrientationCorrelation::k_Level_Key, std::make_any<int32>(1234356));
-  args.insert(NeighborOrientationCorrelation::k_ConfidenceIndexArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(NeighborOrientationCorrelation::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(NeighborOrientationCorrelation::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(NeighborOrientationCorrelation::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(NeighborOrientationCorrelation::k_IgnoredDataArrayPaths_Key,
-              std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(NeighborOrientationCorrelation::k_MinConfidence_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(NeighborOrientationCorrelation::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(NeighborOrientationCorrelation::k_Level_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(NeighborOrientationCorrelation::k_ConfidenceIndexArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(NeighborOrientationCorrelation::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(NeighborOrientationCorrelation::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(NeighborOrientationCorrelation::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(NeighborOrientationCorrelation::k_IgnoredDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

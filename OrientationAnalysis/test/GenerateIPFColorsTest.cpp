@@ -40,13 +40,13 @@ TEST_CASE("OrientationAnalysis::GenerateIPFColors: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(GenerateIPFColors::k_ReferenceDir_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(GenerateIPFColors::k_UseGoodVoxels_Key, std::make_any<bool>(false));
-  args.insert(GenerateIPFColors::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateIPFColors::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateIPFColors::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateIPFColors::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateIPFColors::k_CellIPFColorsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateIPFColors::k_ReferenceDir_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(GenerateIPFColors::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(GenerateIPFColors::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateIPFColors::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateIPFColors::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateIPFColors::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateIPFColors::k_CellIPFColorsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

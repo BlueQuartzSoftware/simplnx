@@ -41,14 +41,14 @@ TEST_CASE("UCSBUtilities::GenerateMisorientationColors: Instantiation and Parame
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(GenerateMisorientationColors::k_ReferenceAxis_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(GenerateMisorientationColors::k_ReferenceAngle_Key, std::make_any<float32>(1.23345f));
-  args.insert(GenerateMisorientationColors::k_UseGoodVoxels_Key, std::make_any<bool>(false));
-  args.insert(GenerateMisorientationColors::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateMisorientationColors::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateMisorientationColors::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateMisorientationColors::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateMisorientationColors::k_MisorientationColorArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateMisorientationColors::k_ReferenceAxis_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(GenerateMisorientationColors::k_ReferenceAngle_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(GenerateMisorientationColors::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(GenerateMisorientationColors::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateMisorientationColors::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateMisorientationColors::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateMisorientationColors::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateMisorientationColors::k_MisorientationColorArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

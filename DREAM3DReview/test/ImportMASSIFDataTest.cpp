@@ -42,9 +42,9 @@ TEST_CASE("DREAM3DReview::ImportMASSIFData: Instantiation and Parameter Check", 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ImportMASSIFData::k_MassifInputFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ImportMASSIFData::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportMASSIFData::k_StepNumber_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ImportMASSIFData::k_MassifInputFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ImportMASSIFData::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportMASSIFData::k_StepNumber_Key, std::make_any<int32>(1234356));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

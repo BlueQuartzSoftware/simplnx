@@ -43,12 +43,12 @@ TEST_CASE("SimulationIO::ExportMultiOnScaleTableFile: Instantiation and Paramete
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ExportMultiOnScaleTableFile::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
-  args.insert(ExportMultiOnScaleTableFile::k_DataContainerPrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ExportMultiOnScaleTableFile::k_MatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ExportMultiOnScaleTableFile::k_ArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ExportMultiOnScaleTableFile::k_NumKeypoints_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
-  args.insert(ExportMultiOnScaleTableFile::k_PhaseNamesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExportMultiOnScaleTableFile::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
+  args.insertOrAssign(ExportMultiOnScaleTableFile::k_DataContainerPrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ExportMultiOnScaleTableFile::k_MatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ExportMultiOnScaleTableFile::k_ArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ExportMultiOnScaleTableFile::k_NumKeypoints_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
+  args.insertOrAssign(ExportMultiOnScaleTableFile::k_PhaseNamesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

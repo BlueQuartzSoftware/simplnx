@@ -38,9 +38,9 @@ TEST_CASE("Sampling::AppendImageGeometryZSlice: Instantiation and Parameter Chec
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(AppendImageGeometryZSlice::k_InputAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AppendImageGeometryZSlice::k_DestinationAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AppendImageGeometryZSlice::k_CheckResolution_Key, std::make_any<bool>(false));
+  args.insertOrAssign(AppendImageGeometryZSlice::k_InputAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AppendImageGeometryZSlice::k_DestinationAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AppendImageGeometryZSlice::k_CheckResolution_Key, std::make_any<bool>(false));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

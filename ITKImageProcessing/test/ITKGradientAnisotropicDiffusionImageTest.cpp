@@ -39,12 +39,12 @@ TEST_CASE("ITKImageProcessing::ITKGradientAnisotropicDiffusionImage: Instantiati
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKGradientAnisotropicDiffusionImage::k_TimeStep_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKGradientAnisotropicDiffusionImage::k_ConductanceParameter_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKGradientAnisotropicDiffusionImage::k_ConductanceScalingUpdateInterval_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKGradientAnisotropicDiffusionImage::k_NumberOfIterations_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKGradientAnisotropicDiffusionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKGradientAnisotropicDiffusionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_TimeStep_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_ConductanceParameter_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_ConductanceScalingUpdateInterval_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_NumberOfIterations_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -39,9 +39,9 @@ TEST_CASE("Core::CreateAttributeMatrix: Instantiation and Parameter Check", "[Co
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CreateAttributeMatrix::k_AttributeMatrixType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  /*[x]*/ args.insert(CreateAttributeMatrix::k_TupleDimensions_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(CreateAttributeMatrix::k_CreatedAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateAttributeMatrix::k_AttributeMatrixType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  /*[x]*/ args.insertOrAssign(CreateAttributeMatrix::k_TupleDimensions_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(CreateAttributeMatrix::k_CreatedAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

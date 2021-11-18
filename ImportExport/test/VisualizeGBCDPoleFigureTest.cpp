@@ -43,11 +43,11 @@ TEST_CASE("ImportExport::VisualizeGBCDPoleFigure: Instantiation and Parameter Ch
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(VisualizeGBCDPoleFigure::k_PhaseOfInterest_Key, std::make_any<int32>(1234356));
-  args.insert(VisualizeGBCDPoleFigure::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(4)));
-  args.insert(VisualizeGBCDPoleFigure::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(VisualizeGBCDPoleFigure::k_GBCDArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(VisualizeGBCDPoleFigure::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(VisualizeGBCDPoleFigure::k_PhaseOfInterest_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(VisualizeGBCDPoleFigure::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(4)));
+  args.insertOrAssign(VisualizeGBCDPoleFigure::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(VisualizeGBCDPoleFigure::k_GBCDArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(VisualizeGBCDPoleFigure::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

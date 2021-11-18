@@ -42,12 +42,12 @@ TEST_CASE("DREAM3DReview::ImportCLIFile: Instantiation and Parameter Check", "[D
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ImportCLIFile::k_CLIFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ImportCLIFile::k_EdgeDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportCLIFile::k_VertexAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportCLIFile::k_EdgeAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportCLIFile::k_LayerIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportCLIFile::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportCLIFile::k_CLIFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ImportCLIFile::k_EdgeDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportCLIFile::k_VertexAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportCLIFile::k_EdgeAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportCLIFile::k_LayerIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportCLIFile::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

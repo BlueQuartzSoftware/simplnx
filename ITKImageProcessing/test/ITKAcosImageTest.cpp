@@ -38,8 +38,8 @@ TEST_CASE("ITKImageProcessing::ITKAcosImage: Instantiation and Parameter Check",
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKAcosImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKAcosImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKAcosImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKAcosImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

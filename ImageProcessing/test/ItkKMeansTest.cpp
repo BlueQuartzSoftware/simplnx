@@ -40,11 +40,11 @@ TEST_CASE("ImageProcessing::ItkKMeans: Instantiation and Parameter Check", "[Ima
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ItkKMeans::k_Classes_Key, std::make_any<int32>(1234356));
-  args.insert(ItkKMeans::k_Slice_Key, std::make_any<bool>(false));
-  args.insert(ItkKMeans::k_SaveAsNewArray_Key, std::make_any<bool>(false));
-  args.insert(ItkKMeans::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkKMeans::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkKMeans::k_Classes_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ItkKMeans::k_Slice_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ItkKMeans::k_SaveAsNewArray_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ItkKMeans::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkKMeans::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

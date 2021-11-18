@@ -39,10 +39,10 @@ TEST_CASE("DREAM3DReview::DownsampleVertexGeometry: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(DownsampleVertexGeometry::k_DecimationFreq_Key, std::make_any<int32>(1234356));
-  args.insert(DownsampleVertexGeometry::k_DecimationFraction_Key, std::make_any<float32>(1.23345f));
-  args.insert(DownsampleVertexGeometry::k_GridResolution_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(DownsampleVertexGeometry::k_VertexAttrMatPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DownsampleVertexGeometry::k_DecimationFreq_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(DownsampleVertexGeometry::k_DecimationFraction_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(DownsampleVertexGeometry::k_GridResolution_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(DownsampleVertexGeometry::k_VertexAttrMatPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

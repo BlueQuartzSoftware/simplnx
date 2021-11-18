@@ -38,8 +38,8 @@ TEST_CASE("Core::RenameAttributeArray: Instantiation and Parameter Check", "[Cor
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(RenameAttributeArray::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(RenameAttributeArray::k_NewArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(RenameAttributeArray::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RenameAttributeArray::k_NewArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

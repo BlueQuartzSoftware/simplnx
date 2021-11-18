@@ -44,12 +44,12 @@ TEST_CASE("Core::RawBinaryReader: Instantiation and Parameter Check", "[Core][Ra
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(RawBinaryReader::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(RawBinaryReader::k_ScalarType_Key, std::make_any<NumericType>(NumericType::int8));
-  args.insert(RawBinaryReader::k_NumberOfComponents_Key, std::make_any<int32>(1234356));
-  args.insert(RawBinaryReader::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(RawBinaryReader::k_SkipHeaderBytes_Key, std::make_any<uint64>(13412341234212));
-  args.insert(RawBinaryReader::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RawBinaryReader::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(RawBinaryReader::k_ScalarType_Key, std::make_any<NumericType>(NumericType::int8));
+  args.insertOrAssign(RawBinaryReader::k_NumberOfComponents_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(RawBinaryReader::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(RawBinaryReader::k_SkipHeaderBytes_Key, std::make_any<uint64>(13412341234212));
+  args.insertOrAssign(RawBinaryReader::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

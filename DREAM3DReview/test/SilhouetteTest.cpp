@@ -40,12 +40,12 @@ TEST_CASE("DREAM3DReview::Silhouette: Instantiation and Parameter Check", "[DREA
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(Silhouette::k_DistanceMetric_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(Silhouette::k_UseMask_Key, std::make_any<bool>(false));
-  args.insert(Silhouette::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(Silhouette::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(Silhouette::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(Silhouette::k_SilhouetteArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(Silhouette::k_DistanceMetric_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(Silhouette::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(Silhouette::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(Silhouette::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(Silhouette::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(Silhouette::k_SilhouetteArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

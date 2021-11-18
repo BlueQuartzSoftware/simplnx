@@ -41,12 +41,13 @@ TEST_CASE("Core::ConvertColorToGrayScale: Instantiation and Parameter Check", "[
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ConvertColorToGrayScale::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ConvertColorToGrayScale::k_ColorChannel_Key, std::make_any<int32>(1234356));
-  args.insert(ConvertColorToGrayScale::k_InputDataArrayVector_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(ConvertColorToGrayScale::k_CreateNewAttributeMatrix_Key, std::make_any<bool>(false));
-  args.insert(ConvertColorToGrayScale::k_OutputAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ConvertColorToGrayScale::k_OutputArrayPrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ConvertColorToGrayScale::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ConvertColorToGrayScale::k_ColorChannel_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ConvertColorToGrayScale::k_InputDataArrayVector_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(ConvertColorToGrayScale::k_CreateNewAttributeMatrix_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ConvertColorToGrayScale::k_OutputAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ConvertColorToGrayScale::k_OutputArrayPrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

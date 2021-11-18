@@ -43,16 +43,16 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometry: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(PointSampleTriangleGeometry::k_NumberOfSamples_Key, std::make_any<int32>(1234356));
-  args.insert(PointSampleTriangleGeometry::k_UseMask_Key, std::make_any<bool>(false));
-  args.insert(PointSampleTriangleGeometry::k_TriangleGeometry_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PointSampleTriangleGeometry::k_ParentGeometry_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PointSampleTriangleGeometry::k_TriangleAreasArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PointSampleTriangleGeometry::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PointSampleTriangleGeometry::k_SelectedDataArrayPaths_Key,
-              std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(PointSampleTriangleGeometry::k_VertexGeometry_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(PointSampleTriangleGeometry::k_VertexAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PointSampleTriangleGeometry::k_NumberOfSamples_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(PointSampleTriangleGeometry::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PointSampleTriangleGeometry::k_TriangleGeometry_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PointSampleTriangleGeometry::k_ParentGeometry_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PointSampleTriangleGeometry::k_TriangleAreasArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PointSampleTriangleGeometry::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PointSampleTriangleGeometry::k_SelectedDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(PointSampleTriangleGeometry::k_VertexGeometry_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(PointSampleTriangleGeometry::k_VertexAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

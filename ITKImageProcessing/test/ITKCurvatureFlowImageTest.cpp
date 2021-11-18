@@ -39,10 +39,10 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImage: Instantiation and Paramete
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKCurvatureFlowImage::k_TimeStep_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKCurvatureFlowImage::k_NumberOfIterations_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKCurvatureFlowImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKCurvatureFlowImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKCurvatureFlowImage::k_TimeStep_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKCurvatureFlowImage::k_NumberOfIterations_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKCurvatureFlowImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKCurvatureFlowImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

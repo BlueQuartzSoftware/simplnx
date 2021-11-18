@@ -39,14 +39,14 @@ TEST_CASE("SurfaceMeshing::FindTriangleGeomShapes: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindTriangleGeomShapes::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTriangleGeomShapes::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTriangleGeomShapes::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTriangleGeomShapes::k_VolumesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTriangleGeomShapes::k_Omega3sArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTriangleGeomShapes::k_AxisLengthsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTriangleGeomShapes::k_AxisEulerAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTriangleGeomShapes::k_AspectRatiosArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomShapes::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomShapes::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomShapes::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomShapes::k_VolumesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomShapes::k_Omega3sArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomShapes::k_AxisLengthsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomShapes::k_AxisEulerAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomShapes::k_AspectRatiosArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

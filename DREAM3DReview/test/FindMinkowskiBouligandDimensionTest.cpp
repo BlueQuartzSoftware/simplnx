@@ -38,9 +38,9 @@ TEST_CASE("DREAM3DReview::FindMinkowskiBouligandDimension: Instantiation and Par
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindMinkowskiBouligandDimension::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindMinkowskiBouligandDimension::k_AttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindMinkowskiBouligandDimension::k_MinkowskiBouligandDimensionArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindMinkowskiBouligandDimension::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindMinkowskiBouligandDimension::k_AttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindMinkowskiBouligandDimension::k_MinkowskiBouligandDimensionArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

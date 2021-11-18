@@ -41,10 +41,10 @@ TEST_CASE("ITKImageProcessing::ITKGradientMagnitudeRecursiveGaussianImage: Insta
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKGradientMagnitudeRecursiveGaussianImage::k_Sigma_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKGradientMagnitudeRecursiveGaussianImage::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-  args.insert(ITKGradientMagnitudeRecursiveGaussianImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKGradientMagnitudeRecursiveGaussianImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKGradientMagnitudeRecursiveGaussianImage::k_Sigma_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKGradientMagnitudeRecursiveGaussianImage::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKGradientMagnitudeRecursiveGaussianImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKGradientMagnitudeRecursiveGaussianImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

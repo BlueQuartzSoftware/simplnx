@@ -41,12 +41,12 @@ TEST_CASE("ProgWorkshop::Lesson4: Instantiation and Parameter Check", "[ProgWork
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(Lesson4::k_InputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(Lesson4::k_OutputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(Lesson4::k_Value_Key, std::make_any<float32>(1.23345f));
-  args.insert(Lesson4::k_Operator_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(Lesson4::k_Selection_Key, std::make_any<bool>(false));
-  args.insert(Lesson4::k_FloatValue_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(Lesson4::k_InputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(Lesson4::k_OutputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(Lesson4::k_Value_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(Lesson4::k_Operator_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(Lesson4::k_Selection_Key, std::make_any<bool>(false));
+  args.insertOrAssign(Lesson4::k_FloatValue_Key, std::make_any<float32>(1.23345f));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

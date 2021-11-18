@@ -40,11 +40,11 @@ TEST_CASE("ITKImageProcessing::ITKRescaleIntensityImage: Instantiation and Param
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKRescaleIntensityImage::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ITKRescaleIntensityImage::k_OutputMinimum_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKRescaleIntensityImage::k_OutputMaximum_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKRescaleIntensityImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKRescaleIntensityImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKRescaleIntensityImage::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ITKRescaleIntensityImage::k_OutputMinimum_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKRescaleIntensityImage::k_OutputMaximum_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKRescaleIntensityImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKRescaleIntensityImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

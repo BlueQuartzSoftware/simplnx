@@ -41,9 +41,9 @@ TEST_CASE("Sampling::SampleSurfaceMeshSpecifiedPoints: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(SampleSurfaceMeshSpecifiedPoints::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(SampleSurfaceMeshSpecifiedPoints::k_InputFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(SampleSurfaceMeshSpecifiedPoints::k_OutputFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(SampleSurfaceMeshSpecifiedPoints::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SampleSurfaceMeshSpecifiedPoints::k_InputFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(SampleSurfaceMeshSpecifiedPoints::k_OutputFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

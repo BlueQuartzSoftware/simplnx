@@ -41,13 +41,13 @@ TEST_CASE("OrientationAnalysis::INLWriter: Instantiation and Parameter Check", "
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(INLWriter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(INLWriter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(INLWriter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(INLWriter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(INLWriter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(INLWriter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(INLWriter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(INLWriter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(INLWriter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(INLWriter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(INLWriter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(INLWriter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(INLWriter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(INLWriter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

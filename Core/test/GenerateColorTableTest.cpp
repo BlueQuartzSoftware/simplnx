@@ -39,9 +39,9 @@ TEST_CASE("Core::GenerateColorTable: Instantiation and Parameter Check", "[Core]
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(GenerateColorTable::k_SelectedPresetName_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(GenerateColorTable::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateColorTable::k_RgbArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  /*[x]*/ args.insertOrAssign(GenerateColorTable::k_SelectedPresetName_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(GenerateColorTable::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateColorTable::k_RgbArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

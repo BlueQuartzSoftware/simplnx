@@ -41,11 +41,11 @@ TEST_CASE("ImportExport::GBCDTriangleDumper: Instantiation and Parameter Check",
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(GBCDTriangleDumper::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(GBCDTriangleDumper::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GBCDTriangleDumper::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GBCDTriangleDumper::k_SurfaceMeshFaceAreasArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GBCDTriangleDumper::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GBCDTriangleDumper::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(GBCDTriangleDumper::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GBCDTriangleDumper::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GBCDTriangleDumper::k_SurfaceMeshFaceAreasArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GBCDTriangleDumper::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -41,9 +41,9 @@ TEST_CASE("Core::DataContainerWriter: Instantiation and Parameter Check", "[Core
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(DataContainerWriter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(DataContainerWriter::k_WriteXdmfFile_Key, std::make_any<bool>(false));
-  args.insert(DataContainerWriter::k_WriteTimeSeries_Key, std::make_any<bool>(false));
+  args.insertOrAssign(DataContainerWriter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(DataContainerWriter::k_WriteXdmfFile_Key, std::make_any<bool>(false));
+  args.insertOrAssign(DataContainerWriter::k_WriteTimeSeries_Key, std::make_any<bool>(false));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

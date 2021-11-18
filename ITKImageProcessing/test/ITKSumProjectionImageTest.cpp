@@ -39,9 +39,9 @@ TEST_CASE("ITKImageProcessing::ITKSumProjectionImage: Instantiation and Paramete
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKSumProjectionImage::k_ProjectionDimension_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKSumProjectionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKSumProjectionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKSumProjectionImage::k_ProjectionDimension_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKSumProjectionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKSumProjectionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

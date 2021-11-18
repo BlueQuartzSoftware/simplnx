@@ -37,7 +37,7 @@ TEST_CASE("DREAM3DReview::CreateArrayofIndices: Instantiation and Parameter Chec
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CreateArrayofIndices::k_IndexArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateArrayofIndices::k_IndexArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

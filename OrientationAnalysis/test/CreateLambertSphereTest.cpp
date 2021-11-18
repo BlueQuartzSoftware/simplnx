@@ -40,16 +40,16 @@ TEST_CASE("OrientationAnalysis::CreateLambertSphere: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CreateLambertSphere::k_Hemisphere_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(CreateLambertSphere::k_CreateVertexGeometry_Key, std::make_any<bool>(false));
-  args.insert(CreateLambertSphere::k_VertexDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CreateLambertSphere::k_CreateEdgeGeometry_Key, std::make_any<bool>(false));
-  args.insert(CreateLambertSphere::k_EdgeDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CreateLambertSphere::k_CreateTriangleGeometry_Key, std::make_any<bool>(false));
-  args.insert(CreateLambertSphere::k_TriangleDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CreateLambertSphere::k_CreateQuadGeometry_Key, std::make_any<bool>(false));
-  args.insert(CreateLambertSphere::k_QuadDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CreateLambertSphere::k_ImageDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateLambertSphere::k_Hemisphere_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(CreateLambertSphere::k_CreateVertexGeometry_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CreateLambertSphere::k_VertexDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateLambertSphere::k_CreateEdgeGeometry_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CreateLambertSphere::k_EdgeDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateLambertSphere::k_CreateTriangleGeometry_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CreateLambertSphere::k_TriangleDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateLambertSphere::k_CreateQuadGeometry_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CreateLambertSphere::k_QuadDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateLambertSphere::k_ImageDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

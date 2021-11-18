@@ -39,9 +39,9 @@ TEST_CASE("ITKImageProcessing::ITKCastImage: Instantiation and Parameter Check",
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKCastImage::k_CastingType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ITKCastImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKCastImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKCastImage::k_CastingType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ITKCastImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKCastImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

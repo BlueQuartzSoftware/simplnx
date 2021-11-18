@@ -40,10 +40,10 @@ TEST_CASE("DREAM3DReview::ApproximatePointCloudHull: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ApproximatePointCloudHull::k_GridResolution_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ApproximatePointCloudHull::k_NumberOfEmptyNeighbors_Key, std::make_any<int32>(1234356));
-  args.insert(ApproximatePointCloudHull::k_VertexDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ApproximatePointCloudHull::k_HullDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ApproximatePointCloudHull::k_GridResolution_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ApproximatePointCloudHull::k_NumberOfEmptyNeighbors_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ApproximatePointCloudHull::k_VertexDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ApproximatePointCloudHull::k_HullDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

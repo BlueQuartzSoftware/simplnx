@@ -40,11 +40,11 @@ TEST_CASE("ImageProcessing::ItkMeanKernel: Instantiation and Parameter Check", "
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ItkMeanKernel::k_KernelSize_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
-  args.insert(ItkMeanKernel::k_Slice_Key, std::make_any<bool>(false));
-  args.insert(ItkMeanKernel::k_SaveAsNewArray_Key, std::make_any<bool>(false));
-  args.insert(ItkMeanKernel::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkMeanKernel::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkMeanKernel::k_KernelSize_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
+  args.insertOrAssign(ItkMeanKernel::k_Slice_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ItkMeanKernel::k_SaveAsNewArray_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ItkMeanKernel::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkMeanKernel::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

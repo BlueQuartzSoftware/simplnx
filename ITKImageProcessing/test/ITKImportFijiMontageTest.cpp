@@ -46,18 +46,18 @@ TEST_CASE("ITKImageProcessing::ITKImportFijiMontage: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKImportFijiMontage::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ITKImportFijiMontage::k_MontageName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ITKImportFijiMontage::k_ColumnMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
-  args.insert(ITKImportFijiMontage::k_RowMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
-  args.insert(ITKImportFijiMontage::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ITKImportFijiMontage::k_ChangeOrigin_Key, std::make_any<bool>(false));
-  args.insert(ITKImportFijiMontage::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKImportFijiMontage::k_ConvertToGrayScale_Key, std::make_any<bool>(false));
-  args.insert(ITKImportFijiMontage::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKImportFijiMontage::k_DataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKImportFijiMontage::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKImportFijiMontage::k_ImageDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKImportFijiMontage::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ITKImportFijiMontage::k_MontageName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKImportFijiMontage::k_ColumnMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
+  args.insertOrAssign(ITKImportFijiMontage::k_RowMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
+  args.insertOrAssign(ITKImportFijiMontage::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ITKImportFijiMontage::k_ChangeOrigin_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKImportFijiMontage::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKImportFijiMontage::k_ConvertToGrayScale_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKImportFijiMontage::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKImportFijiMontage::k_DataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKImportFijiMontage::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKImportFijiMontage::k_ImageDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

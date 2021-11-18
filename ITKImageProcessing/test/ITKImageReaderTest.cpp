@@ -42,10 +42,10 @@ TEST_CASE("ITKImageProcessing::ITKImageReader: Instantiation and Parameter Check
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKImageReader::k_FileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ITKImageReader::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKImageReader::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKImageReader::k_ImageDataArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ITKImageReader::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKImageReader::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKImageReader::k_ImageDataArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

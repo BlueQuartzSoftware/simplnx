@@ -39,9 +39,9 @@ TEST_CASE("ITKImageProcessing::ITKLaplacianSharpeningImage: Instantiation and Pa
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKLaplacianSharpeningImage::k_UseImageSpacing_Key, std::make_any<bool>(false));
-  args.insert(ITKLaplacianSharpeningImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKLaplacianSharpeningImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKLaplacianSharpeningImage::k_UseImageSpacing_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKLaplacianSharpeningImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKLaplacianSharpeningImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

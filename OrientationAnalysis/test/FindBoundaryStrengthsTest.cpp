@@ -39,15 +39,15 @@ TEST_CASE("OrientationAnalysis::FindBoundaryStrengths: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindBoundaryStrengths::k_Loading_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(FindBoundaryStrengths::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindBoundaryStrengths::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindBoundaryStrengths::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindBoundaryStrengths::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindBoundaryStrengths::k_SurfaceMeshF1sArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindBoundaryStrengths::k_SurfaceMeshF1sptsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindBoundaryStrengths::k_SurfaceMeshF7sArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindBoundaryStrengths::k_SurfaceMeshmPrimesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundaryStrengths::k_Loading_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(FindBoundaryStrengths::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundaryStrengths::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundaryStrengths::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundaryStrengths::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundaryStrengths::k_SurfaceMeshF1sArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundaryStrengths::k_SurfaceMeshF1sptsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundaryStrengths::k_SurfaceMeshF7sArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundaryStrengths::k_SurfaceMeshmPrimesArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

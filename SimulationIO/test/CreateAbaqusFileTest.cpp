@@ -44,15 +44,15 @@ TEST_CASE("SimulationIO::CreateAbaqusFile: Instantiation and Parameter Check", "
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CreateAbaqusFile::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
-  args.insert(CreateAbaqusFile::k_OutputFilePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(CreateAbaqusFile::k_JobName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(CreateAbaqusFile::k_NumDepvar_Key, std::make_any<int32>(1234356));
-  args.insert(CreateAbaqusFile::k_NumUserOutVar_Key, std::make_any<int32>(1234356));
-  /*[x]*/ args.insert(CreateAbaqusFile::k_MatConst_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(CreateAbaqusFile::k_AbqFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CreateAbaqusFile::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CreateAbaqusFile::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateAbaqusFile::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
+  args.insertOrAssign(CreateAbaqusFile::k_OutputFilePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(CreateAbaqusFile::k_JobName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(CreateAbaqusFile::k_NumDepvar_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(CreateAbaqusFile::k_NumUserOutVar_Key, std::make_any<int32>(1234356));
+  /*[x]*/ args.insertOrAssign(CreateAbaqusFile::k_MatConst_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(CreateAbaqusFile::k_AbqFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateAbaqusFile::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateAbaqusFile::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

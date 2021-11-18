@@ -40,10 +40,10 @@ TEST_CASE("ITKImageProcessing::ITKLaplacianRecursiveGaussianImage: Instantiation
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKLaplacianRecursiveGaussianImage::k_Sigma_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKLaplacianRecursiveGaussianImage::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-  args.insert(ITKLaplacianRecursiveGaussianImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKLaplacianRecursiveGaussianImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKLaplacianRecursiveGaussianImage::k_Sigma_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKLaplacianRecursiveGaussianImage::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKLaplacianRecursiveGaussianImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKLaplacianRecursiveGaussianImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

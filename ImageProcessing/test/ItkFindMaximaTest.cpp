@@ -39,9 +39,9 @@ TEST_CASE("ImageProcessing::ItkFindMaxima: Instantiation and Parameter Check", "
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ItkFindMaxima::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkFindMaxima::k_Tolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(ItkFindMaxima::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkFindMaxima::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkFindMaxima::k_Tolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ItkFindMaxima::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

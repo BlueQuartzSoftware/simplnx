@@ -40,13 +40,13 @@ TEST_CASE("Processing::MinNeighbors: Instantiation and Parameter Check", "[Proce
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(MinNeighbors::k_MinNumNeighbors_Key, std::make_any<int32>(1234356));
-  args.insert(MinNeighbors::k_ApplyToSinglePhase_Key, std::make_any<bool>(false));
-  args.insert(MinNeighbors::k_PhaseNumber_Key, std::make_any<int32>(1234356));
-  args.insert(MinNeighbors::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MinNeighbors::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MinNeighbors::k_NumNeighborsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MinNeighbors::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(MinNeighbors::k_MinNumNeighbors_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(MinNeighbors::k_ApplyToSinglePhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(MinNeighbors::k_PhaseNumber_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(MinNeighbors::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MinNeighbors::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MinNeighbors::k_NumNeighborsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MinNeighbors::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

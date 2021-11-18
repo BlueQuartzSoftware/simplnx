@@ -39,12 +39,12 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfo: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CreateEnsembleInfo::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  /*[x]*/ args.insert(CreateEnsembleInfo::k_Ensemble_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(CreateEnsembleInfo::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CreateEnsembleInfo::k_CrystalStructuresArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CreateEnsembleInfo::k_PhaseTypesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CreateEnsembleInfo::k_PhaseNamesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateEnsembleInfo::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  /*[x]*/ args.insertOrAssign(CreateEnsembleInfo::k_Ensemble_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(CreateEnsembleInfo::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateEnsembleInfo::k_CrystalStructuresArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateEnsembleInfo::k_PhaseTypesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateEnsembleInfo::k_PhaseNamesArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

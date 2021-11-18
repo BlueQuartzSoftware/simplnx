@@ -40,11 +40,11 @@ TEST_CASE("ImageProcessing::ItkAutoThreshold: Instantiation and Parameter Check"
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ItkAutoThreshold::k_Method_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ItkAutoThreshold::k_Slice_Key, std::make_any<bool>(false));
-  args.insert(ItkAutoThreshold::k_SaveAsNewArray_Key, std::make_any<bool>(false));
-  args.insert(ItkAutoThreshold::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkAutoThreshold::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkAutoThreshold::k_Method_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ItkAutoThreshold::k_Slice_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ItkAutoThreshold::k_SaveAsNewArray_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ItkAutoThreshold::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkAutoThreshold::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -39,12 +39,12 @@ TEST_CASE("Core::CombineAttributeMatrices: Instantiation and Parameter Check", "
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CombineAttributeMatrices::k_FirstAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CombineAttributeMatrices::k_SecondAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CombineAttributeMatrices::k_FirstIndexArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CombineAttributeMatrices::k_SecondIndexArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CombineAttributeMatrices::k_NewIndexArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CombineAttributeMatrices::k_CombinedAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CombineAttributeMatrices::k_FirstAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CombineAttributeMatrices::k_SecondAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CombineAttributeMatrices::k_FirstIndexArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CombineAttributeMatrices::k_SecondIndexArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CombineAttributeMatrices::k_NewIndexArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CombineAttributeMatrices::k_CombinedAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

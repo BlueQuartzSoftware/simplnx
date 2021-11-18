@@ -39,11 +39,11 @@ TEST_CASE("SyntheticBuilding::AddBadData: Instantiation and Parameter Check", "[
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(AddBadData::k_PoissonNoise_Key, std::make_any<bool>(false));
-  args.insert(AddBadData::k_PoissonVolFraction_Key, std::make_any<float32>(1.23345f));
-  args.insert(AddBadData::k_BoundaryNoise_Key, std::make_any<bool>(false));
-  args.insert(AddBadData::k_BoundaryVolFraction_Key, std::make_any<float32>(1.23345f));
-  args.insert(AddBadData::k_GBEuclideanDistancesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AddBadData::k_PoissonNoise_Key, std::make_any<bool>(false));
+  args.insertOrAssign(AddBadData::k_PoissonVolFraction_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(AddBadData::k_BoundaryNoise_Key, std::make_any<bool>(false));
+  args.insertOrAssign(AddBadData::k_BoundaryVolFraction_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(AddBadData::k_GBEuclideanDistancesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

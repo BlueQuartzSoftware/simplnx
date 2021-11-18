@@ -41,14 +41,14 @@ TEST_CASE("DREAM3DReview::DelaunayTriangulation: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(DelaunayTriangulation::k_Offset_Key, std::make_any<float64>(2.3456789));
-  args.insert(DelaunayTriangulation::k_Tolerance_Key, std::make_any<float64>(2.3456789));
-  args.insert(DelaunayTriangulation::k_TriangulateByFeature_Key, std::make_any<bool>(false));
-  args.insert(DelaunayTriangulation::k_InputGeometry_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(DelaunayTriangulation::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(DelaunayTriangulation::k_TriangleDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(DelaunayTriangulation::k_VertexAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(DelaunayTriangulation::k_FaceAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(DelaunayTriangulation::k_Offset_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(DelaunayTriangulation::k_Tolerance_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(DelaunayTriangulation::k_TriangulateByFeature_Key, std::make_any<bool>(false));
+  args.insertOrAssign(DelaunayTriangulation::k_InputGeometry_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DelaunayTriangulation::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DelaunayTriangulation::k_TriangleDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(DelaunayTriangulation::k_VertexAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(DelaunayTriangulation::k_FaceAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

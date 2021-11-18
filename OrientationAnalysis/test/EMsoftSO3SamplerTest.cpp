@@ -40,14 +40,14 @@ TEST_CASE("OrientationAnalysis::EMsoftSO3Sampler: Instantiation and Parameter Ch
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(EMsoftSO3Sampler::k_PointGroup_Key, std::make_any<int32>(1234356));
-  args.insert(EMsoftSO3Sampler::k_OffsetGrid_Key, std::make_any<bool>(false));
-  args.insert(EMsoftSO3Sampler::k_MisOr_Key, std::make_any<float64>(2.3456789));
-  args.insert(EMsoftSO3Sampler::k_RefOr_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(EMsoftSO3Sampler::k_MisOrFull_Key, std::make_any<float64>(2.3456789));
-  args.insert(EMsoftSO3Sampler::k_RefOrFull_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(EMsoftSO3Sampler::k_Numsp_Key, std::make_any<int32>(1234356));
-  args.insert(EMsoftSO3Sampler::k_EulerAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EMsoftSO3Sampler::k_PointGroup_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(EMsoftSO3Sampler::k_OffsetGrid_Key, std::make_any<bool>(false));
+  args.insertOrAssign(EMsoftSO3Sampler::k_MisOr_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(EMsoftSO3Sampler::k_RefOr_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(EMsoftSO3Sampler::k_MisOrFull_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(EMsoftSO3Sampler::k_RefOrFull_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(EMsoftSO3Sampler::k_Numsp_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(EMsoftSO3Sampler::k_EulerAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

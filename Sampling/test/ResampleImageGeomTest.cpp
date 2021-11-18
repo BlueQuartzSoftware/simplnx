@@ -41,13 +41,13 @@ TEST_CASE("Sampling::ResampleImageGeom: Instantiation and Parameter Check", "[Sa
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ResampleImageGeom::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ResampleImageGeom::k_RenumberFeatures_Key, std::make_any<bool>(false));
-  args.insert(ResampleImageGeom::k_SaveAsNewDataContainer_Key, std::make_any<bool>(false));
-  args.insert(ResampleImageGeom::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ResampleImageGeom::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ResampleImageGeom::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ResampleImageGeom::k_NewDataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ResampleImageGeom::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ResampleImageGeom::k_RenumberFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ResampleImageGeom::k_SaveAsNewDataContainer_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ResampleImageGeom::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ResampleImageGeom::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ResampleImageGeom::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ResampleImageGeom::k_NewDataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

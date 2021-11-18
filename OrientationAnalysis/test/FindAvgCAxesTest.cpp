@@ -38,9 +38,9 @@ TEST_CASE("OrientationAnalysis::FindAvgCAxes: Instantiation and Parameter Check"
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindAvgCAxes::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindAvgCAxes::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindAvgCAxes::k_AvgCAxesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindAvgCAxes::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindAvgCAxes::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindAvgCAxes::k_AvgCAxesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

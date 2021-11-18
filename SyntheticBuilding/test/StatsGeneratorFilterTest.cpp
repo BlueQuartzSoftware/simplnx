@@ -39,13 +39,13 @@ TEST_CASE("SyntheticBuilding::StatsGeneratorFilter: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(StatsGeneratorFilter::k_StatsGenerator_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(StatsGeneratorFilter::k_StatsGeneratorDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(StatsGeneratorFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(StatsGeneratorFilter::k_StatsDataArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(StatsGeneratorFilter::k_CrystalStructuresArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(StatsGeneratorFilter::k_PhaseTypesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(StatsGeneratorFilter::k_PhaseNamesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  /*[x]*/ args.insertOrAssign(StatsGeneratorFilter::k_StatsGenerator_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(StatsGeneratorFilter::k_StatsGeneratorDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(StatsGeneratorFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(StatsGeneratorFilter::k_StatsDataArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(StatsGeneratorFilter::k_CrystalStructuresArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(StatsGeneratorFilter::k_PhaseTypesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(StatsGeneratorFilter::k_PhaseNamesArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

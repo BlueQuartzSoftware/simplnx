@@ -41,14 +41,14 @@ TEST_CASE("DREAM3DReview::KMedoids: Instantiation and Parameter Check", "[DREAM3
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(KMedoids::k_InitClusters_Key, std::make_any<int32>(1234356));
-  args.insert(KMedoids::k_DistanceMetric_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(KMedoids::k_UseMask_Key, std::make_any<bool>(false));
-  args.insert(KMedoids::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(KMedoids::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(KMedoids::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(KMedoids::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(KMedoids::k_MedoidsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(KMedoids::k_InitClusters_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(KMedoids::k_DistanceMetric_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(KMedoids::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(KMedoids::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(KMedoids::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(KMedoids::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(KMedoids::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(KMedoids::k_MedoidsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -39,9 +39,9 @@ TEST_CASE("ITKImageProcessing::ITKGradientMagnitudeImage: Instantiation and Para
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKGradientMagnitudeImage::k_UseImageSpacing_Key, std::make_any<bool>(false));
-  args.insert(ITKGradientMagnitudeImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKGradientMagnitudeImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKGradientMagnitudeImage::k_UseImageSpacing_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKGradientMagnitudeImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKGradientMagnitudeImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

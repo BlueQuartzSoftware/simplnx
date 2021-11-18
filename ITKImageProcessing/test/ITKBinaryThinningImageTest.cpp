@@ -38,8 +38,8 @@ TEST_CASE("ITKImageProcessing::ITKBinaryThinningImage: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKBinaryThinningImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKBinaryThinningImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKBinaryThinningImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKBinaryThinningImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

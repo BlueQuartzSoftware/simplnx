@@ -42,9 +42,9 @@ TEST_CASE("ImportExport::DxWriter: Instantiation and Parameter Check", "[ImportE
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(DxWriter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(DxWriter::k_AddSurfaceLayer_Key, std::make_any<bool>(false));
-  args.insert(DxWriter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DxWriter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(DxWriter::k_AddSurfaceLayer_Key, std::make_any<bool>(false));
+  args.insertOrAssign(DxWriter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

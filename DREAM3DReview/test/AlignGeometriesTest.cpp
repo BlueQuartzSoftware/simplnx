@@ -38,9 +38,9 @@ TEST_CASE("DREAM3DReview::AlignGeometries: Instantiation and Parameter Check", "
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(AlignGeometries::k_MovingGeometry_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AlignGeometries::k_TargetGeometry_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AlignGeometries::k_AlignmentType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(AlignGeometries::k_MovingGeometry_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AlignGeometries::k_TargetGeometry_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AlignGeometries::k_AlignmentType_Key, std::make_any<ChoicesParameter::ValueType>(0));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

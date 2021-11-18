@@ -40,12 +40,12 @@ TEST_CASE("ITKImageProcessing::ITKHistogramMatchingImage: Instantiation and Para
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKHistogramMatchingImage::k_NumberOfHistogramLevels_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKHistogramMatchingImage::k_NumberOfMatchPoints_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKHistogramMatchingImage::k_ThresholdAtMeanIntensity_Key, std::make_any<bool>(false));
-  args.insert(ITKHistogramMatchingImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKHistogramMatchingImage::k_ReferenceCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKHistogramMatchingImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKHistogramMatchingImage::k_NumberOfHistogramLevels_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKHistogramMatchingImage::k_NumberOfMatchPoints_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKHistogramMatchingImage::k_ThresholdAtMeanIntensity_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKHistogramMatchingImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKHistogramMatchingImage::k_ReferenceCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKHistogramMatchingImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

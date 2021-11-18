@@ -42,10 +42,10 @@ TEST_CASE("DREAM3DReview::ImportVolumeGraphicsFile: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ImportVolumeGraphicsFile::k_VGHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ImportVolumeGraphicsFile::k_DataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportVolumeGraphicsFile::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportVolumeGraphicsFile::k_DensityArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportVolumeGraphicsFile::k_VGHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ImportVolumeGraphicsFile::k_DataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportVolumeGraphicsFile::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportVolumeGraphicsFile::k_DensityArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

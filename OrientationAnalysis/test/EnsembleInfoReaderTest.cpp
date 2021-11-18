@@ -42,11 +42,11 @@ TEST_CASE("OrientationAnalysis::EnsembleInfoReader: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(EnsembleInfoReader::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(EnsembleInfoReader::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EnsembleInfoReader::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EnsembleInfoReader::k_CrystalStructuresArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EnsembleInfoReader::k_PhaseTypesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EnsembleInfoReader::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(EnsembleInfoReader::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EnsembleInfoReader::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EnsembleInfoReader::k_CrystalStructuresArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EnsembleInfoReader::k_PhaseTypesArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

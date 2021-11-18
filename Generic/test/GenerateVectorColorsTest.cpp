@@ -39,10 +39,10 @@ TEST_CASE("Generic::GenerateVectorColors: Instantiation and Parameter Check", "[
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(GenerateVectorColors::k_UseGoodVoxels_Key, std::make_any<bool>(false));
-  args.insert(GenerateVectorColors::k_VectorsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateVectorColors::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateVectorColors::k_CellVectorColorsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateVectorColors::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(GenerateVectorColors::k_VectorsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateVectorColors::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateVectorColors::k_CellVectorColorsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

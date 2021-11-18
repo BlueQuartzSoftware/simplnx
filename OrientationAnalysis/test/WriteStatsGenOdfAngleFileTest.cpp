@@ -44,15 +44,15 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFile: Instantiation and Par
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(WriteStatsGenOdfAngleFile::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(WriteStatsGenOdfAngleFile::k_Weight_Key, std::make_any<float32>(1.23345f));
-  args.insert(WriteStatsGenOdfAngleFile::k_Sigma_Key, std::make_any<int32>(1234356));
-  args.insert(WriteStatsGenOdfAngleFile::k_Delimiter_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(WriteStatsGenOdfAngleFile::k_ConvertToDegrees_Key, std::make_any<bool>(false));
-  args.insert(WriteStatsGenOdfAngleFile::k_UseGoodVoxels_Key, std::make_any<bool>(false));
-  args.insert(WriteStatsGenOdfAngleFile::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(WriteStatsGenOdfAngleFile::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(WriteStatsGenOdfAngleFile::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(WriteStatsGenOdfAngleFile::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(WriteStatsGenOdfAngleFile::k_Weight_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(WriteStatsGenOdfAngleFile::k_Sigma_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(WriteStatsGenOdfAngleFile::k_Delimiter_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(WriteStatsGenOdfAngleFile::k_ConvertToDegrees_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WriteStatsGenOdfAngleFile::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WriteStatsGenOdfAngleFile::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(WriteStatsGenOdfAngleFile::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(WriteStatsGenOdfAngleFile::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

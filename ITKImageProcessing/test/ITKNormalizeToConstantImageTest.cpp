@@ -39,9 +39,9 @@ TEST_CASE("ITKImageProcessing::ITKNormalizeToConstantImage: Instantiation and Pa
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKNormalizeToConstantImage::k_Constant_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKNormalizeToConstantImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKNormalizeToConstantImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKNormalizeToConstantImage::k_Constant_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKNormalizeToConstantImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKNormalizeToConstantImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

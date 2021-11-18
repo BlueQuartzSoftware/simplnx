@@ -39,10 +39,10 @@ TEST_CASE("ITKImageProcessing::ITKShiftScaleImage: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKShiftScaleImage::k_Shift_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKShiftScaleImage::k_Scale_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKShiftScaleImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKShiftScaleImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKShiftScaleImage::k_Shift_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKShiftScaleImage::k_Scale_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKShiftScaleImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKShiftScaleImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

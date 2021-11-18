@@ -41,22 +41,22 @@ TEST_CASE("SurfaceMeshing::FeatureFaceCurvatureFilter: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FeatureFaceCurvatureFilter::k_NRing_Key, std::make_any<int32>(1234356));
-  args.insert(FeatureFaceCurvatureFilter::k_ComputePrincipalDirectionVectors_Key, std::make_any<bool>(false));
-  args.insert(FeatureFaceCurvatureFilter::k_ComputeGaussianCurvature_Key, std::make_any<bool>(false));
-  args.insert(FeatureFaceCurvatureFilter::k_ComputeMeanCurvature_Key, std::make_any<bool>(false));
-  args.insert(FeatureFaceCurvatureFilter::k_UseNormalsForCurveFitting_Key, std::make_any<bool>(false));
-  args.insert(FeatureFaceCurvatureFilter::k_FaceAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureFaceCurvatureFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureFaceCurvatureFilter::k_SurfaceMeshFeatureFaceIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureFaceCurvatureFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureFaceCurvatureFilter::k_SurfaceMeshTriangleCentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureFaceCurvatureFilter::k_SurfaceMeshPrincipalCurvature1sArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureFaceCurvatureFilter::k_SurfaceMeshPrincipalCurvature2sArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureFaceCurvatureFilter::k_SurfaceMeshPrincipalDirection1sArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureFaceCurvatureFilter::k_SurfaceMeshPrincipalDirection2sArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureFaceCurvatureFilter::k_SurfaceMeshGaussianCurvaturesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureFaceCurvatureFilter::k_SurfaceMeshMeanCurvaturesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_NRing_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputePrincipalDirectionVectors_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeGaussianCurvature_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeMeanCurvature_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_UseNormalsForCurveFitting_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_SurfaceMeshFeatureFaceIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_SurfaceMeshTriangleCentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_SurfaceMeshPrincipalCurvature1sArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_SurfaceMeshPrincipalCurvature2sArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_SurfaceMeshPrincipalDirection1sArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_SurfaceMeshPrincipalDirection2sArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_SurfaceMeshGaussianCurvaturesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_SurfaceMeshMeanCurvaturesArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

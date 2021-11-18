@@ -38,8 +38,8 @@ TEST_CASE("StatsToolbox::FindVolFractions: Instantiation and Parameter Check", "
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindVolFractions::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindVolFractions::k_VolFractionsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindVolFractions::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindVolFractions::k_VolFractionsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

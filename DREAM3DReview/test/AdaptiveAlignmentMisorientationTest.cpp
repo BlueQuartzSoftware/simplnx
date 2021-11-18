@@ -40,17 +40,17 @@ TEST_CASE("DREAM3DReview::AdaptiveAlignmentMisorientation: Instantiation and Par
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(AdaptiveAlignmentMisorientation::k_ImageDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AdaptiveAlignmentMisorientation::k_ShiftX_Key, std::make_any<float32>(1.23345f));
-  args.insert(AdaptiveAlignmentMisorientation::k_ShiftY_Key, std::make_any<float32>(1.23345f));
-  args.insert(AdaptiveAlignmentMisorientation::k_IgnoredDataArrayPaths_Key,
-              std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(AdaptiveAlignmentMisorientation::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(AdaptiveAlignmentMisorientation::k_UseGoodVoxels_Key, std::make_any<bool>(false));
-  args.insert(AdaptiveAlignmentMisorientation::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AdaptiveAlignmentMisorientation::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AdaptiveAlignmentMisorientation::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AdaptiveAlignmentMisorientation::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AdaptiveAlignmentMisorientation::k_ImageDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AdaptiveAlignmentMisorientation::k_ShiftX_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(AdaptiveAlignmentMisorientation::k_ShiftY_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(AdaptiveAlignmentMisorientation::k_IgnoredDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(AdaptiveAlignmentMisorientation::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(AdaptiveAlignmentMisorientation::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(AdaptiveAlignmentMisorientation::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AdaptiveAlignmentMisorientation::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AdaptiveAlignmentMisorientation::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AdaptiveAlignmentMisorientation::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

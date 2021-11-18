@@ -41,12 +41,12 @@ TEST_CASE("Sampling::ResampleRectGridToImageGeom: Instantiation and Parameter Ch
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ResampleRectGridToImageGeom::k_RectilinearGridPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ResampleRectGridToImageGeom::k_SelectedDataArrayPaths_Key,
-              std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(ResampleRectGridToImageGeom::k_Dimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
-  args.insert(ResampleRectGridToImageGeom::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ResampleRectGridToImageGeom::k_ImageGeomCellAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ResampleRectGridToImageGeom::k_RectilinearGridPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ResampleRectGridToImageGeom::k_SelectedDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(ResampleRectGridToImageGeom::k_Dimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
+  args.insertOrAssign(ResampleRectGridToImageGeom::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ResampleRectGridToImageGeom::k_ImageGeomCellAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -41,8 +41,8 @@ TEST_CASE("SimulationIO::ExportLAMMPSFile: Instantiation and Parameter Check", "
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ExportLAMMPSFile::k_LammpsFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(ExportLAMMPSFile::k_AtomFeatureLabelsPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExportLAMMPSFile::k_LammpsFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(ExportLAMMPSFile::k_AtomFeatureLabelsPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

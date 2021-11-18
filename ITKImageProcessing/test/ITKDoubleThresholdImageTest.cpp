@@ -40,15 +40,15 @@ TEST_CASE("ITKImageProcessing::ITKDoubleThresholdImage: Instantiation and Parame
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKDoubleThresholdImage::k_Threshold1_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKDoubleThresholdImage::k_Threshold2_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKDoubleThresholdImage::k_Threshold3_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKDoubleThresholdImage::k_Threshold4_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKDoubleThresholdImage::k_InsideValue_Key, std::make_any<int32>(1234356));
-  args.insert(ITKDoubleThresholdImage::k_OutsideValue_Key, std::make_any<int32>(1234356));
-  args.insert(ITKDoubleThresholdImage::k_FullyConnected_Key, std::make_any<bool>(false));
-  args.insert(ITKDoubleThresholdImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKDoubleThresholdImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKDoubleThresholdImage::k_Threshold1_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKDoubleThresholdImage::k_Threshold2_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKDoubleThresholdImage::k_Threshold3_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKDoubleThresholdImage::k_Threshold4_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKDoubleThresholdImage::k_InsideValue_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ITKDoubleThresholdImage::k_OutsideValue_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ITKDoubleThresholdImage::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKDoubleThresholdImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKDoubleThresholdImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -42,9 +42,9 @@ TEST_CASE("SimulationIO::CreateBsamFile: Instantiation and Parameter Check", "[S
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CreateBsamFile::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
-  args.insert(CreateBsamFile::k_OutputFilePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(CreateBsamFile::k_NumClusters_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(CreateBsamFile::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
+  args.insertOrAssign(CreateBsamFile::k_OutputFilePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(CreateBsamFile::k_NumClusters_Key, std::make_any<int32>(1234356));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

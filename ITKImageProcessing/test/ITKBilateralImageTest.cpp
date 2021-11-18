@@ -39,11 +39,11 @@ TEST_CASE("ITKImageProcessing::ITKBilateralImage: Instantiation and Parameter Ch
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKBilateralImage::k_DomainSigma_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKBilateralImage::k_RangeSigma_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKBilateralImage::k_NumberOfRangeGaussianSamples_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKBilateralImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKBilateralImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKBilateralImage::k_DomainSigma_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKBilateralImage::k_RangeSigma_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKBilateralImage::k_NumberOfRangeGaussianSamples_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKBilateralImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKBilateralImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

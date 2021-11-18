@@ -43,12 +43,12 @@ TEST_CASE("OrientationAnalysis::ReadCtfData: Instantiation and Parameter Check",
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ReadCtfData::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ReadCtfData::k_DegreesToRadians_Key, std::make_any<bool>(false));
-  args.insert(ReadCtfData::k_EdaxHexagonalAlignment_Key, std::make_any<bool>(false));
-  args.insert(ReadCtfData::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ReadCtfData::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ReadCtfData::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadCtfData::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ReadCtfData::k_DegreesToRadians_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ReadCtfData::k_EdaxHexagonalAlignment_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ReadCtfData::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadCtfData::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadCtfData::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

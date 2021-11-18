@@ -40,12 +40,12 @@ TEST_CASE("Processing::ErodeDilateMask: Instantiation and Parameter Check", "[Pr
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ErodeDilateMask::k_Direction_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ErodeDilateMask::k_NumIterations_Key, std::make_any<int32>(1234356));
-  args.insert(ErodeDilateMask::k_XDirOn_Key, std::make_any<bool>(false));
-  args.insert(ErodeDilateMask::k_YDirOn_Key, std::make_any<bool>(false));
-  args.insert(ErodeDilateMask::k_ZDirOn_Key, std::make_any<bool>(false));
-  args.insert(ErodeDilateMask::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ErodeDilateMask::k_Direction_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ErodeDilateMask::k_NumIterations_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ErodeDilateMask::k_XDirOn_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ErodeDilateMask::k_YDirOn_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ErodeDilateMask::k_ZDirOn_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ErodeDilateMask::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

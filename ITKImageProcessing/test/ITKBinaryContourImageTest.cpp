@@ -40,11 +40,11 @@ TEST_CASE("ITKImageProcessing::ITKBinaryContourImage: Instantiation and Paramete
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKBinaryContourImage::k_FullyConnected_Key, std::make_any<bool>(false));
-  args.insert(ITKBinaryContourImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKBinaryContourImage::k_ForegroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKBinaryContourImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKBinaryContourImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKBinaryContourImage::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKBinaryContourImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKBinaryContourImage::k_ForegroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKBinaryContourImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKBinaryContourImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

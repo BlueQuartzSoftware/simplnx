@@ -47,21 +47,21 @@ TEST_CASE("ITKImageProcessing::IlluminationCorrection: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(IlluminationCorrection::k_MontageSelection_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(IlluminationCorrection::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(IlluminationCorrection::k_ImageDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(IlluminationCorrection::k_CorrectedImageDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(IlluminationCorrection::k_BackgroundDataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(IlluminationCorrection::k_BackgroundCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(IlluminationCorrection::k_BackgroundImageArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(IlluminationCorrection::k_LowThreshold_Key, std::make_any<int32>(1234356));
-  args.insert(IlluminationCorrection::k_HighThreshold_Key, std::make_any<int32>(1234356));
-  args.insert(IlluminationCorrection::k_ApplyMedianFilter_Key, std::make_any<bool>(false));
-  args.insert(IlluminationCorrection::k_MedianRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(IlluminationCorrection::k_ApplyCorrection_Key, std::make_any<bool>(false));
-  args.insert(IlluminationCorrection::k_ExportCorrectedImages_Key, std::make_any<bool>(false));
-  args.insert(IlluminationCorrection::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
-  args.insert(IlluminationCorrection::k_FileExtension_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  /*[x]*/ args.insertOrAssign(IlluminationCorrection::k_MontageSelection_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(IlluminationCorrection::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(IlluminationCorrection::k_ImageDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(IlluminationCorrection::k_CorrectedImageDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(IlluminationCorrection::k_BackgroundDataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(IlluminationCorrection::k_BackgroundCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(IlluminationCorrection::k_BackgroundImageArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(IlluminationCorrection::k_LowThreshold_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(IlluminationCorrection::k_HighThreshold_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(IlluminationCorrection::k_ApplyMedianFilter_Key, std::make_any<bool>(false));
+  args.insertOrAssign(IlluminationCorrection::k_MedianRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(IlluminationCorrection::k_ApplyCorrection_Key, std::make_any<bool>(false));
+  args.insertOrAssign(IlluminationCorrection::k_ExportCorrectedImages_Key, std::make_any<bool>(false));
+  args.insertOrAssign(IlluminationCorrection::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
+  args.insertOrAssign(IlluminationCorrection::k_FileExtension_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

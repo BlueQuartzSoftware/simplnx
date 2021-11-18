@@ -40,12 +40,12 @@ TEST_CASE("ITKImageProcessing::ITKThresholdMaximumConnectedComponentsImage: Inst
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKThresholdMaximumConnectedComponentsImage::k_MinimumObjectSizeInPixels_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKThresholdMaximumConnectedComponentsImage::k_UpperBoundary_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKThresholdMaximumConnectedComponentsImage::k_InsideValue_Key, std::make_any<int32>(1234356));
-  args.insert(ITKThresholdMaximumConnectedComponentsImage::k_OutsideValue_Key, std::make_any<int32>(1234356));
-  args.insert(ITKThresholdMaximumConnectedComponentsImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKThresholdMaximumConnectedComponentsImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_MinimumObjectSizeInPixels_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_UpperBoundary_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_InsideValue_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_OutsideValue_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -42,9 +42,9 @@ TEST_CASE("Reconstruction::AlignSectionsList: Instantiation and Parameter Check"
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(AlignSectionsList::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(AlignSectionsList::k_DREAM3DAlignmentFile_Key, std::make_any<bool>(false));
-  args.insert(AlignSectionsList::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AlignSectionsList::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(AlignSectionsList::k_DREAM3DAlignmentFile_Key, std::make_any<bool>(false));
+  args.insertOrAssign(AlignSectionsList::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

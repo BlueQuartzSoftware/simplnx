@@ -40,12 +40,12 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImage: Instantiation and
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKOtsuMultipleThresholdsImage::k_NumberOfThresholds_Key, std::make_any<int32>(1234356));
-  args.insert(ITKOtsuMultipleThresholdsImage::k_LabelOffset_Key, std::make_any<int32>(1234356));
-  args.insert(ITKOtsuMultipleThresholdsImage::k_NumberOfHistogramBins_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKOtsuMultipleThresholdsImage::k_ValleyEmphasis_Key, std::make_any<bool>(false));
-  args.insert(ITKOtsuMultipleThresholdsImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKOtsuMultipleThresholdsImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_NumberOfThresholds_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_LabelOffset_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_NumberOfHistogramBins_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_ValleyEmphasis_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

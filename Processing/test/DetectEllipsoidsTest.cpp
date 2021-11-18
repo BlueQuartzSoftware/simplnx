@@ -41,19 +41,19 @@ TEST_CASE("Processing::DetectEllipsoids: Instantiation and Parameter Check", "[P
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(DetectEllipsoids::k_MinFiberAxisLength_Key, std::make_any<int32>(1234356));
-  args.insert(DetectEllipsoids::k_MaxFiberAxisLength_Key, std::make_any<int32>(1234356));
-  args.insert(DetectEllipsoids::k_HoughTransformThreshold_Key, std::make_any<float32>(1.23345f));
-  args.insert(DetectEllipsoids::k_MinAspectRatio_Key, std::make_any<float32>(1.23345f));
-  args.insert(DetectEllipsoids::k_ImageScaleBarLength_Key, std::make_any<int32>(1234356));
-  args.insert(DetectEllipsoids::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(DetectEllipsoids::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(DetectEllipsoids::k_EllipseFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(DetectEllipsoids::k_CenterCoordinatesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(DetectEllipsoids::k_MajorAxisLengthArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(DetectEllipsoids::k_MinorAxisLengthArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(DetectEllipsoids::k_RotationalAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(DetectEllipsoids::k_DetectedEllipsoidsFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DetectEllipsoids::k_MinFiberAxisLength_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(DetectEllipsoids::k_MaxFiberAxisLength_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(DetectEllipsoids::k_HoughTransformThreshold_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(DetectEllipsoids::k_MinAspectRatio_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(DetectEllipsoids::k_ImageScaleBarLength_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(DetectEllipsoids::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DetectEllipsoids::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DetectEllipsoids::k_EllipseFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DetectEllipsoids::k_CenterCoordinatesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DetectEllipsoids::k_MajorAxisLengthArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DetectEllipsoids::k_MinorAxisLengthArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DetectEllipsoids::k_RotationalAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DetectEllipsoids::k_DetectedEllipsoidsFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -41,17 +41,17 @@ TEST_CASE("ITKImageProcessing::ITKMultiScaleHessianBasedObjectnessImage: Instant
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKMultiScaleHessianBasedObjectnessImage::k_ObjectDimension_Key, std::make_any<int32>(1234356));
-  args.insert(ITKMultiScaleHessianBasedObjectnessImage::k_Alpha_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKMultiScaleHessianBasedObjectnessImage::k_Beta_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKMultiScaleHessianBasedObjectnessImage::k_Gamma_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKMultiScaleHessianBasedObjectnessImage::k_BrightObject_Key, std::make_any<bool>(false));
-  args.insert(ITKMultiScaleHessianBasedObjectnessImage::k_ScaleObjectnessMeasure_Key, std::make_any<bool>(false));
-  args.insert(ITKMultiScaleHessianBasedObjectnessImage::k_SigmaMinimum_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKMultiScaleHessianBasedObjectnessImage::k_SigmaMaximum_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKMultiScaleHessianBasedObjectnessImage::k_NumberOfSigmaSteps_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKMultiScaleHessianBasedObjectnessImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKMultiScaleHessianBasedObjectnessImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKMultiScaleHessianBasedObjectnessImage::k_ObjectDimension_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ITKMultiScaleHessianBasedObjectnessImage::k_Alpha_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKMultiScaleHessianBasedObjectnessImage::k_Beta_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKMultiScaleHessianBasedObjectnessImage::k_Gamma_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKMultiScaleHessianBasedObjectnessImage::k_BrightObject_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKMultiScaleHessianBasedObjectnessImage::k_ScaleObjectnessMeasure_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKMultiScaleHessianBasedObjectnessImage::k_SigmaMinimum_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKMultiScaleHessianBasedObjectnessImage::k_SigmaMaximum_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKMultiScaleHessianBasedObjectnessImage::k_NumberOfSigmaSteps_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKMultiScaleHessianBasedObjectnessImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKMultiScaleHessianBasedObjectnessImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

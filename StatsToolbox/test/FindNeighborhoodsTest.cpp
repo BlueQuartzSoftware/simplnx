@@ -39,12 +39,12 @@ TEST_CASE("StatsToolbox::FindNeighborhoods: Instantiation and Parameter Check", 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindNeighborhoods::k_MultiplesOfAverage_Key, std::make_any<float32>(1.23345f));
-  args.insert(FindNeighborhoods::k_EquivalentDiametersArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighborhoods::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighborhoods::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighborhoods::k_NeighborhoodsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighborhoods::k_NeighborhoodListArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighborhoods::k_MultiplesOfAverage_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(FindNeighborhoods::k_EquivalentDiametersArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighborhoods::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighborhoods::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighborhoods::k_NeighborhoodsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighborhoods::k_NeighborhoodListArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -39,9 +39,9 @@ TEST_CASE("ITKImageProcessing::ITKBoxMeanImage: Instantiation and Parameter Chec
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKBoxMeanImage::k_Radius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKBoxMeanImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKBoxMeanImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKBoxMeanImage::k_Radius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKBoxMeanImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKBoxMeanImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

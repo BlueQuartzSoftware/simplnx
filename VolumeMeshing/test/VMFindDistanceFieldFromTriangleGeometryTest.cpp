@@ -42,14 +42,14 @@ TEST_CASE("VolumeMeshing::VMFindDistanceFieldFromTriangleGeometry: Instantiation
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(VMFindDistanceFieldFromTriangleGeometry::k_DistanceFieldType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(VMFindDistanceFieldFromTriangleGeometry::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(VMFindDistanceFieldFromTriangleGeometry::k_StoreClosestTriangle_Key, std::make_any<bool>(false));
-  args.insert(VMFindDistanceFieldFromTriangleGeometry::k_TriangleDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(VMFindDistanceFieldFromTriangleGeometry::k_ImageDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(VMFindDistanceFieldFromTriangleGeometry::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(VMFindDistanceFieldFromTriangleGeometry::k_SignedDistanceFieldName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(VMFindDistanceFieldFromTriangleGeometry::k_ClosestTriangleName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(VMFindDistanceFieldFromTriangleGeometry::k_DistanceFieldType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(VMFindDistanceFieldFromTriangleGeometry::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(VMFindDistanceFieldFromTriangleGeometry::k_StoreClosestTriangle_Key, std::make_any<bool>(false));
+  args.insertOrAssign(VMFindDistanceFieldFromTriangleGeometry::k_TriangleDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(VMFindDistanceFieldFromTriangleGeometry::k_ImageDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(VMFindDistanceFieldFromTriangleGeometry::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(VMFindDistanceFieldFromTriangleGeometry::k_SignedDistanceFieldName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(VMFindDistanceFieldFromTriangleGeometry::k_ClosestTriangleName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

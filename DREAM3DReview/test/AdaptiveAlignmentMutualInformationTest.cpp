@@ -40,17 +40,17 @@ TEST_CASE("DREAM3DReview::AdaptiveAlignmentMutualInformation: Instantiation and 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(AdaptiveAlignmentMutualInformation::k_ImageDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AdaptiveAlignmentMutualInformation::k_ShiftX_Key, std::make_any<float32>(1.23345f));
-  args.insert(AdaptiveAlignmentMutualInformation::k_ShiftY_Key, std::make_any<float32>(1.23345f));
-  args.insert(AdaptiveAlignmentMutualInformation::k_IgnoredDataArrayPaths_Key,
-              std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(AdaptiveAlignmentMutualInformation::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(AdaptiveAlignmentMutualInformation::k_UseGoodVoxels_Key, std::make_any<bool>(false));
-  args.insert(AdaptiveAlignmentMutualInformation::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AdaptiveAlignmentMutualInformation::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AdaptiveAlignmentMutualInformation::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AdaptiveAlignmentMutualInformation::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AdaptiveAlignmentMutualInformation::k_ImageDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AdaptiveAlignmentMutualInformation::k_ShiftX_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(AdaptiveAlignmentMutualInformation::k_ShiftY_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(AdaptiveAlignmentMutualInformation::k_IgnoredDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(AdaptiveAlignmentMutualInformation::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(AdaptiveAlignmentMutualInformation::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(AdaptiveAlignmentMutualInformation::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AdaptiveAlignmentMutualInformation::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AdaptiveAlignmentMutualInformation::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AdaptiveAlignmentMutualInformation::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

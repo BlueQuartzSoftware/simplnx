@@ -41,17 +41,17 @@ TEST_CASE("StatsToolbox::FindFeatureClustering: Instantiation and Parameter Chec
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindFeatureClustering::k_NumberOfBins_Key, std::make_any<int32>(1234356));
-  args.insert(FindFeatureClustering::k_PhaseNumber_Key, std::make_any<int32>(1234356));
-  args.insert(FindFeatureClustering::k_RemoveBiasedFeatures_Key, std::make_any<bool>(false));
-  args.insert(FindFeatureClustering::k_EquivalentDiametersArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureClustering::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureClustering::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureClustering::k_BiasedFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureClustering::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureClustering::k_ClusteringListArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureClustering::k_NewEnsembleArrayArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureClustering::k_MaxMinArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureClustering::k_NumberOfBins_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(FindFeatureClustering::k_PhaseNumber_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(FindFeatureClustering::k_RemoveBiasedFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindFeatureClustering::k_EquivalentDiametersArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureClustering::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureClustering::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureClustering::k_BiasedFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureClustering::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureClustering::k_ClusteringListArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureClustering::k_NewEnsembleArrayArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureClustering::k_MaxMinArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

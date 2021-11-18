@@ -38,8 +38,8 @@ TEST_CASE("Processing::IdentifySample: Instantiation and Parameter Check", "[Pro
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(IdentifySample::k_FillHoles_Key, std::make_any<bool>(false));
-  args.insert(IdentifySample::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(IdentifySample::k_FillHoles_Key, std::make_any<bool>(false));
+  args.insertOrAssign(IdentifySample::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

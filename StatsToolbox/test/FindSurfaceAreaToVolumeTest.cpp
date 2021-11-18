@@ -39,11 +39,11 @@ TEST_CASE("StatsToolbox::FindSurfaceAreaToVolume: Instantiation and Parameter Ch
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindSurfaceAreaToVolume::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSurfaceAreaToVolume::k_NumCellsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSurfaceAreaToVolume::k_SurfaceAreaVolumeRatioArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSurfaceAreaToVolume::k_CalculateSphericity_Key, std::make_any<bool>(false));
-  args.insert(FindSurfaceAreaToVolume::k_SphericityArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSurfaceAreaToVolume::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSurfaceAreaToVolume::k_NumCellsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSurfaceAreaToVolume::k_SurfaceAreaVolumeRatioArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSurfaceAreaToVolume::k_CalculateSphericity_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindSurfaceAreaToVolume::k_SphericityArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

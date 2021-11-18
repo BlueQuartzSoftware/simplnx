@@ -39,9 +39,9 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleGrindPeakImage: Instantiation and Par
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKGrayscaleGrindPeakImage::k_FullyConnected_Key, std::make_any<bool>(false));
-  args.insert(ITKGrayscaleGrindPeakImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKGrayscaleGrindPeakImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKGrayscaleGrindPeakImage::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKGrayscaleGrindPeakImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKGrayscaleGrindPeakImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

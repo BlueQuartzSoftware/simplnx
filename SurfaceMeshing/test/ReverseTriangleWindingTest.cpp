@@ -37,7 +37,7 @@ TEST_CASE("SurfaceMeshing::ReverseTriangleWinding: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ReverseTriangleWinding::k_SurfaceDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReverseTriangleWinding::k_SurfaceDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

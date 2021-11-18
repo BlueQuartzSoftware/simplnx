@@ -39,9 +39,9 @@ TEST_CASE("ITKImageProcessing::ITKHMaximaImage: Instantiation and Parameter Chec
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKHMaximaImage::k_Height_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKHMaximaImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKHMaximaImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKHMaximaImage::k_Height_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKHMaximaImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKHMaximaImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

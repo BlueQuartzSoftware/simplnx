@@ -40,10 +40,10 @@ TEST_CASE("ITKImageProcessing::ITKMorphologicalGradientImage: Instantiation and 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKMorphologicalGradientImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ITKMorphologicalGradientImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKMorphologicalGradientImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKMorphologicalGradientImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKMorphologicalGradientImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ITKMorphologicalGradientImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKMorphologicalGradientImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKMorphologicalGradientImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

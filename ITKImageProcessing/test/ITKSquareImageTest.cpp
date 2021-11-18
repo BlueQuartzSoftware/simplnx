@@ -38,8 +38,8 @@ TEST_CASE("ITKImageProcessing::ITKSquareImage: Instantiation and Parameter Check
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKSquareImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKSquareImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKSquareImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKSquareImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

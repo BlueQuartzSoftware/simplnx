@@ -40,12 +40,12 @@ TEST_CASE("ITKImageProcessing::ITKRegionalMinimaImage: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKRegionalMinimaImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKRegionalMinimaImage::k_ForegroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKRegionalMinimaImage::k_FullyConnected_Key, std::make_any<bool>(false));
-  args.insert(ITKRegionalMinimaImage::k_FlatIsMinima_Key, std::make_any<bool>(false));
-  args.insert(ITKRegionalMinimaImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKRegionalMinimaImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKRegionalMinimaImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKRegionalMinimaImage::k_ForegroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKRegionalMinimaImage::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKRegionalMinimaImage::k_FlatIsMinima_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKRegionalMinimaImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKRegionalMinimaImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

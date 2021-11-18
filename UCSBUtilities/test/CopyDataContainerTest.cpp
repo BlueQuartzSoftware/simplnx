@@ -38,8 +38,8 @@ TEST_CASE("UCSBUtilities::CopyDataContainer: Instantiation and Parameter Check",
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CopyDataContainer::k_SelectedDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CopyDataContainer::k_NewDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CopyDataContainer::k_SelectedDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CopyDataContainer::k_NewDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

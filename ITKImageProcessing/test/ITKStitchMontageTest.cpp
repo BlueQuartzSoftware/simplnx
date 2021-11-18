@@ -38,12 +38,12 @@ TEST_CASE("ITKImageProcessing::ITKStitchMontage: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(ITKStitchMontage::k_MontageSelection_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(ITKStitchMontage::k_CommonAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ITKStitchMontage::k_CommonDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ITKStitchMontage::k_MontageDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ITKStitchMontage::k_MontageAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ITKStitchMontage::k_MontageDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  /*[x]*/ args.insertOrAssign(ITKStitchMontage::k_MontageSelection_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(ITKStitchMontage::k_CommonAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKStitchMontage::k_CommonDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKStitchMontage::k_MontageDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKStitchMontage::k_MontageAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKStitchMontage::k_MontageDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

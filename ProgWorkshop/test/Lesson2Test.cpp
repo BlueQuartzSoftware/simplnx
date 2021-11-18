@@ -39,9 +39,9 @@ TEST_CASE("ProgWorkshop::Lesson2: Instantiation and Parameter Check", "[ProgWork
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(Lesson2::k_InputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(Lesson2::k_OutputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(Lesson2::k_Value_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(Lesson2::k_InputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(Lesson2::k_OutputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(Lesson2::k_Value_Key, std::make_any<float32>(1.23345f));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

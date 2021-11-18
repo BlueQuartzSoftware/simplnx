@@ -41,14 +41,14 @@ TEST_CASE("DREAM3DReview::LocalDislocationDensityCalculator: Instantiation and P
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(LocalDislocationDensityCalculator::k_CellSize_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(LocalDislocationDensityCalculator::k_EdgeDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(LocalDislocationDensityCalculator::k_BurgersVectorsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(LocalDislocationDensityCalculator::k_SlipPlaneNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(LocalDislocationDensityCalculator::k_OutputDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(LocalDislocationDensityCalculator::k_OutputAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(LocalDislocationDensityCalculator::k_OutputArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(LocalDislocationDensityCalculator::k_DominantSystemArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(LocalDislocationDensityCalculator::k_CellSize_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(LocalDislocationDensityCalculator::k_EdgeDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(LocalDislocationDensityCalculator::k_BurgersVectorsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(LocalDislocationDensityCalculator::k_SlipPlaneNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(LocalDislocationDensityCalculator::k_OutputDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(LocalDislocationDensityCalculator::k_OutputAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(LocalDislocationDensityCalculator::k_OutputArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(LocalDislocationDensityCalculator::k_DominantSystemArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -40,15 +40,15 @@ TEST_CASE("Reconstruction::CAxisSegmentFeatures: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CAxisSegmentFeatures::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(CAxisSegmentFeatures::k_UseGoodVoxels_Key, std::make_any<bool>(false));
-  args.insert(CAxisSegmentFeatures::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CAxisSegmentFeatures::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CAxisSegmentFeatures::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CAxisSegmentFeatures::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CAxisSegmentFeatures::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CAxisSegmentFeatures::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CAxisSegmentFeatures::k_ActiveArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CAxisSegmentFeatures::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(CAxisSegmentFeatures::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CAxisSegmentFeatures::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CAxisSegmentFeatures::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CAxisSegmentFeatures::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CAxisSegmentFeatures::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CAxisSegmentFeatures::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CAxisSegmentFeatures::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CAxisSegmentFeatures::k_ActiveArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

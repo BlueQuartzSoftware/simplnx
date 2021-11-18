@@ -39,12 +39,12 @@ TEST_CASE("ITKImageProcessing::ITKIntensityWindowingImage: Instantiation and Par
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKIntensityWindowingImage::k_WindowMinimum_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKIntensityWindowingImage::k_WindowMaximum_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKIntensityWindowingImage::k_OutputMinimum_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKIntensityWindowingImage::k_OutputMaximum_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKIntensityWindowingImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKIntensityWindowingImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKIntensityWindowingImage::k_WindowMinimum_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKIntensityWindowingImage::k_WindowMaximum_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKIntensityWindowingImage::k_OutputMinimum_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKIntensityWindowingImage::k_OutputMaximum_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKIntensityWindowingImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKIntensityWindowingImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

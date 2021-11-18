@@ -39,12 +39,12 @@ TEST_CASE("UCSBUtilities::FindDirectionalModuli: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindDirectionalModuli::k_LoadingDirection_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(FindDirectionalModuli::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindDirectionalModuli::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindDirectionalModuli::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindDirectionalModuli::k_CrystalCompliancesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindDirectionalModuli::k_DirectionalModuliArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDirectionalModuli::k_LoadingDirection_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(FindDirectionalModuli::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDirectionalModuli::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDirectionalModuli::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDirectionalModuli::k_CrystalCompliancesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDirectionalModuli::k_DirectionalModuliArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

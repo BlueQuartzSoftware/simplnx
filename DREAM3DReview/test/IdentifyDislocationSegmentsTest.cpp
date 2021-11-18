@@ -38,11 +38,11 @@ TEST_CASE("DREAM3DReview::IdentifyDislocationSegments: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(IdentifyDislocationSegments::k_BurgersVectorsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(IdentifyDislocationSegments::k_SlipPlaneNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(IdentifyDislocationSegments::k_DislocationIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(IdentifyDislocationSegments::k_EdgeFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(IdentifyDislocationSegments::k_ActiveArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(IdentifyDislocationSegments::k_BurgersVectorsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(IdentifyDislocationSegments::k_SlipPlaneNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(IdentifyDislocationSegments::k_DislocationIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(IdentifyDislocationSegments::k_EdgeFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(IdentifyDislocationSegments::k_ActiveArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

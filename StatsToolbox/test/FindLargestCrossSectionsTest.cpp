@@ -39,9 +39,9 @@ TEST_CASE("StatsToolbox::FindLargestCrossSections: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindLargestCrossSections::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(FindLargestCrossSections::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindLargestCrossSections::k_LargestCrossSectionsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindLargestCrossSections::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(FindLargestCrossSections::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindLargestCrossSections::k_LargestCrossSectionsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

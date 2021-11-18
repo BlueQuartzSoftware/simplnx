@@ -37,7 +37,7 @@ TEST_CASE("SurfaceMeshing::TriangleNormalFilter: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(TriangleNormalFilter::k_SurfaceMeshTriangleNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(TriangleNormalFilter::k_SurfaceMeshTriangleNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

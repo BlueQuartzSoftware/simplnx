@@ -38,8 +38,8 @@ TEST_CASE("Core::SplitAttributeArray: Instantiation and Parameter Check", "[Core
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(SplitAttributeArray::k_InputArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(SplitAttributeArray::k_SplitArraysSuffix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(SplitAttributeArray::k_InputArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SplitAttributeArray::k_SplitArraysSuffix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

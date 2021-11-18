@@ -42,13 +42,13 @@ TEST_CASE("DREAM3DReview::FFTHDFWriterFilter: Instantiation and Parameter Check"
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FFTHDFWriterFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(FFTHDFWriterFilter::k_WriteEigenstrains_Key, std::make_any<bool>(false));
-  args.insert(FFTHDFWriterFilter::k_EigenstrainsOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(FFTHDFWriterFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FFTHDFWriterFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FFTHDFWriterFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FFTHDFWriterFilter::k_CellEigenstrainsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FFTHDFWriterFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(FFTHDFWriterFilter::k_WriteEigenstrains_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FFTHDFWriterFilter::k_EigenstrainsOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(FFTHDFWriterFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FFTHDFWriterFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FFTHDFWriterFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FFTHDFWriterFilter::k_CellEigenstrainsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

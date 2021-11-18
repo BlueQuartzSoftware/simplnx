@@ -40,10 +40,10 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleDilateImage: Instantiation and Parame
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKGrayscaleDilateImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ITKGrayscaleDilateImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKGrayscaleDilateImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKGrayscaleDilateImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKGrayscaleDilateImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ITKGrayscaleDilateImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKGrayscaleDilateImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKGrayscaleDilateImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

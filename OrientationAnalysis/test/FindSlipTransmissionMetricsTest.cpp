@@ -38,14 +38,14 @@ TEST_CASE("OrientationAnalysis::FindSlipTransmissionMetrics: Instantiation and P
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindSlipTransmissionMetrics::k_NeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSlipTransmissionMetrics::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSlipTransmissionMetrics::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSlipTransmissionMetrics::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSlipTransmissionMetrics::k_F1ListArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSlipTransmissionMetrics::k_F1sptListArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSlipTransmissionMetrics::k_F7ListArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSlipTransmissionMetrics::k_mPrimeListArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSlipTransmissionMetrics::k_NeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSlipTransmissionMetrics::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSlipTransmissionMetrics::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSlipTransmissionMetrics::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSlipTransmissionMetrics::k_F1ListArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSlipTransmissionMetrics::k_F1sptListArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSlipTransmissionMetrics::k_F7ListArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSlipTransmissionMetrics::k_mPrimeListArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

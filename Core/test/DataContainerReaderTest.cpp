@@ -38,8 +38,8 @@ TEST_CASE("Core::DataContainerReader: Instantiation and Parameter Check", "[Core
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(DataContainerReader::k_OverwriteExistingDataContainers_Key, std::make_any<bool>(false));
-  /*[x]*/ args.insert(DataContainerReader::k_InputFileDataContainerArrayProxy_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(DataContainerReader::k_OverwriteExistingDataContainers_Key, std::make_any<bool>(false));
+  /*[x]*/ args.insertOrAssign(DataContainerReader::k_InputFileDataContainerArrayProxy_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

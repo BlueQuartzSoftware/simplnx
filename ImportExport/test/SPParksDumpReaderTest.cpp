@@ -44,13 +44,13 @@ TEST_CASE("ImportExport::SPParksDumpReader: Instantiation and Parameter Check", 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(SPParksDumpReader::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(SPParksDumpReader::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(SPParksDumpReader::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(SPParksDumpReader::k_OneBasedArrays_Key, std::make_any<bool>(false));
-  args.insert(SPParksDumpReader::k_VolumeDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(SPParksDumpReader::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(SPParksDumpReader::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SPParksDumpReader::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(SPParksDumpReader::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(SPParksDumpReader::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(SPParksDumpReader::k_OneBasedArrays_Key, std::make_any<bool>(false));
+  args.insertOrAssign(SPParksDumpReader::k_VolumeDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SPParksDumpReader::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SPParksDumpReader::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

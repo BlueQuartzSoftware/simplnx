@@ -39,11 +39,11 @@ TEST_CASE("ITKImageProcessing::ApplyDewarpParameters: Instantiation and Paramete
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(ApplyDewarpParameters::k_MontageName_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(ApplyDewarpParameters::k_AttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ApplyDewarpParameters::k_TransformPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ApplyDewarpParameters::k_TransformPrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ApplyDewarpParameters::k_MaskName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  /*[x]*/ args.insertOrAssign(ApplyDewarpParameters::k_MontageName_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(ApplyDewarpParameters::k_AttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ApplyDewarpParameters::k_TransformPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ApplyDewarpParameters::k_TransformPrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ApplyDewarpParameters::k_MaskName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

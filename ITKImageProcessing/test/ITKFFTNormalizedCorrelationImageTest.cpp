@@ -39,11 +39,11 @@ TEST_CASE("ITKImageProcessing::ITKFFTNormalizedCorrelationImage: Instantiation a
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKFFTNormalizedCorrelationImage::k_RequiredNumberOfOverlappingPixels_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKFFTNormalizedCorrelationImage::k_RequiredFractionOfOverlappingPixels_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKFFTNormalizedCorrelationImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKFFTNormalizedCorrelationImage::k_MovingCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKFFTNormalizedCorrelationImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKFFTNormalizedCorrelationImage::k_RequiredNumberOfOverlappingPixels_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKFFTNormalizedCorrelationImage::k_RequiredFractionOfOverlappingPixels_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKFFTNormalizedCorrelationImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKFFTNormalizedCorrelationImage::k_MovingCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKFFTNormalizedCorrelationImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

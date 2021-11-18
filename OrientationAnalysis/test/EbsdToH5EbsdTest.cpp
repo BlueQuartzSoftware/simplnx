@@ -37,7 +37,7 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd: Instantiation and Parameter Check"
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(EbsdToH5Ebsd::k_OrientationData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(EbsdToH5Ebsd::k_OrientationData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

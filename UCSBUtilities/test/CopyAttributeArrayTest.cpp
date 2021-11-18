@@ -38,8 +38,8 @@ TEST_CASE("UCSBUtilities::CopyAttributeArray: Instantiation and Parameter Check"
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CopyAttributeArray::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CopyAttributeArray::k_NewArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CopyAttributeArray::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CopyAttributeArray::k_NewArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

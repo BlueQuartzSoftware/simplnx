@@ -37,7 +37,7 @@ TEST_CASE("SurfaceMeshing::TriangleDihedralAngleFilter: Instantiation and Parame
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(TriangleDihedralAngleFilter::k_SurfaceMeshTriangleDihedralAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(TriangleDihedralAngleFilter::k_SurfaceMeshTriangleDihedralAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

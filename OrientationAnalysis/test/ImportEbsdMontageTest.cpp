@@ -40,14 +40,14 @@ TEST_CASE("OrientationAnalysis::ImportEbsdMontage: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(ImportEbsdMontage::k_InputFileListInfo_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(ImportEbsdMontage::k_MontageName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportEbsdMontage::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportEbsdMontage::k_CellEnsembleAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportEbsdMontage::k_ScanOverlapPixel_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
-  args.insert(ImportEbsdMontage::k_ScanOverlapPercent_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(2)));
-  args.insert(ImportEbsdMontage::k_GenerateIPFColorMap_Key, std::make_any<bool>(false));
-  args.insert(ImportEbsdMontage::k_CellIPFColorsArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  /*[x]*/ args.insertOrAssign(ImportEbsdMontage::k_InputFileListInfo_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(ImportEbsdMontage::k_MontageName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportEbsdMontage::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportEbsdMontage::k_CellEnsembleAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportEbsdMontage::k_ScanOverlapPixel_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
+  args.insertOrAssign(ImportEbsdMontage::k_ScanOverlapPercent_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(2)));
+  args.insertOrAssign(ImportEbsdMontage::k_GenerateIPFColorMap_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ImportEbsdMontage::k_CellIPFColorsArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

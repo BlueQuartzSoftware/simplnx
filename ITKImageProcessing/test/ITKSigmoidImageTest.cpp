@@ -39,12 +39,12 @@ TEST_CASE("ITKImageProcessing::ITKSigmoidImage: Instantiation and Parameter Chec
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKSigmoidImage::k_Alpha_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKSigmoidImage::k_Beta_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKSigmoidImage::k_OutputMaximum_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKSigmoidImage::k_OutputMinimum_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKSigmoidImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKSigmoidImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKSigmoidImage::k_Alpha_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKSigmoidImage::k_Beta_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKSigmoidImage::k_OutputMaximum_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKSigmoidImage::k_OutputMinimum_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKSigmoidImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKSigmoidImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

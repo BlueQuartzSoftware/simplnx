@@ -39,10 +39,10 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Instantiation and Parameter Check", 
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(ReadH5Ebsd::k_ReadH5Ebsd_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(ReadH5Ebsd::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ReadH5Ebsd::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ReadH5Ebsd::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  /*[x]*/ args.insertOrAssign(ReadH5Ebsd::k_ReadH5Ebsd_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(ReadH5Ebsd::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadH5Ebsd::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadH5Ebsd::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

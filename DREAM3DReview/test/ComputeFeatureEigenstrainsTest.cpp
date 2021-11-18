@@ -40,19 +40,19 @@ TEST_CASE("DREAM3DReview::ComputeFeatureEigenstrains: Instantiation and Paramete
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ComputeFeatureEigenstrains::k_PoissonRatio_Key, std::make_any<float32>(1.23345f));
-  args.insert(ComputeFeatureEigenstrains::k_UseEllipsoidalGrains_Key, std::make_any<bool>(false));
-  args.insert(ComputeFeatureEigenstrains::k_UseCorrectionalMatrix_Key, std::make_any<bool>(false));
-  args.insert(ComputeFeatureEigenstrains::k_Beta11_Key, std::make_any<float32>(1.23345f));
-  args.insert(ComputeFeatureEigenstrains::k_Beta22_Key, std::make_any<float32>(1.23345f));
-  args.insert(ComputeFeatureEigenstrains::k_Beta33_Key, std::make_any<float32>(1.23345f));
-  args.insert(ComputeFeatureEigenstrains::k_Beta23_Key, std::make_any<float32>(1.23345f));
-  args.insert(ComputeFeatureEigenstrains::k_Beta13_Key, std::make_any<float32>(1.23345f));
-  args.insert(ComputeFeatureEigenstrains::k_Beta12_Key, std::make_any<float32>(1.23345f));
-  args.insert(ComputeFeatureEigenstrains::k_AxisLengthsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ComputeFeatureEigenstrains::k_AxisEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ComputeFeatureEigenstrains::k_ElasticStrainsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ComputeFeatureEigenstrains::k_EigenstrainsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ComputeFeatureEigenstrains::k_PoissonRatio_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ComputeFeatureEigenstrains::k_UseEllipsoidalGrains_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeFeatureEigenstrains::k_UseCorrectionalMatrix_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeFeatureEigenstrains::k_Beta11_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ComputeFeatureEigenstrains::k_Beta22_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ComputeFeatureEigenstrains::k_Beta33_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ComputeFeatureEigenstrains::k_Beta23_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ComputeFeatureEigenstrains::k_Beta13_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ComputeFeatureEigenstrains::k_Beta12_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ComputeFeatureEigenstrains::k_AxisLengthsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ComputeFeatureEigenstrains::k_AxisEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ComputeFeatureEigenstrains::k_ElasticStrainsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ComputeFeatureEigenstrains::k_EigenstrainsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

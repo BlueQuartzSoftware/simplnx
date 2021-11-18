@@ -40,10 +40,10 @@ TEST_CASE("Core::RotateSampleRefFrame: Instantiation and Parameter Check", "[Cor
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(RotateSampleRefFrame::k_RotationAngle_Key, std::make_any<float32>(1.23345f));
-  args.insert(RotateSampleRefFrame::k_RotationAxis_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  /*[x]*/ args.insert(RotateSampleRefFrame::k_RotationTable_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(RotateSampleRefFrame::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RotateSampleRefFrame::k_RotationAngle_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(RotateSampleRefFrame::k_RotationAxis_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  /*[x]*/ args.insertOrAssign(RotateSampleRefFrame::k_RotationTable_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(RotateSampleRefFrame::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

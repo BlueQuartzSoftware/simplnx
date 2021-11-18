@@ -38,8 +38,8 @@ TEST_CASE("ITKImageProcessing::ITKRGBToLuminanceImage: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKRGBToLuminanceImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKRGBToLuminanceImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKRGBToLuminanceImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKRGBToLuminanceImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

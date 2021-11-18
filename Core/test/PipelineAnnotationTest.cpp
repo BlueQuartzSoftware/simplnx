@@ -37,7 +37,7 @@ TEST_CASE("Core::PipelineAnnotation: Instantiation and Parameter Check", "[Core]
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(PipelineAnnotation::k_Summary_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(PipelineAnnotation::k_Summary_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

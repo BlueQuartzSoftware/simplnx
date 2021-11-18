@@ -40,12 +40,12 @@ TEST_CASE("ITKImageProcessing::ITKSignedMaurerDistanceMapImage: Instantiation an
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKSignedMaurerDistanceMapImage::k_InsideIsPositive_Key, std::make_any<bool>(false));
-  args.insert(ITKSignedMaurerDistanceMapImage::k_SquaredDistance_Key, std::make_any<bool>(false));
-  args.insert(ITKSignedMaurerDistanceMapImage::k_UseImageSpacing_Key, std::make_any<bool>(false));
-  args.insert(ITKSignedMaurerDistanceMapImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKSignedMaurerDistanceMapImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKSignedMaurerDistanceMapImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKSignedMaurerDistanceMapImage::k_InsideIsPositive_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKSignedMaurerDistanceMapImage::k_SquaredDistance_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKSignedMaurerDistanceMapImage::k_UseImageSpacing_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKSignedMaurerDistanceMapImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKSignedMaurerDistanceMapImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKSignedMaurerDistanceMapImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -38,9 +38,9 @@ TEST_CASE("UCSBUtilities::FindBoundaryAreas: Instantiation and Parameter Check",
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindBoundaryAreas::k_SurfaceMeshTriangleAreasArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindBoundaryAreas::k_SurfaceMeshFeatureFaceIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindBoundaryAreas::k_SurfaceMeshBoundaryAreasArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundaryAreas::k_SurfaceMeshTriangleAreasArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundaryAreas::k_SurfaceMeshFeatureFaceIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundaryAreas::k_SurfaceMeshBoundaryAreasArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -40,19 +40,19 @@ TEST_CASE("OrientationAnalysis::FindSchmids: Instantiation and Parameter Check",
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindSchmids::k_LoadingDirection_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(FindSchmids::k_StoreAngleComponents_Key, std::make_any<bool>(false));
-  args.insert(FindSchmids::k_OverrideSystem_Key, std::make_any<bool>(false));
-  args.insert(FindSchmids::k_SlipPlane_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(FindSchmids::k_SlipDirection_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(FindSchmids::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSchmids::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSchmids::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSchmids::k_SchmidsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSchmids::k_SlipSystemsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSchmids::k_PolesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSchmids::k_PhisArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSchmids::k_LambdasArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSchmids::k_LoadingDirection_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(FindSchmids::k_StoreAngleComponents_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindSchmids::k_OverrideSystem_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindSchmids::k_SlipPlane_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(FindSchmids::k_SlipDirection_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(FindSchmids::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSchmids::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSchmids::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSchmids::k_SchmidsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSchmids::k_SlipSystemsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSchmids::k_PolesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSchmids::k_PhisArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSchmids::k_LambdasArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

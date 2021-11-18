@@ -37,7 +37,7 @@ TEST_CASE("ProgWorkshop::Lesson6: Instantiation and Parameter Check", "[ProgWork
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(Lesson6::k_GeometrySelection_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(Lesson6::k_GeometrySelection_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

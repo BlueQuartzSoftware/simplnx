@@ -38,15 +38,15 @@ TEST_CASE("OrientationAnalysis::FindDistsToCharactGBs: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindDistsToCharactGBs::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindDistsToCharactGBs::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindDistsToCharactGBs::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindDistsToCharactGBs::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindDistsToCharactGBs::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindDistsToCharactGBs::k_DistToTiltArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindDistsToCharactGBs::k_DistToTwistArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindDistsToCharactGBs::k_DistToSymmetricArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindDistsToCharactGBs::k_DistTo180TiltArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDistsToCharactGBs::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDistsToCharactGBs::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDistsToCharactGBs::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDistsToCharactGBs::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDistsToCharactGBs::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDistsToCharactGBs::k_DistToTiltArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDistsToCharactGBs::k_DistToTwistArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDistsToCharactGBs::k_DistToSymmetricArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDistsToCharactGBs::k_DistTo180TiltArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -43,11 +43,11 @@ TEST_CASE("Core::FeatureDataCSVWriter: Instantiation and Parameter Check", "[Cor
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FeatureDataCSVWriter::k_FeatureDataFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(FeatureDataCSVWriter::k_WriteNeighborListData_Key, std::make_any<bool>(false));
-  args.insert(FeatureDataCSVWriter::k_WriteNumFeaturesLine_Key, std::make_any<bool>(false));
-  args.insert(FeatureDataCSVWriter::k_DelimiterChoiceInt_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(FeatureDataCSVWriter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureDataCSVWriter::k_FeatureDataFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(FeatureDataCSVWriter::k_WriteNeighborListData_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FeatureDataCSVWriter::k_WriteNumFeaturesLine_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FeatureDataCSVWriter::k_DelimiterChoiceInt_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(FeatureDataCSVWriter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

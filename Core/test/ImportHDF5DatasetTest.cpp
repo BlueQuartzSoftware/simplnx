@@ -38,8 +38,8 @@ TEST_CASE("Core::ImportHDF5Dataset: Instantiation and Parameter Check", "[Core][
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(ImportHDF5Dataset::k_ImportHDF5File_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(ImportHDF5Dataset::k_SelectedAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
+  /*[x]*/ args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(ImportHDF5Dataset::k_SelectedAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

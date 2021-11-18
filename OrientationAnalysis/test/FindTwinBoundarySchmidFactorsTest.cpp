@@ -44,16 +44,16 @@ TEST_CASE("OrientationAnalysis::FindTwinBoundarySchmidFactors: Instantiation and
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindTwinBoundarySchmidFactors::k_LoadingDir_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(FindTwinBoundarySchmidFactors::k_WriteFile_Key, std::make_any<bool>(false));
-  args.insert(FindTwinBoundarySchmidFactors::k_TwinBoundarySchmidFactorsFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(FindTwinBoundarySchmidFactors::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTwinBoundarySchmidFactors::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTwinBoundarySchmidFactors::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTwinBoundarySchmidFactors::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTwinBoundarySchmidFactors::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTwinBoundarySchmidFactors::k_SurfaceMeshTwinBoundaryArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTwinBoundarySchmidFactors::k_SurfaceMeshTwinBoundarySchmidFactorsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTwinBoundarySchmidFactors::k_LoadingDir_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(FindTwinBoundarySchmidFactors::k_WriteFile_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindTwinBoundarySchmidFactors::k_TwinBoundarySchmidFactorsFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(FindTwinBoundarySchmidFactors::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTwinBoundarySchmidFactors::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTwinBoundarySchmidFactors::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTwinBoundarySchmidFactors::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTwinBoundarySchmidFactors::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTwinBoundarySchmidFactors::k_SurfaceMeshTwinBoundaryArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTwinBoundarySchmidFactors::k_SurfaceMeshTwinBoundarySchmidFactorsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

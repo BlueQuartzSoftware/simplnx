@@ -39,9 +39,9 @@ TEST_CASE("ITKImageProcessing::ITKInvertIntensityImage: Instantiation and Parame
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKInvertIntensityImage::k_Maximum_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKInvertIntensityImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKInvertIntensityImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKInvertIntensityImage::k_Maximum_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKInvertIntensityImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKInvertIntensityImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

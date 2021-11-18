@@ -42,13 +42,13 @@ TEST_CASE("ITKImageProcessing::ITKBinaryDilateImage: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKBinaryDilateImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ITKBinaryDilateImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKBinaryDilateImage::k_ForegroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKBinaryDilateImage::k_BoundaryToForeground_Key, std::make_any<bool>(false));
-  args.insert(ITKBinaryDilateImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKBinaryDilateImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKBinaryDilateImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKBinaryDilateImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ITKBinaryDilateImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKBinaryDilateImage::k_ForegroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKBinaryDilateImage::k_BoundaryToForeground_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKBinaryDilateImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKBinaryDilateImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKBinaryDilateImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

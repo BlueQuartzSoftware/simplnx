@@ -42,10 +42,10 @@ TEST_CASE("ImportExport::ReadStlFile: Instantiation and Parameter Check", "[Impo
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ReadStlFile::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ReadStlFile::k_SurfaceMeshDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ReadStlFile::k_FaceAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ReadStlFile::k_FaceNormalsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadStlFile::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ReadStlFile::k_SurfaceMeshDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadStlFile::k_FaceAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadStlFile::k_FaceNormalsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

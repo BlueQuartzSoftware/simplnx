@@ -37,8 +37,8 @@ TEST_CASE("Sampling::NearestPointFuseRegularGrids: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(NearestPointFuseRegularGrids::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(NearestPointFuseRegularGrids::k_SamplingCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(NearestPointFuseRegularGrids::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(NearestPointFuseRegularGrids::k_SamplingCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

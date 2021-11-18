@@ -37,7 +37,7 @@ TEST_CASE("SurfaceMeshing::TriangleAreaFilter: Instantiation and Parameter Check
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(TriangleAreaFilter::k_SurfaceMeshTriangleAreasArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(TriangleAreaFilter::k_SurfaceMeshTriangleAreasArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

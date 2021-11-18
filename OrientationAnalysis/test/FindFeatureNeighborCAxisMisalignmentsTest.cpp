@@ -39,13 +39,13 @@ TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignments: Instantia
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindFeatureNeighborCAxisMisalignments::k_FindAvgMisals_Key, std::make_any<bool>(false));
-  args.insert(FindFeatureNeighborCAxisMisalignments::k_NeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureNeighborCAxisMisalignments::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureNeighborCAxisMisalignments::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureNeighborCAxisMisalignments::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureNeighborCAxisMisalignments::k_CAxisMisalignmentListArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureNeighborCAxisMisalignments::k_AvgCAxisMisalignmentsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureNeighborCAxisMisalignments::k_FindAvgMisals_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindFeatureNeighborCAxisMisalignments::k_NeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureNeighborCAxisMisalignments::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureNeighborCAxisMisalignments::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureNeighborCAxisMisalignments::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureNeighborCAxisMisalignments::k_CAxisMisalignmentListArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureNeighborCAxisMisalignments::k_AvgCAxisMisalignmentsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

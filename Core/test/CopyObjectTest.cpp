@@ -39,10 +39,10 @@ TEST_CASE("Core::CopyObject: Instantiation and Parameter Check", "[Core][CopyObj
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CopyObject::k_DataContainerToCopy_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CopyObject::k_AttributeMatrixToCopy_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CopyObject::k_AttributeArrayToCopy_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CopyObject::k_CopiedObjectName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(CopyObject::k_DataContainerToCopy_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CopyObject::k_AttributeMatrixToCopy_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CopyObject::k_AttributeArrayToCopy_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CopyObject::k_CopiedObjectName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

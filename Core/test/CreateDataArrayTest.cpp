@@ -41,11 +41,11 @@ TEST_CASE("Core::CreateDataArray: Instantiation and Parameter Check", "[Core][Cr
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(CreateDataArray::k_ScalarType_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(CreateDataArray::k_NumberOfComponents_Key, std::make_any<int32>(1234356));
-  args.insert(CreateDataArray::k_InitializationValue_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  /*[x]*/ args.insert(CreateDataArray::k_InitializationRange_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(CreateDataArray::k_NewArray_Key, std::make_any<DataPath>(DataPath{}));
+  /*[x]*/ args.insertOrAssign(CreateDataArray::k_ScalarType_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(CreateDataArray::k_NumberOfComponents_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(CreateDataArray::k_InitializationValue_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  /*[x]*/ args.insertOrAssign(CreateDataArray::k_InitializationRange_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(CreateDataArray::k_NewArray_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

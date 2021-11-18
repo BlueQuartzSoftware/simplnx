@@ -38,9 +38,9 @@ TEST_CASE("StatsToolbox::FindAvgScalarValueForFeatures: Instantiation and Parame
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindAvgScalarValueForFeatures::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindAvgScalarValueForFeatures::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindAvgScalarValueForFeatures::k_NewFeatureArrayArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindAvgScalarValueForFeatures::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindAvgScalarValueForFeatures::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindAvgScalarValueForFeatures::k_NewFeatureArrayArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

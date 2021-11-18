@@ -38,10 +38,10 @@ TEST_CASE("Core::CreateImageGeometry: Instantiation and Parameter Check", "[Core
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CreateImageGeometry::k_SelectedDataContainer_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CreateImageGeometry::k_Dimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
-  args.insert(CreateImageGeometry::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(CreateImageGeometry::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(CreateImageGeometry::k_SelectedDataContainer_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateImageGeometry::k_Dimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
+  args.insertOrAssign(CreateImageGeometry::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(CreateImageGeometry::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

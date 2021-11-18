@@ -40,10 +40,10 @@ TEST_CASE("ITKImageProcessing::ITKLabelContourImage: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKLabelContourImage::k_FullyConnected_Key, std::make_any<bool>(false));
-  args.insert(ITKLabelContourImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKLabelContourImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKLabelContourImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKLabelContourImage::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKLabelContourImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKLabelContourImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKLabelContourImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

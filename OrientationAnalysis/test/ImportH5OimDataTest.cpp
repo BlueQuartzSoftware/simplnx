@@ -46,14 +46,14 @@ TEST_CASE("OrientationAnalysis::ImportH5OimData: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ImportH5OimData::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  /*[x]*/ args.insert(ImportH5OimData::k_SelectedScanNames_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(ImportH5OimData::k_ZSpacing_Key, std::make_any<float64>(2.3456789));
-  args.insert(ImportH5OimData::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ImportH5OimData::k_ReadPatternData_Key, std::make_any<bool>(false));
-  args.insert(ImportH5OimData::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportH5OimData::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportH5OimData::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportH5OimData::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  /*[x]*/ args.insertOrAssign(ImportH5OimData::k_SelectedScanNames_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(ImportH5OimData::k_ZSpacing_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ImportH5OimData::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ImportH5OimData::k_ReadPatternData_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ImportH5OimData::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportH5OimData::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportH5OimData::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

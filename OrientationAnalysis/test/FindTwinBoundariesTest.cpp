@@ -40,16 +40,16 @@ TEST_CASE("OrientationAnalysis::FindTwinBoundaries: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindTwinBoundaries::k_AxisTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(FindTwinBoundaries::k_AngleTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(FindTwinBoundaries::k_FindCoherence_Key, std::make_any<bool>(false));
-  args.insert(FindTwinBoundaries::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTwinBoundaries::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTwinBoundaries::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTwinBoundaries::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTwinBoundaries::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTwinBoundaries::k_SurfaceMeshTwinBoundaryArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTwinBoundaries::k_SurfaceMeshTwinBoundaryIncoherenceArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTwinBoundaries::k_AxisTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(FindTwinBoundaries::k_AngleTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(FindTwinBoundaries::k_FindCoherence_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindTwinBoundaries::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTwinBoundaries::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTwinBoundaries::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTwinBoundaries::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTwinBoundaries::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTwinBoundaries::k_SurfaceMeshTwinBoundaryArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTwinBoundaries::k_SurfaceMeshTwinBoundaryIncoherenceArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

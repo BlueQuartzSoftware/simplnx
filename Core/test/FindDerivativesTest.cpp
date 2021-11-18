@@ -38,8 +38,8 @@ TEST_CASE("Core::FindDerivatives: Instantiation and Parameter Check", "[Core][Fi
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindDerivatives::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindDerivatives::k_DerivativesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDerivatives::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDerivatives::k_DerivativesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

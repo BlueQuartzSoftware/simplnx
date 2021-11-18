@@ -40,12 +40,12 @@ TEST_CASE("DREAM3DReview::IterativeClosestPoint: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(IterativeClosestPoint::k_MovingVertexGeometry_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(IterativeClosestPoint::k_TargetVertexGeometry_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(IterativeClosestPoint::k_Iterations_Key, std::make_any<int32>(1234356));
-  args.insert(IterativeClosestPoint::k_ApplyTransform_Key, std::make_any<bool>(false));
-  args.insert(IterativeClosestPoint::k_TransformAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(IterativeClosestPoint::k_TransformArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(IterativeClosestPoint::k_MovingVertexGeometry_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(IterativeClosestPoint::k_TargetVertexGeometry_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(IterativeClosestPoint::k_Iterations_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(IterativeClosestPoint::k_ApplyTransform_Key, std::make_any<bool>(false));
+  args.insertOrAssign(IterativeClosestPoint::k_TransformAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(IterativeClosestPoint::k_TransformArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

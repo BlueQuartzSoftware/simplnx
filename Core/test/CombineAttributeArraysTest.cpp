@@ -39,11 +39,11 @@ TEST_CASE("Core::CombineAttributeArrays: Instantiation and Parameter Check", "[C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CombineAttributeArrays::k_NormalizeData_Key, std::make_any<bool>(false));
-  args.insert(CombineAttributeArrays::k_MoveValues_Key, std::make_any<bool>(false));
-  args.insert(CombineAttributeArrays::k_SelectedDataArrayPaths_Key,
-              std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(CombineAttributeArrays::k_StackedDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(CombineAttributeArrays::k_NormalizeData_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CombineAttributeArrays::k_MoveValues_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CombineAttributeArrays::k_SelectedDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(CombineAttributeArrays::k_StackedDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

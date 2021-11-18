@@ -41,18 +41,19 @@ TEST_CASE("EMMPM::MultiEmmpmFilter: Instantiation and Parameter Check", "[EMMPM]
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(MultiEmmpmFilter::k_NumClasses_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(MultiEmmpmFilter::k_UseOneBasedValues_Key, std::make_any<bool>(false));
-  args.insert(MultiEmmpmFilter::k_UseGradientPenalty_Key, std::make_any<bool>(false));
-  args.insert(MultiEmmpmFilter::k_GradientBetaE_Key, std::make_any<float64>(2.3456789));
-  args.insert(MultiEmmpmFilter::k_UseCurvaturePenalty_Key, std::make_any<bool>(false));
-  args.insert(MultiEmmpmFilter::k_CurvatureBetaC_Key, std::make_any<float64>(2.3456789));
-  args.insert(MultiEmmpmFilter::k_CurvatureRMax_Key, std::make_any<float64>(2.3456789));
-  args.insert(MultiEmmpmFilter::k_CurvatureEMLoopDelay_Key, std::make_any<int32>(1234356));
-  args.insert(MultiEmmpmFilter::k_InputDataArrayVector_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(MultiEmmpmFilter::k_OutputAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(MultiEmmpmFilter::k_UsePreviousMuSigma_Key, std::make_any<bool>(false));
-  args.insert(MultiEmmpmFilter::k_OutputArrayPrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  /*[x]*/ args.insertOrAssign(MultiEmmpmFilter::k_NumClasses_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(MultiEmmpmFilter::k_UseOneBasedValues_Key, std::make_any<bool>(false));
+  args.insertOrAssign(MultiEmmpmFilter::k_UseGradientPenalty_Key, std::make_any<bool>(false));
+  args.insertOrAssign(MultiEmmpmFilter::k_GradientBetaE_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(MultiEmmpmFilter::k_UseCurvaturePenalty_Key, std::make_any<bool>(false));
+  args.insertOrAssign(MultiEmmpmFilter::k_CurvatureBetaC_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(MultiEmmpmFilter::k_CurvatureRMax_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(MultiEmmpmFilter::k_CurvatureEMLoopDelay_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(MultiEmmpmFilter::k_InputDataArrayVector_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(MultiEmmpmFilter::k_OutputAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(MultiEmmpmFilter::k_UsePreviousMuSigma_Key, std::make_any<bool>(false));
+  args.insertOrAssign(MultiEmmpmFilter::k_OutputArrayPrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

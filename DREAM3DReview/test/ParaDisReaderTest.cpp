@@ -43,15 +43,15 @@ TEST_CASE("DREAM3DReview::ParaDisReader: Instantiation and Parameter Check", "[D
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ParaDisReader::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ParaDisReader::k_BurgersVector_Key, std::make_any<float32>(1.23345f));
-  args.insert(ParaDisReader::k_EdgeDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ParaDisReader::k_VertexAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ParaDisReader::k_EdgeAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ParaDisReader::k_NumberOfArmsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ParaDisReader::k_NodeConstraintsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ParaDisReader::k_BurgersVectorsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ParaDisReader::k_SlipPlaneNormalsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ParaDisReader::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ParaDisReader::k_BurgersVector_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ParaDisReader::k_EdgeDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ParaDisReader::k_VertexAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ParaDisReader::k_EdgeAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ParaDisReader::k_NumberOfArmsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ParaDisReader::k_NodeConstraintsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ParaDisReader::k_BurgersVectorsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ParaDisReader::k_SlipPlaneNormalsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

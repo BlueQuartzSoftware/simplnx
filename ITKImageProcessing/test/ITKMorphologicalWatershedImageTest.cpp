@@ -40,11 +40,11 @@ TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedImage: Instantiation and
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKMorphologicalWatershedImage::k_Level_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKMorphologicalWatershedImage::k_MarkWatershedLine_Key, std::make_any<bool>(false));
-  args.insert(ITKMorphologicalWatershedImage::k_FullyConnected_Key, std::make_any<bool>(false));
-  args.insert(ITKMorphologicalWatershedImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKMorphologicalWatershedImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKMorphologicalWatershedImage::k_Level_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKMorphologicalWatershedImage::k_MarkWatershedLine_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKMorphologicalWatershedImage::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKMorphologicalWatershedImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKMorphologicalWatershedImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

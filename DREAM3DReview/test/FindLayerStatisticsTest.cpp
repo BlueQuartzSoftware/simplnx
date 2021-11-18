@@ -39,15 +39,15 @@ TEST_CASE("DREAM3DReview::FindLayerStatistics: Instantiation and Parameter Check
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindLayerStatistics::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(FindLayerStatistics::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindLayerStatistics::k_LayerAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindLayerStatistics::k_LayerIDsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindLayerStatistics::k_LayerMinArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindLayerStatistics::k_LayerMaxArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindLayerStatistics::k_LayerAvgArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindLayerStatistics::k_LayerStdArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindLayerStatistics::k_LayerVarArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindLayerStatistics::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(FindLayerStatistics::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindLayerStatistics::k_LayerAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindLayerStatistics::k_LayerIDsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindLayerStatistics::k_LayerMinArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindLayerStatistics::k_LayerMaxArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindLayerStatistics::k_LayerAvgArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindLayerStatistics::k_LayerStdArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindLayerStatistics::k_LayerVarArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

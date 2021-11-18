@@ -39,13 +39,13 @@ TEST_CASE("OrientationAnalysis::FindFeatureReferenceCAxisMisorientations: Instan
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindFeatureReferenceCAxisMisorientations::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureReferenceCAxisMisorientations::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureReferenceCAxisMisorientations::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureReferenceCAxisMisorientations::k_AvgCAxesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureReferenceCAxisMisorientations::k_FeatureAvgCAxisMisorientationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureReferenceCAxisMisorientations::k_FeatureStdevCAxisMisorientationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureReferenceCAxisMisorientations::k_FeatureReferenceCAxisMisorientationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureReferenceCAxisMisorientations::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureReferenceCAxisMisorientations::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureReferenceCAxisMisorientations::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureReferenceCAxisMisorientations::k_AvgCAxesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureReferenceCAxisMisorientations::k_FeatureAvgCAxisMisorientationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureReferenceCAxisMisorientations::k_FeatureStdevCAxisMisorientationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureReferenceCAxisMisorientations::k_FeatureReferenceCAxisMisorientationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

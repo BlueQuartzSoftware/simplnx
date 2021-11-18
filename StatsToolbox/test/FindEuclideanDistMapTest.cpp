@@ -39,16 +39,16 @@ TEST_CASE("StatsToolbox::FindEuclideanDistMap: Instantiation and Parameter Check
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindEuclideanDistMap::k_CalcManhattanDist_Key, std::make_any<bool>(false));
-  args.insert(FindEuclideanDistMap::k_DoBoundaries_Key, std::make_any<bool>(false));
-  args.insert(FindEuclideanDistMap::k_DoTripleLines_Key, std::make_any<bool>(false));
-  args.insert(FindEuclideanDistMap::k_DoQuadPoints_Key, std::make_any<bool>(false));
-  args.insert(FindEuclideanDistMap::k_SaveNearestNeighbors_Key, std::make_any<bool>(false));
-  args.insert(FindEuclideanDistMap::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindEuclideanDistMap::k_GBDistancesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindEuclideanDistMap::k_TJDistancesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindEuclideanDistMap::k_QPDistancesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindEuclideanDistMap::k_NearestNeighborsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindEuclideanDistMap::k_CalcManhattanDist_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindEuclideanDistMap::k_DoBoundaries_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindEuclideanDistMap::k_DoTripleLines_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindEuclideanDistMap::k_DoQuadPoints_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindEuclideanDistMap::k_SaveNearestNeighbors_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindEuclideanDistMap::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindEuclideanDistMap::k_GBDistancesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindEuclideanDistMap::k_TJDistancesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindEuclideanDistMap::k_QPDistancesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindEuclideanDistMap::k_NearestNeighborsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

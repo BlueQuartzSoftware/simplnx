@@ -38,9 +38,9 @@ TEST_CASE("StatsToolbox::FindDifferenceMap: Instantiation and Parameter Check", 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindDifferenceMap::k_FirstInputArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindDifferenceMap::k_SecondInputArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindDifferenceMap::k_DifferenceMapArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDifferenceMap::k_FirstInputArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDifferenceMap::k_SecondInputArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindDifferenceMap::k_DifferenceMapArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

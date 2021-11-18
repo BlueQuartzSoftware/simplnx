@@ -40,10 +40,10 @@ TEST_CASE("ITKImageProcessing::ITKSmoothingRecursiveGaussianImage: Instantiation
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKSmoothingRecursiveGaussianImage::k_Sigma_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKSmoothingRecursiveGaussianImage::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-  args.insert(ITKSmoothingRecursiveGaussianImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKSmoothingRecursiveGaussianImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_Sigma_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

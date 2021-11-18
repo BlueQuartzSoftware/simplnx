@@ -38,8 +38,8 @@ TEST_CASE("DREAM3DReview::AverageEdgeFaceCellArrayToVertexArray: Instantiation a
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(AverageEdgeFaceCellArrayToVertexArray::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AverageEdgeFaceCellArrayToVertexArray::k_AverageVertexArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AverageEdgeFaceCellArrayToVertexArray::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AverageEdgeFaceCellArrayToVertexArray::k_AverageVertexArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

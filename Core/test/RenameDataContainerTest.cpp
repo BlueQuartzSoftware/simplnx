@@ -38,8 +38,8 @@ TEST_CASE("Core::RenameDataContainer: Instantiation and Parameter Check", "[Core
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(RenameDataContainer::k_SelectedDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(RenameDataContainer::k_NewDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RenameDataContainer::k_SelectedDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RenameDataContainer::k_NewDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

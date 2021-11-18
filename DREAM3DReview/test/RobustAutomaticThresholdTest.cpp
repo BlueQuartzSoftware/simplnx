@@ -38,9 +38,9 @@ TEST_CASE("DREAM3DReview::RobustAutomaticThreshold: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(RobustAutomaticThreshold::k_InputArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(RobustAutomaticThreshold::k_GradientMagnitudeArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(RobustAutomaticThreshold::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RobustAutomaticThreshold::k_InputArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RobustAutomaticThreshold::k_GradientMagnitudeArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RobustAutomaticThreshold::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
