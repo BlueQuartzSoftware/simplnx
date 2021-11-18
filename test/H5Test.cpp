@@ -232,7 +232,11 @@ TEST_CASE("Image Geometry IO")
   try
   {
     DataStructure ds = CreateDataStructure();
-    H5::FileWriter fileWriter(filePath);
+
+    H5::FileWriter::ResultType result = H5::FileWriter::CreateFile(filePath);
+    REQUIRE(result.valid());
+
+    H5::FileWriter& fileWriter = *(result.value());
     REQUIRE(fileWriter.isValid());
 
     herr_t err;
@@ -258,7 +262,10 @@ TEST_CASE("Image Geometry IO")
     // Write DataStructure to another file
     try
     {
-      auto fileWriter = H5::FileWriter(filePath);
+      H5::FileWriter::ResultType result = H5::FileWriter::CreateFile(filePath);
+      REQUIRE(result.valid());
+
+      H5::FileWriter& fileWriter = *(result.value());
       REQUIRE(fileWriter.isValid());
 
       err = ds.writeHdf5(fileWriter);
@@ -453,7 +460,10 @@ TEST_CASE("Node Based Geometry IO")
   try
   {
     DataStructure ds = CreateNodeBasedGeometries();
-    H5::FileWriter fileWriter(filePathString);
+    H5::FileWriter::ResultType result = H5::FileWriter::CreateFile(filePathString);
+    REQUIRE(result.valid());
+
+    H5::FileWriter& fileWriter = *(result.value());
     REQUIRE(fileWriter.isValid());
 
     herr_t err;

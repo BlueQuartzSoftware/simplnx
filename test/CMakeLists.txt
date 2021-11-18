@@ -14,6 +14,7 @@ add_subdirectory(${complex_SOURCE_DIR}/src/Plugins/TestTwo ${complex_BINARY_DIR}
 
 add_executable(complex_test 
   ${COMPLEX_TEST_DIRS_HEADER}
+  UnitTestCommon.hpp
   complex_test_main.cpp
   ArgumentsTest.cpp
   DataStructTest.cpp

@@ -149,8 +149,10 @@ TEST_CASE("DREAM3D File IO Test")
   // Write .dream3d file
   {
     auto fileData = CreateFileData();
-    H5::FileWriter fileWriter(GetIODataPath());
-    auto errorCode = DREAM3D::WriteFile(fileWriter, fileData);
+    H5::FileWriter::ResultType result = H5::FileWriter::CreateFile(GetIODataPath());
+    REQUIRE(result.valid());
+
+    auto errorCode = DREAM3D::WriteFile(*(result.value()), fileData);
     REQUIRE(errorCode >= 0);
   }
 

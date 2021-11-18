@@ -59,7 +59,7 @@ IFilter::PreflightResult ExportDREAM3DFilter::preflightImpl(const DataStructure&
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_NoExportPathError, "Export file path not provided."}})};
   }
   auto exportDirectoryPath = exportFilePath.parent_path();
-  if(std::filesystem::exists(exportDirectoryPath) == false)
+  if(!std::filesystem::exists(exportDirectoryPath))
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_NoParentPathError, "Export parent directory does not exist."}})};
   }
@@ -69,8 +69,11 @@ IFilter::PreflightResult ExportDREAM3DFilter::preflightImpl(const DataStructure&
 Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
-  H5::FileWriter fileWriter(exportFilePath);
-  if(!fileWriter.isValid())
+
+  H5::FileWriter::ResultType result = H5::FileWriter::CreateFile(exportFilePath);
+
+  H5::FileWriter& fileWriter = *(result.value());
+  if(result.invalid())
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedFileWriterError, "Failed to initialize H5:FileWriter."}})};
   }
@@ -80,7 +83,7 @@ Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Ar
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedFindPipelineError, "Failed to retrieve pipeline."}})};
   }
-  Pipeline pipeline = *pipelinePtr.get();
+  Pipeline pipeline = *pipelinePtr;
 
   auto errorCode = DREAM3D::WriteFile(fileWriter, {pipeline, dataStructure});
   if(errorCode < 0)

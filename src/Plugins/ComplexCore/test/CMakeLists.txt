@@ -6,7 +6,8 @@
 #------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
-    CreateDataArrayTest.cpp
+  CreateDataArrayTest.cpp
+  ConditionalSetValueTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
@@ -31,7 +32,7 @@ create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
 #------------------------------------------------------------------------------
 # If there are additional include directories that are needed for this plugin
 # you can use the target_include_directories(.....) cmake call
-# target_include_directories(${PLUGIN_NAME}UnitTest
-#     PUBLIC
-#     ${complex_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME}/src
-# )
+ target_include_directories(${PLUGIN_NAME}UnitTest
+     PUBLIC
+     ${complex_SOURCE_DIR}/test
+ )

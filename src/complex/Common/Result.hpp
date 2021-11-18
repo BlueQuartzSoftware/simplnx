@@ -149,6 +149,25 @@ Result<> convertResult(Result<T>&& result)
   return voidResult;
 }
 
+template <class T>
+Result<T> CovertResultTo(Result<>&& fromResult, T&& value)
+{
+  Result<T> convertedResult;
+  if(fromResult.valid())
+  {
+    convertedResult = {std::move(value)};
+  }
+  else
+  {
+    // Plase errors from 'result' into outputActions
+    convertedResult.m_Expected = nonstd::make_unexpected(std::move(fromResult.errors()));
+  }
+  // Always move the warnings AFTER the other check above...
+  convertedResult.warnings() = std::move(fromResult.warnings());
+
+  return convertedResult;
+}
+
 /**
  * @brief Convenience function to generate a standard error Result Object
  *
