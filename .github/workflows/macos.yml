@@ -50,7 +50,7 @@ jobs:
         env:
           CXX: ${{matrix.cxx}}
         run: |
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE:FILEPATH=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake -DCOMPLEX_EXTRA_PLUGINS="Core;DREAM3DReview;EMMPM;Generic;ImageProcessing;ImportExport;ITKImageProcessing;OrientationAnalysis;Processing;ProgWorkshop;Reconstruction;Sampling;SimulationIO;StatsToolbox;SurfaceMeshing;SyntheticBuilding;UCSBUtilities;VolumeMeshing" -S ${{github.workspace}}/complex -B ${{github.workspace}}/build
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCOMPLEX_PLUGIN_SEARCH_DIRS=${{github.workspace}} -DCMAKE_TOOLCHAIN_FILE:FILEPATH=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake -DCOMPLEX_EXTRA_PLUGINS="Core;DREAM3DReview;EMMPM;Generic;ImageProcessing;ImportExport;ITKImageProcessing;OrientationAnalysis;Processing;ProgWorkshop;Reconstruction;Sampling;SimulationIO;StatsToolbox;SurfaceMeshing;SyntheticBuilding;UCSBUtilities;VolumeMeshing" -S ${{github.workspace}}/complex -B ${{github.workspace}}/build
       - name: Build
         run: |
           cmake --build ${{github.workspace}}/build
