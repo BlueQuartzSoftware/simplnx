@@ -22,9 +22,9 @@ TEST_CASE("ConditionalSetValue: Instantiate Filter", "[ConditionalSetValue]")
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
 
-  args.insert_or_assign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
-  args.insert_or_assign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, "ConditionalArray"})));
-  args.insert_or_assign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
+  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
+  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, "ConditionalArray"})));
+  args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
@@ -44,27 +44,27 @@ TEST_CASE("ConditionalSetValue: Missing/Empty DataPaths", "[ConditionalSetValue]
   ConditionalSetValue filter;
 
   // Preflight the filter and check result with empty values
-  args.insert_or_assign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>(""));
+  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>(""));
   auto preflightResult = filter.preflight(dataGraph, args);
   REQUIRE(preflightResult.outputActions.valid() == false);
 
   // Invalid numeric value
-  args.insert_or_assign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("asfasdf"));
+  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("asfasdf"));
   preflightResult = filter.preflight(dataGraph, args);
   REQUIRE(preflightResult.outputActions.valid() == false);
 
   // Valid numeric value, but the boolean array and the input array are not set, should fail
-  args.insert_or_assign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("5.0"));
+  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("5.0"));
   preflightResult = filter.preflight(dataGraph, args);
   REQUIRE(preflightResult.outputActions.valid() == false);
 
   // Set the mask array but should still fail
-  args.insert_or_assign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, "ConditionalArray"})));
+  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, "ConditionalArray"})));
   preflightResult = filter.preflight(dataGraph, args);
   REQUIRE(preflightResult.outputActions.valid() == false);
 
   // Set the input array, now should pass preflight.
-  args.insert_or_assign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
+  args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
   preflightResult = filter.preflight(dataGraph, args);
   REQUIRE(preflightResult.outputActions.valid() == true);
 }
@@ -92,9 +92,9 @@ TEST_CASE("ConditionalSetValue: Test Algorithm", "[ConditionalSetValue]")
   ConditionalSetValue filter;
   Arguments args;
   // Replace every value with a zero
-  args.insert_or_assign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
-  args.insert_or_assign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, "ConditionalArray"})));
-  args.insert_or_assign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
+  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
+  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, "ConditionalArray"})));
+  args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
@@ -117,9 +117,9 @@ void ConditionalSetValueOverFlowTest(DataStructure& dataGraph, const DataPath& s
   ConditionalSetValue filter;
   Arguments args;
   // Replace every value with a zero
-  args.insert_or_assign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>(value));
-  args.insert_or_assign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(conditionalPath));
-  args.insert_or_assign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(selectedDataPath));
+  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>(value));
+  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(conditionalPath));
+  args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(selectedDataPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
