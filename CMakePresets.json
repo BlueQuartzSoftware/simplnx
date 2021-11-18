@@ -32,10 +32,6 @@
         "COMPLEX_BUILD_PYTHON": {
           "type": "BOOL",
           "value": "OFF"
-        },
-        "COMPLEX_SOURCE_DIR": {
-          "type": "STRING",
-          "value": "${sourceDir}/../complex"
         }
       }
     }
