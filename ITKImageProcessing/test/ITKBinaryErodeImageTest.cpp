@@ -42,13 +42,13 @@ TEST_CASE("ITKImageProcessing::ITKBinaryErodeImage: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKBinaryErodeImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ITKBinaryErodeImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKBinaryErodeImage::k_ForegroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKBinaryErodeImage::k_BoundaryToForeground_Key, std::make_any<bool>(false));
-  args.insert(ITKBinaryErodeImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKBinaryErodeImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKBinaryErodeImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKBinaryErodeImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ITKBinaryErodeImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKBinaryErodeImage::k_ForegroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKBinaryErodeImage::k_BoundaryToForeground_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKBinaryErodeImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKBinaryErodeImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKBinaryErodeImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

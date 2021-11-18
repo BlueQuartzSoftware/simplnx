@@ -41,11 +41,11 @@ TEST_CASE("DREAM3DReview::ImportPrintRiteHDF5File: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ImportPrintRiteHDF5File::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ImportPrintRiteHDF5File::k_HFDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportPrintRiteHDF5File::k_HFDataName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportPrintRiteHDF5File::k_HFSliceIdsArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportPrintRiteHDF5File::k_HFSliceDataName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportPrintRiteHDF5File::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ImportPrintRiteHDF5File::k_HFDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportPrintRiteHDF5File::k_HFDataName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportPrintRiteHDF5File::k_HFSliceIdsArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportPrintRiteHDF5File::k_HFSliceDataName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

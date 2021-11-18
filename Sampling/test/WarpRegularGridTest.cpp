@@ -42,15 +42,15 @@ TEST_CASE("Sampling::WarpRegularGrid: Instantiation and Parameter Check", "[Samp
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(WarpRegularGrid::k_SecondOrderACoeff_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  /*[x]*/ args.insert(WarpRegularGrid::k_SecondOrderBCoeff_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  /*[x]*/ args.insert(WarpRegularGrid::k_ThirdOrderACoeff_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  /*[x]*/ args.insert(WarpRegularGrid::k_ThirdOrderBCoeff_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  /*[x]*/ args.insert(WarpRegularGrid::k_FourthOrderACoeff_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  /*[x]*/ args.insert(WarpRegularGrid::k_FourthOrderBCoeff_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(WarpRegularGrid::k_SaveAsNewDataContainer_Key, std::make_any<bool>(false));
-  args.insert(WarpRegularGrid::k_NewDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(WarpRegularGrid::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  /*[x]*/ args.insertOrAssign(WarpRegularGrid::k_SecondOrderACoeff_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(WarpRegularGrid::k_SecondOrderBCoeff_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(WarpRegularGrid::k_ThirdOrderACoeff_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(WarpRegularGrid::k_ThirdOrderBCoeff_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(WarpRegularGrid::k_FourthOrderACoeff_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(WarpRegularGrid::k_FourthOrderBCoeff_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(WarpRegularGrid::k_SaveAsNewDataContainer_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WarpRegularGrid::k_NewDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(WarpRegularGrid::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -39,12 +39,12 @@ TEST_CASE("DREAM3DReview::AdaptiveAlignmentFeature: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(AdaptiveAlignmentFeature::k_ImageDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AdaptiveAlignmentFeature::k_ShiftX_Key, std::make_any<float32>(1.23345f));
-  args.insert(AdaptiveAlignmentFeature::k_ShiftY_Key, std::make_any<float32>(1.23345f));
-  args.insert(AdaptiveAlignmentFeature::k_IgnoredDataArrayPaths_Key,
-              std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(AdaptiveAlignmentFeature::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AdaptiveAlignmentFeature::k_ImageDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AdaptiveAlignmentFeature::k_ShiftX_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(AdaptiveAlignmentFeature::k_ShiftY_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(AdaptiveAlignmentFeature::k_IgnoredDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(AdaptiveAlignmentFeature::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -38,9 +38,9 @@ TEST_CASE("StatsToolbox::FindBoundaryElementFractions: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindBoundaryElementFractions::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindBoundaryElementFractions::k_BoundaryCellsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindBoundaryElementFractions::k_BoundaryCellFractionsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundaryElementFractions::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundaryElementFractions::k_BoundaryCellsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundaryElementFractions::k_BoundaryCellFractionsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

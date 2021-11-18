@@ -42,15 +42,15 @@ TEST_CASE("DREAM3DReview::PrincipalComponentAnalysis: Instantiation and Paramete
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(PrincipalComponentAnalysis::k_SelectedDataArrayPaths_Key,
-              std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(PrincipalComponentAnalysis::k_MatrixApproach_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(PrincipalComponentAnalysis::k_ProjectDataSpace_Key, std::make_any<bool>(false));
-  args.insert(PrincipalComponentAnalysis::k_NumberOfDimensionsForProjection_Key, std::make_any<int32>(1234356));
-  args.insert(PrincipalComponentAnalysis::k_ProjectedDataSpaceArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PrincipalComponentAnalysis::k_PCAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(PrincipalComponentAnalysis::k_PCEigenvaluesName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(PrincipalComponentAnalysis::k_PCEigenvectorsName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(PrincipalComponentAnalysis::k_SelectedDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(PrincipalComponentAnalysis::k_MatrixApproach_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(PrincipalComponentAnalysis::k_ProjectDataSpace_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PrincipalComponentAnalysis::k_NumberOfDimensionsForProjection_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(PrincipalComponentAnalysis::k_ProjectedDataSpaceArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PrincipalComponentAnalysis::k_PCAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(PrincipalComponentAnalysis::k_PCEigenvaluesName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(PrincipalComponentAnalysis::k_PCEigenvectorsName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -39,10 +39,10 @@ TEST_CASE("ITKImageProcessing::ITKMaskImage: Instantiation and Parameter Check",
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKMaskImage::k_OutsideValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKMaskImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKMaskImage::k_MaskCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKMaskImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKMaskImage::k_OutsideValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKMaskImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKMaskImage::k_MaskCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKMaskImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

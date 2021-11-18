@@ -43,12 +43,12 @@ TEST_CASE("SimulationIO::ImportDelamData: Instantiation and Parameter Check", "[
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ImportDelamData::k_CSDGMFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ImportDelamData::k_BvidStdOutFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ImportDelamData::k_InterfaceThickness_Key, std::make_any<float32>(1.23345f));
-  args.insert(ImportDelamData::k_DataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportDelamData::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportDelamData::k_DataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportDelamData::k_CSDGMFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ImportDelamData::k_BvidStdOutFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ImportDelamData::k_InterfaceThickness_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ImportDelamData::k_DataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportDelamData::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportDelamData::k_DataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

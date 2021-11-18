@@ -39,9 +39,9 @@ TEST_CASE("ImageProcessing::ItkBinaryWatershedLabeled: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ItkBinaryWatershedLabeled::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkBinaryWatershedLabeled::k_PeakTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(ItkBinaryWatershedLabeled::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkBinaryWatershedLabeled::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkBinaryWatershedLabeled::k_PeakTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ItkBinaryWatershedLabeled::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

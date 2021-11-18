@@ -41,10 +41,10 @@ TEST_CASE("OrientationAnalysis::ReplaceElementAttributesWithNeighborValues: Inst
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ReplaceElementAttributesWithNeighborValues::k_MinConfidence_Key, std::make_any<float32>(1.23345f));
-  args.insert(ReplaceElementAttributesWithNeighborValues::k_SelectedComparison_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ReplaceElementAttributesWithNeighborValues::k_Loop_Key, std::make_any<bool>(false));
-  args.insert(ReplaceElementAttributesWithNeighborValues::k_ConfidenceIndexArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReplaceElementAttributesWithNeighborValues::k_MinConfidence_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ReplaceElementAttributesWithNeighborValues::k_SelectedComparison_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ReplaceElementAttributesWithNeighborValues::k_Loop_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ReplaceElementAttributesWithNeighborValues::k_ConfidenceIndexArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

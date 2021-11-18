@@ -44,12 +44,12 @@ TEST_CASE("Core::ImportAsciDataArray: Instantiation and Parameter Check", "[Core
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ImportAsciDataArray::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ImportAsciDataArray::k_ScalarType_Key, std::make_any<NumericType>(NumericType::int8));
-  args.insert(ImportAsciDataArray::k_NumberOfComponents_Key, std::make_any<int32>(1234356));
-  args.insert(ImportAsciDataArray::k_SkipHeaderLines_Key, std::make_any<int32>(1234356));
-  args.insert(ImportAsciDataArray::k_Delimiter_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ImportAsciDataArray::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportAsciDataArray::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ImportAsciDataArray::k_ScalarType_Key, std::make_any<NumericType>(NumericType::int8));
+  args.insertOrAssign(ImportAsciDataArray::k_NumberOfComponents_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ImportAsciDataArray::k_SkipHeaderLines_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ImportAsciDataArray::k_Delimiter_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ImportAsciDataArray::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

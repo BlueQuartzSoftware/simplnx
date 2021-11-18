@@ -46,18 +46,18 @@ TEST_CASE("ITKImageProcessing::ImportZenInfoMontage: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ImportZenInfoMontage::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ImportZenInfoMontage::k_MontageName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportZenInfoMontage::k_ColumnMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
-  args.insert(ImportZenInfoMontage::k_RowMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
-  args.insert(ImportZenInfoMontage::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ImportZenInfoMontage::k_ChangeOrigin_Key, std::make_any<bool>(false));
-  args.insert(ImportZenInfoMontage::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ImportZenInfoMontage::k_ConvertToGrayScale_Key, std::make_any<bool>(false));
-  args.insert(ImportZenInfoMontage::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ImportZenInfoMontage::k_DataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportZenInfoMontage::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportZenInfoMontage::k_ImageDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportZenInfoMontage::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ImportZenInfoMontage::k_MontageName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportZenInfoMontage::k_ColumnMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
+  args.insertOrAssign(ImportZenInfoMontage::k_RowMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
+  args.insertOrAssign(ImportZenInfoMontage::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ImportZenInfoMontage::k_ChangeOrigin_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ImportZenInfoMontage::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ImportZenInfoMontage::k_ConvertToGrayScale_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ImportZenInfoMontage::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ImportZenInfoMontage::k_DataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportZenInfoMontage::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportZenInfoMontage::k_ImageDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

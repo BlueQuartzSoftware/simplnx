@@ -40,14 +40,14 @@ TEST_CASE("Processing::FindRelativeMotionBetweenSlices: Instantiation and Parame
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindRelativeMotionBetweenSlices::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(FindRelativeMotionBetweenSlices::k_PSize1_Key, std::make_any<int32>(1234356));
-  args.insert(FindRelativeMotionBetweenSlices::k_PSize2_Key, std::make_any<int32>(1234356));
-  args.insert(FindRelativeMotionBetweenSlices::k_SSize1_Key, std::make_any<int32>(1234356));
-  args.insert(FindRelativeMotionBetweenSlices::k_SSize2_Key, std::make_any<int32>(1234356));
-  args.insert(FindRelativeMotionBetweenSlices::k_SliceStep_Key, std::make_any<int32>(1234356));
-  args.insert(FindRelativeMotionBetweenSlices::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindRelativeMotionBetweenSlices::k_MotionDirectionArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindRelativeMotionBetweenSlices::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(FindRelativeMotionBetweenSlices::k_PSize1_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(FindRelativeMotionBetweenSlices::k_PSize2_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(FindRelativeMotionBetweenSlices::k_SSize1_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(FindRelativeMotionBetweenSlices::k_SSize2_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(FindRelativeMotionBetweenSlices::k_SliceStep_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(FindRelativeMotionBetweenSlices::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindRelativeMotionBetweenSlices::k_MotionDirectionArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

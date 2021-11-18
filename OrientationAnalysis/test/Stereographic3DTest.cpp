@@ -38,8 +38,8 @@ TEST_CASE("OrientationAnalysis::Stereographic3D: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(Stereographic3D::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(Stereographic3D::k_CoordinatesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(Stereographic3D::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(Stereographic3D::k_CoordinatesArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

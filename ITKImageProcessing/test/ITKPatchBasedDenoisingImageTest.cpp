@@ -41,21 +41,21 @@ TEST_CASE("ITKImageProcessing::ITKPatchBasedDenoisingImage: Instantiation and Pa
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKPatchBasedDenoisingImage::k_NoiseModel_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ITKPatchBasedDenoisingImage::k_KernelBandwidthSigma_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKPatchBasedDenoisingImage::k_PatchRadius_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKPatchBasedDenoisingImage::k_NumberOfIterations_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKPatchBasedDenoisingImage::k_NumberOfSamplePatches_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKPatchBasedDenoisingImage::k_SampleVariance_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKPatchBasedDenoisingImage::k_NoiseSigma_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKPatchBasedDenoisingImage::k_NoiseModelFidelityWeight_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKPatchBasedDenoisingImage::k_AlwaysTreatComponentsAsEuclidean_Key, std::make_any<bool>(false));
-  args.insert(ITKPatchBasedDenoisingImage::k_KernelBandwidthEstimation_Key, std::make_any<bool>(false));
-  args.insert(ITKPatchBasedDenoisingImage::k_KernelBandwidthMultiplicationFactor_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKPatchBasedDenoisingImage::k_KernelBandwidthUpdateFrequency_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKPatchBasedDenoisingImage::k_KernelBandwidthFractionPixelsForEstimation_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKPatchBasedDenoisingImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKPatchBasedDenoisingImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKPatchBasedDenoisingImage::k_NoiseModel_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ITKPatchBasedDenoisingImage::k_KernelBandwidthSigma_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKPatchBasedDenoisingImage::k_PatchRadius_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKPatchBasedDenoisingImage::k_NumberOfIterations_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKPatchBasedDenoisingImage::k_NumberOfSamplePatches_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKPatchBasedDenoisingImage::k_SampleVariance_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKPatchBasedDenoisingImage::k_NoiseSigma_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKPatchBasedDenoisingImage::k_NoiseModelFidelityWeight_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKPatchBasedDenoisingImage::k_AlwaysTreatComponentsAsEuclidean_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKPatchBasedDenoisingImage::k_KernelBandwidthEstimation_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKPatchBasedDenoisingImage::k_KernelBandwidthMultiplicationFactor_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKPatchBasedDenoisingImage::k_KernelBandwidthUpdateFrequency_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKPatchBasedDenoisingImage::k_KernelBandwidthFractionPixelsForEstimation_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKPatchBasedDenoisingImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKPatchBasedDenoisingImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -38,9 +38,9 @@ TEST_CASE("Generic::FindFeaturePhases: Instantiation and Parameter Check", "[Gen
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindFeaturePhases::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeaturePhases::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeaturePhases::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeaturePhases::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeaturePhases::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeaturePhases::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

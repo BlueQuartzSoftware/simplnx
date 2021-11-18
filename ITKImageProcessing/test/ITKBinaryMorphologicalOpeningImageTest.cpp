@@ -41,12 +41,12 @@ TEST_CASE("ITKImageProcessing::ITKBinaryMorphologicalOpeningImage: Instantiation
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKBinaryMorphologicalOpeningImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ITKBinaryMorphologicalOpeningImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKBinaryMorphologicalOpeningImage::k_ForegroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKBinaryMorphologicalOpeningImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKBinaryMorphologicalOpeningImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKBinaryMorphologicalOpeningImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKBinaryMorphologicalOpeningImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ITKBinaryMorphologicalOpeningImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKBinaryMorphologicalOpeningImage::k_ForegroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKBinaryMorphologicalOpeningImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKBinaryMorphologicalOpeningImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKBinaryMorphologicalOpeningImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -39,9 +39,9 @@ TEST_CASE("ITKImageProcessing::ITKStandardDeviationProjectionImage: Instantiatio
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKStandardDeviationProjectionImage::k_ProjectionDimension_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKStandardDeviationProjectionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKStandardDeviationProjectionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKStandardDeviationProjectionImage::k_ProjectionDimension_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKStandardDeviationProjectionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKStandardDeviationProjectionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

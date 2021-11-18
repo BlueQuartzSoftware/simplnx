@@ -41,11 +41,11 @@ TEST_CASE("ITKImageProcessing::ITKDilateObjectMorphologyImage: Instantiation and
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKDilateObjectMorphologyImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ITKDilateObjectMorphologyImage::k_ObjectValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKDilateObjectMorphologyImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKDilateObjectMorphologyImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKDilateObjectMorphologyImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKDilateObjectMorphologyImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ITKDilateObjectMorphologyImage::k_ObjectValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKDilateObjectMorphologyImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKDilateObjectMorphologyImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKDilateObjectMorphologyImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -45,14 +45,14 @@ TEST_CASE("DREAM3DReview::ReadBinaryCTNorthStar: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ReadBinaryCTNorthStar::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ReadBinaryCTNorthStar::k_DataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ReadBinaryCTNorthStar::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ReadBinaryCTNorthStar::k_DensityArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ReadBinaryCTNorthStar::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ReadBinaryCTNorthStar::k_ImportSubvolume_Key, std::make_any<bool>(false));
-  args.insert(ReadBinaryCTNorthStar::k_StartVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
-  args.insert(ReadBinaryCTNorthStar::k_EndVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
+  args.insertOrAssign(ReadBinaryCTNorthStar::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ReadBinaryCTNorthStar::k_DataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ReadBinaryCTNorthStar::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadBinaryCTNorthStar::k_DensityArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadBinaryCTNorthStar::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ReadBinaryCTNorthStar::k_ImportSubvolume_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ReadBinaryCTNorthStar::k_StartVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
+  args.insertOrAssign(ReadBinaryCTNorthStar::k_EndVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

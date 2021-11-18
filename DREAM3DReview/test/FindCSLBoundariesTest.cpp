@@ -39,16 +39,16 @@ TEST_CASE("DREAM3DReview::FindCSLBoundaries: Instantiation and Parameter Check",
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindCSLBoundaries::k_CSL_Key, std::make_any<float32>(1.23345f));
-  args.insert(FindCSLBoundaries::k_AxisTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(FindCSLBoundaries::k_AngleTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(FindCSLBoundaries::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindCSLBoundaries::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindCSLBoundaries::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindCSLBoundaries::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindCSLBoundaries::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindCSLBoundaries::k_SurfaceMeshCSLBoundaryArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindCSLBoundaries::k_SurfaceMeshCSLBoundaryIncoherenceArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindCSLBoundaries::k_CSL_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(FindCSLBoundaries::k_AxisTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(FindCSLBoundaries::k_AngleTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(FindCSLBoundaries::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindCSLBoundaries::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindCSLBoundaries::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindCSLBoundaries::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindCSLBoundaries::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindCSLBoundaries::k_SurfaceMeshCSLBoundaryArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindCSLBoundaries::k_SurfaceMeshCSLBoundaryIncoherenceArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

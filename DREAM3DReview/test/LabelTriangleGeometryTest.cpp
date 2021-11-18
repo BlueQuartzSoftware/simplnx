@@ -38,9 +38,9 @@ TEST_CASE("DREAM3DReview::LabelTriangleGeometry: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(LabelTriangleGeometry::k_CADDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(LabelTriangleGeometry::k_TriangleAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(LabelTriangleGeometry::k_RegionIdArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(LabelTriangleGeometry::k_CADDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(LabelTriangleGeometry::k_TriangleAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(LabelTriangleGeometry::k_RegionIdArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -40,19 +40,19 @@ TEST_CASE("Reconstruction::MergeTwins: Instantiation and Parameter Check", "[Rec
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(MergeTwins::k_UseNonContiguousNeighbors_Key, std::make_any<bool>(false));
-  args.insert(MergeTwins::k_NonContiguousNeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeTwins::k_ContiguousNeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeTwins::k_AxisTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(MergeTwins::k_AngleTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(MergeTwins::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeTwins::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeTwins::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeTwins::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeTwins::k_CellParentIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeTwins::k_NewCellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeTwins::k_FeatureParentIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MergeTwins::k_ActiveArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeTwins::k_UseNonContiguousNeighbors_Key, std::make_any<bool>(false));
+  args.insertOrAssign(MergeTwins::k_NonContiguousNeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeTwins::k_ContiguousNeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeTwins::k_AxisTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(MergeTwins::k_AngleTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(MergeTwins::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeTwins::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeTwins::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeTwins::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeTwins::k_CellParentIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeTwins::k_NewCellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeTwins::k_FeatureParentIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeTwins::k_ActiveArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

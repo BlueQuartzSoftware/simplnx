@@ -39,12 +39,12 @@ TEST_CASE("ITKImageProcessing::ITKBinaryThresholdImage: Instantiation and Parame
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKBinaryThresholdImage::k_LowerThreshold_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKBinaryThresholdImage::k_UpperThreshold_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKBinaryThresholdImage::k_InsideValue_Key, std::make_any<int32>(1234356));
-  args.insert(ITKBinaryThresholdImage::k_OutsideValue_Key, std::make_any<int32>(1234356));
-  args.insert(ITKBinaryThresholdImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKBinaryThresholdImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKBinaryThresholdImage::k_LowerThreshold_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKBinaryThresholdImage::k_UpperThreshold_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKBinaryThresholdImage::k_InsideValue_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ITKBinaryThresholdImage::k_OutsideValue_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ITKBinaryThresholdImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKBinaryThresholdImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

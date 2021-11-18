@@ -41,13 +41,13 @@ TEST_CASE("DREAM3DReview::ApplyTransformationToGeometry: Instantiation and Param
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(ApplyTransformationToGeometry::k_ManualTransformationMatrix_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(ApplyTransformationToGeometry::k_RotationAngle_Key, std::make_any<float32>(1.23345f));
-  args.insert(ApplyTransformationToGeometry::k_RotationAxis_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ApplyTransformationToGeometry::k_Translation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ApplyTransformationToGeometry::k_Scale_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ApplyTransformationToGeometry::k_GeometryToTransform_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ApplyTransformationToGeometry::k_ComputedTransformationMatrix_Key, std::make_any<DataPath>(DataPath{}));
+  /*[x]*/ args.insertOrAssign(ApplyTransformationToGeometry::k_ManualTransformationMatrix_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(ApplyTransformationToGeometry::k_RotationAngle_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ApplyTransformationToGeometry::k_RotationAxis_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ApplyTransformationToGeometry::k_Translation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ApplyTransformationToGeometry::k_Scale_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ApplyTransformationToGeometry::k_GeometryToTransform_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ApplyTransformationToGeometry::k_ComputedTransformationMatrix_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

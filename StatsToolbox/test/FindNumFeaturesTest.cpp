@@ -38,8 +38,8 @@ TEST_CASE("StatsToolbox::FindNumFeatures: Instantiation and Parameter Check", "[
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindNumFeatures::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNumFeatures::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNumFeatures::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNumFeatures::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

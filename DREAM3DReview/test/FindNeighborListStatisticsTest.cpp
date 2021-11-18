@@ -40,22 +40,22 @@ TEST_CASE("DREAM3DReview::FindNeighborListStatistics: Instantiation and Paramete
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindNeighborListStatistics::k_FindLength_Key, std::make_any<bool>(false));
-  args.insert(FindNeighborListStatistics::k_FindMin_Key, std::make_any<bool>(false));
-  args.insert(FindNeighborListStatistics::k_FindMax_Key, std::make_any<bool>(false));
-  args.insert(FindNeighborListStatistics::k_FindMean_Key, std::make_any<bool>(false));
-  args.insert(FindNeighborListStatistics::k_FindMedian_Key, std::make_any<bool>(false));
-  args.insert(FindNeighborListStatistics::k_FindStdDeviation_Key, std::make_any<bool>(false));
-  args.insert(FindNeighborListStatistics::k_FindSummation_Key, std::make_any<bool>(false));
-  args.insert(FindNeighborListStatistics::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighborListStatistics::k_DestinationAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighborListStatistics::k_LengthArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighborListStatistics::k_MinimumArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighborListStatistics::k_MaximumArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighborListStatistics::k_MeanArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighborListStatistics::k_MedianArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighborListStatistics::k_StdDeviationArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighborListStatistics::k_SummationArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighborListStatistics::k_FindLength_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindNeighborListStatistics::k_FindMin_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindNeighborListStatistics::k_FindMax_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindNeighborListStatistics::k_FindMean_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindNeighborListStatistics::k_FindMedian_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindNeighborListStatistics::k_FindStdDeviation_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindNeighborListStatistics::k_FindSummation_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindNeighborListStatistics::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighborListStatistics::k_DestinationAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighborListStatistics::k_LengthArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighborListStatistics::k_MinimumArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighborListStatistics::k_MaximumArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighborListStatistics::k_MeanArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighborListStatistics::k_MedianArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighborListStatistics::k_StdDeviationArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighborListStatistics::k_SummationArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

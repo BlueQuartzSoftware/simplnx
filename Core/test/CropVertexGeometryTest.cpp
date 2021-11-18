@@ -39,14 +39,14 @@ TEST_CASE("Core::CropVertexGeometry: Instantiation and Parameter Check", "[Core]
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CropVertexGeometry::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CropVertexGeometry::k_XMin_Key, std::make_any<float32>(1.23345f));
-  args.insert(CropVertexGeometry::k_YMin_Key, std::make_any<float32>(1.23345f));
-  args.insert(CropVertexGeometry::k_ZMin_Key, std::make_any<float32>(1.23345f));
-  args.insert(CropVertexGeometry::k_XMax_Key, std::make_any<float32>(1.23345f));
-  args.insert(CropVertexGeometry::k_YMax_Key, std::make_any<float32>(1.23345f));
-  args.insert(CropVertexGeometry::k_ZMax_Key, std::make_any<float32>(1.23345f));
-  args.insert(CropVertexGeometry::k_CroppedDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CropVertexGeometry::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CropVertexGeometry::k_XMin_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(CropVertexGeometry::k_YMin_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(CropVertexGeometry::k_ZMin_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(CropVertexGeometry::k_XMax_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(CropVertexGeometry::k_YMax_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(CropVertexGeometry::k_ZMax_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(CropVertexGeometry::k_CroppedDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -42,15 +42,15 @@ TEST_CASE("VolumeMeshing::VMFillLevelSetWithTetrahedra: Instantiation and Parame
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(VMFillLevelSetWithTetrahedra::k_AutoDetectFeatures_Key, std::make_any<bool>(false));
-  args.insert(VMFillLevelSetWithTetrahedra::k_AngleThreshold_Key, std::make_any<float64>(2.3456789));
-  args.insert(VMFillLevelSetWithTetrahedra::k_TriangleDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(VMFillLevelSetWithTetrahedra::k_LevelSetArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(VMFillLevelSetWithTetrahedra::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(VMFillLevelSetWithTetrahedra::k_TetrahedralDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(VMFillLevelSetWithTetrahedra::k_VertexAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(VMFillLevelSetWithTetrahedra::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(VMFillLevelSetWithTetrahedra::k_TetFeatureIdsName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_AutoDetectFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_AngleThreshold_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_TriangleDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_LevelSetArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_TetrahedralDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_VertexAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_TetFeatureIdsName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

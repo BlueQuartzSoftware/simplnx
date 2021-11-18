@@ -40,12 +40,12 @@ TEST_CASE("StatsToolbox::FitFeatureData: Instantiation and Parameter Check", "[S
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FitFeatureData::k_DistributionType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(FitFeatureData::k_RemoveBiasedFeatures_Key, std::make_any<bool>(false));
-  args.insert(FitFeatureData::k_SelectedFeatureArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FitFeatureData::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FitFeatureData::k_BiasedFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FitFeatureData::k_NewEnsembleArrayArray_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FitFeatureData::k_DistributionType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(FitFeatureData::k_RemoveBiasedFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FitFeatureData::k_SelectedFeatureArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FitFeatureData::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FitFeatureData::k_BiasedFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FitFeatureData::k_NewEnsembleArrayArray_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

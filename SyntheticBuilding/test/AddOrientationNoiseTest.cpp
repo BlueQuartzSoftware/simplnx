@@ -38,8 +38,8 @@ TEST_CASE("SyntheticBuilding::AddOrientationNoise: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(AddOrientationNoise::k_Magnitude_Key, std::make_any<float32>(1.23345f));
-  args.insert(AddOrientationNoise::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AddOrientationNoise::k_Magnitude_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(AddOrientationNoise::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

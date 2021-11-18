@@ -41,16 +41,16 @@ TEST_CASE("Sampling::UncertainRegularGridSampleSurfaceMesh: Instantiation and Pa
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(UncertainRegularGridSampleSurfaceMesh::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(UncertainRegularGridSampleSurfaceMesh::k_XPoints_Key, std::make_any<int32>(1234356));
-  args.insert(UncertainRegularGridSampleSurfaceMesh::k_YPoints_Key, std::make_any<int32>(1234356));
-  args.insert(UncertainRegularGridSampleSurfaceMesh::k_ZPoints_Key, std::make_any<int32>(1234356));
-  args.insert(UncertainRegularGridSampleSurfaceMesh::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(UncertainRegularGridSampleSurfaceMesh::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(UncertainRegularGridSampleSurfaceMesh::k_Uncertainty_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(UncertainRegularGridSampleSurfaceMesh::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(UncertainRegularGridSampleSurfaceMesh::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(UncertainRegularGridSampleSurfaceMesh::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMesh::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMesh::k_XPoints_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMesh::k_YPoints_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMesh::k_ZPoints_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMesh::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMesh::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMesh::k_Uncertainty_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMesh::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMesh::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMesh::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

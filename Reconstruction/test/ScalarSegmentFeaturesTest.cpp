@@ -40,13 +40,13 @@ TEST_CASE("Reconstruction::ScalarSegmentFeatures: Instantiation and Parameter Ch
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ScalarSegmentFeatures::k_ScalarTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(ScalarSegmentFeatures::k_UseGoodVoxels_Key, std::make_any<bool>(false));
-  args.insert(ScalarSegmentFeatures::k_ScalarArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ScalarSegmentFeatures::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ScalarSegmentFeatures::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ScalarSegmentFeatures::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ScalarSegmentFeatures::k_ActiveArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ScalarSegmentFeatures::k_ScalarTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ScalarSegmentFeatures::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ScalarSegmentFeatures::k_ScalarArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ScalarSegmentFeatures::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ScalarSegmentFeatures::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ScalarSegmentFeatures::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ScalarSegmentFeatures::k_ActiveArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

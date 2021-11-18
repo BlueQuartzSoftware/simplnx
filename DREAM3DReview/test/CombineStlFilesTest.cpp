@@ -42,10 +42,10 @@ TEST_CASE("DREAM3DReview::CombineStlFiles: Instantiation and Parameter Check", "
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CombineStlFiles::k_StlFilesPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/Directory/To/Read")));
-  args.insert(CombineStlFiles::k_TriangleDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(CombineStlFiles::k_FaceAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CombineStlFiles::k_FaceNormalsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CombineStlFiles::k_StlFilesPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/Directory/To/Read")));
+  args.insertOrAssign(CombineStlFiles::k_TriangleDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(CombineStlFiles::k_FaceAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CombineStlFiles::k_FaceNormalsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

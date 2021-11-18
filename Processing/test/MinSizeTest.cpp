@@ -40,13 +40,13 @@ TEST_CASE("Processing::MinSize: Instantiation and Parameter Check", "[Processing
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(MinSize::k_MinAllowedFeatureSize_Key, std::make_any<int32>(1234356));
-  args.insert(MinSize::k_ApplyToSinglePhase_Key, std::make_any<bool>(false));
-  args.insert(MinSize::k_PhaseNumber_Key, std::make_any<int32>(1234356));
-  args.insert(MinSize::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MinSize::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MinSize::k_NumCellsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MinSize::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(MinSize::k_MinAllowedFeatureSize_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(MinSize::k_ApplyToSinglePhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(MinSize::k_PhaseNumber_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(MinSize::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MinSize::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MinSize::k_NumCellsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MinSize::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -41,14 +41,14 @@ TEST_CASE("Sampling::RegularGridSampleSurfaceMesh: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(RegularGridSampleSurfaceMesh::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(RegularGridSampleSurfaceMesh::k_Dimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
-  args.insert(RegularGridSampleSurfaceMesh::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(RegularGridSampleSurfaceMesh::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(RegularGridSampleSurfaceMesh::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(RegularGridSampleSurfaceMesh::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(RegularGridSampleSurfaceMesh::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(RegularGridSampleSurfaceMesh::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RegularGridSampleSurfaceMesh::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RegularGridSampleSurfaceMesh::k_Dimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
+  args.insertOrAssign(RegularGridSampleSurfaceMesh::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(RegularGridSampleSurfaceMesh::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(RegularGridSampleSurfaceMesh::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(RegularGridSampleSurfaceMesh::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RegularGridSampleSurfaceMesh::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RegularGridSampleSurfaceMesh::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -41,14 +41,14 @@ TEST_CASE("DREAM3DReview::DBSCAN: Instantiation and Parameter Check", "[DREAM3DR
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(DBSCAN::k_Epsilon_Key, std::make_any<float32>(1.23345f));
-  args.insert(DBSCAN::k_MinPnts_Key, std::make_any<int32>(1234356));
-  args.insert(DBSCAN::k_DistanceMetric_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(DBSCAN::k_UseMask_Key, std::make_any<bool>(false));
-  args.insert(DBSCAN::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(DBSCAN::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(DBSCAN::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(DBSCAN::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DBSCAN::k_Epsilon_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(DBSCAN::k_MinPnts_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(DBSCAN::k_DistanceMetric_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(DBSCAN::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(DBSCAN::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DBSCAN::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DBSCAN::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DBSCAN::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

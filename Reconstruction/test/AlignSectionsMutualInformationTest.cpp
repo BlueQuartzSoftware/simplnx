@@ -43,14 +43,14 @@ TEST_CASE("Reconstruction::AlignSectionsMutualInformation: Instantiation and Par
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(AlignSectionsMutualInformation::k_WriteAlignmentShifts_Key, std::make_any<bool>(false));
-  args.insert(AlignSectionsMutualInformation::k_AlignmentShiftFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(AlignSectionsMutualInformation::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(AlignSectionsMutualInformation::k_UseGoodVoxels_Key, std::make_any<bool>(false));
-  args.insert(AlignSectionsMutualInformation::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AlignSectionsMutualInformation::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AlignSectionsMutualInformation::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AlignSectionsMutualInformation::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AlignSectionsMutualInformation::k_WriteAlignmentShifts_Key, std::make_any<bool>(false));
+  args.insertOrAssign(AlignSectionsMutualInformation::k_AlignmentShiftFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(AlignSectionsMutualInformation::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(AlignSectionsMutualInformation::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(AlignSectionsMutualInformation::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AlignSectionsMutualInformation::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AlignSectionsMutualInformation::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AlignSectionsMutualInformation::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

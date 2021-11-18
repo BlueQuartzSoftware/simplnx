@@ -39,10 +39,10 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ConvertOrientations::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ConvertOrientations::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ConvertOrientations::k_InputOrientationArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ConvertOrientations::k_OutputOrientationArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ConvertOrientations::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ConvertOrientations::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ConvertOrientations::k_InputOrientationArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ConvertOrientations::k_OutputOrientationArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -38,8 +38,8 @@ TEST_CASE("UCSBUtilities::InputCrystalCompliances: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(InputCrystalCompliances::k_Compliances_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(InputCrystalCompliances::k_CrystalCompliancesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  /*[x]*/ args.insertOrAssign(InputCrystalCompliances::k_Compliances_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(InputCrystalCompliances::k_CrystalCompliancesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

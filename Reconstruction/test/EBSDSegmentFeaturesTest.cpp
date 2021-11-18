@@ -40,15 +40,15 @@ TEST_CASE("Reconstruction::EBSDSegmentFeatures: Instantiation and Parameter Chec
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(EBSDSegmentFeatures::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insert(EBSDSegmentFeatures::k_UseGoodVoxels_Key, std::make_any<bool>(false));
-  args.insert(EBSDSegmentFeatures::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EBSDSegmentFeatures::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EBSDSegmentFeatures::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EBSDSegmentFeatures::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EBSDSegmentFeatures::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EBSDSegmentFeatures::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EBSDSegmentFeatures::k_ActiveArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EBSDSegmentFeatures::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(EBSDSegmentFeatures::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(EBSDSegmentFeatures::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EBSDSegmentFeatures::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EBSDSegmentFeatures::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EBSDSegmentFeatures::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EBSDSegmentFeatures::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EBSDSegmentFeatures::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EBSDSegmentFeatures::k_ActiveArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

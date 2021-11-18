@@ -40,10 +40,10 @@ TEST_CASE("ImageProcessing::ItkDiscreteGaussianBlur: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ItkDiscreteGaussianBlur::k_SaveAsNewArray_Key, std::make_any<bool>(false));
-  args.insert(ItkDiscreteGaussianBlur::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkDiscreteGaussianBlur::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkDiscreteGaussianBlur::k_Stdev_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ItkDiscreteGaussianBlur::k_SaveAsNewArray_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ItkDiscreteGaussianBlur::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkDiscreteGaussianBlur::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkDiscreteGaussianBlur::k_Stdev_Key, std::make_any<float32>(1.23345f));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

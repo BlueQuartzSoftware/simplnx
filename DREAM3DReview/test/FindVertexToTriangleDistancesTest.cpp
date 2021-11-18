@@ -39,11 +39,11 @@ TEST_CASE("DREAM3DReview::FindVertexToTriangleDistances: Instantiation and Param
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindVertexToTriangleDistances::k_VertexDataContainer_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindVertexToTriangleDistances::k_TriangleDataContainer_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindVertexToTriangleDistances::k_TriangleNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindVertexToTriangleDistances::k_DistancesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindVertexToTriangleDistances::k_ClosestTriangleIdArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindVertexToTriangleDistances::k_VertexDataContainer_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindVertexToTriangleDistances::k_TriangleDataContainer_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindVertexToTriangleDistances::k_TriangleNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindVertexToTriangleDistances::k_DistancesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindVertexToTriangleDistances::k_ClosestTriangleIdArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

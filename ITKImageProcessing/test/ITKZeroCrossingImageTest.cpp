@@ -39,10 +39,10 @@ TEST_CASE("ITKImageProcessing::ITKZeroCrossingImage: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKZeroCrossingImage::k_ForegroundValue_Key, std::make_any<int32>(1234356));
-  args.insert(ITKZeroCrossingImage::k_BackgroundValue_Key, std::make_any<int32>(1234356));
-  args.insert(ITKZeroCrossingImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKZeroCrossingImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKZeroCrossingImage::k_ForegroundValue_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ITKZeroCrossingImage::k_BackgroundValue_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ITKZeroCrossingImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKZeroCrossingImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

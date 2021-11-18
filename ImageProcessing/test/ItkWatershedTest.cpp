@@ -39,10 +39,10 @@ TEST_CASE("ImageProcessing::ItkWatershed: Instantiation and Parameter Check", "[
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ItkWatershed::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkWatershed::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkWatershed::k_Threshold_Key, std::make_any<float32>(1.23345f));
-  args.insert(ItkWatershed::k_Level_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ItkWatershed::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkWatershed::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkWatershed::k_Threshold_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ItkWatershed::k_Level_Key, std::make_any<float32>(1.23345f));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

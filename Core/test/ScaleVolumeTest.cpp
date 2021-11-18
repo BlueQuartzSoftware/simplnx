@@ -39,11 +39,11 @@ TEST_CASE("Core::ScaleVolume: Instantiation and Parameter Check", "[Core][ScaleV
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ScaleVolume::k_ScaleFactor_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ScaleVolume::k_ApplyToVoxelVolume_Key, std::make_any<bool>(false));
-  args.insert(ScaleVolume::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ScaleVolume::k_ApplyToSurfaceMesh_Key, std::make_any<bool>(false));
-  args.insert(ScaleVolume::k_SurfaceDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ScaleVolume::k_ScaleFactor_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ScaleVolume::k_ApplyToVoxelVolume_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ScaleVolume::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ScaleVolume::k_ApplyToSurfaceMesh_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ScaleVolume::k_SurfaceDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

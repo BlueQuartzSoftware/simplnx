@@ -38,10 +38,10 @@ TEST_CASE("Core::PostSlackMessage: Instantiation and Parameter Check", "[Core][P
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(PostSlackMessage::k_SlackUser_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(PostSlackMessage::k_SlackUrl_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(PostSlackMessage::k_SlackMessage_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(PostSlackMessage::k_WarningsAsError_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PostSlackMessage::k_SlackUser_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(PostSlackMessage::k_SlackUrl_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(PostSlackMessage::k_SlackMessage_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(PostSlackMessage::k_WarningsAsError_Key, std::make_any<bool>(false));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -43,10 +43,10 @@ TEST_CASE("ImportExport::AvizoRectilinearCoordinateWriter: Instantiation and Par
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(AvizoRectilinearCoordinateWriter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(AvizoRectilinearCoordinateWriter::k_WriteBinaryFile_Key, std::make_any<bool>(false));
-  args.insert(AvizoRectilinearCoordinateWriter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(AvizoRectilinearCoordinateWriter::k_Units_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(AvizoRectilinearCoordinateWriter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(AvizoRectilinearCoordinateWriter::k_WriteBinaryFile_Key, std::make_any<bool>(false));
+  args.insertOrAssign(AvizoRectilinearCoordinateWriter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AvizoRectilinearCoordinateWriter::k_Units_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -40,11 +40,11 @@ TEST_CASE("ITKImageProcessing::ITKProxTVImage: Instantiation and Parameter Check
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKProxTVImage::k_MaximumNumberOfIterations_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKProxTVImage::k_Weights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKProxTVImage::k_Norms_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKProxTVImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKProxTVImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKProxTVImage::k_MaximumNumberOfIterations_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKProxTVImage::k_Weights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKProxTVImage::k_Norms_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKProxTVImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKProxTVImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

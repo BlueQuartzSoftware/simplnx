@@ -41,12 +41,12 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImage: Instantiation and Param
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKDiscreteGaussianImage::k_Variance_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKDiscreteGaussianImage::k_MaximumKernelWidth_Key, std::make_any<int32>(1234356));
-  args.insert(ITKDiscreteGaussianImage::k_MaximumError_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKDiscreteGaussianImage::k_UseImageSpacing_Key, std::make_any<bool>(false));
-  args.insert(ITKDiscreteGaussianImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKDiscreteGaussianImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKDiscreteGaussianImage::k_Variance_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKDiscreteGaussianImage::k_MaximumKernelWidth_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ITKDiscreteGaussianImage::k_MaximumError_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKDiscreteGaussianImage::k_UseImageSpacing_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKDiscreteGaussianImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKDiscreteGaussianImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

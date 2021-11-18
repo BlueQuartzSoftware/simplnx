@@ -40,10 +40,10 @@ TEST_CASE("ImageProcessing::ItkManualThreshold: Instantiation and Parameter Chec
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ItkManualThreshold::k_ManualParameter_Key, std::make_any<int32>(1234356));
-  args.insert(ItkManualThreshold::k_SaveAsNewArray_Key, std::make_any<bool>(false));
-  args.insert(ItkManualThreshold::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkManualThreshold::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkManualThreshold::k_ManualParameter_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ItkManualThreshold::k_SaveAsNewArray_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ItkManualThreshold::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkManualThreshold::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

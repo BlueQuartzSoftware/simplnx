@@ -40,10 +40,10 @@ TEST_CASE("ITKImageProcessing::ITKRelabelComponentImage: Instantiation and Param
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKRelabelComponentImage::k_MinimumObjectSize_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKRelabelComponentImage::k_SortByObjectSize_Key, std::make_any<bool>(false));
-  args.insert(ITKRelabelComponentImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKRelabelComponentImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKRelabelComponentImage::k_MinimumObjectSize_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKRelabelComponentImage::k_SortByObjectSize_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKRelabelComponentImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKRelabelComponentImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -39,14 +39,14 @@ TEST_CASE("StatsToolbox::FindShapes: Instantiation and Parameter Check", "[Stats
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindShapes::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindShapes::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindShapes::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindShapes::k_Omega3sArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindShapes::k_AxisLengthsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindShapes::k_AxisEulerAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindShapes::k_AspectRatiosArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindShapes::k_VolumesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindShapes::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindShapes::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindShapes::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindShapes::k_Omega3sArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindShapes::k_AxisLengthsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindShapes::k_AxisEulerAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindShapes::k_AspectRatiosArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindShapes::k_VolumesArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

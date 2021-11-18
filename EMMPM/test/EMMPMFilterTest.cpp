@@ -41,16 +41,16 @@ TEST_CASE("EMMPM::EMMPMFilter: Instantiation and Parameter Check", "[EMMPM][EMMP
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(EMMPMFilter::k_NumClasses_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(EMMPMFilter::k_UseOneBasedValues_Key, std::make_any<bool>(false));
-  args.insert(EMMPMFilter::k_UseGradientPenalty_Key, std::make_any<bool>(false));
-  args.insert(EMMPMFilter::k_GradientBetaE_Key, std::make_any<float64>(2.3456789));
-  args.insert(EMMPMFilter::k_UseCurvaturePenalty_Key, std::make_any<bool>(false));
-  args.insert(EMMPMFilter::k_CurvatureBetaC_Key, std::make_any<float64>(2.3456789));
-  args.insert(EMMPMFilter::k_CurvatureRMax_Key, std::make_any<float64>(2.3456789));
-  args.insert(EMMPMFilter::k_CurvatureEMLoopDelay_Key, std::make_any<int32>(1234356));
-  args.insert(EMMPMFilter::k_InputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EMMPMFilter::k_OutputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  /*[x]*/ args.insertOrAssign(EMMPMFilter::k_NumClasses_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(EMMPMFilter::k_UseOneBasedValues_Key, std::make_any<bool>(false));
+  args.insertOrAssign(EMMPMFilter::k_UseGradientPenalty_Key, std::make_any<bool>(false));
+  args.insertOrAssign(EMMPMFilter::k_GradientBetaE_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(EMMPMFilter::k_UseCurvaturePenalty_Key, std::make_any<bool>(false));
+  args.insertOrAssign(EMMPMFilter::k_CurvatureBetaC_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(EMMPMFilter::k_CurvatureRMax_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(EMMPMFilter::k_CurvatureEMLoopDelay_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(EMMPMFilter::k_InputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EMMPMFilter::k_OutputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

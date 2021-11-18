@@ -38,8 +38,8 @@ TEST_CASE("UCSBUtilities::CopyAttributeMatrix: Instantiation and Parameter Check
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CopyAttributeMatrix::k_SelectedAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CopyAttributeMatrix::k_NewAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CopyAttributeMatrix::k_SelectedAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CopyAttributeMatrix::k_NewAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

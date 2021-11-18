@@ -39,10 +39,10 @@ TEST_CASE("SurfaceMeshing::FindTriangleGeomNeighbors: Instantiation and Paramete
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindTriangleGeomNeighbors::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTriangleGeomNeighbors::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTriangleGeomNeighbors::k_NumNeighborsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTriangleGeomNeighbors::k_NeighborListArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomNeighbors::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomNeighbors::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomNeighbors::k_NumNeighborsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomNeighbors::k_NeighborListArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

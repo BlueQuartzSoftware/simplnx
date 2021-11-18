@@ -37,7 +37,7 @@ TEST_CASE("Core::RemoveArrays: Instantiation and Parameter Check", "[Core][Remov
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(RemoveArrays::k_DataArraysToRemove_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(RemoveArrays::k_DataArraysToRemove_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

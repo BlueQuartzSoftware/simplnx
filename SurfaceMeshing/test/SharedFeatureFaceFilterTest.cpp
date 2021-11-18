@@ -38,11 +38,11 @@ TEST_CASE("SurfaceMeshing::SharedFeatureFaceFilter: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(SharedFeatureFaceFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(SharedFeatureFaceFilter::k_SurfaceMeshFeatureFaceIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(SharedFeatureFaceFilter::k_FaceFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(SharedFeatureFaceFilter::k_SurfaceMeshFeatureFaceLabelsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(SharedFeatureFaceFilter::k_SurfaceMeshFeatureFaceNumTrianglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SharedFeatureFaceFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SharedFeatureFaceFilter::k_SurfaceMeshFeatureFaceIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SharedFeatureFaceFilter::k_FaceFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SharedFeatureFaceFilter::k_SurfaceMeshFeatureFaceLabelsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SharedFeatureFaceFilter::k_SurfaceMeshFeatureFaceNumTrianglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

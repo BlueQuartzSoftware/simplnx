@@ -42,9 +42,9 @@ TEST_CASE("Sampling::RegularizeZSpacing: Instantiation and Parameter Check", "[S
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(RegularizeZSpacing::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(RegularizeZSpacing::k_NewZRes_Key, std::make_any<float32>(1.23345f));
-  args.insert(RegularizeZSpacing::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RegularizeZSpacing::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(RegularizeZSpacing::k_NewZRes_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(RegularizeZSpacing::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -40,11 +40,11 @@ TEST_CASE("DREAM3DReview::LaplacianSmoothPointCloud: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(LaplacianSmoothPointCloud::k_UseMask_Key, std::make_any<bool>(false));
-  args.insert(LaplacianSmoothPointCloud::k_NumIterations_Key, std::make_any<int32>(1234356));
-  args.insert(LaplacianSmoothPointCloud::k_Lambda_Key, std::make_any<float32>(1.23345f));
-  args.insert(LaplacianSmoothPointCloud::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(LaplacianSmoothPointCloud::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(LaplacianSmoothPointCloud::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(LaplacianSmoothPointCloud::k_NumIterations_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(LaplacianSmoothPointCloud::k_Lambda_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(LaplacianSmoothPointCloud::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(LaplacianSmoothPointCloud::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

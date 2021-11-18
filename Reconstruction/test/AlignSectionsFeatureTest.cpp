@@ -42,9 +42,9 @@ TEST_CASE("Reconstruction::AlignSectionsFeature: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(AlignSectionsFeature::k_WriteAlignmentShifts_Key, std::make_any<bool>(false));
-  args.insert(AlignSectionsFeature::k_AlignmentShiftFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(AlignSectionsFeature::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AlignSectionsFeature::k_WriteAlignmentShifts_Key, std::make_any<bool>(false));
+  args.insertOrAssign(AlignSectionsFeature::k_AlignmentShiftFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(AlignSectionsFeature::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

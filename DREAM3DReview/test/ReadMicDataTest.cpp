@@ -42,10 +42,10 @@ TEST_CASE("DREAM3DReview::ReadMicData: Instantiation and Parameter Check", "[DRE
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ReadMicData::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ReadMicData::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ReadMicData::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ReadMicData::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadMicData::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ReadMicData::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadMicData::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadMicData::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

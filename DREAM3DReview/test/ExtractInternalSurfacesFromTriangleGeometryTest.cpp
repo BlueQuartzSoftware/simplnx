@@ -39,9 +39,9 @@ TEST_CASE("DREAM3DReview::ExtractInternalSurfacesFromTriangleGeometry: Instantia
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_TriangleDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_NodeTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_InternalTrianglesName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometry::k_TriangleDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometry::k_NodeTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometry::k_InternalTrianglesName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

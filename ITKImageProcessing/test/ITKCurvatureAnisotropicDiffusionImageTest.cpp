@@ -39,12 +39,12 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureAnisotropicDiffusionImage: Instantiat
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKCurvatureAnisotropicDiffusionImage::k_TimeStep_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKCurvatureAnisotropicDiffusionImage::k_ConductanceParameter_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKCurvatureAnisotropicDiffusionImage::k_ConductanceScalingUpdateInterval_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKCurvatureAnisotropicDiffusionImage::k_NumberOfIterations_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKCurvatureAnisotropicDiffusionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKCurvatureAnisotropicDiffusionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_TimeStep_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_ConductanceParameter_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_ConductanceScalingUpdateInterval_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_NumberOfIterations_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

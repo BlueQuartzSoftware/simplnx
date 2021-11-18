@@ -45,23 +45,23 @@ TEST_CASE("SyntheticBuilding::PackPrimaryPhases: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(PackPrimaryPhases::k_PeriodicBoundaries_Key, std::make_any<bool>(false));
-  args.insert(PackPrimaryPhases::k_UseMask_Key, std::make_any<bool>(false));
-  args.insert(PackPrimaryPhases::k_OutputCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PackPrimaryPhases::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PackPrimaryPhases::k_InputStatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PackPrimaryPhases::k_InputPhaseTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PackPrimaryPhases::k_InputPhaseNamesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PackPrimaryPhases::k_InputShapeTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PackPrimaryPhases::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PackPrimaryPhases::k_CellPhasesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PackPrimaryPhases::k_OutputCellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PackPrimaryPhases::k_FeaturePhasesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PackPrimaryPhases::k_OutputCellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PackPrimaryPhases::k_NumFeaturesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PackPrimaryPhases::k_FeatureInputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(PackPrimaryPhases::k_NewAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PackPrimaryPhases::k_SelectedAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PackPrimaryPhases::k_PeriodicBoundaries_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PackPrimaryPhases::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PackPrimaryPhases::k_OutputCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PackPrimaryPhases::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PackPrimaryPhases::k_InputStatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PackPrimaryPhases::k_InputPhaseTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PackPrimaryPhases::k_InputPhaseNamesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PackPrimaryPhases::k_InputShapeTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PackPrimaryPhases::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PackPrimaryPhases::k_CellPhasesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PackPrimaryPhases::k_OutputCellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PackPrimaryPhases::k_FeaturePhasesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PackPrimaryPhases::k_OutputCellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PackPrimaryPhases::k_NumFeaturesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PackPrimaryPhases::k_FeatureInputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(PackPrimaryPhases::k_NewAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PackPrimaryPhases::k_SelectedAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -43,21 +43,21 @@ TEST_CASE("SimulationIO::ImportFEAData: Instantiation and Parameter Check", "[Si
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ImportFEAData::k_odbName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportFEAData::k_odbFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
-  args.insert(ImportFEAData::k_ABQPythonCommand_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportFEAData::k_InstanceName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportFEAData::k_Step_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportFEAData::k_FrameNumber_Key, std::make_any<int32>(1234356));
-  args.insert(ImportFEAData::k_BSAMInputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ImportFEAData::k_DEFORMInputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ImportFEAData::k_DEFORMPointTrackInputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ImportFEAData::k_ImportSingleTimeStep_Key, std::make_any<bool>(false));
-  args.insert(ImportFEAData::k_SingleTimeStepValue_Key, std::make_any<int32>(1234356));
-  args.insert(ImportFEAData::k_TimeSeriesBundleName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportFEAData::k_DataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportFEAData::k_VertexAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportFEAData::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportFEAData::k_odbName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportFEAData::k_odbFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
+  args.insertOrAssign(ImportFEAData::k_ABQPythonCommand_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportFEAData::k_InstanceName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportFEAData::k_Step_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportFEAData::k_FrameNumber_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ImportFEAData::k_BSAMInputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ImportFEAData::k_DEFORMInputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ImportFEAData::k_DEFORMPointTrackInputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ImportFEAData::k_ImportSingleTimeStep_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ImportFEAData::k_SingleTimeStepValue_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ImportFEAData::k_TimeSeriesBundleName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportFEAData::k_DataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportFEAData::k_VertexAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportFEAData::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -39,9 +39,9 @@ TEST_CASE("ImageProcessing::ItkKdTreeKMeans: Instantiation and Parameter Check",
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ItkKdTreeKMeans::k_Classes_Key, std::make_any<int32>(1234356));
-  args.insert(ItkKdTreeKMeans::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkKdTreeKMeans::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkKdTreeKMeans::k_Classes_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ItkKdTreeKMeans::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkKdTreeKMeans::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

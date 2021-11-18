@@ -39,9 +39,9 @@ TEST_CASE("SyntheticBuilding::EstablishShapeTypes: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(EstablishShapeTypes::k_InputPhaseTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishShapeTypes::k_ShapeTypesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  /*[x]*/ args.insert(EstablishShapeTypes::k_ShapeTypeData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(EstablishShapeTypes::k_InputPhaseTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishShapeTypes::k_ShapeTypesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  /*[x]*/ args.insertOrAssign(EstablishShapeTypes::k_ShapeTypeData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

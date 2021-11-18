@@ -44,21 +44,21 @@ TEST_CASE("ITKImageProcessing::ImportAxioVisionV4Montage: Instantiation and Para
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ImportAxioVisionV4Montage::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ImportAxioVisionV4Montage::k_MontageName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportAxioVisionV4Montage::k_ColumnMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
-  args.insert(ImportAxioVisionV4Montage::k_RowMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
-  args.insert(ImportAxioVisionV4Montage::k_ImportAllMetaData_Key, std::make_any<bool>(false));
-  args.insert(ImportAxioVisionV4Montage::k_ChangeOrigin_Key, std::make_any<bool>(false));
-  args.insert(ImportAxioVisionV4Montage::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ImportAxioVisionV4Montage::k_ChangeSpacing_Key, std::make_any<bool>(false));
-  args.insert(ImportAxioVisionV4Montage::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ImportAxioVisionV4Montage::k_ConvertToGrayScale_Key, std::make_any<bool>(false));
-  args.insert(ImportAxioVisionV4Montage::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ImportAxioVisionV4Montage::k_DataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportAxioVisionV4Montage::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportAxioVisionV4Montage::k_ImageDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportAxioVisionV4Montage::k_MetaDataAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportAxioVisionV4Montage::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ImportAxioVisionV4Montage::k_MontageName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportAxioVisionV4Montage::k_ColumnMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
+  args.insertOrAssign(ImportAxioVisionV4Montage::k_RowMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
+  args.insertOrAssign(ImportAxioVisionV4Montage::k_ImportAllMetaData_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ImportAxioVisionV4Montage::k_ChangeOrigin_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ImportAxioVisionV4Montage::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ImportAxioVisionV4Montage::k_ChangeSpacing_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ImportAxioVisionV4Montage::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ImportAxioVisionV4Montage::k_ConvertToGrayScale_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ImportAxioVisionV4Montage::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ImportAxioVisionV4Montage::k_DataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportAxioVisionV4Montage::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportAxioVisionV4Montage::k_ImageDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportAxioVisionV4Montage::k_MetaDataAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

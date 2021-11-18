@@ -41,11 +41,11 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleMorphologicalOpeningImage: Instantiat
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKGrayscaleMorphologicalOpeningImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ITKGrayscaleMorphologicalOpeningImage::k_SafeBorder_Key, std::make_any<bool>(false));
-  args.insert(ITKGrayscaleMorphologicalOpeningImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKGrayscaleMorphologicalOpeningImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKGrayscaleMorphologicalOpeningImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_SafeBorder_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

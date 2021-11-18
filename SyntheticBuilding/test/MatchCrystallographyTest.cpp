@@ -39,20 +39,20 @@ TEST_CASE("SyntheticBuilding::MatchCrystallography: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(MatchCrystallography::k_MaxIterations_Key, std::make_any<int32>(1234356));
-  args.insert(MatchCrystallography::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MatchCrystallography::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MatchCrystallography::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MatchCrystallography::k_NeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MatchCrystallography::k_SharedSurfaceAreaListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MatchCrystallography::k_InputStatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MatchCrystallography::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MatchCrystallography::k_PhaseTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MatchCrystallography::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MatchCrystallography::k_CellEulerAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MatchCrystallography::k_VolumesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MatchCrystallography::k_FeatureEulerAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MatchCrystallography::k_AvgQuatsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MatchCrystallography::k_MaxIterations_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(MatchCrystallography::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MatchCrystallography::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MatchCrystallography::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MatchCrystallography::k_NeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MatchCrystallography::k_SharedSurfaceAreaListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MatchCrystallography::k_InputStatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MatchCrystallography::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MatchCrystallography::k_PhaseTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MatchCrystallography::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MatchCrystallography::k_CellEulerAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MatchCrystallography::k_VolumesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MatchCrystallography::k_FeatureEulerAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MatchCrystallography::k_AvgQuatsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

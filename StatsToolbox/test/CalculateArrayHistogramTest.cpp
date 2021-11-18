@@ -41,15 +41,15 @@ TEST_CASE("StatsToolbox::CalculateArrayHistogram: Instantiation and Parameter Ch
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CalculateArrayHistogram::k_NumberOfBins_Key, std::make_any<int32>(1234356));
-  args.insert(CalculateArrayHistogram::k_UserDefinedRange_Key, std::make_any<bool>(false));
-  args.insert(CalculateArrayHistogram::k_MinRange_Key, std::make_any<float64>(2.3456789));
-  args.insert(CalculateArrayHistogram::k_MaxRange_Key, std::make_any<float64>(2.3456789));
-  args.insert(CalculateArrayHistogram::k_NewDataContainer_Key, std::make_any<bool>(false));
-  args.insert(CalculateArrayHistogram::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CalculateArrayHistogram::k_NewDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CalculateArrayHistogram::k_NewAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CalculateArrayHistogram::k_NewDataArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CalculateArrayHistogram::k_NumberOfBins_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(CalculateArrayHistogram::k_UserDefinedRange_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CalculateArrayHistogram::k_MinRange_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(CalculateArrayHistogram::k_MaxRange_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(CalculateArrayHistogram::k_NewDataContainer_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CalculateArrayHistogram::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CalculateArrayHistogram::k_NewDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CalculateArrayHistogram::k_NewAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CalculateArrayHistogram::k_NewDataArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

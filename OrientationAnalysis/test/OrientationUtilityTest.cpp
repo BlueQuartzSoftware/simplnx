@@ -37,7 +37,7 @@ TEST_CASE("OrientationAnalysis::OrientationUtility: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(OrientationUtility::k__Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(OrientationUtility::k__Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

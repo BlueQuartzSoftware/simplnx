@@ -39,10 +39,10 @@ TEST_CASE("ITKImageProcessing::ITKIsoContourDistanceImage: Instantiation and Par
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKIsoContourDistanceImage::k_LevelSetValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKIsoContourDistanceImage::k_FarValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKIsoContourDistanceImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKIsoContourDistanceImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKIsoContourDistanceImage::k_LevelSetValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKIsoContourDistanceImage::k_FarValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKIsoContourDistanceImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKIsoContourDistanceImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

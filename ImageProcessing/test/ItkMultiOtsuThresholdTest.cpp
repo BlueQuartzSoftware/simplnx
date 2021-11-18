@@ -40,11 +40,11 @@ TEST_CASE("ImageProcessing::ItkMultiOtsuThreshold: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ItkMultiOtsuThreshold::k_Slice_Key, std::make_any<bool>(false));
-  args.insert(ItkMultiOtsuThreshold::k_Levels_Key, std::make_any<int32>(1234356));
-  args.insert(ItkMultiOtsuThreshold::k_SaveAsNewArray_Key, std::make_any<bool>(false));
-  args.insert(ItkMultiOtsuThreshold::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkMultiOtsuThreshold::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkMultiOtsuThreshold::k_Slice_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ItkMultiOtsuThreshold::k_Levels_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ItkMultiOtsuThreshold::k_SaveAsNewArray_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ItkMultiOtsuThreshold::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkMultiOtsuThreshold::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

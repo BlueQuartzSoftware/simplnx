@@ -41,13 +41,13 @@ TEST_CASE("ITKImageProcessing::ImportVectorImageStack: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(ImportVectorImageStack::k_InputFileListInfo_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(ImportVectorImageStack::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ImportVectorImageStack::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ImportVectorImageStack::k_ConvertToGrayscale_Key, std::make_any<bool>(false));
-  args.insert(ImportVectorImageStack::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportVectorImageStack::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportVectorImageStack::k_VectorDataArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  /*[x]*/ args.insertOrAssign(ImportVectorImageStack::k_InputFileListInfo_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(ImportVectorImageStack::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ImportVectorImageStack::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ImportVectorImageStack::k_ConvertToGrayscale_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ImportVectorImageStack::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportVectorImageStack::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportVectorImageStack::k_VectorDataArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

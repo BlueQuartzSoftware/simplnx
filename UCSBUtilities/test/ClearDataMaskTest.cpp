@@ -37,7 +37,7 @@ TEST_CASE("UCSBUtilities::ClearDataMask: Instantiation and Parameter Check", "[U
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ClearDataMask::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ClearDataMask::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

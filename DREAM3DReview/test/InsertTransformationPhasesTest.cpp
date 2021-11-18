@@ -43,32 +43,32 @@ TEST_CASE("DREAM3DReview::InsertTransformationPhases: Instantiation and Paramete
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(InsertTransformationPhases::k_ParentPhase_Key, std::make_any<int32>(1234356));
-  args.insert(InsertTransformationPhases::k_TransCrystalStruct_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(InsertTransformationPhases::k_TransformationPhaseMisorientation_Key, std::make_any<float32>(1.23345f));
-  args.insert(InsertTransformationPhases::k_DefineHabitPlane_Key, std::make_any<bool>(false));
-  args.insert(InsertTransformationPhases::k_TransformationPhaseHabitPlane_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(InsertTransformationPhases::k_UseAllVariants_Key, std::make_any<bool>(false));
-  args.insert(InsertTransformationPhases::k_CoherentFrac_Key, std::make_any<float32>(1.23345f));
-  args.insert(InsertTransformationPhases::k_TransformationPhaseThickness_Key, std::make_any<float32>(1.23345f));
-  args.insert(InsertTransformationPhases::k_NumTransformationPhasesPerFeature_Key, std::make_any<int32>(1234356));
-  args.insert(InsertTransformationPhases::k_PeninsulaFrac_Key, std::make_any<float32>(1.23345f));
-  args.insert(InsertTransformationPhases::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertTransformationPhases::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertTransformationPhases::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertTransformationPhases::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertTransformationPhases::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertTransformationPhases::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertTransformationPhases::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertTransformationPhases::k_EquivalentDiametersArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertTransformationPhases::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertTransformationPhases::k_StatsGenCellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertTransformationPhases::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertTransformationPhases::k_PhaseTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertTransformationPhases::k_ShapeTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertTransformationPhases::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertTransformationPhases::k_FeatureParentIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertTransformationPhases::k_NumFeaturesPerParentArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_ParentPhase_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(InsertTransformationPhases::k_TransCrystalStruct_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(InsertTransformationPhases::k_TransformationPhaseMisorientation_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(InsertTransformationPhases::k_DefineHabitPlane_Key, std::make_any<bool>(false));
+  args.insertOrAssign(InsertTransformationPhases::k_TransformationPhaseHabitPlane_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(InsertTransformationPhases::k_UseAllVariants_Key, std::make_any<bool>(false));
+  args.insertOrAssign(InsertTransformationPhases::k_CoherentFrac_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(InsertTransformationPhases::k_TransformationPhaseThickness_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(InsertTransformationPhases::k_NumTransformationPhasesPerFeature_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(InsertTransformationPhases::k_PeninsulaFrac_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(InsertTransformationPhases::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_EquivalentDiametersArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_StatsGenCellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_PhaseTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_ShapeTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_FeatureParentIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_NumFeaturesPerParentArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

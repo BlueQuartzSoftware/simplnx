@@ -43,14 +43,14 @@ TEST_CASE("SimulationIO::ImportOnScaleTableFile: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ImportOnScaleTableFile::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ImportOnScaleTableFile::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ImportOnScaleTableFile::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ImportOnScaleTableFile::k_VolumeDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportOnScaleTableFile::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportOnScaleTableFile::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportOnScaleTableFile::k_PhaseAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportOnScaleTableFile::k_MaterialNameArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportOnScaleTableFile::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ImportOnScaleTableFile::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ImportOnScaleTableFile::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ImportOnScaleTableFile::k_VolumeDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportOnScaleTableFile::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportOnScaleTableFile::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportOnScaleTableFile::k_PhaseAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportOnScaleTableFile::k_MaterialNameArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

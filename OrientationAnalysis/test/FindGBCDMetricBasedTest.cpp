@@ -45,22 +45,22 @@ TEST_CASE("OrientationAnalysis::FindGBCDMetricBased: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindGBCDMetricBased::k_PhaseOfInterest_Key, std::make_any<int32>(1234356));
-  args.insert(FindGBCDMetricBased::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(4)));
-  args.insert(FindGBCDMetricBased::k_ChosenLimitDists_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(FindGBCDMetricBased::k_NumSamplPts_Key, std::make_any<int32>(1234356));
-  args.insert(FindGBCDMetricBased::k_ExcludeTripleLines_Key, std::make_any<bool>(false));
-  args.insert(FindGBCDMetricBased::k_DistOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(FindGBCDMetricBased::k_ErrOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(FindGBCDMetricBased::k_SaveRelativeErr_Key, std::make_any<bool>(false));
-  args.insert(FindGBCDMetricBased::k_NodeTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindGBCDMetricBased::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindGBCDMetricBased::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindGBCDMetricBased::k_SurfaceMeshFaceAreasArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindGBCDMetricBased::k_SurfaceMeshFeatureFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindGBCDMetricBased::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindGBCDMetricBased::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindGBCDMetricBased::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindGBCDMetricBased::k_PhaseOfInterest_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(FindGBCDMetricBased::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(4)));
+  args.insertOrAssign(FindGBCDMetricBased::k_ChosenLimitDists_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(FindGBCDMetricBased::k_NumSamplPts_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(FindGBCDMetricBased::k_ExcludeTripleLines_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindGBCDMetricBased::k_DistOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(FindGBCDMetricBased::k_ErrOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(FindGBCDMetricBased::k_SaveRelativeErr_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindGBCDMetricBased::k_NodeTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindGBCDMetricBased::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindGBCDMetricBased::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindGBCDMetricBased::k_SurfaceMeshFaceAreasArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindGBCDMetricBased::k_SurfaceMeshFeatureFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindGBCDMetricBased::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindGBCDMetricBased::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindGBCDMetricBased::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

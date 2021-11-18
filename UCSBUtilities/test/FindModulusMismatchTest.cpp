@@ -38,9 +38,9 @@ TEST_CASE("UCSBUtilities::FindModulusMismatch: Instantiation and Parameter Check
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindModulusMismatch::k_ModuliArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindModulusMismatch::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindModulusMismatch::k_SurfaceMeshDeltaModulusArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindModulusMismatch::k_ModuliArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindModulusMismatch::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindModulusMismatch::k_SurfaceMeshDeltaModulusArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

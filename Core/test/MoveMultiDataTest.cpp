@@ -39,10 +39,10 @@ TEST_CASE("Core::MoveMultiData: Instantiation and Parameter Check", "[Core][Move
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(MoveMultiData::k_AttributeMatrixSources_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(MoveMultiData::k_DataContainerDestination_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MoveMultiData::k_DataArraySources_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(MoveMultiData::k_AttributeMatrixDestination_Key, std::make_any<DataPath>(DataPath{}));
+  /*[x]*/ args.insertOrAssign(MoveMultiData::k_AttributeMatrixSources_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(MoveMultiData::k_DataContainerDestination_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MoveMultiData::k_DataArraySources_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(MoveMultiData::k_AttributeMatrixDestination_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

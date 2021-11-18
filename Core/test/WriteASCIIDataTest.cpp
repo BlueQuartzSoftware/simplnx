@@ -44,12 +44,13 @@ TEST_CASE("Core::WriteASCIIData: Instantiation and Parameter Check", "[Core][Wri
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(WriteASCIIData::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
-  args.insert(WriteASCIIData::k_FileExtension_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(WriteASCIIData::k_MaxValPerLine_Key, std::make_any<int32>(1234356));
-  args.insert(WriteASCIIData::k_OutputFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(WriteASCIIData::k_Delimiter_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(WriteASCIIData::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(WriteASCIIData::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
+  args.insertOrAssign(WriteASCIIData::k_FileExtension_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(WriteASCIIData::k_MaxValPerLine_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(WriteASCIIData::k_OutputFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(WriteASCIIData::k_Delimiter_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(WriteASCIIData::k_SelectedDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

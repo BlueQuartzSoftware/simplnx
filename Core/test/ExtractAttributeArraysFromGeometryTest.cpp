@@ -38,21 +38,21 @@ TEST_CASE("Core::ExtractAttributeArraysFromGeometry: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ExtractAttributeArraysFromGeometry::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractAttributeArraysFromGeometry::k_XBoundsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractAttributeArraysFromGeometry::k_YBoundsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractAttributeArraysFromGeometry::k_ZBoundsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractAttributeArraysFromGeometry::k_SharedVertexListArrayPath0_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractAttributeArraysFromGeometry::k_SharedVertexListArrayPath1_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractAttributeArraysFromGeometry::k_SharedEdgeListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractAttributeArraysFromGeometry::k_SharedVertexListArrayPath2_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractAttributeArraysFromGeometry::k_SharedTriListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractAttributeArraysFromGeometry::k_SharedVertexListArrayPath3_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractAttributeArraysFromGeometry::k_SharedQuadListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractAttributeArraysFromGeometry::k_SharedVertexListArrayPath4_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractAttributeArraysFromGeometry::k_SharedTetListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractAttributeArraysFromGeometry::k_SharedVertexListArrayPath5_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractAttributeArraysFromGeometry::k_SharedHexListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractAttributeArraysFromGeometry::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractAttributeArraysFromGeometry::k_XBoundsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractAttributeArraysFromGeometry::k_YBoundsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractAttributeArraysFromGeometry::k_ZBoundsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractAttributeArraysFromGeometry::k_SharedVertexListArrayPath0_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractAttributeArraysFromGeometry::k_SharedVertexListArrayPath1_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractAttributeArraysFromGeometry::k_SharedEdgeListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractAttributeArraysFromGeometry::k_SharedVertexListArrayPath2_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractAttributeArraysFromGeometry::k_SharedTriListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractAttributeArraysFromGeometry::k_SharedVertexListArrayPath3_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractAttributeArraysFromGeometry::k_SharedQuadListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractAttributeArraysFromGeometry::k_SharedVertexListArrayPath4_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractAttributeArraysFromGeometry::k_SharedTetListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractAttributeArraysFromGeometry::k_SharedVertexListArrayPath5_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractAttributeArraysFromGeometry::k_SharedHexListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

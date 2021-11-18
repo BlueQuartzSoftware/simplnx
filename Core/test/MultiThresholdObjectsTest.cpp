@@ -38,8 +38,8 @@ TEST_CASE("Core::MultiThresholdObjects: Instantiation and Parameter Check", "[Co
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(MultiThresholdObjects::k_SelectedThresholds_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(MultiThresholdObjects::k_DestinationArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  /*[x]*/ args.insertOrAssign(MultiThresholdObjects::k_SelectedThresholds_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(MultiThresholdObjects::k_DestinationArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

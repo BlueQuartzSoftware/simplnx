@@ -38,10 +38,10 @@ TEST_CASE("Core::MoveData: Instantiation and Parameter Check", "[Core][MoveData]
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(MoveData::k_AttributeMatrixSource_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MoveData::k_DataContainerDestination_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MoveData::k_DataArraySource_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(MoveData::k_AttributeMatrixDestination_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MoveData::k_AttributeMatrixSource_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MoveData::k_DataContainerDestination_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MoveData::k_DataArraySource_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MoveData::k_AttributeMatrixDestination_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

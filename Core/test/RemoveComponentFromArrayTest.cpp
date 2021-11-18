@@ -40,11 +40,11 @@ TEST_CASE("Core::RemoveComponentFromArray: Instantiation and Parameter Check", "
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(RemoveComponentFromArray::k_CompNumber_Key, std::make_any<int32>(1234356));
-  args.insert(RemoveComponentFromArray::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(RemoveComponentFromArray::k_NewArrayArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(RemoveComponentFromArray::k_ReducedArrayArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(RemoveComponentFromArray::k_SaveRemovedComponent_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RemoveComponentFromArray::k_CompNumber_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(RemoveComponentFromArray::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RemoveComponentFromArray::k_NewArrayArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RemoveComponentFromArray::k_ReducedArrayArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RemoveComponentFromArray::k_SaveRemovedComponent_Key, std::make_any<bool>(false));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

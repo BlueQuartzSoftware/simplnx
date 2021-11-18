@@ -39,9 +39,9 @@ TEST_CASE("ITKImageProcessing::ITKMaximumProjectionImage: Instantiation and Para
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKMaximumProjectionImage::k_ProjectionDimension_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKMaximumProjectionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKMaximumProjectionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKMaximumProjectionImage::k_ProjectionDimension_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKMaximumProjectionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKMaximumProjectionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

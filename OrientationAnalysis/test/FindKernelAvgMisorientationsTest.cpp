@@ -39,12 +39,12 @@ TEST_CASE("OrientationAnalysis::FindKernelAvgMisorientations: Instantiation and 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindKernelAvgMisorientations::k_KernelSize_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
-  args.insert(FindKernelAvgMisorientations::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindKernelAvgMisorientations::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindKernelAvgMisorientations::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindKernelAvgMisorientations::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindKernelAvgMisorientations::k_KernelAverageMisorientationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindKernelAvgMisorientations::k_KernelSize_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
+  args.insertOrAssign(FindKernelAvgMisorientations::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindKernelAvgMisorientations::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindKernelAvgMisorientations::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindKernelAvgMisorientations::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindKernelAvgMisorientations::k_KernelAverageMisorientationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

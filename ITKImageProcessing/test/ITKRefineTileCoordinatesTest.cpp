@@ -41,12 +41,12 @@ TEST_CASE("ITKImageProcessing::ITKRefineTileCoordinates: Instantiation and Param
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKRefineTileCoordinates::k_MontageSize_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
-  args.insert(ITKRefineTileCoordinates::k_TileOverlap_Key, std::make_any<float32>(1.23345f));
-  args.insert(ITKRefineTileCoordinates::k_ApplyRefinedOrigin_Key, std::make_any<bool>(false));
-  /*[x]*/ args.insert(ITKRefineTileCoordinates::k_DataContainers_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(ITKRefineTileCoordinates::k_CommonAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ITKRefineTileCoordinates::k_CommonDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKRefineTileCoordinates::k_MontageSize_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
+  args.insertOrAssign(ITKRefineTileCoordinates::k_TileOverlap_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ITKRefineTileCoordinates::k_ApplyRefinedOrigin_Key, std::make_any<bool>(false));
+  /*[x]*/ args.insertOrAssign(ITKRefineTileCoordinates::k_DataContainers_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(ITKRefineTileCoordinates::k_CommonAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKRefineTileCoordinates::k_CommonDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

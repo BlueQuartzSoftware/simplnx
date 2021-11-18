@@ -45,27 +45,27 @@ TEST_CASE("SimulationIO::Export3dSolidMesh: Instantiation and Parameter Check", 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(Export3dSolidMesh::k_outputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
-  args.insert(Export3dSolidMesh::k_PackageLocation_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
-  args.insert(Export3dSolidMesh::k_NetgenSTLFileName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(Export3dSolidMesh::k_GmshSTLFileName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(Export3dSolidMesh::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(Export3dSolidMesh::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(Export3dSolidMesh::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(Export3dSolidMesh::k_FeatureCentroidArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(Export3dSolidMesh::k_MeshFileFormat_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(Export3dSolidMesh::k_RefineMesh_Key, std::make_any<bool>(false));
-  args.insert(Export3dSolidMesh::k_MaxRadiusEdgeRatio_Key, std::make_any<float32>(1.23345f));
-  args.insert(Export3dSolidMesh::k_MinDihedralAngle_Key, std::make_any<float32>(1.23345f));
-  args.insert(Export3dSolidMesh::k_OptimizationLevel_Key, std::make_any<int32>(1234356));
-  args.insert(Export3dSolidMesh::k_MeshSize_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(Export3dSolidMesh::k_LimitTetrahedraVolume_Key, std::make_any<bool>(false));
-  args.insert(Export3dSolidMesh::k_MaxTetrahedraVolume_Key, std::make_any<float32>(1.23345f));
-  args.insert(Export3dSolidMesh::k_IncludeHolesUsingPhaseID_Key, std::make_any<bool>(false));
-  args.insert(Export3dSolidMesh::k_PhaseID_Key, std::make_any<int32>(1234356));
-  args.insert(Export3dSolidMesh::k_TetDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(Export3dSolidMesh::k_VertexAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(Export3dSolidMesh::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(Export3dSolidMesh::k_outputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
+  args.insertOrAssign(Export3dSolidMesh::k_PackageLocation_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
+  args.insertOrAssign(Export3dSolidMesh::k_NetgenSTLFileName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(Export3dSolidMesh::k_GmshSTLFileName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(Export3dSolidMesh::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(Export3dSolidMesh::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(Export3dSolidMesh::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(Export3dSolidMesh::k_FeatureCentroidArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(Export3dSolidMesh::k_MeshFileFormat_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(Export3dSolidMesh::k_RefineMesh_Key, std::make_any<bool>(false));
+  args.insertOrAssign(Export3dSolidMesh::k_MaxRadiusEdgeRatio_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(Export3dSolidMesh::k_MinDihedralAngle_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(Export3dSolidMesh::k_OptimizationLevel_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(Export3dSolidMesh::k_MeshSize_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(Export3dSolidMesh::k_LimitTetrahedraVolume_Key, std::make_any<bool>(false));
+  args.insertOrAssign(Export3dSolidMesh::k_MaxTetrahedraVolume_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(Export3dSolidMesh::k_IncludeHolesUsingPhaseID_Key, std::make_any<bool>(false));
+  args.insertOrAssign(Export3dSolidMesh::k_PhaseID_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(Export3dSolidMesh::k_TetDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(Export3dSolidMesh::k_VertexAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(Export3dSolidMesh::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

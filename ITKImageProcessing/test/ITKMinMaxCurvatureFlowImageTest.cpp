@@ -39,11 +39,11 @@ TEST_CASE("ITKImageProcessing::ITKMinMaxCurvatureFlowImage: Instantiation and Pa
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKMinMaxCurvatureFlowImage::k_TimeStep_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKMinMaxCurvatureFlowImage::k_NumberOfIterations_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKMinMaxCurvatureFlowImage::k_StencilRadius_Key, std::make_any<int32>(1234356));
-  args.insert(ITKMinMaxCurvatureFlowImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKMinMaxCurvatureFlowImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_TimeStep_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_NumberOfIterations_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_StencilRadius_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

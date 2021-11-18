@@ -41,13 +41,14 @@ TEST_CASE("Processing::ErodeDilateBadData: Instantiation and Parameter Check", "
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ErodeDilateBadData::k_Direction_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ErodeDilateBadData::k_NumIterations_Key, std::make_any<int32>(1234356));
-  args.insert(ErodeDilateBadData::k_XDirOn_Key, std::make_any<bool>(false));
-  args.insert(ErodeDilateBadData::k_YDirOn_Key, std::make_any<bool>(false));
-  args.insert(ErodeDilateBadData::k_ZDirOn_Key, std::make_any<bool>(false));
-  args.insert(ErodeDilateBadData::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ErodeDilateBadData::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(ErodeDilateBadData::k_Direction_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ErodeDilateBadData::k_NumIterations_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ErodeDilateBadData::k_XDirOn_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ErodeDilateBadData::k_YDirOn_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ErodeDilateBadData::k_ZDirOn_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ErodeDilateBadData::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ErodeDilateBadData::k_IgnoredDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

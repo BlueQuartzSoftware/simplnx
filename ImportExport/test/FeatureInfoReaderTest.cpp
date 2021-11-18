@@ -45,17 +45,17 @@ TEST_CASE("ImportExport::FeatureInfoReader: Instantiation and Parameter Check", 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FeatureInfoReader::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(FeatureInfoReader::k_CreateCellLevelArrays_Key, std::make_any<bool>(false));
-  args.insert(FeatureInfoReader::k_RenumberFeatures_Key, std::make_any<bool>(false));
-  args.insert(FeatureInfoReader::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureInfoReader::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureInfoReader::k_CellPhasesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureInfoReader::k_CellEulerAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureInfoReader::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureInfoReader::k_FeaturePhasesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureInfoReader::k_FeatureEulerAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FeatureInfoReader::k_Delimiter_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(FeatureInfoReader::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(FeatureInfoReader::k_CreateCellLevelArrays_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FeatureInfoReader::k_RenumberFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FeatureInfoReader::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureInfoReader::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureInfoReader::k_CellPhasesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureInfoReader::k_CellEulerAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureInfoReader::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureInfoReader::k_FeaturePhasesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureInfoReader::k_FeatureEulerAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureInfoReader::k_Delimiter_Key, std::make_any<ChoicesParameter::ValueType>(0));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

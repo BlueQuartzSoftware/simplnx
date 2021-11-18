@@ -43,10 +43,10 @@ TEST_CASE("ITKImageProcessing::ITKImageWriter: Instantiation and Parameter Check
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKImageWriter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ITKImageWriter::k_FileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(ITKImageWriter::k_IndexOffset_Key, std::make_any<int32>(1234356));
-  args.insert(ITKImageWriter::k_ImageArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKImageWriter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ITKImageWriter::k_FileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(ITKImageWriter::k_IndexOffset_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ITKImageWriter::k_ImageArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

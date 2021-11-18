@@ -43,13 +43,13 @@ TEST_CASE("ImportExport::VtkStructuredPointsReader: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(VtkStructuredPointsReader::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(VtkStructuredPointsReader::k_ReadPointData_Key, std::make_any<bool>(false));
-  args.insert(VtkStructuredPointsReader::k_ReadCellData_Key, std::make_any<bool>(false));
-  args.insert(VtkStructuredPointsReader::k_VertexDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(VtkStructuredPointsReader::k_VolumeDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(VtkStructuredPointsReader::k_VertexAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(VtkStructuredPointsReader::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(VtkStructuredPointsReader::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(VtkStructuredPointsReader::k_ReadPointData_Key, std::make_any<bool>(false));
+  args.insertOrAssign(VtkStructuredPointsReader::k_ReadCellData_Key, std::make_any<bool>(false));
+  args.insertOrAssign(VtkStructuredPointsReader::k_VertexDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(VtkStructuredPointsReader::k_VolumeDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(VtkStructuredPointsReader::k_VertexAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(VtkStructuredPointsReader::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

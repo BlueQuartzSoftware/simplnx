@@ -39,10 +39,10 @@ TEST_CASE("ITKImageProcessing::ITKSaltAndPepperNoiseImage: Instantiation and Par
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKSaltAndPepperNoiseImage::k_Probability_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKSaltAndPepperNoiseImage::k_Seed_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKSaltAndPepperNoiseImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKSaltAndPepperNoiseImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKSaltAndPepperNoiseImage::k_Probability_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKSaltAndPepperNoiseImage::k_Seed_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKSaltAndPepperNoiseImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKSaltAndPepperNoiseImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

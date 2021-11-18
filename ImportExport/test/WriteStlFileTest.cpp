@@ -42,9 +42,9 @@ TEST_CASE("ImportExport::WriteStlFile: Instantiation and Parameter Check", "[Imp
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(WriteStlFile::k_OutputStlDirectory_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
-  args.insert(WriteStlFile::k_OutputStlPrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(WriteStlFile::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(WriteStlFile::k_OutputStlDirectory_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
+  args.insertOrAssign(WriteStlFile::k_OutputStlPrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(WriteStlFile::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

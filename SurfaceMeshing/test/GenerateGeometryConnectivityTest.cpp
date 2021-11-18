@@ -38,9 +38,9 @@ TEST_CASE("SurfaceMeshing::GenerateGeometryConnectivity: Instantiation and Param
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(GenerateGeometryConnectivity::k_GenerateVertexTriangleLists_Key, std::make_any<bool>(false));
-  args.insert(GenerateGeometryConnectivity::k_GenerateTriangleNeighbors_Key, std::make_any<bool>(false));
-  args.insert(GenerateGeometryConnectivity::k_SurfaceDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateGeometryConnectivity::k_GenerateVertexTriangleLists_Key, std::make_any<bool>(false));
+  args.insertOrAssign(GenerateGeometryConnectivity::k_GenerateTriangleNeighbors_Key, std::make_any<bool>(false));
+  args.insertOrAssign(GenerateGeometryConnectivity::k_SurfaceDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

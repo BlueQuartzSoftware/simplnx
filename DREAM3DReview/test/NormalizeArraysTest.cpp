@@ -41,13 +41,14 @@ TEST_CASE("DREAM3DReview::NormalizeArrays: Instantiation and Parameter Check", "
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(NormalizeArrays::k_Postfix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(NormalizeArrays::k_UseMask_Key, std::make_any<bool>(false));
-  args.insert(NormalizeArrays::k_DefaultValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(NormalizeArrays::k_RangeMin_Key, std::make_any<float64>(2.3456789));
-  args.insert(NormalizeArrays::k_RangeMax_Key, std::make_any<float64>(2.3456789));
-  args.insert(NormalizeArrays::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(NormalizeArrays::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(NormalizeArrays::k_Postfix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(NormalizeArrays::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(NormalizeArrays::k_DefaultValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(NormalizeArrays::k_RangeMin_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(NormalizeArrays::k_RangeMax_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(NormalizeArrays::k_SelectedDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(NormalizeArrays::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

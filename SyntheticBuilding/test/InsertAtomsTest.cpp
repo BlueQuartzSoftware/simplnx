@@ -41,13 +41,13 @@ TEST_CASE("SyntheticBuilding::InsertAtoms: Instantiation and Parameter Check", "
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(InsertAtoms::k_LatticeConstants_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(InsertAtoms::k_Basis_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(InsertAtoms::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertAtoms::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertAtoms::k_VertexDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertAtoms::k_VertexAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertAtoms::k_AtomFeatureLabelsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertAtoms::k_LatticeConstants_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(InsertAtoms::k_Basis_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(InsertAtoms::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertAtoms::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertAtoms::k_VertexDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertAtoms::k_VertexAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertAtoms::k_AtomFeatureLabelsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

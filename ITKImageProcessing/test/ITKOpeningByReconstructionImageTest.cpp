@@ -41,12 +41,12 @@ TEST_CASE("ITKImageProcessing::ITKOpeningByReconstructionImage: Instantiation an
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKOpeningByReconstructionImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ITKOpeningByReconstructionImage::k_FullyConnected_Key, std::make_any<bool>(false));
-  args.insert(ITKOpeningByReconstructionImage::k_PreserveIntensities_Key, std::make_any<bool>(false));
-  args.insert(ITKOpeningByReconstructionImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKOpeningByReconstructionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKOpeningByReconstructionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKOpeningByReconstructionImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ITKOpeningByReconstructionImage::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKOpeningByReconstructionImage::k_PreserveIntensities_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKOpeningByReconstructionImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKOpeningByReconstructionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKOpeningByReconstructionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

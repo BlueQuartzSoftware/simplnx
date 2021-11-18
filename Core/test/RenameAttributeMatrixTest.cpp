@@ -38,8 +38,8 @@ TEST_CASE("Core::RenameAttributeMatrix: Instantiation and Parameter Check", "[Co
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(RenameAttributeMatrix::k_SelectedAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(RenameAttributeMatrix::k_NewAttributeMatrix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(RenameAttributeMatrix::k_SelectedAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RenameAttributeMatrix::k_NewAttributeMatrix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

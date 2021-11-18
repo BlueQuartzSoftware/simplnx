@@ -39,10 +39,10 @@ TEST_CASE("ITKImageProcessing::ITKSpeckleNoiseImage: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKSpeckleNoiseImage::k_StandardDeviation_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKSpeckleNoiseImage::k_Seed_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKSpeckleNoiseImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKSpeckleNoiseImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKSpeckleNoiseImage::k_StandardDeviation_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKSpeckleNoiseImage::k_Seed_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKSpeckleNoiseImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKSpeckleNoiseImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

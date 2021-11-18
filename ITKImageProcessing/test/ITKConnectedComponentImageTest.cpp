@@ -39,9 +39,9 @@ TEST_CASE("ITKImageProcessing::ITKConnectedComponentImage: Instantiation and Par
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKConnectedComponentImage::k_FullyConnected_Key, std::make_any<bool>(false));
-  args.insert(ITKConnectedComponentImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKConnectedComponentImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKConnectedComponentImage::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKConnectedComponentImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKConnectedComponentImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

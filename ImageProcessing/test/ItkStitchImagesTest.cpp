@@ -40,12 +40,12 @@ TEST_CASE("ImageProcessing::ItkStitchImages: Instantiation and Parameter Check",
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ItkStitchImages::k_AttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkStitchImages::k_StitchedCoordinatesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkStitchImages::k_AttributeArrayNamesPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkStitchImages::k_StitchedVolumeDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkStitchImages::k_StitchedAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkStitchImages::k_StitchedImagesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkStitchImages::k_AttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkStitchImages::k_StitchedCoordinatesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkStitchImages::k_AttributeArrayNamesPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkStitchImages::k_StitchedVolumeDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkStitchImages::k_StitchedAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkStitchImages::k_StitchedImagesArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

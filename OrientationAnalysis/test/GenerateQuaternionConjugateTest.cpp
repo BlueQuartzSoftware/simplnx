@@ -39,9 +39,9 @@ TEST_CASE("OrientationAnalysis::GenerateQuaternionConjugate: Instantiation and P
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(GenerateQuaternionConjugate::k_QuaternionDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateQuaternionConjugate::k_OutputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateQuaternionConjugate::k_DeleteOriginalData_Key, std::make_any<bool>(false));
+  args.insertOrAssign(GenerateQuaternionConjugate::k_QuaternionDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateQuaternionConjugate::k_OutputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateQuaternionConjugate::k_DeleteOriginalData_Key, std::make_any<bool>(false));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

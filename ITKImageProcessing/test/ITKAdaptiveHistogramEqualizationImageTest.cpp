@@ -40,11 +40,11 @@ TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImage: Instantiat
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKAdaptiveHistogramEqualizationImage::k_Radius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKAdaptiveHistogramEqualizationImage::k_Alpha_Key, std::make_any<float32>(1.23345f));
-  args.insert(ITKAdaptiveHistogramEqualizationImage::k_Beta_Key, std::make_any<float32>(1.23345f));
-  args.insert(ITKAdaptiveHistogramEqualizationImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKAdaptiveHistogramEqualizationImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Radius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Alpha_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Beta_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

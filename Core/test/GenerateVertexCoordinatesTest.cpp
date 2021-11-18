@@ -38,8 +38,8 @@ TEST_CASE("Core::GenerateVertexCoordinates: Instantiation and Parameter Check", 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(GenerateVertexCoordinates::k_SelectedDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateVertexCoordinates::k_CoordinateArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateVertexCoordinates::k_SelectedDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateVertexCoordinates::k_CoordinateArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

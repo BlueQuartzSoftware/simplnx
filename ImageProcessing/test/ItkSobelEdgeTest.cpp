@@ -39,10 +39,10 @@ TEST_CASE("ImageProcessing::ItkSobelEdge: Instantiation and Parameter Check", "[
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ItkSobelEdge::k_Slice_Key, std::make_any<bool>(false));
-  args.insert(ItkSobelEdge::k_SaveAsNewArray_Key, std::make_any<bool>(false));
-  args.insert(ItkSobelEdge::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkSobelEdge::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkSobelEdge::k_Slice_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ItkSobelEdge::k_SaveAsNewArray_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ItkSobelEdge::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkSobelEdge::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -39,12 +39,12 @@ TEST_CASE("DREAM3DReview::PottsModel: Instantiation and Parameter Check", "[DREA
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(PottsModel::k_Iterations_Key, std::make_any<int32>(1234356));
-  args.insert(PottsModel::k_Temperature_Key, std::make_any<float64>(2.3456789));
-  args.insert(PottsModel::k_PeriodicBoundaries_Key, std::make_any<bool>(false));
-  args.insert(PottsModel::k_UseMask_Key, std::make_any<bool>(false));
-  args.insert(PottsModel::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(PottsModel::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PottsModel::k_Iterations_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(PottsModel::k_Temperature_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(PottsModel::k_PeriodicBoundaries_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PottsModel::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PottsModel::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PottsModel::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

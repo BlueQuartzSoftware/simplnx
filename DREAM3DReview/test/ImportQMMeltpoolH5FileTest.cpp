@@ -41,11 +41,11 @@ TEST_CASE("DREAM3DReview::ImportQMMeltpoolH5File: Instantiation and Parameter Ch
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(ImportQMMeltpoolH5File::k_InputFiles_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(ImportQMMeltpoolH5File::k_SliceRange_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
-  args.insert(ImportQMMeltpoolH5File::k_DataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ImportQMMeltpoolH5File::k_VertexAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ImportQMMeltpoolH5File::k_Power_Key, std::make_any<float32>(1.23345f));
+  /*[x]*/ args.insertOrAssign(ImportQMMeltpoolH5File::k_InputFiles_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(ImportQMMeltpoolH5File::k_SliceRange_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
+  args.insertOrAssign(ImportQMMeltpoolH5File::k_DataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ImportQMMeltpoolH5File::k_VertexAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportQMMeltpoolH5File::k_Power_Key, std::make_any<float32>(1.23345f));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

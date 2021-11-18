@@ -43,11 +43,11 @@ TEST_CASE("ImportExport::AbaqusHexahedronWriter: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(AbaqusHexahedronWriter::k_HourglassStiffness_Key, std::make_any<int32>(1234356));
-  args.insert(AbaqusHexahedronWriter::k_JobName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(AbaqusHexahedronWriter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
-  args.insert(AbaqusHexahedronWriter::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(AbaqusHexahedronWriter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AbaqusHexahedronWriter::k_HourglassStiffness_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(AbaqusHexahedronWriter::k_JobName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(AbaqusHexahedronWriter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
+  args.insertOrAssign(AbaqusHexahedronWriter::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(AbaqusHexahedronWriter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -39,10 +39,10 @@ TEST_CASE("ITKImageProcessing::ITKApproximateSignedDistanceMapImage: Instantiati
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKApproximateSignedDistanceMapImage::k_InsideValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKApproximateSignedDistanceMapImage::k_OutsideValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKApproximateSignedDistanceMapImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKApproximateSignedDistanceMapImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKApproximateSignedDistanceMapImage::k_InsideValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKApproximateSignedDistanceMapImage::k_OutsideValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKApproximateSignedDistanceMapImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKApproximateSignedDistanceMapImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

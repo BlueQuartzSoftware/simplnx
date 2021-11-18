@@ -43,11 +43,11 @@ TEST_CASE("SimulationIO::ExportOnScaleTableFile: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ExportOnScaleTableFile::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
-  args.insert(ExportOnScaleTableFile::k_OutputFilePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ExportOnScaleTableFile::k_NumKeypoints_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
-  args.insert(ExportOnScaleTableFile::k_PhaseNamesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExportOnScaleTableFile::k_PzflexFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExportOnScaleTableFile::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
+  args.insertOrAssign(ExportOnScaleTableFile::k_OutputFilePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ExportOnScaleTableFile::k_NumKeypoints_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
+  args.insertOrAssign(ExportOnScaleTableFile::k_PhaseNamesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExportOnScaleTableFile::k_PzflexFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

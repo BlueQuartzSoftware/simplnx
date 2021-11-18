@@ -42,12 +42,12 @@ TEST_CASE("DREAM3DReview::SteinerCompact: Instantiation and Parameter Check", "[
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(SteinerCompact::k_VtkOutput_Key, std::make_any<bool>(false));
-  args.insert(SteinerCompact::k_VtkFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(SteinerCompact::k_TxtOutput_Key, std::make_any<bool>(false));
-  args.insert(SteinerCompact::k_TxtFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(SteinerCompact::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(SteinerCompact::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SteinerCompact::k_VtkOutput_Key, std::make_any<bool>(false));
+  args.insertOrAssign(SteinerCompact::k_VtkFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(SteinerCompact::k_TxtOutput_Key, std::make_any<bool>(false));
+  args.insertOrAssign(SteinerCompact::k_TxtFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(SteinerCompact::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SteinerCompact::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -43,11 +43,11 @@ TEST_CASE("Reconstruction::AlignSectionsFeatureCentroid: Instantiation and Param
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(AlignSectionsFeatureCentroid::k_WriteAlignmentShifts_Key, std::make_any<bool>(false));
-  args.insert(AlignSectionsFeatureCentroid::k_AlignmentShiftFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(AlignSectionsFeatureCentroid::k_UseReferenceSlice_Key, std::make_any<bool>(false));
-  args.insert(AlignSectionsFeatureCentroid::k_ReferenceSlice_Key, std::make_any<int32>(1234356));
-  args.insert(AlignSectionsFeatureCentroid::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AlignSectionsFeatureCentroid::k_WriteAlignmentShifts_Key, std::make_any<bool>(false));
+  args.insertOrAssign(AlignSectionsFeatureCentroid::k_AlignmentShiftFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(AlignSectionsFeatureCentroid::k_UseReferenceSlice_Key, std::make_any<bool>(false));
+  args.insertOrAssign(AlignSectionsFeatureCentroid::k_ReferenceSlice_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(AlignSectionsFeatureCentroid::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

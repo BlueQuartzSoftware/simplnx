@@ -39,15 +39,15 @@ TEST_CASE("OrientationAnalysis::FindGBCD: Instantiation and Parameter Check", "[
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindGBCD::k_GBCDRes_Key, std::make_any<float32>(1.23345f));
-  args.insert(FindGBCD::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindGBCD::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindGBCD::k_SurfaceMeshFaceAreasArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindGBCD::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindGBCD::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindGBCD::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindGBCD::k_FaceEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindGBCD::k_GBCDArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindGBCD::k_GBCDRes_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(FindGBCD::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindGBCD::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindGBCD::k_SurfaceMeshFaceAreasArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindGBCD::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindGBCD::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindGBCD::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindGBCD::k_FaceEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindGBCD::k_GBCDArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

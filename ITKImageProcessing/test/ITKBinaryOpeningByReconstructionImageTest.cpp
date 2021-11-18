@@ -42,13 +42,13 @@ TEST_CASE("ITKImageProcessing::ITKBinaryOpeningByReconstructionImage: Instantiat
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKBinaryOpeningByReconstructionImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ITKBinaryOpeningByReconstructionImage::k_ForegroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKBinaryOpeningByReconstructionImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKBinaryOpeningByReconstructionImage::k_FullyConnected_Key, std::make_any<bool>(false));
-  args.insert(ITKBinaryOpeningByReconstructionImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKBinaryOpeningByReconstructionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKBinaryOpeningByReconstructionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_ForegroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_KernelRadius_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -39,11 +39,11 @@ TEST_CASE("ITKImageProcessing::ITKDanielssonDistanceMapImage: Instantiation and 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKDanielssonDistanceMapImage::k_InputIsBinary_Key, std::make_any<bool>(false));
-  args.insert(ITKDanielssonDistanceMapImage::k_SquaredDistance_Key, std::make_any<bool>(false));
-  args.insert(ITKDanielssonDistanceMapImage::k_UseImageSpacing_Key, std::make_any<bool>(false));
-  args.insert(ITKDanielssonDistanceMapImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKDanielssonDistanceMapImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKDanielssonDistanceMapImage::k_InputIsBinary_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKDanielssonDistanceMapImage::k_SquaredDistance_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKDanielssonDistanceMapImage::k_UseImageSpacing_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKDanielssonDistanceMapImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKDanielssonDistanceMapImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

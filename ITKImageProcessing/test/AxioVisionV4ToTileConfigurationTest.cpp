@@ -40,8 +40,8 @@ TEST_CASE("ITKImageProcessing::AxioVisionV4ToTileConfiguration: Instantiation an
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(AxioVisionV4ToTileConfiguration::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(AxioVisionV4ToTileConfiguration::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(AxioVisionV4ToTileConfiguration::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(AxioVisionV4ToTileConfiguration::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

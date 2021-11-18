@@ -40,12 +40,12 @@ TEST_CASE("ITKImageProcessing::ITKRegionalMaximaImage: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKRegionalMaximaImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKRegionalMaximaImage::k_ForegroundValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKRegionalMaximaImage::k_FullyConnected_Key, std::make_any<bool>(false));
-  args.insert(ITKRegionalMaximaImage::k_FlatIsMaxima_Key, std::make_any<bool>(false));
-  args.insert(ITKRegionalMaximaImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKRegionalMaximaImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKRegionalMaximaImage::k_BackgroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKRegionalMaximaImage::k_ForegroundValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKRegionalMaximaImage::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKRegionalMaximaImage::k_FlatIsMaxima_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKRegionalMaximaImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKRegionalMaximaImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

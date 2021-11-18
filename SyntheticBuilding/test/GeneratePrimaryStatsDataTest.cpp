@@ -44,23 +44,23 @@ TEST_CASE("SyntheticBuilding::GeneratePrimaryStatsData: Instantiation and Parame
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(GeneratePrimaryStatsData::k_PhaseName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(GeneratePrimaryStatsData::k_CrystalSymmetry_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(GeneratePrimaryStatsData::k_MicroPresetModel_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(GeneratePrimaryStatsData::k_PhaseFraction_Key, std::make_any<float64>(2.3456789));
-  args.insert(GeneratePrimaryStatsData::k_Mu_Key, std::make_any<float64>(2.3456789));
-  args.insert(GeneratePrimaryStatsData::k_Sigma_Key, std::make_any<float64>(2.3456789));
-  args.insert(GeneratePrimaryStatsData::k_MinCutOff_Key, std::make_any<float64>(2.3456789));
-  args.insert(GeneratePrimaryStatsData::k_MaxCutOff_Key, std::make_any<float64>(2.3456789));
-  args.insert(GeneratePrimaryStatsData::k_BinStepSize_Key, std::make_any<float64>(2.3456789));
-  /*[x]*/ args.insert(GeneratePrimaryStatsData::k_OdfData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  /*[x]*/ args.insert(GeneratePrimaryStatsData::k_MdfData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  /*[x]*/ args.insert(GeneratePrimaryStatsData::k_AxisOdfData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(GeneratePrimaryStatsData::k_CreateEnsembleAttributeMatrix_Key, std::make_any<bool>(false));
-  args.insert(GeneratePrimaryStatsData::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GeneratePrimaryStatsData::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GeneratePrimaryStatsData::k_AppendToExistingAttributeMatrix_Key, std::make_any<bool>(false));
-  args.insert(GeneratePrimaryStatsData::k_SelectedEnsembleAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GeneratePrimaryStatsData::k_PhaseName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(GeneratePrimaryStatsData::k_CrystalSymmetry_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(GeneratePrimaryStatsData::k_MicroPresetModel_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(GeneratePrimaryStatsData::k_PhaseFraction_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(GeneratePrimaryStatsData::k_Mu_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(GeneratePrimaryStatsData::k_Sigma_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(GeneratePrimaryStatsData::k_MinCutOff_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(GeneratePrimaryStatsData::k_MaxCutOff_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(GeneratePrimaryStatsData::k_BinStepSize_Key, std::make_any<float64>(2.3456789));
+  /*[x]*/ args.insertOrAssign(GeneratePrimaryStatsData::k_OdfData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(GeneratePrimaryStatsData::k_MdfData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(GeneratePrimaryStatsData::k_AxisOdfData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(GeneratePrimaryStatsData::k_CreateEnsembleAttributeMatrix_Key, std::make_any<bool>(false));
+  args.insertOrAssign(GeneratePrimaryStatsData::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GeneratePrimaryStatsData::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GeneratePrimaryStatsData::k_AppendToExistingAttributeMatrix_Key, std::make_any<bool>(false));
+  args.insertOrAssign(GeneratePrimaryStatsData::k_SelectedEnsembleAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

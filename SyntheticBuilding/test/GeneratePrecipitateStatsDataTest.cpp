@@ -45,26 +45,26 @@ TEST_CASE("SyntheticBuilding::GeneratePrecipitateStatsData: Instantiation and Pa
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(GeneratePrecipitateStatsData::k_PhaseName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(GeneratePrecipitateStatsData::k_CrystalSymmetry_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(GeneratePrecipitateStatsData::k_MicroPresetModel_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(GeneratePrecipitateStatsData::k_PhaseFraction_Key, std::make_any<float64>(2.3456789));
-  args.insert(GeneratePrecipitateStatsData::k_Mu_Key, std::make_any<float64>(2.3456789));
-  args.insert(GeneratePrecipitateStatsData::k_Sigma_Key, std::make_any<float64>(2.3456789));
-  args.insert(GeneratePrecipitateStatsData::k_MinCutOff_Key, std::make_any<float64>(2.3456789));
-  args.insert(GeneratePrecipitateStatsData::k_MaxCutOff_Key, std::make_any<float64>(2.3456789));
-  args.insert(GeneratePrecipitateStatsData::k_BinStepSize_Key, std::make_any<float64>(2.3456789));
-  /*[x]*/ args.insert(GeneratePrecipitateStatsData::k_OdfData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  /*[x]*/ args.insert(GeneratePrecipitateStatsData::k_MdfData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  /*[x]*/ args.insert(GeneratePrecipitateStatsData::k_AxisOdfData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(GeneratePrecipitateStatsData::k_RdfMinMaxDistance_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(2)));
-  args.insert(GeneratePrecipitateStatsData::k_RdfNumBins_Key, std::make_any<int32>(1234356));
-  args.insert(GeneratePrecipitateStatsData::k_RdfBoxSize_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(GeneratePrecipitateStatsData::k_CreateEnsembleAttributeMatrix_Key, std::make_any<bool>(false));
-  args.insert(GeneratePrecipitateStatsData::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GeneratePrecipitateStatsData::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GeneratePrecipitateStatsData::k_AppendToExistingAttributeMatrix_Key, std::make_any<bool>(false));
-  args.insert(GeneratePrecipitateStatsData::k_SelectedEnsembleAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_PhaseName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_CrystalSymmetry_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_MicroPresetModel_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_PhaseFraction_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_Mu_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_Sigma_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_MinCutOff_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_MaxCutOff_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_BinStepSize_Key, std::make_any<float64>(2.3456789));
+  /*[x]*/ args.insertOrAssign(GeneratePrecipitateStatsData::k_OdfData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(GeneratePrecipitateStatsData::k_MdfData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(GeneratePrecipitateStatsData::k_AxisOdfData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_RdfMinMaxDistance_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(2)));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_RdfNumBins_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_RdfBoxSize_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_CreateEnsembleAttributeMatrix_Key, std::make_any<bool>(false));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_AppendToExistingAttributeMatrix_Key, std::make_any<bool>(false));
+  args.insertOrAssign(GeneratePrecipitateStatsData::k_SelectedEnsembleAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -38,8 +38,8 @@ TEST_CASE("ImageProcessing::ItkConvertArrayTo8BitImage: Instantiation and Parame
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ItkConvertArrayTo8BitImage::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkConvertArrayTo8BitImage::k_NewArrayArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkConvertArrayTo8BitImage::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkConvertArrayTo8BitImage::k_NewArrayArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -43,22 +43,22 @@ TEST_CASE("DREAM3DReview::InterpolatePointCloudToRegularGrid: Instantiation and 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(InterpolatePointCloudToRegularGrid::k_UseMask_Key, std::make_any<bool>(false));
-  args.insert(InterpolatePointCloudToRegularGrid::k_StoreKernelDistances_Key, std::make_any<bool>(false));
-  args.insert(InterpolatePointCloudToRegularGrid::k_KernelSize_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(InterpolatePointCloudToRegularGrid::k_Sigmas_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(InterpolatePointCloudToRegularGrid::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InterpolatePointCloudToRegularGrid::k_InterpolatedDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InterpolatePointCloudToRegularGrid::k_VoxelIndicesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InterpolatePointCloudToRegularGrid::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InterpolatePointCloudToRegularGrid::k_ArraysToInterpolate_Key,
-              std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(InterpolatePointCloudToRegularGrid::k_ArraysToCopy_Key,
-              std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(InterpolatePointCloudToRegularGrid::k_InterpolatedAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InterpolatePointCloudToRegularGrid::k_KernelDistancesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InterpolatePointCloudToRegularGrid::k_InterpolatedSuffix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(InterpolatePointCloudToRegularGrid::k_CopySuffix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(InterpolatePointCloudToRegularGrid::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(InterpolatePointCloudToRegularGrid::k_StoreKernelDistances_Key, std::make_any<bool>(false));
+  args.insertOrAssign(InterpolatePointCloudToRegularGrid::k_KernelSize_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(InterpolatePointCloudToRegularGrid::k_Sigmas_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(InterpolatePointCloudToRegularGrid::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InterpolatePointCloudToRegularGrid::k_InterpolatedDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InterpolatePointCloudToRegularGrid::k_VoxelIndicesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InterpolatePointCloudToRegularGrid::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InterpolatePointCloudToRegularGrid::k_ArraysToInterpolate_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(InterpolatePointCloudToRegularGrid::k_ArraysToCopy_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(InterpolatePointCloudToRegularGrid::k_InterpolatedAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InterpolatePointCloudToRegularGrid::k_KernelDistancesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InterpolatePointCloudToRegularGrid::k_InterpolatedSuffix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(InterpolatePointCloudToRegularGrid::k_CopySuffix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -39,12 +39,12 @@ TEST_CASE("DREAM3DReview::ExtractTripleLinesFromTriangleGeometry: Instantiation 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ExtractTripleLinesFromTriangleGeometry::k_SmoothTripleLines_Key, std::make_any<bool>(false));
-  args.insert(ExtractTripleLinesFromTriangleGeometry::k_NodeTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractTripleLinesFromTriangleGeometry::k_EdgeGeometry_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ExtractTripleLinesFromTriangleGeometry::k_VertexAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ExtractTripleLinesFromTriangleGeometry::k_NodeTypesArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ExtractTripleLinesFromTriangleGeometry::k_EdgeAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ExtractTripleLinesFromTriangleGeometry::k_SmoothTripleLines_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ExtractTripleLinesFromTriangleGeometry::k_NodeTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractTripleLinesFromTriangleGeometry::k_EdgeGeometry_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ExtractTripleLinesFromTriangleGeometry::k_VertexAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ExtractTripleLinesFromTriangleGeometry::k_NodeTypesArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ExtractTripleLinesFromTriangleGeometry::k_EdgeAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -44,21 +44,21 @@ TEST_CASE("SyntheticBuilding::InsertPrecipitatePhases: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(InsertPrecipitatePhases::k_PeriodicBoundaries_Key, std::make_any<bool>(false));
-  args.insert(InsertPrecipitatePhases::k_MatchRDF_Key, std::make_any<bool>(false));
-  args.insert(InsertPrecipitatePhases::k_UseMask_Key, std::make_any<bool>(false));
-  args.insert(InsertPrecipitatePhases::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertPrecipitatePhases::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertPrecipitatePhases::k_BoundaryCellsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertPrecipitatePhases::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertPrecipitatePhases::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertPrecipitatePhases::k_InputStatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertPrecipitatePhases::k_InputPhaseTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertPrecipitatePhases::k_InputShapeTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertPrecipitatePhases::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertPrecipitatePhases::k_PrecipInputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(InsertPrecipitatePhases::k_NewAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InsertPrecipitatePhases::k_SelectedAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertPrecipitatePhases::k_PeriodicBoundaries_Key, std::make_any<bool>(false));
+  args.insertOrAssign(InsertPrecipitatePhases::k_MatchRDF_Key, std::make_any<bool>(false));
+  args.insertOrAssign(InsertPrecipitatePhases::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(InsertPrecipitatePhases::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertPrecipitatePhases::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertPrecipitatePhases::k_BoundaryCellsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertPrecipitatePhases::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertPrecipitatePhases::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertPrecipitatePhases::k_InputStatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertPrecipitatePhases::k_InputPhaseTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertPrecipitatePhases::k_InputShapeTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertPrecipitatePhases::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertPrecipitatePhases::k_PrecipInputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(InsertPrecipitatePhases::k_NewAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertPrecipitatePhases::k_SelectedAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

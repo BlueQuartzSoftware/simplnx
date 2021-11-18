@@ -44,13 +44,13 @@ TEST_CASE("SimulationIO::ExportDAMASKFiles: Instantiation and Parameter Check", 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ExportDAMASKFiles::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
-  args.insert(ExportDAMASKFiles::k_GeometryFileName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ExportDAMASKFiles::k_HomogenizationIndex_Key, std::make_any<int32>(1234356));
-  args.insert(ExportDAMASKFiles::k_CompressGeomFile_Key, std::make_any<bool>(false));
-  args.insert(ExportDAMASKFiles::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExportDAMASKFiles::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExportDAMASKFiles::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExportDAMASKFiles::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
+  args.insertOrAssign(ExportDAMASKFiles::k_GeometryFileName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ExportDAMASKFiles::k_HomogenizationIndex_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ExportDAMASKFiles::k_CompressGeomFile_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ExportDAMASKFiles::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExportDAMASKFiles::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExportDAMASKFiles::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -41,8 +41,8 @@ TEST_CASE("DREAM3DReview::WaveFrontObjectFileWriter: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(WaveFrontObjectFileWriter::k_OutputWaveFrontFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(WaveFrontObjectFileWriter::k_TriangleGeometry_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(WaveFrontObjectFileWriter::k_OutputWaveFrontFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(WaveFrontObjectFileWriter::k_TriangleGeometry_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

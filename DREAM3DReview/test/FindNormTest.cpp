@@ -39,9 +39,9 @@ TEST_CASE("DREAM3DReview::FindNorm: Instantiation and Parameter Check", "[DREAM3
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindNorm::k_PSpace_Key, std::make_any<float32>(1.23345f));
-  args.insert(FindNorm::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNorm::k_NormArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNorm::k_PSpace_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(FindNorm::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNorm::k_NormArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

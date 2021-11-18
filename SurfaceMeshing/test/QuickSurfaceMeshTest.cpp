@@ -41,15 +41,16 @@ TEST_CASE("SurfaceMeshing::QuickSurfaceMesh: Instantiation and Parameter Check",
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(QuickSurfaceMesh::k_FixProblemVoxels_Key, std::make_any<bool>(false));
-  args.insert(QuickSurfaceMesh::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(QuickSurfaceMesh::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(QuickSurfaceMesh::k_SurfaceDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(QuickSurfaceMesh::k_VertexAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(QuickSurfaceMesh::k_NodeTypesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(QuickSurfaceMesh::k_FaceAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(QuickSurfaceMesh::k_FaceLabelsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(QuickSurfaceMesh::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(QuickSurfaceMesh::k_FixProblemVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(QuickSurfaceMesh::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(QuickSurfaceMesh::k_SelectedDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(QuickSurfaceMesh::k_SurfaceDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(QuickSurfaceMesh::k_VertexAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(QuickSurfaceMesh::k_NodeTypesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(QuickSurfaceMesh::k_FaceAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(QuickSurfaceMesh::k_FaceLabelsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(QuickSurfaceMesh::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

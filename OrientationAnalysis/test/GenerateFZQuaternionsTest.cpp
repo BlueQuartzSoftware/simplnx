@@ -39,12 +39,12 @@ TEST_CASE("OrientationAnalysis::GenerateFZQuaternions: Instantiation and Paramet
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(GenerateFZQuaternions::k_UseGoodVoxels_Key, std::make_any<bool>(false));
-  args.insert(GenerateFZQuaternions::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFZQuaternions::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFZQuaternions::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFZQuaternions::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFZQuaternions::k_FZQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFZQuaternions::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(GenerateFZQuaternions::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFZQuaternions::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFZQuaternions::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFZQuaternions::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFZQuaternions::k_FZQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

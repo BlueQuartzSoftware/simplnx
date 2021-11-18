@@ -39,9 +39,9 @@ TEST_CASE("DREAM3DReview::RemoveFlaggedVertices: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(RemoveFlaggedVertices::k_VertexGeometry_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(RemoveFlaggedVertices::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(RemoveFlaggedVertices::k_ReducedVertexGeometry_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(RemoveFlaggedVertices::k_VertexGeometry_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RemoveFlaggedVertices::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RemoveFlaggedVertices::k_ReducedVertexGeometry_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

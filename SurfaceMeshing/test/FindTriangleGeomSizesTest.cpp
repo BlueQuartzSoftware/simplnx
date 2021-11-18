@@ -39,9 +39,9 @@ TEST_CASE("SurfaceMeshing::FindTriangleGeomSizes: Instantiation and Parameter Ch
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindTriangleGeomSizes::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTriangleGeomSizes::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTriangleGeomSizes::k_VolumesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomSizes::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomSizes::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomSizes::k_VolumesArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -42,12 +42,13 @@ TEST_CASE("Core::ExtractVertexGeometry: Instantiation and Parameter Check", "[Co
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ExtractVertexGeometry::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ExtractVertexGeometry::k_UseMask_Key, std::make_any<bool>(false));
-  args.insert(ExtractVertexGeometry::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractVertexGeometry::k_SelectedDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractVertexGeometry::k_IncludedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  args.insert(ExtractVertexGeometry::k_VertexDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractVertexGeometry::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ExtractVertexGeometry::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ExtractVertexGeometry::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractVertexGeometry::k_SelectedDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractVertexGeometry::k_IncludedDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(ExtractVertexGeometry::k_VertexDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

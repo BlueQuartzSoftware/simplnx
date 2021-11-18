@@ -39,9 +39,9 @@ TEST_CASE("Core::ExtractComponentAsArray: Instantiation and Parameter Check", "[
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ExtractComponentAsArray::k_CompNumber_Key, std::make_any<int32>(1234356));
-  args.insert(ExtractComponentAsArray::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExtractComponentAsArray::k_NewArrayArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractComponentAsArray::k_CompNumber_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ExtractComponentAsArray::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractComponentAsArray::k_NewArrayArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

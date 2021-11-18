@@ -38,10 +38,10 @@ TEST_CASE("ImageProcessing::ItkGrayToRGB: Instantiation and Parameter Check", "[
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ItkGrayToRGB::k_RedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkGrayToRGB::k_GreenArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkGrayToRGB::k_BlueArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkGrayToRGB::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkGrayToRGB::k_RedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkGrayToRGB::k_GreenArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkGrayToRGB::k_BlueArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkGrayToRGB::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

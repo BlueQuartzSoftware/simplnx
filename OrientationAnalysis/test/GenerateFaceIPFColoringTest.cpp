@@ -38,12 +38,12 @@ TEST_CASE("OrientationAnalysis::GenerateFaceIPFColoring: Instantiation and Param
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(GenerateFaceIPFColoring::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFaceIPFColoring::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFaceIPFColoring::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFaceIPFColoring::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFaceIPFColoring::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFaceIPFColoring::k_SurfaceMeshFaceIPFColorsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFaceIPFColoring::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFaceIPFColoring::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFaceIPFColoring::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFaceIPFColoring::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFaceIPFColoring::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFaceIPFColoring::k_SurfaceMeshFaceIPFColorsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

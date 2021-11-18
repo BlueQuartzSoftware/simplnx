@@ -39,9 +39,9 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleFillholeImage: Instantiation and Para
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKGrayscaleFillholeImage::k_FullyConnected_Key, std::make_any<bool>(false));
-  args.insert(ITKGrayscaleFillholeImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKGrayscaleFillholeImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKGrayscaleFillholeImage::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKGrayscaleFillholeImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKGrayscaleFillholeImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

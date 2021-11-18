@@ -37,7 +37,7 @@ TEST_CASE("SurfaceMeshing::TriangleCentroidFilter: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(TriangleCentroidFilter::k_SurfaceMeshTriangleCentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(TriangleCentroidFilter::k_SurfaceMeshTriangleCentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

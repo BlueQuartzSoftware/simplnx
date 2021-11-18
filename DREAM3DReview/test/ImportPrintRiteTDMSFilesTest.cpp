@@ -46,24 +46,24 @@ TEST_CASE("DREAM3DReview::ImportPrintRiteTDMSFiles: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ImportPrintRiteTDMSFiles::k_LayerThickness_Key, std::make_any<float32>(1.23345f));
-  args.insert(ImportPrintRiteTDMSFiles::k_LaserOnArrayOption_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ImportPrintRiteTDMSFiles::k_LaserOnThreshold_Key, std::make_any<float32>(1.23345f));
-  args.insert(ImportPrintRiteTDMSFiles::k_DowncastRawData_Key, std::make_any<bool>(false));
-  args.insert(ImportPrintRiteTDMSFiles::k_ScaleLaserPower_Key, std::make_any<bool>(false));
-  args.insert(ImportPrintRiteTDMSFiles::k_PowerScalingCoefficients_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(2)));
-  args.insert(ImportPrintRiteTDMSFiles::k_ScalePyrometerTemperature_Key, std::make_any<bool>(false));
-  args.insert(ImportPrintRiteTDMSFiles::k_TemperatureScalingCoefficients_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(2)));
-  args.insert(ImportPrintRiteTDMSFiles::k_LayerForScaling_Key, std::make_any<int32>(1234356));
-  args.insert(ImportPrintRiteTDMSFiles::k_SearchRadius_Key, std::make_any<float32>(1.23345f));
-  args.insert(ImportPrintRiteTDMSFiles::k_SplitRegions1_Key, std::make_any<bool>(false));
-  args.insert(ImportPrintRiteTDMSFiles::k_SplitRegions2_Key, std::make_any<bool>(false));
-  args.insert(ImportPrintRiteTDMSFiles::k_STLFilePath1_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ImportPrintRiteTDMSFiles::k_STLFilePath2_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ImportPrintRiteTDMSFiles::k_InputSpatialTransformFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ImportPrintRiteTDMSFiles::k_InputFilesList_Key, std::make_any<GeneratedFileListParameter::ValueType>(GeneratedFileListParameter::ValueType{}));
-  args.insert(ImportPrintRiteTDMSFiles::k_OutputDirectory_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
-  args.insert(ImportPrintRiteTDMSFiles::k_OutputFilePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_LayerThickness_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_LaserOnArrayOption_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_LaserOnThreshold_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_DowncastRawData_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_ScaleLaserPower_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_PowerScalingCoefficients_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(2)));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_ScalePyrometerTemperature_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_TemperatureScalingCoefficients_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(2)));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_LayerForScaling_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_SearchRadius_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_SplitRegions1_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_SplitRegions2_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_STLFilePath1_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_STLFilePath2_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_InputSpatialTransformFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_InputFilesList_Key, std::make_any<GeneratedFileListParameter::ValueType>(GeneratedFileListParameter::ValueType{}));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_OutputDirectory_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
+  args.insertOrAssign(ImportPrintRiteTDMSFiles::k_OutputFilePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

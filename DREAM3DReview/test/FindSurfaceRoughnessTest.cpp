@@ -38,9 +38,9 @@ TEST_CASE("DREAM3DReview::FindSurfaceRoughness: Instantiation and Parameter Chec
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindSurfaceRoughness::k_BoundaryCellsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSurfaceRoughness::k_AttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(FindSurfaceRoughness::k_RoughnessParamsArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(FindSurfaceRoughness::k_BoundaryCellsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSurfaceRoughness::k_AttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(FindSurfaceRoughness::k_RoughnessParamsArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

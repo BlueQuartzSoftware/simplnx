@@ -39,10 +39,10 @@ TEST_CASE("Core::CreateFeatureArrayFromElementArray: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CreateFeatureArrayFromElementArray::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CreateFeatureArrayFromElementArray::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CreateFeatureArrayFromElementArray::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(CreateFeatureArrayFromElementArray::k_CreatedArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateFeatureArrayFromElementArray::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateFeatureArrayFromElementArray::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateFeatureArrayFromElementArray::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateFeatureArrayFromElementArray::k_CreatedArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

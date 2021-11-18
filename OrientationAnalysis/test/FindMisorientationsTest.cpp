@@ -39,13 +39,13 @@ TEST_CASE("OrientationAnalysis::FindMisorientations: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindMisorientations::k_FindAvgMisors_Key, std::make_any<bool>(false));
-  args.insert(FindMisorientations::k_NeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindMisorientations::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindMisorientations::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindMisorientations::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindMisorientations::k_MisorientationListArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindMisorientations::k_AvgMisorientationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindMisorientations::k_FindAvgMisors_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindMisorientations::k_NeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindMisorientations::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindMisorientations::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindMisorientations::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindMisorientations::k_MisorientationListArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindMisorientations::k_AvgMisorientationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

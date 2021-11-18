@@ -38,8 +38,8 @@ TEST_CASE("Core::CreateStringArray: Instantiation and Parameter Check", "[Core][
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(CreateStringArray::k_InitializationValue_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(CreateStringArray::k_NewArray_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateStringArray::k_InitializationValue_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(CreateStringArray::k_NewArray_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

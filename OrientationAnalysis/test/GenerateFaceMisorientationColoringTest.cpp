@@ -38,11 +38,11 @@ TEST_CASE("OrientationAnalysis::GenerateFaceMisorientationColoring: Instantiatio
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(GenerateFaceMisorientationColoring::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFaceMisorientationColoring::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFaceMisorientationColoring::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFaceMisorientationColoring::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFaceMisorientationColoring::k_SurfaceMeshFaceMisorientationColorsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFaceMisorientationColoring::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFaceMisorientationColoring::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFaceMisorientationColoring::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFaceMisorientationColoring::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFaceMisorientationColoring::k_SurfaceMeshFaceMisorientationColorsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

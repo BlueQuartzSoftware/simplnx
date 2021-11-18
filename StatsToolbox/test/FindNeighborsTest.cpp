@@ -40,15 +40,15 @@ TEST_CASE("StatsToolbox::FindNeighbors: Instantiation and Parameter Check", "[St
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindNeighbors::k_StoreBoundaryCells_Key, std::make_any<bool>(false));
-  args.insert(FindNeighbors::k_StoreSurfaceFeatures_Key, std::make_any<bool>(false));
-  args.insert(FindNeighbors::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighbors::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighbors::k_BoundaryCellsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighbors::k_NumNeighborsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighbors::k_NeighborListArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighbors::k_SharedSurfaceAreaListArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindNeighbors::k_SurfaceFeaturesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighbors::k_StoreBoundaryCells_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindNeighbors::k_StoreSurfaceFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindNeighbors::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighbors::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighbors::k_BoundaryCellsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighbors::k_NumNeighborsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighbors::k_NeighborListArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighbors::k_SharedSurfaceAreaListArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighbors::k_SurfaceFeaturesArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

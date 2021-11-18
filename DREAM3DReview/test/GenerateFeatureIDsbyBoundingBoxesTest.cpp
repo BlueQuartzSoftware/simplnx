@@ -39,11 +39,11 @@ TEST_CASE("DREAM3DReview::GenerateFeatureIDsbyBoundingBoxes: Instantiation and P
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(GenerateFeatureIDsbyBoundingBoxes::k_FeatureIDsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFeatureIDsbyBoundingBoxes::k_FeatureAttributeMatrixArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFeatureIDsbyBoundingBoxes::k_BoxCenterArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFeatureIDsbyBoundingBoxes::k_BoxDimensionsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateFeatureIDsbyBoundingBoxes::k_BoxFeatureIDsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFeatureIDsbyBoundingBoxes::k_FeatureIDsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFeatureIDsbyBoundingBoxes::k_FeatureAttributeMatrixArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFeatureIDsbyBoundingBoxes::k_BoxCenterArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFeatureIDsbyBoundingBoxes::k_BoxDimensionsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFeatureIDsbyBoundingBoxes::k_BoxFeatureIDsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

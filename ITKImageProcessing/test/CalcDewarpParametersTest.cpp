@@ -41,18 +41,18 @@ TEST_CASE("ITKImageProcessing::CalcDewarpParameters: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(CalcDewarpParameters::k_MontageName_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(CalcDewarpParameters::k_MaxIterations_Key, std::make_any<int32>(1234356));
-  args.insert(CalcDewarpParameters::k_Delta_Key, std::make_any<int32>(1234356));
-  args.insert(CalcDewarpParameters::k_FractionalTolerance_Key, std::make_any<float64>(2.3456789));
-  args.insert(CalcDewarpParameters::k_SpecifyInitialSimplex_Key, std::make_any<bool>(false));
-  /*[x]*/ args.insert(CalcDewarpParameters::k_XFactors_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  /*[x]*/ args.insert(CalcDewarpParameters::k_YFactors_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insert(CalcDewarpParameters::k_AttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(CalcDewarpParameters::k_IPFColorsArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(CalcDewarpParameters::k_TransformDCName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(CalcDewarpParameters::k_TransformMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(CalcDewarpParameters::k_TransformArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  /*[x]*/ args.insertOrAssign(CalcDewarpParameters::k_MontageName_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(CalcDewarpParameters::k_MaxIterations_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(CalcDewarpParameters::k_Delta_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(CalcDewarpParameters::k_FractionalTolerance_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(CalcDewarpParameters::k_SpecifyInitialSimplex_Key, std::make_any<bool>(false));
+  /*[x]*/ args.insertOrAssign(CalcDewarpParameters::k_XFactors_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(CalcDewarpParameters::k_YFactors_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  args.insertOrAssign(CalcDewarpParameters::k_AttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(CalcDewarpParameters::k_IPFColorsArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(CalcDewarpParameters::k_TransformDCName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(CalcDewarpParameters::k_TransformMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(CalcDewarpParameters::k_TransformArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

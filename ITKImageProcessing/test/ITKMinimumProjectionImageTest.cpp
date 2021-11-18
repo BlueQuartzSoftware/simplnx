@@ -39,9 +39,9 @@ TEST_CASE("ITKImageProcessing::ITKMinimumProjectionImage: Instantiation and Para
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKMinimumProjectionImage::k_ProjectionDimension_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKMinimumProjectionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKMinimumProjectionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKMinimumProjectionImage::k_ProjectionDimension_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKMinimumProjectionImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKMinimumProjectionImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

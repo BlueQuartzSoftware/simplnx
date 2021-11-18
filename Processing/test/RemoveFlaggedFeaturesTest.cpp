@@ -39,10 +39,11 @@ TEST_CASE("Processing::RemoveFlaggedFeatures: Instantiation and Parameter Check"
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(RemoveFlaggedFeatures::k_FillRemovedFeatures_Key, std::make_any<bool>(false));
-  args.insert(RemoveFlaggedFeatures::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(RemoveFlaggedFeatures::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(RemoveFlaggedFeatures::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(RemoveFlaggedFeatures::k_FillRemovedFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RemoveFlaggedFeatures::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RemoveFlaggedFeatures::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RemoveFlaggedFeatures::k_IgnoredDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

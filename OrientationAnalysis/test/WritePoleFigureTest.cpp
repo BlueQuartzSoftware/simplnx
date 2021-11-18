@@ -45,20 +45,20 @@ TEST_CASE("OrientationAnalysis::WritePoleFigure: Instantiation and Parameter Che
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(WritePoleFigure::k_Title_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(WritePoleFigure::k_LambertSize_Key, std::make_any<int32>(1234356));
-  args.insert(WritePoleFigure::k_NumColors_Key, std::make_any<int32>(1234356));
-  args.insert(WritePoleFigure::k_ImageFormat_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(WritePoleFigure::k_ImageLayout_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(WritePoleFigure::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
-  args.insert(WritePoleFigure::k_ImagePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(WritePoleFigure::k_ImageSize_Key, std::make_any<int32>(1234356));
-  args.insert(WritePoleFigure::k_UseGoodVoxels_Key, std::make_any<bool>(false));
-  args.insert(WritePoleFigure::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(WritePoleFigure::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(WritePoleFigure::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(WritePoleFigure::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(WritePoleFigure::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(WritePoleFigure::k_Title_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(WritePoleFigure::k_LambertSize_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(WritePoleFigure::k_NumColors_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(WritePoleFigure::k_ImageFormat_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(WritePoleFigure::k_ImageLayout_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(WritePoleFigure::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
+  args.insertOrAssign(WritePoleFigure::k_ImagePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(WritePoleFigure::k_ImageSize_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(WritePoleFigure::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WritePoleFigure::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(WritePoleFigure::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(WritePoleFigure::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(WritePoleFigure::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(WritePoleFigure::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

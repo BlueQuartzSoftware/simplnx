@@ -38,12 +38,12 @@ TEST_CASE("DREAM3DReview::GenerateMaskFromSimpleShapes: Instantiation and Parame
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(GenerateMaskFromSimpleShapes::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateMaskFromSimpleShapes::k_CentersArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateMaskFromSimpleShapes::k_AxesLengthArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateMaskFromSimpleShapes::k_BoxDimensionsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateMaskFromSimpleShapes::k_CylinderRadiusArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(GenerateMaskFromSimpleShapes::k_CylinderHeightArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateMaskFromSimpleShapes::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateMaskFromSimpleShapes::k_CentersArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateMaskFromSimpleShapes::k_AxesLengthArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateMaskFromSimpleShapes::k_BoxDimensionsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateMaskFromSimpleShapes::k_CylinderRadiusArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateMaskFromSimpleShapes::k_CylinderHeightArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

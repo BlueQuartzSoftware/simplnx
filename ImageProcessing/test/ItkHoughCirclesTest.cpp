@@ -40,12 +40,12 @@ TEST_CASE("ImageProcessing::ItkHoughCircles: Instantiation and Parameter Check",
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ItkHoughCircles::k_SaveAsNewArray_Key, std::make_any<bool>(false));
-  args.insert(ItkHoughCircles::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkHoughCircles::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ItkHoughCircles::k_MinRadius_Key, std::make_any<float32>(1.23345f));
-  args.insert(ItkHoughCircles::k_MaxRadius_Key, std::make_any<float32>(1.23345f));
-  args.insert(ItkHoughCircles::k_NumberCircles_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ItkHoughCircles::k_SaveAsNewArray_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ItkHoughCircles::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkHoughCircles::k_NewCellArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkHoughCircles::k_MinRadius_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ItkHoughCircles::k_MaxRadius_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(ItkHoughCircles::k_NumberCircles_Key, std::make_any<int32>(1234356));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

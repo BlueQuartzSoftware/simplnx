@@ -39,13 +39,13 @@ TEST_CASE("Processing::FindProjectedImageStatistics: Instantiation and Parameter
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindProjectedImageStatistics::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(FindProjectedImageStatistics::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindProjectedImageStatistics::k_ProjectedImageMinArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindProjectedImageStatistics::k_ProjectedImageMaxArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindProjectedImageStatistics::k_ProjectedImageAvgArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindProjectedImageStatistics::k_ProjectedImageStdArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindProjectedImageStatistics::k_ProjectedImageVarArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindProjectedImageStatistics::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(FindProjectedImageStatistics::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindProjectedImageStatistics::k_ProjectedImageMinArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindProjectedImageStatistics::k_ProjectedImageMaxArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindProjectedImageStatistics::k_ProjectedImageAvgArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindProjectedImageStatistics::k_ProjectedImageStdArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindProjectedImageStatistics::k_ProjectedImageVarArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -39,9 +39,9 @@ TEST_CASE("SurfaceMeshing::FindTriangleGeomCentroids: Instantiation and Paramete
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindTriangleGeomCentroids::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTriangleGeomCentroids::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindTriangleGeomCentroids::k_CentroidsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomCentroids::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomCentroids::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindTriangleGeomCentroids::k_CentroidsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

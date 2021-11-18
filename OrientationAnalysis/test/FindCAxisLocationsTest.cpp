@@ -38,8 +38,8 @@ TEST_CASE("OrientationAnalysis::FindCAxisLocations: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindCAxisLocations::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindCAxisLocations::k_CAxisLocationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindCAxisLocations::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindCAxisLocations::k_CAxisLocationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

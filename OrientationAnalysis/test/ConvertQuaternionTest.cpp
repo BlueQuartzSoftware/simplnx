@@ -40,10 +40,10 @@ TEST_CASE("OrientationAnalysis::ConvertQuaternion: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ConvertQuaternion::k_QuaternionDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ConvertQuaternion::k_OutputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ConvertQuaternion::k_DeleteOriginalData_Key, std::make_any<bool>(false));
-  args.insert(ConvertQuaternion::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ConvertQuaternion::k_QuaternionDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ConvertQuaternion::k_OutputDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ConvertQuaternion::k_DeleteOriginalData_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ConvertQuaternion::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(0));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

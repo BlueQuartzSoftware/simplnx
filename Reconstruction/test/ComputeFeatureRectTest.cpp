@@ -38,8 +38,8 @@ TEST_CASE("Reconstruction::ComputeFeatureRect: Instantiation and Parameter Check
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ComputeFeatureRect::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ComputeFeatureRect::k_FeatureRectArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ComputeFeatureRect::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ComputeFeatureRect::k_FeatureRectArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

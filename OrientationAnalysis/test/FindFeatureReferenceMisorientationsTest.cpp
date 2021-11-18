@@ -38,14 +38,14 @@ TEST_CASE("OrientationAnalysis::FindFeatureReferenceMisorientations: Instantiati
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindFeatureReferenceMisorientations::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureReferenceMisorientations::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureReferenceMisorientations::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureReferenceMisorientations::k_GBEuclideanDistancesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureReferenceMisorientations::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureReferenceMisorientations::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureReferenceMisorientations::k_FeatureReferenceMisorientationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindFeatureReferenceMisorientations::k_FeatureAvgMisorientationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureReferenceMisorientations::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureReferenceMisorientations::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureReferenceMisorientations::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureReferenceMisorientations::k_GBEuclideanDistancesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureReferenceMisorientations::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureReferenceMisorientations::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureReferenceMisorientations::k_FeatureReferenceMisorientationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureReferenceMisorientations::k_FeatureAvgMisorientationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -37,7 +37,7 @@ TEST_CASE("ImageProcessing::ItkConvertArrayTo8BitImageAttributeMatrix: Instantia
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ItkConvertArrayTo8BitImageAttributeMatrix::k_AttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ItkConvertArrayTo8BitImageAttributeMatrix::k_AttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

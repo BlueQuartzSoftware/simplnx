@@ -37,7 +37,7 @@ TEST_CASE("Core::ExecuteProcess: Instantiation and Parameter Check", "[Core][Exe
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ExecuteProcess::k_Arguments_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ExecuteProcess::k_Arguments_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

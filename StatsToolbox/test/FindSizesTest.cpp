@@ -40,12 +40,12 @@ TEST_CASE("StatsToolbox::FindSizes: Instantiation and Parameter Check", "[StatsT
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FindSizes::k_SaveElementSizes_Key, std::make_any<bool>(false));
-  args.insert(FindSizes::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSizes::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSizes::k_EquivalentDiametersArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSizes::k_NumElementsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FindSizes::k_VolumesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSizes::k_SaveElementSizes_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindSizes::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSizes::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSizes::k_EquivalentDiametersArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSizes::k_NumElementsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSizes::k_VolumesArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

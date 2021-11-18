@@ -43,16 +43,16 @@ TEST_CASE("SyntheticBuilding::InitializeSyntheticVolume: Instantiation and Param
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(InitializeSyntheticVolume::k_EstimateNumberOfFeatures_Key, std::make_any<bool>(false));
-  args.insert(InitializeSyntheticVolume::k_GeometryDataContainer_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InitializeSyntheticVolume::k_InputStatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InitializeSyntheticVolume::k_InputPhaseTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InitializeSyntheticVolume::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InitializeSyntheticVolume::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(InitializeSyntheticVolume::k_Dimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
-  args.insert(InitializeSyntheticVolume::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(InitializeSyntheticVolume::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(InitializeSyntheticVolume::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(InitializeSyntheticVolume::k_EstimateNumberOfFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(InitializeSyntheticVolume::k_GeometryDataContainer_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InitializeSyntheticVolume::k_InputStatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InitializeSyntheticVolume::k_InputPhaseTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InitializeSyntheticVolume::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InitializeSyntheticVolume::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InitializeSyntheticVolume::k_Dimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
+  args.insertOrAssign(InitializeSyntheticVolume::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(InitializeSyntheticVolume::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(InitializeSyntheticVolume::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(0));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

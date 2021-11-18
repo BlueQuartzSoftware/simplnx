@@ -46,23 +46,23 @@ TEST_CASE("ITKImageProcessing::ITKImportRoboMetMontage: Instantiation and Parame
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKImportRoboMetMontage::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insert(ITKImportRoboMetMontage::k_MontageName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ITKImportRoboMetMontage::k_ColumnMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
-  args.insert(ITKImportRoboMetMontage::k_RowMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
-  args.insert(ITKImportRoboMetMontage::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insert(ITKImportRoboMetMontage::k_SliceNumber_Key, std::make_any<int32>(1234356));
-  args.insert(ITKImportRoboMetMontage::k_ImageFilePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ITKImportRoboMetMontage::k_ImageFileExtension_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ITKImportRoboMetMontage::k_ChangeOrigin_Key, std::make_any<bool>(false));
-  args.insert(ITKImportRoboMetMontage::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKImportRoboMetMontage::k_ChangeSpacing_Key, std::make_any<bool>(false));
-  args.insert(ITKImportRoboMetMontage::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKImportRoboMetMontage::k_ConvertToGrayScale_Key, std::make_any<bool>(false));
-  args.insert(ITKImportRoboMetMontage::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insert(ITKImportRoboMetMontage::k_DataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKImportRoboMetMontage::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ITKImportRoboMetMontage::k_ImageDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_MontageName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_ColumnMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_RowMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(2)));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_SliceNumber_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_ImageFilePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_ImageFileExtension_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_ChangeOrigin_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_ChangeSpacing_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_ConvertToGrayScale_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_DataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKImportRoboMetMontage::k_ImageDataArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

@@ -40,10 +40,10 @@ TEST_CASE("ITKImageProcessing::ITKHMinimaImage: Instantiation and Parameter Chec
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKHMinimaImage::k_Height_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKHMinimaImage::k_FullyConnected_Key, std::make_any<bool>(false));
-  args.insert(ITKHMinimaImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKHMinimaImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKHMinimaImage::k_Height_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKHMinimaImage::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ITKHMinimaImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKHMinimaImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

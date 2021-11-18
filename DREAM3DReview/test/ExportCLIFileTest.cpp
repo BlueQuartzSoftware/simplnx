@@ -45,14 +45,14 @@ TEST_CASE("DREAM3DReview::ExportCLIFile: Instantiation and Parameter Check", "[D
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ExportCLIFile::k_UnitsScaleFactor_Key, std::make_any<float64>(2.3456789));
-  args.insert(ExportCLIFile::k_Precision_Key, std::make_any<int32>(1234356));
-  args.insert(ExportCLIFile::k_OutputDirectory_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
-  args.insert(ExportCLIFile::k_OutputFilePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(ExportCLIFile::k_SplitByGroup_Key, std::make_any<bool>(false));
-  args.insert(ExportCLIFile::k_EdgeGeometry_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExportCLIFile::k_LayerIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ExportCLIFile::k_GroupIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExportCLIFile::k_UnitsScaleFactor_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ExportCLIFile::k_Precision_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(ExportCLIFile::k_OutputDirectory_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
+  args.insertOrAssign(ExportCLIFile::k_OutputFilePrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ExportCLIFile::k_SplitByGroup_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ExportCLIFile::k_EdgeGeometry_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExportCLIFile::k_LayerIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExportCLIFile::k_GroupIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

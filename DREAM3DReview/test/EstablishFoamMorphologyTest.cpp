@@ -45,27 +45,27 @@ TEST_CASE("DREAM3DReview::EstablishFoamMorphology: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(EstablishFoamMorphology::k_PeriodicBoundaries_Key, std::make_any<bool>(false));
-  args.insert(EstablishFoamMorphology::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishFoamMorphology::k_InputStatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishFoamMorphology::k_InputPhaseTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishFoamMorphology::k_InputPhaseNamesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishFoamMorphology::k_InputShapeTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishFoamMorphology::k_InputCellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishFoamMorphology::k_OutputCellEnsembleAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(EstablishFoamMorphology::k_NumFeaturesArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(EstablishFoamMorphology::k_OutputCellFeatureAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(EstablishFoamMorphology::k_FeatureIdsArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(EstablishFoamMorphology::k_MaskArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(EstablishFoamMorphology::k_CellPhasesArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(EstablishFoamMorphology::k_QPEuclideanDistancesArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(EstablishFoamMorphology::k_TJEuclideanDistancesArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(EstablishFoamMorphology::k_GBEuclideanDistancesArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insert(EstablishFoamMorphology::k_WriteGoalAttributes_Key, std::make_any<bool>(false));
-  args.insert(EstablishFoamMorphology::k_CsvOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(EstablishFoamMorphology::k_MinStrutThickness_Key, std::make_any<float64>(2.3456789));
-  args.insert(EstablishFoamMorphology::k_StrutThicknessVariability_Key, std::make_any<float32>(1.23345f));
-  args.insert(EstablishFoamMorphology::k_StrutShapeVariability_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(EstablishFoamMorphology::k_PeriodicBoundaries_Key, std::make_any<bool>(false));
+  args.insertOrAssign(EstablishFoamMorphology::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishFoamMorphology::k_InputStatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishFoamMorphology::k_InputPhaseTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishFoamMorphology::k_InputPhaseNamesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishFoamMorphology::k_InputShapeTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishFoamMorphology::k_InputCellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishFoamMorphology::k_OutputCellEnsembleAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(EstablishFoamMorphology::k_NumFeaturesArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(EstablishFoamMorphology::k_OutputCellFeatureAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(EstablishFoamMorphology::k_FeatureIdsArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(EstablishFoamMorphology::k_MaskArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(EstablishFoamMorphology::k_CellPhasesArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(EstablishFoamMorphology::k_QPEuclideanDistancesArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(EstablishFoamMorphology::k_TJEuclideanDistancesArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(EstablishFoamMorphology::k_GBEuclideanDistancesArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(EstablishFoamMorphology::k_WriteGoalAttributes_Key, std::make_any<bool>(false));
+  args.insertOrAssign(EstablishFoamMorphology::k_CsvOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(EstablishFoamMorphology::k_MinStrutThickness_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(EstablishFoamMorphology::k_StrutThicknessVariability_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(EstablishFoamMorphology::k_StrutShapeVariability_Key, std::make_any<float32>(1.23345f));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

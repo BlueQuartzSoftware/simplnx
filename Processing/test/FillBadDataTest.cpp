@@ -40,11 +40,11 @@ TEST_CASE("Processing::FillBadData: Instantiation and Parameter Check", "[Proces
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(FillBadData::k_MinAllowedDefectSize_Key, std::make_any<int32>(1234356));
-  args.insert(FillBadData::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
-  args.insert(FillBadData::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FillBadData::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(FillBadData::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(FillBadData::k_MinAllowedDefectSize_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(FillBadData::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadData::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FillBadData::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FillBadData::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

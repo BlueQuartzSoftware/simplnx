@@ -39,11 +39,11 @@ TEST_CASE("DREAM3DReview::ComputeUmeyamaTransform: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ComputeUmeyamaTransform::k_UseScaling_Key, std::make_any<bool>(false));
-  args.insert(ComputeUmeyamaTransform::k_SourcePointSet_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ComputeUmeyamaTransform::k_DestPointSet_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ComputeUmeyamaTransform::k_TransformationAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ComputeUmeyamaTransform::k_TransformationMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ComputeUmeyamaTransform::k_UseScaling_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeUmeyamaTransform::k_SourcePointSet_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ComputeUmeyamaTransform::k_DestPointSet_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ComputeUmeyamaTransform::k_TransformationAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ComputeUmeyamaTransform::k_TransformationMatrixName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

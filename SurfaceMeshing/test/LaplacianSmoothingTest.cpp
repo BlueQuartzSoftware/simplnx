@@ -39,17 +39,17 @@ TEST_CASE("SurfaceMeshing::LaplacianSmoothing: Instantiation and Parameter Check
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(LaplacianSmoothing::k_IterationSteps_Key, std::make_any<int32>(1234356));
-  args.insert(LaplacianSmoothing::k_Lambda_Key, std::make_any<float32>(1.23345f));
-  args.insert(LaplacianSmoothing::k_UseTaubinSmoothing_Key, std::make_any<bool>(false));
-  args.insert(LaplacianSmoothing::k_MuFactor_Key, std::make_any<float32>(1.23345f));
-  args.insert(LaplacianSmoothing::k_TripleLineLambda_Key, std::make_any<float32>(1.23345f));
-  args.insert(LaplacianSmoothing::k_QuadPointLambda_Key, std::make_any<float32>(1.23345f));
-  args.insert(LaplacianSmoothing::k_SurfacePointLambda_Key, std::make_any<float32>(1.23345f));
-  args.insert(LaplacianSmoothing::k_SurfaceTripleLineLambda_Key, std::make_any<float32>(1.23345f));
-  args.insert(LaplacianSmoothing::k_SurfaceQuadPointLambda_Key, std::make_any<float32>(1.23345f));
-  args.insert(LaplacianSmoothing::k_SurfaceMeshNodeTypeArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(LaplacianSmoothing::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(LaplacianSmoothing::k_IterationSteps_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(LaplacianSmoothing::k_Lambda_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(LaplacianSmoothing::k_UseTaubinSmoothing_Key, std::make_any<bool>(false));
+  args.insertOrAssign(LaplacianSmoothing::k_MuFactor_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(LaplacianSmoothing::k_TripleLineLambda_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(LaplacianSmoothing::k_QuadPointLambda_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(LaplacianSmoothing::k_SurfacePointLambda_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(LaplacianSmoothing::k_SurfaceTripleLineLambda_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(LaplacianSmoothing::k_SurfaceQuadPointLambda_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(LaplacianSmoothing::k_SurfaceMeshNodeTypeArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(LaplacianSmoothing::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

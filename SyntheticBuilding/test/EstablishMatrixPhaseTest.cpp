@@ -40,18 +40,18 @@ TEST_CASE("SyntheticBuilding::EstablishMatrixPhase: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(EstablishMatrixPhase::k_UseMask_Key, std::make_any<bool>(false));
-  args.insert(EstablishMatrixPhase::k_OutputCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishMatrixPhase::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishMatrixPhase::k_CellPhasesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishMatrixPhase::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishMatrixPhase::k_OutputCellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishMatrixPhase::k_FeaturePhasesArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishMatrixPhase::k_InputStatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishMatrixPhase::k_InputPhaseTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishMatrixPhase::k_InputPhaseNamesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishMatrixPhase::k_OutputCellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(EstablishMatrixPhase::k_NumFeaturesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishMatrixPhase::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(EstablishMatrixPhase::k_OutputCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishMatrixPhase::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishMatrixPhase::k_CellPhasesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishMatrixPhase::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishMatrixPhase::k_OutputCellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishMatrixPhase::k_FeaturePhasesArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishMatrixPhase::k_InputStatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishMatrixPhase::k_InputPhaseTypesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishMatrixPhase::k_InputPhaseNamesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishMatrixPhase::k_OutputCellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EstablishMatrixPhase::k_NumFeaturesArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

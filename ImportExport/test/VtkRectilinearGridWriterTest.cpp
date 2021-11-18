@@ -42,10 +42,10 @@ TEST_CASE("ImportExport::VtkRectilinearGridWriter: Instantiation and Parameter C
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(VtkRectilinearGridWriter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insert(VtkRectilinearGridWriter::k_WriteBinaryFile_Key, std::make_any<bool>(false));
-  args.insert(VtkRectilinearGridWriter::k_SelectedDataArrayPaths_Key,
-              std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(VtkRectilinearGridWriter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
+  args.insertOrAssign(VtkRectilinearGridWriter::k_WriteBinaryFile_Key, std::make_any<bool>(false));
+  args.insertOrAssign(VtkRectilinearGridWriter::k_SelectedDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

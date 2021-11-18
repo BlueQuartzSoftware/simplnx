@@ -37,7 +37,7 @@ TEST_CASE("Core::ReadASCIIData: Instantiation and Parameter Check", "[Core][Read
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insert(ReadASCIIData::k_WizardData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(ReadASCIIData::k_WizardData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

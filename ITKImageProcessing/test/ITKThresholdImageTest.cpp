@@ -39,11 +39,11 @@ TEST_CASE("ITKImageProcessing::ITKThresholdImage: Instantiation and Parameter Ch
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insert(ITKThresholdImage::k_Lower_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKThresholdImage::k_Upper_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKThresholdImage::k_OutsideValue_Key, std::make_any<float64>(2.3456789));
-  args.insert(ITKThresholdImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insert(ITKThresholdImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
+  args.insertOrAssign(ITKThresholdImage::k_Lower_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKThresholdImage::k_Upper_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKThresholdImage::k_OutsideValue_Key, std::make_any<float64>(2.3456789));
+  args.insertOrAssign(ITKThresholdImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ITKThresholdImage::k_NewCellArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
