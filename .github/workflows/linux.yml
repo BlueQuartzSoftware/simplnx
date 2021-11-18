@@ -65,7 +65,7 @@ jobs:
           cmake --preset ci ${{github.workspace}} -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data -D VCPKG_TARGET_TRIPLET:STRING=x64-linux-dynamic
       - name: Build
         run: |
-          cmake --build --preset ci
+          cmake --build ${{github.workspace}}/build
       - name: Test
         run: |
-          ctest --preset ci
+          ctest --test-dir ${{github.workspace}}/build
