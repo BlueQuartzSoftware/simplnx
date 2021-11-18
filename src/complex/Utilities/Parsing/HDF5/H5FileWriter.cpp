@@ -15,7 +15,7 @@ H5::FileWriter::ResultType H5::FileWriter::CreateFile(const std::filesystem::pat
   {
     if(!std::filesystem::create_directories(parentPath))
     {
-      return MakeErrorResult<PointerType>(-300, fmt::format("Error creating Output HDF5 file at path '{}'. Parent path could not be created.", filepath.c_str()));
+      return MakeErrorResult<PointerType>(-300, fmt::format("Error creating Output HDF5 file at path '{}'. Parent path could not be created.", filepath.string()));
     }
   }
 
@@ -24,7 +24,7 @@ H5::FileWriter::ResultType H5::FileWriter::CreateFile(const std::filesystem::pat
     return {std::unique_ptr<FileWriter>(new FileWriter(filepath))};
   } catch(const std::runtime_error& error)
   {
-    return MakeErrorResult<PointerType>(-301, fmt::format("Error creating Output HDF5 file at path '{}'. Parent path could not be created.", filepath.c_str()));
+    return MakeErrorResult<PointerType>(-301, fmt::format("Error creating Output HDF5 file at path '{}'. Parent path could not be created.", filepath.string()));
   }
   return {}; // Code should not get here. We return everywhere else.
 }
@@ -45,7 +45,7 @@ H5::FileWriter::FileWriter(const std::filesystem::path& filepath)
   m_FileId = H5Fcreate(filepath.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
   if(m_FileId < 0)
   {
-    throw std::runtime_error(fmt::format("Error creating Output HDF5 file at path '{}'. HDF5Library threw error.", filepath.c_str()));
+    throw std::runtime_error(fmt::format("Error creating Output HDF5 file at path '{}'. HDF5Library threw error.", filepath.string()));
   }
 }
 

@@ -113,7 +113,7 @@ template <typename T>
 Result<> CheckValuesFloatDouble(const std::string& valueAsStr, const std::string& strType)
 {
   using CovertorType = ConvertTo<double>;
-  using ConversionResultType = std::pair<T, Result<>>;
+  using ConversionResultType = std::pair<double, Result<>>;
   ConversionResultType conversionResult = CovertorType::convert(valueAsStr);
   if(conversionResult.second.valid()) // If the string was converted to a double, then lets check the range is valid
   {
