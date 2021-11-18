@@ -1,21 +1,56 @@
 #include "H5FileWriter.hpp"
 
+#include <fmt/format.h>
+
+#include <stdexcept>
+
 using namespace complex;
 
-H5::FileWriter::FileWriter()
-: GroupWriter()
+H5::FileWriter::ResultType H5::FileWriter::CreateFile(const std::filesystem::path& filepath)
 {
+  ResultType result;
+
+  auto parentPath = filepath.parent_path();
+  if(!std::filesystem::exists(parentPath))
+  {
+    if(!std::filesystem::create_directories(parentPath))
+    {
+      return MakeErrorResult<PointerType>(-300, fmt::format("Error creating Output HDF5 file at path '{}'. Parent path could not be created.", filepath.string()));
+    }
+  }
+
+  try
+  {
+    return {std::unique_ptr<FileWriter>(new FileWriter(filepath))};
+  } catch(const std::runtime_error& error)
+  {
+    return MakeErrorResult<PointerType>(-301, fmt::format("Error creating Output HDF5 file at path '{}'. Parent path could not be created.", filepath.string()));
+  }
+  return {}; // Code should not get here. We return everywhere else.
 }
 
+H5::FileWriter::ResultType H5::FileWriter::WrapHdf5FileId(H5::IdType fileId)
+{
+  if(fileId <= 0)
+  {
+    return MakeErrorResult<PointerType>(-302, fmt::format("Error wrapping existing HDF5 FileId with value '{}'.", fileId));
+  }
+  return {std::unique_ptr<FileWriter>(new FileWriter(fileId))};
+}
+
+H5::FileWriter::FileWriter() = default;
+
 H5::FileWriter::FileWriter(const std::filesystem::path& filepath)
-: GroupWriter()
 {
   m_FileId = H5Fcreate(filepath.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  if(m_FileId < 0)
+  {
+    throw std::runtime_error(fmt::format("Error creating Output HDF5 file at path '{}'. HDF5Library threw error.", filepath.string()));
+  }
 }
 
 H5::FileWriter::FileWriter(H5::IdType fileId)
-: GroupWriter()
-, m_FileId(fileId)
+: m_FileId(fileId)
 {
 }
 

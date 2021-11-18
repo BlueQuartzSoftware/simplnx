@@ -15,7 +15,7 @@ project(complex
   LANGUAGES CXX
 )
 
-set(COMPLEX_BIN_DIR ${PROJECT_BINARY_DIR}/bin)
+set(COMPLEX_BIN_DIR ${PROJECT_BINARY_DIR}/Bin)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${COMPLEX_BIN_DIR} CACHE PATH "Single Directory for all Libraries")
 
@@ -141,6 +141,7 @@ set(COMPLEX_SOURCE_DIR ${complex_SOURCE_DIR}/src/complex)
 set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Common/Array.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Bit.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/ComplexConstants.hpp
   ${COMPLEX_SOURCE_DIR}/Common/BoundingBox.hpp
   ${COMPLEX_SOURCE_DIR}/Common/EulerAngle.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Point2D.hpp

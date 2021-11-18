@@ -38,7 +38,7 @@ Uuid ImportDREAM3DFilter::uuid() const
 
 std::string ImportDREAM3DFilter::humanName() const
 {
-  return "Read DREAM.3D File";
+  return "Read DREAM.3D File (v8)";
 }
 
 Parameters ImportDREAM3DFilter::parameters() const

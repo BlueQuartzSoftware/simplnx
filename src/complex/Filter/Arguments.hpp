@@ -28,9 +28,11 @@ public:
   Arguments& operator=(Arguments&&) noexcept = default;
 
   /**
-   * @brief Insert the given key value pair.
+   * @brief Insert the given key value pair IF and ONLY IF there isn't a key already in the underlying map.
+   * If you want to overwrite the current value then use ther insert_or_assign() function
    * @param key
    * @param value
+   * @return bool if the insert worked.
    */
   bool insert(std::string key, std::any value);
 

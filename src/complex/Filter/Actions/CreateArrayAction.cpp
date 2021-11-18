@@ -21,6 +21,7 @@ CreateArrayAction::~CreateArrayAction() noexcept = default;
 
 Result<> CreateArrayAction::apply(DataStructure& dataStructure, Mode mode) const
 {
+  // Validate the Numeric Type
   switch(m_Type)
   {
   case NumericType::int8: {
@@ -54,7 +55,7 @@ Result<> CreateArrayAction::apply(DataStructure& dataStructure, Mode mode) const
     return CreateArray<float64>(dataStructure, m_Dims, m_NComp, m_Path, mode);
   }
   default:
-    throw std::runtime_error("Invalid type");
+    throw std::runtime_error(fmt::format("CreateArrayAction: Invalid Numeric Type '{}'", m_Type));
   }
 }
 

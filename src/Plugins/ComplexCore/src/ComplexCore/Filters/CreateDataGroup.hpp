@@ -1,11 +1,13 @@
 #pragma once
 
 #include "ComplexCore/ComplexCore_export.hpp"
+
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Filter/Parameters.hpp"
+
 namespace complex
 {
 class COMPLEXCORE_EXPORT CreateDataGroup : public IFilter
