@@ -1,6 +1,5 @@
 #pragma once
 
-#include "complex/Common/Array.hpp"
 #include "complex/Filter/Output.hpp"
 #include "complex/complex_export.hpp"
 
@@ -12,13 +11,9 @@ namespace complex
 class COMPLEX_EXPORT EmptyAction : public IDataAction
 {
 public:
-  using DimensionType = std::vector<size_t>;
-  using OriginType = std::vector<float>;
-  using SpacingType = std::vector<float>;
-
   EmptyAction() = default;
 
-  ~EmptyAction() noexcept override;
+  ~EmptyAction() noexcept override = default;
 
   EmptyAction(const EmptyAction&) = delete;
   EmptyAction(EmptyAction&&) noexcept = delete;
@@ -31,12 +26,9 @@ public:
    * @param dataStructure
    * @return
    */
-  Result<> apply(DataStructure& dataStructure, Mode mode) const override;
-
-private:
-  DataPath m_Path;
-  DimensionType m_Dims;
-  OriginType m_Origin;
-  SpacingType m_Spacing;
+  Result<> apply(DataStructure& dataStructure, Mode mode) const override
+  {
+    return {};
+  }
 };
 } // namespace complex
