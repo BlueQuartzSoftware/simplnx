@@ -10,23 +10,23 @@
 
 using namespace complex;
 
-TetrahedralGeom::TetrahedralGeom(DataStructure& ds, const std::string& name)
-: AbstractGeometry3D(ds, name)
+TetrahedralGeom::TetrahedralGeom(DataStructure& ds, std::string name)
+: AbstractGeometry3D(ds, std::move(name))
 {
 }
 
-TetrahedralGeom::TetrahedralGeom(DataStructure& ds, const std::string& name, IdType importId)
-: AbstractGeometry3D(ds, name, importId)
+TetrahedralGeom::TetrahedralGeom(DataStructure& ds, std::string name, IdType importId)
+: AbstractGeometry3D(ds, std::move(name), importId)
 {
 }
 
-TetrahedralGeom::TetrahedralGeom(DataStructure& ds, const std::string& name, usize numTets, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
-: AbstractGeometry3D(ds, name)
+TetrahedralGeom::TetrahedralGeom(DataStructure& ds, std::string name, usize numTets, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
+: AbstractGeometry3D(ds, std::move(name))
 {
 }
 
-TetrahedralGeom::TetrahedralGeom(DataStructure& ds, const std::string& name, const std::shared_ptr<SharedTetList>& tets, const std::shared_ptr<SharedVertexList>& vertices)
-: AbstractGeometry3D(ds, name)
+TetrahedralGeom::TetrahedralGeom(DataStructure& ds, std::string name, const std::shared_ptr<SharedTetList>& tets, const std::shared_ptr<SharedVertexList>& vertices)
+: AbstractGeometry3D(ds, std::move(name))
 {
 }
 
@@ -56,9 +56,9 @@ TetrahedralGeom::TetrahedralGeom(TetrahedralGeom&& other) noexcept
 
 TetrahedralGeom::~TetrahedralGeom() = default;
 
-TetrahedralGeom* TetrahedralGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+TetrahedralGeom* TetrahedralGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<TetrahedralGeom>(new TetrahedralGeom(ds, name));
+  auto data = std::shared_ptr<TetrahedralGeom>(new TetrahedralGeom(ds, std::move(name)));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
@@ -66,9 +66,9 @@ TetrahedralGeom* TetrahedralGeom::Create(DataStructure& ds, const std::string& n
   return data.get();
 }
 
-TetrahedralGeom* TetrahedralGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+TetrahedralGeom* TetrahedralGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<TetrahedralGeom>(new TetrahedralGeom(ds, name, importId));
+  auto data = std::shared_ptr<TetrahedralGeom>(new TetrahedralGeom(ds, std::move(name), importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

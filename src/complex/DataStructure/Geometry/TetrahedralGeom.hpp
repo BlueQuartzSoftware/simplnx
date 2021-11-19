@@ -22,7 +22,7 @@ public:
    * @param parentId = {}
    * @return TetrahedralGeom*
    */
-  static TetrahedralGeom* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
+  static TetrahedralGeom* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -32,7 +32,7 @@ public:
    * @param parentId = {}
    * @return TetrahedralGeom*
    */
-  static TetrahedralGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+  static TetrahedralGeom* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -334,7 +334,7 @@ protected:
    * @param ds
    * @param name
    */
-  TetrahedralGeom(DataStructure& ds, const std::string& name);
+  TetrahedralGeom(DataStructure& ds, std::string name);
 
   /**
    * @brief
@@ -342,7 +342,7 @@ protected:
    * @param name
    * @param importId
    */
-  TetrahedralGeom(DataStructure& ds, const std::string& name, IdType importId);
+  TetrahedralGeom(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief
@@ -352,7 +352,7 @@ protected:
    * @param vertices
    * @param allocate = true
    */
-  TetrahedralGeom(DataStructure& ds, const std::string& name, usize numTets, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
+  TetrahedralGeom(DataStructure& ds, std::string name, usize numTets, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
 
   /**
    * @brief
@@ -361,7 +361,7 @@ protected:
    * @param tets
    * @param vertices
    */
-  TetrahedralGeom(DataStructure& ds, const std::string& name, const std::shared_ptr<SharedTetList>& tets, const std::shared_ptr<SharedVertexList>& vertices);
+  TetrahedralGeom(DataStructure& ds, std::string name, const std::shared_ptr<SharedTetList>& tets, const std::shared_ptr<SharedVertexList>& vertices);
 
   /**
    * @brief

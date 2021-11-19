@@ -48,9 +48,9 @@ public:
    * @param parentId = {}
    * @return DataArray<T>* Instance of the DataArray object that is owned and managed by the DataStructure
    */
-  static DataArray* Create(DataStructure& ds, const std::string& name, store_type* store, const std::optional<IdType>& parentId = {})
+  static DataArray* Create(DataStructure& ds, std::string name, store_type* store, const std::optional<IdType>& parentId = {})
   {
-    auto data = std::shared_ptr<DataArray>(new DataArray(ds, name, store));
+    auto data = std::shared_ptr<DataArray>(new DataArray(ds, std::move(name), store));
     if(!AttemptToAddObject(ds, data, parentId))
     {
       return nullptr;
@@ -70,12 +70,11 @@ public:
    * @return DataArray<T>* Instance of the DataArray object that is owned and managed by the DataStructure
    */
   template <typename DataStoreType>
-  static DataArray* CreateWithStore(DataStructure& ds, const std::string& name, const std::vector<size_t>& tupleShape, const std::vector<size_t>& componentShape,
-                                    const std::optional<IdType>& parentId = {})
+  static DataArray* CreateWithStore(DataStructure& ds, std::string name, const std::vector<size_t>& tupleShape, const std::vector<size_t>& componentShape, const std::optional<IdType>& parentId = {})
   {
     DataStoreType* dataStore = new DataStoreType(tupleShape, componentShape);
 
-    auto data = std::shared_ptr<DataArray>(new DataArray(ds, name, dataStore));
+    auto data = std::shared_ptr<DataArray>(new DataArray(ds, std::move(name), dataStore));
     if(!AttemptToAddObject(ds, data, parentId))
     {
       return nullptr;
@@ -108,9 +107,9 @@ public:
    * @param parentId = {}
    * @return DataArray<T>*
    */
-  static DataArray* Import(DataStructure& ds, const std::string& name, IdType importId, store_type* store, const std::optional<IdType>& parentId = {})
+  static DataArray* Import(DataStructure& ds, std::string name, IdType importId, store_type* store, const std::optional<IdType>& parentId = {})
   {
-    auto data = std::shared_ptr<DataArray>(new DataArray(ds, name, importId, store));
+    auto data = std::shared_ptr<DataArray>(new DataArray(ds, std::move(name), importId, store));
     if(!AttemptToAddObject(ds, data, parentId))
     {
       return nullptr;
@@ -499,8 +498,8 @@ protected:
    * @param name
    * @param store
    */
-  DataArray(DataStructure& ds, const std::string& name, store_type* store = nullptr)
-  : IDataArray(ds, name)
+  DataArray(DataStructure& ds, std::string name, store_type* store = nullptr)
+  : IDataArray(ds, std::move(name))
   {
     setDataStore(store);
   }
@@ -514,8 +513,8 @@ protected:
    * @param name
    * @param dataStore
    */
-  DataArray(DataStructure& ds, const std::string& name, const weak_store& store)
-  : IDataArray(ds, name)
+  DataArray(DataStructure& ds, std::string name, const weak_store& store)
+  : IDataArray(ds, std::move(name))
   {
     setDataStore(store);
   }
@@ -530,8 +529,8 @@ protected:
    * @param importId
    * @param store
    */
-  DataArray(DataStructure& ds, const std::string& name, IdType importId, store_type* store = nullptr)
-  : IDataArray(ds, name, importId)
+  DataArray(DataStructure& ds, std::string name, IdType importId, store_type* store = nullptr)
+  : IDataArray(ds, std::move(name), importId)
   {
     setDataStore(store);
   }

@@ -162,7 +162,7 @@ protected:
    * @param ds
    * @param name
    */
-  AbstractGeometryGrid(DataStructure& ds, const std::string& name);
+  AbstractGeometryGrid(DataStructure& ds, std::string name);
 
   /**
    * @brief
@@ -170,7 +170,7 @@ protected:
    * @param name
    * @param importId
    */
-  AbstractGeometryGrid(DataStructure& ds, const std::string& name, IdType importId);
+  AbstractGeometryGrid(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief

@@ -7,13 +7,13 @@
 
 using namespace complex;
 
-BaseGroup::BaseGroup(DataStructure& ds, const std::string& name)
-: DataObject(ds, name)
+BaseGroup::BaseGroup(DataStructure& ds, std::string name)
+: DataObject(ds, std::move(name))
 {
 }
 
-BaseGroup::BaseGroup(DataStructure& ds, const std::string& name, IdType importId)
-: DataObject(ds, name, importId)
+BaseGroup::BaseGroup(DataStructure& ds, std::string name, IdType importId)
+: DataObject(ds, std::move(name), importId)
 {
 }
 

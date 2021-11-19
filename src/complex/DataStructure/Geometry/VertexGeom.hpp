@@ -23,7 +23,7 @@ public:
    * @param parentId = {}
    * @return VertexGeom*
    */
-  static VertexGeom* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
+  static VertexGeom* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -33,7 +33,7 @@ public:
    * @param parentId = {}
    * @return VertexGeom*
    */
-  static VertexGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+  static VertexGeom* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -256,7 +256,7 @@ protected:
    * @param ds
    * @param name
    */
-  VertexGeom(DataStructure& ds, const std::string& name);
+  VertexGeom(DataStructure& ds, std::string name);
 
   /**
    * @brief
@@ -264,7 +264,7 @@ protected:
    * @param name
    * @param importId
    */
-  VertexGeom(DataStructure& ds, const std::string& name, IdType importId);
+  VertexGeom(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief
@@ -273,7 +273,7 @@ protected:
    * @param numVertices
    * @param allocate
    */
-  VertexGeom(DataStructure& ds, const std::string& name, usize numVertices, bool allocate);
+  VertexGeom(DataStructure& ds, std::string name, usize numVertices, bool allocate);
 
   /**
    * @brief
@@ -281,7 +281,7 @@ protected:
    * @param name
    * @param vertices
    */
-  VertexGeom(DataStructure& ds, const std::string& name, const SharedVertexList* vertices);
+  VertexGeom(DataStructure& ds, std::string name, const SharedVertexList* vertices);
 
   /**
    * @brief

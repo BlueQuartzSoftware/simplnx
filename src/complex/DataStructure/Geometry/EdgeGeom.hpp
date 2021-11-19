@@ -23,7 +23,7 @@ public:
    * @param parentId = {}
    * @return EdgeGeom*
    */
-  static EdgeGeom* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
+  static EdgeGeom* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -33,7 +33,7 @@ public:
    * @param parentId = {}
    * @return EdgeGeom*
    */
-  static EdgeGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+  static EdgeGeom* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -305,14 +305,14 @@ protected:
    * @param edges
    * @param vertices
    */
-  EdgeGeom(DataStructure& ds, const std::string& name, const SharedEdgeList* edges, const SharedVertexList* vertices);
+  EdgeGeom(DataStructure& ds, std::string name, const SharedEdgeList* edges, const SharedVertexList* vertices);
 
   /**
    * @brief
    * @param ds
    * @param name
    */
-  EdgeGeom(DataStructure& ds, const std::string& name);
+  EdgeGeom(DataStructure& ds, std::string name);
 
   /**
    * @brief
@@ -320,7 +320,7 @@ protected:
    * @param name
    * @param importId
    */
-  EdgeGeom(DataStructure& ds, const std::string& name, IdType importId);
+  EdgeGeom(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief

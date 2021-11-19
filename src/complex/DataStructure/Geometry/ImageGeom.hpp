@@ -36,7 +36,7 @@ public:
    * @param parentId = {}
    * @return ImageGeom*
    */
-  static ImageGeom* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
+  static ImageGeom* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -46,7 +46,7 @@ public:
    * @param parentId = {}
    * @return ImageGeom*
    */
-  static ImageGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+  static ImageGeom* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -420,7 +420,7 @@ protected:
    * @param ds
    * @param name
    */
-  ImageGeom(DataStructure& ds, const std::string& name);
+  ImageGeom(DataStructure& ds, std::string name);
 
   /**
    * @brief
@@ -428,7 +428,7 @@ protected:
    * @param name
    * @param importId
    */
-  ImageGeom(DataStructure& ds, const std::string& name, IdType importId);
+  ImageGeom(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief

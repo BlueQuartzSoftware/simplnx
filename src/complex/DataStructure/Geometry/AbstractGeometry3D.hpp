@@ -239,7 +239,7 @@ protected:
    * @param ds
    * @param name
    */
-  AbstractGeometry3D(DataStructure& ds, const std::string& name);
+  AbstractGeometry3D(DataStructure& ds, std::string name);
 
   /**
    * @brief
@@ -247,7 +247,7 @@ protected:
    * @param name
    * @param importId
    */
-  AbstractGeometry3D(DataStructure& ds, const std::string& name, IdType importId);
+  AbstractGeometry3D(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief

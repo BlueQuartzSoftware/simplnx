@@ -12,13 +12,13 @@ namespace Constants
 inline const std::string TypeName = "";
 }
 
-DataGroup::DataGroup(DataStructure& ds, const std::string& name)
-: BaseGroup(ds, name)
+DataGroup::DataGroup(DataStructure& ds, std::string name)
+: BaseGroup(ds, std::move(name))
 {
 }
 
-DataGroup::DataGroup(DataStructure& ds, const std::string& name, IdType importId)
-: BaseGroup(ds, name, importId)
+DataGroup::DataGroup(DataStructure& ds, std::string name, IdType importId)
+: BaseGroup(ds, std::move(name), importId)
 {
 }
 
@@ -34,9 +34,9 @@ DataGroup::DataGroup(DataGroup&& other) noexcept
 
 DataGroup::~DataGroup() = default;
 
-DataGroup* DataGroup::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+DataGroup* DataGroup::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<DataGroup>(new DataGroup(ds, name));
+  auto data = std::shared_ptr<DataGroup>(new DataGroup(ds, std::move(name)));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
@@ -44,9 +44,9 @@ DataGroup* DataGroup::Create(DataStructure& ds, const std::string& name, const s
   return data.get();
 }
 
-DataGroup* DataGroup::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+DataGroup* DataGroup::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<DataGroup>(new DataGroup(ds, name, importId));
+  auto data = std::shared_ptr<DataGroup>(new DataGroup(ds, std::move(name), importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

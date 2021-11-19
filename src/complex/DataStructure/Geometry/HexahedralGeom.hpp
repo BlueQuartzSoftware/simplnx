@@ -22,7 +22,7 @@ public:
    * @param parentId = {}
    * @return HexahedralGeom*
    */
-  static HexahedralGeom* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
+  static HexahedralGeom* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -32,7 +32,7 @@ public:
    * @param parentId = {}
    * @return HexahedralGeom*
    */
-  static HexahedralGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+  static HexahedralGeom* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -343,7 +343,7 @@ protected:
    * @param ds
    * @param name
    */
-  HexahedralGeom(DataStructure& ds, const std::string& name);
+  HexahedralGeom(DataStructure& ds, std::string name);
 
   /**
    * @brief
@@ -351,7 +351,7 @@ protected:
    * @param name
    * @param importId
    */
-  HexahedralGeom(DataStructure& ds, const std::string& name, IdType importId);
+  HexahedralGeom(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief
@@ -361,7 +361,7 @@ protected:
    * @param vertices
    * @param allocate
    */
-  HexahedralGeom(DataStructure& ds, const std::string& name, usize numHexas, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
+  HexahedralGeom(DataStructure& ds, std::string name, usize numHexas, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
 
   /**
    * @brief
@@ -370,7 +370,7 @@ protected:
    * @param hexas
    * @param vertices
    */
-  HexahedralGeom(DataStructure& ds, const std::string& name, const std::shared_ptr<SharedHexList>& hexas, const std::shared_ptr<SharedVertexList>& vertices);
+  HexahedralGeom(DataStructure& ds, std::string name, const std::shared_ptr<SharedHexList>& hexas, const std::shared_ptr<SharedVertexList>& vertices);
 
   /**
    * @brief

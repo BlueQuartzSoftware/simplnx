@@ -44,12 +44,12 @@ public:
   virtual void copyTuple(usize from, usize to) = 0;
 
 protected:
-  IDataArray(DataStructure& dataStructure, const std::string& name)
-  : DataObject(dataStructure, name)
+  IDataArray(DataStructure& dataStructure, std::string name)
+  : DataObject(dataStructure, std::move(name))
   {
   }
-  IDataArray(DataStructure& dataStructure, const std::string& name, IdType importId)
-  : DataObject(dataStructure, name, importId)
+  IDataArray(DataStructure& dataStructure, std::string name, IdType importId)
+  : DataObject(dataStructure, std::move(name), importId)
   {
   }
 };

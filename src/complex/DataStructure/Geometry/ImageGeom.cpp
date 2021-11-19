@@ -11,13 +11,13 @@
 
 using namespace complex;
 
-ImageGeom::ImageGeom(DataStructure& ds, const std::string& name)
-: AbstractGeometryGrid(ds, name)
+ImageGeom::ImageGeom(DataStructure& ds, std::string name)
+: AbstractGeometryGrid(ds, std::move(name))
 {
 }
 
-ImageGeom::ImageGeom(DataStructure& ds, const std::string& name, IdType importId)
-: AbstractGeometryGrid(ds, name, importId)
+ImageGeom::ImageGeom(DataStructure& ds, std::string name, IdType importId)
+: AbstractGeometryGrid(ds, std::move(name), importId)
 {
 }
 
@@ -41,9 +41,9 @@ ImageGeom::ImageGeom(ImageGeom&& other) noexcept
 
 ImageGeom::~ImageGeom() = default;
 
-ImageGeom* ImageGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+ImageGeom* ImageGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<ImageGeom>(new ImageGeom(ds, name));
+  auto data = std::shared_ptr<ImageGeom>(new ImageGeom(ds, std::move(name)));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
@@ -51,9 +51,9 @@ ImageGeom* ImageGeom::Create(DataStructure& ds, const std::string& name, const s
   return data.get();
 }
 
-ImageGeom* ImageGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+ImageGeom* ImageGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<ImageGeom>(new ImageGeom(ds, name, importId));
+  auto data = std::shared_ptr<ImageGeom>(new ImageGeom(ds, std::move(name), importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

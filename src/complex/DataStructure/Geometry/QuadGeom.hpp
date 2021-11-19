@@ -23,7 +23,7 @@ public:
    * @param parentId = {}
    * @return QuadGeom*
    */
-  static QuadGeom* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
+  static QuadGeom* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -33,7 +33,7 @@ public:
    * @param parentId = {}
    * @return QuadGeom*
    */
-  static QuadGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+  static QuadGeom* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -308,7 +308,7 @@ protected:
    * @param ds
    * @param name
    */
-  QuadGeom(DataStructure& ds, const std::string& name);
+  QuadGeom(DataStructure& ds, std::string name);
 
   /**
    * @brief
@@ -316,7 +316,7 @@ protected:
    * @param name
    * @param importId
    */
-  QuadGeom(DataStructure& ds, const std::string& name, IdType importId);
+  QuadGeom(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief
@@ -326,7 +326,7 @@ protected:
    * @param vertices
    * @param allocate
    */
-  QuadGeom(DataStructure& ds, const std::string& name, usize numQuads, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
+  QuadGeom(DataStructure& ds, std::string name, usize numQuads, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
 
   /**
    * @brief
@@ -335,7 +335,7 @@ protected:
    * @param quads
    * @param vertices
    */
-  QuadGeom(DataStructure& ds, const std::string& name, const std::shared_ptr<SharedQuadList>& quads, const std::shared_ptr<SharedVertexList>& vertices);
+  QuadGeom(DataStructure& ds, std::string name, const std::shared_ptr<SharedQuadList>& quads, const std::shared_ptr<SharedVertexList>& vertices);
 
   /**
    * @brief

@@ -29,7 +29,7 @@ public:
    * @param parentId = {}
    * @return DataGroup*
    */
-  static DataGroup* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
+  static DataGroup* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief Attempts to construct and insert a DataGroup into the DataStructure.
@@ -49,7 +49,7 @@ public:
    * @param parentId = {}
    * @return DataGroup*
    */
-  static DataGroup* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+  static DataGroup* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief Constructs a shallow copy of the DataGroup. This copy is not added
@@ -103,7 +103,7 @@ protected:
    * @param ds
    * @param name
    */
-  DataGroup(DataStructure& ds, const std::string& name);
+  DataGroup(DataStructure& ds, std::string name);
 
   /**
    * @brief Creates the DataGroup for the target DataStructure and with the
@@ -112,7 +112,7 @@ protected:
    * @param name
    * @param importId
    */
-  DataGroup(DataStructure& ds, const std::string& name, IdType importId);
+  DataGroup(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief Checks if the provided DataObject can be added to the container.

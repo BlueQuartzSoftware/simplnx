@@ -340,7 +340,7 @@ protected:
    * @param ds
    * @param name
    */
-  AbstractGeometry(DataStructure& ds, const std::string& name);
+  AbstractGeometry(DataStructure& ds, std::string name);
 
   /**
    * @brief
@@ -348,7 +348,7 @@ protected:
    * @param name
    * @param importId
    */
-  AbstractGeometry(DataStructure& ds, const std::string& name, IdType importId);
+  AbstractGeometry(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief
