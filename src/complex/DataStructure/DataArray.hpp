@@ -236,7 +236,7 @@ public:
    * @param from
    * @param to
    */
-  void copyTuple(usize from, usize to)
+  void copyTuple(usize from, usize to) override
   {
     const auto numComponents = getNumberOfComponents();
     for(usize i = 0; i < numComponents; i++)
