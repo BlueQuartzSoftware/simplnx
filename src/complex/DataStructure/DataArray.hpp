@@ -305,6 +305,32 @@ public:
   }
 
   /**
+   * @brief Returns a reference to the DataStore.
+   * @return DataStore<T>&
+   */
+  store_type& getDataStoreRef()
+  {
+    if(m_DataStore == nullptr)
+    {
+      throw std::runtime_error("DataArray: Null DataStore");
+    }
+    return *m_DataStore;
+  }
+
+  /**
+   * @brief Returns a reference to the DataStore.
+   * @return const DataStore<T>&
+   */
+  const store_type& getDataStoreRef() const
+  {
+    if(m_DataStore == nullptr)
+    {
+      throw std::runtime_error("DataArray: Null DataStore");
+    }
+    return *m_DataStore;
+  }
+
+  /**
    * @brief Returns a pointer to the DataStore cast as type StoreT.
    * @return const StoreT*
    */
