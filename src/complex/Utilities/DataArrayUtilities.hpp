@@ -322,15 +322,15 @@ Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObjec
  * @return
  */
 template <class T>
-IDataStore<T>* CreateDataStore(const typename IDataStore<T>::ShapeType& tupleShape, const typename IDataStore<T>::ShapeType& componentShape, IDataAction::Mode mode)
+std::unique_ptr<IDataStore<T>> CreateDataStore(const typename IDataStore<T>::ShapeType& tupleShape, const typename IDataStore<T>::ShapeType& componentShape, IDataAction::Mode mode)
 {
   switch(mode)
   {
   case IDataAction::Mode::Preflight: {
-    return new EmptyDataStore<T>(tupleShape, componentShape);
+    return std::make_unique<EmptyDataStore<T>>(tupleShape, componentShape);
   }
   case IDataAction::Mode::Execute: {
-    return new DataStore<T>(tupleShape, componentShape);
+    return std::make_unique<DataStore<T>>(tupleShape, componentShape);
   }
   default: {
     throw std::runtime_error("Invalid mode");
@@ -376,8 +376,8 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
 
   std::string name = path[last];
 
-  auto* store = CreateDataStore<T>(tupleShape, {nComp}, mode);
-  auto dataArray = DataArray<T>::Create(dataStructure, name, store, id);
+  auto store = CreateDataStore<T>(tupleShape, {nComp}, mode);
+  auto dataArray = DataArray<T>::Create(dataStructure, name, std::move(store), id);
   if(dataArray == nullptr)
   {
     return MakeErrorResult(-264, fmt::format("Unable to create DataArray at \"{}\"", path.toString()));

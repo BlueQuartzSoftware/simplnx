@@ -319,9 +319,9 @@ public:
 
   /**
    * @brief Returns a deep copy of the data store and all its data.
-   * @return IDataStore*
+   * @return std::unique_ptr<IDataStore>
    */
-  virtual IDataStore* deepCopy() const = 0;
+  virtual std::unique_ptr<IDataStore<T>> deepCopy() const = 0;
 
   /**
    * @brief Returns an Iterator to the begining of the DataStore.

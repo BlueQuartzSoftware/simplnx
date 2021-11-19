@@ -261,11 +261,11 @@ public:
 
   /**
    * @brief Returns a deep copy of the data store and all its data.
-   * @return IDataStore*
+   * @return std::unique_ptr<IDataStore>
    */
-  IDataStore<T>* deepCopy() const override
+  std::unique_ptr<IDataStore<T>> deepCopy() const override
   {
-    auto copy = new DataStore(*this);
+    auto copy = std::make_unique<DataStore<T>>(*this);
     auto size = this->getSize();
     for(usize i = 0; i < size; i++)
     {
@@ -321,14 +321,13 @@ public:
     return err;
   }
 
-  static DataStore* readHdf5(const H5::DatasetReader& datasetReader)
+  static std::unique_ptr<DataStore> readHdf5(const H5::DatasetReader& datasetReader)
   {
     // tupleShape
     H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(k_TupleShape);
     if(!tupleShapeAttribute.isValid())
     {
       throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
-      return nullptr;
     }
     typename DataStore<T>::ShapeType tupleShape = tupleShapeAttribute.readAsVector<size_t>();
 
@@ -337,18 +336,17 @@ public:
     if(!componentShapeAttribute.isValid())
     {
       throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
-      return nullptr;
     }
     typename DataStore<T>::ShapeType componentShape = componentShapeAttribute.readAsVector<size_t>();
 
     // Create DataStore
-    auto dataStore = new complex::DataStore<T>(tupleShape, componentShape);
+    auto dataStore = std::make_unique<DataStore<T>>(tupleShape, componentShape);
 
     auto count = dataStore->getSize();
     auto dataVector = datasetReader.readAsVector<T>();
-    auto dataPtr = new value_type[count];
-    std::copy(dataVector.begin(), dataVector.end(), dataPtr);
-    dataStore->m_Data.reset(dataPtr);
+    auto dataPtr = std::make_unique<value_type[]>(count);
+    std::copy(dataVector.begin(), dataVector.end(), dataPtr.get());
+    dataStore->m_Data = std::move(dataPtr);
 
     return dataStore;
   }

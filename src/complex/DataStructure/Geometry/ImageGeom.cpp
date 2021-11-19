@@ -159,8 +159,8 @@ AbstractGeometry::StatusCode ImageGeom::findElementSizes()
   {
     return -1;
   }
-  auto dataStore = new DataStore<float32>({getNumberOfElements()}, {1});
-  auto voxelSizes = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", dataStore, getId());
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfElements()}, std::vector<usize>{1});
+  auto voxelSizes = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", std::move(dataStore), getId());
   voxelSizes->getDataStore()->fill(res[0] * res[1] * res[2]);
   m_VoxelSizesId = voxelSizes->getId();
   return 1;

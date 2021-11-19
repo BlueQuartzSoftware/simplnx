@@ -296,8 +296,8 @@ usize EdgeGeom::getNumberOfElements() const
 
 AbstractGeometry::StatusCode EdgeGeom::findElementSizes()
 {
-  auto dataStore = new DataStore<float32>(getNumberOfElements());
-  auto sizes = DataArray<float32>::Create(*getDataStructure(), "Edge Lengths", dataStore, getId());
+  auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfElements());
+  auto sizes = DataArray<float32>::Create(*getDataStructure(), "Edge Lengths", std::move(dataStore), getId());
   m_EdgeSizesId = sizes->getId();
 
   Point3D<float32> vert0 = {0.0f, 0.0f, 0.0f};
@@ -398,8 +398,8 @@ void EdgeGeom::deleteElementNeighbors()
 
 AbstractGeometry::StatusCode EdgeGeom::findElementCentroids()
 {
-  auto dataStore = new DataStore<float32>({getNumberOfElements()}, {3});
-  Float32Array* edgeCentroids = DataArray<float32>::Create(*getDataStructure(), "Edge Centroids", dataStore, getId());
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfElements()}, std::vector<usize>{3});
+  Float32Array* edgeCentroids = DataArray<float32>::Create(*getDataStructure(), "Edge Centroids", std::move(dataStore), getId());
   GeometryHelpers::Topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroids);
   if(getElementCentroids() == nullptr)
   {

@@ -162,8 +162,8 @@ std::string AbstractGeometry::getInfoString(complex::InfoStringFormat format) co
 
 AbstractGeometry::SharedEdgeList* AbstractGeometry::createSharedEdgeList(usize numEdges)
 {
-  auto dataStore = new DataStore<MeshIndexType>({numEdges}, {2ULL});
-  SharedEdgeList* edges = DataArray<MeshIndexType>::Create(*getDataStructure(), "Shared Edge List", dataStore, getId());
+  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numEdges}, std::vector<usize>{2});
+  SharedEdgeList* edges = DataArray<MeshIndexType>::Create(*getDataStructure(), "Shared Edge List", std::move(dataStore), getId());
   edges->getDataStore()->fill(0.0);
   return edges;
 }

@@ -108,7 +108,7 @@ void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const
 {
   const std::string daName = dataArrayReader.getName();
 
-  auto dataStore = new complex::DataStore<T>({tDims}, {cDims});
+  auto dataStore = std::make_unique<DataStore<T>>(std::vector<usize>{tDims}, std::vector<usize>{cDims});
   auto data = dataArrayReader.readAsVector<T>();
   if(data.size() != dataStore->getSize())
   {
@@ -120,7 +120,7 @@ void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const
     dataStore->setValue(i, data.at(i));
   }
   // Insert the DataArray into the DataStructure
-  auto dataArray = DataArray<T>::Create(ds, daName, dataStore, parentId);
+  auto dataArray = DataArray<T>::Create(ds, daName, std::move(dataStore), parentId);
 }
 
 /**

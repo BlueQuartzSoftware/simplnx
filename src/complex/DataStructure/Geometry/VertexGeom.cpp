@@ -112,9 +112,9 @@ void VertexGeom::resizeVertexList(usize newNumVertices)
   AbstractGeometry::SharedVertexList* vertices = getVertices();
   if(vertices == nullptr)
   {
-    DataStore<float32>* dataStore = new DataStore<float32>({newNumVertices}, {3});
+    auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{newNumVertices}, std::vector<usize>{3});
     DataStructure* ds = getDataStructure();
-    vertices = AbstractGeometry::SharedVertexList::Create(*ds, "Vertices", dataStore);
+    vertices = AbstractGeometry::SharedVertexList::Create(*ds, "Vertices", std::move(dataStore));
     setVertices(vertices);
   }
   else
@@ -192,10 +192,10 @@ AbstractGeometry::StatusCode VertexGeom::findElementSizes()
 {
   // Vertices are 0-dimensional (they have no getSize),
   // so simply splat 0 over the sizes array
-  auto dataStore = new DataStore<float32>({getNumberOfElements()}, {1});
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfElements()}, std::vector<usize>{1});
   dataStore->fill(0.0f);
 
-  Float32Array* vertexSizes = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", dataStore, getId());
+  Float32Array* vertexSizes = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", std::move(dataStore), getId());
   m_VertexSizesId = vertexSizes->getId();
   return 1;
 }

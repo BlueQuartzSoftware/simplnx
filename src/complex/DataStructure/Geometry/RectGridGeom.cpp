@@ -158,7 +158,7 @@ usize RectGridGeom::getNumberOfElements() const
 
 AbstractGeometry::StatusCode RectGridGeom::findElementSizes()
 {
-  auto sizes = new DataStore<float32>({getNumberOfElements()}, {1});
+  auto sizes = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfElements()}, std::vector<usize>{1});
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
   auto zBnds = getZBounds();
@@ -177,7 +177,6 @@ AbstractGeometry::StatusCode RectGridGeom::findElementSizes()
         zRes = zBnds->at(z + 1) - zBnds->at(z);
         if(xRes <= 0.0f || yRes <= 0.0f || zRes <= 0.0f)
         {
-          delete sizes;
           m_VoxelSizesId.reset();
           return -1;
         }
@@ -186,10 +185,9 @@ AbstractGeometry::StatusCode RectGridGeom::findElementSizes()
     }
   }
 
-  Float32Array* sizeArray = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", sizes, getId());
+  Float32Array* sizeArray = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", std::move(sizes), getId());
   if(!sizeArray)
   {
-    delete sizes;
     m_VoxelSizesId.reset();
     return -1;
   }
