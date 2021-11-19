@@ -1188,10 +1188,13 @@ public:
 using FloatVec3 = Vec3<float32>;
 using IntVec3 = Vec3<int32>;
 using SizeVec3 = Vec3<usize>;
+using UInt64Vec3 = Vec3<uint64>;
+using USizeVec3 = Vec3<usize>;
 
 using FloatVec4 = Vec4<float32>;
 using IntVec4 = Vec4<int32>;
 using SizeVec4 = Vec4<usize>;
+using USizeVec4 = Vec4<usize>;
 
 using FloatVec6 = Vec6<float32>;
 using IntVec6 = Vec6<int32>;

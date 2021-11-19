@@ -70,7 +70,8 @@ DataArray<T>* CreateTestDataArray(DataStructure& dataGraph, const std::string& n
  * @brief Creates a DataStructure that mimics an EBSD data set
  * @return
  */
-DataStructure CreateDataStructure()
+
+static DataStructure CreateDataStructure()
 {
   DataStructure dataGraph;
   DataGroup* topLevelGroup = DataGroup::Create(dataGraph, Constants::k_SmallIN100);
@@ -113,7 +114,7 @@ DataStructure CreateDataStructure()
  * other group has a DataArray of each primitive type with 3 components.
  * @return
  */
-DataStructure CreateAllPrimitiveTypes()
+static DataStructure CreateAllPrimitiveTypes(const std::vector<usize>& tupleShape)
 {
   DataStructure dataGraph;
   DataGroup* levelZeroGroup = DataGroup::Create(dataGraph, Constants::k_LevelZero);
@@ -122,14 +123,15 @@ DataStructure CreateAllPrimitiveTypes()
   auto levelOneId = levelOneGroup->getId();
   DataGroup* levelTwoGroup = DataGroup::Create(dataGraph, Constants::k_LevelTwo, levelZeroGroup->getId());
   auto levelTwoId = levelTwoGroup->getId();
-  // Create an Image Geometry grid for the Scan Data
-  ImageGeom* imageGeom = ImageGeom::Create(dataGraph, Constants::k_ImageGeometry, levelOneGroup->getId());
-  SizeVec3 imageGeomDims = {40, 60, 80};
-  imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
-  imageGeom->setSpacing({0.25f, 0.55f, 1.86});
-  imageGeom->setOrigin({0.0f, 20.0f, 66.0f});
 
-  DataStore<size_t>::ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
+//  // Create an Image Geometry grid for the Scan Data
+//  ImageGeom* imageGeom = ImageGeom::Create(dataGraph, Constants::k_ImageGeometry, levelOneGroup->getId());
+//  SizeVec3 imageGeomDims = {40, 60, 80};
+//  imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
+//  imageGeom->setSpacing({0.25f, 0.55f, 1.86});
+//  imageGeom->setOrigin({0.0f, 20.0f, 66.0f});
+
+  //DataStore<size_t>::ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
   // Create Scalar type data
   DataStore<size_t>::ShapeType componentShape = {1ULL};
 
@@ -171,7 +173,7 @@ DataStructure CreateAllPrimitiveTypes()
 /**
  * @brief Adds an ImageGeometry of the prescribed size to a group in the DataStructure.
  */
-void AddImageGeometry(DataStructure& dataGraph, const SizeVec3& imageGeomDims, const FloatVec3& spacing, const FloatVec3& origin, DataGroup* dataGroup)
+static void AddImageGeometry(DataStructure& dataGraph, const SizeVec3& imageGeomDims, const FloatVec3& spacing, const FloatVec3& origin, DataGroup* dataGroup)
 {
   // Create an Image Geometry grid for the Scan Data
   ImageGeom* imageGeom = ImageGeom::Create(dataGraph, Constants::k_ImageGeometry, dataGroup->getId());
