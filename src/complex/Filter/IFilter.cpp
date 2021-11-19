@@ -124,7 +124,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& ar
   PreflightResult preflightResult = preflight(data, args);
   if(!preflightResult.outputActions.valid())
   {
-    return ExecuteResult{convertResult(std::move(preflightResult.outputActions)), std::move(preflightResult.outputValues)};
+    return ExecuteResult{ConvertResult(std::move(preflightResult.outputActions)), std::move(preflightResult.outputValues)};
   }
 
   for(const auto& action : preflightResult.outputActions.value().actions)

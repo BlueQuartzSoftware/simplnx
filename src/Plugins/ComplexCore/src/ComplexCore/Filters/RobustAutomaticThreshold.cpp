@@ -18,99 +18,94 @@ using namespace complex;
 
 namespace
 {
-constexpr int64 k_IncorrectOrMissingInputArray = -60;
-constexpr int64 k_IncorrectOrMissingMagnitudeArray = -61;
-constexpr int64 k_BadArrayCreationPath = -62;
-constexpr int64 k_IncorrectInputArrayType = -63;
+constexpr int32 k_IncorrectOrMissingInputArray = -60;
+constexpr int32 k_IncorrectOrMissingMagnitudeArray = -61;
+constexpr int32 k_BadArrayCreationPath = -62;
+constexpr int32 k_IncorrectInputArrayType = -63;
+constexpr int32 k_MismatchedDims = -64;
 
-bool isDataArray(const DataObject* dataObject)
+template <class T>
+void FindThreshold(const DataArray<T>& inputArray, const Float32Array& gradMagnitudeArray, UInt8Array& maskArray)
 {
-  return dataObject->getTypeName() == "DataArray";
-}
+  const IDataStore<T>& inputData = inputArray.getDataStoreRef();
+  const IDataStore<float32>& gradMag = gradMagnitudeArray.getDataStoreRef();
+  IDataStore<uint8>& maskStore = maskArray.getDataStoreRef();
 
-template <typename T>
-void findThreshold(const DataArray<T>* input, const Float32Array* gradMagPtr, const UInt8Array* maskPtr)
-{
-  typename std::shared_ptr<IDataStore<T>> inputData = input->getDataStorePtr().lock();
-  std::shared_ptr<IDataStore<float>> gradMag = gradMagPtr->getDataStorePtr().lock();
-  std::shared_ptr<IDataStore<uint8>> maskStore = maskPtr->getDataStorePtr().lock();
-
-  size_t numTuples = input->getNumberOfTuples();
+  usize numTuples = inputArray.getNumberOfTuples();
   float numerator = 0;
   float denominator = 0;
 
-  for(size_t i = 0; i < numTuples; i++)
+  for(usize i = 0; i < numTuples; i++)
   {
-    numerator += (inputData->getValue(i) * gradMag->getValue(i));
-    denominator += gradMag->getValue(i);
+    numerator += (inputData.getValue(i) * gradMag.getValue(i));
+    denominator += gradMag.getValue(i);
   }
 
   float threshold = numerator / denominator;
 
-  for(size_t i = 0; i < numTuples; i++)
+  for(usize i = 0; i < numTuples; i++)
   {
-    if(inputData->getValue(i) < threshold)
+    if(inputData.getValue(i) < threshold)
     {
-      maskStore->setValue(i, 0);
+      maskStore.setValue(i, 0);
     }
     else
     {
-      maskStore->setValue(i, 1);
+      maskStore.setValue(i, 1);
     }
   }
 }
 
-void findThreshold(const IDataArray* inputObject, const Float32Array* gradMagnitudeArray, const UInt8Array* maskArray)
+void FindThreshold(const IDataArray& inputObject, const Float32Array& gradMagnitudeArray, UInt8Array& maskArray)
 {
-  if(auto inputArray = dynamic_cast<const Int8Array*>(inputObject))
+  if(auto inputArray = dynamic_cast<const Int8Array*>(&inputObject); inputArray != nullptr)
   {
-    findThreshold(inputArray, gradMagnitudeArray, maskArray);
+    FindThreshold(*inputArray, gradMagnitudeArray, maskArray);
   }
-  if(auto inputArray = dynamic_cast<const Int16Array*>(inputObject))
+  if(auto inputArray = dynamic_cast<const Int16Array*>(&inputObject); inputArray != nullptr)
   {
-    findThreshold(inputArray, gradMagnitudeArray, maskArray);
+    FindThreshold(*inputArray, gradMagnitudeArray, maskArray);
   }
-  if(auto inputArray = dynamic_cast<const Int32Array*>(inputObject))
+  if(auto inputArray = dynamic_cast<const Int32Array*>(&inputObject); inputArray != nullptr)
   {
-    findThreshold(inputArray, gradMagnitudeArray, maskArray);
+    FindThreshold(*inputArray, gradMagnitudeArray, maskArray);
   }
-  if(auto inputArray = dynamic_cast<const Int64Array*>(inputObject))
+  if(auto inputArray = dynamic_cast<const Int64Array*>(&inputObject); inputArray != nullptr)
   {
-    findThreshold(inputArray, gradMagnitudeArray, maskArray);
-  }
-
-  if(auto inputArray = dynamic_cast<const UInt8Array*>(inputObject))
-  {
-    findThreshold(inputArray, gradMagnitudeArray, maskArray);
-  }
-  if(auto inputArray = dynamic_cast<const UInt16Array*>(inputObject))
-  {
-    findThreshold(inputArray, gradMagnitudeArray, maskArray);
-  }
-  if(auto inputArray = dynamic_cast<const UInt32Array*>(inputObject))
-  {
-    findThreshold(inputArray, gradMagnitudeArray, maskArray);
-  }
-  if(auto inputArray = dynamic_cast<const UInt64Array*>(inputObject))
-  {
-    findThreshold(inputArray, gradMagnitudeArray, maskArray);
+    FindThreshold(*inputArray, gradMagnitudeArray, maskArray);
   }
 
-  if(auto inputArray = dynamic_cast<const USizeArray*>(inputObject))
+  if(auto inputArray = dynamic_cast<const UInt8Array*>(&inputObject); inputArray != nullptr)
   {
-    findThreshold(inputArray, gradMagnitudeArray, maskArray);
+    FindThreshold(*inputArray, gradMagnitudeArray, maskArray);
+  }
+  if(auto inputArray = dynamic_cast<const UInt16Array*>(&inputObject); inputArray != nullptr)
+  {
+    FindThreshold(*inputArray, gradMagnitudeArray, maskArray);
+  }
+  if(auto inputArray = dynamic_cast<const UInt32Array*>(&inputObject); inputArray != nullptr)
+  {
+    FindThreshold(*inputArray, gradMagnitudeArray, maskArray);
+  }
+  if(auto inputArray = dynamic_cast<const UInt64Array*>(&inputObject); inputArray != nullptr)
+  {
+    FindThreshold(*inputArray, gradMagnitudeArray, maskArray);
   }
 
-  if(auto inputArray = dynamic_cast<const Float32Array*>(inputObject))
+  if(auto inputArray = dynamic_cast<const USizeArray*>(&inputObject); inputArray != nullptr)
   {
-    findThreshold(inputArray, gradMagnitudeArray, maskArray);
+    FindThreshold(*inputArray, gradMagnitudeArray, maskArray);
   }
-  if(auto inputArray = dynamic_cast<const Float64Array*>(inputObject))
+
+  if(auto inputArray = dynamic_cast<const Float32Array*>(&inputObject); inputArray != nullptr)
   {
-    findThreshold(inputArray, gradMagnitudeArray, maskArray);
+    FindThreshold(*inputArray, gradMagnitudeArray, maskArray);
+  }
+  if(auto inputArray = dynamic_cast<const Float64Array*>(&inputObject); inputArray != nullptr)
+  {
+    FindThreshold(*inputArray, gradMagnitudeArray, maskArray);
   }
 }
-
 } // namespace
 
 namespace complex
@@ -158,29 +153,25 @@ IFilter::PreflightResult RobustAutomaticThreshold::preflightImpl(const DataStruc
 
   std::vector<DataPath> dataPaths;
 
-  auto inputArray = data.getDataAs<IDataArray>(inputArrayPath);
-  if(inputArray == nullptr)
+  const auto& inputArray = data.getDataRefAs<IDataArray>(inputArrayPath);
+  if(dynamic_cast<const BoolArray*>(&inputArray) != nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectOrMissingInputArray, "Could not find the input DataArray."}})};
-  }
-  if(dynamic_cast<const BoolArray*>(inputArray))
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArrayType, "Input Attribute Array to threshold cannot be of type bool"}})};
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArrayType, "Input Attribute Array to threshold cannot be of type bool")};
   }
   dataPaths.push_back(inputArrayPath);
 
-  auto gradientArray = data.getDataAs<Float32Array>(gradientArrayPath);
-  if(gradientArray == nullptr)
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectOrMissingMagnitudeArray, "Failed to find DataArray<float32> Gradient array."}})};
-  }
+  const auto& gradientArray = data.getDataRefAs<Float32Array>(gradientArrayPath);
   dataPaths.push_back(gradientArrayPath);
 
-  std::vector<usize> tupleDims = {inputArray->getNumberOfTuples()};
-  usize numComponents = inputArray->getNumberOfComponents();
-  auto action = std::make_unique<CreateArrayAction>(NumericType::uint8, tupleDims, numComponents, createdMaskPath);
+  std::vector<usize> tupleDims = {inputArray.getNumberOfTuples()};
+  usize numComponents = inputArray.getNumberOfComponents();
 
-  data.validateNumberOfTuples(dataPaths);
+  if(!data.validateNumberOfTuples(dataPaths))
+  {
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArrayType, "Input array and gradient array have mismatched dimensions")};
+  }
+
+  auto action = std::make_unique<CreateArrayAction>(NumericType::uint8, tupleDims, numComponents, createdMaskPath);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));
@@ -194,11 +185,11 @@ Result<> RobustAutomaticThreshold::executeImpl(DataStructure& data, const Argume
   auto gradientArrayPath = args.value<DataPath>(k_GradientMagnitudePath);
   auto createdMaskPath = args.value<DataPath>(k_ArrayCreationPath);
 
-  auto inputArray = data.getDataAs<IDataArray>(inputArrayPath);
-  auto gradientArray = data.getDataAs<DataArray<float32>>(gradientArrayPath);
-  auto maskArray = data.getDataAs<DataArray<uint8>>(createdMaskPath);
+  const auto& inputArray = data.getDataRefAs<IDataArray>(inputArrayPath);
+  const auto& gradientArray = data.getDataRefAs<DataArray<float32>>(gradientArrayPath);
+  auto& maskArray = data.getDataRefAs<DataArray<uint8>>(createdMaskPath);
 
-  findThreshold(inputArray, gradientArray, maskArray);
+  FindThreshold(inputArray, gradientArray, maskArray);
 
   return {};
 }

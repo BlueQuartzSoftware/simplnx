@@ -369,18 +369,6 @@ public:
   }
 
   /**
-   * @brief Fills the array
-   * @param tupleIndex
-   * @param value
-   */
-  //  virtual void fill(usize tupleIndex, value_type value)
-  //  {
-  //    Iterator start = begin();
-  //    usize offset = getNumberOfComponents() * tupleIndex;
-  //    std::fill(start + offset, start + offset + getNumberOfComponents(), value);
-  //  }
-
-  /**
    * @brief Writes the data store to HDF5. Returns the HDF5 error code should
    * one be encountered. Otherwise, returns 0.
    * @param datasetWriter

@@ -2,23 +2,24 @@
 
 #include "complex/Common/StringLiteral.hpp"
 
-#define MAKE_STRING_CONSTANT(name) static inline constexpr StringLiteral k_##name = #name;
+#define COMPLEX_DEF_STRING_CONSTANT(name) StringLiteral k_##name = #name
 
 namespace complex
 {
 namespace Constants
 {
-MAKE_STRING_CONSTANT(Int8)
-MAKE_STRING_CONSTANT(UInt8)
-MAKE_STRING_CONSTANT(Int16)
-MAKE_STRING_CONSTANT(UInt16)
-MAKE_STRING_CONSTANT(Int32)
-MAKE_STRING_CONSTANT(UInt32)
-MAKE_STRING_CONSTANT(Int64)
-MAKE_STRING_CONSTANT(UInt64)
-MAKE_STRING_CONSTANT(Float32)
-MAKE_STRING_CONSTANT(Float64)
-MAKE_STRING_CONSTANT(SizeT)
+inline constexpr COMPLEX_DEF_STRING_CONSTANT(Int8);
+inline constexpr COMPLEX_DEF_STRING_CONSTANT(UInt8);
+inline constexpr COMPLEX_DEF_STRING_CONSTANT(Int16);
+inline constexpr COMPLEX_DEF_STRING_CONSTANT(UInt16);
+inline constexpr COMPLEX_DEF_STRING_CONSTANT(Int32);
+inline constexpr COMPLEX_DEF_STRING_CONSTANT(UInt32);
+inline constexpr COMPLEX_DEF_STRING_CONSTANT(Int64);
+inline constexpr COMPLEX_DEF_STRING_CONSTANT(UInt64);
+inline constexpr COMPLEX_DEF_STRING_CONSTANT(Float32);
+inline constexpr COMPLEX_DEF_STRING_CONSTANT(Float64);
+inline constexpr COMPLEX_DEF_STRING_CONSTANT(USize);
 } // namespace Constants
-
 } // namespace complex
+
+#undef COMPLEX_DEF_STRING_CONSTANT

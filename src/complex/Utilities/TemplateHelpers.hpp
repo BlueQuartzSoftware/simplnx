@@ -138,32 +138,13 @@ namespace TemplateHelpers
  * @brief This class (functor) simply returns true or false if the IDataArray can be downcast to a certain DataArray type
  * parameterized by the template parameter T.
  */
-template <typename T>
-class CanDynamicCast
+template <class T>
+struct CanDynamicCast
 {
-public:
-  CanDynamicCast() = default;
-  virtual ~CanDynamicCast() = default;
-  CanDynamicCast(const CanDynamicCast&) = delete;            // Copy Constructor Not Implemented
-  CanDynamicCast(CanDynamicCast&&) = delete;                 // Move Constructor Not Implemented
-  CanDynamicCast& operator=(const CanDynamicCast&) = delete; // Copy Assignment Not Implemented
-  CanDynamicCast& operator=(CanDynamicCast&&) = delete;      // Move Assignment Not Implemented
-
-  bool operator()(std::shared_ptr<DataObject> p)
+  bool operator()(const DataObject* p) const
   {
-    return (std::dynamic_pointer_cast<T>(p) != nullptr);
-  }
-  bool operator()(DataObject* p)
-  {
-    return (dynamic_cast<T*>(p) != nullptr);
-  }
-
-  bool operator()(const DataObject* p)
-  {
-    return (dynamic_cast<const T*>(p) != nullptr);
+    return dynamic_cast<const T*>(p) != nullptr;
   }
 };
-
-} // end namespace TemplateHelpers
-
-} // end namespace complex
+} // namespace TemplateHelpers
+} // namespace complex
