@@ -148,11 +148,11 @@ public:
 
   /**
    * @brief Returns a deep copy of the data store and all its data.
-   * @return IDataStore*
+   * @return std::unique_ptr<IDataStore>
    */
-  IDataStore<T>* deepCopy() const override
+  std::unique_ptr<IDataStore<T>> deepCopy() const override
   {
-    return new EmptyDataStore(*this);
+    return std::make_unique<EmptyDataStore>(*this);
   }
 
   /**

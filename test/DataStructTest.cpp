@@ -272,8 +272,10 @@ TEST_CASE("DataArrayTest")
 {
   DataStructure dataStr;
 
-  auto store = new DataStore<int32>({2}, {2});
+  auto store = std::make_shared<DataStore<int32>>(std::vector<usize>{2}, std::vector<usize>{2});
+  REQUIRE(store != nullptr);
   auto dataArr = DataArray<int32>::Create(dataStr, "array", store);
+  REQUIRE(dataArr != nullptr);
 
   SECTION("test size")
   {

@@ -48,9 +48,9 @@ public:
    * @param parentId = {}
    * @return DataArray<T>* Instance of the DataArray object that is owned and managed by the DataStructure
    */
-  static DataArray* Create(DataStructure& ds, std::string name, store_type* store, const std::optional<IdType>& parentId = {})
+  static DataArray* Create(DataStructure& ds, std::string name, std::shared_ptr<store_type> store, const std::optional<IdType>& parentId = {})
   {
-    auto data = std::shared_ptr<DataArray>(new DataArray(ds, std::move(name), store));
+    auto data = std::shared_ptr<DataArray>(new DataArray(ds, std::move(name), std::move(store)));
     if(!AttemptToAddObject(ds, data, parentId))
     {
       return nullptr;
@@ -72,9 +72,9 @@ public:
   template <typename DataStoreType>
   static DataArray* CreateWithStore(DataStructure& ds, std::string name, const std::vector<size_t>& tupleShape, const std::vector<size_t>& componentShape, const std::optional<IdType>& parentId = {})
   {
-    DataStoreType* dataStore = new DataStoreType(tupleShape, componentShape);
+    auto dataStore = std::make_shared<DataStoreType>(tupleShape, componentShape);
 
-    auto data = std::shared_ptr<DataArray>(new DataArray(ds, std::move(name), dataStore));
+    auto data = std::shared_ptr<DataArray>(new DataArray(ds, std::move(name), std::move(dataStore)));
     if(!AttemptToAddObject(ds, data, parentId))
     {
       return nullptr;
@@ -107,9 +107,9 @@ public:
    * @param parentId = {}
    * @return DataArray<T>*
    */
-  static DataArray* Import(DataStructure& ds, std::string name, IdType importId, store_type* store, const std::optional<IdType>& parentId = {})
+  static DataArray* Import(DataStructure& ds, std::string name, IdType importId, std::shared_ptr<store_type> store, const std::optional<IdType>& parentId = {})
   {
-    auto data = std::shared_ptr<DataArray>(new DataArray(ds, std::move(name), importId, store));
+    auto data = std::shared_ptr<DataArray>(new DataArray(ds, std::move(name), importId, std::move(store)));
     if(!AttemptToAddObject(ds, data, parentId))
     {
       return nullptr;
@@ -372,28 +372,12 @@ public:
    * before replacing it, call releaseDataStore() before setting the new DataStore.
    * @param store
    */
-  void setDataStore(store_type* store)
+  void setDataStore(std::shared_ptr<store_type> store)
   {
-    m_DataStore = std::shared_ptr<store_type>(store);
+    m_DataStore = std::move(store);
     if(m_DataStore == nullptr)
     {
-      m_DataStore = std::shared_ptr<store_type>(new EmptyDataStore<T>());
-    }
-  }
-
-  /**
-   * @brief Sets a new DataStore for the DataArray to handle. The existing
-   * DataStore is deleted if there are no other std::shared_ptr references.
-   * To save the existing DataStore before replacing it, call
-   * releaseDataStore() before setting the new DataStore.
-   * @param store
-   */
-  void setDataStore(const weak_store& store)
-  {
-    m_DataStore = store.lock();
-    if(m_DataStore == nullptr)
-    {
-      m_DataStore = std::shared_ptr<store_type>(new EmptyDataStore<T>());
+      m_DataStore = std::make_shared<EmptyDataStore<T>>();
     }
   }
 
@@ -498,25 +482,10 @@ protected:
    * @param name
    * @param store
    */
-  DataArray(DataStructure& ds, std::string name, store_type* store = nullptr)
+  DataArray(DataStructure& ds, std::string name, std::shared_ptr<store_type> store = nullptr)
   : IDataArray(ds, std::move(name))
   {
-    setDataStore(store);
-  }
-
-  /**
-   * @brief Constructs a DataArray with the specified tuple getSize, count, and
-   * DataStore.
-   *
-   * The DataArray takes ownership of the DataStore.
-   * @param ds
-   * @param name
-   * @param dataStore
-   */
-  DataArray(DataStructure& ds, std::string name, const weak_store& store)
-  : IDataArray(ds, std::move(name))
-  {
-    setDataStore(store);
+    setDataStore(std::move(store));
   }
 
   /**
@@ -529,10 +498,10 @@ protected:
    * @param importId
    * @param store
    */
-  DataArray(DataStructure& ds, std::string name, IdType importId, store_type* store = nullptr)
+  DataArray(DataStructure& ds, std::string name, IdType importId, std::shared_ptr<store_type> store = nullptr)
   : IDataArray(ds, std::move(name), importId)
   {
-    setDataStore(store);
+    setDataStore(std::move(store));
   }
 
   /**
@@ -555,7 +524,7 @@ protected:
   }
 
 private:
-  std::shared_ptr<IDataStore<T>> m_DataStore = nullptr;
+  std::shared_ptr<store_type> m_DataStore = nullptr;
 };
 
 // Declare extern templates

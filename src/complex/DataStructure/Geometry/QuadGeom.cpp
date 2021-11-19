@@ -209,8 +209,8 @@ usize QuadGeom::getNumberOfElements() const
 
 AbstractGeometry::StatusCode QuadGeom::findElementSizes()
 {
-  auto dataStore = new DataStore<float32>(getNumberOfQuads());
-  Float32Array* quadSizes = DataArray<float32>::Create(*getDataStructure(), "Quad Areas", dataStore, getId());
+  auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfQuads());
+  Float32Array* quadSizes = DataArray<float32>::Create(*getDataStructure(), "Quad Areas", std::move(dataStore), getId());
   GeometryHelpers::Topology::Find2DElementAreas(getQuads(), getVertices(), quadSizes);
   if(quadSizes == nullptr)
   {
@@ -291,8 +291,8 @@ void QuadGeom::deleteElementNeighbors()
 
 AbstractGeometry::StatusCode QuadGeom::findElementCentroids()
 {
-  auto dataStore = new DataStore<float32>({getNumberOfQuads()}, {3});
-  auto quadCentroids = DataArray<float32>::Create(*getDataStructure(), "Quad Centroids", dataStore, getId());
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfQuads()}, std::vector<usize>{3});
+  auto quadCentroids = DataArray<float32>::Create(*getDataStructure(), "Quad Centroids", std::move(dataStore), getId());
   GeometryHelpers::Topology::FindElementCentroids(getQuads(), getVertices(), quadCentroids);
   if(quadCentroids == nullptr)
   {
@@ -431,8 +431,8 @@ AbstractGeometry::StatusCode QuadGeom::findEdges()
 
 AbstractGeometry::StatusCode QuadGeom::findUnsharedEdges()
 {
-  auto dataStore = new DataStore<MeshIndexType>({0}, {2});
-  auto unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", dataStore, getId());
+  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2});
+  auto unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", std::move(dataStore), getId());
   GeometryHelpers::Connectivity::Find2DUnsharedEdges(getQuads(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
