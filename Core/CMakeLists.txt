@@ -18,7 +18,6 @@ set(FilterList
   CreateFeatureArrayFromElementArray
   CreateGeometry
   CreateGridMontage
-  CreateImageGeometry
   CreateStringArray
   CropVertexGeometry
   #DataContainerReader # MISSING 1 or more Parameter Implementations

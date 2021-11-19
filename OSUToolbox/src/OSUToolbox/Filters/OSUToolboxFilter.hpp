@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Core_export.hpp"
+#include "OSUToolbox/OSUToolbox_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,26 +8,22 @@
 namespace complex
 {
 /**
- * @class CreateImageGeometry
+ * @class OSUToolboxFilter
  * @brief This filter will ....
  */
-class CORE_EXPORT CreateImageGeometry : public IFilter
+class OSUTOOLBOX_EXPORT OSUToolboxFilter : public IFilter
 {
 public:
-  CreateImageGeometry() = default;
-  ~CreateImageGeometry() noexcept override = default;
+  OSUToolboxFilter() = default;
+  ~OSUToolboxFilter() noexcept override = default;
 
-  CreateImageGeometry(const CreateImageGeometry&) = delete;
-  CreateImageGeometry(CreateImageGeometry&&) noexcept = delete;
+  OSUToolboxFilter(const OSUToolboxFilter&) = delete;
+  OSUToolboxFilter(OSUToolboxFilter&&) noexcept = delete;
 
-  CreateImageGeometry& operator=(const CreateImageGeometry&) = delete;
-  CreateImageGeometry& operator=(CreateImageGeometry&&) noexcept = delete;
+  OSUToolboxFilter& operator=(const OSUToolboxFilter&) = delete;
+  OSUToolboxFilter& operator=(OSUToolboxFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedDataContainer_Key = "SelectedDataContainer";
-  static inline constexpr StringLiteral k_Dimensions_Key = "Dimensions";
-  static inline constexpr StringLiteral k_Origin_Key = "Origin";
-  static inline constexpr StringLiteral k_Spacing_Key = "Spacing";
 
   /**
    * @brief Returns the name of the filter.
@@ -95,4 +91,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, CreateImageGeometry, "c4320659-1a84-561d-939e-c7c10229a504");
+COMPLEX_DEF_FILTER_TRAITS(complex, OSUToolboxFilter, "37fb4025-f40d-5ef7-bff4-8bec274316e3");

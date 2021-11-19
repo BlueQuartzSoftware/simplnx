@@ -1,6 +1,7 @@
 #include "GeneratePrecipitateStatsData.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
+#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
@@ -117,36 +118,56 @@ IFilter::PreflightResult GeneratePrecipitateStatsData::preflightImpl(const DataS
   auto pAppendToExistingAttributeMatrixValue = filterArgs.value<bool>(k_AppendToExistingAttributeMatrix_Key);
   auto pSelectedEnsembleAttributeMatrixValue = filterArgs.value<DataPath>(k_SelectedEnsembleAttributeMatrix_Key);
 
-  // These variables should be updated with the latest data generated for each variable during preflight.
-  // These will be returned through the preflightResult variable to the
-  // user interface. You could make these member variables instead if needed.
-  std::string numberOfBins;
-  std::string featureESD;
-
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
   // any preflight updated values that you want to be displayed to the user, typically
   // through a user interface (UI).
   PreflightResult preflightResult;
 
-#if 0
-  // Define the OutputActions Object that will hold the actions that would take
-  // place if the filter were to execute. This is mainly what would happen to the
-  // DataStructure during this filter, i.e., what modificationst to the DataStructure
-  // would take place.
-  OutputActions actions;
-  // Define a custom class that generates the changes to the DataStructure.
-  auto action = std::make_unique<GeneratePrecipitateStatsDataAction>();
-  actions.actions.push_back(std::move(action));
-  // Assign the generated outputActions to the PreflightResult::OutputActions property
-  preflightResult.outputActions = std::move(actions);
-#endif
+  // If your filter is making structural changes to the DataStructure then the filter
+  // is going to create OutputActions subclasses that need to be returned. This will
+  // store those actions.
+  complex::Result<OutputActions> resultOutputActions;
 
+  // If your filter is going to pass back some `preflight updated values` then this is where you
+  // would create the code to store those values in the appropriate object. Note that we
+  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
+  // the std::vector<PreflightValue> object.
+  std::vector<PreflightValue> preflightUpdatedValues;
+
+  // If the filter needs to pass back some updated values via a key:value string:string set of values
+  // you can declare and update that string here.
+  // These variables should be updated with the latest data generated for each variable during preflight.
+  // These will be returned through the preflightResult variable to the
+  // user interface. You could make these member variables instead if needed.
+  std::string numberOfBins;
+  std::string featureESD;
+
+  // Assuming this filter did make some structural changes to the DataStructure then store
+  // the outputAction into the resultOutputActions object via a std::move().
+  // NOTE: That using std::move() means that you can *NOT* use the outputAction variable
+  // past this point so let us scope this part which will stop stupid subtle bugs
+  // from being introduced. If you have multiple `Actions` classes that you are
+  // using such as a CreateDataGroupAction followed by a CreateArrayAction you might
+  // want to consider scoping each of those bits of code into their own section of code
+  {
+    // Replace the "EmptyAction" with one of the prebuilt actions that apply changes
+    // to the DataStructure. If none are available then create a new custom Action subclass.
+    // If your filter does not make any structural modifications to the DataStructure then
+    // you can skip this code.
+
+    auto outputAction = std::make_unique<EmptyAction>();
+    resultOutputActions.value().actions.push_back(std::move(outputAction));
+  }
+
+  // Store the preflight updated value(s) into the preflightUpdatedValues vector using
+  // the appropriate methods.
   // These values should have been updated during the preflightImpl(...) method
-  preflightResult.outputValues.push_back({"NumberOfBins", numberOfBins});
-  preflightResult.outputValues.push_back({"FeatureESD", featureESD});
+  preflightUpdatedValues.push_back({"NumberOfBins", numberOfBins});
+  preflightUpdatedValues.push_back({"FeatureESD", featureESD});
 
-  return preflightResult;
+  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
