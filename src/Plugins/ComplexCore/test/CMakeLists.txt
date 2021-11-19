@@ -8,6 +8,7 @@
 set(${PLUGIN_NAME}UnitTest_SRCS
   CreateDataArrayTest.cpp
   ConditionalSetValueTest.cpp
+  RobustAutomaticThresholdTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}

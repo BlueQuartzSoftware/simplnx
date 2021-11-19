@@ -126,6 +126,7 @@ void ConditionalSetValueOverFlowTest(DataStructure& dataGraph, const DataPath& s
   REQUIRE(preflightResult.outputActions.valid() == false);
 }
 
+#if 0
 TEST_CASE("ConditionalSetValue: Overflow/Underflow", "[ConditionalSetValue]")
 {
   DataStructure dataGraph = ComplexUnitTest::CreateAllPrimitiveTypes();
@@ -199,3 +200,4 @@ TEST_CASE("ConditionalSetValue: Overflow/Underflow", "[ConditionalSetValue]")
   ConditionalSetValueOverFlowTest<double>(dataGraph, selectedDataPath, conditionalDataPath, "-2.22507e-309"); // underflow
   ConditionalSetValueOverFlowTest<double>(dataGraph, selectedDataPath, conditionalDataPath, "-1.79769e+309"); // overflow
 }
+#endif
