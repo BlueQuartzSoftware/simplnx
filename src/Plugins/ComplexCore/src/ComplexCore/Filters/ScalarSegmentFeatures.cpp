@@ -4,6 +4,7 @@
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
@@ -22,6 +23,10 @@ constexpr StringLiteral k_GoodVoxelsPathKey = "mask path";
 constexpr StringLiteral k_FeatureIdsPathKey = "feature ids path";
 constexpr StringLiteral k_CellFeaturePathKey = "cell feature group path";
 constexpr StringLiteral k_ActiveArrayPathKey = "active array path";
+
+constexpr int64 k_IncorrectInputArray = -600;
+constexpr int64 k_MissingInputArray = -601;
+constexpr int64 k_MissingOrIncorrectGoodVoxelsArray = -602;
 
 /* from http://www.newty.de/fpt/functor.html */
 /**
@@ -47,7 +52,7 @@ class TSpecificCompareFunctorBool : public CompareFunctor
 public:
   TSpecificCompareFunctorBool(void* data, int64_t length, bool tolerance, int32_t* featureIds)
   : m_Length(length)
-  , m_FeatureIds(featureIds)
+  , featureIdsArray(featureIds)
   {
     m_Data = reinterpret_cast<bool*>(data);
   }
@@ -63,7 +68,7 @@ public:
 
     if(m_Data[neighborpoint] == m_Data[referencepoint])
     {
-      m_FeatureIds[neighborpoint] = gnum;
+      featureIdsArray[neighborpoint] = gnum;
       return true;
     }
     return false;
@@ -75,7 +80,7 @@ protected:
 private:
   bool* m_Data = nullptr;          // The data that is being compared
   int64_t m_Length = 0;            // Length of the Data Array
-  int32_t* m_FeatureIds = nullptr; // The Feature Ids
+  int32_t* featureIdsArray = nullptr; // The Feature Ids
 };
 
 /**
@@ -88,7 +93,7 @@ public:
   TSpecificCompareFunctor(void* data, int64_t length, T tolerance, int32_t* featureIds)
   : m_Length(length)
   , m_Tolerance(tolerance)
-  , m_FeatureIds(featureIds)
+  , featureIdsArray(featureIds)
   {
     m_Data = reinterpret_cast<T*>(data);
   }
@@ -106,7 +111,7 @@ public:
     {
       if((m_Data[referencepoint] - m_Data[neighborpoint]) <= m_Tolerance)
       {
-        m_FeatureIds[neighborpoint] = gnum;
+        featureIdsArray[neighborpoint] = gnum;
         return true;
       }
     }
@@ -114,7 +119,7 @@ public:
     {
       if((m_Data[neighborpoint] - m_Data[referencepoint]) <= m_Tolerance)
       {
-        m_FeatureIds[neighborpoint] = gnum;
+        featureIdsArray[neighborpoint] = gnum;
         return true;
       }
     }
@@ -128,9 +133,9 @@ private:
   T* m_Data = nullptr;               // The data that is being compared
   int64_t m_Length = 0;              // Length of the Data Array
   T m_Tolerance = static_cast<T>(0); // The tolerance of the comparison
-  int32_t* m_FeatureIds = nullptr;   // The Feature Ids
+  int32_t* featureIdsArray = nullptr;   // The Feature Ids
 };
-}
+} // namespace
 
 namespace complex
 {
@@ -180,34 +185,174 @@ IFilter::UniquePointer ScalarSegmentFeatures::clone() const
 
 IFilter::PreflightResult ScalarSegmentFeatures::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPathKey);
   auto inputDataPath = args.value<DataPath>(k_InputArrayPathKey);
+  float scalarTolerance = args.value<float>(k_ScalarToleranceKey);
+
+  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPathKey);
+  auto cellFeaturesPath = args.value<DataPath>(k_CellFeaturePathKey);
+  auto activeArrayPath = args.value<DataPath>(k_ActiveArrayPathKey);
 
   bool useGoodVoxels = args.value<bool>(k_UseGoodVoxelsKey);
+  DataPath goodVoxelsPath;
   if(useGoodVoxels)
   {
-    auto goodVoxelsPath = args.value<DataPath>(k_GoodVoxelsPathKey);
+    goodVoxelsPath = args.value<DataPath>(k_GoodVoxelsPathKey);
   }
 
-  auto activePath = args.value<DataPath>();
+  // auto activePath = args.value<DataPath>();
 
-  validateNmberOfTuples(data, dataArrayPaths);
+  std::vector<DataPath> dataPaths;
 
-  //
-  auto action = std::make_unique<ScalarSegmentFeaturesAction>(dataArrayPath);
+  usize numTuples = 0;
+  // Input Array
+  if(auto inputDataArray = data.getDataAs<IDataArray>(inputDataPath))
+  {
+    numTuples = inputDataArray->getNumberOfTuples();
+    if(inputDataArray->getNumberOfComponents() == 1)
+    {
+      dataPaths.push_back(inputDataPath);
+    }
+    else
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Input Array must be a scalar array"}})};
+    }
+  }
+  else
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingInputArray, "Input Array must be specified"}})};
+  }
+
+  // Good Voxels
+  if(useGoodVoxels)
+  {
+    if(auto goodVoxelsArray = data.getDataAs<GoodVoxelsArrayType>(goodVoxelsPath))
+    {
+      dataPaths.push_back(goodVoxelsPath);
+    }
+    else
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, "Good Voxels array is missing or incorrect type."}})};
+    }
+  }
+
+  data.validateNumberOfTuples(dataPaths);
+
+  // Create Active array
+  auto createActiveAction = std::make_unique<CreateArrayAction>(NumericType::uint8, std::vector<usize>{numTuples}, 1, activeArrayPath);
+  auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(NumericType::int32, std::vector<usize>{numTuples}, 1, featureIdsPath);
 
   OutputActions actions;
-  actions.actions.push_back(std::move(action));
+  actions.actions.push_back(std::move(createActiveAction));
+  actions.actions.push_back(std::move(createFeatureIdsAction));
 
   return {std::move(actions)};
 }
 
 Result<> ScalarSegmentFeatures::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
+  auto inputDataPath = args.value<DataPath>(k_InputArrayPathKey);
+  float scalarTolerance = args.value<float>(k_ScalarToleranceKey);
+
+  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPathKey);
+  auto cellFeaturesPath = args.value<DataPath>(k_CellFeaturePathKey);
+  auto activeArrayPath = args.value<DataPath>(k_ActiveArrayPathKey);
+
+  bool useGoodVoxels = args.value<bool>(k_UseGoodVoxelsKey);
+  DataPath goodVoxelsPath;
+  if(useGoodVoxels)
+  {
+    goodVoxelsPath = args.value<DataPath>(k_GoodVoxelsPathKey);
+  }
+
+  auto gridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
+
+  //updateFeatureInstancePointers();
+
+  auto gridGeom = data.getDataAs<AbstractGeometryGrid>(gridGeomPath);
+  auto activeArray = data.getDataAs<IDataArray>(activeArrayPath);
+
+  auto featureIdsArray = data.getDataAs<Int32Array>(featureIdsPath);
+  auto inputDataArray = data.getDataAs<IDataArray>(inputDataPath);
+
+  auto totalPoints = featureIdsArray->getNumberOfTuples();
+  auto inDataPoints = inputDataArray->getNumberOfTuples();
+
+  std::shared_ptr<CompareFunctor> compare = nullptr;
+
+  if(inputDataArray->getNumberOfComponents() != 1)
+  {
+    compare = std::shared_ptr<CompareFunctor>(new CompareFunctor()); // The default CompareFunctor which ALWAYS returns false for the comparison
+  }
+  else if(auto inputData = dynamic_cast<Int8Array*>(inputDataArray))
+  {
+    compare = std::shared_ptr<TSpecificCompareFunctor<int8_t>>(new TSpecificCompareFunctor<int8_t>(inputData, inDataPoints, static_cast<int8_t>(scalarTolerance), featureIdsArray));
+  }
+  else if(auto inputData = dynamic_cast<UInt8Array*>(inputDataArray))
+  {
+    compare = std::shared_ptr<TSpecificCompareFunctor<uint8_t>>(new TSpecificCompareFunctor<uint8_t>(inputData, inDataPoints, static_cast<uint8_t>(scalarTolerance), featureIdsArray));
+  }
+  else if(auto inputData = dynamic_cast<BoolArray*>(inputDataArray))
+  {
+    compare = std::shared_ptr<TSpecificCompareFunctorBool>(new TSpecificCompareFunctorBool(inputData, inDataPoints, static_cast<bool>(scalarTolerance), featureIdsArray));
+  }
+  else if(auto inputData = dynamic_cast<Int16Array*>(inputDataArray))
+  {
+    compare = std::shared_ptr<TSpecificCompareFunctor<int16_t>>(new TSpecificCompareFunctor<int16_t>(inputData, inDataPoints, static_cast<int16_t>(scalarTolerance), featureIdsArray));
+  }
+  else if(auto inputData = dynamic_cast<UInt16Array*>(inputDataArray))
+  {
+    compare = std::shared_ptr<TSpecificCompareFunctor<uint16_t>>(new TSpecificCompareFunctor<uint16_t>(inputData, inDataPoints, static_cast<uint16_t>(scalarTolerance), featureIdsArray));
+  }
+  else if(auto inputData = dynamic_cast<Int32Array*>(inputDataArray))
+  {
+    compare = std::shared_ptr<TSpecificCompareFunctor<int32_t>>(new TSpecificCompareFunctor<int32_t>(inputData, inDataPoints, static_cast<int32_t>(scalarTolerance), featureIdsArray));
+  }
+  else if(auto inputData = dynamic_cast<UInt32Array*>(inputDataArray))
+  {
+    compare = std::shared_ptr<TSpecificCompareFunctor<uint32_t>>(new TSpecificCompareFunctor<uint32_t>(inputData, inDataPoints, static_cast<uint32_t>(scalarTolerance), featureIdsArray));
+  }
+  else if(auto inputData = dynamic_cast<Int64Array*>(inputDataArray))
+  {
+    compare = std::shared_ptr<TSpecificCompareFunctor<int64_t>>(new TSpecificCompareFunctor<int64_t>(inputData, inDataPoints, static_cast<int64_t>(scalarTolerance), featureIdsArray));
+  }
+  else if(auto inputData = dynamic_cast<UInt64Array*>(inputDataArray))
+  {
+    compare = std::shared_ptr<TSpecificCompareFunctor<uint64_t>>(new TSpecificCompareFunctor<uint64_t>(inputData, inDataPoints, static_cast<uint64_t>(scalarTolerance), featureIdsArray));
+  }
+  else if(auto inputData = dynamic_cast<Float32Array*>(inputDataArray))
+  {
+    compare = std::shared_ptr<TSpecificCompareFunctor<float>>(new TSpecificCompareFunctor<float>(inputData, inDataPoints, scalarTolerance, featureIdsArray));
+  }
+  else if(auto inputData = dynamic_cast<Float64Array*>(inputDataArray))
+  {
+    compare = std::shared_ptr<TSpecificCompareFunctor<double>>(new TSpecificCompareFunctor<double>(inputData, inDataPoints, static_cast<double>(scalarTolerance), featureIdsArray));
+  }
+
+  // Generate the random voxel indices that will be used for the seed points to start a new grain growth/agglomeration
+  const int64_t rangeMin = 0;
+  const int64_t rangeMax = totalPoints - 1;
+  Int64Distribution distribution;
+  initializeVoxelSeedGenerator(distribution, rangeMin, rangeMax);
+
+  SegmentFeatures::executeImpl(data, args, pipelineNode, messageHandler);
+
+  int64_t totalFeatures = static_cast<int64_t>(activeArray->getNumberOfTuples());
+  if(totalFeatures < 2)
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-87000, "The number of Features was 0 or 1 which means no Features were detected. A threshold value may be set too high"}})};
+  }
+
+  // By default we randomize grains
+  if(randomizeFeatureIds)
+  {
+    totalPoints = static_cast<int64_t>(gridGeom->getNumberOfElements());
+    randomizeFeatureIds(featureIdsArray, totalPoints, totalFeatures, distribution);
+  }
+
   return {};
 }
 
-void ScalarSegmentFeatures::randomizeFeatureIds(Int32Array* featureIds, int64_t totalPoints, int64_t totalFeatures, Int64Distribution& distribution)
+void ScalarSegmentFeatures::randomizeFeatureIds(Int32Array* featureIds, int64_t totalPoints, int64_t totalFeatures, Int64Distribution& distribution) const
 {
   // notifyStatusMessage("Randomizing Feature Ids");
   // Generate an even distribution of numbers between the min and max range
@@ -248,7 +393,7 @@ void ScalarSegmentFeatures::randomizeFeatureIds(Int32Array* featureIds, int64_t 
   }
 }
 
-int64 ScalarSegmentFeatures::getSeed(Int32Array* featureIdsArray, int32 gnum, int64 nextSeed, bool useGoodVoxels, const UInt8Array* goodVoxelsArray)
+int64 ScalarSegmentFeatures::getSeed(Int32Array* featureIdsArray, int32 gnum, int64 nextSeed, bool useGoodVoxels, const UInt8Array* goodVoxelsArray) const
 {
   auto featureIds = featureIdsArray->getDataStore();
   usize totalPoints = featureIds->getNumberOfTuples();
@@ -277,19 +422,19 @@ int64 ScalarSegmentFeatures::getSeed(Int32Array* featureIdsArray, int32 gnum, in
   if(seed >= 0)
   {
     featureIds->setValue(seed, gnum);
-    //std::vector<size_t> tDims(1, gnum + 1);
-    //m->getAttributeMatrix(getCellFeatureAttributeMatrixName())->resizeAttributeArrays(tDims);
+    // std::vector<size_t> tDims(1, gnum + 1);
+    // m->getAttributeMatrix(getCellFeatureAttributeMatrixName())->resizeAttributeArrays(tDims);
   }
   return seed;
 }
 
-bool ScalarSegmentFeatures::determineGrouping(const Int32Array* featureIdsArray, bool useGoodVoxels, const UInt8Array* goodVoxelsArray, int64 referencepoint, int64 neighborpoint, int32 gnum)
+bool ScalarSegmentFeatures::determineGrouping(const Int32Array* featureIdsArray, bool useGoodVoxels, const UInt8Array* goodVoxelsArray, int64 referencepoint, int64 neighborpoint, int32 gnum) const
 {
   auto feastureIds = featureIdsArray->getDataStore();
   auto goodVoxels = goodVoxelsArray->getDataStore();
   if(feastureIds->getValue(neighborpoint) == 0 && (!useGoodVoxels || goodVoxels->getValue(neighborpoint)))
   {
-    CompareFunctor* func = m_Compare.get();
+    CompareFunctor* func = compare.get();
     return (*func)((size_t)(referencepoint), (size_t)(neighborpoint), gnum);
     //     | Functor  ||calling the operator() method of the CompareFunctor Class |
   }
@@ -297,7 +442,7 @@ bool ScalarSegmentFeatures::determineGrouping(const Int32Array* featureIdsArray,
   return false;
 }
 
-ScalarSegmentFeatures::SeedGenerator ScalarSegmentFeatures::initializeVoxelSeedGenerator(Int64Distribution& distribution, const int64 rangeMin, const int64 rangeMax)
+ScalarSegmentFeatures::SeedGenerator ScalarSegmentFeatures::initializeVoxelSeedGenerator(Int64Distribution& distribution, const int64 rangeMin, const int64 rangeMax) const
 {
   auto seed = static_cast<SeedGenerator::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
   SeedGenerator generator;
@@ -306,10 +451,5 @@ ScalarSegmentFeatures::SeedGenerator ScalarSegmentFeatures::initializeVoxelSeedG
   distribution = std::uniform_int_distribution<int64>(rangeMin, rangeMax);
 
   return generator;
-}
-
-bool ScalarSegmentFeatures::validateNmberOfTuples(const DataStructure& dataStructure, const std::vector<DataPath>& dataArrayPaths)
-{
-
 }
 } // namespace complex

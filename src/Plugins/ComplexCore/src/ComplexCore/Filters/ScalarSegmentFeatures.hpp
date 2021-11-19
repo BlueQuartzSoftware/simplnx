@@ -2,21 +2,26 @@
 
 #include <random>
 
-#include "ComplexCore/ComplexCore_export.hpp"
-
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+
+#include "ComplexCore/Filters/SegmentFeatures.hpp"
 
 namespace complex
 {
-class COMPLEXCORE_EXPORT ScalarSegmentFeatures : public IFilter
+/**
+ * @class ScalarSegmentFeatures
+ * @brief
+ */
+class COMPLEXCORE_EXPORT ScalarSegmentFeatures : public SegmentFeatures
 {
 public:
   using SeedGenerator = std::mt19937_64;
   using Int64Distribution = std::uniform_int_distribution<int64>;
+
+  using GoodVoxelsArrayType = UInt8Array;
 
   ScalarSegmentFeatures() = default;
   ~ScalarSegmentFeatures() noexcept override = default;
@@ -67,8 +72,6 @@ public:
   UniquePointer clone() const override;
 
 protected:
-  static bool validateNmberOfTuples(const DataStructure& dataStructure, const std::vector<DataPath>& dataArrayPaths);
-
   /**
    * @brief
    * @param featureIds
@@ -77,7 +80,7 @@ protected:
    * @param distribution
    * @param generator
    */
-  void randomizeFeatureIds(Int32Array* featureIdsArray, int64_t totalPoints, int64_t totalFeatures, Int64Distribution& distribution);
+  void randomizeFeatureIds(Int32Array* featureIdsArray, int64_t totalPoints, int64_t totalFeatures, Int64Distribution& distribution) const;
 
   /**
    * @brief
@@ -86,7 +89,7 @@ protected:
    * @param nextSeed
    * @return int64
    */
-  int64 getSeed(Int32Array* featureIds, int32 gnum, int64 nextSeed, bool useGoodVoxels, const UInt8Array* goodVoxels);
+  int64 getSeed(Int32Array* featureIds, int32 gnum, int64 nextSeed, bool useGoodVoxels, const UInt8Array* goodVoxels) const;
 
   /**
    * @brief
@@ -98,7 +101,7 @@ protected:
    * @param gnum
    * @return bool
    */
-  bool determineGrouping(const Int32Array* featureIdsArray, bool useGoodVoxels, const UInt8Array* goodVoxelsArray, int64 referencepoint, int64 neighborpoint, int32 gnum);
+  bool determineGrouping(const Int32Array* featureIdsArray, bool useGoodVoxels, const UInt8Array* goodVoxelsArray, int64 referencepoint, int64 neighborpoint, int32 gnum) const;
 
   /**
    * @brief
@@ -107,7 +110,7 @@ protected:
    * @param rangeMax
    * @return SeedGenerator
    */
-  SeedGenerator initializeVoxelSeedGenerator(Int64Distribution& distribution, const int64 rangeMin, const int64 rangeMax);
+  SeedGenerator initializeVoxelSeedGenerator(Int64Distribution& distribution, const int64 rangeMin, const int64 rangeMax) const;
 
   /**
    * @brief
