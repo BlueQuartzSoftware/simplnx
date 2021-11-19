@@ -140,6 +140,7 @@ set(CoreParameters
   DataPathSelectionParameter
   FileSystemPathParameter
   GeneratedFileListParameter
+  ImageGeometrySelectionParameter
   Dream3dImportParameter
   MultiArraySelectionParameter
   NumberParameter
