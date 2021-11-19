@@ -36,6 +36,13 @@ public:
    */
   virtual size_t getNumberOfComponents() const = 0;
 
+  /**
+   * @brief Copies values from one tuple to another.
+   * @param from
+   * @param to
+   */
+  virtual void copyTuple(usize from, usize to) = 0;
+
 protected:
   IDataArray(DataStructure& dataStructure, const std::string& name)
   : DataObject(dataStructure, name)
