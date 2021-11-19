@@ -9,8 +9,10 @@ find_package(Catch2 CONFIG REQUIRED)
 
 include(Catch)
 
+get_property(COMPLEX_PLUGIN_COUNT GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT)
 add_subdirectory(${complex_SOURCE_DIR}/src/Plugins/TestOne ${complex_BINARY_DIR}/Plugins/TestOne)
 add_subdirectory(${complex_SOURCE_DIR}/src/Plugins/TestTwo ${complex_BINARY_DIR}/Plugins/TestTwo)
+MATH(EXPR COMPLEX_PLUGIN_COUNT "${COMPLEX_PLUGIN_COUNT}+2")
 
 add_executable(complex_test 
   ${COMPLEX_TEST_DIRS_HEADER}
@@ -54,6 +56,7 @@ set_target_properties(complex_test
 target_compile_definitions(complex_test
   PRIVATE
     COMPLEX_BUILD_DIR="$<TARGET_FILE_DIR:complex_test>"
+    COMPLEX_PLUGIN_COUNT=${COMPLEX_PLUGIN_COUNT}
 )
 
 target_compile_options(complex_test

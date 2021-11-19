@@ -46,7 +46,7 @@ TEST_CASE("Create Core Filter")
   auto filterList = app.getFilterList();
   REQUIRE(filterList != nullptr);
 
-  // Only core filters should exists since plugins were not loaded
+  // Only core filters should exist since plugins were not loaded
   const auto& handles = filterList->getFilterHandles();
   REQUIRE(handles.size() > 0);
 

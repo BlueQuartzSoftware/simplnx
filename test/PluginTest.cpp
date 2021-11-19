@@ -33,7 +33,7 @@ TEST_CASE("Test Loading Plugins")
   const auto& filterHandles = filterList->getFilterHandles();
   auto plugins = filterList->getLoadedPlugins();
 
-  REQUIRE(plugins.size() == 3);
+  REQUIRE(plugins.size() == COMPLEX_PLUGIN_COUNT);
   REQUIRE(filterHandles.size() >= 2);
 
   DataStructure ds;
@@ -64,7 +64,7 @@ TEST_CASE("Test Singleton")
   auto plugins = filterList->getLoadedPlugins();
 
   // Check plugins were loaded
-  REQUIRE(plugins.size() == 3);
+  REQUIRE(plugins.size() == COMPLEX_PLUGIN_COUNT);
 
   // Check filters loaded
   REQUIRE(filterHandles.size() >= 2);
