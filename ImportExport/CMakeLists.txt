@@ -16,7 +16,6 @@ set(FilterList
   LosAlamosFFTWriter
   PhReader
   PhWriter
-  ReadStlFile
   SPParksDumpReader
   SPParksSitesWriter
   VisualizeGBCDGMT

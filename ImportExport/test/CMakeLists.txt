@@ -17,7 +17,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     LosAlamosFFTWriterTest.cpp
     PhReaderTest.cpp
     PhWriterTest.cpp
-    ReadStlFileTest.cpp
     SPParksDumpReaderTest.cpp
     SPParksSitesWriterTest.cpp
     VisualizeGBCDGMTTest.cpp

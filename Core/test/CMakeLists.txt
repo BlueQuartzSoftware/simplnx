@@ -19,7 +19,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     CreateFeatureArrayFromElementArrayTest.cpp
     CreateGeometryTest.cpp
     CreateGridMontageTest.cpp
-    CreateImageGeometryTest.cpp
     CreateStringArrayTest.cpp
     CropVertexGeometryTest.cpp
     #DataContainerReaderTest.cpp    # MISSING 1 or more Parameter Implementations

@@ -13,7 +13,6 @@
 | LosAlamosFFTWriter | TRUE  | | | |
 | PhReader | TRUE  | | | |
 | PhWriter | TRUE  | | | |
-| ReadStlFile | TRUE  | | | |
 | SPParksDumpReader | TRUE  | | | |
 | SPParksSitesWriter | TRUE  | | | |
 | VisualizeGBCDGMT | TRUE  | | | |
@@ -25,5 +24,5 @@
 
 ## Summary ##
 
-+ Filters Ready to be Ported: 19
++ Filters Ready to be Ported: 18
 + Filters Needing more Parameters Implemented: 0

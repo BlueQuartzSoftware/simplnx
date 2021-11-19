@@ -1,5 +1,5 @@
 /**
- * This file is auto generated from the original Core/CreateImageGeometry
+ * This file is auto generated from the original OSUToolbox/OSUToolboxFilter
  * runtime information. These are the steps that need to be taken to utilize this
  * unit test in the proper way.
  *
@@ -15,33 +15,26 @@
  * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
  * allow easier parsing of the unit tests.
  *
- * When you start working on this unit test remove "[CreateImageGeometry][.][UNIMPLEMENTED]"
+ * When you start working on this unit test remove "[OSUToolboxFilter][.][UNIMPLEMENTED]"
  * from the TEST_CASE macro. This will enable this unit test to be run by default
  * and report errors.
  */
 
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
-
-#include "Core/Core_test_dirs.hpp"
-#include "Core/Filters/CreateImageGeometry.hpp"
+#include "OSUToolbox/Filters/OSUToolboxFilter.hpp"
+#include "OSUToolbox/OSUToolbox_test_dirs.hpp"
 
 using namespace complex;
 
-TEST_CASE("Core::CreateImageGeometry: Instantiation and Parameter Check", "[Core][CreateImageGeometry][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OSUToolbox::OSUToolboxFilter: Instantiation and Parameter Check", "[OSUToolbox][OSUToolboxFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  CreateImageGeometry filter;
+  OSUToolboxFilter filter;
   DataStructure ds;
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(CreateImageGeometry::k_SelectedDataContainer_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(CreateImageGeometry::k_Dimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3)));
-  args.insertOrAssign(CreateImageGeometry::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insertOrAssign(CreateImageGeometry::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
@@ -52,12 +45,12 @@ TEST_CASE("Core::CreateImageGeometry: Instantiation and Parameter Check", "[Core
   REQUIRE(executeResult.result.valid());
 }
 
-// TEST_CASE("Core::CreateImageGeometry: Valid filter execution")
+// TEST_CASE("OSUToolbox::OSUToolboxFilter: Valid filter execution")
 //{
 //
 //}
 
-// TEST_CASE("Core::CreateImageGeometry: InValid filter execution")
+// TEST_CASE("OSUToolbox::OSUToolboxFilter: InValid filter execution")
 //{
 //
 //}

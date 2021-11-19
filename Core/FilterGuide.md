@@ -5,7 +5,6 @@
 | ArrayCalculator | FALSE  | | | |
 | CombineAttributeArrays | TRUE  | | | |
 | CombineAttributeMatrices | TRUE  | | | |
-| ConditionalSetValue | TRUE  | | | |
 | ConvertColorToGrayScale | TRUE  | | | |
 | ConvertData | TRUE  | | | |
 | CopyFeatureArrayToElementArray | TRUE  | | | |
@@ -16,7 +15,6 @@
 | CreateFeatureArrayFromElementArray | TRUE  | | | |
 | CreateGeometry | TRUE  | | | |
 | CreateGridMontage | TRUE  | | | |
-| CreateImageGeometry | TRUE  | | | |
 | CreateStringArray | TRUE  | | | |
 | CropVertexGeometry | TRUE  | | | |
 | DataContainerReader | FALSE  | | | |
@@ -61,5 +59,5 @@
 
 ## Summary ##
 
-+ Filters Ready to be Ported: 41
++ Filters Ready to be Ported: 39
 + Filters Needing more Parameters Implemented: 14
