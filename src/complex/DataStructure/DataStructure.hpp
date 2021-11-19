@@ -520,6 +520,14 @@ public:
   static DataStructure readFromHdf5(const H5::GroupReader& groupReader, H5::ErrorType& err);
 
   /**
+   * @brief Checks if all IDataArrays at the target paths have the same tuple count.
+   * Returns false if any of the paths are not derived from IDataArray.
+   * @param dataPaths
+   * @return bool
+   */
+  bool validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const;
+
+  /**
    * @brief Copy assignment operator. The copied DataStructure's observers are not retained.
    * @param rhs
    * @return DataStructure&
