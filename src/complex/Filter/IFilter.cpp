@@ -130,7 +130,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& ar
   for(const auto& action : preflightResult.outputActions.value().actions)
   {
     Result<> actionResult = action->apply(data, IDataAction::Mode::Execute);
-    if(!preflightResult.outputActions.valid())
+    if(!actionResult.valid())
     {
       return ExecuteResult{std::move(actionResult), std::move(preflightResult.outputValues)};
     }
