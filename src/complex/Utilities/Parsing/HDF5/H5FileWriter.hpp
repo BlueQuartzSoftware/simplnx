@@ -14,16 +14,13 @@ namespace H5
 class COMPLEX_EXPORT FileWriter : public GroupWriter
 {
 public:
-  using PointerType = std::unique_ptr<H5::FileWriter>;
-  using ResultType = Result<PointerType>;
-
   /**
    * @brief This static method will ensure that the complete path to the file exists
    * and the file is created.
    * @param filepath The file path to the HDF5 file that should be created
    * @return A standard Result object that wraps a std::unique_ptr<FileWriter> object on success.
    */
-  static ResultType CreateFile(const std::filesystem::path& filepath);
+  static Result<H5::FileWriter> CreateFile(const std::filesystem::path& filepath);
 
   /**
    * @brief This static method will wrap an existing HDF5 fileId value as long as the
@@ -31,7 +28,7 @@ public:
    * @param fileId The HDF5 File ID to wrap
    * @return A standard Result object that wraps a std::unique_ptr<FileWriter> object on success.
    */
-  static ResultType WrapHdf5FileId(H5::IdType fileId);
+  static Result<H5::FileWriter> WrapHdf5FileId(H5::IdType fileId);
 
   /**
    * @brief Constructs an invalid FileWriter.
@@ -39,9 +36,15 @@ public:
   FileWriter();
 
   /**
+   * @brief Move constructor.
+   * @param rhs
+   */
+  FileWriter(FileWriter&& rhs) noexcept;
+
+  /**
    * @brief Closes the HDF5 file.
    */
-  virtual ~FileWriter();
+  ~FileWriter() override;
 
   /**
    * @brief Returns the file's HDF5 ID. Returns 0 if the object is invalid.
@@ -63,7 +66,7 @@ protected:
    * existing data. If the file cannot be created, the writer is invalid.
    * @param filepath
    */
-  FileWriter(const std::filesystem::path& filepath) noexcept(false);
+  FileWriter(const std::filesystem::path& filepath);
 
   /**
    * @brief Constructs a FileWriter and wraps an already open HDF5 file. The
