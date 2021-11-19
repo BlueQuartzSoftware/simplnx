@@ -232,6 +232,23 @@ public:
   }
 
   /**
+   * @brief Copies values from one tuple to another.
+   * @param from
+   * @param to
+   */
+  void copyTuple(usize from, usize to)
+  {
+    const auto numComponents = getNumberOfComponents();
+    for(usize i = 0; i < numComponents; i++)
+    {
+      usize fromCompIndex = from * numComponents;
+      auto value = m_DataStore->getValue(fromCompIndex);
+      usize toCompIndex = to * numComponents;
+      m_DataStore->setValue(toCompIndex, value);
+    }
+  }
+
+  /**
    * @brief Returns const reference to the value found at the specified index
    * of the data array. This cannot be used to edit the value found at the
    * specified index.
