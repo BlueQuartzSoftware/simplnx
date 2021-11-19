@@ -6,39 +6,45 @@
 
 using namespace complex;
 
-H5::FileWriter::ResultType H5::FileWriter::CreateFile(const std::filesystem::path& filepath)
+Result<H5::FileWriter> H5::FileWriter::CreateFile(const std::filesystem::path& filepath)
 {
-  ResultType result;
+  Result<H5::FileWriter> result;
 
   auto parentPath = filepath.parent_path();
   if(!std::filesystem::exists(parentPath))
   {
     if(!std::filesystem::create_directories(parentPath))
     {
-      return MakeErrorResult<PointerType>(-300, fmt::format("Error creating Output HDF5 file at path '{}'. Parent path could not be created.", filepath.string()));
+      return MakeErrorResult<H5::FileWriter>(-300, fmt::format("Error creating Output HDF5 file at path '{}'. Parent path could not be created.", filepath.string()));
     }
   }
 
   try
   {
-    return {std::unique_ptr<FileWriter>(new FileWriter(filepath))};
+    return {FileWriter(filepath)};
   } catch(const std::runtime_error& error)
   {
-    return MakeErrorResult<PointerType>(-301, fmt::format("Error creating Output HDF5 file at path '{}'. Parent path could not be created.", filepath.string()));
+    return MakeErrorResult<H5::FileWriter>(-301, fmt::format("Error creating Output HDF5 file at path '{}'. Parent path could not be created.", filepath.string()));
   }
   return {}; // Code should not get here. We return everywhere else.
 }
 
-H5::FileWriter::ResultType H5::FileWriter::WrapHdf5FileId(H5::IdType fileId)
+Result<H5::FileWriter> H5::FileWriter::WrapHdf5FileId(H5::IdType fileId)
 {
   if(fileId <= 0)
   {
-    return MakeErrorResult<PointerType>(-302, fmt::format("Error wrapping existing HDF5 FileId with value '{}'.", fileId));
+    return MakeErrorResult<H5::FileWriter>(-302, fmt::format("Error wrapping existing HDF5 FileId with value '{}'.", fileId));
   }
-  return {std::unique_ptr<FileWriter>(new FileWriter(fileId))};
+  return {FileWriter(fileId)};
 }
 
 H5::FileWriter::FileWriter() = default;
+
+H5::FileWriter::FileWriter(FileWriter&& rhs) noexcept
+: GroupWriter()
+, m_FileId(std::exchange(rhs.m_FileId, -1))
+{
+}
 
 H5::FileWriter::FileWriter(const std::filesystem::path& filepath)
 {

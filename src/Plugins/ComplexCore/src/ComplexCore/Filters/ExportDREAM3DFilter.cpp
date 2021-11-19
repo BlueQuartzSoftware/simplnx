@@ -70,13 +70,13 @@ Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Ar
 {
   auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
 
-  H5::FileWriter::ResultType result = H5::FileWriter::CreateFile(exportFilePath);
+  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(exportFilePath);
 
-  H5::FileWriter& fileWriter = *(result.value());
   if(result.invalid())
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedFileWriterError, "Failed to initialize H5:FileWriter."}})};
   }
+  H5::FileWriter fileWriter = std::move(result.value());
 
   auto pipelinePtr = pipelineNode->getPrecedingPipeline();
   if(pipelinePtr == nullptr)
