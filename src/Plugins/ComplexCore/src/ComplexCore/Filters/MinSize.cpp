@@ -20,19 +20,6 @@ constexpr int32 k_BadMinAllowedFeatureSize = -5555;
 constexpr int32 k_BadNumCellsPath = -5556;
 constexpr int32 k_ParentlessPathError = -5557;
 
-#if 0
-bool isOverlap(const std::vector<DataPath>& vec1, const std::vector<DataPath>& vec2)
-{
-  std::vector<std::string> vec3;
-
-  std::sort(vec1.begin(), vec1.end());
-  std::sort(vec2.begin(), vec2.end());
-
-  std::set_intersection(vec1.begin(), vec1.end(), vec2.begin(), vec2.end(), back_inserter(vec3));
-  return vec3.size() > 0;
-}
-#endif
-
 void assign_badpoints(DataStructure& data, const DataPath& featureIdsPath, SizeVec3 dimensions, const Int32Array* numCellsPtr)
 {
   auto featureIdsPtr = data.getDataAs<Int64Array>(featureIdsPath);
