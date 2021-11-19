@@ -124,14 +124,14 @@ static DataStructure CreateAllPrimitiveTypes(const std::vector<usize>& tupleShap
   DataGroup* levelTwoGroup = DataGroup::Create(dataGraph, Constants::k_LevelTwo, levelZeroGroup->getId());
   auto levelTwoId = levelTwoGroup->getId();
 
-//  // Create an Image Geometry grid for the Scan Data
-//  ImageGeom* imageGeom = ImageGeom::Create(dataGraph, Constants::k_ImageGeometry, levelOneGroup->getId());
-//  SizeVec3 imageGeomDims = {40, 60, 80};
-//  imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
-//  imageGeom->setSpacing({0.25f, 0.55f, 1.86});
-//  imageGeom->setOrigin({0.0f, 20.0f, 66.0f});
+  //  // Create an Image Geometry grid for the Scan Data
+  //  ImageGeom* imageGeom = ImageGeom::Create(dataGraph, Constants::k_ImageGeometry, levelOneGroup->getId());
+  //  SizeVec3 imageGeomDims = {40, 60, 80};
+  //  imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
+  //  imageGeom->setSpacing({0.25f, 0.55f, 1.86});
+  //  imageGeom->setOrigin({0.0f, 20.0f, 66.0f});
 
-  //DataStore<size_t>::ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
+  // DataStore<size_t>::ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
   // Create Scalar type data
   DataStore<size_t>::ShapeType componentShape = {1ULL};
 

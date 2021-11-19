@@ -126,18 +126,17 @@ void ConditionalSetValueOverFlowTest(DataStructure& dataGraph, const DataPath& s
   REQUIRE(preflightResult.outputActions.valid() == false);
 }
 
-#if 0
 TEST_CASE("ConditionalSetValue: Overflow/Underflow", "[ConditionalSetValue]")
 {
-  DataStructure dataGraph = ComplexUnitTest::CreateAllPrimitiveTypes();
 
-  SizeVec3 imageDims = {40, 60, 80};
+  std::vector<size_t> imageDims = {40, 60, 80};
   FloatVec3 imageSpacing = {0.10F, 2.0F, 33.0F};
   FloatVec3 imageOrigin = {
       0.0F,
       22.0F,
       77.0F,
   };
+  DataStructure dataGraph = ComplexUnitTest::CreateAllPrimitiveTypes(imageDims);
 
   // Get the DataGroups that we are going to add an Image Geometry into
   DataGroup* levelOneGroup = dataGraph.getDataAs<DataGroup>(DataPath({ComplexUnitTest::Constants::k_LevelZero, ComplexUnitTest::Constants::k_LevelOne}));
@@ -200,4 +199,3 @@ TEST_CASE("ConditionalSetValue: Overflow/Underflow", "[ConditionalSetValue]")
   ConditionalSetValueOverFlowTest<double>(dataGraph, selectedDataPath, conditionalDataPath, "-2.22507e-309"); // underflow
   ConditionalSetValueOverFlowTest<double>(dataGraph, selectedDataPath, conditionalDataPath, "-1.79769e+309"); // overflow
 }
-#endif
