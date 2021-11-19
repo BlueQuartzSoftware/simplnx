@@ -9,14 +9,11 @@
 #include <iostream>
 #include <string>
 
-namespace complex
-{
-
 #define CDA_CREATE_CONVERTOR(TYPE, FUNCTION)                                                                                                                                                           \
   template <>                                                                                                                                                                                          \
   struct ConvertTo<TYPE>                                                                                                                                                                               \
   {                                                                                                                                                                                                    \
-    static std::pair<TYPE, Result<>> convert(const std::string& input)                                                                                                                                 \
+    static Result<TYPE> convert(const std::string& input)                                                                                                                                              \
     {                                                                                                                                                                                                  \
       TYPE value;                                                                                                                                                                                      \
       try                                                                                                                                                                                              \
@@ -24,15 +21,17 @@ namespace complex
         value = static_cast<TYPE>(FUNCTION(input));                                                                                                                                                    \
       } catch(std::invalid_argument const& e)                                                                                                                                                          \
       {                                                                                                                                                                                                \
-        return {value, MakeErrorResult(-100, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION))};                                                  \
+        return complex::MakeErrorResult<TYPE>(-100, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                            \
       } catch(std::out_of_range const& e)                                                                                                                                                              \
       {                                                                                                                                                                                                \
-        return {value, MakeErrorResult(-100, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION))};                                         \
+        return complex::MakeErrorResult<TYPE>(-101, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                   \
       }                                                                                                                                                                                                \
-      return {value, {}};                                                                                                                                                                              \
+      return {value};                                                                                                                                                                                  \
     }                                                                                                                                                                                                  \
   };
 
+namespace complex
+{
 template <class T>
 struct ConvertTo
 {
@@ -42,20 +41,19 @@ struct ConvertTo
  * These macros will create convertor objects that convert from a string to a numeric type
  */
 
-CDA_CREATE_CONVERTOR(uint8_t, std::stoull)
-CDA_CREATE_CONVERTOR(int8_t, std::stoll)
-CDA_CREATE_CONVERTOR(uint16_t, std::stoull)
-CDA_CREATE_CONVERTOR(int16_t, std::stoll)
-CDA_CREATE_CONVERTOR(uint32_t, std::stoull)
-CDA_CREATE_CONVERTOR(int32_t, std::stoll)
-CDA_CREATE_CONVERTOR(uint64_t, std::stoull)
-CDA_CREATE_CONVERTOR(int64_t, std::stoll)
+CDA_CREATE_CONVERTOR(uint8, std::stoull)
+CDA_CREATE_CONVERTOR(int8, std::stoll)
+CDA_CREATE_CONVERTOR(uint16, std::stoull)
+CDA_CREATE_CONVERTOR(int16, std::stoll)
+CDA_CREATE_CONVERTOR(uint32, std::stoull)
+CDA_CREATE_CONVERTOR(int32, std::stoll)
+CDA_CREATE_CONVERTOR(uint64, std::stoull)
+CDA_CREATE_CONVERTOR(int64, std::stoll)
 #ifdef __APPLE__
-CDA_CREATE_CONVERTOR(size_t, std::stoull)
+CDA_CREATE_CONVERTOR(usize, std::stoull)
 #endif
-// CDA_CREATE_CONVERTOR(bool, toInt)
-CDA_CREATE_CONVERTOR(float, std::stof)
-CDA_CREATE_CONVERTOR(double, std::stod)
+CDA_CREATE_CONVERTOR(float32, std::stof)
+CDA_CREATE_CONVERTOR(float64, std::stod)
 
 /**
  * @brief Checks if the given string can be correctly converted into the given type
@@ -64,70 +62,70 @@ CDA_CREATE_CONVERTOR(double, std::stod)
  * @param strType The primitive type. The valid values can be found in a constants file
  * @return Result<> object that is either valid or has an error message/code
  */
-template <typename T>
+template <class T>
 Result<> CheckValuesUnsignedInt(const std::string& valueAsStr, const std::string& strType)
 {
-  using CovertorType = ConvertTo<uint64_t>;
-  using ConversionResultType = std::pair<uint64_t, Result<>>;
+  static_assert(std::is_unsigned_v<T>);
+
   if(valueAsStr[0] == '-')
   {
-    return complex::MakeErrorResult<>(-255, fmt::format("The value '{}' could not be converted to {} due to the value being outside of the range for {} to {}", valueAsStr, strType,
-                                                        std::numeric_limits<T>::min(), std::numeric_limits<T>::max()));
+    return MakeErrorResult(-255, fmt::format("The value '{}' could not be converted to {} due to the value being outside of the range for {} to {}", valueAsStr, strType, std::numeric_limits<T>::min(),
+                                             std::numeric_limits<T>::max()));
   }
-  ConversionResultType conversionResult = CovertorType::convert(valueAsStr);
-  if(conversionResult.second.valid()) // If the string was converted to a double, then lets check the range is valid
+  Result<uint64> conversionResult = ConvertTo<uint64>::convert(valueAsStr);
+  if(conversionResult.valid()) // If the string was converted to a double, then lets check the range is valid
   {
-    uint64_t replaceValue = conversionResult.first;
+    uint64 replaceValue = conversionResult.value();
     std::string ss;
     if(!((replaceValue >= std::numeric_limits<T>::min()) && (replaceValue <= std::numeric_limits<T>::max())))
     {
-      return complex::MakeErrorResult<>(-256, fmt::format("The value '{}' could not be converted to {} due to the value being outside of the range for {} to {}", valueAsStr, strType,
-                                                          std::numeric_limits<T>::min(), std::numeric_limits<T>::max()));
+      return MakeErrorResult(-256, fmt::format("The value '{}' could not be converted to {} due to the value being outside of the range for {} to {}", valueAsStr, strType,
+                                               std::numeric_limits<T>::min(), std::numeric_limits<T>::max()));
     }
   }
-  return conversionResult.second;
+  return ConvertResult(std::move(conversionResult));
 }
 
 // -----------------------------------------------------------------------------
-template <typename T>
+template <class T>
 Result<> CheckValuesSignedInt(const std::string& valueAsStr, const std::string& strType)
 {
-  using CovertorType = ConvertTo<int64_t>;
-  using ConversionResultType = std::pair<int64_t, Result<>>;
-  ConversionResultType conversionResult = CovertorType::convert(valueAsStr);
-  if(conversionResult.second.valid()) // If the string was converted to a double, then lets check the range is valid
+  static_assert(std::is_signed_v<T>);
+
+  Result<int64> conversionResult = ConvertTo<int64>::convert(valueAsStr);
+  if(conversionResult.valid()) // If the string was converted to a double, then lets check the range is valid
   {
-    int64_t replaceValue = conversionResult.first;
+    int64 replaceValue = conversionResult.value();
     std::string ss;
     if(!((replaceValue >= std::numeric_limits<T>::min()) && (replaceValue <= std::numeric_limits<T>::max())))
     {
-      return complex::MakeErrorResult<>(-257, fmt::format("The value '{}' could not be converted to {} due to the value being outside of the range for {} to {}", valueAsStr, strType,
-                                                          std::numeric_limits<T>::min(), std::numeric_limits<T>::max()));
+      return MakeErrorResult(-257, fmt::format("The value '{}' could not be converted to {} due to the value being outside of the range for {} to {}", valueAsStr, strType,
+                                               std::numeric_limits<T>::min(), std::numeric_limits<T>::max()));
     }
   }
-  return conversionResult.second;
+  return ConvertResult(std::move(conversionResult));
 }
 
 // -----------------------------------------------------------------------------
-template <typename T>
+template <class T>
 Result<> CheckValuesFloatDouble(const std::string& valueAsStr, const std::string& strType)
 {
-  using CovertorType = ConvertTo<double>;
-  using ConversionResultType = std::pair<double, Result<>>;
-  ConversionResultType conversionResult = CovertorType::convert(valueAsStr);
-  if(conversionResult.second.valid()) // If the string was converted to a double, then lets check the range is valid
+  static_assert(std::is_floating_point_v<T>);
+
+  Result<float64> conversionResult = ConvertTo<float64>::convert(valueAsStr);
+  if(conversionResult.valid()) // If the string was converted to a double, then lets check the range is valid
   {
-    double replaceValue = conversionResult.first;
+    float64 replaceValue = conversionResult.value();
     std::string ss;
 
     if(!(((replaceValue >= static_cast<T>(-1) * std::numeric_limits<T>::max()) && (replaceValue <= static_cast<T>(-1) * std::numeric_limits<T>::min())) || (replaceValue == 0) ||
          ((replaceValue >= std::numeric_limits<T>::min()) && (replaceValue <= std::numeric_limits<T>::max()))))
     {
-      return complex::MakeErrorResult<>(-258, fmt::format("The {} replace value was invalid. The valid ranges are -{} to -{}, 0, %{} to %{}", std::numeric_limits<T>::max(), strType,
-                                                          std::numeric_limits<T>::min(), std::numeric_limits<T>::min(), std::numeric_limits<T>::max()));
+      return MakeErrorResult<>(-258, fmt::format("The {} replace value was invalid. The valid ranges are -{} to -{}, 0, %{} to %{}", std::numeric_limits<T>::max(), strType,
+                                                 std::numeric_limits<T>::min(), std::numeric_limits<T>::min(), std::numeric_limits<T>::max()));
     }
   }
-  return conversionResult.second;
+  return ConvertResult(std::move(conversionResult));
 }
 
 /**
@@ -138,61 +136,54 @@ Result<> CheckValuesFloatDouble(const std::string& valueAsStr, const std::string
  * @param inputDataArray
  * @return
  */
-Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObject* inputDataArray)
+Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObject& inputDataArray)
 {
-
-  if(TemplateHelpers::CanDynamicCast<Float32Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<Float32Array>()(&inputDataArray))
   {
-    return CheckValuesFloatDouble<float>(value, complex::Constants::k_Float32);
+    return CheckValuesFloatDouble<float32>(value, Constants::k_Float32);
   }
-  if(TemplateHelpers::CanDynamicCast<Float64Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<Float64Array>()(&inputDataArray))
   {
-    return CheckValuesFloatDouble<double>(value, complex::Constants::k_Float64);
+    return CheckValuesFloatDouble<float64>(value, Constants::k_Float64);
   }
-  if(TemplateHelpers::CanDynamicCast<Int8Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<Int8Array>()(&inputDataArray))
   {
-    return CheckValuesSignedInt<int8_t>(value, complex::Constants::k_Int8);
+    return CheckValuesSignedInt<int8>(value, Constants::k_Int8);
   }
-  if(TemplateHelpers::CanDynamicCast<UInt8Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<UInt8Array>()(&inputDataArray))
   {
-    return CheckValuesUnsignedInt<uint8_t>(value, complex::Constants::k_UInt8);
+    return CheckValuesUnsignedInt<uint8>(value, Constants::k_UInt8);
   }
-  if(TemplateHelpers::CanDynamicCast<Int16Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<Int16Array>()(&inputDataArray))
   {
-    return CheckValuesSignedInt<int16_t>(value, complex::Constants::k_Int16);
+    return CheckValuesSignedInt<int16>(value, Constants::k_Int16);
   }
-  if(TemplateHelpers::CanDynamicCast<UInt16Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<UInt16Array>()(&inputDataArray))
   {
-    return CheckValuesUnsignedInt<uint16_t>(value, complex::Constants::k_UInt16);
+    return CheckValuesUnsignedInt<uint16>(value, Constants::k_UInt16);
   }
-  if(TemplateHelpers::CanDynamicCast<Int32Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<Int32Array>()(&inputDataArray))
   {
-    return CheckValuesSignedInt<int32_t>(value, complex::Constants::k_Int32);
+    return CheckValuesSignedInt<int32>(value, Constants::k_Int32);
   }
-  if(TemplateHelpers::CanDynamicCast<UInt32Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<UInt32Array>()(&inputDataArray))
   {
-    return CheckValuesUnsignedInt<uint32_t>(value, complex::Constants::k_UInt32);
+    return CheckValuesUnsignedInt<uint32>(value, Constants::k_UInt32);
   }
-  if(TemplateHelpers::CanDynamicCast<Int64Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<Int64Array>()(&inputDataArray))
   {
-    return CheckValuesSignedInt<int64_t>(value, complex::Constants::k_Int64);
+    return CheckValuesSignedInt<int64>(value, Constants::k_Int64);
   }
-  if(TemplateHelpers::CanDynamicCast<UInt64Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<UInt64Array>()(&inputDataArray))
   {
-    return CheckValuesUnsignedInt<uint64_t>(value, complex::Constants::k_UInt64);
+    return CheckValuesUnsignedInt<uint64>(value, Constants::k_UInt64);
   }
-
-  //   if(TemplateHelpers::CanDynamicCast<BoolArray>()(inputDataArray))
-  //  {
-  //    const BoolArray* data = dynamic_cast<const BoolArray*>(inputDataObject);
-  //  }
-
-  if(TemplateHelpers::CanDynamicCast<DataArray<size_t>>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<DataArray<usize>>()(&inputDataArray))
   {
-    return CheckValuesUnsignedInt<size_t>(value, complex::Constants::k_SizeT);
+    return CheckValuesUnsignedInt<usize>(value, Constants::k_USize);
   }
 
-  return {complex::MakeErrorResult(-259, fmt::format("Input DataObject could not be cast to any primitive type."))};
+  return {MakeErrorResult(-259, fmt::format("Input DataObject could not be cast to any primitive type."))};
 }
 
 /**
@@ -202,17 +193,17 @@ Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObjec
  * @param condDataPtr The mask array as a boolean array
  * @param replaceValue The value that will be used for every place the conditional array is TRUE
  */
-template <typename T>
-void ReplaceValue(DataArray<T>* inputArrayPtr, BoolArray* condDataPtr, T replaceValue)
+template <class T>
+void ReplaceValue(DataArray<T>& inputArrayPtr, const BoolArray& condDataPtr, T replaceValue)
 {
   T replaceVal = static_cast<T>(replaceValue);
-  size_t numTuples = inputArrayPtr->getNumberOfTuples();
+  usize numTuples = inputArrayPtr.getNumberOfTuples();
 
-  for(size_t tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
+  for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
   {
-    if((*condDataPtr)[tupleIndex])
+    if(condDataPtr[tupleIndex])
     {
-      inputArrayPtr->initializeTuple(tupleIndex, replaceValue);
+      inputArrayPtr.initializeTuple(tupleIndex, replaceValue);
     }
   }
 }
@@ -226,20 +217,22 @@ void ReplaceValue(DataArray<T>* inputArrayPtr, BoolArray* condDataPtr, T replace
  * @return True or False whether the replacement algorithm was run. This function can
  * return FALSE if the wrong array type is specified as the template parameter
  */
-template <typename T>
-bool ConditionalReplaceValueInArrayFromString(const std::string& valueAsStr, DataObject* inputDataObject, BoolArray* conditionalDataArray)
+template <class T>
+bool ConditionalReplaceValueInArrayFromString(const std::string& valueAsStr, DataObject& inputDataObject, const BoolArray& conditionalDataArray)
 {
   using DataArrayType = DataArray<T>;
-  if(TemplateHelpers::CanDynamicCast<DataArrayType>()(inputDataObject))
+  if(!TemplateHelpers::CanDynamicCast<DataArrayType>()(&inputDataObject))
   {
-    DataArrayType* inputDataArray = dynamic_cast<DataArrayType*>(inputDataObject);
-    using CovertorType = ConvertTo<T>;
-    using ConversionResultType = std::pair<T, Result<>>;
-    ConversionResultType conversionResult = CovertorType::convert(valueAsStr);
-    ReplaceValue<T>(inputDataArray, conditionalDataArray, conversionResult.first);
-    return true;
+    return false;
   }
-  return false;
+  DataArrayType& inputDataArray = dynamic_cast<DataArrayType&>(inputDataObject);
+  Result<T> conversionResult = ConvertTo<T>::convert(valueAsStr);
+  if(conversionResult.invalid())
+  {
+    return false;
+  }
+  ReplaceValue<T>(inputDataArray, conditionalDataArray, conversionResult.value());
+  return true;
 }
 
 /**
@@ -249,68 +242,57 @@ bool ConditionalReplaceValueInArrayFromString(const std::string& valueAsStr, Dat
  * @param conditionalDataArray The mask array as a boolean array
  * @return
  */
-Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject* inputDataObject, BoolArray* conditionalDataArray)
+Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const BoolArray& conditionalDataArray)
 {
-
   if(ConditionalReplaceValueInArrayFromString<float32>(valueAsStr, inputDataObject, conditionalDataArray))
   {
     return {};
   }
-  if(ConditionalReplaceValueInArrayFromString<double>(valueAsStr, inputDataObject, conditionalDataArray))
+  if(ConditionalReplaceValueInArrayFromString<float64>(valueAsStr, inputDataObject, conditionalDataArray))
   {
     return {};
   }
 
-  if(ConditionalReplaceValueInArrayFromString<uint8_t>(valueAsStr, inputDataObject, conditionalDataArray))
+  if(ConditionalReplaceValueInArrayFromString<uint8>(valueAsStr, inputDataObject, conditionalDataArray))
   {
     return {};
   }
-  if(ConditionalReplaceValueInArrayFromString<uint16_t>(valueAsStr, inputDataObject, conditionalDataArray))
+  if(ConditionalReplaceValueInArrayFromString<uint16>(valueAsStr, inputDataObject, conditionalDataArray))
   {
     return {};
   }
-  if(ConditionalReplaceValueInArrayFromString<uint32_t>(valueAsStr, inputDataObject, conditionalDataArray))
+  if(ConditionalReplaceValueInArrayFromString<uint32>(valueAsStr, inputDataObject, conditionalDataArray))
   {
     return {};
   }
-  if(ConditionalReplaceValueInArrayFromString<uint64_t>(valueAsStr, inputDataObject, conditionalDataArray))
-  {
-    return {};
-  }
-
-  if(ConditionalReplaceValueInArrayFromString<int8_t>(valueAsStr, inputDataObject, conditionalDataArray))
-  {
-    return {};
-  }
-  if(ConditionalReplaceValueInArrayFromString<int16_t>(valueAsStr, inputDataObject, conditionalDataArray))
-  {
-    return {};
-  }
-  if(ConditionalReplaceValueInArrayFromString<int32_t>(valueAsStr, inputDataObject, conditionalDataArray))
-  {
-    return {};
-  }
-  if(ConditionalReplaceValueInArrayFromString<int64_t>(valueAsStr, inputDataObject, conditionalDataArray))
+  if(ConditionalReplaceValueInArrayFromString<uint64>(valueAsStr, inputDataObject, conditionalDataArray))
   {
     return {};
   }
 
-  if(ConditionalReplaceValueInArrayFromString<size_t>(valueAsStr, inputDataObject, conditionalDataArray))
+  if(ConditionalReplaceValueInArrayFromString<int8>(valueAsStr, inputDataObject, conditionalDataArray))
+  {
+    return {};
+  }
+  if(ConditionalReplaceValueInArrayFromString<int16>(valueAsStr, inputDataObject, conditionalDataArray))
+  {
+    return {};
+  }
+  if(ConditionalReplaceValueInArrayFromString<int32>(valueAsStr, inputDataObject, conditionalDataArray))
+  {
+    return {};
+  }
+  if(ConditionalReplaceValueInArrayFromString<int64>(valueAsStr, inputDataObject, conditionalDataArray))
   {
     return {};
   }
 
-  //   if(TemplateHelpers::CanDynamicCast<BoolArray>()(inputDataObject))
-  //  {
-  //    const BoolArray* data = dynamic_cast<const BoolArray*>(inputDataObject);
-  //  }
-
-  if(TemplateHelpers::CanDynamicCast<DataArray<size_t>>()(inputDataObject))
+  if(ConditionalReplaceValueInArrayFromString<usize>(valueAsStr, inputDataObject, conditionalDataArray))
   {
-    return CheckValuesUnsignedInt<size_t>(valueAsStr, complex::Constants::k_SizeT);
+    return {};
   }
 
-  return {complex::MakeErrorResult(-260, fmt::format("Input DataObject could not be cast to any primitive type."))};
+  return {MakeErrorResult(-260, fmt::format("Input DataObject could not be cast to any primitive type."))};
 }
 
 /**

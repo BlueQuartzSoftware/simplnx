@@ -9,7 +9,7 @@
 #include "ComplexCore/Filters/RobustAutomaticThreshold.hpp"
 
 using namespace complex;
-using namespace ComplexUnitTest::Constants;
+using namespace complex::UnitTest::Constants;
 
 TEST_CASE("RobustAutomaticThreshold: Instantiate Filter", "[RobustAutomaticThreshold]")
 {
@@ -27,17 +27,17 @@ TEST_CASE("RobustAutomaticThreshold: Instantiate Filter", "[RobustAutomaticThres
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
-  REQUIRE(preflightResult.outputActions.valid() == false);
+  REQUIRE(!preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataGraph, args);
-  REQUIRE(executeResult.result.valid() == false);
+  REQUIRE(!executeResult.result.valid());
 }
 
 TEST_CASE("RobustAutomaticThreshold: Missing/Empty DataPaths", "[RobustAutomaticThreshold]")
 {
   RobustAutomaticThreshold filter;
-  DataStructure dataGraph = ComplexUnitTest::CreateDataStructure();
+  DataStructure dataGraph = UnitTest::CreateDataStructure();
   Arguments args;
 
   DataPath inputPath({k_SmallIN100, k_EbsdScanData, "Phases"});
@@ -48,28 +48,28 @@ TEST_CASE("RobustAutomaticThreshold: Missing/Empty DataPaths", "[RobustAutomatic
   {
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);
-    REQUIRE(preflightResult.outputActions.valid() == false);
+    REQUIRE(!preflightResult.outputActions.valid());
   }
 
   args.insertOrAssign(RobustAutomaticThreshold::k_GradientMagnitudePath, std::make_any<DataPath>(gradientMagnitudePath));
   // Preflight the filter and check result
   {
     auto preflightResult = filter.preflight(dataGraph, args);
-    REQUIRE(preflightResult.outputActions.valid() == false);
+    REQUIRE(!preflightResult.outputActions.valid());
   }
 
   args.insertOrAssign(RobustAutomaticThreshold::k_ArrayCreationPath, std::make_any<DataPath>(createdArrayPath));
   {
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);
-    REQUIRE(preflightResult.outputActions.valid() == true);
+    REQUIRE(preflightResult.outputActions.valid());
   }
 }
 
 TEST_CASE("RobustAutomaticThreshold: Test Algorithm", "[RobustAutomaticThreshold]")
 {
   RobustAutomaticThreshold filter;
-  DataStructure dataGraph = ComplexUnitTest::CreateDataStructure();
+  DataStructure dataGraph = UnitTest::CreateDataStructure();
   Arguments args;
 
   DataPath inputPath({k_SmallIN100, k_EbsdScanData, "Phases"});

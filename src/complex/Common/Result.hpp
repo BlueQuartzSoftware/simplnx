@@ -138,7 +138,7 @@ struct Result : public detail::ResultBaseT<T>
  * @return Result<>
  */
 template <class T>
-Result<> convertResult(Result<T>&& result)
+Result<> ConvertResult(Result<T>&& result)
 {
   Result<> voidResult;
   if(!result.valid())

@@ -656,7 +656,7 @@ DataStructure DataStructure::readFromHdf5(const H5::GroupReader& groupReader, H5
 
 bool DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const
 {
-  if(dataPaths.size() == 0)
+  if(dataPaths.empty())
   {
     return true;
   }
@@ -665,21 +665,18 @@ bool DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPath
   for(usize i = 0; i < dataPaths.size(); i++)
   {
     const auto& dataPath = dataPaths[i];
+    auto* dataArray = getDataAs<IDataArray>(dataPath);
     // Must be an IDataArray
-    if(auto dataArray = getDataAs<IDataArray>(dataPath))
+    if(dataArray == nullptr)
     {
-      // Check equality if not first item
-      if(i == 0)
-      {
-        tupleCount = dataArray->getNumberOfTuples();
-      }
-      else if(tupleCount != dataArray->getNumberOfTuples())
-      {
-        return false;
-      }
+      return false;
     }
-    // DataPath not pointing to an IDataArray
-    else
+    // Check equality if not first item
+    if(i == 0)
+    {
+      tupleCount = dataArray->getNumberOfTuples();
+    }
+    else if(tupleCount != dataArray->getNumberOfTuples())
     {
       return false;
     }
