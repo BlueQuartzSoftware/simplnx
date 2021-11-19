@@ -524,7 +524,7 @@ public:
    * Returns false if any of the paths are not derived from IDataArray.
    * @param dataPaths
    * @return bool
-  */
+   */
   bool validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const;
 
   /**
