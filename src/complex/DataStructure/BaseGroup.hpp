@@ -209,7 +209,7 @@ protected:
    * @param ds
    * @param name
    */
-  BaseGroup(DataStructure& ds, const std::string& name);
+  BaseGroup(DataStructure& ds, std::string name);
 
   /**
    * @brief Creates a BaseGroup with the target DataStructure and name.
@@ -217,7 +217,7 @@ protected:
    * @param name
    * @param importId
    */
-  BaseGroup(DataStructure& ds, const std::string& name, IdType importId);
+  BaseGroup(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief Checks if the provided DataObject can be added to the container.

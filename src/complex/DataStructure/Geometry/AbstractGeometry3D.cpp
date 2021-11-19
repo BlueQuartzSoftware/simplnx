@@ -6,13 +6,13 @@
 
 using namespace complex;
 
-AbstractGeometry3D::AbstractGeometry3D(DataStructure& ds, const std::string& name)
-: AbstractGeometry(ds, name)
+AbstractGeometry3D::AbstractGeometry3D(DataStructure& ds, std::string name)
+: AbstractGeometry(ds, std::move(name))
 {
 }
 
-AbstractGeometry3D::AbstractGeometry3D(DataStructure& ds, const std::string& name, IdType importId)
-: AbstractGeometry(ds, name, importId)
+AbstractGeometry3D::AbstractGeometry3D(DataStructure& ds, std::string name, IdType importId)
+: AbstractGeometry(ds, std::move(name), importId)
 {
 }
 

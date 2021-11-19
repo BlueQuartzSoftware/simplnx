@@ -135,7 +135,7 @@ protected:
    * @param ds
    * @param name
    */
-  AbstractMontage(DataStructure& ds, const std::string& name);
+  AbstractMontage(DataStructure& ds, std::string name);
 
   /**
    * @brief Constructs a new Abstract montage for the target DataStructure
@@ -144,7 +144,7 @@ protected:
    * @param name
    * @param importId
    */
-  AbstractMontage(DataStructure& ds, const std::string& name, IdType importId);
+  AbstractMontage(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief Checks if the specified DataObject can be added to the montage.

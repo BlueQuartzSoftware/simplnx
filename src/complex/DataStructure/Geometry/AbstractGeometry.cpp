@@ -73,13 +73,13 @@ std::string AbstractGeometry::LengthUnitToString(LengthUnit unit)
   return "Unknown";
 }
 
-AbstractGeometry::AbstractGeometry(DataStructure& ds, const std::string& name)
-: BaseGroup(ds, name)
+AbstractGeometry::AbstractGeometry(DataStructure& ds, std::string name)
+: BaseGroup(ds, std::move(name))
 {
 }
 
-AbstractGeometry::AbstractGeometry(DataStructure& ds, const std::string& name, IdType importId)
-: BaseGroup(ds, name, importId)
+AbstractGeometry::AbstractGeometry(DataStructure& ds, std::string name, IdType importId)
+: BaseGroup(ds, std::move(name), importId)
 {
 }
 

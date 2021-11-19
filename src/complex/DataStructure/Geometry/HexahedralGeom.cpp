@@ -10,23 +10,23 @@
 
 using namespace complex;
 
-HexahedralGeom::HexahedralGeom(DataStructure& ds, const std::string& name)
-: AbstractGeometry3D(ds, name)
+HexahedralGeom::HexahedralGeom(DataStructure& ds, std::string name)
+: AbstractGeometry3D(ds, std::move(name))
 {
 }
 
-HexahedralGeom::HexahedralGeom(DataStructure& ds, const std::string& name, IdType importId)
-: AbstractGeometry3D(ds, name, importId)
+HexahedralGeom::HexahedralGeom(DataStructure& ds, std::string name, IdType importId)
+: AbstractGeometry3D(ds, std::move(name), importId)
 {
 }
 
-HexahedralGeom::HexahedralGeom(DataStructure& ds, const std::string& name, usize numHexas, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
-: AbstractGeometry3D(ds, name)
+HexahedralGeom::HexahedralGeom(DataStructure& ds, std::string name, usize numHexas, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
+: AbstractGeometry3D(ds, std::move(name))
 {
 }
 
-HexahedralGeom::HexahedralGeom(DataStructure& ds, const std::string& name, const std::shared_ptr<SharedHexList>& hexas, const std::shared_ptr<SharedVertexList>& vertices)
-: AbstractGeometry3D(ds, name)
+HexahedralGeom::HexahedralGeom(DataStructure& ds, std::string name, const std::shared_ptr<SharedHexList>& hexas, const std::shared_ptr<SharedVertexList>& vertices)
+: AbstractGeometry3D(ds, std::move(name))
 {
 }
 
@@ -52,9 +52,9 @@ HexahedralGeom::HexahedralGeom(HexahedralGeom&& other) noexcept
 
 HexahedralGeom::~HexahedralGeom() = default;
 
-HexahedralGeom* HexahedralGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+HexahedralGeom* HexahedralGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(ds, name));
+  auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(ds, std::move(name)));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
@@ -62,9 +62,9 @@ HexahedralGeom* HexahedralGeom::Create(DataStructure& ds, const std::string& nam
   return data.get();
 }
 
-HexahedralGeom* HexahedralGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+HexahedralGeom* HexahedralGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(ds, name, importId));
+  auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(ds, std::move(name), importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

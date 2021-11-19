@@ -10,18 +10,18 @@
 
 using namespace complex;
 
-EdgeGeom::EdgeGeom(DataStructure& ds, const std::string& name)
-: AbstractGeometry(ds, name)
+EdgeGeom::EdgeGeom(DataStructure& ds, std::string name)
+: AbstractGeometry(ds, std::move(name))
 {
 }
 
-EdgeGeom::EdgeGeom(DataStructure& ds, const std::string& name, IdType importId)
-: AbstractGeometry(ds, name, importId)
+EdgeGeom::EdgeGeom(DataStructure& ds, std::string name, IdType importId)
+: AbstractGeometry(ds, std::move(name), importId)
 {
 }
 
-EdgeGeom::EdgeGeom(DataStructure& ds, const std::string& name, const SharedEdgeList* edges, const SharedVertexList* vertices)
-: AbstractGeometry(ds, name)
+EdgeGeom::EdgeGeom(DataStructure& ds, std::string name, const SharedEdgeList* edges, const SharedVertexList* vertices)
+: AbstractGeometry(ds, std::move(name))
 {
   setEdges(edges);
   setVertices(vertices);
@@ -42,9 +42,9 @@ EdgeGeom::EdgeGeom(EdgeGeom&& other) noexcept
 
 EdgeGeom::~EdgeGeom() = default;
 
-EdgeGeom* EdgeGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+EdgeGeom* EdgeGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<EdgeGeom>(new EdgeGeom(ds, name));
+  auto data = std::shared_ptr<EdgeGeom>(new EdgeGeom(ds, std::move(name)));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
@@ -52,9 +52,9 @@ EdgeGeom* EdgeGeom::Create(DataStructure& ds, const std::string& name, const std
   return data.get();
 }
 
-EdgeGeom* EdgeGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+EdgeGeom* EdgeGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<EdgeGeom>(new EdgeGeom(ds, name, importId));
+  auto data = std::shared_ptr<EdgeGeom>(new EdgeGeom(ds, std::move(name), importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

@@ -11,23 +11,23 @@
 
 using namespace complex;
 
-TriangleGeom::TriangleGeom(DataStructure& ds, const std::string& name)
-: AbstractGeometry2D(ds, name)
+TriangleGeom::TriangleGeom(DataStructure& ds, std::string name)
+: AbstractGeometry2D(ds, std::move(name))
 {
 }
 
-TriangleGeom::TriangleGeom(DataStructure& ds, const std::string& name, IdType importId)
-: AbstractGeometry2D(ds, name, importId)
+TriangleGeom::TriangleGeom(DataStructure& ds, std::string name, IdType importId)
+: AbstractGeometry2D(ds, std::move(name), importId)
 {
 }
 
-TriangleGeom::TriangleGeom(DataStructure& ds, const std::string& name, usize numTriangles, const SharedVertexList* vertices, bool allocate)
-: AbstractGeometry2D(ds, name)
+TriangleGeom::TriangleGeom(DataStructure& ds, std::string name, usize numTriangles, const SharedVertexList* vertices, bool allocate)
+: AbstractGeometry2D(ds, std::move(name))
 {
 }
 
-TriangleGeom::TriangleGeom(DataStructure& ds, const std::string& name, const SharedTriList* triangles, const SharedVertexList* vertices)
-: AbstractGeometry2D(ds, name)
+TriangleGeom::TriangleGeom(DataStructure& ds, std::string name, const SharedTriList* triangles, const SharedVertexList* vertices)
+: AbstractGeometry2D(ds, std::move(name))
 {
 }
 
@@ -53,9 +53,9 @@ TriangleGeom::TriangleGeom(TriangleGeom&& other) noexcept
 
 TriangleGeom::~TriangleGeom() = default;
 
-TriangleGeom* TriangleGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+TriangleGeom* TriangleGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(ds, name));
+  auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(ds, std::move(name)));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
@@ -63,9 +63,9 @@ TriangleGeom* TriangleGeom::Create(DataStructure& ds, const std::string& name, c
   return data.get();
 }
 
-TriangleGeom* TriangleGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+TriangleGeom* TriangleGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(ds, name, importId));
+  auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(ds, std::move(name), importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

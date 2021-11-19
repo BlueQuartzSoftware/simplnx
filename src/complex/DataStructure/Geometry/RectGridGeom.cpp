@@ -11,13 +11,13 @@
 
 using namespace complex;
 
-RectGridGeom::RectGridGeom(DataStructure& ds, const std::string& name)
-: AbstractGeometryGrid(ds, name)
+RectGridGeom::RectGridGeom(DataStructure& ds, std::string name)
+: AbstractGeometryGrid(ds, std::move(name))
 {
 }
 
-RectGridGeom::RectGridGeom(DataStructure& ds, const std::string& name, IdType importId)
-: AbstractGeometryGrid(ds, name, importId)
+RectGridGeom::RectGridGeom(DataStructure& ds, std::string name, IdType importId)
+: AbstractGeometryGrid(ds, std::move(name), importId)
 {
 }
 
@@ -43,9 +43,9 @@ RectGridGeom::RectGridGeom(RectGridGeom&& other) noexcept
 
 RectGridGeom::~RectGridGeom() = default;
 
-RectGridGeom* RectGridGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+RectGridGeom* RectGridGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(ds, name));
+  auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(ds, std::move(name)));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
@@ -53,9 +53,9 @@ RectGridGeom* RectGridGeom::Create(DataStructure& ds, const std::string& name, c
   return data.get();
 }
 
-RectGridGeom* RectGridGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+RectGridGeom* RectGridGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(ds, name, importId));
+  auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(ds, std::move(name), importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

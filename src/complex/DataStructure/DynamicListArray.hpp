@@ -36,9 +36,9 @@ public:
    * @param parentId = {}
    * @return DynamicListArray*
    */
-  static DynamicListArray* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+  static DynamicListArray* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
   {
-    auto data = std::shared_ptr<DynamicListArray>(new DynamicListArray(ds, name));
+    auto data = std::shared_ptr<DynamicListArray>(new DynamicListArray(ds, std::move(name)));
     if(!AttemptToAddObject(ds, data, parentId))
     {
       return nullptr;
@@ -60,9 +60,9 @@ public:
    * @param parentId = {}
    * @return DynamicListArray*
    */
-  static DynamicListArray* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+  static DynamicListArray* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
   {
-    auto data = std::shared_ptr<DynamicListArray>(new DynamicListArray(ds, name, importId));
+    auto data = std::shared_ptr<DynamicListArray>(new DynamicListArray(ds, std::move(name), importId));
     if(!AttemptToAddObject(ds, data, parentId))
     {
       return nullptr;
@@ -311,8 +311,8 @@ protected:
    * @param ds
    * @param name
    */
-  DynamicListArray(DataStructure& ds, const std::string& name)
-  : DataObject(ds, name)
+  DynamicListArray(DataStructure& ds, std::string name)
+  : DataObject(ds, std::move(name))
   {
   }
 
@@ -322,8 +322,8 @@ protected:
    * @param name
    * @param importId
    */
-  DynamicListArray(DataStructure& ds, const std::string& name, IdType importId)
-  : DataObject(ds, name, importId)
+  DynamicListArray(DataStructure& ds, std::string name, IdType importId)
+  : DataObject(ds, std::move(name), importId)
   {
   }
 

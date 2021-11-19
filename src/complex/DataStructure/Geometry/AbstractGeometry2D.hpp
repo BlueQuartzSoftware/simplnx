@@ -171,7 +171,7 @@ protected:
    * @param ds
    * @param name
    */
-  AbstractGeometry2D(DataStructure& ds, const std::string& name);
+  AbstractGeometry2D(DataStructure& ds, std::string name);
 
   /**
    * @brief
@@ -179,7 +179,7 @@ protected:
    * @param name
    * @param importId
    */
-  AbstractGeometry2D(DataStructure& ds, const std::string& name, IdType importId);
+  AbstractGeometry2D(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief

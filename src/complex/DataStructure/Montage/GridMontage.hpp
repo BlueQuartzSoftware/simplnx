@@ -35,7 +35,7 @@ public:
    * @param parentId = {}
    * @return GridMontage*
    */
-  static GridMontage* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
+  static GridMontage* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief Attempts to create a new GridMontage and insert it into the
@@ -55,7 +55,7 @@ public:
    * @param parentId = {}
    * @return GridMontage*
    */
-  static GridMontage* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+  static GridMontage* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief Creates a copy of the specified GridMontage but does not add it to
@@ -249,7 +249,7 @@ protected:
    * @param ds
    * @param name
    */
-  GridMontage(DataStructure& ds, const std::string& name);
+  GridMontage(DataStructure& ds, std::string name);
 
   /**
    * @brief
@@ -257,7 +257,7 @@ protected:
    * @param name
    * @param importId
    */
-  GridMontage(DataStructure& ds, const std::string& name, IdType importId);
+  GridMontage(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief Returns the appropriate linear offset from the provided

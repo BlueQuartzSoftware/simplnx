@@ -12,23 +12,23 @@
 
 using namespace complex;
 
-VertexGeom::VertexGeom(DataStructure& ds, const std::string& name)
-: AbstractGeometry(ds, name)
+VertexGeom::VertexGeom(DataStructure& ds, std::string name)
+: AbstractGeometry(ds, std::move(name))
 {
 }
 
-VertexGeom::VertexGeom(DataStructure& ds, const std::string& name, IdType importId)
-: AbstractGeometry(ds, name, importId)
+VertexGeom::VertexGeom(DataStructure& ds, std::string name, IdType importId)
+: AbstractGeometry(ds, std::move(name), importId)
 {
 }
 
-VertexGeom::VertexGeom(DataStructure& ds, const std::string& name, usize numVertices, bool allocate)
-: AbstractGeometry(ds, name)
+VertexGeom::VertexGeom(DataStructure& ds, std::string name, usize numVertices, bool allocate)
+: AbstractGeometry(ds, std::move(name))
 {
 }
 
-VertexGeom::VertexGeom(DataStructure& ds, const std::string& name, const SharedVertexList* vertices)
-: AbstractGeometry(ds, name)
+VertexGeom::VertexGeom(DataStructure& ds, std::string name, const SharedVertexList* vertices)
+: AbstractGeometry(ds, std::move(name))
 {
 }
 
@@ -48,9 +48,9 @@ VertexGeom::VertexGeom(VertexGeom&& other) noexcept
 
 VertexGeom::~VertexGeom() = default;
 
-VertexGeom* VertexGeom::Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId)
+VertexGeom* VertexGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<VertexGeom>(new VertexGeom(ds, name));
+  auto data = std::shared_ptr<VertexGeom>(new VertexGeom(ds, std::move(name)));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
@@ -58,9 +58,9 @@ VertexGeom* VertexGeom::Create(DataStructure& ds, const std::string& name, const
   return data.get();
 }
 
-VertexGeom* VertexGeom::Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId)
+VertexGeom* VertexGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<VertexGeom>(new VertexGeom(ds, name, importId));
+  auto data = std::shared_ptr<VertexGeom>(new VertexGeom(ds, std::move(name), importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;

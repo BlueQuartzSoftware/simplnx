@@ -2,13 +2,13 @@
 
 using namespace complex;
 
-AbstractGeometryGrid::AbstractGeometryGrid(DataStructure& ds, const std::string& name)
-: AbstractGeometry(ds, name)
+AbstractGeometryGrid::AbstractGeometryGrid(DataStructure& ds, std::string name)
+: AbstractGeometry(ds, std::move(name))
 {
 }
 
-AbstractGeometryGrid::AbstractGeometryGrid(DataStructure& ds, const std::string& name, IdType importId)
-: AbstractGeometry(ds, name, importId)
+AbstractGeometryGrid::AbstractGeometryGrid(DataStructure& ds, std::string name, IdType importId)
+: AbstractGeometry(ds, std::move(name), importId)
 {
 }
 

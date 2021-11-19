@@ -23,7 +23,7 @@ public:
    * @param parentId = {}
    * @return TriangleGeom*
    */
-  static TriangleGeom* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
+  static TriangleGeom* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -33,7 +33,7 @@ public:
    * @param parentId = {}
    * @return TriangleGeom*
    */
-  static TriangleGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+  static TriangleGeom* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -306,7 +306,7 @@ protected:
    * @param ds
    * @param name
    */
-  TriangleGeom(DataStructure& ds, const std::string& name);
+  TriangleGeom(DataStructure& ds, std::string name);
 
   /**
    * @brief
@@ -314,7 +314,7 @@ protected:
    * @param name
    * @param importId
    */
-  TriangleGeom(DataStructure& ds, const std::string& name, IdType importId);
+  TriangleGeom(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief
@@ -324,7 +324,7 @@ protected:
    * @param vertices
    * @param allocate
    */
-  TriangleGeom(DataStructure& ds, const std::string& name, usize numTriangles, const SharedVertexList* vertices, bool allocate);
+  TriangleGeom(DataStructure& ds, std::string name, usize numTriangles, const SharedVertexList* vertices, bool allocate);
 
   /**
    * @brief
@@ -333,7 +333,7 @@ protected:
    * @param triangles
    * @param vertices
    */
-  TriangleGeom(DataStructure& ds, const std::string& name, const SharedTriList* triangles, const SharedVertexList* vertices);
+  TriangleGeom(DataStructure& ds, std::string name, const SharedTriList* triangles, const SharedVertexList* vertices);
 
   /**
    * @brief

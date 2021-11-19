@@ -23,7 +23,7 @@ public:
    * @param parentId = {}
    * @return RectGridGeom*
    */
-  static RectGridGeom* Create(DataStructure& ds, const std::string& name, const std::optional<IdType>& parentId = {});
+  static RectGridGeom* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -33,7 +33,7 @@ public:
    * @param parentId = {}
    * @return RectGridGeom*
    */
-  static RectGridGeom* Import(DataStructure& ds, const std::string& name, IdType importId, const std::optional<IdType>& parentId = {});
+  static RectGridGeom* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -378,7 +378,7 @@ protected:
    * @param ds
    * @param name
    */
-  RectGridGeom(DataStructure& ds, const std::string& name);
+  RectGridGeom(DataStructure& ds, std::string name);
 
   /**
    * @brief
@@ -386,7 +386,7 @@ protected:
    * @param name
    * @param importId
    */
-  RectGridGeom(DataStructure& ds, const std::string& name, IdType importId);
+  RectGridGeom(DataStructure& ds, std::string name, IdType importId);
 
   /**
    * @brief
