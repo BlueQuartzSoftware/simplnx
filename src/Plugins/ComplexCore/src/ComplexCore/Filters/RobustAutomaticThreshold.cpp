@@ -18,133 +18,14 @@ using namespace complex;
 
 namespace
 {
-constexpr StringLiteral k_InputArrayPath = "array_to_threshold";
-constexpr StringLiteral k_GradientMagnitudePath = "gradient_array";
-constexpr StringLiteral k_ArrayCreationPath = "created_mask_path";
-
 constexpr int64 k_IncorrectOrMissingInputArray = -60;
 constexpr int64 k_IncorrectOrMissingMagnitudeArray = -61;
 constexpr int64 k_BadArrayCreationPath = -62;
+constexpr int64 k_IncorrectInputArrayType = -63;
 
 bool isDataArray(const DataObject* dataObject)
 {
   return dataObject->getTypeName() == "DataArray";
-}
-
-std::vector<usize> getArrayTupleDims(const DataObject* dataObject)
-{
-  if(!isDataArray(dataObject))
-  {
-    return {};
-  }
-
-  if(auto dataArray = dynamic_cast<const Int8Array*>(dataObject))
-  {
-    return {dataArray->getNumberOfTuples()};
-  }
-  if(auto dataArray = dynamic_cast<const Int16Array*>(dataObject))
-  {
-    return {dataArray->getNumberOfTuples()};
-  }
-  if(auto dataArray = dynamic_cast<const Int32Array*>(dataObject))
-  {
-    return {dataArray->getNumberOfTuples()};
-  }
-  if(auto dataArray = dynamic_cast<const Int64Array*>(dataObject))
-  {
-    return {dataArray->getNumberOfTuples()};
-  }
-
-  if(auto dataArray = dynamic_cast<const UInt8Array*>(dataObject))
-  {
-    return {dataArray->getNumberOfTuples()};
-  }
-  if(auto dataArray = dynamic_cast<const UInt16Array*>(dataObject))
-  {
-    return {dataArray->getNumberOfTuples()};
-  }
-  if(auto dataArray = dynamic_cast<const UInt32Array*>(dataObject))
-  {
-    return {dataArray->getNumberOfTuples()};
-  }
-  if(auto dataArray = dynamic_cast<const UInt64Array*>(dataObject))
-  {
-    return {dataArray->getNumberOfTuples()};
-  }
-
-  if(auto dataArray = dynamic_cast<const USizeArray*>(dataObject))
-  {
-    return {dataArray->getNumberOfTuples()};
-  }
-
-  if(auto dataArray = dynamic_cast<const Float32Array*>(dataObject))
-  {
-    return {dataArray->getNumberOfTuples()};
-  }
-  if(auto dataArray = dynamic_cast<const Float64Array*>(dataObject))
-  {
-    return {dataArray->getNumberOfTuples()};
-  }
-
-  return {};
-}
-
-usize getNumComponents(const DataObject* dataObject)
-{
-  if(!isDataArray(dataObject))
-  {
-    return 0;
-  }
-
-  if(auto dataArray = dynamic_cast<const Int8Array*>(dataObject))
-  {
-    return dataArray->getNumberOfComponents();
-  }
-  if(auto dataArray = dynamic_cast<const Int16Array*>(dataObject))
-  {
-    return dataArray->getNumberOfComponents();
-  }
-  if(auto dataArray = dynamic_cast<const Int32Array*>(dataObject))
-  {
-    return dataArray->getNumberOfComponents();
-  }
-  if(auto dataArray = dynamic_cast<const Int64Array*>(dataObject))
-  {
-    return dataArray->getNumberOfComponents();
-  }
-
-  if(auto dataArray = dynamic_cast<const UInt8Array*>(dataObject))
-  {
-    return dataArray->getNumberOfComponents();
-  }
-  if(auto dataArray = dynamic_cast<const UInt16Array*>(dataObject))
-  {
-    return dataArray->getNumberOfComponents();
-  }
-  if(auto dataArray = dynamic_cast<const UInt32Array*>(dataObject))
-  {
-    return dataArray->getNumberOfComponents();
-  }
-  if(auto dataArray = dynamic_cast<const UInt64Array*>(dataObject))
-  {
-    return dataArray->getNumberOfComponents();
-  }
-
-  if(auto dataArray = dynamic_cast<const USizeArray*>(dataObject))
-  {
-    return dataArray->getNumberOfComponents();
-  }
-
-  if(auto dataArray = dynamic_cast<const Float32Array*>(dataObject))
-  {
-    return dataArray->getNumberOfComponents();
-  }
-  if(auto dataArray = dynamic_cast<const Float64Array*>(dataObject))
-  {
-    return dataArray->getNumberOfComponents();
-  }
-
-  return 0;
 }
 
 template <typename T>
@@ -179,7 +60,7 @@ void findThreshold(const DataArray<T>* input, const Float32Array* gradMagPtr, co
   }
 }
 
-void findThreshold(const DataObject* inputObject, const Float32Array* gradMagnitudeArray, const UInt8Array* maskArray)
+void findThreshold(const IDataArray* inputObject, const Float32Array* gradMagnitudeArray, const UInt8Array* maskArray)
 {
   if(auto inputArray = dynamic_cast<const Int8Array*>(inputObject))
   {
@@ -275,30 +156,31 @@ IFilter::PreflightResult RobustAutomaticThreshold::preflightImpl(const DataStruc
   auto gradientArrayPath = args.value<DataPath>(k_GradientMagnitudePath);
   auto createdMaskPath = args.value<DataPath>(k_ArrayCreationPath);
 
-  auto inputArrayObject = data.getData(inputArrayPath);
-  if(inputArrayObject == nullptr)
+  std::vector<DataPath> dataPaths;
+
+  auto inputArray = data.getDataAs<IDataArray>(inputArrayPath);
+  if(inputArray == nullptr)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectOrMissingInputArray, "Could not find the input DataArray."}})};
   }
-  if(!isDataArray(inputArrayObject))
+  if(dynamic_cast<const BoolArray*>(inputArray))
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectOrMissingInputArray, "Target Input DataArray is of an incorrect DataObject type."}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArrayType, "Input Attribute Array to threshold cannot be of type bool"}})};
   }
+  dataPaths.push_back(inputArrayPath);
 
-  auto gradientArray = data.getDataAs<DataArray<float32>>(gradientArrayPath);
+  auto gradientArray = data.getDataAs<Float32Array>(gradientArrayPath);
   if(gradientArray == nullptr)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectOrMissingMagnitudeArray, "Failed to find DataArray<float32> Gradient array."}})};
   }
+  dataPaths.push_back(gradientArrayPath);
 
-  if(data.getData(createdMaskPath) != nullptr)
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadArrayCreationPath, "Cannot create Mask array as data already exists at the given path"}})};
-  }
-
-  auto tupleDims = getArrayTupleDims(inputArrayObject);
-  auto numComponents = getNumComponents(inputArrayObject);
+  std::vector<usize> tupleDims = {inputArray->getNumberOfTuples()};
+  usize numComponents = inputArray->getNumberOfComponents();
   auto action = std::make_unique<CreateArrayAction>(NumericType::uint8, tupleDims, numComponents, createdMaskPath);
+
+  data.validateNumberOfTuples(dataPaths);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));
@@ -312,11 +194,11 @@ Result<> RobustAutomaticThreshold::executeImpl(DataStructure& data, const Argume
   auto gradientArrayPath = args.value<DataPath>(k_GradientMagnitudePath);
   auto createdMaskPath = args.value<DataPath>(k_ArrayCreationPath);
 
-  auto inputArrayObject = data.getData(inputArrayPath);
+  auto inputArray = data.getDataAs<IDataArray>(inputArrayPath);
   auto gradientArray = data.getDataAs<DataArray<float32>>(gradientArrayPath);
   auto maskArray = data.getDataAs<DataArray<uint8>>(createdMaskPath);
 
-  findThreshold(inputArrayObject, gradientArray, maskArray);
+  findThreshold(inputArray, gradientArray, maskArray);
 
   return {};
 }

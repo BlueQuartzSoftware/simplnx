@@ -2,6 +2,7 @@
 
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/DataStructure/IDataArray.hpp"
 #include "complex/DataStructure/LinkedPath.hpp"
 #include "complex/DataStructure/Messaging/DataAddedMessage.hpp"
 #include "complex/DataStructure/Messaging/DataRemovedMessage.hpp"
@@ -653,4 +654,36 @@ DataStructure DataStructure::readFromHdf5(const H5::GroupReader& groupReader, H5
   return dataStructureReader.readH5Group(groupReader, err);
 }
 
+bool DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const
+{
+  if(dataPaths.size() == 0)
+  {
+    return true;
+  }
+
+  usize tupleCount = 0;
+  for(usize i = 0; i < dataPaths.size(); i++)
+  {
+    const auto& dataPath = dataPaths[i];
+    // Must be an IDataArray
+    if(auto dataArray = getDataAs<IDataArray>(dataPath))
+    {
+      // Check equality if not first item
+      if(i == 0)
+      {
+        tupleCount = dataArray->getNumberOfTuples();
+      }
+      else if(tupleCount != dataArray->getNumberOfTuples())
+      {
+        return false;
+      }
+    }
+    // DataPath not pointing to an IDataArray
+    else
+    {
+      return false;
+    }
+  }
+  return true;
+}
 } // namespace complex

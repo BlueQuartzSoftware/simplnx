@@ -19,6 +19,10 @@ public:
   RobustAutomaticThreshold& operator=(const RobustAutomaticThreshold&) = delete;
   RobustAutomaticThreshold& operator=(RobustAutomaticThreshold&&) noexcept = delete;
 
+  static inline constexpr StringLiteral k_InputArrayPath = "array_to_threshold";
+  static inline constexpr StringLiteral k_GradientMagnitudePath = "gradient_array";
+  static inline constexpr StringLiteral k_ArrayCreationPath = "created_mask_path";
+
   /**
    * @brief Returns the name of the filter.
    * @return std::string
