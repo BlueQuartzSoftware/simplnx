@@ -4,6 +4,7 @@
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
@@ -19,41 +20,19 @@ namespace
 using FeatureIdsArrayType = Int32Array;
 using GoodVoxelsArrayType = UInt8Array;
 
-constexpr StringLiteral k_ScalarToleranceKey = "scalar tolerance";
-constexpr StringLiteral k_InputArrayPathKey = "input array path";
-constexpr StringLiteral k_UseGoodVoxelsKey = "use mask";
-constexpr StringLiteral k_GoodVoxelsPathKey = "mask path";
-constexpr StringLiteral k_FeatureIdsPathKey = "feature ids path";
-constexpr StringLiteral k_CellFeaturePathKey = "cell feature group path";
-constexpr StringLiteral k_ActiveArrayPathKey = "active array path";
+static inline constexpr StringLiteral k_CompareFunctKey = "Compare Function";
 
 constexpr int64 k_IncorrectInputArray = -600;
 constexpr int64 k_MissingInputArray = -601;
 constexpr int64 k_MissingOrIncorrectGoodVoxelsArray = -602;
 
-/* from http://www.newty.de/fpt/functor.html */
-/**
- * @brief The CompareFunctor class serves as a functor superclass for specific implementations
- * of performing scalar comparisons
- */
-class CompareFunctor
-{
-public:
-  virtual ~CompareFunctor() = default;
-
-  virtual bool operator()(int64_t index, int64_t neighIndex, int32_t gnum) // call using () operator
-  {
-    return false;
-  }
-};
-
 /**
  * @brief The TSpecificCompareFunctorBool class extends @see CompareFunctor to compare boolean data
  */
-class TSpecificCompareFunctorBool : public CompareFunctor
+class TSpecificCompareFunctorBool : public SegmentFeatures::CompareFunctor
 {
 public:
-  TSpecificCompareFunctorBool(void* data, int64_t length, bool tolerance, int32_t* featureIds)
+  TSpecificCompareFunctorBool(void* data, int64 length, bool tolerance, IDataStore<int32>* featureIds)
   : m_Length(length)
   , featureIdsArray(featureIds)
   {
@@ -61,7 +40,7 @@ public:
   }
   virtual ~TSpecificCompareFunctorBool() = default;
 
-  bool operator()(int64_t referencepoint, int64_t neighborpoint, int32_t gnum) override
+  bool operator()(int64 referencepoint, int64 neighborpoint, int32 gnum) override
   {
     // Sanity check the indices that are being passed in.
     if(referencepoint >= m_Length || neighborpoint >= m_Length)
@@ -71,7 +50,7 @@ public:
 
     if(m_Data[neighborpoint] == m_Data[referencepoint])
     {
-      featureIdsArray[neighborpoint] = gnum;
+      featureIdsArray->setValue(neighborpoint, gnum);
       return true;
     }
     return false;
@@ -82,18 +61,18 @@ protected:
 
 private:
   bool* m_Data = nullptr;          // The data that is being compared
-  int64_t m_Length = 0;            // Length of the Data Array
-  int32_t* featureIdsArray = nullptr; // The Feature Ids
+  int64 m_Length = 0;            // Length of the Data Array
+  IDataStore<int32>* featureIdsArray = nullptr; // The Feature Ids
 };
 
 /**
  * @brief The TSpecificCompareFunctor class extens @see CompareFunctor to compare templated data
  */
 template <class T>
-class TSpecificCompareFunctor : public CompareFunctor
+class TSpecificCompareFunctor : public SegmentFeatures::CompareFunctor
 {
 public:
-  TSpecificCompareFunctor(void* data, int64_t length, T tolerance, int32_t* featureIds)
+  TSpecificCompareFunctor(void* data, int64 length, T tolerance, IDataStore<int32>* featureIds)
   : m_Length(length)
   , m_Tolerance(tolerance)
   , featureIdsArray(featureIds)
@@ -102,7 +81,7 @@ public:
   }
   virtual ~TSpecificCompareFunctor() = default;
 
-  bool operator()(int64_t referencepoint, int64_t neighborpoint, int32_t gnum) override
+  bool operator()(int64 referencepoint, int64 neighborpoint, int32 gnum) override
   {
     // Sanity check the indices that are being passed in.
     if(referencepoint >= m_Length || neighborpoint >= m_Length)
@@ -114,7 +93,7 @@ public:
     {
       if((m_Data[referencepoint] - m_Data[neighborpoint]) <= m_Tolerance)
       {
-        featureIdsArray[neighborpoint] = gnum;
+        featureIdsArray->setValue(neighborpoint, gnum);
         return true;
       }
     }
@@ -122,7 +101,7 @@ public:
     {
       if((m_Data[neighborpoint] - m_Data[referencepoint]) <= m_Tolerance)
       {
-        featureIdsArray[neighborpoint] = gnum;
+        featureIdsArray->setValue(neighborpoint, gnum);
         return true;
       }
     }
@@ -134,9 +113,9 @@ protected:
 
 private:
   T* m_Data = nullptr;               // The data that is being compared
-  int64_t m_Length = 0;              // Length of the Data Array
+  int64 m_Length = 0;              // Length of the Data Array
   T m_Tolerance = static_cast<T>(0); // The tolerance of the comparison
-  int32_t* featureIdsArray = nullptr;   // The Feature Ids
+  IDataStore<int32>* featureIdsArray = nullptr; // The Feature Ids
 };
 } // namespace
 
@@ -178,6 +157,8 @@ Parameters ScalarSegmentFeatures::parameters() const
   params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsPathKey, "Feature IDs", "Path to the created Feature IDs path", DataPath()));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellFeaturePathKey, "Cell Feature Group", "Path to the parent Feature group", DataPath()));
   params.insert(std::make_unique<ArrayCreationParameter>(k_ActiveArrayPathKey, "Active", "Created array", DataPath()));
+
+  params.insert(std::make_unique<BoolParameter>(k_RandomizeFeaturesKey, "Randomize Feature IDs", "Specifies if feature IDs should be randomized during calculations", false));
   return params;
 }
 
@@ -255,6 +236,7 @@ Result<> ScalarSegmentFeatures::executeImpl(DataStructure& data, const Arguments
 {
   auto inputDataPath = args.value<DataPath>(k_InputArrayPathKey);
   float scalarTolerance = args.value<float>(k_ScalarToleranceKey);
+  auto shouldRandomizeFeatureIds = args.value<bool>(k_RandomizeFeaturesKey);
 
   auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPathKey);
   auto cellFeaturesPath = args.value<DataPath>(k_CellFeaturePathKey);
@@ -280,6 +262,8 @@ Result<> ScalarSegmentFeatures::executeImpl(DataStructure& data, const Arguments
   auto totalPoints = featureIdsArray->getNumberOfTuples();
   auto inDataPoints = inputDataArray->getNumberOfTuples();
 
+  auto featureIds = featureIdsArray->getDataStore();
+
   std::shared_ptr<CompareFunctor> compare = nullptr;
 
   if(inputDataArray->getNumberOfComponents() != 1)
@@ -288,95 +272,99 @@ Result<> ScalarSegmentFeatures::executeImpl(DataStructure& data, const Arguments
   }
   else if(auto inputData = dynamic_cast<Int8Array*>(inputDataArray))
   {
-    compare = std::make_shared<TSpecificCompareFunctor<int8_t>>(inputData, inDataPoints, static_cast<int8_t>(scalarTolerance), featureIdsArray);
+    compare = std::make_shared<TSpecificCompareFunctor<int8>>(inputData, inDataPoints, static_cast<int8>(scalarTolerance), featureIds);
   }
   else if(auto inputData = dynamic_cast<UInt8Array*>(inputDataArray))
   {
-    compare = std::make_shared<TSpecificCompareFunctor<uint8_t>>(inputData, inDataPoints, static_cast<uint8_t>(scalarTolerance), featureIdsArray);
+    compare = std::make_shared<TSpecificCompareFunctor<uint8>>(inputData, inDataPoints, static_cast<uint8>(scalarTolerance), featureIds);
   }
   else if(auto inputData = dynamic_cast<BoolArray*>(inputDataArray))
   {
-    compare = std::make_shared<TSpecificCompareFunctorBool>(inputData, inDataPoints, static_cast<bool>(scalarTolerance), featureIdsArray);
+    compare = std::make_shared<TSpecificCompareFunctorBool>(inputData, inDataPoints, static_cast<bool>(scalarTolerance), featureIds);
   }
   else if(auto inputData = dynamic_cast<Int16Array*>(inputDataArray))
   {
-    compare = std::make_shared<TSpecificCompareFunctor<int16_t>>(inputData, inDataPoints, static_cast<int16_t>(scalarTolerance), featureIdsArray);
+    compare = std::make_shared<TSpecificCompareFunctor<int16>>(inputData, inDataPoints, static_cast<int16>(scalarTolerance), featureIds);
   }
   else if(auto inputData = dynamic_cast<UInt16Array*>(inputDataArray))
   {
-    compare = std::make_shared<TSpecificCompareFunctor<uint16_t>>(inputData, inDataPoints, static_cast<uint16_t>(scalarTolerance), featureIdsArray);
+    compare = std::make_shared<TSpecificCompareFunctor<uint16>>(inputData, inDataPoints, static_cast<uint16>(scalarTolerance), featureIds);
   }
   else if(auto inputData = dynamic_cast<Int32Array*>(inputDataArray))
   {
-    compare = std::make_shared<TSpecificCompareFunctor<int32_t>>(inputData, inDataPoints, static_cast<int32_t>(scalarTolerance), featureIdsArray);
+    compare = std::make_shared<TSpecificCompareFunctor<int32>>(inputData, inDataPoints, static_cast<int32>(scalarTolerance), featureIds);
   }
   else if(auto inputData = dynamic_cast<UInt32Array*>(inputDataArray))
   {
-    compare = std::make_shared<TSpecificCompareFunctor<uint32_t>>(inputData, inDataPoints, static_cast<uint32_t>(scalarTolerance), featureIdsArray);
+    compare = std::make_shared<TSpecificCompareFunctor<uint32>>(inputData, inDataPoints, static_cast<uint32>(scalarTolerance), featureIds);
   }
   else if(auto inputData = dynamic_cast<Int64Array*>(inputDataArray))
   {
-    compare = std::make_shared<TSpecificCompareFunctor<int64_t>>(inputData, inDataPoints, static_cast<int64_t>(scalarTolerance), featureIdsArray);
+    compare = std::make_shared<TSpecificCompareFunctor<int64>>(inputData, inDataPoints, static_cast<int64>(scalarTolerance), featureIds);
   }
   else if(auto inputData = dynamic_cast<UInt64Array*>(inputDataArray))
   {
-    compare = std::make_shared<TSpecificCompareFunctor<uint64_t>>(inputData, inDataPoints, static_cast<uint64_t>(scalarTolerance), featureIdsArray);
+    compare = std::make_shared<TSpecificCompareFunctor<uint64>>(inputData, inDataPoints, static_cast<uint64>(scalarTolerance), featureIds);
   }
   else if(auto inputData = dynamic_cast<Float32Array*>(inputDataArray))
   {
-    compare = std::make_shared<TSpecificCompareFunctor<float>>(inputData, inDataPoints, scalarTolerance, featureIdsArray);
+    compare = std::make_shared<TSpecificCompareFunctor<float32>>(inputData, inDataPoints, scalarTolerance, featureIds);
   }
   else if(auto inputData = dynamic_cast<Float64Array*>(inputDataArray))
   {
-    compare = std::make_shared<TSpecificCompareFunctor<double>>(inputData, inDataPoints, static_cast<double>(scalarTolerance), featureIdsArray);
+    compare = std::make_shared<TSpecificCompareFunctor<float64>>(inputData, inDataPoints, static_cast<float64>(scalarTolerance), featureIds);
   }
 
   // Generate the random voxel indices that will be used for the seed points to start a new grain growth/agglomeration
-  const int64_t rangeMin = 0;
-  const int64_t rangeMax = totalPoints - 1;
+  const int64 rangeMin = 0;
+  const int64 rangeMax = totalPoints - 1;
   Int64Distribution distribution;
   initializeVoxelSeedGenerator(distribution, rangeMin, rangeMax);
 
-  SegmentFeatures::executeImpl(data, args, pipelineNode, messageHandler);
+  // Add compare function to argumetns
+  Arguments newArgs = args;
+  newArgs.insert(k_CompareFunctKey, compare.get());
 
-  int64_t totalFeatures = static_cast<int64_t>(activeArray->getNumberOfTuples());
+  SegmentFeatures::executeImpl(data, newArgs, pipelineNode, messageHandler);
+
+  auto totalFeatures = activeArray->getNumberOfTuples();
   if(totalFeatures < 2)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{-87000, "The number of Features was 0 or 1 which means no Features were detected. A threshold value may be set too high"}})};
   }
 
   // By default we randomize grains
-  if(randomizeFeatureIds)
+  if(shouldRandomizeFeatureIds)
   {
-    totalPoints = static_cast<int64_t>(gridGeom->getNumberOfElements());
+    totalPoints = gridGeom->getNumberOfElements();
     randomizeFeatureIds(featureIdsArray, totalPoints, totalFeatures, distribution);
   }
 
   return {};
 }
 
-void ScalarSegmentFeatures::randomizeFeatureIds(Int32Array* featureIds, int64_t totalPoints, int64_t totalFeatures, Int64Distribution& distribution) const
+void ScalarSegmentFeatures::randomizeFeatureIds(Int32Array* featureIds, uint64 totalPoints, uint64 totalFeatures, Int64Distribution& distribution) const
 {
   // notifyStatusMessage("Randomizing Feature Ids");
   // Generate an even distribution of numbers between the min and max range
-  const int64_t rangeMin = 1;
-  const int64_t rangeMax = totalFeatures - 1;
+  const int64 rangeMin = 1;
+  const int64 rangeMax = totalFeatures - 1;
   auto generator = initializeVoxelSeedGenerator(distribution, rangeMin, rangeMax);
 
-  auto rndNumbers = std::make_shared<Int64Array>(totalFeatures, std::string("_INTERNAL_USE_ONLY_NewFeatureIds"), true);
+  DataStructure tmpStructure;
+  auto rndNumbers = Int64Array::CreateWithStore<DataStore<int64>>(tmpStructure, std::string("_INTERNAL_USE_ONLY_NewFeatureIds"), std::vector<usize>{totalFeatures}, std::vector<usize>{1});
   auto rndStore = rndNumbers->getDataStore();
-  rndStore->setValue(0, 0);
 
-  for(int64_t i = 1; i < totalFeatures; ++i)
+  for(int64 i = 0; i < totalFeatures; ++i)
   {
     rndStore->setValue(i, i);
   }
 
-  int64_t r = 0;
-  int64_t temp = 0;
+  int64 r = 0;
+  int64 temp = 0;
 
   //--- Shuffle elements by randomly exchanging each with one other.
-  for(int64_t i = 1; i < totalFeatures; i++)
+  for(int64 i = 1; i < totalFeatures; i++)
   {
     r = distribution(generator); // Random remaining position.
     if(r >= totalFeatures)
@@ -390,13 +378,13 @@ void ScalarSegmentFeatures::randomizeFeatureIds(Int32Array* featureIds, int64_t 
 
   // Now adjust all the Grain Id values for each Voxel
   auto featureIdsStore = featureIds->getDataStore();
-  for(int64_t i = 0; i < totalPoints; ++i)
+  for(int64 i = 0; i < totalPoints; ++i)
   {
     featureIdsStore->setValue(i, rndStore->getValue(featureIdsStore->getValue(i)));
   }
 }
 
-int64 ScalarSegmentFeatures::getSeed(const DataStructure& data, const Arguments& args, int32 gnum, int64 nextSeed) const
+int64 ScalarSegmentFeatures::getSeed(DataStructure& data, const Arguments& args, int32 gnum, int64 nextSeed) const
 {
   auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPathKey);
   auto useGoodVoxels = args.value<bool>(k_UseGoodVoxelsKey);
@@ -410,7 +398,7 @@ int64 ScalarSegmentFeatures::getSeed(const DataStructure& data, const Arguments&
   auto goodVoxels = goodVoxelsArray->getDataStore();
   int64 seed = -1;
   // start with the next voxel after the last seed
-  usize randpoint = static_cast<size_t>(nextSeed);
+  usize randpoint = static_cast<usize>(nextSeed);
   while(seed == -1 && randpoint < totalPoints)
   {
     if(featureIds->getValue(randpoint) == 0) // If the GrainId of the voxel is ZERO then we can use this as a seed point
@@ -432,7 +420,7 @@ int64 ScalarSegmentFeatures::getSeed(const DataStructure& data, const Arguments&
   if(seed >= 0)
   {
     featureIds->setValue(static_cast<usize>(seed), gnum);
-    // std::vector<size_t> tDims(1, gnum + 1);
+    // std::vector<usize> tDims(1, gnum + 1);
     // m->getAttributeMatrix(getCellFeatureAttributeMatrixName())->resizeAttributeArrays(tDims);
   }
   return seed;
@@ -451,8 +439,9 @@ bool ScalarSegmentFeatures::determineGrouping(const DataStructure& data, const A
   auto goodVoxels = goodVoxelsArray->getDataStore();
   if(feastureIds->getValue(neighborpoint) == 0 && (!useGoodVoxels || goodVoxels->getValue(neighborpoint)))
   {
-    CompareFunctor* func = compare.get();
-    return (*func)((size_t)(referencepoint), (size_t)(neighborpoint), gnum);
+    auto compare = args.value<CompareFunctor*>(k_CompareFunctKey);
+    CompareFunctor* func = compare;
+    return (*func)((usize)(referencepoint), (usize)(neighborpoint), gnum);
     //     | Functor  ||calling the operator() method of the CompareFunctor Class |
   }
 

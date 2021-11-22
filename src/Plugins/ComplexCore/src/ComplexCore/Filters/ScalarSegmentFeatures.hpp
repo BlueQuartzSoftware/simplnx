@@ -33,6 +33,15 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_DataPath_Key = "scalar_segment_path";
 
+  static inline constexpr StringLiteral k_ScalarToleranceKey = "scalar tolerance";
+  static inline constexpr StringLiteral k_InputArrayPathKey = "input array path";
+  static inline constexpr StringLiteral k_UseGoodVoxelsKey = "use mask";
+  static inline constexpr StringLiteral k_GoodVoxelsPathKey = "mask path";
+  static inline constexpr StringLiteral k_FeatureIdsPathKey = "feature ids path";
+  static inline constexpr StringLiteral k_CellFeaturePathKey = "cell feature group path";
+  static inline constexpr StringLiteral k_ActiveArrayPathKey = "active array path";
+  static inline constexpr StringLiteral k_RandomizeFeaturesKey = "randomize features";
+
   /**
    * @brief Returns the filter's name.
    * @return std::string
@@ -78,7 +87,7 @@ protected:
    * @param distribution
    * @param generator
    */
-  void randomizeFeatureIds(Int32Array* featureIdsArray, int64_t totalPoints, int64_t totalFeatures, Int64Distribution& distribution) const;
+  void randomizeFeatureIds(Int32Array* featureIdsArray, uint64 totalPoints, uint64 totalFeatures, Int64Distribution& distribution) const;
 
   /**
    * @brief
@@ -88,7 +97,7 @@ protected:
    * @param nextSeed
    * @return int64
    */
-  int64 getSeed(const DataStructure& data, const Arguments& args, int32 gnum, int64 nextSeed) const override;
+  int64 getSeed(DataStructure& data, const Arguments& args, int32 gnum, int64 nextSeed) const override;
 
   /**
    * @brief

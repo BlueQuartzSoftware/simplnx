@@ -51,6 +51,16 @@ IFilter::PreflightResult SegmentFeatures::preflightImpl(const DataStructure& dat
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingGeomError, "A Grid Geometry is required for SegmentFeatures"}})};
   }
 
+  
+
+  OutputActions actions;
+  return {std::move(actions)};
+}
+
+Result<> SegmentFeatures::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+{
+  auto gridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
+
   auto gridGeom = data.getDataAs<AbstractGeometryGrid>(gridGeomPath);
   SizeVec3 udims = gridGeom->getDimensions();
 
@@ -150,16 +160,10 @@ IFilter::PreflightResult SegmentFeatures::preflightImpl(const DataStructure& dat
     }
   }
 
-  OutputActions actions;
-  return {std::move(actions)};
-}
-
-Result<> SegmentFeatures::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
-{
   return {};
 }
 
-int64 SegmentFeatures::getSeed(const DataStructure& data, const Arguments& args, int32 gnum, int64 nextSeed) const
+int64 SegmentFeatures::getSeed(DataStructure& data, const Arguments& args, int32 gnum, int64 nextSeed) const
 {
   return -1;
 }

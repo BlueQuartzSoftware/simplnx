@@ -62,6 +62,22 @@ public:
    */
   UniquePointer clone() const override;
 
+  /* from http://www.newty.de/fpt/functor.html */
+  /**
+   * @brief The CompareFunctor class serves as a functor superclass for specific implementations
+   * of performing scalar comparisons
+   */
+  class CompareFunctor
+  {
+  public:
+    virtual ~CompareFunctor() = default;
+
+    virtual bool operator()(int64 index, int64 neighIndex, int32 gnum) // call using () operator
+    {
+      return false;
+    }
+  };
+
 protected:
   /**
    * @brief
@@ -90,7 +106,7 @@ protected:
    * @param nextSeed
    * @return int64
    */
-  virtual int64 getSeed(const DataStructure& data, const Arguments& args, int32 gnum, int64 nextSeed) const;
+  virtual int64 getSeed(DataStructure& data, const Arguments& args, int32 gnum, int64 nextSeed) const;
 
   /**
    * @brief Determines the grouping for the specified values.
