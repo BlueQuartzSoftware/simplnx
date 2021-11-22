@@ -70,7 +70,8 @@ public:
    * @return DataArray<T>* Instance of the DataArray object that is owned and managed by the DataStructure
    */
   template <typename DataStoreType>
-  static DataArray* CreateWithStore(DataStructure& ds, std::string name, const std::vector<size_t>& tupleShape, const std::vector<size_t>& componentShape, const std::optional<IdType>& parentId = {})
+  static DataArray* CreateWithStore(DataStructure& ds, const std::string& name, const std::vector<usize>& tupleShape, const std::vector<usize>& componentShape,
+                                    const std::optional<IdType>& parentId = {})
   {
     auto dataStore = std::make_shared<DataStoreType>(tupleShape, componentShape);
 
