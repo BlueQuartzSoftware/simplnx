@@ -60,8 +60,8 @@ protected:
   TSpecificCompareFunctorBool() = default;
 
 private:
-  bool* m_Data = nullptr;          // The data that is being compared
-  int64 m_Length = 0;            // Length of the Data Array
+  bool* m_Data = nullptr;                       // The data that is being compared
+  int64 m_Length = 0;                           // Length of the Data Array
   IDataStore<int32>* featureIdsArray = nullptr; // The Feature Ids
 };
 
@@ -112,9 +112,9 @@ protected:
   TSpecificCompareFunctor() = default;
 
 private:
-  T* m_Data = nullptr;               // The data that is being compared
-  int64 m_Length = 0;              // Length of the Data Array
-  T m_Tolerance = static_cast<T>(0); // The tolerance of the comparison
+  T* m_Data = nullptr;                          // The data that is being compared
+  int64 m_Length = 0;                           // Length of the Data Array
+  T m_Tolerance = static_cast<T>(0);            // The tolerance of the comparison
   IDataStore<int32>* featureIdsArray = nullptr; // The Feature Ids
 };
 } // namespace
@@ -251,7 +251,7 @@ Result<> ScalarSegmentFeatures::executeImpl(DataStructure& data, const Arguments
 
   auto gridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
 
-  //updateFeatureInstancePointers();
+  // updateFeatureInstancePointers();
 
   auto gridGeom = data.getDataAs<AbstractGeometryGrid>(gridGeomPath);
   auto activeArray = data.getDataAs<IDataArray>(activeArrayPath);

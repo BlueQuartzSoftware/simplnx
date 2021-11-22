@@ -27,7 +27,7 @@ Uuid SegmentFeatures::uuid() const
 
 std::string SegmentFeatures::humanName() const
 {
-  return "Delete Data";
+  return "Segment Features";
 }
 
 Parameters SegmentFeatures::parameters() const
@@ -50,8 +50,6 @@ IFilter::PreflightResult SegmentFeatures::preflightImpl(const DataStructure& dat
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingGeomError, "A Grid Geometry is required for SegmentFeatures"}})};
   }
-
-  
 
   OutputActions actions;
   return {std::move(actions)};
