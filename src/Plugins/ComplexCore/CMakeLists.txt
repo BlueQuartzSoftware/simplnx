@@ -12,6 +12,7 @@ set(FilterList
   ConditionalSetValue
   DeleteData
   ExportDREAM3DFilter
+  FindSizes
   ImportDREAM3DFilter
   ImportTextFilter
   MinSize
