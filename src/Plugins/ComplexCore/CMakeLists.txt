@@ -14,6 +14,7 @@ set(FilterList
   DeleteData
   ExportDREAM3DFilter
   CalculateFeatureSizesFilter
+  FindDifferencesMap
   ImportDREAM3DFilter
   ImportTextFilter
   RemoveMinimumSizeFeaturesFilter
