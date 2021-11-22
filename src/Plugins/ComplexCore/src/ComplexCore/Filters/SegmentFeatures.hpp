@@ -84,20 +84,24 @@ protected:
 
   /**
    * @brief Returns the seed for the specified values.
+   * @param data
+   * @param args
    * @param gnum
    * @param nextSeed
    * @return int64
    */
-  virtual int64 getSeed(int32 gnum, int64 nextSeed) const;
+  virtual int64 getSeed(const DataStructure& data, const Arguments& args, int32 gnum, int64 nextSeed) const;
 
   /**
    * @brief Determines the grouping for the specified values.
+   * @param data
+   * @param args
    * @param referencePoint
    * @param neighborPoint
    * @param gnum
    * @return bool
    */
-  virtual bool determineGrouping(int64 referencePoint, int64 neighborPoint, int32 gnum) const;
+  virtual bool determineGrouping(const DataStructure& data, const Arguments& args, int64 referencePoint, int64 neighborPoint, int32 gnum) const;
 };
 } // namespace complex
 

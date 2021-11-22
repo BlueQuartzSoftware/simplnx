@@ -21,8 +21,6 @@ public:
   using SeedGenerator = std::mt19937_64;
   using Int64Distribution = std::uniform_int_distribution<int64>;
 
-  using GoodVoxelsArrayType = UInt8Array;
-
   ScalarSegmentFeatures() = default;
   ~ScalarSegmentFeatures() noexcept override = default;
 
@@ -84,24 +82,24 @@ protected:
 
   /**
    * @brief
-   * @param featureIds
+   * @param data
+   * @param args
    * @param gnum
    * @param nextSeed
    * @return int64
    */
-  int64 getSeed(Int32Array* featureIds, int32 gnum, int64 nextSeed, bool useGoodVoxels, const UInt8Array* goodVoxels) const;
+  int64 getSeed(const DataStructure& data, const Arguments& args, int32 gnum, int64 nextSeed) const override;
 
   /**
    * @brief
-   * @param featureIdsArray
-   * @param useGoodVoxels
-   * @param goodVoxelsArray
+   * @param data
+   * @param args
    * @param referencepoint
    * @param neighborpoint
    * @param gnum
    * @return bool
    */
-  bool determineGrouping(const Int32Array* featureIdsArray, bool useGoodVoxels, const UInt8Array* goodVoxelsArray, int64 referencepoint, int64 neighborpoint, int32 gnum) const;
+  bool determineGrouping(const DataStructure& data, const Arguments& args, int64 referencePoint, int64 neighborPoint, int32 gnum) const override;
 
   /**
    * @brief

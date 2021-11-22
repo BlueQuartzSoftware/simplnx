@@ -16,6 +16,9 @@ using namespace complex;
 
 namespace
 {
+using FeatureIdsArrayType = Int32Array;
+using GoodVoxelsArrayType = UInt8Array;
+
 constexpr StringLiteral k_ScalarToleranceKey = "scalar tolerance";
 constexpr StringLiteral k_InputArrayPathKey = "input array path";
 constexpr StringLiteral k_UseGoodVoxelsKey = "use mask";
@@ -285,47 +288,47 @@ Result<> ScalarSegmentFeatures::executeImpl(DataStructure& data, const Arguments
   }
   else if(auto inputData = dynamic_cast<Int8Array*>(inputDataArray))
   {
-    compare = std::shared_ptr<TSpecificCompareFunctor<int8_t>>(new TSpecificCompareFunctor<int8_t>(inputData, inDataPoints, static_cast<int8_t>(scalarTolerance), featureIdsArray));
+    compare = std::make_shared<TSpecificCompareFunctor<int8_t>>(inputData, inDataPoints, static_cast<int8_t>(scalarTolerance), featureIdsArray);
   }
   else if(auto inputData = dynamic_cast<UInt8Array*>(inputDataArray))
   {
-    compare = std::shared_ptr<TSpecificCompareFunctor<uint8_t>>(new TSpecificCompareFunctor<uint8_t>(inputData, inDataPoints, static_cast<uint8_t>(scalarTolerance), featureIdsArray));
+    compare = std::make_shared<TSpecificCompareFunctor<uint8_t>>(inputData, inDataPoints, static_cast<uint8_t>(scalarTolerance), featureIdsArray);
   }
   else if(auto inputData = dynamic_cast<BoolArray*>(inputDataArray))
   {
-    compare = std::shared_ptr<TSpecificCompareFunctorBool>(new TSpecificCompareFunctorBool(inputData, inDataPoints, static_cast<bool>(scalarTolerance), featureIdsArray));
+    compare = std::make_shared<TSpecificCompareFunctorBool>(inputData, inDataPoints, static_cast<bool>(scalarTolerance), featureIdsArray);
   }
   else if(auto inputData = dynamic_cast<Int16Array*>(inputDataArray))
   {
-    compare = std::shared_ptr<TSpecificCompareFunctor<int16_t>>(new TSpecificCompareFunctor<int16_t>(inputData, inDataPoints, static_cast<int16_t>(scalarTolerance), featureIdsArray));
+    compare = std::make_shared<TSpecificCompareFunctor<int16_t>>(inputData, inDataPoints, static_cast<int16_t>(scalarTolerance), featureIdsArray);
   }
   else if(auto inputData = dynamic_cast<UInt16Array*>(inputDataArray))
   {
-    compare = std::shared_ptr<TSpecificCompareFunctor<uint16_t>>(new TSpecificCompareFunctor<uint16_t>(inputData, inDataPoints, static_cast<uint16_t>(scalarTolerance), featureIdsArray));
+    compare = std::make_shared<TSpecificCompareFunctor<uint16_t>>(inputData, inDataPoints, static_cast<uint16_t>(scalarTolerance), featureIdsArray);
   }
   else if(auto inputData = dynamic_cast<Int32Array*>(inputDataArray))
   {
-    compare = std::shared_ptr<TSpecificCompareFunctor<int32_t>>(new TSpecificCompareFunctor<int32_t>(inputData, inDataPoints, static_cast<int32_t>(scalarTolerance), featureIdsArray));
+    compare = std::make_shared<TSpecificCompareFunctor<int32_t>>(inputData, inDataPoints, static_cast<int32_t>(scalarTolerance), featureIdsArray);
   }
   else if(auto inputData = dynamic_cast<UInt32Array*>(inputDataArray))
   {
-    compare = std::shared_ptr<TSpecificCompareFunctor<uint32_t>>(new TSpecificCompareFunctor<uint32_t>(inputData, inDataPoints, static_cast<uint32_t>(scalarTolerance), featureIdsArray));
+    compare = std::make_shared<TSpecificCompareFunctor<uint32_t>>(inputData, inDataPoints, static_cast<uint32_t>(scalarTolerance), featureIdsArray);
   }
   else if(auto inputData = dynamic_cast<Int64Array*>(inputDataArray))
   {
-    compare = std::shared_ptr<TSpecificCompareFunctor<int64_t>>(new TSpecificCompareFunctor<int64_t>(inputData, inDataPoints, static_cast<int64_t>(scalarTolerance), featureIdsArray));
+    compare = std::make_shared<TSpecificCompareFunctor<int64_t>>(inputData, inDataPoints, static_cast<int64_t>(scalarTolerance), featureIdsArray);
   }
   else if(auto inputData = dynamic_cast<UInt64Array*>(inputDataArray))
   {
-    compare = std::shared_ptr<TSpecificCompareFunctor<uint64_t>>(new TSpecificCompareFunctor<uint64_t>(inputData, inDataPoints, static_cast<uint64_t>(scalarTolerance), featureIdsArray));
+    compare = std::make_shared<TSpecificCompareFunctor<uint64_t>>(inputData, inDataPoints, static_cast<uint64_t>(scalarTolerance), featureIdsArray);
   }
   else if(auto inputData = dynamic_cast<Float32Array*>(inputDataArray))
   {
-    compare = std::shared_ptr<TSpecificCompareFunctor<float>>(new TSpecificCompareFunctor<float>(inputData, inDataPoints, scalarTolerance, featureIdsArray));
+    compare = std::make_shared<TSpecificCompareFunctor<float>>(inputData, inDataPoints, scalarTolerance, featureIdsArray);
   }
   else if(auto inputData = dynamic_cast<Float64Array*>(inputDataArray))
   {
-    compare = std::shared_ptr<TSpecificCompareFunctor<double>>(new TSpecificCompareFunctor<double>(inputData, inDataPoints, static_cast<double>(scalarTolerance), featureIdsArray));
+    compare = std::make_shared<TSpecificCompareFunctor<double>>(inputData, inDataPoints, static_cast<double>(scalarTolerance), featureIdsArray);
   }
 
   // Generate the random voxel indices that will be used for the seed points to start a new grain growth/agglomeration
@@ -393,8 +396,15 @@ void ScalarSegmentFeatures::randomizeFeatureIds(Int32Array* featureIds, int64_t 
   }
 }
 
-int64 ScalarSegmentFeatures::getSeed(Int32Array* featureIdsArray, int32 gnum, int64 nextSeed, bool useGoodVoxels, const UInt8Array* goodVoxelsArray) const
+int64 ScalarSegmentFeatures::getSeed(const DataStructure& data, const Arguments& args, int32 gnum, int64 nextSeed) const
 {
+  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPathKey);
+  auto useGoodVoxels = args.value<bool>(k_UseGoodVoxelsKey);
+  auto goodVoxelsPath = args.value<DataPath>(k_GoodVoxelsPathKey);
+
+  auto featureIdsArray = data.getDataAs<FeatureIdsArrayType>(featureIdsPath);
+  auto goodVoxelsArray = data.getDataAs<GoodVoxelsArrayType>(goodVoxelsPath);
+
   auto featureIds = featureIdsArray->getDataStore();
   usize totalPoints = featureIds->getNumberOfTuples();
   auto goodVoxels = goodVoxelsArray->getDataStore();
@@ -421,15 +431,22 @@ int64 ScalarSegmentFeatures::getSeed(Int32Array* featureIdsArray, int32 gnum, in
   }
   if(seed >= 0)
   {
-    featureIds->setValue(seed, gnum);
+    featureIds->setValue(static_cast<usize>(seed), gnum);
     // std::vector<size_t> tDims(1, gnum + 1);
     // m->getAttributeMatrix(getCellFeatureAttributeMatrixName())->resizeAttributeArrays(tDims);
   }
   return seed;
 }
 
-bool ScalarSegmentFeatures::determineGrouping(const Int32Array* featureIdsArray, bool useGoodVoxels, const UInt8Array* goodVoxelsArray, int64 referencepoint, int64 neighborpoint, int32 gnum) const
+bool ScalarSegmentFeatures::determineGrouping(const DataStructure& data, const Arguments& args, int64 referencepoint, int64 neighborpoint, int32 gnum) const
 {
+  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPathKey);
+  auto useGoodVoxels = args.value<bool>(k_UseGoodVoxelsKey);
+  auto goodVoxelsPath = args.value<DataPath>(k_GoodVoxelsPathKey);
+
+  auto featureIdsArray = data.getDataAs<FeatureIdsArrayType>(featureIdsPath);
+  auto goodVoxelsArray = data.getDataAs<GoodVoxelsArrayType>(goodVoxelsPath);
+
   auto feastureIds = featureIdsArray->getDataStore();
   auto goodVoxels = goodVoxelsArray->getDataStore();
   if(feastureIds->getValue(neighborpoint) == 0 && (!useGoodVoxels || goodVoxels->getValue(neighborpoint)))
@@ -447,7 +464,7 @@ ScalarSegmentFeatures::SeedGenerator ScalarSegmentFeatures::initializeVoxelSeedG
   auto seed = static_cast<SeedGenerator::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
   SeedGenerator generator;
   generator.seed(seed);
-  auto distribution = std::uniform_int_distribution<int64>(rangeMin, rangeMax);
+  distribution = std::uniform_int_distribution<int64>(rangeMin, rangeMax);
   distribution = std::uniform_int_distribution<int64>(rangeMin, rangeMax);
 
   return generator;

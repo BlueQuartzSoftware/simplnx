@@ -75,7 +75,7 @@ IFilter::PreflightResult SegmentFeatures::preflightImpl(const DataStructure& dat
 
   while(seed >= 0)
   {
-    seed = getSeed(gnum, nextSeed);
+    seed = getSeed(data, args, gnum, nextSeed);
     nextSeed = seed + 1;
     if(seed >= 0)
     {
@@ -119,7 +119,7 @@ IFilter::PreflightResult SegmentFeatures::preflightImpl(const DataStructure& dat
           }
           if(good)
           {
-            if(determineGrouping(currentpoint, neighbor, gnum))
+            if(determineGrouping(data, args, currentpoint, neighbor, gnum))
             {
               voxelslist[size] = neighbor;
               size++;
@@ -159,12 +159,12 @@ Result<> SegmentFeatures::executeImpl(DataStructure& data, const Arguments& args
   return {};
 }
 
-int64 SegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
+int64 SegmentFeatures::getSeed(const DataStructure& data, const Arguments& args, int32 gnum, int64 nextSeed) const
 {
   return -1;
 }
 
-bool SegmentFeatures::determineGrouping(int64 referencePoint, int64 neighborPoint, int32 gnum) const
+bool SegmentFeatures::determineGrouping(const DataStructure& data, const Arguments& args, int64 referencePoint, int64 neighborPoint, int32 gnum) const
 {
   return false;
 }
