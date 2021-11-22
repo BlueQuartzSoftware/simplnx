@@ -25,6 +25,7 @@
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+
 #include "complex/unit_test/complex_test_dirs.hpp"
 
 #include "UnitTestCommon.hpp"
@@ -33,7 +34,7 @@
 #include "ComplexCore/Filters/CreateImageGeometry.hpp"
 
 using namespace complex;
-using namespace ComplexUnitTest;
+
 namespace fs = std::filesystem;
 
 namespace CreateImageGeometryUnitTest
@@ -50,19 +51,15 @@ TEST_CASE("ComplexCore::CreateImageGeometry: Instantiation and Parameter Check",
 
   std::vector<usize> imageDims = {40, 60, 80};
   std::vector<float32> imageSpacing = {0.10F, 2.0F, 33.0F};
-  std::vector<float32> imageOrigin = {
-      0.0F,
-      22.0F,
-      77.0F,
-  };
+  std::vector<float32> imageOrigin = {0.0F, 22.0F, 77.0F};
 
   VectorUInt64Parameter::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
 
-  DataStructure dataGraph = ComplexUnitTest::CreateAllPrimitiveTypes(imageDims);
+  DataStructure dataGraph = complex::UnitTest::CreateAllPrimitiveTypes(imageDims);
   //  DataGroup* levelZeroGroup = DataGroup::Create(dataGraph, ComplexUnitTest::Constants::k_LevelZero);
   //  DataGroup* levelOneGroup = DataGroup::Create(dataGraph, ComplexUnitTest::Constants::k_LevelOne, levelZeroGroup->getId());
 
-  DataPath selectedDataGroupPath({ComplexUnitTest::Constants::k_LevelZero, ComplexUnitTest::Constants::k_LevelOne});
+  DataPath selectedDataGroupPath({complex::UnitTest::Constants::k_LevelZero, complex::UnitTest::Constants::k_LevelOne});
   Arguments args;
   // Create default Parameters for the filter.
   args.insertOrAssign(CreateImageGeometry::k_SelectedDataGroup_Key, std::make_any<DataPath>(selectedDataGroupPath));
