@@ -1,6 +1,7 @@
 #include "ArraySelectionParameter.hpp"
 
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/DataStructure/IDataArray.hpp"
 
 #include <fmt/core.h>
 
@@ -84,6 +85,12 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
   if(dataGroup != nullptr)
   {
     return complex::MakeErrorResult<>(-2, fmt::format("Object at path '{}' is a DataGroup but needs to be a DataArray.", value.toString()));
+  }
+
+  const IDataArray* dataArray = dynamic_cast<const IDataArray*>(object);
+  if(dataArray == nullptr)
+  {
+    return complex::MakeErrorResult<>(-2, fmt::format("Object at path '{}' must be a DataArray.", value.toString()));
   }
 
   return {};

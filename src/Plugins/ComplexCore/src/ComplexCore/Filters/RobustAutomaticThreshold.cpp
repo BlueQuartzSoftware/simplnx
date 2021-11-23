@@ -1,17 +1,13 @@
 #include "RobustAutomaticThreshold.hpp"
 
-#include <filesystem>
-#include <fstream>
-
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/NumericTypeParameter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
 
 namespace fs = std::filesystem;
 using namespace complex;
@@ -133,8 +129,8 @@ std::string RobustAutomaticThreshold::humanName() const
 Parameters RobustAutomaticThreshold::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_InputArrayPath, "Input Array", "DataArray to Threshold", DataPath()));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_GradientMagnitudePath, "Gradient Magnitude", "Type to interpret data as", DataPath()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPath, "Input Array", "DataArray to Threshold", DataPath()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_GradientMagnitudePath, "Gradient Magnitude Data", "", DataPath()));
   params.insert(std::make_unique<ArrayCreationParameter>(k_ArrayCreationPath, "Mask", "Created mask based on Input Array and Gradient Magnitude", DataPath()));
 
   return params;
