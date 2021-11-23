@@ -8,7 +8,7 @@ using namespace complex;
 
 namespace complex
 {
-CreateImageGeometryAction::CreateImageGeometryAction(DataPath path, SizeVec3 dims, FloatVec3 origin, FloatVec3 spacing)
+CreateImageGeometryAction::CreateImageGeometryAction(DataPath path, DimensionType dims, OriginType origin, SpacingType spacing)
 : m_Path(std::move(path))
 , m_Dims(std::move(dims))
 , m_Origin(std::move(origin))
@@ -39,7 +39,16 @@ Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode mod
     }
   }
 
-  ImageGeom::Create(dataStructure, name, id);
+  BaseGroup* dataObject = dataStructure.getDataAs<BaseGroup>(id);
+  if(dataObject->contains(name))
+  {
+    return MakeErrorResult(-200, fmt::format("CreateImageGeometryAction: DataObject already exists at path '{}'", m_Path.toString()));
+  }
+
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, name, id);
+  imageGeom->setDimensions(m_Dims);
+  imageGeom->setOrigin(m_Origin);
+  imageGeom->setSpacing(m_Spacing);
 
   return {};
 }
@@ -49,17 +58,17 @@ const DataPath& CreateImageGeometryAction::path() const
   return m_Path;
 }
 
-const SizeVec3& CreateImageGeometryAction::dims() const
+const CreateImageGeometryAction::DimensionType& CreateImageGeometryAction::dims() const
 {
   return m_Dims;
 }
 
-const FloatVec3& CreateImageGeometryAction::origin() const
+const CreateImageGeometryAction::OriginType& CreateImageGeometryAction::origin() const
 {
   return m_Origin;
 }
 
-const FloatVec3& CreateImageGeometryAction::spacing() const
+const CreateImageGeometryAction::SpacingType& CreateImageGeometryAction::spacing() const
 {
   return m_Spacing;
 }

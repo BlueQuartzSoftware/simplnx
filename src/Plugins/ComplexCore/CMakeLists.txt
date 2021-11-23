@@ -9,6 +9,7 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${complex_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 set(FilterList
   CreateDataArray
   CreateDataGroup
+  CreateImageGeometry
   ConditionalSetValue
   DeleteData
   ExportDREAM3DFilter
