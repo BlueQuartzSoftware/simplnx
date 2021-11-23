@@ -11,6 +11,7 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
 
 namespace complex
 {
@@ -272,9 +273,9 @@ std::string MinSize::humanName() const
 Parameters MinSize::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_FeaturePhasesPath_Key, "Feature Phases Array", "DataPath to Feature Phases DataArray", DataPath{}));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_NumCellsPath_Key, "NumCells Array", "DataPath to NumCells DataArray", DataPath{}));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_FeatureIdsPath_Key, "FeatureIds Array", "DataPath to FeatureIds DataArray", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Feature Phases Array", "DataPath to Feature Phases DataArray", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_NumCellsPath_Key, "NumCells Array", "DataPath to NumCells DataArray", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "FeatureIds Array", "DataPath to FeatureIds DataArray", DataPath{}));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "DataPath to Image Geometry", DataPath{}));
 
   params.insert(std::make_unique<BoolParameter>(k_ApplySinglePhase_Key, "Apply to Single Phase", "Apply to Single Phase", true));
