@@ -140,8 +140,8 @@ TEST_CASE("ConditionalSetValue: Test Algorithm", "[ConditionalSetValue]")
 
 TEST_CASE("ConditionalSetValue: Overflow/Underflow", "[ConditionalSetValue]")
 {
-  std::vector<usize> imageDims = {40, 60, 80};
-  FloatVec3 imageSpacing = {0.10f, 2.0f, 33.0f};
+  std::vector<size_t> imageDims = {40, 60, 80};
+  FloatVec3 imageSpacing = {0.10F, 2.0F, 33.0F};
   FloatVec3 imageOrigin = {
       0.0f,
       22.0f,

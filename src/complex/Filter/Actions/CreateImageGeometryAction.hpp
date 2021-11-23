@@ -12,9 +12,13 @@ namespace complex
 class COMPLEX_EXPORT CreateImageGeometryAction : public IDataAction
 {
 public:
+  using DimensionType = std::vector<size_t>;
+  using OriginType = std::vector<float>;
+  using SpacingType = std::vector<float>;
+
   CreateImageGeometryAction() = delete;
 
-  CreateImageGeometryAction(DataPath path, SizeVec3 dims, FloatVec3 origin, FloatVec3 spacing);
+  CreateImageGeometryAction(DataPath path, DimensionType dims, OriginType origin, SpacingType spacing);
 
   ~CreateImageGeometryAction() noexcept override;
 
@@ -41,24 +45,24 @@ public:
    * @brief Returns the dimensions of the ImageGeometry to be created.
    * @return
    */
-  const SizeVec3& dims() const;
+  const DimensionType& dims() const;
 
   /**
    * @brief Returns the origin of the ImageGeometry to be created.
    * @return
    */
-  const FloatVec3& origin() const;
+  const OriginType& origin() const;
 
   /**
    * @brief Returns the spacing of the ImageGeometry to be created.
    * @return
    */
-  const FloatVec3& spacing() const;
+  const SpacingType& spacing() const;
 
 private:
   DataPath m_Path;
-  SizeVec3 m_Dims;
-  FloatVec3 m_Origin;
-  FloatVec3 m_Spacing;
+  DimensionType m_Dims;
+  OriginType m_Origin;
+  SpacingType m_Spacing;
 };
 } // namespace complex
