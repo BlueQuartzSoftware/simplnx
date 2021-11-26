@@ -113,7 +113,7 @@ Result<> StlFileReader::operator()()
   m_MinMaxCoords = ::CreateMinMaxCoords();
 
   // Open File
-  FILE* f = std::fopen(m_FilePath.c_str(), "rb");
+  FILE* f = std::fopen(m_FilePath.string().c_str(), "rb");
   if(nullptr == f)
   {
     return MakeErrorResult(complex::StlConstants::k_ErrorOpeningFile, "Error opening STL file");
