@@ -34,8 +34,6 @@
 
 #pragma once
 
-#include <array>
-
 #include "complex/Common/ComplexRange3D.hpp"
 #include "complex/complex_export.hpp"
 
@@ -43,12 +41,13 @@
 // This is consistent with previous behavior, only earlier parallelization split the includes between
 // the corresponding .h and .cpp files.
 #ifdef COMPLEX_ENABLE_MULTICORE
-// clang-format off
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
 #include <tbb/partitioner.h>
-// clang-format on
 #endif
+
+#include <array>
+#include <cstddef>
 
 namespace complex
 {

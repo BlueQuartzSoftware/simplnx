@@ -33,9 +33,10 @@
 
 #pragma once
 
-#include <array>
-
 #include "complex/complex_export.hpp"
+
+#include <array>
+#include <stddef.h>
 
 #ifdef COMPLEX_ENABLE_MULTICORE
 #include <tbb/blocked_range2d.h>

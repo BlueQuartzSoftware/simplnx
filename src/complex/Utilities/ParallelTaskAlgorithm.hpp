@@ -34,8 +34,6 @@
 
 #pragma once
 
-#include <memory>
-
 #include "complex/complex_export.hpp"
 
 // SIMPLib.h MUST be included before this or the guard will block the include but not its uses below.
@@ -44,6 +42,10 @@
 #ifdef COMPLEX_ENABLE_MULTICORE
 #include <tbb/task_group.h>
 #endif
+
+#include <array>
+#include <cstddef>
+#include <memory>
 
 namespace complex
 {

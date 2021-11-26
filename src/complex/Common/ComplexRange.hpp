@@ -33,13 +33,14 @@
 
 #pragma once
 
-#include <array>
-
 #include "complex/complex_export.hpp"
 
 #ifdef COMPLEX_ENABLE_MULTICORE
 #include <tbb/blocked_range.h>
 #endif
+
+#include <array>
+#include <stddef.h>
 
 namespace complex
 {
