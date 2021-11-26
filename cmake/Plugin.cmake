@@ -276,6 +276,7 @@ function(create_complex_plugin_unit_test)
   #------------------------------------------------------------------------------
   # Convert the native path to a path that will be compatible with C++ source codes
   file(TO_CMAKE_PATH "${${ARGS_PLUGIN_NAME}_SOURCE_DIR}" PLUGIN_SOURCE_DIR_NORM)
+  file(TO_CMAKE_PATH "${complex_SOURCE_DIR}" COMPLEX_SOURCE_DIR_NORM)
 
   #------------------------------------------------------------------------------
   # Set the generated directory in the build folder, set the path to the generated

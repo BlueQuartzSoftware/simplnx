@@ -101,9 +101,17 @@ Result<> CreateTriangleGeometryAction::apply(DataStructure& dataStructure, Mode 
   return {};
 }
 
-const DataPath& CreateTriangleGeometryAction::path() const
+const DataPath& CreateTriangleGeometryAction::geometryPath() const
 {
   return m_GeometryPath;
+}
+AbstractGeometry::MeshIndexType CreateTriangleGeometryAction::numFaces() const
+{
+  return m_NumFaces;
+}
+AbstractGeometry::MeshIndexType CreateTriangleGeometryAction::numVertices() const
+{
+  return m_NumVertices;
 }
 
 } // namespace complex

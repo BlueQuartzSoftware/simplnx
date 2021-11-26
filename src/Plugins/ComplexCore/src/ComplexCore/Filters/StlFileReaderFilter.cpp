@@ -154,7 +154,6 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
     numTriangles = 1; // This can happen in a LOT of STL files. Just means the writer didn't go back and update the header.
   }
 
-  std::cout << "num triangles: " << numTriangles << std::endl;
   DataPath geometryDataPath = pParentDataGroupPath.createChildPath(pFaceGeometryName);
 
   // Assign the outputAction to the Result<OutputActions>::actions vector via a push_back

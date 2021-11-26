@@ -27,11 +27,11 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 
 #include "UnitTestCommon.hpp"
 
 #include "ComplexCore/Filters/StlFileReaderFilter.hpp"
-
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include <filesystem>
@@ -57,9 +57,11 @@ TEST_CASE("ComplexCore::StlFileReaderFilter: Instantiation and Parameter Check",
 
   DataPath normalsDataPath = parentPath.createChildPath(triangleGeometryName).createChildPath(triangleFaceDataGroupName).createChildPath(normalsDataArrayName);
 
+  std::string inputFile = fmt::format("{}/ASTMD638_specimen.stl", unit_test::k_ComplexTestDataSourceDir.view());
+
+
   // Create default Parameters for the filter.
-  args.insertOrAssign(StlFileReaderFilter::k_StlFilePath_Key,
-                      std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Users/mjackson/DREAM3D-Dev/DREAM3D_Data/Data/Models/ASTMD638_specimen.stl")));
+  args.insertOrAssign(StlFileReaderFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
   args.insertOrAssign(StlFileReaderFilter::k_ParentDataGroupPath_Key, std::make_any<DataPath>(parentPath));
   args.insertOrAssign(StlFileReaderFilter::k_GeometryName_Key, std::make_any<std::string>(triangleGeometryName));
   args.insertOrAssign(StlFileReaderFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(triangleFaceDataGroupName));
@@ -72,6 +74,10 @@ TEST_CASE("ComplexCore::StlFileReaderFilter: Instantiation and Parameter Check",
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataGraph, args);
   REQUIRE(executeResult.result.valid());
+
+  TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(parentPath.createChildPath(triangleGeometryName));
+  REQUIRE(triangleGeom.getNumberOfTris() == 92);
+  REQUIRE(triangleGeom.getNumberOfVertices() == 48);
 
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile("/tmp/out.dream3d");
   H5::FileWriter fileWriter = std::move(result.value());
