@@ -2,30 +2,27 @@
  * Time Tracking:
  * THURS: 11:00 - 12:00
  * THURS: 13:45 - 16:45
+ * FRI: 9:00 -
+ *
  */
 
-#include "StlFileReader.hpp"
+#include "StlFileReaderFilter.hpp"
 
-#include "complex/Common/ComplexRange.hpp"
-#include "complex/DataStructure/DataArray.hpp"
+#include "ComplexCore/Filters/Algorithms/StlFileReader.hpp"
+#include "ComplexCore/utils/StlUtilities.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
+#include "complex/Filter/Actions/CreateTriangleGeometryAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateTriangleGeometryAction.hpp"
-
-#include "ComplexCore/Filters/Actions/StlFileReaderAction.hpp"
-#include "ComplexCore/utils/StlUtilities.hpp"
-
 
 #include <cstdio>
-#include <tuple>
 #include <filesystem>
+#include <tuple>
 namespace fs = std::filesystem;
 
 using namespace complex;
@@ -33,100 +30,43 @@ using namespace complex;
 namespace
 {
 
-/**
- * @brief The FindUniqueIdsImpl class implements a threaded algorithm that determines the set of
- * unique vertices in the triangle geometry
- */
-class FindUniqueIdsImpl
-{
-public:
-  FindUniqueIdsImpl(AbstractGeometry::SharedVertexList& vertex,
-                    const std::vector<std::vector<size_t>>& nodesInBin,
-                    complex::Int64Array& uniqueIds)
-  : m_Vertex(vertex)
-  , m_NodesInBin(nodesInBin)
-  , m_UniqueIds(uniqueIds)
-  {
-  }
-
-  // -----------------------------------------------------------------------------
-  void convert(size_t start, size_t end) const
-  {
-    for(size_t i = start; i < end; i++)
-    {
-      for(size_t j = 0; j < m_NodesInBin[i].size(); j++)
-      {
-        size_t node1 = m_NodesInBin[i][j];
-        if(m_UniqueIds[node1] == static_cast<int64_t>(node1))
-        {
-          for(size_t k = j + 1; k < m_NodesInBin[i].size(); k++)
-          {
-            size_t node2 = m_NodesInBin[i][k];
-            if(m_Vertex[node1 * 3] == m_Vertex[node2 * 3] && m_Vertex[node1 * 3 + 1] == m_Vertex[node2 * 3 + 1] && m_Vertex[node1 * 3 + 2] == m_Vertex[node2 * 3 + 2])
-            {
-              m_UniqueIds[node2] = node1;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // -----------------------------------------------------------------------------
-  void operator()(const ComplexRange& range) const
-  {
-    convert(range.min(), range.max());
-  }
-
-private:
-  const AbstractGeometry::SharedVertexList& m_Vertex;
-  const std::vector<std::vector<size_t>>& m_NodesInBin;
-  complex::Int64Array& m_UniqueIds;
-};
-
-std::array<float, 6> CreateMinMaxCoords()
-{
-  return {std::numeric_limits<float>::max(),  -std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
-          -std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),  -std::numeric_limits<float>::max()};
-}
-
-}
+} // namespace
 
 namespace complex
 {
 
 //------------------------------------------------------------------------------
-std::string StlFileReader::name() const
+std::string StlFileReaderFilter::name() const
 {
-  return FilterTraits<StlFileReader>::name.str();
+  return FilterTraits<StlFileReaderFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string StlFileReader::className() const
+std::string StlFileReaderFilter::className() const
 {
-  return FilterTraits<StlFileReader>::className;
+  return FilterTraits<StlFileReaderFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid StlFileReader::uuid() const
+Uuid StlFileReaderFilter::uuid() const
 {
-  return FilterTraits<StlFileReader>::uuid;
+  return FilterTraits<StlFileReaderFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string StlFileReader::humanName() const
+std::string StlFileReaderFilter::humanName() const
 {
   return "Import STL File";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> StlFileReader::defaultTags() const
+std::vector<std::string> StlFileReaderFilter::defaultTags() const
 {
   return {"#IO", "#Input", "#Read", "#Import"};
 }
 
 //------------------------------------------------------------------------------
-Parameters StlFileReader::parameters() const
+Parameters StlFileReaderFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
@@ -141,21 +81,14 @@ Parameters StlFileReader::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer StlFileReader::clone() const
+IFilter::UniquePointer StlFileReaderFilter::clone() const
 {
-  return std::make_unique<StlFileReader>();
+  return std::make_unique<StlFileReaderFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult StlFileReader::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
-/** ======================================================
- *  Before we even get here each of the filter parameters will have validated the
- *  input that the user has provided to the best of it's ability. This means
- *  that the input file parameter will have already figured out if the file is
- *  available on the file system, the parent data group is available.
- */
-
   /**
    * These are the values that were gathered from the UI or the pipeline file or
    * otherwise passed into the filter. These are here for your convenience. If you
@@ -191,12 +124,13 @@ IFilter::PreflightResult StlFileReader::preflightImpl(const DataStructure& ds, c
   // to the DataStructure. If none are available then create a new custom Action subclass.
   // If your filter does not make any structural modifications to the DataStructure then
   // you can skip this code.
-  //auto stlFileReaderAction = std::make_unique<StlFileReaderAction>(pStlFilePathValue);
+  // auto stlFileReaderAction = std::make_unique<StlFileReaderFilterAction>(pStlFilePathValue);
 
   int32_t stlFileType = StlUtilities::DetermineStlFileType(pStlFilePathValue);
   if(stlFileType < 0)
   {
-    Error result = {StlConstants::k_UnsupportedFileType, fmt::format("The Input STL File is ASCII which is not currently supported. Please convert it to a binary STL file using another program.", pStlFilePathValue.string())};
+    Error result = {StlConstants::k_UnsupportedFileType,
+                    fmt::format("The Input STL File is ASCII which is not currently supported. Please convert it to a binary STL file using another program.", pStlFilePathValue.string())};
     resultOutputActions.errors().push_back(result);
     return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
   }
@@ -234,7 +168,7 @@ IFilter::PreflightResult StlFileReader::preflightImpl(const DataStructure& ds, c
     auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(geometryDataPath, numTriangles, 1);
     resultOutputActions.value().actions.push_back(std::move(createTriangleGeometryAction));
   }
-  //Create Triangle FaceData (for the Normals) action and store it
+  // Create Triangle FaceData (for the Normals) action and store it
   {
     DataPath faceGroupDataPath = geometryDataPath.createChildPath(pFaceDataGroupName);
     auto createDataGroupAction = std::make_unique<CreateDataGroupAction>(faceGroupDataPath);
@@ -242,9 +176,7 @@ IFilter::PreflightResult StlFileReader::preflightImpl(const DataStructure& ds, c
   }
   // Create the face Normals DataArray action and store it
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::float32,
-                                                                 std::vector<usize>{static_cast<usize>(numTriangles)},
-                                                                 3, pFaceNormalsArrayNameValue);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::float64, std::vector<usize>{static_cast<usize>(numTriangles)}, 3, pFaceNormalsArrayNameValue);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
@@ -256,21 +188,16 @@ IFilter::PreflightResult StlFileReader::preflightImpl(const DataStructure& ds, c
 }
 
 //------------------------------------------------------------------------------
-Result<> StlFileReader::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> StlFileReaderFilter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
-  /****************************************************************************
-   * Extract the actual input values from the 'filterArgs' object
-   ***************************************************************************/
   auto pStlFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
   auto pParentDataGroupPath = filterArgs.value<DataPath>(k_ParentDataGroupPath_Key);
   auto pFaceGeometryName = filterArgs.value<std::string>(k_GeometryName_Key);
   auto pFaceDataGroupName = filterArgs.value<std::string>(k_FaceDataGroupName_Key);
   auto pFaceNormalsArrayNameValue = filterArgs.value<DataPath>(k_FaceNormalsArrayName_Key);
 
-  /****************************************************************************
-   * Write your algorithm implementation in this function
-   ***************************************************************************/
-
-  return {};
+  Result<> result = StlFileReader(data, pStlFilePathValue, pParentDataGroupPath, pFaceGeometryName, pFaceDataGroupName, pFaceNormalsArrayNameValue, this)();
+  return result;
 }
+
 } // namespace complex

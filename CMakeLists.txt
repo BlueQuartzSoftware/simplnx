@@ -280,6 +280,10 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/DataArrayUtilities.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
 
@@ -302,6 +306,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectWriter.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Constants.hpp
+
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.hpp
 )
@@ -408,6 +413,10 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/DataArrayUtilities.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
 

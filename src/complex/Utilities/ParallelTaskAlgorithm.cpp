@@ -1,5 +1,6 @@
 /* ============================================================================
  * Copyright (c) 2019 BlueQuartz Software, LLC
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -11,9 +12,9 @@
  * list of conditions and the following disclaimer in the documentation and/or
  * other materials provided with the distribution.
  *
- * Neither the name of BlueQuartz Software, the US Air Force, nor the names of its
- * contributors may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * Neither the names of any of the BlueQuartz Software contributors
+ * may be used to endorse or promote products derived from this software without
+ * specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -31,118 +32,79 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "complex/Common/ComplexRange2D.hpp"
+#include "ParallelTaskAlgorithm.hpp"
 
-#include <stdexcept>
+#include <algorithm>
+#include <thread>
+
 using namespace complex;
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-ComplexRange2D::ComplexRange2D()
-: m_Range({{0, 0, 0, 0}})
-{
-}
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ComplexRange2D::ComplexRange2D(size_t initRow, size_t initCol, size_t endRow, size_t endCol)
-: m_Range({{initRow, initCol, endRow, endCol}})
-{
-}
-
+ParallelTaskAlgorithm::ParallelTaskAlgorithm()
+: m_Parallelization(true)
+, m_MaxThreads(std::thread::hardware_concurrency())
 #ifdef COMPLEX_ENABLE_MULTICORE
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-ComplexRange2D::ComplexRange2D(const tbb::blocked_range2d<size_t, size_t>& r)
-: m_Range({{r.rows().begin(), r.cols().begin(), r.rows().end(), r.cols().end()}})
-{
-}
+, m_TaskGroup(new tbb::task_group)
 #endif
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-ComplexRange2D::RangeType ComplexRange2D::getRange() const
 {
-  return m_Range;
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-size_t ComplexRange2D::minRow() const
+ParallelTaskAlgorithm::~ParallelTaskAlgorithm()
 {
-  return m_Range[0];
+#ifdef COMPLEX_ENABLE_MULTICORE
+  m_TaskGroup->wait();
+#endif
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-size_t ComplexRange2D::minCol() const
+bool ParallelTaskAlgorithm::getParallelizationEnabled() const
 {
-  return m_Range[1];
+  return m_Parallelization;
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-size_t ComplexRange2D::maxRow() const
+void ParallelTaskAlgorithm::setParallelizationEnabled(bool doParallel)
 {
-  return m_Range[2];
+  m_Parallelization = doParallel;
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-size_t ComplexRange2D::maxCol() const
+uint32_t ParallelTaskAlgorithm::getMaxThreads() const
 {
-  return m_Range[3];
+#ifdef COMPLEX_ENABLE_MULTICORE
+  return m_MaxThreads;
+#else
+  return std::thread::hardware_concurrency();
+#endif
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-size_t ComplexRange2D::numRows() const
+void ParallelTaskAlgorithm::setMaxThreads(uint32_t threads)
 {
-  return maxRow() - minRow();
+  m_MaxThreads = std::min(threads, std::thread::hardware_concurrency());
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-size_t ComplexRange2D::numCols() const
+void ParallelTaskAlgorithm::wait()
 {
-  return maxCol() - minCol();
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-size_t ComplexRange2D::size() const
-{
-  return numRows() * numCols();
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-bool ComplexRange2D::empty() const
-{
-  const bool emptyRows = (m_Range[0] == m_Range[2]) && (m_Range[0] == 0);
-  const bool emptyCols = (m_Range[1] == m_Range[3]) && (m_Range[1] == 0);
-  return emptyRows && emptyCols;
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-size_t ComplexRange2D::operator[](size_t index) const
-{
-  if(index < 4)
-  {
-    return m_Range[index];
-  }
-  throw std::range_error("Range out of bounds");
+#ifdef COMPLEX_ENABLE_MULTICORE
+  // This will spill over if the number of files to process does not divide evenly by the number of threads.
+  m_TaskGroup->wait();
+  m_CurThreads = 0;
+#endif
 }

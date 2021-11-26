@@ -40,7 +40,8 @@
 #ifdef COMPLEX_ENABLE_MULTICORE
 #include <tbb/blocked_range2d.h>
 #endif
-
+namespace complex
+{
 /**
  * @class ComplexRange2D ComplexRange2D.h SIMPLib/Common/ComplexRange2D.h
  * @brief The ComplexRange2D class defines a range between set of minimum and
@@ -124,3 +125,5 @@ public:
 private:
   RangeType m_Range;
 };
+
+} // namespace complex

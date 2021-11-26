@@ -188,4 +188,15 @@ std::vector<std::string> IFilter::defaultTags() const
 {
   return {};
 }
+
+void IFilter::setCanceled(bool cancel)
+{
+  m_Cancel = cancel;
+}
+
+bool IFilter::isCanceled() const
+{
+  return m_Cancel;
+}
+
 } // namespace complex

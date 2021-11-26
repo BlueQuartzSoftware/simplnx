@@ -40,7 +40,8 @@
 #ifdef COMPLEX_ENABLE_MULTICORE
 #include <tbb/blocked_range3d.h>
 #endif
-
+namespace complex
+{
 
 /**
  * @class ComplexRange3D ComplexRange3D.h SIMPLib/Common/ComplexRange3D.h
@@ -105,3 +106,5 @@ public:
 private:
   RangeType m_Range;
 };
+
+} // namespace complex

@@ -4,9 +4,9 @@
 
 #include <utility>
 
-#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataGroup.hpp"
+#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
 using namespace complex;
@@ -24,7 +24,7 @@ DataArray<T>* ArrayFromPath(DataStructure& dataGraph, const DataPath& path)
   }
   return dataArray;
 }
-}
+} // namespace
 
 namespace complex
 {
@@ -36,7 +36,6 @@ CreateTriangleGeometryAction::CreateTriangleGeometryAction(DataPath geometryPath
 }
 
 CreateTriangleGeometryAction::~CreateTriangleGeometryAction() noexcept = default;
-
 
 Result<> CreateTriangleGeometryAction::apply(DataStructure& dataStructure, Mode mode) const
 {
@@ -86,7 +85,6 @@ Result<> CreateTriangleGeometryAction::apply(DataStructure& dataStructure, Mode 
   }
   SharedTriList* triangles = ::ArrayFromPath<MeshIndexType>(dataStructure, trianglesPath);
   triangleGeom->setTriangles(triangles);
-
 
   // Create the Vertex Array with a component size of 3
   DataPath vertexPath = m_GeometryPath.createChildPath(k_VertexDataName);

@@ -23,16 +23,21 @@ set(FilterList
   SegmentFeatures
   ExampleFilter1
   ExampleFilter2
-  StlFileReader
+  StlFileReaderFilter
 )
 
 set(ActionList
-  StlFileReaderAction
+  )
+
+set(AlgorithmList
+  StlFileReader
+
   )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
                       FILTER_LIST ${FilterList}
                       ACTION_LIST ${ActionList}
+                      ALGORITHM_LIST ${AlgorithmList}
                       DESCRIPTION "Plugin for ${PLUGIN_NAME}"
                       VERSION "0.1.0"
 )

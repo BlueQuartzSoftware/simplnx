@@ -1,9 +1,9 @@
 #pragma once
 
 #include "complex/Common/Array.hpp"
+#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "complex/Filter/Output.hpp"
 #include "complex/complex_export.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
 
 namespace complex
 {
@@ -41,7 +41,6 @@ public:
    * @return
    */
   const DataPath& path() const;
-
 
 private:
   DataPath m_GeometryPath;

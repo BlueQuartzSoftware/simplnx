@@ -30,40 +30,40 @@
 
 #include "UnitTestCommon.hpp"
 
-#include "ComplexCore/Filters/StlFileReader.hpp"
+#include "ComplexCore/Filters/StlFileReaderFilter.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 
-#include <string>
 #include <filesystem>
+#include <string>
 namespace fs = std::filesystem;
-
 
 using namespace complex;
 using namespace complex::UnitTest::Constants;
 
-TEST_CASE("ComplexCore::StlFileReader: Instantiation and Parameter Check", "[ComplexCore][StlFileReader]")
+TEST_CASE("ComplexCore::StlFileReaderFilter: Instantiation and Parameter Check", "[ComplexCore][StlFileReaderFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  StlFileReader filter;
+  StlFileReaderFilter filter;
   DataStructure dataGraph;
   Arguments args;
 
   DataGroup* topLevelGroup = DataGroup::Create(dataGraph, k_LevelZero);
 
   DataPath parentPath = DataPath({k_LevelZero});
-  std::string triangleGeometryName ="[Triangle Geometry]";
+  std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "Face Data";
   std::string normalsDataArrayName = "Normals";
 
   DataPath normalsDataPath = parentPath.createChildPath(triangleGeometryName).createChildPath(triangleFaceDataGroupName).createChildPath(normalsDataArrayName);
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(StlFileReader::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Users/mjackson/DREAM3D-Dev/DREAM3D_Data/Data/Models/ASTMD638_specimen.stl")));
-  args.insertOrAssign(StlFileReader::k_ParentDataGroupPath_Key, std::make_any<DataPath>(parentPath));
-  args.insertOrAssign(StlFileReader::k_GeometryName_Key, std::make_any<std::string>(triangleGeometryName));
-  args.insertOrAssign(StlFileReader::k_FaceDataGroupName_Key, std::make_any<std::string>(triangleFaceDataGroupName));
-  args.insertOrAssign(StlFileReader::k_FaceNormalsArrayName_Key, std::make_any<DataPath>(normalsDataPath));
+  args.insertOrAssign(StlFileReaderFilter::k_StlFilePath_Key,
+                      std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Users/mjackson/DREAM3D-Dev/DREAM3D_Data/Data/Models/ASTMD638_specimen.stl")));
+  args.insertOrAssign(StlFileReaderFilter::k_ParentDataGroupPath_Key, std::make_any<DataPath>(parentPath));
+  args.insertOrAssign(StlFileReaderFilter::k_GeometryName_Key, std::make_any<std::string>(triangleGeometryName));
+  args.insertOrAssign(StlFileReaderFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(triangleFaceDataGroupName));
+  args.insertOrAssign(StlFileReaderFilter::k_FaceNormalsArrayName_Key, std::make_any<DataPath>(normalsDataPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
@@ -72,7 +72,6 @@ TEST_CASE("ComplexCore::StlFileReader: Instantiation and Parameter Check", "[Com
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataGraph, args);
   REQUIRE(executeResult.result.valid());
-
 
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile("/tmp/out.dream3d");
   H5::FileWriter fileWriter = std::move(result.value());

@@ -34,6 +34,7 @@
 #include "complex/Common/ComplexRange.hpp"
 
 #include <stdexcept>
+using namespace complex;
 
 // -----------------------------------------------------------------------------
 //

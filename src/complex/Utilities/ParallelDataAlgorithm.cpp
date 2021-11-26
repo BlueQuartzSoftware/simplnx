@@ -1,5 +1,6 @@
 /* ============================================================================
  * Copyright (c) 2019 BlueQuartz Software, LLC
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -11,9 +12,9 @@
  * list of conditions and the following disclaimer in the documentation and/or
  * other materials provided with the distribution.
  *
- * Neither the name of BlueQuartz Software, the US Air Force, nor the names of its
- * contributors may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * Neither the names of any of the BlueQuartz Software contributors
+ * may be used to endorse or promote products derived from this software without
+ * specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -31,40 +32,47 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "complex/Common/ComplexRange2D.hpp"
+#include "ParallelDataAlgorithm.hpp"
 
-#include <stdexcept>
 using namespace complex;
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-ComplexRange2D::ComplexRange2D()
-: m_Range({{0, 0, 0, 0}})
-{
-}
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ComplexRange2D::ComplexRange2D(size_t initRow, size_t initCol, size_t endRow, size_t endCol)
-: m_Range({{initRow, initCol, endRow, endCol}})
-{
-}
-
+ParallelDataAlgorithm::ParallelDataAlgorithm()
+: m_Range(ComplexRange())
 #ifdef COMPLEX_ENABLE_MULTICORE
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-ComplexRange2D::ComplexRange2D(const tbb::blocked_range2d<size_t, size_t>& r)
-: m_Range({{r.rows().begin(), r.cols().begin(), r.rows().end(), r.cols().end()}})
+, m_RunParallel(true)
+, m_Partitioner(tbb::auto_partitioner())
+#endif
 {
 }
-#endif
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ComplexRange2D::RangeType ComplexRange2D::getRange() const
+ParallelDataAlgorithm::~ParallelDataAlgorithm() = default;
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+bool ParallelDataAlgorithm::getParallelizationEnabled() const
+{
+  return m_RunParallel;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void ParallelDataAlgorithm::setParallelizationEnabled(bool doParallel)
+{
+  m_RunParallel = doParallel;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+ComplexRange ParallelDataAlgorithm::getRange() const
 {
   return m_Range;
 }
@@ -72,77 +80,25 @@ ComplexRange2D::RangeType ComplexRange2D::getRange() const
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-size_t ComplexRange2D::minRow() const
+void ParallelDataAlgorithm::setRange(const ComplexRange& range)
 {
-  return m_Range[0];
+  m_Range = range;
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-size_t ComplexRange2D::minCol() const
+void ParallelDataAlgorithm::setRange(size_t min, size_t max)
 {
-  return m_Range[1];
+  m_Range = {min, max};
 }
 
+#ifdef COMPLEX_ENABLE_MULTICORE
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-size_t ComplexRange2D::maxRow() const
+void ParallelDataAlgorithm::setPartitioner(const tbb::auto_partitioner& partitioner)
 {
-  return m_Range[2];
+  m_Partitioner = partitioner;
 }
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-size_t ComplexRange2D::maxCol() const
-{
-  return m_Range[3];
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-size_t ComplexRange2D::numRows() const
-{
-  return maxRow() - minRow();
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-size_t ComplexRange2D::numCols() const
-{
-  return maxCol() - minCol();
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-size_t ComplexRange2D::size() const
-{
-  return numRows() * numCols();
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-bool ComplexRange2D::empty() const
-{
-  const bool emptyRows = (m_Range[0] == m_Range[2]) && (m_Range[0] == 0);
-  const bool emptyCols = (m_Range[1] == m_Range[3]) && (m_Range[1] == 0);
-  return emptyRows && emptyCols;
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-size_t ComplexRange2D::operator[](size_t index) const
-{
-  if(index < 4)
-  {
-    return m_Range[index];
-  }
-  throw std::range_error("Range out of bounds");
-}
+#endif

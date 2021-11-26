@@ -1,6 +1,5 @@
 #include "DataArrayUtilities.hpp"
 
-
 namespace complex
 {
 Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObject& inputDataArray)
@@ -106,4 +105,4 @@ Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObjec
   return {MakeErrorResult(-260, fmt::format("Input DataObject could not be cast to any primitive type."))};
 }
 
-}
+} // namespace complex

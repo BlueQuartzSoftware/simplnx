@@ -8,21 +8,21 @@
 namespace complex
 {
 /**
- * @class StlFileReader
+ * @class StlFileReaderFilter
  *
  * @brief This filter will ....
  */
-class COMPLEXCORE_EXPORT StlFileReader : public IFilter
+class COMPLEXCORE_EXPORT StlFileReaderFilter : public IFilter
 {
 public:
-  StlFileReader() = default;
-  ~StlFileReader() noexcept override = default;
+  StlFileReaderFilter() = default;
+  ~StlFileReaderFilter() noexcept override = default;
 
-  StlFileReader(const StlFileReader&) = delete;
-  StlFileReader(StlFileReader&&) noexcept = delete;
+  StlFileReaderFilter(const StlFileReaderFilter&) = delete;
+  StlFileReaderFilter(StlFileReaderFilter&&) noexcept = delete;
 
-  StlFileReader& operator=(const StlFileReader&) = delete;
-  StlFileReader& operator=(StlFileReader&&) noexcept = delete;
+  StlFileReaderFilter& operator=(const StlFileReaderFilter&) = delete;
+  StlFileReaderFilter& operator=(StlFileReaderFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_StlFilePath_Key = "StlFilePath";
@@ -94,14 +94,7 @@ protected:
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const override;
-
-
-private:
-  // Holds the min/max coordinates for X, Y, Z laid out at { X_Min, X_Max, Y_Min, Y_Max, Z_Min, Z_Max}
-  std::array<float, 6> m_MinMaxCoords = {std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(),
-                                          std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(),
-                                          std::numeric_limits<float>::max(), -std::numeric_limits<float>::max()};
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, StlFileReader, "11608280-cec5-55d8-972b-d858a9caa74b");
+COMPLEX_DEF_FILTER_TRAITS(complex, StlFileReaderFilter, "11608280-cec5-55d8-972b-d858a9caa74b");

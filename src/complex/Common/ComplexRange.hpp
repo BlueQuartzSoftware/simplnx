@@ -41,6 +41,8 @@
 #include <tbb/blocked_range.h>
 #endif
 
+namespace complex
+{
 /**
  * @class ComplexRange ComplexRange.h SIMPLib/Common/ComplexRange.h
  * @brief The ComplexRange class defines a range between set of minimum and
@@ -100,3 +102,5 @@ public:
 private:
   RangeType m_Range;
 };
+
+} // namespace complex

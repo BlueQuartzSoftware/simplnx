@@ -102,7 +102,7 @@ endfunction()
 function(create_complex_plugin)
   set(options)
   set(oneValueArgs NAME DESCRIPTION VERSION)
-  set(multiValueArgs FILTER_LIST ACTION_LIST)
+  set(multiValueArgs FILTER_LIST ACTION_LIST ALGORITHM_LIST)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
   PROJECT(${ARGS_NAME}
@@ -160,6 +160,7 @@ function(create_complex_plugin)
 
   endforeach()
 
+  # Include all of the custom Actions
   foreach(action ${ARGS_ACTION_LIST})
     list(APPEND ${ARGS_NAME}_Plugin_HDRS
       "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/Actions/${action}.hpp"
@@ -168,6 +169,17 @@ function(create_complex_plugin)
       "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/Actions/${action}.cpp"
       )
   endforeach()
+
+  # Include all of the algorithms
+  foreach(algorithm ${ARGS_ALGORITHM_LIST})
+    list(APPEND ${ARGS_NAME}_Plugin_HDRS
+      "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/Algorithms/${algorithm}.hpp"
+      )
+    list(APPEND ${ARGS_NAME}_Plugin_SRCS
+      "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/Algorithms/${algorithm}.cpp"
+      )
+  endforeach()
+
 
   configure_file( ${complex_SOURCE_DIR}/cmake/plugin_filter_registration.h.in
     ${ARGS_GENERATED_HEADER_DIR}/plugin_filter_registration.h)
