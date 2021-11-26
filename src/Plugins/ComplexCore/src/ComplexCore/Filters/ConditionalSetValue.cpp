@@ -65,7 +65,7 @@ IFilter::PreflightResult ConditionalSetValue::preflightImpl(const DataStructure&
   // convert the result from above to a Result<OutputActions> object and return. Note the
   // std::move() used for the `result` variable. We can do this because we will *NOT* be
   // using the variable past this line.
-  return {CovertResultTo<OutputActions>(std::move(result), {})};
+  return {ConvertResultTo<OutputActions>(std::move(result), {})};
 }
 
 Result<> ConditionalSetValue::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const

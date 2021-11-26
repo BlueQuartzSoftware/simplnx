@@ -10,6 +10,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ConditionalSetValueTest.cpp
   RobustAutomaticThresholdTest.cpp
   CreateImageGeometryTest.cpp
+  StlFileReaderTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}

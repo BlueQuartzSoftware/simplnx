@@ -23,10 +23,16 @@ set(FilterList
   SegmentFeatures
   ExampleFilter1
   ExampleFilter2
+  StlFileReader
 )
+
+set(ActionList
+  StlFileReaderAction
+  )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
                       FILTER_LIST ${FilterList}
+                      ACTION_LIST ${ActionList}
                       DESCRIPTION "Plugin for ${PLUGIN_NAME}"
                       VERSION "0.1.0"
 )
@@ -50,12 +56,13 @@ add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 #------------------------------------------------------------------------------
 # If there are additional source files that need to be compiled for this plugin
 # can use the target_sources(...) cmake call
-# target_sources(${PLUGIN_NAME}
-#   PUBLIC
-#     additional header files
+ target_sources(${PLUGIN_NAME}
+   PUBLIC
+    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp
+    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.cpp
 #   PRIVATE
 #     additional source files
-# )
+ )
 
 #------------------------------------------------------------------------------
 # If there are additional include directories that are needed for this plugin

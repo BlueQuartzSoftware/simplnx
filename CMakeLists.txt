@@ -39,6 +39,13 @@ find_package(expected-lite CONFIG REQUIRED)
 find_package(span-lite CONFIG REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(HDF5 REQUIRED)
+option(COMPLEX_ENABLE_MULTICORE "Enable multicore support using Threading Building Blocks" ON)
+if(COMPLEX_ENABLE_MULTICORE)
+  find_package(TBB NAMES TBB)
+  if(NOT TBB_FOUND)
+    message(FATAL_ERROR "TBB was not found on your system. Set the TBB_DIR variable to the 'cmake' directory in your installation of TBB")
+  endif()
+endif()
 
 add_library(complex SHARED)
 add_library(complex::complex ALIAS complex)
@@ -71,6 +78,11 @@ endif()
 # Force HDF5 1.10 API
 target_compile_definitions(complex PUBLIC "H5_USE_110_API")
 
+# For Including TBB
+if(COMPLEX_ENABLE_MULTICORE)
+  target_compile_definitions(complex PUBLIC "COMPLEX_ENABLE_MULTICORE")
+  target_link_libraries(complex PUBLIC TBB::tbb)
+endif()
 
 target_include_directories(complex
   PRIVATE
@@ -152,6 +164,10 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Common/StringLiteral.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Types.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Uuid.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Common/ComplexRange.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/ComplexRange2D.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/ComplexRange3D.hpp
 
   ${COMPLEX_SOURCE_DIR}/Core/Application.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/FilterHandle.hpp
@@ -235,6 +251,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateTriangleGeometryAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/EmptyAction.hpp
@@ -295,6 +312,9 @@ set(COMPLEX_GENERATED_HEADERS
 
 set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Common/RgbColor.cpp
+  ${COMPLEX_SOURCE_DIR}/Common/ComplexRange.cpp
+  ${COMPLEX_SOURCE_DIR}/Common/ComplexRange2D.cpp
+  ${COMPLEX_SOURCE_DIR}/Common/ComplexRange3D.cpp
 
   ${COMPLEX_SOURCE_DIR}/Core/Application.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/FilterHandle.cpp
@@ -362,6 +382,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateTriangleGeometryAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.cpp
 
@@ -386,6 +407,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/DataArrayUtilities.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
 

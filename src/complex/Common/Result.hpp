@@ -150,7 +150,7 @@ Result<> ConvertResult(Result<T>&& result)
 }
 
 template <class T>
-Result<T> CovertResultTo(Result<>&& fromResult, T&& value)
+Result<T> ConvertResultTo(Result<>&& fromResult, T&& value)
 {
   Result<T> convertedResult;
   if(fromResult.valid())
