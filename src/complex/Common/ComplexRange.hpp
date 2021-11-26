@@ -33,6 +33,8 @@
 
 #pragma once
 
+#include <array>
+
 #include "complex/complex_export.hpp"
 
 #ifdef COMPLEX_ENABLE_MULTICORE

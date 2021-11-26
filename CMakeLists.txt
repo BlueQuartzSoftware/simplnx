@@ -388,6 +388,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateTriangleGeometryAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.cpp
 
