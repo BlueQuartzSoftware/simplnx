@@ -40,7 +40,20 @@ public:
    * @brief Returns the path of the ImageGeometry to be created.
    * @return
    */
-  const DataPath& path() const;
+  const DataPath& geometryPath() const;
+
+  /**
+   * @brief Returns the number of faces
+   * @return
+   */
+  AbstractGeometry::MeshIndexType numFaces() const;
+
+  /**
+   * @brief Returns the number of vertices (estimated in some circumstances)
+   * @return
+   */
+  AbstractGeometry::MeshIndexType numVertices() const;
+
 
 private:
   DataPath m_GeometryPath;
