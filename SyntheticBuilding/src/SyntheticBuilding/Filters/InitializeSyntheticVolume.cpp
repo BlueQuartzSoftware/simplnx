@@ -159,7 +159,7 @@ IFilter::PreflightResult InitializeSyntheticVolume::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> InitializeSyntheticVolume::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> InitializeSyntheticVolume::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

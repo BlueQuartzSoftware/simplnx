@@ -123,7 +123,7 @@ IFilter::PreflightResult ITKBinaryProjectionImage::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKBinaryProjectionImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKBinaryProjectionImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

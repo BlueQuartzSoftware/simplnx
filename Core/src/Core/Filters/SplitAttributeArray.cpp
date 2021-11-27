@@ -114,7 +114,7 @@ IFilter::PreflightResult SplitAttributeArray::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> SplitAttributeArray::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> SplitAttributeArray::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

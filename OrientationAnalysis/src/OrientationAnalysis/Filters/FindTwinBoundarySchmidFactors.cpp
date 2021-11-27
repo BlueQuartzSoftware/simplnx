@@ -143,7 +143,7 @@ IFilter::PreflightResult FindTwinBoundarySchmidFactors::preflightImpl(const Data
 }
 
 //------------------------------------------------------------------------------
-Result<> FindTwinBoundarySchmidFactors::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> FindTwinBoundarySchmidFactors::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

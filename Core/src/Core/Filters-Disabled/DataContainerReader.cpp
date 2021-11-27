@@ -114,7 +114,7 @@ IFilter::PreflightResult DataContainerReader::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> DataContainerReader::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> DataContainerReader::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

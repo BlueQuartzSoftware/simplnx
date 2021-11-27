@@ -137,7 +137,7 @@ IFilter::PreflightResult WriteStatsGenOdfAngleFile::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteStatsGenOdfAngleFile::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> WriteStatsGenOdfAngleFile::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

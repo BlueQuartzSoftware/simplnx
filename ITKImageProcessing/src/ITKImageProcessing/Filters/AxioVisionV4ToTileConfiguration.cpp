@@ -116,7 +116,7 @@ IFilter::PreflightResult AxioVisionV4ToTileConfiguration::preflightImpl(const Da
 }
 
 //------------------------------------------------------------------------------
-Result<> AxioVisionV4ToTileConfiguration::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> AxioVisionV4ToTileConfiguration::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

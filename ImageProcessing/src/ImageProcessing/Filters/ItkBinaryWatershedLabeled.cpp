@@ -119,7 +119,7 @@ IFilter::PreflightResult ItkBinaryWatershedLabeled::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> ItkBinaryWatershedLabeled::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ItkBinaryWatershedLabeled::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

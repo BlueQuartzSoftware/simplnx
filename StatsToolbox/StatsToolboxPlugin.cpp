@@ -18,7 +18,6 @@ std::map<complex::Uuid, complex::Uuid> k_SimplToComplexFilterMapping = {
     {Uuid::FromString("{97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac}").value(), Uuid::FromString("0307a3a9-8633-5878-a208-f799308162f3").value()}, /* FindNeighbors */
     {Uuid::FromString("{529743cf-d5d5-5d5a-a79f-95c84a5ddbb5}").value(), Uuid::FromString("003fd97b-0645-54c3-841c-c6ed62cb6f36").value()}, /* FindNumFeatures */
     {Uuid::FromString("{3b0ababf-9c8d-538d-96af-e40775c4f0ab}").value(), Uuid::FromString("759c49f6-f5d4-5981-8967-dc9790c6d292").value()}, /* FindShapes */
-    {Uuid::FromString("{656f144c-a120-5c3b-bee5-06deab438588}").value(), Uuid::FromString("6f357191-0713-599e-97ef-57b328edabf0").value()}, /* FindSizes */
     {Uuid::FromString("{5d586366-6b59-566e-8de1-57aa9ae8a91c}").value(), Uuid::FromString("16fff570-cb6f-59ac-ba75-3eab70607590").value()}, /* FindSurfaceAreaToVolume */
     {Uuid::FromString("{68246a67-7f32-5c80-815a-bec82008d7bc}").value(), Uuid::FromString("d0ef7827-cbf1-5a3f-938a-2d184604b49f").value()}, /* FindVolFractions */
     {Uuid::FromString("{6c255fc4-1692-57cf-be55-71dc4e05ec83}").value(), Uuid::FromString("ac39a101-3f9a-5604-b0f6-b0bda6989d40").value()}, /* FitFeatureData */

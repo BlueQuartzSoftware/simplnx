@@ -16,7 +16,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     EBSDSegmentFeaturesTest.cpp
     MergeColoniesTest.cpp
     MergeTwinsTest.cpp
-    ScalarSegmentFeaturesTest.cpp
 
 )
 

@@ -11,7 +11,6 @@ set(FilterList
   FindTriangleGeomShapes
   FindTriangleGeomSizes
   GenerateGeometryConnectivity
-  LaplacianSmoothing
   QuickSurfaceMesh
   ReverseTriangleWinding
   SharedFeatureFaceFilter

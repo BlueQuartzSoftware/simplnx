@@ -18,7 +18,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     FindNeighborsTest.cpp
     FindNumFeaturesTest.cpp
     FindShapesTest.cpp
-    FindSizesTest.cpp
     FindSurfaceAreaToVolumeTest.cpp
     FindVolFractionsTest.cpp
     FitFeatureDataTest.cpp

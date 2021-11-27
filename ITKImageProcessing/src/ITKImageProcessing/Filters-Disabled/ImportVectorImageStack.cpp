@@ -134,7 +134,7 @@ IFilter::PreflightResult ImportVectorImageStack::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportVectorImageStack::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ImportVectorImageStack::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

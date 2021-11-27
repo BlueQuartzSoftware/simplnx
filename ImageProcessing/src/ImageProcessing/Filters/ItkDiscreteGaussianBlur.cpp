@@ -124,7 +124,7 @@ IFilter::PreflightResult ItkDiscreteGaussianBlur::preflightImpl(const DataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> ItkDiscreteGaussianBlur::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ItkDiscreteGaussianBlur::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

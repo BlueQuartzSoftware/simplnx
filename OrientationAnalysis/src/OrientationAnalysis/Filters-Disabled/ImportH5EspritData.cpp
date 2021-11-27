@@ -146,7 +146,7 @@ IFilter::PreflightResult ImportH5EspritData::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportH5EspritData::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ImportH5EspritData::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

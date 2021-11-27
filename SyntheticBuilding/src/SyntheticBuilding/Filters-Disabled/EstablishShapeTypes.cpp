@@ -119,7 +119,7 @@ IFilter::PreflightResult EstablishShapeTypes::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> EstablishShapeTypes::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> EstablishShapeTypes::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

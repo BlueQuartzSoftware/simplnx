@@ -123,7 +123,7 @@ IFilter::PreflightResult FindFeatureCentroids::preflightImpl(const DataStructure
 }
 
 //------------------------------------------------------------------------------
-Result<> FindFeatureCentroids::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> FindFeatureCentroids::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

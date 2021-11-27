@@ -15,7 +15,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     FindRelativeMotionBetweenSlicesTest.cpp
     IdentifySampleTest.cpp
     MinNeighborsTest.cpp
-    MinSizeTest.cpp
     RemoveFlaggedFeaturesTest.cpp
 
 )

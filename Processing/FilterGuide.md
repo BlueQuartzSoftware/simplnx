@@ -11,11 +11,10 @@
 | FindRelativeMotionBetweenSlices | TRUE  | | | |
 | IdentifySample | TRUE  | | | |
 | MinNeighbors | TRUE  | | | |
-| MinSize | TRUE  | | | |
 | RemoveFlaggedFeatures | TRUE  | | | |
 
 
 ## Summary ##
 
-+ Filters Ready to be Ported: 11
++ Filters Ready to be Ported: 10
 + Filters Needing more Parameters Implemented: 0

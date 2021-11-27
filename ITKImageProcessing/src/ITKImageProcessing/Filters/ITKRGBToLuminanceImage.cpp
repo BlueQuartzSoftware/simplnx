@@ -116,7 +116,7 @@ IFilter::PreflightResult ITKRGBToLuminanceImage::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKRGBToLuminanceImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKRGBToLuminanceImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

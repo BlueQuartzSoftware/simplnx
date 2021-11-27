@@ -136,7 +136,7 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateDataArray::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> CreateDataArray::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

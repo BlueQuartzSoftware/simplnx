@@ -124,7 +124,7 @@ IFilter::PreflightResult ITKMorphologicalWatershedImage::preflightImpl(const Dat
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKMorphologicalWatershedImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKMorphologicalWatershedImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

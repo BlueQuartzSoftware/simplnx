@@ -118,7 +118,7 @@ IFilter::PreflightResult AbaqusSurfaceMeshWriter::preflightImpl(const DataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> AbaqusSurfaceMeshWriter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> AbaqusSurfaceMeshWriter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

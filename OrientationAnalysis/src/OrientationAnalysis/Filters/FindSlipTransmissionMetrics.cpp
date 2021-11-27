@@ -129,7 +129,7 @@ IFilter::PreflightResult FindSlipTransmissionMetrics::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> FindSlipTransmissionMetrics::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> FindSlipTransmissionMetrics::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

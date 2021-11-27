@@ -127,7 +127,7 @@ IFilter::PreflightResult ITKBinaryMorphologicalOpeningImage::preflightImpl(const
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKBinaryMorphologicalOpeningImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKBinaryMorphologicalOpeningImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

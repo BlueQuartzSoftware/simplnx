@@ -126,7 +126,7 @@ IFilter::PreflightResult MoveData::preflightImpl(const DataStructure& dataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> MoveData::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> MoveData::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

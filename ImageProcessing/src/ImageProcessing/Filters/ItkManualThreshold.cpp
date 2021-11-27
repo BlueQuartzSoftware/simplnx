@@ -124,7 +124,7 @@ IFilter::PreflightResult ItkManualThreshold::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> ItkManualThreshold::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ItkManualThreshold::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

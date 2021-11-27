@@ -135,7 +135,7 @@ IFilter::PreflightResult LocalDislocationDensityCalculator::preflightImpl(const 
 }
 
 //------------------------------------------------------------------------------
-Result<> LocalDislocationDensityCalculator::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> LocalDislocationDensityCalculator::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

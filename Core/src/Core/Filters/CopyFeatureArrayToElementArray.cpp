@@ -119,7 +119,7 @@ IFilter::PreflightResult CopyFeatureArrayToElementArray::preflightImpl(const Dat
 }
 
 //------------------------------------------------------------------------------
-Result<> CopyFeatureArrayToElementArray::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> CopyFeatureArrayToElementArray::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

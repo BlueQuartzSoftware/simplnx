@@ -122,7 +122,7 @@ IFilter::PreflightResult ITKVectorRescaleIntensityImage::preflightImpl(const Dat
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKVectorRescaleIntensityImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKVectorRescaleIntensityImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

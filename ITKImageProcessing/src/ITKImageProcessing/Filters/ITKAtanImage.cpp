@@ -116,7 +116,7 @@ IFilter::PreflightResult ITKAtanImage::preflightImpl(const DataStructure& dataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKAtanImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKAtanImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

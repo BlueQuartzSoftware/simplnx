@@ -116,7 +116,7 @@ IFilter::PreflightResult ITKBinaryThinningImage::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKBinaryThinningImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKBinaryThinningImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

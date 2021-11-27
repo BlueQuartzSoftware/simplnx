@@ -122,7 +122,7 @@ IFilter::PreflightResult ITKLaplacianRecursiveGaussianImage::preflightImpl(const
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKLaplacianRecursiveGaussianImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKLaplacianRecursiveGaussianImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -133,7 +133,7 @@ IFilter::PreflightResult ImportQMMeltpoolH5File::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportQMMeltpoolH5File::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ImportQMMeltpoolH5File::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -119,7 +119,7 @@ IFilter::PreflightResult TriangleNormalFilter::preflightImpl(const DataStructure
 }
 
 //------------------------------------------------------------------------------
-Result<> TriangleNormalFilter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> TriangleNormalFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

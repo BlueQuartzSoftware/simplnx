@@ -64,7 +64,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     ReadBinaryCTNorthStarTest.cpp
     ReadMicDataTest.cpp
     RemoveFlaggedVerticesTest.cpp
-    RobustAutomaticThresholdTest.cpp
     SilhouetteTest.cpp
     SliceTriangleGeometryTest.cpp
     SteinerCompactTest.cpp

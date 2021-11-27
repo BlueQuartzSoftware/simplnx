@@ -125,7 +125,7 @@ IFilter::PreflightResult FindBoundingBoxFeatures::preflightImpl(const DataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> FindBoundingBoxFeatures::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> FindBoundingBoxFeatures::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -138,7 +138,7 @@ IFilter::PreflightResult TesselateFarFieldGrains::preflightImpl(const DataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> TesselateFarFieldGrains::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> TesselateFarFieldGrains::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

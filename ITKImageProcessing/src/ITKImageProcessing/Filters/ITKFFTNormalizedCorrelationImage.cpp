@@ -123,7 +123,7 @@ IFilter::PreflightResult ITKFFTNormalizedCorrelationImage::preflightImpl(const D
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKFFTNormalizedCorrelationImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKFFTNormalizedCorrelationImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

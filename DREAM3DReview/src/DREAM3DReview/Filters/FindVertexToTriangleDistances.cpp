@@ -132,7 +132,7 @@ IFilter::PreflightResult FindVertexToTriangleDistances::preflightImpl(const Data
 }
 
 //------------------------------------------------------------------------------
-Result<> FindVertexToTriangleDistances::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> FindVertexToTriangleDistances::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

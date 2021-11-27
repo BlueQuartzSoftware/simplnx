@@ -141,7 +141,7 @@ IFilter::PreflightResult RegularGridSampleSurfaceMesh::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-Result<> RegularGridSampleSurfaceMesh::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> RegularGridSampleSurfaceMesh::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

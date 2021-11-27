@@ -12,7 +12,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     FindTriangleGeomShapesTest.cpp
     FindTriangleGeomSizesTest.cpp
     GenerateGeometryConnectivityTest.cpp
-    LaplacianSmoothingTest.cpp
     QuickSurfaceMeshTest.cpp
     ReverseTriangleWindingTest.cpp
     SharedFeatureFaceFilterTest.cpp

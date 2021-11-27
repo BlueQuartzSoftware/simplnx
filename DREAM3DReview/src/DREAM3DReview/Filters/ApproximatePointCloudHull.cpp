@@ -120,7 +120,7 @@ IFilter::PreflightResult ApproximatePointCloudHull::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> ApproximatePointCloudHull::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ApproximatePointCloudHull::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -142,7 +142,7 @@ IFilter::PreflightResult PointSampleTriangleGeometry::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> PointSampleTriangleGeometry::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> PointSampleTriangleGeometry::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

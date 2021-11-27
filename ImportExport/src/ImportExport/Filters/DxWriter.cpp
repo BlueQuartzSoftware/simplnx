@@ -121,7 +121,7 @@ IFilter::PreflightResult DxWriter::preflightImpl(const DataStructure& dataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> DxWriter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> DxWriter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -125,7 +125,7 @@ IFilter::PreflightResult ITKIntensityWindowingImage::preflightImpl(const DataStr
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKIntensityWindowingImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKIntensityWindowingImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

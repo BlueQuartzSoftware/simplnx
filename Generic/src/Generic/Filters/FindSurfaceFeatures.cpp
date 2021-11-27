@@ -123,7 +123,7 @@ IFilter::PreflightResult FindSurfaceFeatures::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> FindSurfaceFeatures::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> FindSurfaceFeatures::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

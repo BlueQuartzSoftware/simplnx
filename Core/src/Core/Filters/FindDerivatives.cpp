@@ -121,7 +121,7 @@ IFilter::PreflightResult FindDerivatives::preflightImpl(const DataStructure& dat
 }
 
 //------------------------------------------------------------------------------
-Result<> FindDerivatives::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> FindDerivatives::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

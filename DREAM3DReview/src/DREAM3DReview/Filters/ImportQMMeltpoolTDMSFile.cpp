@@ -123,7 +123,7 @@ IFilter::PreflightResult ImportQMMeltpoolTDMSFile::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportQMMeltpoolTDMSFile::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ImportQMMeltpoolTDMSFile::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

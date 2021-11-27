@@ -114,7 +114,7 @@ IFilter::PreflightResult RenameAttributeMatrix::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> RenameAttributeMatrix::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> RenameAttributeMatrix::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

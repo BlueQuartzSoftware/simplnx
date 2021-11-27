@@ -114,7 +114,7 @@ IFilter::PreflightResult NearestPointFuseRegularGrids::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-Result<> NearestPointFuseRegularGrids::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> NearestPointFuseRegularGrids::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

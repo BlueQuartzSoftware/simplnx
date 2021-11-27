@@ -119,7 +119,7 @@ IFilter::PreflightResult ITKLaplacianSharpeningImage::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKLaplacianSharpeningImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKLaplacianSharpeningImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

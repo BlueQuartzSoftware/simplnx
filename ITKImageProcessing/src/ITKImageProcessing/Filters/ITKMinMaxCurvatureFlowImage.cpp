@@ -123,7 +123,7 @@ IFilter::PreflightResult ITKMinMaxCurvatureFlowImage::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKMinMaxCurvatureFlowImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKMinMaxCurvatureFlowImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

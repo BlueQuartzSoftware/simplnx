@@ -125,7 +125,7 @@ IFilter::PreflightResult ITKGradientAnisotropicDiffusionImage::preflightImpl(con
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKGradientAnisotropicDiffusionImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKGradientAnisotropicDiffusionImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

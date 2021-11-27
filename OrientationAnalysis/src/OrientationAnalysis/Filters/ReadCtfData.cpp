@@ -135,7 +135,7 @@ IFilter::PreflightResult ReadCtfData::preflightImpl(const DataStructure& dataStr
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadCtfData::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ReadCtfData::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

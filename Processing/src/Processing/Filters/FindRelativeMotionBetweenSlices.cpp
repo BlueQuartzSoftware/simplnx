@@ -130,7 +130,7 @@ IFilter::PreflightResult FindRelativeMotionBetweenSlices::preflightImpl(const Da
 }
 
 //------------------------------------------------------------------------------
-Result<> FindRelativeMotionBetweenSlices::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> FindRelativeMotionBetweenSlices::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

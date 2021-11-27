@@ -125,7 +125,7 @@ IFilter::PreflightResult ITKBinaryThresholdImage::preflightImpl(const DataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKBinaryThresholdImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKBinaryThresholdImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

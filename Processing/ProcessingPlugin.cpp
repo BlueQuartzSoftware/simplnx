@@ -15,7 +15,6 @@ std::map<complex::Uuid, complex::Uuid> k_SimplToComplexFilterMapping = {
     {Uuid::FromString("{801008ce-1dcb-5604-8f16-a86526e28cf9}").value(), Uuid::FromString("b81d0944-9f3e-5a7f-8c2d-9cc8d3d41bb3").value()}, /* FindRelativeMotionBetweenSlices */
     {Uuid::FromString("{0e8c0818-a3fb-57d4-a5c8-7cb8ae54a40a}").value(), Uuid::FromString("3c118462-ae4c-52b4-a54f-d690241a427a").value()}, /* IdentifySample */
     {Uuid::FromString("{dab5de3c-5f81-5bb5-8490-73521e1183ea}").value(), Uuid::FromString("7e4e67b7-4b6c-5073-a7ec-98d0654c7315").value()}, /* MinNeighbors */
-    {Uuid::FromString("{53ac1638-8934-57b8-b8e5-4b91cdda23ec}").value(), Uuid::FromString("f41f6124-38be-55ff-b4c0-22b08c25c862").value()}, /* MinSize */
     {Uuid::FromString("{a8463056-3fa7-530b-847f-7f4cb78b8602}").value(), Uuid::FromString("5a3d45d6-5d91-5a28-9589-c6c2acecd69d").value()}, /* RemoveFlaggedFeatures */
 };
 // Plugin Uuid

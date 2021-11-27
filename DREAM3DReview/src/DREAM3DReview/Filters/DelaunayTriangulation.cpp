@@ -133,7 +133,7 @@ IFilter::PreflightResult DelaunayTriangulation::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> DelaunayTriangulation::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> DelaunayTriangulation::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

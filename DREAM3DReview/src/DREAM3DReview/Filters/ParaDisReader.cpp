@@ -139,7 +139,7 @@ IFilter::PreflightResult ParaDisReader::preflightImpl(const DataStructure& dataS
 }
 
 //------------------------------------------------------------------------------
-Result<> ParaDisReader::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ParaDisReader::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

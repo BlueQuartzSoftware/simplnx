@@ -124,7 +124,7 @@ IFilter::PreflightResult BadDataNeighborOrientationCheck::preflightImpl(const Da
 }
 
 //------------------------------------------------------------------------------
-Result<> BadDataNeighborOrientationCheck::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> BadDataNeighborOrientationCheck::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
