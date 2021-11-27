@@ -270,4 +270,19 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
 
   return {};
 }
+
+
+template <class T>
+DataArray<T>* ArrayFromPath(DataStructure& dataGraph, const DataPath& path)
+{
+  DataObject* object = dataGraph.getData(path);
+  DataArray<T>* dataArray = dynamic_cast<DataArray<T>*>(object);
+  if(dataArray == nullptr)
+  {
+    throw std::runtime_error("Can't obtain DataArray");
+  }
+  return dataArray;
+}
+
+
 } // namespace complex

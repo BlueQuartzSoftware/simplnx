@@ -14,7 +14,7 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
-#include "complex/Filter/Actions/CreateTriangleGeometryAction.hpp"
+#include "complex/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"

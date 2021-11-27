@@ -251,7 +251,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateTriangleGeometryAction.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGeometry2DAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/EmptyAction.hpp
@@ -387,7 +387,6 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateTriangleGeometryAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.cpp
 
