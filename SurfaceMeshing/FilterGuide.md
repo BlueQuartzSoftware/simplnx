@@ -12,7 +12,6 @@
 | QuickSurfaceMesh | TRUE  | | | |
 | ReverseTriangleWinding | TRUE  | | | |
 | SharedFeatureFaceFilter | TRUE  | | | |
-| TriangleAreaFilter | TRUE  | | | |
 | TriangleCentroidFilter | TRUE  | | | |
 | TriangleDihedralAngleFilter | TRUE  | | | |
 | TriangleNormalFilter | TRUE  | | | |
@@ -20,5 +19,5 @@
 
 ## Summary ##
 
-+ Filters Ready to be Ported: 14
++ Filters Ready to be Ported: 13
 + Filters Needing more Parameters Implemented: 0

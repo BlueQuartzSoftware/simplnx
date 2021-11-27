@@ -15,7 +15,6 @@ set(FilterList
   QuickSurfaceMesh
   ReverseTriangleWinding
   SharedFeatureFaceFilter
-  TriangleAreaFilter
   TriangleCentroidFilter
   TriangleDihedralAngleFilter
   TriangleNormalFilter

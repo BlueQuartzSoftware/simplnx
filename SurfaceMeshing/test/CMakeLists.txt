@@ -16,7 +16,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     QuickSurfaceMeshTest.cpp
     ReverseTriangleWindingTest.cpp
     SharedFeatureFaceFilterTest.cpp
-    TriangleAreaFilterTest.cpp
     TriangleCentroidFilterTest.cpp
     TriangleDihedralAngleFilterTest.cpp
     TriangleNormalFilterTest.cpp
