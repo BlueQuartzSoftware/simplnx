@@ -24,13 +24,10 @@
 
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-
 #include "complex/unit_test/complex_test_dirs.hpp"
 
 #include "UnitTestCommon.hpp"
 
-//#include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/CreateImageGeometry.hpp"
 
 using namespace complex;
