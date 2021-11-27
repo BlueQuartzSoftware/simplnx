@@ -1,26 +1,25 @@
 #pragma once
 
 #include "complex/Common/Array.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
-#include "complex/Filter/Output.hpp"
-#include "complex/complex_export.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
+#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "complex/DataStructure/Geometry/QuadGeom.hpp"
+#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
+#include "complex/Filter/Output.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/complex_export.hpp"
 
 #include <fmt/core.h>
 
 #include <utility>
-
 
 namespace complex
 {
 /**
  * @brief Action for creating an ImageGeometry in a DataStructure
  */
-template<typename Geometry2DType>
+template <typename Geometry2DType>
 class CreateGeometry2DAction : public IDataAction
 {
 public:
@@ -37,7 +36,7 @@ public:
   {
   }
 
-  ~CreateGeometry2DAction()noexcept = default;
+  ~CreateGeometry2DAction() noexcept = default;
 
   CreateGeometry2DAction(const CreateGeometry2DAction&) = delete;
   CreateGeometry2DAction(CreateGeometry2DAction&&) noexcept = delete;
@@ -139,8 +138,6 @@ public:
   {
     return m_NumVertices;
   }
-
-
 
 private:
   DataPath m_GeometryPath;

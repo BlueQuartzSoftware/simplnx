@@ -11,6 +11,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   RobustAutomaticThresholdTest.cpp
   CreateImageGeometryTest.cpp
   StlFileReaderTest.cpp
+  TriangleAreaFilterTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}

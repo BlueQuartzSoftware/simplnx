@@ -38,6 +38,8 @@ If your codes specifically resize the AttributeMatrix, this is not needed anymor
 
 ## QString Formatting ##
 
+Use the `format` library
+
 ```c++
 QString msg = QString("Error reading Triangle '%1'. Object Count was %2 and should have been %3").arg(t, objsRead, k_StlElementCount);
 ```

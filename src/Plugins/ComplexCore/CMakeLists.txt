@@ -24,6 +24,7 @@ set(FilterList
   ExampleFilter1
   ExampleFilter2
   StlFileReaderFilter
+  TriangleAreaFilter
 )
 
 set(ActionList

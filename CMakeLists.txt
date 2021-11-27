@@ -286,6 +286,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.hpp
 
@@ -418,6 +419,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.cpp
 

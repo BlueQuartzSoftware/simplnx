@@ -1,11 +1,3 @@
-/**
- * Time Tracking:
- * THURS: 11:00 - 12:00
- * THURS: 13:45 - 16:45
- * FRI: 9:00 -
- *
- */
-
 #include "StlFileReaderFilter.hpp"
 
 #include "ComplexCore/Filters/Algorithms/StlFileReader.hpp"
@@ -26,11 +18,6 @@
 namespace fs = std::filesystem;
 
 using namespace complex;
-
-namespace
-{
-
-} // namespace
 
 namespace complex
 {

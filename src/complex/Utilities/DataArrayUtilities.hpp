@@ -271,7 +271,6 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
   return {};
 }
 
-
 template <class T>
 DataArray<T>* ArrayFromPath(DataStructure& dataGraph, const DataPath& path)
 {
@@ -283,6 +282,5 @@ DataArray<T>* ArrayFromPath(DataStructure& dataGraph, const DataPath& path)
   }
   return dataArray;
 }
-
 
 } // namespace complex

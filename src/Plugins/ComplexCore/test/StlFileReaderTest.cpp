@@ -23,16 +23,15 @@
 
 #include <catch2/catch.hpp>
 
+#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 
 #include "UnitTestCommon.hpp"
 
-#include "ComplexCore/Filters/StlFileReaderFilter.hpp"
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/StlFileReaderFilter.hpp"
 
 #include <filesystem>
 #include <string>
@@ -59,7 +58,6 @@ TEST_CASE("ComplexCore::StlFileReaderFilter: Instantiation and Parameter Check",
 
   std::string inputFile = fmt::format("{}/ASTMD638_specimen.stl", unit_test::k_ComplexTestDataSourceDir.view());
 
-
   // Create default Parameters for the filter.
   args.insertOrAssign(StlFileReaderFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
   args.insertOrAssign(StlFileReaderFilter::k_ParentDataGroupPath_Key, std::make_any<DataPath>(parentPath));
@@ -79,7 +77,7 @@ TEST_CASE("ComplexCore::StlFileReaderFilter: Instantiation and Parameter Check",
   REQUIRE(triangleGeom.getNumberOfFaces() == 92);
   REQUIRE(triangleGeom.getNumberOfVertices() == 48);
 
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile("/tmp/out.dream3d");
+  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/StlFileReaderTest.dream3d", unit_test::k_BinaryDir));
   H5::FileWriter fileWriter = std::move(result.value());
 
   herr_t err = dataGraph.writeHdf5(fileWriter);
