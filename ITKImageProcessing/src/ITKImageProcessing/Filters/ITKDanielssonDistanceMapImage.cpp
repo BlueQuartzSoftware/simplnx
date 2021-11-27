@@ -123,7 +123,7 @@ IFilter::PreflightResult ITKDanielssonDistanceMapImage::preflightImpl(const Data
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKDanielssonDistanceMapImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKDanielssonDistanceMapImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

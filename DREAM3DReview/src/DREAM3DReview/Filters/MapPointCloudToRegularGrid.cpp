@@ -149,7 +149,7 @@ IFilter::PreflightResult MapPointCloudToRegularGrid::preflightImpl(const DataStr
 }
 
 //------------------------------------------------------------------------------
-Result<> MapPointCloudToRegularGrid::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> MapPointCloudToRegularGrid::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -8,7 +8,6 @@
 | FindTriangleGeomShapes | TRUE  | | | |
 | FindTriangleGeomSizes | TRUE  | | | |
 | GenerateGeometryConnectivity | TRUE  | | | |
-| LaplacianSmoothing | TRUE  | | | |
 | QuickSurfaceMesh | TRUE  | | | |
 | ReverseTriangleWinding | TRUE  | | | |
 | SharedFeatureFaceFilter | TRUE  | | | |
@@ -19,5 +18,5 @@
 
 ## Summary ##
 
-+ Filters Ready to be Ported: 13
++ Filters Ready to be Ported: 12
 + Filters Needing more Parameters Implemented: 0

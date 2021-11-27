@@ -125,7 +125,7 @@ IFilter::PreflightResult FindBoundaryElementFractions::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-Result<> FindBoundaryElementFractions::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> FindBoundaryElementFractions::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

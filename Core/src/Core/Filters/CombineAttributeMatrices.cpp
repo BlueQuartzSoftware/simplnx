@@ -126,7 +126,7 @@ IFilter::PreflightResult CombineAttributeMatrices::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> CombineAttributeMatrices::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> CombineAttributeMatrices::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

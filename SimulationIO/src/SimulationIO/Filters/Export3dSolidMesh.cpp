@@ -190,7 +190,7 @@ IFilter::PreflightResult Export3dSolidMesh::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> Export3dSolidMesh::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> Export3dSolidMesh::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

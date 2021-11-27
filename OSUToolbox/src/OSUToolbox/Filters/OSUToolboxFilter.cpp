@@ -108,7 +108,7 @@ IFilter::PreflightResult OSUToolboxFilter::preflightImpl(const DataStructure& da
 }
 
 //------------------------------------------------------------------------------
-Result<> OSUToolboxFilter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> OSUToolboxFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

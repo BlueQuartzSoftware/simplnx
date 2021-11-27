@@ -161,7 +161,7 @@ IFilter::PreflightResult ImportAxioVisionV4Montage::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportAxioVisionV4Montage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ImportAxioVisionV4Montage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

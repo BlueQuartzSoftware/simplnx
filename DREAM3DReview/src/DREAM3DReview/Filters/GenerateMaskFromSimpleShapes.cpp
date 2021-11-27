@@ -137,7 +137,7 @@ IFilter::PreflightResult GenerateMaskFromSimpleShapes::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-Result<> GenerateMaskFromSimpleShapes::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> GenerateMaskFromSimpleShapes::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

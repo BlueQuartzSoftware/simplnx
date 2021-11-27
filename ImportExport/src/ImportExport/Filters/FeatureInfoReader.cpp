@@ -145,7 +145,7 @@ IFilter::PreflightResult FeatureInfoReader::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> FeatureInfoReader::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> FeatureInfoReader::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

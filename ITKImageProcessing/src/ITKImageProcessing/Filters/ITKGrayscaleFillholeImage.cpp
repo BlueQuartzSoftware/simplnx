@@ -119,7 +119,7 @@ IFilter::PreflightResult ITKGrayscaleFillholeImage::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKGrayscaleFillholeImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKGrayscaleFillholeImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

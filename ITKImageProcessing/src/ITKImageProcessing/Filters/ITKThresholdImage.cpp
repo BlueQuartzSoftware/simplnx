@@ -123,7 +123,7 @@ IFilter::PreflightResult ITKThresholdImage::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKThresholdImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKThresholdImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

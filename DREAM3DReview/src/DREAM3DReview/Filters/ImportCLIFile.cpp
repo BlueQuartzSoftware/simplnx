@@ -128,7 +128,7 @@ IFilter::PreflightResult ImportCLIFile::preflightImpl(const DataStructure& dataS
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportCLIFile::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ImportCLIFile::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

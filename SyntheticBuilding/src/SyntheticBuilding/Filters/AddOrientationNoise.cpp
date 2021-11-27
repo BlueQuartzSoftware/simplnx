@@ -115,7 +115,7 @@ IFilter::PreflightResult AddOrientationNoise::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> AddOrientationNoise::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> AddOrientationNoise::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -111,7 +111,7 @@ IFilter::PreflightResult Lesson6::preflightImpl(const DataStructure& dataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> Lesson6::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> Lesson6::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -116,7 +116,7 @@ IFilter::PreflightResult ITKNotImage::preflightImpl(const DataStructure& dataStr
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKNotImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKNotImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

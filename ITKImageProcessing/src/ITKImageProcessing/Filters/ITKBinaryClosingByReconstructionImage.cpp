@@ -128,7 +128,7 @@ IFilter::PreflightResult ITKBinaryClosingByReconstructionImage::preflightImpl(co
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKBinaryClosingByReconstructionImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKBinaryClosingByReconstructionImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

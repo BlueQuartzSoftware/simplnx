@@ -14,7 +14,6 @@ set(FilterList
   FindRelativeMotionBetweenSlices
   IdentifySample
   MinNeighbors
-  MinSize
   RemoveFlaggedFeatures
 
 )

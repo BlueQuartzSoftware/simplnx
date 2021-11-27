@@ -121,7 +121,7 @@ IFilter::PreflightResult VtkRectilinearGridWriter::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> VtkRectilinearGridWriter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> VtkRectilinearGridWriter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

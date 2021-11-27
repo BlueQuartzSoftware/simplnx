@@ -164,7 +164,7 @@ IFilter::PreflightResult ImportFEAData::preflightImpl(const DataStructure& dataS
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportFEAData::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ImportFEAData::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

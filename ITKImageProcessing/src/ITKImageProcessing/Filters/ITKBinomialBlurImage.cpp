@@ -119,7 +119,7 @@ IFilter::PreflightResult ITKBinomialBlurImage::preflightImpl(const DataStructure
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKBinomialBlurImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKBinomialBlurImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

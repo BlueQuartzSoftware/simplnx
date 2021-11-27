@@ -145,7 +145,7 @@ IFilter::PreflightResult ITKPatchBasedDenoisingImage::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKPatchBasedDenoisingImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKPatchBasedDenoisingImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

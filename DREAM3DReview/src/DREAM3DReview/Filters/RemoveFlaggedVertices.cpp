@@ -117,7 +117,7 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> RemoveFlaggedVertices::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> RemoveFlaggedVertices::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

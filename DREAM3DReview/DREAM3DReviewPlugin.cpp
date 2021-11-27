@@ -64,7 +64,6 @@ std::map<complex::Uuid, complex::Uuid> k_SimplToComplexFilterMapping = {
     {Uuid::FromString("{f2259481-5011-5f22-9fcb-c92fb6f8be10}").value(), Uuid::FromString("b694c528-2a9b-5383-ab9c-f17360e81b7a").value()}, /* ReadBinaryCTNorthStar */
     {Uuid::FromString("{5a2b714e-bae9-5213-8171-d1e190609e2d}").value(), Uuid::FromString("dac4155e-bf33-54cf-9401-f9282a4c5c41").value()}, /* ReadMicData */
     {Uuid::FromString("{379ccc67-16dd-530a-984f-177db2314bac}").value(), Uuid::FromString("ea6c86f7-1866-543f-958c-b33c264e84ef").value()}, /* RemoveFlaggedVertices */
-    {Uuid::FromString("{3062fc2c-76b2-5c50-92b7-edbbb424c41d}").value(), Uuid::FromString("6fae2634-52bf-5fc4-b309-1f0d5cf355c8").value()}, /* RobustAutomaticThreshold */
     {Uuid::FromString("{f84d4d69-9ea5-54b6-a71c-df76d76d50cf}").value(), Uuid::FromString("746d10be-6b34-57af-9596-d75b27e1dc85").value()}, /* Silhouette */
     {Uuid::FromString("{222307a4-67fd-5cb5-a12e-d80f9fb970ae}").value(), Uuid::FromString("c6d42b50-5860-52ed-bde4-0f7bebb8623b").value()}, /* SliceTriangleGeometry */
     {Uuid::FromString("{07b1048e-d6d4-56d0-8cc5-132ac79bdf60}").value(), Uuid::FromString("40505a78-f73d-57e6-95dd-accbf18098da").value()}, /* SteinerCompact */

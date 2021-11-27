@@ -122,7 +122,7 @@ IFilter::PreflightResult FindTriangleGeomNeighbors::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> FindTriangleGeomNeighbors::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> FindTriangleGeomNeighbors::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

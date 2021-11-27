@@ -123,7 +123,7 @@ IFilter::PreflightResult CombineStlFiles::preflightImpl(const DataStructure& dat
 }
 
 //------------------------------------------------------------------------------
-Result<> CombineStlFiles::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> CombineStlFiles::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

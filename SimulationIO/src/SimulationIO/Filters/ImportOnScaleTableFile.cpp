@@ -143,7 +143,7 @@ IFilter::PreflightResult ImportOnScaleTableFile::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportOnScaleTableFile::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ImportOnScaleTableFile::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

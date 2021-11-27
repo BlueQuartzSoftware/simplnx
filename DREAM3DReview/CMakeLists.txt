@@ -63,7 +63,6 @@ set(FilterList
   ReadBinaryCTNorthStar
   ReadMicData
   RemoveFlaggedVertices
-  RobustAutomaticThreshold
   Silhouette
   SliceTriangleGeometry
   SteinerCompact

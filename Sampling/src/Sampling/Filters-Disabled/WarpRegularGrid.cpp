@@ -150,7 +150,7 @@ IFilter::PreflightResult WarpRegularGrid::preflightImpl(const DataStructure& dat
 }
 
 //------------------------------------------------------------------------------
-Result<> WarpRegularGrid::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> WarpRegularGrid::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -116,7 +116,7 @@ IFilter::PreflightResult ITKExpNegativeImage::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKExpNegativeImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKExpNegativeImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -166,7 +166,7 @@ IFilter::PreflightResult GeneratePrimaryStatsData::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> GeneratePrimaryStatsData::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> GeneratePrimaryStatsData::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

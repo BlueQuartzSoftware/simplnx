@@ -126,7 +126,7 @@ IFilter::PreflightResult AbaqusHexahedronWriter::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> AbaqusHexahedronWriter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> AbaqusHexahedronWriter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

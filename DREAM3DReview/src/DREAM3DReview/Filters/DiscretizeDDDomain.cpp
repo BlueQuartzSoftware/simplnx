@@ -128,7 +128,7 @@ IFilter::PreflightResult DiscretizeDDDomain::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> DiscretizeDDDomain::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> DiscretizeDDDomain::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -111,7 +111,7 @@ IFilter::PreflightResult OrientationUtility::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> OrientationUtility::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> OrientationUtility::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

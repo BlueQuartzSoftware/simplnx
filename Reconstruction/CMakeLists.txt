@@ -15,7 +15,6 @@ set(FilterList
   EBSDSegmentFeatures
   MergeColonies
   MergeTwins
-  ScalarSegmentFeatures
 
 )
 

@@ -125,7 +125,7 @@ IFilter::PreflightResult ITKGrayscaleMorphologicalClosingImage::preflightImpl(co
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKGrayscaleMorphologicalClosingImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKGrayscaleMorphologicalClosingImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

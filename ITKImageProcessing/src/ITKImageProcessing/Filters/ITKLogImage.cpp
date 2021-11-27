@@ -116,7 +116,7 @@ IFilter::PreflightResult ITKLogImage::preflightImpl(const DataStructure& dataStr
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKLogImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKLogImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

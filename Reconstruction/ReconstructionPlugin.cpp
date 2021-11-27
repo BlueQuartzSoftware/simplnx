@@ -16,7 +16,6 @@ std::map<complex::Uuid, complex::Uuid> k_SimplToComplexFilterMapping = {
     {Uuid::FromString("{7861c691-b821-537b-bd25-dc195578e0ea}").value(), Uuid::FromString("4b6297ce-e2f0-56ed-98c6-e5a68fa24943").value()}, /* EBSDSegmentFeatures */
     {Uuid::FromString("{2c4a6d83-6a1b-56d8-9f65-9453b28845b9}").value(), Uuid::FromString("1fcdb8cf-c174-51e9-ae3e-14cc18710b26").value()}, /* MergeColonies */
     {Uuid::FromString("{c9af506e-9ea1-5ff5-a882-fa561def5f52}").value(), Uuid::FromString("bafbfa3f-7bdc-5e89-9412-2ecfab515090").value()}, /* MergeTwins */
-    {Uuid::FromString("{2c5edebf-95d8-511f-b787-90ee2adf485c}").value(), Uuid::FromString("948d0035-dc19-58b9-a931-30b69a09bb1a").value()}, /* ScalarSegmentFeatures */
 };
 // Plugin Uuid
 constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("a506e94f-2a20-5eb4-b191-574cd89cf2f0");

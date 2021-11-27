@@ -127,7 +127,7 @@ IFilter::PreflightResult ArrayCalculator::preflightImpl(const DataStructure& dat
 }
 
 //------------------------------------------------------------------------------
-Result<> ArrayCalculator::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ArrayCalculator::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

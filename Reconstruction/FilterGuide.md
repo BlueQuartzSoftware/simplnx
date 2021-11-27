@@ -12,10 +12,9 @@
 | EBSDSegmentFeatures | TRUE  | | | |
 | MergeColonies | TRUE  | | | |
 | MergeTwins | TRUE  | | | |
-| ScalarSegmentFeatures | TRUE  | | | |
 
 
 ## Summary ##
 
-+ Filters Ready to be Ported: 11
++ Filters Ready to be Ported: 10
 + Filters Needing more Parameters Implemented: 0

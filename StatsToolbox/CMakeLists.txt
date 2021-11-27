@@ -17,7 +17,6 @@ set(FilterList
   FindNeighbors
   FindNumFeatures
   FindShapes
-  FindSizes
   FindSurfaceAreaToVolume
   FindVolFractions
   FitFeatureData

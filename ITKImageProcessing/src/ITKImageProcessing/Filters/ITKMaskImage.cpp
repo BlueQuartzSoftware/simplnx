@@ -121,7 +121,7 @@ IFilter::PreflightResult ITKMaskImage::preflightImpl(const DataStructure& dataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKMaskImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKMaskImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

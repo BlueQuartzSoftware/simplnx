@@ -111,7 +111,7 @@ IFilter::PreflightResult ConvertHexGridToSquareGrid::preflightImpl(const DataStr
 }
 
 //------------------------------------------------------------------------------
-Result<> ConvertHexGridToSquareGrid::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ConvertHexGridToSquareGrid::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

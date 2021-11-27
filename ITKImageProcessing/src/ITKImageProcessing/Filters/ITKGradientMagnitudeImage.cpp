@@ -119,7 +119,7 @@ IFilter::PreflightResult ITKGradientMagnitudeImage::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKGradientMagnitudeImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKGradientMagnitudeImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

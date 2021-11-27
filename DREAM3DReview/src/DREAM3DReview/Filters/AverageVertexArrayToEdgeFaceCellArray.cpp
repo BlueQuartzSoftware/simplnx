@@ -126,7 +126,7 @@ IFilter::PreflightResult AverageVertexArrayToEdgeFaceCellArray::preflightImpl(co
 }
 
 //------------------------------------------------------------------------------
-Result<> AverageVertexArrayToEdgeFaceCellArray::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> AverageVertexArrayToEdgeFaceCellArray::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

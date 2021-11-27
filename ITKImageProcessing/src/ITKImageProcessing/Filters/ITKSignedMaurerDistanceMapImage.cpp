@@ -126,7 +126,7 @@ IFilter::PreflightResult ITKSignedMaurerDistanceMapImage::preflightImpl(const Da
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKSignedMaurerDistanceMapImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKSignedMaurerDistanceMapImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

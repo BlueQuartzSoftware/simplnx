@@ -108,7 +108,7 @@ IFilter::PreflightResult RequiredZThickness::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> RequiredZThickness::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> RequiredZThickness::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

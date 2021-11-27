@@ -121,7 +121,7 @@ IFilter::PreflightResult ApplyDewarpParameters::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> ApplyDewarpParameters::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ApplyDewarpParameters::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

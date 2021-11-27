@@ -124,7 +124,7 @@ IFilter::PreflightResult ITKBinaryContourImage::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKBinaryContourImage::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKBinaryContourImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

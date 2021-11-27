@@ -116,7 +116,7 @@ IFilter::PreflightResult Stereographic3D::preflightImpl(const DataStructure& dat
 }
 
 //------------------------------------------------------------------------------
-Result<> Stereographic3D::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> Stereographic3D::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

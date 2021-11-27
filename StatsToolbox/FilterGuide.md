@@ -14,7 +14,6 @@
 | FindNeighbors | TRUE  | | | |
 | FindNumFeatures | TRUE  | | | |
 | FindShapes | TRUE  | | | |
-| FindSizes | TRUE  | | | |
 | FindSurfaceAreaToVolume | TRUE  | | | |
 | FindVolFractions | TRUE  | | | |
 | FitFeatureData | TRUE  | | | |
@@ -23,5 +22,5 @@
 
 ## Summary ##
 
-+ Filters Ready to be Ported: 16
++ Filters Ready to be Ported: 15
 + Filters Needing more Parameters Implemented: 1

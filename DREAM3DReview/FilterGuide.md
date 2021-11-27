@@ -60,7 +60,6 @@
 | ReadBinaryCTNorthStar | TRUE  | | | |
 | ReadMicData | TRUE  | | | |
 | RemoveFlaggedVertices | TRUE  | | | |
-| RobustAutomaticThreshold | TRUE  | | | |
 | Silhouette | TRUE  | | | |
 | SliceTriangleGeometry | TRUE  | | | |
 | SteinerCompact | TRUE  | | | |
@@ -71,5 +70,5 @@
 
 ## Summary ##
 
-+ Filters Ready to be Ported: 63
++ Filters Ready to be Ported: 62
 + Filters Needing more Parameters Implemented: 2

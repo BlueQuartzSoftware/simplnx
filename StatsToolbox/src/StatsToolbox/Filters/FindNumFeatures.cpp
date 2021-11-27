@@ -123,7 +123,7 @@ IFilter::PreflightResult FindNumFeatures::preflightImpl(const DataStructure& dat
 }
 
 //------------------------------------------------------------------------------
-Result<> FindNumFeatures::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> FindNumFeatures::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
