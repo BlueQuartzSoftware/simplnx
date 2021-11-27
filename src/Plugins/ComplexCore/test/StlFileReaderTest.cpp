@@ -76,7 +76,7 @@ TEST_CASE("ComplexCore::StlFileReaderFilter: Instantiation and Parameter Check",
   REQUIRE(executeResult.result.valid());
 
   TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(parentPath.createChildPath(triangleGeometryName));
-  REQUIRE(triangleGeom.getNumberOfTris() == 92);
+  REQUIRE(triangleGeom.getNumberOfFaces() == 92);
   REQUIRE(triangleGeom.getNumberOfVertices() == 48);
 
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile("/tmp/out.dream3d");

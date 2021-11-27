@@ -307,9 +307,9 @@ void CreateVertexGeometry(DataStructure& dataGraph)
   REQUIRE(vertexCount == 144);
   complex::Result result = complex::CreateArray<float>(dataGraph, {vertexCount}, 3, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto& vertexArray = complex::CsvParser::ArrayFromPath<float>(dataGraph, path);
-  CsvParser::ReadFile(inputFile, vertexArray, skipLines, delimiter);
-  vertexGeometry->setVertices(&vertexArray);
+  auto vertexArray = complex::CsvParser::ArrayFromPath<float>(dataGraph, path);
+  CsvParser::ReadFile(inputFile, *vertexArray, skipLines, delimiter);
+  vertexGeometry->setVertices(vertexArray);
   REQUIRE(vertexGeometry->getNumberOfVertices() == 144);
 
   // Now create some "Cell" data for the Vertex Geometry
@@ -344,9 +344,9 @@ void CreateTriangleGeometry(DataStructure& dataGraph)
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
   complex::Result result = complex::CreateArray<MeshIndexType>(dataGraph, {faceCount}, 3, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto& dataArray = complex::CsvParser::ArrayFromPath<MeshIndexType>(dataGraph, path);
-  CsvParser::ReadFile(inputFile, dataArray, skipLines, delimiter);
-  triangleGeom->setTriangles(&dataArray);
+  auto dataArray = complex::CsvParser::ArrayFromPath<MeshIndexType>(dataGraph, path);
+  CsvParser::ReadFile(inputFile, *dataArray, skipLines, delimiter);
+  triangleGeom->setFaces(dataArray);
 
   // Create the Vertex Array with a component size of 3
   path = DataPath({k_TriangleGroupName, k_VertexListName});
@@ -355,9 +355,9 @@ void CreateTriangleGeometry(DataStructure& dataGraph)
   REQUIRE(vertexCount == 144);
   result = complex::CreateArray<float>(dataGraph, {vertexCount}, 3, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto& vertexArray = complex::CsvParser::ArrayFromPath<float>(dataGraph, path);
-  CsvParser::ReadFile(inputFile, vertexArray, skipLines, delimiter);
-  triangleGeom->setVertices(&vertexArray);
+  auto vertexArray = complex::CsvParser::ArrayFromPath<float>(dataGraph, path);
+  CsvParser::ReadFile(inputFile, *vertexArray, skipLines, delimiter);
+  triangleGeom->setVertices(vertexArray);
 }
 
 void CreateQuadGeometry(DataStructure& dataGraph)
@@ -378,9 +378,9 @@ void CreateQuadGeometry(DataStructure& dataGraph)
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
   complex::Result result = complex::CreateArray<MeshIndexType>(dataGraph, {faceCount}, 4, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto& dataArray = complex::CsvParser::ArrayFromPath<MeshIndexType>(dataGraph, path);
-  CsvParser::ReadFile(inputFile, dataArray, skipLines, delimiter);
-  geometry->setQuads(&dataArray);
+  auto dataArray = complex::CsvParser::ArrayFromPath<MeshIndexType>(dataGraph, path);
+  CsvParser::ReadFile(inputFile, *dataArray, skipLines, delimiter);
+  geometry->setFaces(dataArray);
 
   // Create the Vertex Array with a component size of 3
   path = DataPath({k_QuadGroupName, k_VertexListName});
@@ -389,9 +389,9 @@ void CreateQuadGeometry(DataStructure& dataGraph)
   REQUIRE(vertexCount == 144);
   result = complex::CreateArray<float>(dataGraph, {vertexCount}, 3, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto& vertexArray = complex::CsvParser::ArrayFromPath<float>(dataGraph, path);
-  CsvParser::ReadFile(inputFile, vertexArray, skipLines, delimiter);
-  geometry->setVertices(&vertexArray);
+  auto vertexArray = complex::CsvParser::ArrayFromPath<float>(dataGraph, path);
+  CsvParser::ReadFile(inputFile, *vertexArray, skipLines, delimiter);
+  geometry->setVertices(vertexArray);
 }
 
 void CreateEdgeGeometry(DataStructure& dataGraph)
@@ -412,9 +412,9 @@ void CreateEdgeGeometry(DataStructure& dataGraph)
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
   complex::Result result = complex::CreateArray<MeshIndexType>(dataGraph, {faceCount}, 2, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto& dataArray = complex::CsvParser::ArrayFromPath<MeshIndexType>(dataGraph, path);
-  CsvParser::ReadFile(inputFile, dataArray, skipLines, delimiter);
-  geometry->setEdges(&dataArray);
+  auto dataArray = complex::CsvParser::ArrayFromPath<MeshIndexType>(dataGraph, path);
+  CsvParser::ReadFile(inputFile, *dataArray, skipLines, delimiter);
+  geometry->setEdges(dataArray);
 
   // Create the Vertex Array with a component size of 3
   path = DataPath({k_EdgeGroupName, k_VertexListName});
@@ -423,9 +423,9 @@ void CreateEdgeGeometry(DataStructure& dataGraph)
   REQUIRE(vertexCount == 144);
   result = complex::CreateArray<float>(dataGraph, {vertexCount}, 3, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto& vertexArray = complex::CsvParser::ArrayFromPath<float>(dataGraph, path);
-  CsvParser::ReadFile(inputFile, vertexArray, skipLines, delimiter);
-  geometry->setVertices(&vertexArray);
+  auto vertexArray = complex::CsvParser::ArrayFromPath<float>(dataGraph, path);
+  CsvParser::ReadFile(inputFile, *vertexArray, skipLines, delimiter);
+  geometry->setVertices(vertexArray);
 }
 
 //------------------------------------------------------------------------------

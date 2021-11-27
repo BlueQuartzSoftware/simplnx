@@ -152,13 +152,13 @@ Result<> StlFileReader::operator()()
   DataPath triangleGeometryDataPath = m_ParentDataPath.createChildPath(m_GeometryName);
   TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(triangleGeometryDataPath);
 
-  triangleGeom.resizeTriList(triCount);
+  triangleGeom.resizeFaceList(triCount);
   triangleGeom.resizeVertexList(triCount * 3);
 
   using SharedTriList = AbstractGeometry::MeshIndexArrayType;
   using SharedVertList = AbstractGeometry::SharedVertexList;
 
-  SharedTriList& triangles = *(triangleGeom.getTriangles());
+  SharedTriList& triangles = *(triangleGeom.getFaces());
   SharedVertList& nodes = *(triangleGeom.getVertices());
 
   Float64Array& faceNormals = m_DataStructure.getDataRefAs<Float64Array>(m_FaceNormalsDataPath);
@@ -292,11 +292,11 @@ Result<> StlFileReader::eliminate_duplicate_nodes()
   using SharedTriList = AbstractGeometry::MeshIndexArrayType;
   using SharedVertList = AbstractGeometry::SharedVertexList;
 
-  SharedTriList& triangles = *(triangleGeom.getTriangles());
+  SharedTriList& triangles = *(triangleGeom.getFaces());
   SharedVertList& vertices = *(triangleGeom.getVertices());
 
   AbstractGeometry::MeshIndexType nNodesAll = triangleGeom.getNumberOfVertices();
-  AbstractGeometry::MeshIndexType nTriangles = triangleGeom.getNumberOfTris();
+  AbstractGeometry::MeshIndexType nTriangles = triangleGeom.getNumberOfFaces();
   size_t nNodes = 0;
   if(nNodesAll > 0)
   {

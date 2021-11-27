@@ -84,7 +84,7 @@ Result<> CreateTriangleGeometryAction::apply(DataStructure& dataStructure, Mode 
     return MakeErrorResult(-223, fmt::format("CreateTriangleGeometryAction: Could not allocate SharedTriList '{}'", trianglesPath.toString()));
   }
   SharedTriList* triangles = ::ArrayFromPath<MeshIndexType>(dataStructure, trianglesPath);
-  triangleGeom->setTriangles(triangles);
+  triangleGeom->setFaces(triangles);
 
   // Create the Vertex Array with a component size of 3
   DataPath vertexPath = m_GeometryPath.createChildPath(k_VertexDataName);

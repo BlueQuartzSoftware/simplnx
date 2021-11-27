@@ -77,25 +77,25 @@ public:
    * @brief
    * @param numQuads
    */
-  void resizeQuadList(usize numQuads);
+  void resizeFaceList(usize numQuads);
 
   /**
    * @brief
    * @param quads
    */
-  void setQuads(const SharedQuadList* quads);
+  void setFaces(const SharedQuadList* quads);
 
   /**
    * @brief
    * @return SharedQuadList*
    */
-  SharedQuadList* getQuads();
+  SharedQuadList* setFaces();
 
   /**
    * @brief
    * @return const SharedQuadList*
    */
-  const SharedQuadList* getQuads() const;
+  const SharedQuadList* getFaces() const;
 
   /**
    * @brief
