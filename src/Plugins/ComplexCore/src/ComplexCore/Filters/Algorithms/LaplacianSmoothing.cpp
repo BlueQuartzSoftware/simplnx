@@ -72,7 +72,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     }
     std::string ss = fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps);
     // TODO: Send Progress Update to filter
-
+    std::cout << ss << std::endl;
     // Compute the Deltas for each point
     for(AbstractGeometry::MeshIndexType i = 0; i < nedges; i++)
     {
@@ -120,7 +120,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
         return {};
       }
       std::string ss = fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps);
-      // TODO:  Send progress message to the filter
+      std::cout << ss << std::endl;
       // Compute the Delta's
       for(AbstractGeometry::MeshIndexType i = 0; i < nedges; i++)
       {

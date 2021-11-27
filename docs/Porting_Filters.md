@@ -67,3 +67,16 @@ Example of getting an array and summing the values using range based for loop.
 ```c++
     DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath("Triangle Areas");
 ```
+
+## Print out the preflight errors during a Unit Test ##
+
+```c++
+    if(preflightResult.outputActions.invalid())
+    {
+      for(const auto& error : preflightResult.outputActions.errors())
+      {
+        std::cout << error.code << ": " << error.message << std::endl;
+      }
+    }
+```
+

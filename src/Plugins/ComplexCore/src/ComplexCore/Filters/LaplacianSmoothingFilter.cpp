@@ -59,8 +59,8 @@ Parameters LaplacianSmoothingFilter::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_SurfaceQuadPointLambda_Key, "Outer Quadruple Points Lambda", "", 1.23345f));
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshNodeTypeArrayPath_Key, "Node Type", "", DataPath{}));
-  params.insertSeparator(Parameters::Separator{"Face Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}));
+ // params.insertSeparator(Parameters::Separator{"Face Data"});
+ // params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseTaubinSmoothing_Key, k_MuFactor_Key, true);
 
@@ -91,7 +91,7 @@ IFilter::PreflightResult LaplacianSmoothingFilter::preflightImpl(const DataStruc
   auto pSurfaceTripleLineLambdaValue = filterArgs.value<float32>(k_SurfaceTripleLineLambda_Key);
   auto pSurfaceQuadPointLambdaValue = filterArgs.value<float32>(k_SurfaceQuadPointLambda_Key);
   auto pSurfaceMeshNodeTypeArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshNodeTypeArrayPath_Key);
-  auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  //auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -154,7 +154,7 @@ Result<> LaplacianSmoothingFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.pSurfaceTripleLineLambda = filterArgs.value<float32>(k_SurfaceTripleLineLambda_Key);
   inputValues.pSurfaceQuadPointLambda = filterArgs.value<float32>(k_SurfaceQuadPointLambda_Key);
   inputValues.pSurfaceMeshNodeTypeArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshNodeTypeArrayPath_Key);
-  inputValues.pSurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  //inputValues.pSurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
 
   // Let the Algorithm instance do the work
   Result<> result = LaplacianSmoothing(dataStructure, &inputValues, this)();

@@ -23,7 +23,6 @@ struct LaplacianSmoothingInputValues
   float32 pSurfaceTripleLineLambda;
   float32 pSurfaceQuadPointLambda;
   DataPath pSurfaceMeshNodeTypeArrayPath;
-  DataPath pSurfaceMeshFaceLabelsArrayPath;
 };
 
 /**
