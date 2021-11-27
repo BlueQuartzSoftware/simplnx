@@ -9,20 +9,20 @@
 namespace complex
 {
 /**
- * @class MinSize
+ * @class RemoveMinimumSizeFeaturesFilter
  * @brief
  */
-class COMPLEXCORE_EXPORT MinSize : public IFilter
+class COMPLEXCORE_EXPORT RemoveMinimumSizeFeaturesFilter : public IFilter
 {
 public:
-  MinSize() = default;
-  ~MinSize() noexcept override = default;
+  RemoveMinimumSizeFeaturesFilter() = default;
+  ~RemoveMinimumSizeFeaturesFilter() noexcept override = default;
 
-  MinSize(const MinSize&) = delete;
-  MinSize(MinSize&&) noexcept = delete;
+  RemoveMinimumSizeFeaturesFilter(const RemoveMinimumSizeFeaturesFilter&) = delete;
+  RemoveMinimumSizeFeaturesFilter(RemoveMinimumSizeFeaturesFilter&&) noexcept = delete;
 
-  MinSize& operator=(const MinSize&) = delete;
-  MinSize& operator=(MinSize&&) noexcept = delete;
+  RemoveMinimumSizeFeaturesFilter& operator=(const RemoveMinimumSizeFeaturesFilter&) = delete;
+  RemoveMinimumSizeFeaturesFilter& operator=(RemoveMinimumSizeFeaturesFilter&&) noexcept = delete;
 
   static inline constexpr StringLiteral k_FeaturePhasesPath_Key = "feature_Phiases_path";
   static inline constexpr StringLiteral k_NumCellsPath_Key = "num_cells_path";
@@ -55,6 +55,12 @@ public:
    * @return
    */
   std::string humanName() const override;
+
+  /**
+   * @brief Returns the default tags for this filter.
+   * @return
+   */
+  std::vector<std::string> defaultTags() const override;
 
   /**
    * @brief
@@ -90,4 +96,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, MinSize, "ed8b5905-d000-4ce5-89ee-bd3c4e4094da");
+COMPLEX_DEF_FILTER_TRAITS(complex, RemoveMinimumSizeFeaturesFilter, "ed8b5905-d000-4ce5-89ee-bd3c4e4094da");

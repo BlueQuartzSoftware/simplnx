@@ -1,4 +1,4 @@
-#include "MinSize.hpp"
+#include "RemoveMinimumSizeFeaturesFilter.hpp"
 
 #include <algorithm>
 #include <set>
@@ -250,27 +250,33 @@ std::vector<bool> remove_smallfeatures(DataArray<int64>* featureIdsPtr, const Da
 }
 } // namespace
 
-std::string MinSize::name() const
+std::string RemoveMinimumSizeFeaturesFilter::name() const
 {
-  return FilterTraits<MinSize>::name;
+  return FilterTraits<RemoveMinimumSizeFeaturesFilter>::name;
 }
 
-std::string MinSize::className() const
+std::string RemoveMinimumSizeFeaturesFilter::className() const
 {
-  return FilterTraits<MinSize>::className;
+  return FilterTraits<RemoveMinimumSizeFeaturesFilter>::className;
 }
 
-Uuid MinSize::uuid() const
+Uuid RemoveMinimumSizeFeaturesFilter::uuid() const
 {
-  return FilterTraits<MinSize>::uuid;
+  return FilterTraits<RemoveMinimumSizeFeaturesFilter>::uuid;
 }
 
-std::string MinSize::humanName() const
+std::string RemoveMinimumSizeFeaturesFilter::humanName() const
 {
-  return "Minimum Size";
+  return "Remove Small Features";
 }
 
-Parameters MinSize::parameters() const
+//------------------------------------------------------------------------------
+std::vector<std::string> RemoveMinimumSizeFeaturesFilter::defaultTags() const
+{
+  return {"#Processing", "#Cleanup", "#MinSize"};
+}
+
+Parameters RemoveMinimumSizeFeaturesFilter::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Feature Phases Array", "DataPath to Feature Phases DataArray", DataPath{}));
@@ -284,12 +290,12 @@ Parameters MinSize::parameters() const
   return params;
 }
 
-IFilter::UniquePointer MinSize::clone() const
+IFilter::UniquePointer RemoveMinimumSizeFeaturesFilter::clone() const
 {
-  return std::make_unique<MinSize>();
+  return std::make_unique<RemoveMinimumSizeFeaturesFilter>();
 }
 
-IFilter::PreflightResult MinSize::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   auto featurePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
   auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
@@ -357,7 +363,7 @@ IFilter::PreflightResult MinSize::preflightImpl(const DataStructure& data, const
   return {};
 }
 
-Result<> MinSize::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> RemoveMinimumSizeFeaturesFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   auto featurePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
   auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);

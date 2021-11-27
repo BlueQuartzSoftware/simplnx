@@ -8,20 +8,20 @@
 namespace complex
 {
 /**
- * @class TriangleAreaFilter
+ * @class CalculateTriangleAreasFilter
  * @brief This filter will compute the area for each triangle within a TriangleGeometry
  */
-class COMPLEXCORE_EXPORT TriangleAreaFilter : public IFilter
+class COMPLEXCORE_EXPORT CalculateTriangleAreasFilter : public IFilter
 {
 public:
-  TriangleAreaFilter() = default;
-  ~TriangleAreaFilter() noexcept override = default;
+  CalculateTriangleAreasFilter() = default;
+  ~CalculateTriangleAreasFilter() noexcept override = default;
 
-  TriangleAreaFilter(const TriangleAreaFilter&) = delete;
-  TriangleAreaFilter(TriangleAreaFilter&&) noexcept = delete;
+  CalculateTriangleAreasFilter(const CalculateTriangleAreasFilter&) = delete;
+  CalculateTriangleAreasFilter(CalculateTriangleAreasFilter&&) noexcept = delete;
 
-  TriangleAreaFilter& operator=(const TriangleAreaFilter&) = delete;
-  TriangleAreaFilter& operator=(TriangleAreaFilter&&) noexcept = delete;
+  CalculateTriangleAreasFilter& operator=(const CalculateTriangleAreasFilter&) = delete;
+  CalculateTriangleAreasFilter& operator=(CalculateTriangleAreasFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_TriangleGeometryDataPath_Key = "TriangleGeometryDataPath";
@@ -93,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, TriangleAreaFilter, "71df3378-16b5-575d-8889-3ddae4dcec4b");
+COMPLEX_DEF_FILTER_TRAITS(complex, CalculateTriangleAreasFilter, "71df3378-16b5-575d-8889-3ddae4dcec4b");

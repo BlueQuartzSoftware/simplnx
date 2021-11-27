@@ -1,4 +1,4 @@
-#include "FindSizes.hpp"
+#include "CalculateFeatureSizesFilter.hpp"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -22,27 +22,33 @@ constexpr complex::int32 k_BadFeatureCount = -78231;
 constexpr complex::float32 k_PI = M_PI;
 } // namespace
 
-std::string FindSizes::name() const
+std::string CalculateFeatureSizesFilter::name() const
 {
-  return FilterTraits<FindSizes>::name;
+  return FilterTraits<CalculateFeatureSizesFilter>::name;
 }
 
-std::string FindSizes::className() const
+std::string CalculateFeatureSizesFilter::className() const
 {
-  return FilterTraits<FindSizes>::className;
+  return FilterTraits<CalculateFeatureSizesFilter>::className;
 }
 
-Uuid FindSizes::uuid() const
+Uuid CalculateFeatureSizesFilter::uuid() const
 {
-  return FilterTraits<FindSizes>::uuid;
+  return FilterTraits<CalculateFeatureSizesFilter>::uuid;
 }
 
-std::string FindSizes::humanName() const
+std::string CalculateFeatureSizesFilter::humanName() const
 {
   return "Find Sizes";
 }
 
-Parameters FindSizes::parameters() const
+//------------------------------------------------------------------------------
+std::vector<std::string> CalculateFeatureSizesFilter::defaultTags() const
+{
+  return {"#Statistics", "#Morphological", "#Feature Calculation", "#Find Sizes"};
+}
+
+Parameters CalculateFeatureSizesFilter::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<BoolParameter>(k_SaveElementSizes_Key, "Save Element Sizes", "Save element sizes", false));
@@ -54,12 +60,12 @@ Parameters FindSizes::parameters() const
   return params;
 }
 
-IFilter::UniquePointer FindSizes::clone() const
+IFilter::UniquePointer CalculateFeatureSizesFilter::clone() const
 {
-  return std::make_unique<FindSizes>();
+  return std::make_unique<CalculateFeatureSizesFilter>();
 }
 
-IFilter::PreflightResult FindSizes::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
   auto geometryPath = args.value<DataPath>(k_GeometryPath_Key);
 
@@ -97,12 +103,12 @@ IFilter::PreflightResult FindSizes::preflightImpl(const DataStructure& data, con
   return {std::move(actions)};
 }
 
-Result<> FindSizes::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   return std::move(findSizes(data, args));
 }
 
-Result<> FindSizes::findSizesImage(DataStructure& data, const Arguments& args, ImageGeom* image) const
+Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const Arguments& args, ImageGeom* image) const
 {
   auto saveElementSizes = args.value<bool>(k_SaveElementSizes_Key);
 
@@ -209,7 +215,7 @@ Result<> FindSizes::findSizesImage(DataStructure& data, const Arguments& args, I
   return {};
 }
 
-Result<> FindSizes::findSizesUnstructured(DataStructure& data, const Arguments& args, AbstractGeometry* igeom) const
+Result<> CalculateFeatureSizesFilter::findSizesUnstructured(DataStructure& data, const Arguments& args, AbstractGeometry* igeom) const
 {
   auto saveElementSizes = args.value<bool>(k_SaveElementSizes_Key);
 
@@ -277,7 +283,7 @@ Result<> FindSizes::findSizesUnstructured(DataStructure& data, const Arguments& 
   return {};
 }
 
-Result<> FindSizes::findSizes(DataStructure& data, const Arguments& args) const
+Result<> CalculateFeatureSizesFilter::findSizes(DataStructure& data, const Arguments& args) const
 {
   auto geomPath = args.value<DataPath>(k_GeometryPath_Key);
   auto geom = data.getDataAs<AbstractGeometry>(geomPath);

@@ -13,10 +13,10 @@ set(FilterList
   ConditionalSetValue
   DeleteData
   ExportDREAM3DFilter
-  FindSizes
+  CalculateFeatureSizesFilter
   ImportDREAM3DFilter
   ImportTextFilter
-  MinSize
+  RemoveMinimumSizeFeaturesFilter
   MultiThresholdObjects
   RobustAutomaticThreshold
   ScalarSegmentFeatures
@@ -24,7 +24,7 @@ set(FilterList
   ExampleFilter1
   ExampleFilter2
   StlFileReaderFilter
-  TriangleAreaFilter
+  CalculateTriangleAreasFilter
 )
 
 set(ActionList

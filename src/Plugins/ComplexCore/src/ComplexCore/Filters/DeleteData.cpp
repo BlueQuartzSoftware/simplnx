@@ -30,6 +30,12 @@ std::string DeleteData::humanName() const
   return "Delete Data";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> DeleteData::defaultTags() const
+{
+  return {"#Core", "#Memory Management", "#Remove Data", "#Delete Data"};
+}
+
 Parameters DeleteData::parameters() const
 {
   Parameters params;

@@ -107,12 +107,7 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
 
-  // Replace the "EmptyAction" with one of the prebuilt actions that apply changes
-  // to the DataStructure. If none are available then create a new custom Action subclass.
-  // If your filter does not make any structural modifications to the DataStructure then
-  // you can skip this code.
-  // auto stlFileReaderAction = std::make_unique<StlFileReaderFilterAction>(pStlFilePathValue);
-
+  // Validate that the STL File is binary and readable.
   int32_t stlFileType = StlUtilities::DetermineStlFileType(pStlFilePathValue);
   if(stlFileType < 0)
   {
@@ -136,9 +131,11 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
     resultOutputActions.errors().push_back(result);
     return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
   }
+
+  // This can happen in a LOT of STL files. Just means the writer didn't go back and update the header.
   if(numTriangles == 0)
   {
-    numTriangles = 1; // This can happen in a LOT of STL files. Just means the writer didn't go back and update the header.
+    numTriangles = 1;
   }
 
   DataPath geometryDataPath = pParentDataGroupPath.createChildPath(pFaceGeometryName);
@@ -182,6 +179,7 @@ Result<> StlFileReaderFilter::executeImpl(DataStructure& data, const Arguments& 
   auto pFaceDataGroupName = filterArgs.value<std::string>(k_FaceDataGroupName_Key);
   auto pFaceNormalsArrayNameValue = filterArgs.value<DataPath>(k_FaceNormalsArrayName_Key);
 
+  // The actual STL File Reading is placed in a separate class `StlFileReader`
   Result<> result = StlFileReader(data, pStlFilePathValue, pParentDataGroupPath, pFaceGeometryName, pFaceDataGroupName, pFaceNormalsArrayNameValue, this)();
   return result;
 }

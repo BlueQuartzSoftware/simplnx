@@ -8,8 +8,15 @@
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/TemplateHelpers.hpp"
 
+namespace
+{
+constexpr complex::int32 k_EMPTY_PARAMETER = -123;
+
+}
+
 namespace complex
 {
+
 std::string ConditionalSetValue::name() const
 {
   return FilterTraits<ConditionalSetValue>::name.str();
@@ -28,6 +35,11 @@ Uuid ConditionalSetValue::uuid() const
 std::string ConditionalSetValue::humanName() const
 {
   return "Replace Value in Array (Conditional)";
+}
+//------------------------------------------------------------------------------
+std::vector<std::string> ConditionalSetValue::defaultTags() const
+{
+  return {"#Core", "#Processing", "#DataArray"};
 }
 
 Parameters ConditionalSetValue::parameters() const
@@ -51,7 +63,7 @@ IFilter::PreflightResult ConditionalSetValue::preflightImpl(const DataStructure&
 
   if(replaceValueString.empty())
   {
-    return {MakeErrorResult<OutputActions>(-123, fmt::format("{}: Replacement parameter cannot be empty.{}({})", humanName(), __FILE__, __LINE__)), {}};
+    return {MakeErrorResult<OutputActions>(::k_EMPTY_PARAMETER, fmt::format("{}: Replacement parameter cannot be empty.{}({})", humanName(), __FILE__, __LINE__)), {}};
   }
 
   const DataObject& inputDataObject = dataStructure.getDataRef(selectedArrayPath);

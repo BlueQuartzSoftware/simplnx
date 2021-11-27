@@ -47,3 +47,23 @@ QString msg = QString("Error reading Triangle '%1'. Object Count was %2 and shou
 ```c++
 std::string msg = fmt::format("Error reading Triangle '{}}'. Object Count was {} and should have been {}", t, objsRead, k_StlElementCount);
 ```
+
+## Get An Array from the DataStructure ##
+
+Example of getting an array and summing the values using range based for loop.
+
+```c++
+ // Let's sum up all the areas.
+    Float64Array& faceAreas = dataGraph.getDataRefAs<Float64Array>(triangleAreasDataPath);
+    double sumOfAreas = 0.0;
+    for(const auto& area : faceAreas)
+    {
+      sumOfAreas += area;
+    }
+```
+
+## Chaining Together DataPath + String to form new DataPath ##
+
+```c++
+    DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath("Triangle Areas");
+```

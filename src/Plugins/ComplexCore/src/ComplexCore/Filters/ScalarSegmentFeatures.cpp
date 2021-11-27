@@ -146,6 +146,12 @@ std::string ScalarSegmentFeatures::humanName() const
   return "Segment Features (Scalar)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ScalarSegmentFeatures::defaultTags() const
+{
+  return {"#Reconstruction", "#Segmentation"};
+}
+
 Parameters ScalarSegmentFeatures::parameters() const
 {
   Parameters params;

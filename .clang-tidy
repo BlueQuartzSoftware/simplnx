@@ -17,6 +17,7 @@ Checks: '
   misc-*,
   moderize-*,
   -modernize-use-trailing-return-type,
+  -modernize-use-nodiscard,
   -mpi-*,
   -objc-*,
   -openmp-*,

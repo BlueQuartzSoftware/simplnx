@@ -1,19 +1,16 @@
-#include "TriangleAreaFilter.hpp"
+#include "CalculateTriangleAreasFilter.hpp"
 
 #include "complex/Common/ComplexRange.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace complex;
-
-#define SQR(value) (value) * (value)
 
 namespace
 {
@@ -73,37 +70,37 @@ private:
 namespace complex
 {
 //------------------------------------------------------------------------------
-std::string TriangleAreaFilter::name() const
+std::string CalculateTriangleAreasFilter::name() const
 {
-  return FilterTraits<TriangleAreaFilter>::name.str();
+  return FilterTraits<CalculateTriangleAreasFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string TriangleAreaFilter::className() const
+std::string CalculateTriangleAreasFilter::className() const
 {
-  return FilterTraits<TriangleAreaFilter>::className;
+  return FilterTraits<CalculateTriangleAreasFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid TriangleAreaFilter::uuid() const
+Uuid CalculateTriangleAreasFilter::uuid() const
 {
-  return FilterTraits<TriangleAreaFilter>::uuid;
+  return FilterTraits<CalculateTriangleAreasFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string TriangleAreaFilter::humanName() const
+std::string CalculateTriangleAreasFilter::humanName() const
 {
   return "Calculate Triangle Areas";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> TriangleAreaFilter::defaultTags() const
+std::vector<std::string> CalculateTriangleAreasFilter::defaultTags() const
 {
   return {"#Surface Meshing", "#Misc", "#Triangle Geometry"};
 }
 
 //------------------------------------------------------------------------------
-Parameters TriangleAreaFilter::parameters() const
+Parameters CalculateTriangleAreasFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
@@ -114,13 +111,13 @@ Parameters TriangleAreaFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer TriangleAreaFilter::clone() const
+IFilter::UniquePointer CalculateTriangleAreasFilter::clone() const
 {
-  return std::make_unique<TriangleAreaFilter>();
+  return std::make_unique<CalculateTriangleAreasFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult TriangleAreaFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult CalculateTriangleAreasFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   auto pCalculatedAreasDataPath = filterArgs.value<DataPath>(k_CalculatedAreasDataPath_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
@@ -137,7 +134,7 @@ IFilter::PreflightResult TriangleAreaFilter::preflightImpl(const DataStructure& 
   std::vector<PreflightValue> preflightUpdatedValues;
   {
     const TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
-    // Create the face areas DataArray action and store it
+    // Create the face areas DataArray Action and store it into the resultOutputActions
     auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::float64, std::vector<usize>{triangleGeom.getNumberOfFaces()}, 1, pCalculatedAreasDataPath);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
@@ -147,7 +144,7 @@ IFilter::PreflightResult TriangleAreaFilter::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> TriangleAreaFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> CalculateTriangleAreasFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   auto pCalculatedAreasDataPath = filterArgs.value<DataPath>(k_CalculatedAreasDataPath_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);

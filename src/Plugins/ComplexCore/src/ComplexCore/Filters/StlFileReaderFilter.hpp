@@ -8,9 +8,10 @@
 namespace complex
 {
 /**
- * @class StlFileReaderFilter
+ * @brief StlFileReaderFilter This filter will read a Binary STL file into a Triangle
+ * Geometry including the Normal Vector for each face. The actual algorithm is
+ * contained in the ComplexCore/Filters/Algorithms/StlFileReader
  *
- * @brief This filter will ....
  */
 class COMPLEXCORE_EXPORT StlFileReaderFilter : public IFilter
 {
