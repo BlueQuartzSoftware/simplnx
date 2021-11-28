@@ -53,9 +53,7 @@ inline constexpr StringLiteral k_ConditionalArray("Conditional [bool]");
  * @return
  */
 template <typename T>
-DataArray<T>* CreateTestDataArray(DataStructure& dataGraph, const std::string& name,
-                                  typename DataStore<T>::ShapeType tupleShape,
-                                  typename DataStore<T>::ShapeType componentShape,
+DataArray<T>* CreateTestDataArray(DataStructure& dataGraph, const std::string& name, typename DataStore<T>::ShapeType tupleShape, typename DataStore<T>::ShapeType componentShape,
                                   DataObject::IdType parentId)
 {
   using DataStoreType = DataStore<T>;

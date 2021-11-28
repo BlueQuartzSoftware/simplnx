@@ -6,14 +6,14 @@
 #include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "complex/DataStructure/Geometry/AbstractGeometry2D.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
-#include "complex/Filter/IFilter.hpp"
 
 using namespace complex;
 
-LaplacianSmoothing::LaplacianSmoothing(DataStructure& dataStructure, LaplacianSmoothingInputValues* inputValues, const IFilter* filter)
+LaplacianSmoothing::LaplacianSmoothing(DataStructure& dataStructure, LaplacianSmoothingInputValues* inputValues, const IFilter* filter, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_Filter(filter)
+, m_MessageHandler(mesgHandler)
 {
 }
 
@@ -71,8 +71,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
       return {};
     }
     std::string ss = fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps);
-    // TODO: Send Progress Update to filter
-    std::cout << ss << std::endl;
+    m_MessageHandler(IFilter::Message::Type::Info, ss);
     // Compute the Deltas for each point
     for(AbstractGeometry::MeshIndexType i = 0; i < nedges; i++)
     {
@@ -120,7 +119,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
         return {};
       }
       std::string ss = fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps);
-      std::cout << ss << std::endl;
+      m_MessageHandler(IFilter::Message::Type::Info, ss);
       // Compute the Delta's
       for(AbstractGeometry::MeshIndexType i = 0; i < nedges; i++)
       {

@@ -71,6 +71,7 @@ Example of getting an array and summing the values using range based for loop.
 ## Print out the preflight errors during a Unit Test ##
 
 ```c++
+    auto preflightResult = filter.preflight(dataGraph, args);
     if(preflightResult.outputActions.invalid())
     {
       for(const auto& error : preflightResult.outputActions.errors())

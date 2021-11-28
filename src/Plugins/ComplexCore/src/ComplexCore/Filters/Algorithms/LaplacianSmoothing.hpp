@@ -4,6 +4,7 @@
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/Filter/IFilter.hpp"
 
 #include <vector>
 
@@ -31,12 +32,10 @@ struct LaplacianSmoothingInputValues
  * where a bool mask array specifies.
  */
 
-class IFilter;
-
 class COMPLEXCORE_EXPORT LaplacianSmoothing
 {
 public:
-  LaplacianSmoothing(DataStructure& data, LaplacianSmoothingInputValues* inputValues, const IFilter* filter);
+  LaplacianSmoothing(DataStructure& data, LaplacianSmoothingInputValues* inputValues, const IFilter* filter, const IFilter::MessageHandler& mesgHandler);
   ~LaplacianSmoothing() noexcept;
 
   LaplacianSmoothing(const LaplacianSmoothing&) = delete;
@@ -50,6 +49,7 @@ private:
   DataStructure& m_DataStructure;
   const LaplacianSmoothingInputValues* m_InputValues = nullptr;
   const IFilter* m_Filter = nullptr;
+  const IFilter::MessageHandler& m_MessageHandler;
 
   std::vector<float> generateLambdaArray();
   Result<> edgeBasedSmoothing();

@@ -22,14 +22,13 @@
 
 #include <catch2/catch.hpp>
 
-
-#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/Geometry/AbstractGeometry2D.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
 
 #include "UnitTestCommon.hpp"
 
@@ -43,8 +42,6 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 using namespace complex::UnitTest::Constants;
-
-
 
 TEST_CASE("SurfaceMeshing::LaplacianSmoothingFilter: Instantiation and Parameter Check", "[SurfaceMeshing][LaplacianSmoothingFilter]")
 {
@@ -100,7 +97,7 @@ TEST_CASE("SurfaceMeshing::LaplacianSmoothingFilter: Instantiation and Parameter
     Arguments args;
 
     TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(parentPath.createChildPath(triangleGeometryName));
-    std::vector<size_t> tupleShape = { triangleGeom.getNumberOfVertices()};
+    std::vector<size_t> tupleShape = {triangleGeom.getNumberOfVertices()};
     std::vector<size_t> compShape = {1};
     // Insert a Node Type array into the DataStructure so the filter works.
     Int8Array* nodeType = complex::UnitTest::CreateTestDataArray<int8_t>(dataGraph, nodeTypeArrayName, tupleShape, compShape, vertexDataGroupId);
