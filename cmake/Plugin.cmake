@@ -93,143 +93,165 @@ endfunction()
 # This function will search through the COMPLEX_PLUGIN_SEARCH_DIRS variable and
 # look for a directory with the name that holds a CMakeLists.txt file.
 # Arguments:
-# PLUGIN_NAME The name of the Plugin
-# FILTER_LIST the list of filters to compile
+# NAME The name of the Plugin
 # DESCRIPTION The description of the plugin, used in the "PROJECT(...)" call
 # VERSION The version of the plugin, used in the "PROJECT(...)" call
+# FILTER_LIST the list of filters to compile
+# ACTION_LIST
 # 
 function(create_complex_plugin)
   set(options)
   set(oneValueArgs NAME DESCRIPTION VERSION)
-  set(multiValueArgs FILTER_LIST)
-  cmake_parse_arguments(PLUGIN "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
-  
-  PROJECT(${PLUGIN_NAME}
-      VERSION ${PLUGIN_VERSION}
-      DESCRIPTION ${PLUGIN_DESCRIPTION}
-  )
+  set(multiValueArgs FILTER_LIST ACTION_LIST ALGORITHM_LIST)
+  cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
-  set(PLUGIN_GENERATED_DIR ${PROJECT_BINARY_DIR}/generated)
-  set(PLUGIN_GENERATED_HEADER_DIR ${PROJECT_BINARY_DIR}/generated/${PLUGIN_NAME})
-  set(PLUGIN_EXPORT_HEADER ${PLUGIN_GENERATED_HEADER_DIR}/${PLUGIN_NAME}_export.hpp)
+  PROJECT(${ARGS_NAME}
+    VERSION ${ARGS_VERSION}
+    DESCRIPTION ${ARGS_DESCRIPTION}
+    )
+
+  set(ARGS_GENERATED_DIR ${PROJECT_BINARY_DIR}/generated)
+  set(ARGS_GENERATED_HEADER_DIR ${PROJECT_BINARY_DIR}/generated/${ARGS_NAME})
+  set(ARGS_EXPORT_HEADER ${ARGS_GENERATED_HEADER_DIR}/${ARGS_NAME}_export.hpp)
 
 
-  list(LENGTH PLUGIN_FILTER_LIST PluginNumFilters)
-  set_property(GLOBAL PROPERTY ${PLUGIN_NAME}_filter_count ${PluginNumFilters})
-
-  #------------------------------------------------------------------------------
-  # Plugin Headers
-  set(${PLUGIN_NAME}_Plugin_HDRS
-      ${${PLUGIN_NAME}_SOURCE_DIR}/${PLUGIN_NAME}Plugin.hpp
-  )
+  list(LENGTH ARGS_FILTER_LIST PluginNumFilters)
+  set_property(GLOBAL PROPERTY ${ARGS_NAME}_filter_count ${PluginNumFilters})
 
   #------------------------------------------------------------------------------
   # Plugin Headers
-  set(${PLUGIN_NAME}_Plugin_SRCS
-      ${${PLUGIN_NAME}_SOURCE_DIR}/${PLUGIN_NAME}Plugin.cpp
-  )
+  set(${ARGS_NAME}_Plugin_HDRS
+    ${${ARGS_NAME}_SOURCE_DIR}/${ARGS_NAME}Plugin.hpp
+    )
+
+  #------------------------------------------------------------------------------
+  # Plugin Headers
+  set(${ARGS_NAME}_Plugin_SRCS
+    ${${ARGS_NAME}_SOURCE_DIR}/${ARGS_NAME}Plugin.cpp
+    )
 
   #------------------------------------------------------------------------------
   # Plugin Filter Files
-  set(${PLUGIN_NAME}_PLUGIN_FILTER_FILES)
+  set(${ARGS_NAME}_ARGS_FILTER_FILES)
 
   set(Filter_Registration_Include_String "")
   set(Filter_Registration_Code "")
 
   #------------------------------------------------------------------------------
   # Add Filter Sources that need to be compiled.
-  # Also generate the Registration code for each of the filters 
-  foreach(filter ${PLUGIN_FILTER_LIST})
-    list(APPEND ${PLUGIN_NAME}_Plugin_HDRS
-      "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${filter}.hpp"
-    )
-    list(APPEND ${PLUGIN_NAME}_Plugin_SRCS
-      "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${filter}.cpp"
-    )
-    list(APPEND ${PLUGIN_NAME}_PLUGIN_FILTER_FILES
-      "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${filter}.hpp"
-      "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${filter}.cpp"
-    )
+  # Also generate the Registration code for each of the filters
+  foreach(filter ${ARGS_FILTER_LIST})
+    list(APPEND ${ARGS_NAME}_Plugin_HDRS
+      "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/${filter}.hpp"
+      )
+    list(APPEND ${ARGS_NAME}_Plugin_SRCS
+      "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/${filter}.cpp"
+      )
+    list(APPEND ${ARGS_NAME}_ARGS_FILTER_FILES
+      "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/${filter}.hpp"
+      "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/${filter}.cpp"
+      )
 
     string(APPEND Filter_Registration_Include_String
-      "#include \"${PLUGIN_NAME}/Filters/${filter}.hpp\"\n")
+      "#include \"${ARGS_NAME}/Filters/${filter}.hpp\"\n")
 
     string(APPEND Filter_Registration_Code
       "  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<${filter}>(); });\n")
 
   endforeach()
 
+  # Include all of the custom Actions
+  foreach(action ${ARGS_ACTION_LIST})
+    list(APPEND ${ARGS_NAME}_Plugin_HDRS
+      "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/Actions/${action}.hpp"
+      )
+    list(APPEND ${ARGS_NAME}_Plugin_SRCS
+      "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/Actions/${action}.cpp"
+      )
+  endforeach()
+
+  # Include all of the algorithms
+  foreach(algorithm ${ARGS_ALGORITHM_LIST})
+    list(APPEND ${ARGS_NAME}_Plugin_HDRS
+      "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/Algorithms/${algorithm}.hpp"
+      )
+    list(APPEND ${ARGS_NAME}_Plugin_SRCS
+      "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/Algorithms/${algorithm}.cpp"
+      )
+  endforeach()
+
+
   configure_file( ${complex_SOURCE_DIR}/cmake/plugin_filter_registration.h.in
-                  ${PLUGIN_GENERATED_HEADER_DIR}/plugin_filter_registration.h)
+    ${ARGS_GENERATED_HEADER_DIR}/plugin_filter_registration.h)
 
-  add_library(${PLUGIN_NAME} SHARED)
-  add_library(complex::${PLUGIN_NAME} ALIAS ${PLUGIN_NAME})
+  add_library(${ARGS_NAME} SHARED)
+  add_library(complex::${ARGS_NAME} ALIAS ${ARGS_NAME})
 
-  set_target_properties(${PLUGIN_NAME} PROPERTIES
-    FOLDER "Plugins/${PLUGIN_NAME}"
+  set_target_properties(${ARGS_NAME} PROPERTIES
+    FOLDER "Plugins/${ARGS_NAME}"
     SUFFIX ".complex")
 
   #------------------------------------------------------------------------------
   # Where are the plugins going to be placed during the build, unless overridden
-  # by the global property COMPLEX_PLUGIN_OUTPUT_DIR
-  get_property(COMPLEX_PLUGIN_OUTPUT_DIR GLOBAL PROPERTY COMPLEX_PLUGIN_OUTPUT_DIR)
-  if("${COMPLEX_PLUGIN_OUTPUT_DIR}" STREQUAL "")
-    set_target_properties(${PLUGIN_NAME} PROPERTIES
+  # by the global property COMPLEX_ARGS_OUTPUT_DIR
+  get_property(COMPLEX_ARGS_OUTPUT_DIR GLOBAL PROPERTY COMPLEX_ARGS_OUTPUT_DIR)
+  if("${COMPLEX_ARGS_OUTPUT_DIR}" STREQUAL "")
+    set_target_properties(${ARGS_NAME} PROPERTIES
       LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
       RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
-    )
+      )
   else()
-    set_target_properties(${PLUGIN_NAME} PROPERTIES
-      LIBRARY_OUTPUT_DIRECTORY ${COMPLEX_PLUGIN_OUTPUT_DIR}
-      RUNTIME_OUTPUT_DIRECTORY ${COMPLEX_PLUGIN_OUTPUT_DIR}
-    )
+    set_target_properties(${ARGS_NAME} PROPERTIES
+      LIBRARY_OUTPUT_DIRECTORY ${COMPLEX_ARGS_OUTPUT_DIR}
+      RUNTIME_OUTPUT_DIRECTORY ${COMPLEX_ARGS_OUTPUT_DIR}
+      )
   endif()
 
-  target_link_libraries(${PLUGIN_NAME} PUBLIC complex)
+  target_link_libraries(${ARGS_NAME} PUBLIC complex)
 
   if(MSVC)
-    target_compile_options(${PLUGIN_NAME}
+    target_compile_options(${ARGS_NAME}
       PRIVATE
-        /MP
-    )
+      /MP
+      )
   endif()
 
-  generate_export_header(${PLUGIN_NAME}
-    EXPORT_FILE_NAME ${PLUGIN_EXPORT_HEADER}
-  )
-  set(${PLUGIN_NAME}_GENERATED_HEADERS
-    ${PLUGIN_EXPORT_HEADER}
-  )
-  set(${PLUGIN_NAME}_ALL_HDRS
-    ${${PLUGIN_NAME}_Plugin_HDRS}
-    ${${PLUGIN_NAME}_GENERATED_HEADERS}
-  )
+  generate_export_header(${ARGS_NAME}
+    EXPORT_FILE_NAME ${ARGS_EXPORT_HEADER}
+    )
+  set(${ARGS_NAME}_GENERATED_HEADERS
+    ${ARGS_EXPORT_HEADER}
+    )
+  set(${ARGS_NAME}_ALL_HDRS
+    ${${ARGS_NAME}_Plugin_HDRS}
+    ${${ARGS_NAME}_GENERATED_HEADERS}
+    )
 
-  target_sources(${PLUGIN_NAME}
+  target_sources(${ARGS_NAME}
     PRIVATE
-      ${${PLUGIN_NAME}_ALL_HDRS}
-      ${${PLUGIN_NAME}_Plugin_SRCS}
-  )
+    ${${ARGS_NAME}_ALL_HDRS}
+    ${${ARGS_NAME}_Plugin_SRCS}
+    )
 
-  source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} FILES ${${PLUGIN_NAME}_PLUGIN_FILTER_FILES})
+  source_group(TREE "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}" PREFIX ${ARGS_NAME} FILES ${${ARGS_NAME}_ARGS_FILTER_FILES})
 
-  target_include_directories(${PLUGIN_NAME}
-      PUBLIC
-      $<BUILD_INTERFACE:${${PLUGIN_NAME}_SOURCE_DIR}/src>
-      $<BUILD_INTERFACE:${PLUGIN_GENERATED_DIR}>
-      $<BUILD_INTERFACE:${COMPLEX_BINARY_DIR}/Plugins/${PLUGIN_NAME}>
-  )
+  target_include_directories(${ARGS_NAME}
+    PUBLIC
+    $<BUILD_INTERFACE:${${ARGS_NAME}_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${ARGS_GENERATED_DIR}>
+    $<BUILD_INTERFACE:${COMPLEX_BINARY_DIR}/Plugins/${ARGS_NAME}>
+    )
 
-  install(TARGETS ${PLUGIN_NAME}
-      PUBLIC_HEADER DESTINATION include/${PLUGIN_NAME}
-      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-          COMPONENT   ${PLUGIN_NAME}_Runtime
-      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-          COMPONENT   ${PLUGIN_NAME}_Runtime
-          NAMELINK_COMPONENT ${PLUGIN_NAME}_Development
-      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-          COMPONENT   ${PLUGIN_NAME}_Development
-  )
+  install(TARGETS ${ARGS_NAME}
+    PUBLIC_HEADER DESTINATION include/${ARGS_NAME}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT   ${ARGS_NAME}_Runtime
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT   ${ARGS_NAME}_Runtime
+    NAMELINK_COMPONENT ${ARGS_NAME}_Development
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT   ${ARGS_NAME}_Development
+    )
 
 endfunction()
 
@@ -254,6 +276,7 @@ function(create_complex_plugin_unit_test)
   #------------------------------------------------------------------------------
   # Convert the native path to a path that will be compatible with C++ source codes
   file(TO_CMAKE_PATH "${${ARGS_PLUGIN_NAME}_SOURCE_DIR}" PLUGIN_SOURCE_DIR_NORM)
+  file(TO_CMAKE_PATH "${complex_SOURCE_DIR}" COMPLEX_SOURCE_DIR_NORM)
 
   #------------------------------------------------------------------------------
   # Set the generated directory in the build folder, set the path to the generated

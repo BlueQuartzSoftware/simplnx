@@ -77,39 +77,39 @@ public:
    * @brief
    * @param newNumTris
    */
-  void resizeTriList(usize newNumTris);
+  void resizeFaceList(usize newNumTris);
 
   /**
    * @brief
    * @param triangles
    */
-  void setTriangles(const SharedTriList* triangles);
+  void setFaces(const SharedTriList* triangles);
 
   /**
    * @brief
    * @return SharedTriList*
    */
-  SharedTriList* getTriangles();
+  SharedTriList* getFaces();
 
   /**
    * @brief
    * @return const SharedTriList*
    */
-  const SharedTriList* getTriangles() const;
+  const SharedTriList* getFaces() const;
 
   /**
    * @brief
    * @param triId
    * @param verts
    */
-  void setVertsAtTri(usize triId, usize verts[3]);
+  void setVertexIdsForFace(usize triId, usize verts[3]);
 
   /**
    * @brief
    * @param triId
    * @param verts
    */
-  void getVertsAtTri(usize triId, usize verts[3]) const;
+  void getVertexIdsForFace(usize triId, usize verts[3]) const;
 
   /**
    * @brief
@@ -118,13 +118,13 @@ public:
    * @param vert2
    * @param vert3
    */
-  void getVertCoordsAtTri(usize triId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3) const;
+  void getVertexCoordsForFace(usize triId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3) const;
 
   /**
    * @brief
    * @return usize
    */
-  usize getNumberOfTris() const;
+  usize getNumberOfFaces() const;
 
   /**
    * @brief

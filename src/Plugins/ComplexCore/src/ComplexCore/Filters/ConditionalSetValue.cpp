@@ -8,8 +8,15 @@
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/TemplateHelpers.hpp"
 
+namespace
+{
+constexpr complex::int32 k_EMPTY_PARAMETER = -123;
+
+}
+
 namespace complex
 {
+
 std::string ConditionalSetValue::name() const
 {
   return FilterTraits<ConditionalSetValue>::name.str();
@@ -28,6 +35,11 @@ Uuid ConditionalSetValue::uuid() const
 std::string ConditionalSetValue::humanName() const
 {
   return "Replace Value in Array (Conditional)";
+}
+//------------------------------------------------------------------------------
+std::vector<std::string> ConditionalSetValue::defaultTags() const
+{
+  return {"#Core", "#Processing", "#DataArray"};
 }
 
 Parameters ConditionalSetValue::parameters() const
@@ -51,7 +63,7 @@ IFilter::PreflightResult ConditionalSetValue::preflightImpl(const DataStructure&
 
   if(replaceValueString.empty())
   {
-    return {MakeErrorResult<OutputActions>(-123, fmt::format("{}: Replacement parameter cannot be empty.{}({})", humanName(), __FILE__, __LINE__)), {}};
+    return {MakeErrorResult<OutputActions>(::k_EMPTY_PARAMETER, fmt::format("{}: Replacement parameter cannot be empty.{}({})", humanName(), __FILE__, __LINE__)), {}};
   }
 
   const DataObject& inputDataObject = dataStructure.getDataRef(selectedArrayPath);
@@ -65,7 +77,7 @@ IFilter::PreflightResult ConditionalSetValue::preflightImpl(const DataStructure&
   // convert the result from above to a Result<OutputActions> object and return. Note the
   // std::move() used for the `result` variable. We can do this because we will *NOT* be
   // using the variable past this line.
-  return {CovertResultTo<OutputActions>(std::move(result), {})};
+  return {ConvertResultTo<OutputActions>(std::move(result), {})};
 }
 
 Result<> ConditionalSetValue::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const

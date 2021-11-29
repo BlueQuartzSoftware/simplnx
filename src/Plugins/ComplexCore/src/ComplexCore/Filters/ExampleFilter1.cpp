@@ -71,6 +71,7 @@ IFilter::PreflightResult ExampleFilter1::preflightImpl(const DataStructure& data
   auto vec4f = filterArgs.value<VectorFloat32Parameter::ValueType>("Vec4F_Key");
   auto vec6 = filterArgs.value<VectorFloat32Parameter::ValueType>("Vec6F_Key");
 
+#if 0
   for(const auto& value : vec2)
   {
     std::cout << value << ", ";
@@ -100,7 +101,7 @@ IFilter::PreflightResult ExampleFilter1::preflightImpl(const DataStructure& data
     std::cout << value << ", ";
   }
   std::cout << std::endl;
-
+#endif
   return {};
 }
 

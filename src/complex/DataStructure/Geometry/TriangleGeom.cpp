@@ -105,12 +105,12 @@ std::string TriangleGeom::getGeometryTypeAsString() const
   return "TriangleGeom";
 }
 
-void TriangleGeom::resizeTriList(usize newNumTris)
+void TriangleGeom::resizeFaceList(usize newNumTris)
 {
-  getTriangles()->getDataStore()->reshapeTuples({newNumTris});
+  getFaces()->getDataStore()->reshapeTuples({newNumTris});
 }
 
-void TriangleGeom::setTriangles(const SharedTriList* triangles)
+void TriangleGeom::setFaces(const SharedTriList* triangles)
 {
   if(!triangles)
   {
@@ -120,19 +120,19 @@ void TriangleGeom::setTriangles(const SharedTriList* triangles)
   m_TriListId = triangles->getId();
 }
 
-AbstractGeometry::SharedTriList* TriangleGeom::getTriangles()
+AbstractGeometry::SharedTriList* TriangleGeom::getFaces()
 {
   return dynamic_cast<SharedTriList*>(getDataStructure()->getData(m_TriListId));
 }
 
-const AbstractGeometry::SharedTriList* TriangleGeom::getTriangles() const
+const AbstractGeometry::SharedTriList* TriangleGeom::getFaces() const
 {
   return dynamic_cast<const SharedTriList*>(getDataStructure()->getData(m_TriListId));
 }
 
-void TriangleGeom::setVertsAtTri(usize triId, usize verts[3])
+void TriangleGeom::setVertexIdsForFace(usize triId, usize verts[3])
 {
-  auto tris = getTriangles();
+  auto tris = getFaces();
   if(!tris)
   {
     return;
@@ -143,9 +143,9 @@ void TriangleGeom::setVertsAtTri(usize triId, usize verts[3])
   }
 }
 
-void TriangleGeom::getVertsAtTri(usize triId, usize verts[3]) const
+void TriangleGeom::getVertexIdsForFace(usize triId, usize verts[3]) const
 {
-  auto tris = getTriangles();
+  auto tris = getFaces();
   if(!tris)
   {
     return;
@@ -156,9 +156,9 @@ void TriangleGeom::getVertsAtTri(usize triId, usize verts[3]) const
   }
 }
 
-void TriangleGeom::getVertCoordsAtTri(usize triId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3) const
+void TriangleGeom::getVertexCoordsForFace(usize triId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3) const
 {
-  if(!getTriangles())
+  if(!getFaces())
   {
     return;
   }
@@ -167,15 +167,15 @@ void TriangleGeom::getVertCoordsAtTri(usize triId, Point3D<float32>& vert1, Poin
     return;
   }
   usize verts[3];
-  getVertsAtTri(triId, verts);
+  getVertexIdsForFace(triId, verts);
   vert1 = getCoords(verts[0]);
   vert2 = getCoords(verts[1]);
   vert3 = getCoords(verts[2]);
 }
 
-usize TriangleGeom::getNumberOfTris() const
+usize TriangleGeom::getNumberOfFaces() const
 {
-  auto tris = getTriangles();
+  auto tris = getFaces();
   if(!tris)
   {
     return 0;
@@ -186,19 +186,19 @@ usize TriangleGeom::getNumberOfTris() const
 void TriangleGeom::initializeWithZeros()
 {
   getVertices()->getDataStore()->fill(0.0f);
-  getTriangles()->getDataStore()->fill(0);
+  getFaces()->getDataStore()->fill(0);
 }
 
 usize TriangleGeom::getNumberOfElements() const
 {
-  return getTriangles()->getNumberOfTuples();
+  return getFaces()->getNumberOfTuples();
 }
 
 AbstractGeometry::StatusCode TriangleGeom::findElementSizes()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfTris()}, std::vector<usize>{1});
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfFaces()}, std::vector<usize>{1});
   Float32Array* triangleSizes = DataArray<float32>::Create(*getDataStructure(), "Triangle Areas", std::move(dataStore), getId());
-  GeometryHelpers::Topology::Find2DElementAreas(getTriangles(), getVertices(), triangleSizes);
+  GeometryHelpers::Topology::Find2DElementAreas(getFaces(), getVertices(), triangleSizes);
   if(triangleSizes == nullptr)
   {
     m_TriangleSizesId.reset();
@@ -222,7 +222,7 @@ void TriangleGeom::deleteElementSizes()
 AbstractGeometry::StatusCode TriangleGeom::findElementsContainingVert()
 {
   auto trianglesContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Triangles Containing Vert", getId());
-  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getTriangles(), trianglesContainingVert, getNumberOfVertices());
+  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), trianglesContainingVert, getNumberOfVertices());
   if(trianglesContainingVert == nullptr)
   {
     m_TrianglesContainingVertId.reset();
@@ -255,7 +255,7 @@ AbstractGeometry::StatusCode TriangleGeom::findElementNeighbors()
     }
   }
   auto triangleNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Triangle Neighbors", getId());
-  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getTriangles(), getElementsContainingVert(), triangleNeighbors, AbstractGeometry::Type::Triangle);
+  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), triangleNeighbors, AbstractGeometry::Type::Triangle);
   if(triangleNeighbors == nullptr)
   {
     m_TriangleNeighborsId.reset();
@@ -278,9 +278,9 @@ void TriangleGeom::deleteElementNeighbors()
 
 AbstractGeometry::StatusCode TriangleGeom::findElementCentroids()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfTris()}, std::vector<usize>{3});
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfFaces()}, std::vector<usize>{3});
   auto triangleCentroids = DataArray<float32>::Create(*getDataStructure(), "Triangle Centroids", std::move(dataStore), getId());
-  GeometryHelpers::Topology::FindElementCentroids(getTriangles(), getVertices(), triangleCentroids);
+  GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), triangleCentroids);
   if(triangleCentroids == nullptr)
   {
     m_TriangleCentroidsId.reset();
@@ -332,7 +332,7 @@ complex::TooltipGenerator TriangleGeom::getTooltipGenerator() const
   toolTipGen.addTitle("Geometry Info");
   toolTipGen.addValue("Type", "TriangleGeom");
   toolTipGen.addValue("Units", LengthUnitToString(getUnits()));
-  toolTipGen.addValue("Number of Triangles", std::to_string(getNumberOfTris()));
+  toolTipGen.addValue("Number of Triangles", std::to_string(getNumberOfFaces()));
   toolTipGen.addValue("Number of Vertices", std::to_string(getNumberOfVertices()));
 
   return toolTipGen;
@@ -382,7 +382,7 @@ AbstractGeometry::StatusCode TriangleGeom::findEdges()
 {
   auto dataStore = std::make_unique<DataStore<uint64>>(std::vector<usize>{0}, std::vector<usize>{2});
   DataArray<uint64>* edgeList = DataArray<uint64>::Create(*getDataStructure(), "Edge List", std::move(dataStore), getId());
-  GeometryHelpers::Connectivity::Find2DElementEdges(getTriangles(), edgeList);
+  GeometryHelpers::Connectivity::Find2DElementEdges(getFaces(), edgeList);
   if(edgeList == nullptr)
   {
     setEdges(nullptr);
@@ -417,7 +417,7 @@ AbstractGeometry::StatusCode TriangleGeom::findUnsharedEdges()
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2});
   auto unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", std::move(dataStore), getId());
-  GeometryHelpers::Connectivity::Find2DUnsharedEdges(getTriangles(), unsharedEdgeList);
+  GeometryHelpers::Connectivity::Find2DUnsharedEdges(getFaces(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
     setUnsharedEdges(nullptr);
