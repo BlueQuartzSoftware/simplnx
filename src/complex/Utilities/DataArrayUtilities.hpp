@@ -1,14 +1,12 @@
 #pragma once
 
-#include "complex/complex_export.hpp"
 #include "complex/Common/Result.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
 #include "complex/Filter/Output.hpp"
 #include "complex/Utilities/TemplateHelpers.hpp"
-#include "complex/Filter/Output.hpp"
-
+#include "complex/complex_export.hpp"
 
 #include <iostream>
 #include <string>
