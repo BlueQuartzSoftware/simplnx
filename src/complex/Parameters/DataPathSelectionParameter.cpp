@@ -71,16 +71,16 @@ typename DataPathSelectionParameter::ValueType DataPathSelectionParameter::defau
   return m_DefaultValue;
 }
 
-Result<> DataPathSelectionParameter::validate(const DataStructure& dataStructure, const std::string& key, const std::any& value) const
+Result<> DataPathSelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
   auto path = std::any_cast<ValueType>(value);
 
-  return validatePath(dataStructure, key, path);
+  return validatePath(dataStructure, path);
 }
 
-Result<> DataPathSelectionParameter::validatePath(const DataStructure& dataStructure, const std::string& key, const DataPath& value) const
+Result<> DataPathSelectionParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
 {
-  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", key);
+  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
 
   if(value.empty())
   {

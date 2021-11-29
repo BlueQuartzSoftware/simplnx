@@ -70,14 +70,14 @@ public:
    * @param value
    * @return
    */
-  Result<> validate(const DataStructure& dataStructure, const std::string& key, const std::any& value) const override;
+  Result<> validate(const DataStructure& dataStructure, const std::any& value) const override;
 
   /**
    * @brief
    * @param value
    * @return
    */
-  Result<> validatePath(const DataStructure& dataStructure, const std::string& key, const DataPath& value) const;
+  Result<> validatePath(const DataStructure& dataStructure, const DataPath& value) const;
 
   /**
    * @brief

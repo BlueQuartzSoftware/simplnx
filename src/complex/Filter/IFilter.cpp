@@ -83,7 +83,7 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
     }
     case IParameter::Type::Data: {
       const auto* dataStructureParameter = static_cast<const DataParameter*>(parameter.get());
-      Result result = dataStructureParameter->validate(data, name, constructedArg);
+      Result result = dataStructureParameter->validate(data, constructedArg);
       moveResult(result, errors, warnings);
       if(!result.valid())
       {

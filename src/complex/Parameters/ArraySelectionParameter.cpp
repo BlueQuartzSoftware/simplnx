@@ -62,16 +62,16 @@ typename ArraySelectionParameter::ValueType ArraySelectionParameter::defaultPath
   return m_DefaultValue;
 }
 
-Result<> ArraySelectionParameter::validate(const DataStructure& dataStructure, const std::string& key, const std::any& value) const
+Result<> ArraySelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
   auto path = std::any_cast<ValueType>(value);
 
-  return validatePath(dataStructure, key, path);
+  return validatePath(dataStructure, path);
 }
 
-Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructure, const std::string& key, const DataPath& value) const
+Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
 {
-  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", key);
+  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
 
   if(value.empty())
   {

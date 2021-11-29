@@ -64,16 +64,16 @@ typename DataGroupSelectionParameter::ValueType DataGroupSelectionParameter::def
   return m_DefaultValue;
 }
 
-Result<> DataGroupSelectionParameter::validate(const DataStructure& dataStructure, const std::string& key, const std::any& value) const
+Result<> DataGroupSelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
   auto path = std::any_cast<ValueType>(value);
 
-  return validatePath(dataStructure, key, path);
+  return validatePath(dataStructure, path);
 }
 
-Result<> DataGroupSelectionParameter::validatePath(const DataStructure& dataStructure, const std::string& key, const DataPath& value) const
+Result<> DataGroupSelectionParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
 {
-  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", key);
+  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
 
   if(value.empty())
   {
