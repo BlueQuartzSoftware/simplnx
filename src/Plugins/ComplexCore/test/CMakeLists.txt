@@ -12,6 +12,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CreateImageGeometryTest.cpp
   StlFileReaderTest.cpp
   CalculateTriangleAreasFilterTest.cpp
+  LaplacianSmoothingFilterTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}

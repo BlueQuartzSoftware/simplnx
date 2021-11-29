@@ -5,6 +5,18 @@
 
 namespace complex
 {
+
+namespace NodeType
+{
+inline constexpr int8_t Unused = 0;
+inline constexpr int8_t Default = 2;
+inline constexpr int8_t TriplePoint = 3;
+inline constexpr int8_t QuadPoint = 4;
+inline constexpr int8_t SurfaceDefault = 12;
+inline constexpr int8_t SurfaceTriplePoint = 13;
+inline constexpr int8_t SurfaceQuadPoint = 14;
+} // namespace NodeType
+
 /**
  * @class AbstractGeometry2D
  * @brief

@@ -25,6 +25,7 @@ set(FilterList
   ExampleFilter2
   StlFileReaderFilter
   CalculateTriangleAreasFilter
+  LaplacianSmoothingFilter
 )
 
 set(ActionList
@@ -32,7 +33,7 @@ set(ActionList
 
 set(AlgorithmList
   StlFileReader
-
+  LaplacianSmoothing
   )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
