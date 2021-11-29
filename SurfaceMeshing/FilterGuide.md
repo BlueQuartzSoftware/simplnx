@@ -8,7 +8,7 @@
 | FindTriangleGeomShapes | TRUE  | | | |
 | FindTriangleGeomSizes | TRUE  | | | |
 | GenerateGeometryConnectivity | TRUE  | | | |
-| QuickSurfaceMesh | TRUE  | | | |
+| QuickSurfaceMeshFilter | TRUE  | | | |
 | ReverseTriangleWinding | TRUE  | | | |
 | SharedFeatureFaceFilter | TRUE  | | | |
 | TriangleCentroidFilter | TRUE  | | | |
