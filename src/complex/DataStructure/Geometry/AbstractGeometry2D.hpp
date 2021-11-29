@@ -17,6 +17,9 @@ public:
    */
   ~AbstractGeometry2D() override;
 
+  AbstractGeometry2D& operator=(const AbstractGeometry2D&) = delete;
+  AbstractGeometry2D& operator=(AbstractGeometry2D&&) noexcept = delete;
+
   /**
    * @brief Resizes the vertex list with the new number of vertices.
    * @param newNumVertices

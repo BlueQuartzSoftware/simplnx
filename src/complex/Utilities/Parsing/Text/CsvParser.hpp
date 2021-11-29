@@ -91,15 +91,16 @@ Result<> ReadFile(const fs::path& inputPath, DataArray<T>& data, uint64 skipLine
 }
 
 template <class T>
-DataArray<T>& ArrayFromPath(DataStructure& data, const DataPath& path)
+DataArray<T>* ArrayFromPath(DataStructure& data, const DataPath& path)
 {
+  using DataArrayType = DataArray<T>;
   DataObject* object = data.getData(path);
-  DataArray<T>* dataArray = dynamic_cast<DataArray<T>*>(object);
+  DataArrayType* dataArray = dynamic_cast<DataArrayType*>(object);
   if(dataArray == nullptr)
   {
     throw std::runtime_error("Can't obtain DataArray");
   }
-  return *dataArray;
+  return dataArray;
 }
 
 char IndexToDelimiter(uint64 index)

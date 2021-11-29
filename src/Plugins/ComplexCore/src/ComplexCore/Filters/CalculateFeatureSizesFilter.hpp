@@ -10,20 +10,20 @@
 namespace complex
 {
 /**
- * @class FindSizes
+ * @class CalculateFeatureSizesFilter
  * @brief
  */
-class COMPLEXCORE_EXPORT FindSizes : public IFilter
+class COMPLEXCORE_EXPORT CalculateFeatureSizesFilter : public IFilter
 {
 public:
-  FindSizes() = default;
-  ~FindSizes() noexcept override = default;
+  CalculateFeatureSizesFilter() = default;
+  ~CalculateFeatureSizesFilter() noexcept override = default;
 
-  FindSizes(const FindSizes&) = delete;
-  FindSizes(FindSizes&&) noexcept = delete;
+  CalculateFeatureSizesFilter(const CalculateFeatureSizesFilter&) = delete;
+  CalculateFeatureSizesFilter(CalculateFeatureSizesFilter&&) noexcept = delete;
 
-  FindSizes& operator=(const FindSizes&) = delete;
-  FindSizes& operator=(FindSizes&&) noexcept = delete;
+  CalculateFeatureSizesFilter& operator=(const CalculateFeatureSizesFilter&) = delete;
+  CalculateFeatureSizesFilter& operator=(CalculateFeatureSizesFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SaveElementSizes_Key = "save_element_sizes";
@@ -56,6 +56,12 @@ public:
    * @return std::string
    */
   std::string humanName() const override;
+
+  /**
+   * @brief Returns the default tags for this filter.
+   * @return
+   */
+  std::vector<std::string> defaultTags() const override;
 
   /**
    * @brief Returns the filter's Parameters.
@@ -117,4 +123,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindSizes, "30e6f5e9-7949-4c14-aaef-0a68c93c1fd5");
+COMPLEX_DEF_FILTER_TRAITS(complex, CalculateFeatureSizesFilter, "30e6f5e9-7949-4c14-aaef-0a68c93c1fd5");

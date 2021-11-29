@@ -170,6 +170,20 @@ public:
    */
   Result<Arguments> fromJson(const nlohmann::json& json) const;
 
+  /**
+   * @brief Signals to the filter to stop execution. It is up to the filter to check
+   * this variable during its execution and act upon it.
+   * @param cancel
+   */
+  void setCanceled(bool cancel);
+
+  /**
+   * @brief Returns if this filter has been canceled. Note that the filter may still be running until the filter checks
+   * this value
+   * @return
+   */
+  bool isCanceled() const;
+
 protected:
   IFilter() = default;
 
@@ -193,6 +207,9 @@ protected:
    * @return Result<>
    */
   virtual Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const = 0;
+
+private:
+  bool m_Cancel = {false};
 };
 
 using FilterCreationFunc = IFilter::UniquePointer (*)();
