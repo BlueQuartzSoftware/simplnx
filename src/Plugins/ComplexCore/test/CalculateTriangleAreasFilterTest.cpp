@@ -16,7 +16,7 @@
 namespace fs = std::filesystem;
 
 using namespace complex;
-using namespace complex::UnitTest::Constants;
+using namespace complex::Constants;
 
 TEST_CASE("ComplexCore::CalculateTriangleAreasFilter: Instantiation and Parameter Check", "[ComplexCore][CalculateTriangleAreasFilter]")
 {
@@ -86,8 +86,6 @@ TEST_CASE("ComplexCore::CalculateTriangleAreasFilter: Instantiation and Paramete
     }
     REQUIRE(sumOfAreas > 7098.90);
     REQUIRE(sumOfAreas < 7098.94);
-
-    std::cout << "Sum Of Areas: " << sumOfAreas << std::endl;
   }
 
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/TriangleAreas.dream3d", unit_test::k_BinaryDir));

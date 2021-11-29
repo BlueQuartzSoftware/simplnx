@@ -59,34 +59,36 @@ typename ArrayThresholdsParameter::ValueType ArrayThresholdsParameter::defaultPa
   return m_DefaultValue;
 }
 
-Result<> ArrayThresholdsParameter::validate(const DataStructure& dataStructure, const std::any& value) const
+Result<> ArrayThresholdsParameter::validate(const DataStructure& dataStructure, const std::string& key, const std::any& value) const
 {
   auto threshold = std::any_cast<ValueType>(value);
 
-  return validatePaths(dataStructure, threshold);
+  return validatePaths(dataStructure, key, threshold);
 }
 
-Result<> ArrayThresholdsParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
+Result<> ArrayThresholdsParameter::validatePath(const DataStructure& dataStructure, const std::string& key, const DataPath& value) const
 {
+  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", key);
+
   if(value.empty())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, "DataPath cannot be empty"}})};
+    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
   const DataObject* object = dataStructure.getData(value);
   if(object != nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("Object already exists at path \"{}\"", value.toString())}})};
+    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_ExistingValue, fmt::format("{}Object exists at path '{}'", prefix, value.toString()));
   }
 
   return {};
 }
 
-Result<> ArrayThresholdsParameter::validatePaths(const DataStructure& dataStructure, const ValueType& value) const
+Result<> ArrayThresholdsParameter::validatePaths(const DataStructure& dataStructure, const std::string& key, const ValueType& value) const
 {
   auto paths = value.getRequiredPaths();
   for(const auto& path : paths)
   {
-    auto validation = validatePath(dataStructure, path);
+    auto validation = validatePath(dataStructure, key, path);
     if(validation.invalid())
     {
       return validation;

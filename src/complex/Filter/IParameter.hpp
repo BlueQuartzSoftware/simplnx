@@ -34,6 +34,8 @@ inline constexpr int32 k_Json_Value_Not_Value_Type = -106;
 inline constexpr int32 k_Validate_Empty_Value = -201;
 inline constexpr int32 k_Validate_ExistingValue = -202;
 inline constexpr int32 k_Validate_DuplicateValue = -203;
+inline constexpr int32 k_Validate_Does_Not_Exist = -204;
+inline constexpr int32 k_Validate_Type_Error = -205;
 
 } // namespace FilterParameter::Constants
 

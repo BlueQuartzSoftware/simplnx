@@ -26,6 +26,7 @@ set(FilterList
   StlFileReaderFilter
   CalculateTriangleAreasFilter
   LaplacianSmoothingFilter
+  QuickSurfaceMeshFilter
 )
 
 set(ActionList
@@ -34,6 +35,7 @@ set(ActionList
 set(AlgorithmList
   StlFileReader
   LaplacianSmoothing
+  QuickSurfaceMesh
   )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}

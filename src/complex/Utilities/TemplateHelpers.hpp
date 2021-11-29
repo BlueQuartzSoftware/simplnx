@@ -130,6 +130,64 @@
     /*  observableObj->setErrorConditionWithPrefix(TemplateHelpers::Errors::UnsupportedDataType, #templateName, "The input array was of unsupported type"); */                                         \
   }
 
+/**
+ * @brief This macro includes the 'bool' type.
+ */
+#define EXECUTE_FUNCTION_TEMPLATE2(observableObj, templateName, inputDataPath, ...)                                                                                                                    \
+  auto* inputData = m_DataStructure.getDataAs<IDataArray>(inputDataPath);                                                                                                                              \
+  if(TemplateHelpers::CanDynamicCast<Float32Array>()(inputData))                                                                                                                                       \
+  {                                                                                                                                                                                                    \
+    templateName<float>(__VA_ARGS__);                                                                                                                                                                  \
+  }                                                                                                                                                                                                    \
+  else if(TemplateHelpers::CanDynamicCast<Float64Array>()(inputData))                                                                                                                                  \
+  {                                                                                                                                                                                                    \
+    templateName<double>(__VA_ARGS__);                                                                                                                                                                 \
+  }                                                                                                                                                                                                    \
+  else if(TemplateHelpers::CanDynamicCast<Int8Array>()(inputData))                                                                                                                                     \
+  {                                                                                                                                                                                                    \
+    templateName<int8_t>(__VA_ARGS__);                                                                                                                                                                 \
+  }                                                                                                                                                                                                    \
+  else if(TemplateHelpers::CanDynamicCast<UInt8Array>()(inputData))                                                                                                                                    \
+  {                                                                                                                                                                                                    \
+    templateName<uint8_t>(__VA_ARGS__);                                                                                                                                                                \
+  }                                                                                                                                                                                                    \
+  else if(TemplateHelpers::CanDynamicCast<Int16Array>()(inputData))                                                                                                                                    \
+  {                                                                                                                                                                                                    \
+    templateName<int16_t>(__VA_ARGS__);                                                                                                                                                                \
+  }                                                                                                                                                                                                    \
+  else if(TemplateHelpers::CanDynamicCast<UInt16Array>()(inputData))                                                                                                                                   \
+  {                                                                                                                                                                                                    \
+    templateName<uint16_t>(__VA_ARGS__);                                                                                                                                                               \
+  }                                                                                                                                                                                                    \
+  else if(TemplateHelpers::CanDynamicCast<Int32Array>()(inputData))                                                                                                                                    \
+  {                                                                                                                                                                                                    \
+    templateName<int32_t>(__VA_ARGS__);                                                                                                                                                                \
+  }                                                                                                                                                                                                    \
+  else if(TemplateHelpers::CanDynamicCast<UInt32Array>()(inputData))                                                                                                                                   \
+  {                                                                                                                                                                                                    \
+    templateName<uint32_t>(__VA_ARGS__);                                                                                                                                                               \
+  }                                                                                                                                                                                                    \
+  else if(TemplateHelpers::CanDynamicCast<Int64Array>()(inputData))                                                                                                                                    \
+  {                                                                                                                                                                                                    \
+    templateName<int64_t>(__VA_ARGS__);                                                                                                                                                                \
+  }                                                                                                                                                                                                    \
+  else if(TemplateHelpers::CanDynamicCast<UInt64Array>()(inputData))                                                                                                                                   \
+  {                                                                                                                                                                                                    \
+    templateName<uint64_t>(__VA_ARGS__);                                                                                                                                                               \
+  }                                                                                                                                                                                                    \
+  else if(TemplateHelpers::CanDynamicCast<BoolArray>()(inputData))                                                                                                                                     \
+  {                                                                                                                                                                                                    \
+    templateName<bool>(__VA_ARGS__);                                                                                                                                                                   \
+  }                                                                                                                                                                                                    \
+  else if(TemplateHelpers::CanDynamicCast<DataArray<size_t>>()(inputData))                                                                                                                             \
+  {                                                                                                                                                                                                    \
+    templateName<size_t>(__VA_ARGS__);                                                                                                                                                                 \
+  }                                                                                                                                                                                                    \
+  else                                                                                                                                                                                                 \
+  {                                                                                                                                                                                                    \
+    throw std::runtime_error("The input array was of unsupported type");                                                                                                                               \
+  }
+
 namespace complex
 {
 namespace TemplateHelpers

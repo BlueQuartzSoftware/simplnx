@@ -82,6 +82,24 @@ public:
   }
 
   /**
+   * @brief Returns the dimensions of the Tuples
+   * @return
+   */
+  const ShapeType& getTupleShape() const override
+  {
+    return m_TupleShape;
+  }
+
+  /**
+   * @brief Returns the dimensions of the Components
+   * @return
+   */
+  const ShapeType& getComponentShape() const override
+  {
+    return m_ComponentShape;
+  }
+
+  /**
    * @brief Throws an exception because this should never be called. The
    * EmptyDataStore class contains no data other than its target size.
    * @param tupleShape

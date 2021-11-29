@@ -62,16 +62,16 @@ typename DataGroupCreationParameter::ValueType DataGroupCreationParameter::defau
   return m_DefaultValue;
 }
 
-Result<> DataGroupCreationParameter::validate(const DataStructure& dataStructure, const std::any& value) const
+Result<> DataGroupCreationParameter::validate(const DataStructure& dataStructure, const std::string& key, const std::any& value) const
 {
   auto path = std::any_cast<ValueType>(value);
 
-  return validatePath(dataStructure, path);
+  return validatePath(dataStructure, key, path);
 }
 
-Result<> DataGroupCreationParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
+Result<> DataGroupCreationParameter::validatePath(const DataStructure& dataStructure, const std::string& key, const DataPath& value) const
 {
-  const std::string prefix("FilterParameter 'DataGroupCreationParameter' Validation Error: ");
+  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", key);
 
   if(value.empty())
   {

@@ -75,7 +75,7 @@ public:
   {
     auto dataStore = std::make_shared<DataStoreType>(tupleShape, componentShape);
 
-    auto data = std::shared_ptr<DataArray>(new DataArray(ds, std::move(name), std::move(dataStore)));
+    auto data = std::shared_ptr<DataArray>(new DataArray(ds, name, std::move(dataStore)));
     if(!AttemptToAddObject(ds, data, parentId))
     {
       return nullptr;

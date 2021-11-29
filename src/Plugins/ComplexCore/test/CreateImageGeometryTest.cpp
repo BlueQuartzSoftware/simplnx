@@ -31,6 +31,7 @@
 #include "ComplexCore/Filters/CreateImageGeometry.hpp"
 
 using namespace complex;
+using namespace complex::Constants;
 
 namespace fs = std::filesystem;
 
@@ -53,10 +54,10 @@ TEST_CASE("ComplexCore::CreateImageGeometry: Instantiation and Parameter Check",
   VectorUInt64Parameter::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
 
   DataStructure dataGraph = complex::UnitTest::CreateAllPrimitiveTypes(imageDims);
-  //  DataGroup* levelZeroGroup = DataGroup::Create(dataGraph, ComplexUnitTest::Constants::k_LevelZero);
-  //  DataGroup* levelOneGroup = DataGroup::Create(dataGraph, ComplexUnitTest::Constants::k_LevelOne, levelZeroGroup->getId());
+  //  DataGroup* levelZeroGroup = DataGroup::Create(dataGraph, Complexk_LevelZero);
+  //  DataGroup* levelOneGroup = DataGroup::Create(dataGraph, Complexk_LevelOne, levelZeroGroup->getId());
 
-  DataPath selectedDataGroupPath({complex::UnitTest::Constants::k_LevelZero, complex::UnitTest::Constants::k_LevelOne});
+  DataPath selectedDataGroupPath({k_LevelZero, k_LevelOne});
   Arguments args;
   // Create default Parameters for the filter.
   args.insertOrAssign(CreateImageGeometry::k_SelectedDataGroup_Key, std::make_any<DataPath>(selectedDataGroupPath));

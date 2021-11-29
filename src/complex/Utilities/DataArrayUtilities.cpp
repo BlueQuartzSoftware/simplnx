@@ -105,4 +105,66 @@ Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObjec
   return {MakeErrorResult(-260, fmt::format("Input DataObject could not be cast to any primitive type."))};
 }
 
+#define DAU_BODY(type)                                                                                                                                                                                 \
+  DataArray<type>* castInputArray = dynamic_cast<DataArray<type>*>(inputDataArray);                                                                                                                    \
+  IDataStore<type>::ShapeType componentShape = castInputArray->getDataStore()->getComponentShape();                                                                                                    \
+  dataStructure.removeData(dataPath);                                                                                                                                                                  \
+  return CreateArray<type>(dataStructure, tupleShape, componentShape, dataPath, mode);
+
+Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath& dataPath, std::vector<usize>& tupleShape, complex::IDataAction::Mode mode)
+{
+  auto* inputDataArray = dataStructure.getDataAs<IDataArray>(dataPath);
+
+  if(TemplateHelpers::CanDynamicCast<Float32Array>()(inputDataArray))
+  {
+    DAU_BODY(float)
+  }
+  if(TemplateHelpers::CanDynamicCast<Float64Array>()(inputDataArray))
+  {
+    DAU_BODY(double)
+  }
+  if(TemplateHelpers::CanDynamicCast<Int8Array>()(inputDataArray))
+  {
+    DAU_BODY(int8_t)
+  }
+  if(TemplateHelpers::CanDynamicCast<UInt8Array>()(inputDataArray))
+  {
+    DAU_BODY(uint8_t)
+  }
+  if(TemplateHelpers::CanDynamicCast<Int16Array>()(inputDataArray))
+  {
+    DAU_BODY(int16_t)
+  }
+  if(TemplateHelpers::CanDynamicCast<UInt16Array>()(inputDataArray))
+  {
+    DAU_BODY(uint16_t)
+  }
+  if(TemplateHelpers::CanDynamicCast<Int32Array>()(inputDataArray))
+  {
+    DAU_BODY(int32_t)
+  }
+  if(TemplateHelpers::CanDynamicCast<UInt32Array>()(inputDataArray))
+  {
+    DAU_BODY(uint32_t)
+  }
+  if(TemplateHelpers::CanDynamicCast<Int64Array>()(inputDataArray))
+  {
+    DAU_BODY(int64_t)
+  }
+  if(TemplateHelpers::CanDynamicCast<UInt64Array>()(inputDataArray))
+  {
+    DAU_BODY(uint64_t)
+  }
+  if(TemplateHelpers::CanDynamicCast<BoolArray>()(inputDataArray))
+  {
+    DAU_BODY(bool)
+  }
+  if(TemplateHelpers::CanDynamicCast<DataArray<size_t>>()(inputDataArray))
+  {
+    DAU_BODY(size_t)
+  }
+
+  return MakeErrorResult(-401, fmt::format("The input array at DataPath '{}' was of an unsupported type", dataPath.toString()));
+}
+
 } // namespace complex

@@ -56,7 +56,7 @@ public:
    * @param value The value to validate
    * @return
    */
-  virtual Result<> validate(const DataStructure& dataStructure, const std::any& value) const = 0;
+  virtual Result<> validate(const DataStructure& dataStructure, const std::string& key, const std::any& value) const = 0;
 
 protected:
   DataParameter() = delete;

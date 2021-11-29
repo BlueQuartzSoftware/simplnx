@@ -10,7 +10,7 @@
 #include <string>
 
 using namespace complex;
-using namespace complex::UnitTest::Constants;
+using namespace complex::Constants;
 
 namespace
 {
@@ -150,9 +150,9 @@ TEST_CASE("ConditionalSetValue: Overflow/Underflow", "[ConditionalSetValue]")
   DataStructure dataGraph = UnitTest::CreateAllPrimitiveTypes(imageDims);
 
   // Get the DataGroups that we are going to add an Image Geometry into
-  DataGroup* levelOneGroup = dataGraph.getDataAs<DataGroup>(DataPath({UnitTest::Constants::k_LevelZero, UnitTest::Constants::k_LevelOne}));
+  DataGroup* levelOneGroup = dataGraph.getDataAs<DataGroup>(DataPath({k_LevelZero, k_LevelOne}));
   REQUIRE(levelOneGroup != nullptr);
-  DataGroup* levelTwoGroup = dataGraph.getDataAs<DataGroup>(DataPath({UnitTest::Constants::k_LevelZero, UnitTest::Constants::k_LevelTwo}));
+  DataGroup* levelTwoGroup = dataGraph.getDataAs<DataGroup>(DataPath({k_LevelZero, k_LevelTwo}));
   REQUIRE(levelTwoGroup != nullptr);
 
   // Add an ImageGeometry into each DataGroup
@@ -161,52 +161,52 @@ TEST_CASE("ConditionalSetValue: Overflow/Underflow", "[ConditionalSetValue]")
 
   // Create a bool array where every value is TRUE
   std::vector<usize> tupleShape = {imageDims[2], imageDims[1], imageDims[0]};
-  BoolArray* conditionalArray1 = UnitTest::CreateTestDataArray<bool>(dataGraph, UnitTest::Constants::k_ConditionalArray, tupleShape, {1}, levelOneGroup->getId());
+  BoolArray* conditionalArray1 = UnitTest::CreateTestDataArray<bool>(dataGraph, k_ConditionalArray, tupleShape, {1}, levelOneGroup->getId());
   conditionalArray1->fill(true);
-  BoolArray* conditionalArray2 = UnitTest::CreateTestDataArray<bool>(dataGraph, UnitTest::Constants::k_ConditionalArray, tupleShape, {1}, levelTwoGroup->getId());
+  BoolArray* conditionalArray2 = UnitTest::CreateTestDataArray<bool>(dataGraph, k_ConditionalArray, tupleShape, {1}, levelTwoGroup->getId());
   conditionalArray2->fill(true);
 
-  DataPath conditionalDataPath({UnitTest::Constants::k_LevelZero, UnitTest::Constants::k_LevelOne, UnitTest::Constants::k_ConditionalArray});
+  DataPath conditionalDataPath({k_LevelZero, k_LevelOne, k_ConditionalArray});
 
-  DataPath selectedDataPath = DataPath({UnitTest::Constants::k_LevelZero, UnitTest::Constants::k_LevelOne, UnitTest::Constants::k_Int8});
+  DataPath selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Int8DataSet});
   ConditionalSetValueOverFlowTest<int8>(dataGraph, selectedDataPath, conditionalDataPath, "-130"); // underflow
   ConditionalSetValueOverFlowTest<int8>(dataGraph, selectedDataPath, conditionalDataPath, "130");  // overflow
 
-  selectedDataPath = DataPath({UnitTest::Constants::k_LevelZero, UnitTest::Constants::k_LevelOne, UnitTest::Constants::k_Uint8});
+  selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Uint8DataSet});
   ConditionalSetValueOverFlowTest<uint8>(dataGraph, selectedDataPath, conditionalDataPath, "-1");  // underflow
   ConditionalSetValueOverFlowTest<uint8>(dataGraph, selectedDataPath, conditionalDataPath, "260"); // overflow
 
-  selectedDataPath = DataPath({UnitTest::Constants::k_LevelZero, UnitTest::Constants::k_LevelOne, UnitTest::Constants::k_Int16});
+  selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Int16DataSet});
   ConditionalSetValueOverFlowTest<int16>(dataGraph, selectedDataPath, conditionalDataPath, "-32770"); // underflow
   ConditionalSetValueOverFlowTest<int16>(dataGraph, selectedDataPath, conditionalDataPath, "32770");  // overflow
 
-  selectedDataPath = DataPath({UnitTest::Constants::k_LevelZero, UnitTest::Constants::k_LevelOne, UnitTest::Constants::k_Uint16});
+  selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Uint16DataSet});
   ConditionalSetValueOverFlowTest<uint16>(dataGraph, selectedDataPath, conditionalDataPath, "-1");    // underflow
   ConditionalSetValueOverFlowTest<uint16>(dataGraph, selectedDataPath, conditionalDataPath, "65537"); // overflow
 
-  selectedDataPath = DataPath({UnitTest::Constants::k_LevelZero, UnitTest::Constants::k_LevelOne, UnitTest::Constants::k_Int32});
+  selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Int32DataSet});
   ConditionalSetValueOverFlowTest<int32>(dataGraph, selectedDataPath, conditionalDataPath, "-2147483649"); // underflow
   ConditionalSetValueOverFlowTest<int32>(dataGraph, selectedDataPath, conditionalDataPath, "2147483649");  // overflow
 
-  selectedDataPath = DataPath({UnitTest::Constants::k_LevelZero, UnitTest::Constants::k_LevelOne, UnitTest::Constants::k_Uint32});
+  selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Uint32DataSet});
   ConditionalSetValueOverFlowTest<uint32>(dataGraph, selectedDataPath, conditionalDataPath, "-1");         // underflow
   ConditionalSetValueOverFlowTest<uint32>(dataGraph, selectedDataPath, conditionalDataPath, "4294967297"); // overflow
 
-  selectedDataPath = DataPath({UnitTest::Constants::k_LevelZero, UnitTest::Constants::k_LevelOne, UnitTest::Constants::k_Int64});
+  selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Int64DataSet});
   ConditionalSetValueOverFlowTest<int64>(dataGraph, selectedDataPath, conditionalDataPath, "-92233720368547758080"); // underflow
   ConditionalSetValueOverFlowTest<int64>(dataGraph, selectedDataPath, conditionalDataPath, "92233720368547758080");  // overflow
 
-  selectedDataPath = DataPath({UnitTest::Constants::k_LevelZero, UnitTest::Constants::k_LevelOne, UnitTest::Constants::k_Uint64});
+  selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Uint64DataSet});
   ConditionalSetValueOverFlowTest<uint64>(dataGraph, selectedDataPath, conditionalDataPath, "-1");                    // underflow
   ConditionalSetValueOverFlowTest<uint64>(dataGraph, selectedDataPath, conditionalDataPath, "184467440737095516150"); // overflow
 
-  selectedDataPath = DataPath({UnitTest::Constants::k_LevelZero, UnitTest::Constants::k_LevelOne, UnitTest::Constants::k_Float32});
+  selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Float32DataSet});
   ConditionalSetValueOverFlowTest<float32>(dataGraph, selectedDataPath, conditionalDataPath, "1.17549e-039");  // underflow
   ConditionalSetValueOverFlowTest<float32>(dataGraph, selectedDataPath, conditionalDataPath, "3.40282e+039");  // overflow
   ConditionalSetValueOverFlowTest<float32>(dataGraph, selectedDataPath, conditionalDataPath, "-1.17549e-039"); // underflow
   ConditionalSetValueOverFlowTest<float32>(dataGraph, selectedDataPath, conditionalDataPath, "-3.40282e+039"); // overflow
 
-  selectedDataPath = DataPath({UnitTest::Constants::k_LevelZero, UnitTest::Constants::k_LevelOne, UnitTest::Constants::k_Float64});
+  selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Float64DataSet});
   ConditionalSetValueOverFlowTest<float64>(dataGraph, selectedDataPath, conditionalDataPath, "2.22507e-309");  // underflow
   ConditionalSetValueOverFlowTest<float64>(dataGraph, selectedDataPath, conditionalDataPath, "1.79769e+309");  // overflow
   ConditionalSetValueOverFlowTest<float64>(dataGraph, selectedDataPath, conditionalDataPath, "-2.22507e-309"); // underflow

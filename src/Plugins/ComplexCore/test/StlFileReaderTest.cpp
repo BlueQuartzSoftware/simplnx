@@ -15,7 +15,7 @@
 namespace fs = std::filesystem;
 
 using namespace complex;
-using namespace complex::UnitTest::Constants;
+using namespace complex::Constants;
 
 TEST_CASE("ComplexCore::StlFileReaderFilter: Instantiation and Parameter Check", "[ComplexCore][StlFileReaderFilter]")
 {
