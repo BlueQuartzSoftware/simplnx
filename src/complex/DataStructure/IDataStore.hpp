@@ -256,12 +256,23 @@ public:
    * @return usize
    */
   virtual usize getNumberOfTuples() const = 0;
+  /**
+   * @brief Returns the dimensions of the Tuples
+   * @return
+   */
+  virtual const ShapeType& getTupleShape() const = 0;
 
   /**
    * @brief Returns the number of components.
    * @return usize
    */
   virtual usize getNumberOfComponents() const = 0;
+
+  /**
+   * @brief Returns the dimensions of the Components
+   * @return
+   */
+  virtual const ShapeType& getComponentShape() const = 0;
 
   /**
    * @brief Returns the number of values stored within the DataStore.

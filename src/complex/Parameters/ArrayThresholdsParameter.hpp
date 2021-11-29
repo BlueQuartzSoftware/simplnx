@@ -72,14 +72,14 @@ public:
    * @param value
    * @return Result<>
    */
-  Result<> validate(const DataStructure& dataStructure, const std::any& value) const override;
+  Result<> validate(const DataStructure& dataStructure, const std::string& key, const std::any& value) const override;
 
   /**
    * @brief
    * @param value
    * @return Result<>
    */
-  Result<> validatePath(const DataStructure& dataStructure, const DataPath& value) const;
+  Result<> validatePath(const DataStructure& dataStructure, const std::string& key, const DataPath& value) const;
 
   /**
    * @brief
@@ -96,7 +96,7 @@ protected:
    * @param value
    * @return Result<>
    */
-  Result<> validatePaths(const DataStructure& dataStructure, const ValueType& value) const;
+  Result<> validatePaths(const DataStructure& dataStructure, const std::string& key, const ValueType& value) const;
 
 private:
   ValueType m_DefaultValue = {};

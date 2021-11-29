@@ -11,7 +11,7 @@
 namespace complex
 {
 
-struct LaplacianSmoothingInputValues
+struct COMPLEXCORE_EXPORT LaplacianSmoothingInputValues
 {
   DataPath pTriangleGeometryDataPath;
   int32 pIterationSteps;

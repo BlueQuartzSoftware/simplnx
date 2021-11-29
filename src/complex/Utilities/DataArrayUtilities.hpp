@@ -4,12 +4,16 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
+#include "complex/DataStructure/IDataStore.hpp"
 #include "complex/Filter/Output.hpp"
 #include "complex/Utilities/TemplateHelpers.hpp"
 #include "complex/complex_export.hpp"
 
+#include <filesystem>
 #include <iostream>
 #include <string>
+
+namespace fs = std::filesystem;
 
 #define CDA_CREATE_CONVERTOR(TYPE, FUNCTION)                                                                                                                                                           \
   template <>                                                                                                                                                                                          \
@@ -234,7 +238,7 @@ std::unique_ptr<IDataStore<T>> CreateDataStore(const typename IDataStore<T>::Sha
  * @return
  */
 template <class T>
-Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tupleShape, uint64 nComp, const DataPath& path, IDataAction::Mode mode)
+Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tupleShape, const std::vector<usize>& compShape, const DataPath& path, IDataAction::Mode mode)
 {
   auto parentPath = path.getParent();
 
@@ -252,16 +256,16 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
   }
 
   // Validate Number of Components
-  if(nComp == 0)
+  if(compShape.empty())
   {
-    return MakeErrorResult(-261, fmt::format("CreateArrayAction: Number of components is ZERO. Please set the number of components. Value being used:'{}'", nComp));
+    return MakeErrorResult(-261, fmt::format("CreateArrayAction: Number of components is ZERO. Please set the number of components."));
   }
 
   usize last = path.getLength() - 1;
 
   std::string name = path[last];
 
-  auto store = CreateDataStore<T>(tupleShape, {nComp}, mode);
+  auto store = CreateDataStore<T>(tupleShape, compShape, mode);
   auto dataArray = DataArray<T>::Create(dataStructure, name, std::move(store), id);
   if(dataArray == nullptr)
   {
@@ -282,5 +286,72 @@ DataArray<T>* ArrayFromPath(DataStructure& dataGraph, const DataPath& path)
   }
   return dataArray;
 }
+
+template <typename T>
+DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::string& name, DataStructure* dataGraph, const std::vector<size_t>& tupleShape, const std::vector<size_t>& componentShape,
+                                   DataObject::IdType parentId = {})
+{
+  // std::cout << "  Reading file " << filename << std::endl;
+  using DataStoreType = DataStore<T>;
+  using ArrayType = DataArray<T>;
+  constexpr size_t defaultBlocksize = 1048576;
+
+  if(!fs::exists(filename))
+  {
+    std::cout << "File Does Not Exist:'" << filename << "'" << std::endl;
+    return nullptr;
+  }
+
+  std::shared_ptr<DataStoreType> dataStore = std::shared_ptr<DataStoreType>(new DataStoreType({tupleShape}, componentShape));
+  ArrayType* dataArray = ArrayType::Create(*dataGraph, name, dataStore, parentId);
+
+  const size_t fileSize = fs::file_size(filename);
+  const size_t numBytesToRead = dataArray->getSize() * sizeof(T);
+  if(numBytesToRead != fileSize)
+  {
+    std::cout << "FileSize and Allocated Size do not match" << std::endl;
+    return nullptr;
+  }
+
+  FILE* f = std::fopen(filename.c_str(), "rb");
+  if(f == nullptr)
+  {
+    return nullptr;
+  }
+
+  std::byte* chunkptr = reinterpret_cast<std::byte*>(dataStore->data());
+
+  // Now start reading the data in chunks if needed.
+  size_t chunkSize = std::min(numBytesToRead, defaultBlocksize);
+
+  size_t masterCounter = 0;
+  while(masterCounter < numBytesToRead)
+  {
+    size_t bytesRead = std::fread(chunkptr, sizeof(std::byte), chunkSize, f);
+    chunkptr += bytesRead;
+    masterCounter += bytesRead;
+
+    size_t bytesLeft = numBytesToRead - masterCounter;
+
+    if(bytesLeft < chunkSize)
+    {
+      chunkSize = bytesLeft;
+    }
+  }
+
+  fclose(f);
+
+  return dataArray;
+}
+
+/**
+ * @brief
+ * @param dataStructure
+ * @param dataPath
+ * @param tupleShape
+ * @param mode
+ * @return
+ */
+COMPLEX_EXPORT Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath& dataPath, std::vector<usize>& tupleShape, complex::IDataAction::Mode mode);
 
 } // namespace complex

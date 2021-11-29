@@ -81,3 +81,24 @@ Example of getting an array and summing the values using range based for loop.
     }
 ```
 
+## Moving from Pointer based array navigation ##
+
+Previously inside of SIMPL one would have done the following to get the raw pointer
+to the data stored in a DataArray:
+
+```c++
+float* vertex = triangleGeom->getVertexPointer(0);
+```
+and then used the `[]` notation to get and set values. With the possibility of out-of-core
+being added there is no guarantee that the data would exist at a given pointer offset in memory.
+Instead the developer should use:
+
+```c++
+AbstractGeometry::SharedVertexList& vertex = *(triangleGeom->getVertices());
+```
+Note the use of a _Reference Variable_ instead of the pointer. The developer can still use 
+code such as `vertex[index]` to get/set a value but the code `vertex = i` to move a pointer
+**will not work**.
+
+
+

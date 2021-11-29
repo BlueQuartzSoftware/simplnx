@@ -59,23 +59,25 @@ typename ArrayCreationParameter::ValueType ArrayCreationParameter::defaultPath()
   return m_DefaultValue;
 }
 
-Result<> ArrayCreationParameter::validate(const DataStructure& dataStructure, const std::any& value) const
+Result<> ArrayCreationParameter::validate(const DataStructure& dataStructure, const std::string& key, const std::any& value) const
 {
   auto path = std::any_cast<ValueType>(value);
 
-  return validatePath(dataStructure, path);
+  return validatePath(dataStructure, key, path);
 }
 
-Result<> ArrayCreationParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
+Result<> ArrayCreationParameter::validatePath(const DataStructure& dataStructure, const std::string& key, const DataPath& value) const
 {
+  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", key);
+
   if(value.empty())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, "DataPath cannot be empty"}})};
+    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
   const DataObject* object = dataStructure.getData(value);
   if(object != nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-2, fmt::format("Object already exists at path \"{}\"", value.toString())}})};
+    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_ExistingValue, fmt::format("{}Object exists at path '{}'", prefix, value.toString()));
   }
 
   return {};

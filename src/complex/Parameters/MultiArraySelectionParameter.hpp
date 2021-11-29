@@ -73,7 +73,7 @@ public:
    * @param value The value to validate
    * @return
    */
-  Result<> validate(const DataStructure& dataStructure, const std::any& value) const override;
+  Result<> validate(const DataStructure& dataStructure, const std::string& key, const std::any& value) const override;
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
@@ -81,7 +81,7 @@ public:
    * @param value The value to validate
    * @return
    */
-  Result<> validatePaths(const DataStructure& dataStructure, const ValueType& value) const;
+  Result<> validatePaths(const DataStructure& dataStructure, const std::string& key, const ValueType& value) const;
 
   /**
    * @brief Takes the value and a mutable DataStructure and attempts store the actual derived DataObject in the std::any.

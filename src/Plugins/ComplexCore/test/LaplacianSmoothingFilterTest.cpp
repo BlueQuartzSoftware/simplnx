@@ -41,7 +41,7 @@
 namespace fs = std::filesystem;
 
 using namespace complex;
-using namespace complex::UnitTest::Constants;
+using namespace complex::Constants;
 
 TEST_CASE("SurfaceMeshing::LaplacianSmoothingFilter: Instantiation and Parameter Check", "[SurfaceMeshing][LaplacianSmoothingFilter]")
 {

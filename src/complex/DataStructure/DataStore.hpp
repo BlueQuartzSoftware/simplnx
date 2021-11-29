@@ -131,7 +131,7 @@ public:
    * @brief Returns the dimensions of the Tuples
    * @return
    */
-  const ShapeType& getTupleShape() const
+  const ShapeType& getTupleShape() const override
   {
     return m_TupleShape;
   }
@@ -140,7 +140,7 @@ public:
    * @brief Returns the dimensions of the Components
    * @return
    */
-  const ShapeType& getComponentShape() const
+  const ShapeType& getComponentShape() const override
   {
     return m_ComponentShape;
   }

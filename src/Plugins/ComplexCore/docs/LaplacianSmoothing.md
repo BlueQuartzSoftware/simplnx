@@ -1,5 +1,5 @@
-Laplacian Smoothing 
-============
+# Laplacian Smoothing #
+
 
 ## Group (Subgroup) ##
 

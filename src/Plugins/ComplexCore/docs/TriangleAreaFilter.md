@@ -1,5 +1,5 @@
-Generate Triangle Areas 
-============
+# Generate Triangle Areas #
+
 
 ## Group (Subgroup) ##
 

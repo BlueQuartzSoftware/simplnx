@@ -10,7 +10,7 @@
 
 using namespace complex;
 
-namespace complex::UnitTest
+namespace complex
 {
 namespace Constants
 {
@@ -18,29 +18,44 @@ inline constexpr StringLiteral k_SmallIN100("Small IN100");
 inline constexpr StringLiteral k_EbsdScanData("EBSD Scan Data");
 inline constexpr StringLiteral k_ImageGeometry("Image Geometry");
 inline constexpr StringLiteral k_ConfidenceIndex("Confidence Index");
+inline constexpr StringLiteral k_FeatureIds("FeatureIds");
+inline constexpr StringLiteral k_ImageQuality("Image Quality");
+inline constexpr StringLiteral k_Phases("Phases");
+inline constexpr StringLiteral k_IpfColors("IPF Colors");
+inline constexpr StringLiteral k_PhaseData("Phase Data");
+inline constexpr StringLiteral k_LaueClass("Laue Class");
+inline constexpr StringLiteral k_SmallIn100ImageGeom("[Image Geometry]");
+
+inline constexpr StringLiteral k_TriangleGeometryName("[Triangle Geometry]");
+inline constexpr StringLiteral k_VertexDataGroupName("Vertex Data");
+inline constexpr StringLiteral k_NodeTypeArrayName("Node Type");
+inline constexpr StringLiteral k_FaceDataGroupName("Face Data");
+inline constexpr StringLiteral k_FaceLabels("Face Labels");
 
 inline constexpr StringLiteral k_LevelZero("ZERO");
 inline constexpr StringLiteral k_LevelOne("ONE");
 inline constexpr StringLiteral k_LevelTwo("TWO");
 
-inline constexpr StringLiteral k_Int8("int8 DataSet");
-inline constexpr StringLiteral k_Uint8("uint8 DataSet");
+inline constexpr StringLiteral k_Int8DataSet("int8 DataSet");
+inline constexpr StringLiteral k_Uint8DataSet("uint8 DataSet");
 
-inline constexpr StringLiteral k_Int16("int16 DataSet");
-inline constexpr StringLiteral k_Uint16("uint16 DataSet");
+inline constexpr StringLiteral k_Int16DataSet("int16 DataSet");
+inline constexpr StringLiteral k_Uint16DataSet("uint16 DataSet");
 
-inline constexpr StringLiteral k_Int32("int32 DataSet");
-inline constexpr StringLiteral k_Uint32("uint32 DataSet");
+inline constexpr StringLiteral k_Int32DataSet("int32 DataSet");
+inline constexpr StringLiteral k_Uint32DataSet("uint32 DataSet");
 
-inline constexpr StringLiteral k_Int64("int64 DataSet");
-inline constexpr StringLiteral k_Uint64("uint64 DataSet");
+inline constexpr StringLiteral k_Int64DataSet("int64 DataSet");
+inline constexpr StringLiteral k_Uint64DataSet("uint64 DataSet");
 
-inline constexpr StringLiteral k_Float32("float32 DataSet");
-inline constexpr StringLiteral k_Float64("float64 DataSet");
+inline constexpr StringLiteral k_Float32DataSet("float32 DataSet");
+inline constexpr StringLiteral k_Float64DataSet("float64 DataSet");
 
 inline constexpr StringLiteral k_ConditionalArray("Conditional [bool]");
 } // namespace Constants
 
+namespace UnitTest
+{
 /**
  * @brief Creates a DataArray backed by a DataStore (in memory).
  * @tparam T The primitive type to use, i.e. int8, float, double
@@ -87,7 +102,7 @@ inline DataStructure CreateDataStructure()
   std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
   Float32Array* ci_data = CreateTestDataArray<float>(dataGraph, Constants::k_ConfidenceIndex, tupleShape, {numComponents}, scanData->getId());
-  Int32Array* feature_ids_data = CreateTestDataArray<int32>(dataGraph, "FeatureIds", tupleShape, {numComponents}, scanData->getId());
+  Int32Array* feature_ids_data = CreateTestDataArray<int32>(dataGraph, Constants::k_FeatureIds, tupleShape, {numComponents}, scanData->getId());
   Int32Array* phases_data = CreateTestDataArray<int32>(dataGraph, "Phases", tupleShape, {numComponents}, scanData->getId());
 
   BoolArray* conditionalArray = CreateTestDataArray<bool>(dataGraph, "ConditionalArray", tupleShape, {1}, scanData->getId());
@@ -132,37 +147,37 @@ inline DataStructure CreateAllPrimitiveTypes(const std::vector<usize>& tupleShap
   // Create Scalar type data
   DataStore<usize>::ShapeType componentShape = {1ULL};
 
-  CreateTestDataArray<int8>(dataGraph, Constants::k_Int8, tupleShape, componentShape, levelOneId);
-  CreateTestDataArray<uint8>(dataGraph, Constants::k_Uint8, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<int8>(dataGraph, Constants::k_Int8DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<uint8>(dataGraph, Constants::k_Uint8DataSet, tupleShape, componentShape, levelOneId);
 
-  CreateTestDataArray<int16>(dataGraph, Constants::k_Int16, tupleShape, componentShape, levelOneId);
-  CreateTestDataArray<uint16>(dataGraph, Constants::k_Uint16, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<int16>(dataGraph, Constants::k_Int16DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<uint16>(dataGraph, Constants::k_Uint16DataSet, tupleShape, componentShape, levelOneId);
 
-  CreateTestDataArray<int32>(dataGraph, Constants::k_Int32, tupleShape, componentShape, levelOneId);
-  CreateTestDataArray<uint32>(dataGraph, Constants::k_Uint32, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<int32>(dataGraph, Constants::k_Int32DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<uint32>(dataGraph, Constants::k_Uint32DataSet, tupleShape, componentShape, levelOneId);
 
-  CreateTestDataArray<int64>(dataGraph, Constants::k_Int64, tupleShape, componentShape, levelOneId);
-  CreateTestDataArray<uint64>(dataGraph, Constants::k_Uint64, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<int64>(dataGraph, Constants::k_Int64DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<uint64>(dataGraph, Constants::k_Uint64DataSet, tupleShape, componentShape, levelOneId);
 
-  CreateTestDataArray<float32>(dataGraph, Constants::k_Float32, tupleShape, componentShape, levelOneId);
-  CreateTestDataArray<float64>(dataGraph, Constants::k_Float64, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<float32>(dataGraph, Constants::k_Float32DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<float64>(dataGraph, Constants::k_Float64DataSet, tupleShape, componentShape, levelOneId);
 
   // Create Vector/RGB type of data
   componentShape = {3ULL};
-  CreateTestDataArray<int8>(dataGraph, Constants::k_Int8, tupleShape, componentShape, levelTwoId);
-  CreateTestDataArray<uint8>(dataGraph, Constants::k_Uint8, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<int8>(dataGraph, Constants::k_Int8DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<uint8>(dataGraph, Constants::k_Uint8DataSet, tupleShape, componentShape, levelTwoId);
 
-  CreateTestDataArray<int16>(dataGraph, Constants::k_Int16, tupleShape, componentShape, levelTwoId);
-  CreateTestDataArray<uint16>(dataGraph, Constants::k_Uint16, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<int16>(dataGraph, Constants::k_Int16DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<uint16>(dataGraph, Constants::k_Uint16DataSet, tupleShape, componentShape, levelTwoId);
 
-  CreateTestDataArray<int32>(dataGraph, Constants::k_Int32, tupleShape, componentShape, levelTwoId);
-  CreateTestDataArray<uint32>(dataGraph, Constants::k_Uint32, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<int32>(dataGraph, Constants::k_Int32DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<uint32>(dataGraph, Constants::k_Uint32DataSet, tupleShape, componentShape, levelTwoId);
 
-  CreateTestDataArray<int64>(dataGraph, Constants::k_Int64, tupleShape, componentShape, levelTwoId);
-  CreateTestDataArray<uint64>(dataGraph, Constants::k_Uint64, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<int64>(dataGraph, Constants::k_Int64DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<uint64>(dataGraph, Constants::k_Uint64DataSet, tupleShape, componentShape, levelTwoId);
 
-  CreateTestDataArray<float32>(dataGraph, Constants::k_Float32, tupleShape, componentShape, levelTwoId);
-  CreateTestDataArray<float64>(dataGraph, Constants::k_Float64, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<float32>(dataGraph, Constants::k_Float32DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<float64>(dataGraph, Constants::k_Float64DataSet, tupleShape, componentShape, levelTwoId);
 
   return dataGraph;
 }
@@ -182,4 +197,5 @@ inline void AddImageGeometry(DataStructure& dataGraph, const SizeVec3& imageGeom
   imageGeom->setSpacing(spacing);
   imageGeom->setOrigin(origin);
 }
-} // namespace complex::UnitTest
+} // namespace UnitTest
+} // namespace complex
