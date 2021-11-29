@@ -83,25 +83,26 @@ typename MultiArraySelectionParameter::ValueType MultiArraySelectionParameter::d
   return m_DefaultValue;
 }
 
-Result<> MultiArraySelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
+Result<> MultiArraySelectionParameter::validate(const DataStructure& dataStructure, const std::string& key, const std::any& value) const
 {
   auto paths = std::any_cast<ValueType>(value);
 
-  return validatePaths(dataStructure, paths);
+  return validatePaths(dataStructure, key, paths);
 }
 
-Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataStructure, const ValueType& value) const
+Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataStructure, const std::string& key, const ValueType& value) const
 {
+  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", key);
   for(const auto& path : value)
   {
     if(value.empty())
     {
-      return complex::MakeErrorResult<>(-1, "DataPath cannot be empty");
+      return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
     }
     const DataObject* object = dataStructure.getData(path);
     if(object == nullptr)
     {
-      return complex::MakeErrorResult<>(-2, fmt::format("Object does not exists at path '{}'", path.toString()));
+      return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exists at path '{}'", prefix, path.toString()));
     }
   }
 

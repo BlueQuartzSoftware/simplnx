@@ -62,35 +62,38 @@ typename ArraySelectionParameter::ValueType ArraySelectionParameter::defaultPath
   return m_DefaultValue;
 }
 
-Result<> ArraySelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
+Result<> ArraySelectionParameter::validate(const DataStructure& dataStructure, const std::string& key, const std::any& value) const
 {
   auto path = std::any_cast<ValueType>(value);
 
-  return validatePath(dataStructure, path);
+  return validatePath(dataStructure, key, path);
 }
 
-Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
+Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructure, const std::string& key, const DataPath& value) const
 {
+  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", key);
+
   if(value.empty())
   {
-    return complex::MakeErrorResult<>(-1, "DataPath cannot be empty");
+    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
   const DataObject* object = dataStructure.getData(value);
   if(object == nullptr)
   {
-    return complex::MakeErrorResult<>(-2, fmt::format("Object does not exists at path '{}'", value.toString()));
+    return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exists at path '{}'", prefix, value.toString()));
   }
 
   const DataGroup* dataGroup = dynamic_cast<const DataGroup*>(object);
   if(dataGroup != nullptr)
   {
-    return complex::MakeErrorResult<>(-2, fmt::format("Object at path '{}' is a DataGroup but needs to be a DataArray.", value.toString()));
+    return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Type_Error,
+                                      fmt::format("{}Object at path '{}' is a DataGroup but needs to be a DataArray.", prefix, value.toString()));
   }
 
   const IDataArray* dataArray = dynamic_cast<const IDataArray*>(object);
   if(dataArray == nullptr)
   {
-    return complex::MakeErrorResult<>(-2, fmt::format("Object at path '{}' must be a DataArray.", value.toString()));
+    return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, value.toString()));
   }
 
   return {};

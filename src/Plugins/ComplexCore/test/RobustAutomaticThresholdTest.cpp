@@ -9,7 +9,7 @@
 #include "ComplexCore/Filters/RobustAutomaticThreshold.hpp"
 
 using namespace complex;
-using namespace complex::UnitTest::Constants;
+using namespace complex::Constants;
 
 TEST_CASE("RobustAutomaticThreshold: Instantiate Filter", "[RobustAutomaticThreshold]")
 {

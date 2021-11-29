@@ -89,7 +89,7 @@ public:
     // Create the default DataArray that will hold the FaceList and Vertices. We
     // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
     std::vector<size_t> tupleShape = {m_NumFaces};
-    complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, tupleShape, 3, trianglesPath, mode);
+    complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, tupleShape, {3}, trianglesPath, mode);
     if(result.invalid())
     {
       return MakeErrorResult(-223, fmt::format("CreateGeometry2DAction: Could not allocate SharedTriList '{}'", trianglesPath.toString()));
@@ -101,7 +101,7 @@ public:
     DataPath vertexPath = m_GeometryPath.createChildPath(k_VertexDataName);
     tupleShape = {m_NumVertices}; // We don't probably know how many Vertices there are but take what ever the developer sends us
 
-    result = complex::CreateArray<float>(dataStructure, tupleShape, 3, vertexPath, mode);
+    result = complex::CreateArray<float>(dataStructure, tupleShape, {3}, vertexPath, mode);
     if(result.invalid())
     {
       return MakeErrorResult(-224, fmt::format("CreateGeometry2DAction: Could not allocate SharedVertList '{}'", trianglesPath.toString()));
