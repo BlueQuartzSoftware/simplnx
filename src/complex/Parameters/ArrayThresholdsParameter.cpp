@@ -59,16 +59,16 @@ typename ArrayThresholdsParameter::ValueType ArrayThresholdsParameter::defaultPa
   return m_DefaultValue;
 }
 
-Result<> ArrayThresholdsParameter::validate(const DataStructure& dataStructure, const std::string& key, const std::any& value) const
+Result<> ArrayThresholdsParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
   auto threshold = std::any_cast<ValueType>(value);
 
-  return validatePaths(dataStructure, key, threshold);
+  return validatePaths(dataStructure, threshold);
 }
 
-Result<> ArrayThresholdsParameter::validatePath(const DataStructure& dataStructure, const std::string& key, const DataPath& value) const
+Result<> ArrayThresholdsParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
 {
-  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", key);
+  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
 
   if(value.empty())
   {
@@ -83,12 +83,12 @@ Result<> ArrayThresholdsParameter::validatePath(const DataStructure& dataStructu
   return {};
 }
 
-Result<> ArrayThresholdsParameter::validatePaths(const DataStructure& dataStructure, const std::string& key, const ValueType& value) const
+Result<> ArrayThresholdsParameter::validatePaths(const DataStructure& dataStructure, const ValueType& value) const
 {
   auto paths = value.getRequiredPaths();
   for(const auto& path : paths)
   {
-    auto validation = validatePath(dataStructure, key, path);
+    auto validation = validatePath(dataStructure, path);
     if(validation.invalid())
     {
       return validation;

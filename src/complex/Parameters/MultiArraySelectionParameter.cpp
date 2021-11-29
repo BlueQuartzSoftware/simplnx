@@ -83,16 +83,16 @@ typename MultiArraySelectionParameter::ValueType MultiArraySelectionParameter::d
   return m_DefaultValue;
 }
 
-Result<> MultiArraySelectionParameter::validate(const DataStructure& dataStructure, const std::string& key, const std::any& value) const
+Result<> MultiArraySelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
   auto paths = std::any_cast<ValueType>(value);
 
-  return validatePaths(dataStructure, key, paths);
+  return validatePaths(dataStructure, paths);
 }
 
-Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataStructure, const std::string& key, const ValueType& value) const
+Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataStructure, const ValueType& value) const
 {
-  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", key);
+  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
   for(const auto& path : value)
   {
     if(value.empty())
