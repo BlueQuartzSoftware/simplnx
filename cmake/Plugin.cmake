@@ -11,7 +11,7 @@ include(GNUInstallDirs)
 function(complex_COMPILE_PLUGIN)
   set(options)
   set(oneValueArgs PLUGIN_NAME PLUGIN_SOURCE_DIR)
-  cmake_parse_arguments(P "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+  cmake_parse_arguments(P "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   option(COMPLEX_PLUGIN_ENABLE_${P_PLUGIN_NAME} "Build the ${P_PLUGIN_NAME}" ON)
 
@@ -24,7 +24,7 @@ function(complex_COMPILE_PLUGIN)
     #- things like Visual Studio are forced to rebuild the plugins when launching
     #- the sandbox application
     if(COMPLEX_PLUGIN_ENABLE_${P_PLUGIN_NAME} AND TARGET complex::complex AND TARGET ${P_PLUGIN_NAME})
-      add_dependencies(${P_PLUGIN_NAME} complex::complex )
+      add_dependencies(${P_PLUGIN_NAME} complex::complex)
     endif()
 
   else()
@@ -37,11 +37,10 @@ endfunction()
 # look for a directory with the name that holds a CMakeLists.txt file.
 # Arguments:
 # PLUGIN_NAME The name of the Plugin
-#
 function(complex_add_plugin)
   set(options)
   set(oneValueArgs PLUGIN_NAME)
-  cmake_parse_arguments(P "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+  cmake_parse_arguments(P "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   #message(STATUS "complex_add_plugin: ${P_PLUGIN_NAME}")
   #message(STATUS "COMPLEX_${P_PLUGIN_NAME}_SOURCE_DIR: ${COMPLEX_${P_PLUGIN_NAME}_SOURCE_DIR}")
@@ -75,18 +74,18 @@ function(complex_add_plugin)
 
   # By this point we should have everything defined and ready to go...
   if(DEFINED COMPLEX_${P_PLUGIN_NAME}_SOURCE_DIR AND DEFINED ${P_PLUGIN_NAME}_IMPORT_FILE)
-      #message(STATUS "Plugin: Adding Plugin ${COMPLEX_${P_PLUGIN_NAME}_SOURCE_DIR}")
-      complex_COMPILE_PLUGIN(PLUGIN_NAME ${P_PLUGIN_NAME}
-                             PLUGIN_SOURCE_DIR ${COMPLEX_${P_PLUGIN_NAME}_SOURCE_DIR})
-      # Increment the plugin count
-      get_property(P_PLUGIN_COUNT GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT)
-      MATH(EXPR P_PLUGIN_COUNT "${P_PLUGIN_COUNT}+1")
-      set_property(GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT ${P_PLUGIN_COUNT})
+    #message(STATUS "Plugin: Adding Plugin ${COMPLEX_${P_PLUGIN_NAME}_SOURCE_DIR}")
+    complex_COMPILE_PLUGIN(PLUGIN_NAME ${P_PLUGIN_NAME}
+      PLUGIN_SOURCE_DIR ${COMPLEX_${P_PLUGIN_NAME}_SOURCE_DIR}
+    )
+    # Increment the plugin count
+    get_property(P_PLUGIN_COUNT GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT)
+    math(EXPR P_PLUGIN_COUNT "${P_PLUGIN_COUNT}+1")
+    set_property(GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT ${P_PLUGIN_COUNT})
   else()
-      set(COMPLEX_${P_PLUGIN_NAME}_SOURCE_DIR ${pluginSearchDir} CACHE PATH "" FORCE)
-      message(STATUS "${P_PLUGIN_NAME} [DISABLED]. Missing Source Directory. Use -DCOMPLEX_${P_PLUGIN_NAME}_SOURCE_DIR=/Path/To/PluginDir")
+    set(COMPLEX_${P_PLUGIN_NAME}_SOURCE_DIR ${pluginSearchDir} CACHE PATH "" FORCE)
+    message(STATUS "${P_PLUGIN_NAME} [DISABLED]. Missing Source Directory. Use -DCOMPLEX_${P_PLUGIN_NAME}_SOURCE_DIR=/Path/To/PluginDir")
   endif()
-
 endfunction()
 
 # -----------------------------------------------------------------------------
@@ -94,26 +93,24 @@ endfunction()
 # look for a directory with the name that holds a CMakeLists.txt file.
 # Arguments:
 # NAME The name of the Plugin
-# DESCRIPTION The description of the plugin, used in the "PROJECT(...)" call
-# VERSION The version of the plugin, used in the "PROJECT(...)" call
+# DESCRIPTION The description of the plugin, used in the "project(...)" call
+# VERSION The version of the plugin, used in the "project(...)" call
 # FILTER_LIST the list of filters to compile
 # ACTION_LIST
-# 
 function(create_complex_plugin)
   set(options)
   set(oneValueArgs NAME DESCRIPTION VERSION)
   set(multiValueArgs FILTER_LIST ACTION_LIST ALGORITHM_LIST)
-  cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+  cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  PROJECT(${ARGS_NAME}
+  project(${ARGS_NAME}
     VERSION ${ARGS_VERSION}
     DESCRIPTION ${ARGS_DESCRIPTION}
-    )
+  )
 
   set(ARGS_GENERATED_DIR ${PROJECT_BINARY_DIR}/generated)
   set(ARGS_GENERATED_HEADER_DIR ${PROJECT_BINARY_DIR}/generated/${ARGS_NAME})
   set(ARGS_EXPORT_HEADER ${ARGS_GENERATED_HEADER_DIR}/${ARGS_NAME}_export.hpp)
-
 
   list(LENGTH ARGS_FILTER_LIST PluginNumFilters)
   set_property(GLOBAL PROPERTY ${ARGS_NAME}_filter_count ${PluginNumFilters})
@@ -122,13 +119,13 @@ function(create_complex_plugin)
   # Plugin Headers
   set(${ARGS_NAME}_Plugin_HDRS
     ${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/${ARGS_NAME}Plugin.hpp
-    )
+  )
 
   #------------------------------------------------------------------------------
   # Plugin Headers
   set(${ARGS_NAME}_Plugin_SRCS
     ${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/${ARGS_NAME}Plugin.cpp
-    )
+  )
 
   #------------------------------------------------------------------------------
   # Plugin Filter Files
@@ -143,53 +140,56 @@ function(create_complex_plugin)
   foreach(filter ${ARGS_FILTER_LIST})
     list(APPEND ${ARGS_NAME}_Plugin_HDRS
       "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/${filter}.hpp"
-      )
+    )
     list(APPEND ${ARGS_NAME}_Plugin_SRCS
       "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/${filter}.cpp"
-      )
+    )
     list(APPEND ${ARGS_NAME}_ARGS_FILTER_FILES
       "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/${filter}.hpp"
       "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/${filter}.cpp"
-      )
+    )
 
     string(APPEND Filter_Registration_Include_String
-      "#include \"${ARGS_NAME}/Filters/${filter}.hpp\"\n")
+      "#include \"${ARGS_NAME}/Filters/${filter}.hpp\"\n"
+    )
 
     string(APPEND Filter_Registration_Code
-      "  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<${filter}>(); });\n")
-
+      "  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<${filter}>(); });\n"
+    )
   endforeach()
 
   # Include all of the custom Actions
   foreach(action ${ARGS_ACTION_LIST})
     list(APPEND ${ARGS_NAME}_Plugin_HDRS
       "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/Actions/${action}.hpp"
-      )
+    )
     list(APPEND ${ARGS_NAME}_Plugin_SRCS
       "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/Actions/${action}.cpp"
-      )
+    )
   endforeach()
 
   # Include all of the algorithms
   foreach(algorithm ${ARGS_ALGORITHM_LIST})
     list(APPEND ${ARGS_NAME}_Plugin_HDRS
       "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/Algorithms/${algorithm}.hpp"
-      )
+    )
     list(APPEND ${ARGS_NAME}_Plugin_SRCS
       "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/Filters/Algorithms/${algorithm}.cpp"
-      )
+    )
   endforeach()
 
-
   configure_file( ${complex_SOURCE_DIR}/cmake/plugin_filter_registration.h.in
-    ${ARGS_GENERATED_HEADER_DIR}/plugin_filter_registration.h)
+    ${ARGS_GENERATED_HEADER_DIR}/plugin_filter_registration.h
+  )
 
   add_library(${ARGS_NAME} SHARED)
   add_library(complex::${ARGS_NAME} ALIAS ${ARGS_NAME})
 
-  set_target_properties(${ARGS_NAME} PROPERTIES
-    FOLDER "Plugins/${ARGS_NAME}"
-    SUFFIX ".complex")
+  set_target_properties(${ARGS_NAME}
+    PROPERTIES
+      FOLDER "Plugins/${ARGS_NAME}"
+      SUFFIX ".complex"
+  )
 
   #------------------------------------------------------------------------------
   # Where are the plugins going to be placed during the build, unless overridden
@@ -199,12 +199,12 @@ function(create_complex_plugin)
     set_target_properties(${ARGS_NAME} PROPERTIES
       LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
       RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
-      )
+    )
   else()
     set_target_properties(${ARGS_NAME} PROPERTIES
       LIBRARY_OUTPUT_DIRECTORY ${COMPLEX_ARGS_OUTPUT_DIR}
       RUNTIME_OUTPUT_DIRECTORY ${COMPLEX_ARGS_OUTPUT_DIR}
-      )
+    )
   endif()
 
   target_link_libraries(${ARGS_NAME} PUBLIC complex)
@@ -213,15 +213,15 @@ function(create_complex_plugin)
     target_compile_options(${ARGS_NAME}
       PRIVATE
       /MP
-      )
+    )
   endif()
 
   generate_export_header(${ARGS_NAME}
     EXPORT_FILE_NAME ${ARGS_EXPORT_HEADER}
-    )
+  )
   set(${ARGS_NAME}_GENERATED_HEADERS
     ${ARGS_EXPORT_HEADER}
-    )
+  )
   set(${ARGS_NAME}_ALL_HDRS
     ${${ARGS_NAME}_Plugin_HDRS}
     ${${ARGS_NAME}_GENERATED_HEADERS}
@@ -229,30 +229,33 @@ function(create_complex_plugin)
 
   target_sources(${ARGS_NAME}
     PRIVATE
-    ${${ARGS_NAME}_ALL_HDRS}
-    ${${ARGS_NAME}_Plugin_SRCS}
-    )
+      ${${ARGS_NAME}_ALL_HDRS}
+      ${${ARGS_NAME}_Plugin_SRCS}
+  )
 
   source_group(TREE "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}" PREFIX ${ARGS_NAME} FILES ${${ARGS_NAME}_ARGS_FILTER_FILES})
 
   target_include_directories(${ARGS_NAME}
     PUBLIC
-    $<BUILD_INTERFACE:${${ARGS_NAME}_SOURCE_DIR}/src>
-    $<BUILD_INTERFACE:${ARGS_GENERATED_DIR}>
-    $<BUILD_INTERFACE:${COMPLEX_BINARY_DIR}/Plugins/${ARGS_NAME}>
-    )
+      $<BUILD_INTERFACE:${${ARGS_NAME}_SOURCE_DIR}/src>
+      $<BUILD_INTERFACE:${ARGS_GENERATED_DIR}>
+      $<BUILD_INTERFACE:${COMPLEX_BINARY_DIR}/Plugins/${ARGS_NAME}>
+  )
 
   install(TARGETS ${ARGS_NAME}
-    PUBLIC_HEADER DESTINATION include/${ARGS_NAME}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    COMPONENT   ${ARGS_NAME}_Runtime
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    COMPONENT   ${ARGS_NAME}_Runtime
-    NAMELINK_COMPONENT ${ARGS_NAME}_Development
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    COMPONENT   ${ARGS_NAME}_Development
-    )
-
+    PUBLIC_HEADER
+      DESTINATION include/${ARGS_NAME}
+    RUNTIME
+      DESTINATION ${CMAKE_INSTALL_BINDIR}
+      COMPONENT ${ARGS_NAME}_Runtime
+    LIBRARY
+      DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      COMPONENT ${ARGS_NAME}_Runtime
+      NAMELINK_COMPONENT ${ARGS_NAME}_Development
+    ARCHIVE
+      DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      COMPONENT ${ARGS_NAME}_Development
+  )
 endfunction()
 
 # -----------------------------------------------------------------------------
@@ -261,12 +264,11 @@ endfunction()
 # Arguments:
 # PLUGIN_NAME The name of the Plugin
 # FILTER_LIST The list of sources to compile.
-# 
 function(create_complex_plugin_unit_test)
   set(options)
   set(oneValueArgs PLUGIN_NAME)
   set(multiValueArgs FILTER_LIST)
-  cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+  cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   #------------------------------------------------------------------------------
   # Find the Catch2 unit testing package
@@ -288,13 +290,16 @@ function(create_complex_plugin_unit_test)
   #------------------------------------------------------------------------------
   # Create the unit test executable
   add_executable(${ARGS_PLUGIN_NAME}UnitTest
-            ${COMPLEX_TEST_DIRS_HEADER}
-            ${ARGS_PLUGIN_NAME}_test_main.cpp
-            ${${ARGS_PLUGIN_NAME}UnitTest_SRCS}
+    ${COMPLEX_TEST_DIRS_HEADER}
+    ${ARGS_PLUGIN_NAME}_test_main.cpp
+    ${${ARGS_PLUGIN_NAME}UnitTest_SRCS}
   )
 
   target_link_libraries(${ARGS_PLUGIN_NAME}UnitTest
-    PRIVATE complex ${ARGS_PLUGIN_NAME} Catch2::Catch2
+    PRIVATE
+      complex
+      ${ARGS_PLUGIN_NAME}
+      Catch2::Catch2
   )
 
   #------------------------------------------------------------------------------
@@ -304,21 +309,23 @@ function(create_complex_plugin_unit_test)
 
   set_target_properties(${ARGS_PLUGIN_NAME}UnitTest
     PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
+      RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
   )
 
   target_compile_definitions(${ARGS_PLUGIN_NAME}UnitTest
     PRIVATE
-    COMPLEX_BUILD_DIR="$<TARGET_FILE_DIR:complex_test>"
+      COMPLEX_BUILD_DIR="$<TARGET_FILE_DIR:complex_test>"
   )
 
   target_compile_options(${ARGS_PLUGIN_NAME}UnitTest
     PRIVATE
-    $<$<CXX_COMPILER_ID:MSVC>:/MP>
+      $<$<CXX_COMPILER_ID:MSVC>:/MP>
   )
 
-  target_include_directories(${ARGS_PLUGIN_NAME}UnitTest PRIVATE ${${ARGS_PLUGIN_NAME}_GENERATED_DIR})
+  target_include_directories(${ARGS_PLUGIN_NAME}UnitTest
+    PRIVATE
+      ${${ARGS_PLUGIN_NAME}_GENERATED_DIR}
+  )
 
   catch_discover_tests(${ARGS_PLUGIN_NAME}UnitTest)
-
 endfunction()
