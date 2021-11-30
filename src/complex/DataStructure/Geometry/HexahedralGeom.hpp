@@ -48,6 +48,9 @@ public:
 
   ~HexahedralGeom() override;
 
+  HexahedralGeom& operator=(const HexahedralGeom&) = delete;
+  HexahedralGeom& operator=(HexahedralGeom&&) noexcept = delete;
+
   /**
    * @brief Returns typename of the DataObject as a std::string.
    * @return std::string
@@ -361,7 +364,7 @@ protected:
    * @param vertices
    * @param allocate
    */
-  HexahedralGeom(DataStructure& ds, std::string name, usize numHexas, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
+  // HexahedralGeom(DataStructure& ds, std::string name, usize numHexas, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
 
   /**
    * @brief
@@ -370,7 +373,7 @@ protected:
    * @param hexas
    * @param vertices
    */
-  HexahedralGeom(DataStructure& ds, std::string name, const std::shared_ptr<SharedHexList>& hexas, const std::shared_ptr<SharedVertexList>& vertices);
+  // HexahedralGeom(DataStructure& ds, std::string name, const std::shared_ptr<SharedHexList>& hexas, const std::shared_ptr<SharedVertexList>& vertices);
 
   /**
    * @brief

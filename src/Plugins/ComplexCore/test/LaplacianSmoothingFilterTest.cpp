@@ -43,7 +43,7 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 
-TEST_CASE("SurfaceMeshing::LaplacianSmoothingFilter: Instantiation and Parameter Check", "[SurfaceMeshing][LaplacianSmoothingFilter]")
+TEST_CASE("SurfaceMeshing::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSmoothingFilter]")
 {
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "Face Data";

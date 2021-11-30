@@ -49,6 +49,9 @@ public:
 
   ~VertexGeom() override;
 
+  VertexGeom& operator=(const VertexGeom&) = delete;
+  VertexGeom& operator=(VertexGeom&&) noexcept = delete;
+
   /**
    * @brief Returns typename of the DataObject as a std::string.
    * @return std::string
@@ -273,7 +276,7 @@ protected:
    * @param numVertices
    * @param allocate
    */
-  VertexGeom(DataStructure& ds, std::string name, usize numVertices, bool allocate);
+  // VertexGeom(DataStructure& ds, std::string name, usize numVertices, bool allocate);
 
   /**
    * @brief
@@ -281,7 +284,7 @@ protected:
    * @param name
    * @param vertices
    */
-  VertexGeom(DataStructure& ds, std::string name, const SharedVertexList* vertices);
+  // VertexGeom(DataStructure& ds, std::string name, const SharedVertexList* vertices);
 
   /**
    * @brief

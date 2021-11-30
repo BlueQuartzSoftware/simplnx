@@ -22,15 +22,15 @@ VertexGeom::VertexGeom(DataStructure& ds, std::string name, IdType importId)
 {
 }
 
-VertexGeom::VertexGeom(DataStructure& ds, std::string name, usize numVertices, bool allocate)
-: AbstractGeometry(ds, std::move(name))
-{
-}
-
-VertexGeom::VertexGeom(DataStructure& ds, std::string name, const SharedVertexList* vertices)
-: AbstractGeometry(ds, std::move(name))
-{
-}
+// VertexGeom::VertexGeom(DataStructure& ds, std::string name, usize numVertices, bool allocate)
+//: AbstractGeometry(ds, std::move(name))
+//{
+//}
+//
+// VertexGeom::VertexGeom(DataStructure& ds, std::string name, const SharedVertexList* vertices)
+//: AbstractGeometry(ds, std::move(name))
+//{
+//}
 
 VertexGeom::VertexGeom(const VertexGeom& other)
 : AbstractGeometry(other)

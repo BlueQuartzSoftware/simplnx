@@ -20,15 +20,15 @@ QuadGeom::QuadGeom(DataStructure& ds, std::string name, IdType importId)
 {
 }
 
-QuadGeom::QuadGeom(DataStructure& ds, std::string name, usize numQuads, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
-: AbstractGeometry2D(ds, std::move(name))
-{
-}
-
-QuadGeom::QuadGeom(DataStructure& ds, std::string name, const std::shared_ptr<SharedQuadList>& quads, const std::shared_ptr<SharedVertexList>& vertices)
-: AbstractGeometry2D(ds, std::move(name))
-{
-}
+// QuadGeom::QuadGeom(DataStructure& ds, std::string name, usize numQuads, const std::shared_ptr<SharedVertexList>& vertices, bool allocate)
+//: AbstractGeometry2D(ds, std::move(name))
+//{
+//}
+//
+// QuadGeom::QuadGeom(DataStructure& ds, std::string name, const std::shared_ptr<SharedQuadList>& quads, const std::shared_ptr<SharedVertexList>& vertices)
+//: AbstractGeometry2D(ds, std::move(name))
+//{
+//}
 
 QuadGeom::QuadGeom(const QuadGeom& other)
 : AbstractGeometry2D(other)
@@ -106,12 +106,12 @@ std::string QuadGeom::getGeometryTypeAsString() const
 
 void QuadGeom::resizeFaceList(usize numQuads)
 {
-  setFaces()->getDataStore()->reshapeTuples({numQuads});
+  getFaces()->getDataStore()->reshapeTuples({numQuads});
 }
 
 void QuadGeom::setFaces(const SharedQuadList* quads)
 {
-  if(!quads)
+  if(quads == nullptr)
   {
     m_QuadListId.reset();
     return;
@@ -119,7 +119,7 @@ void QuadGeom::setFaces(const SharedQuadList* quads)
   m_QuadListId = quads->getId();
 }
 
-AbstractGeometry::SharedQuadList* QuadGeom::setFaces()
+AbstractGeometry::SharedQuadList* QuadGeom::getFaces()
 {
   return dynamic_cast<SharedQuadList*>(getDataStructure()->getData(m_QuadListId));
 }
@@ -129,34 +129,35 @@ const AbstractGeometry::SharedQuadList* QuadGeom::getFaces() const
   return dynamic_cast<const SharedQuadList*>(getDataStructure()->getData(m_QuadListId));
 }
 
-void QuadGeom::setVertsAtQuad(usize quadId, usize verts[4])
+void QuadGeom::setVertexIdsForFace(usize faceId, usize verts[4])
 {
-  auto quads = setFaces();
-  if(!quads)
+  auto faces = getFaces();
+  if(!faces)
   {
     return;
   }
-  const usize offset = quadId * 4;
-  for(usize i = 0; i < 4; i++)
+  const usize offset = faceId * k_NumVerts;
+  for(usize i = 0; i < k_NumVerts; i++)
   {
-    (*quads)[offset + i] = verts[i];
+    (*faces)[offset + i] = verts[i];
   }
 }
 
-void QuadGeom::getVertsAtQuad(usize quadId, usize verts[4]) const
+void QuadGeom::getVertexIdsForFace(usize faceId, usize verts[k_NumVerts]) const
 {
-  auto quads = getFaces();
-  if(!quads)
+  auto faces = getFaces();
+  if(!faces)
   {
     return;
   }
-  for(usize i = 0; i < 4; i++)
+  const usize offset = faceId * k_NumVerts;
+  for(usize i = 0; i < k_NumVerts; i++)
   {
-    verts[i] = quads->at(quadId * 4 + i);
+    verts[i] = faces->at(offset + i);
   }
 }
 
-void QuadGeom::getVertCoordsAtQuad(usize quadId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const
+void QuadGeom::getVertexCoordsForFace(usize faceId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const
 {
   if(!getFaces())
   {
@@ -168,25 +169,22 @@ void QuadGeom::getVertCoordsAtQuad(usize quadId, complex::Point3D<float32>& vert
     return;
   }
   usize verts[4];
-  getVertsAtQuad(quadId, verts);
-  for(usize i = 0; i < 4; i++)
-  {
-    vert1[i] = vertices->at(verts[0] * 4 + i);
-    vert2[i] = vertices->at(verts[1] * 4 + i);
-    vert3[i] = vertices->at(verts[2] * 4 + i);
-    vert4[i] = vertices->at(verts[3] * 4 + i);
-  }
+  getVertexIdsForFace(faceId, verts);
+  vert1 = getCoords(verts[0]);
+  vert2 = getCoords(verts[1]);
+  vert3 = getCoords(verts[2]);
+  vert4 = getCoords(verts[3]);
 }
 
 void QuadGeom::initializeWithZeros()
 {
   auto vertices = getVertices();
-  if(vertices)
+  if(vertices != nullptr)
   {
     vertices->getDataStore()->fill(0.0f);
   }
-  auto quads = setFaces();
-  if(quads)
+  auto quads = getFaces();
+  if(quads != nullptr)
   {
     quads->getDataStore()->fill(0.0);
   }
@@ -195,7 +193,7 @@ void QuadGeom::initializeWithZeros()
 usize QuadGeom::getNumberOfQuads() const
 {
   auto quads = getFaces();
-  if(!quads)
+  if(quads == nullptr)
   {
     return 0;
   }
@@ -211,7 +209,7 @@ AbstractGeometry::StatusCode QuadGeom::findElementSizes()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfQuads());
   Float32Array* quadSizes = DataArray<float32>::Create(*getDataStructure(), "Quad Areas", std::move(dataStore), getId());
-  GeometryHelpers::Topology::Find2DElementAreas(setFaces(), getVertices(), quadSizes);
+  GeometryHelpers::Topology::Find2DElementAreas(getFaces(), getVertices(), quadSizes);
   if(quadSizes == nullptr)
   {
     m_QuadSizesId.reset();
@@ -235,7 +233,7 @@ void QuadGeom::deleteElementSizes()
 AbstractGeometry::StatusCode QuadGeom::findElementsContainingVert()
 {
   auto quadsContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Quads Containing Vert", getId());
-  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(setFaces(), quadsContainingVert, getNumberOfVertices());
+  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), quadsContainingVert, getNumberOfVertices());
   if(quadsContainingVert == nullptr)
   {
     m_QuadsContainingVertId.reset();
@@ -268,7 +266,7 @@ AbstractGeometry::StatusCode QuadGeom::findElementNeighbors()
     }
   }
   auto quadNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Quad Neighbors", getId());
-  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(setFaces(), getElementsContainingVert(), quadNeighbors, AbstractGeometry::Type::Quad);
+  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), quadNeighbors, AbstractGeometry::Type::Quad);
   if(quadNeighbors == nullptr)
   {
     m_QuadNeighborsId.reset();
@@ -293,7 +291,7 @@ AbstractGeometry::StatusCode QuadGeom::findElementCentroids()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfQuads()}, std::vector<usize>{3});
   auto quadCentroids = DataArray<float32>::Create(*getDataStructure(), "Quad Centroids", std::move(dataStore), getId());
-  GeometryHelpers::Topology::FindElementCentroids(setFaces(), getVertices(), quadCentroids);
+  GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), quadCentroids);
   if(quadCentroids == nullptr)
   {
     m_QuadCentroidsId.reset();
@@ -419,7 +417,7 @@ void QuadGeom::getVertCoordsAtEdge(usize edgeId, complex::Point3D<float32>& vert
 AbstractGeometry::StatusCode QuadGeom::findEdges()
 {
   auto edgeList = createSharedEdgeList(0);
-  GeometryHelpers::Connectivity::Find2DElementEdges(setFaces(), edgeList);
+  GeometryHelpers::Connectivity::Find2DElementEdges(getFaces(), edgeList);
   if(edgeList == nullptr)
   {
     setEdges(nullptr);
@@ -433,7 +431,7 @@ AbstractGeometry::StatusCode QuadGeom::findUnsharedEdges()
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2});
   auto unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", std::move(dataStore), getId());
-  GeometryHelpers::Connectivity::Find2DUnsharedEdges(setFaces(), unsharedEdgeList);
+  GeometryHelpers::Connectivity::Find2DUnsharedEdges(getFaces(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
     setUnsharedEdges(nullptr);

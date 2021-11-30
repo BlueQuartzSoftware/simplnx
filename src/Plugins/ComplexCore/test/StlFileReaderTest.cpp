@@ -17,14 +17,14 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 
-TEST_CASE("ComplexCore::StlFileReaderFilter: Instantiation and Parameter Check", "[ComplexCore][StlFileReaderFilter]")
+TEST_CASE("ComplexCore::StlFileReaderFilter", "[ComplexCore][StlFileReaderFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   StlFileReaderFilter filter;
   DataStructure dataGraph;
   Arguments args;
 
-  DataGroup* topLevelGroup = DataGroup::Create(dataGraph, k_LevelZero);
+  DataGroup::Create(dataGraph, k_LevelZero);
 
   DataPath parentPath = DataPath({k_LevelZero});
   std::string triangleGeometryName = "[Triangle Geometry]";
