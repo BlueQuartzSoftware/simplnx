@@ -15,7 +15,7 @@ public:
   using ValueType = DataPath;
 
   DataPathSelectionParameter() = delete;
-  DataPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  DataPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty = true);
   ~DataPathSelectionParameter() override = default;
 
   DataPathSelectionParameter(const DataPathSelectionParameter&) = delete;
@@ -95,6 +95,7 @@ public:
 
 private:
   ValueType m_DefaultValue = {};
+  bool m_AllowEmpty = false;
 };
 } // namespace complex
 

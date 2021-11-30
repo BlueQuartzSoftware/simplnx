@@ -18,7 +18,7 @@ public:
   using ValueType = DataPath;
 
   ArraySelectionParameter() = delete;
-  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty = false);
   ~ArraySelectionParameter() override = default;
 
   ArraySelectionParameter(const ArraySelectionParameter&) = delete;
@@ -98,6 +98,7 @@ public:
 
 private:
   ValueType m_DefaultValue = {};
+  bool m_AllowEmpty = false;
 };
 } // namespace complex
 
