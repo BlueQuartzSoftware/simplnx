@@ -28,6 +28,11 @@ set(FilterList
   StlFileReaderFilter
   ExampleFilter1
   ExampleFilter2
+  StlFileReaderFilter
+  CalculateTriangleAreasFilter
+  LaplacianSmoothingFilter
+  QuickSurfaceMeshFilter
+  PointSampleTriangleGeometryFilter
 )
 
 set(ActionList
@@ -37,6 +42,7 @@ set(AlgorithmList
   StlFileReader
   LaplacianSmoothing
   QuickSurfaceMesh
+  PointSampleTriangleGeometry
   TupleTransfer
   )
 

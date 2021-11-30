@@ -61,11 +61,12 @@ TEST_CASE("ComplexCore::CalculateTriangleAreasFilter", "[ComplexCore][CalculateT
   {
     CalculateTriangleAreasFilter filter;
     Arguments args;
+    std::string triangleAreasName = "Triangle Areas";
 
     DataPath geometryPath = DataPath({k_LevelZero, triangleGeometryName});
 
     // Create default Parameters for the filter.
-    DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath("Triangle Areas");
+    DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleAreasName);
     args.insertOrAssign(CalculateTriangleAreasFilter::k_TriangleGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CalculateTriangleAreasFilter::k_CalculatedAreasDataPath_Key, std::make_any<DataPath>(triangleAreasDataPath));
 

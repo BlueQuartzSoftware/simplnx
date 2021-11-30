@@ -23,10 +23,6 @@ template <typename Geometry2DType>
 class CreateGeometry2DAction : public IDataAction
 {
 public:
-  using DimensionType = std::vector<size_t>;
-  using OriginType = std::vector<float>;
-  using SpacingType = std::vector<float>;
-
   CreateGeometry2DAction() = delete;
 
   CreateGeometry2DAction(DataPath geometryPath, AbstractGeometry::MeshIndexType numFaces, AbstractGeometry::MeshIndexType numVertices)

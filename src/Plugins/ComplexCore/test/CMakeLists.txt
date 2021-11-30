@@ -15,6 +15,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CalculateTriangleAreasFilterTest.cpp
   LaplacianSmoothingFilterTest.cpp
   QuickSurfaceMeshFilterTest.cpp
+  PointSampleTriangleGeometryFilterTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
