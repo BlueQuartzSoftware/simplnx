@@ -227,6 +227,10 @@ DataObject* traversePath(DataObject* obj, const DataPath& path, usize index)
 
 DataObject* DataStructure::getData(const DataPath& path)
 {
+  if(path.empty())
+  {
+    return nullptr;
+  }
   auto topLevel = getTopLevelData();
   for(DataObject* obj : topLevel)
   {
@@ -247,7 +251,7 @@ DataObject& DataStructure::getDataRef(const DataPath& path)
   DataObject* object = getData(path);
   if(object == nullptr)
   {
-    throw std::out_of_range(fmt::format("DataPath \"{}\" does not exist", path.toString()));
+    throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Input Path \"{}\" does not exist", path.toString()));
   }
   return *object;
 }
@@ -309,7 +313,7 @@ const DataObject& DataStructure::getDataRef(const DataPath& path) const
   const DataObject* object = getData(path);
   if(object == nullptr)
   {
-    throw std::out_of_range(fmt::format("DataPath \"{}\" does not exist", path.toString()));
+    throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Input Path \"{}\" does not exist", path.toString()));
   }
   return *object;
 }
