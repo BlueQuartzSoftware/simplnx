@@ -37,6 +37,7 @@ set(AlgorithmList
   StlFileReader
   LaplacianSmoothing
   QuickSurfaceMesh
+  TupleTransfer
   )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
