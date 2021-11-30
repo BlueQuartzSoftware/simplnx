@@ -60,11 +60,11 @@ namespace complex
 
 struct COMPLEXCORE_EXPORT PointSampleTriangleGeometryInputs
 {
-  ChoicesParameter::ValueType pSamplesNumberType;
+  // ChoicesParameter::ValueType pSamplesNumberType;
   int32 pNumberOfSamples;
   bool pUseMask;
   DataPath pTriangleGeometry;
-  DataPath pParentGeometry;
+  // DataPath pParentGeometry;
   DataPath pTriangleAreasArrayPath;
   DataPath pMaskArrayPath;
   MultiArraySelectionParameter::ValueType pSelectedDataArrayPaths;

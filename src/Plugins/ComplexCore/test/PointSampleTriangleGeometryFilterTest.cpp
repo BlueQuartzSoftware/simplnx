@@ -4,13 +4,9 @@
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
@@ -22,11 +18,56 @@
 #include "ComplexCore/Filters/StlFileReaderFilter.hpp"
 
 #include <filesystem>
+#include <limits>
 
 namespace fs = std::filesystem;
 
 using namespace complex;
 using namespace complex::Constants;
+
+std::array<float, 6> FindMinMaxCoord(AbstractGeometry::SharedVertexList* vertices, usize numVerts)
+{
+  std::array<float, 6> minMaxVerts = {std::numeric_limits<float>::max(), std::numeric_limits<float>::min(), std::numeric_limits<float>::max(),
+                                      std::numeric_limits<float>::min(), std::numeric_limits<float>::max(), std::numeric_limits<float>::min()};
+
+  for(usize v = 0; v < numVerts; v++)
+  {
+    if((*vertices)[v * 3] < minMaxVerts[0])
+    {
+      minMaxVerts[0] = (*vertices)[v * 3];
+    }
+    if((*vertices)[v * 3] > minMaxVerts[1])
+    {
+      minMaxVerts[1] = (*vertices)[v * 3];
+    }
+
+    if((*vertices)[v * 3 + 1] < minMaxVerts[2])
+    {
+      minMaxVerts[2] = (*vertices)[v * 3 + 1];
+    }
+    if((*vertices)[v * 3 + 1] > minMaxVerts[3])
+    {
+      minMaxVerts[3] = (*vertices)[v * 3 + 1];
+    }
+
+    if((*vertices)[v * 3 + 2] < minMaxVerts[4])
+    {
+      minMaxVerts[4] = (*vertices)[v * 3 + 2];
+    }
+    if((*vertices)[v * 3 + 2] > minMaxVerts[5])
+    {
+      minMaxVerts[5] = (*vertices)[v * 3 + 2];
+    }
+  }
+
+  //  for(auto& coord : minMaxVerts)
+  //  {
+  //    std::cout << coord << ",";
+  //  }
+  //  std::cout << std::endl;
+
+  return minMaxVerts;
+}
 
 TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][PointSampleTriangleGeometryFilter]")
 {
@@ -44,7 +85,7 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
     StlFileReaderFilter filter;
     Arguments args;
 
-    DataGroup* topLevelGroup = DataGroup::Create(dataGraph, k_LevelZero);
+    DataGroup::Create(dataGraph, k_LevelZero);
 
     DataPath normalsDataPath = parentPath.createChildPath(triangleGeometryName).createChildPath(triangleFaceDataGroupName).createChildPath(normalsDataArrayName);
 
@@ -109,19 +150,19 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
     PointSampleTriangleGeometryFilter filter;
     Arguments args;
 
-    const ChoicesParameter::ValueType k_ManualSampling = 0;
-    const int32_t k_GeometrySampling = 1;
+    //    const ChoicesParameter::ValueType k_ManualSampling = 0;
+    //    const int32_t k_GeometrySampling = 1;
 
     // Create default Parameters for the filter.
     args.insertOrAssign(PointSampleTriangleGeometryFilter::k_NumberOfSamples_Key, std::make_any<int32>(200));
-    args.insertOrAssign(PointSampleTriangleGeometryFilter::k_SamplesNumberType_Key, std::make_any<ChoicesParameter::ValueType>(k_ManualSampling));
+    // args.insertOrAssign(PointSampleTriangleGeometryFilter::k_SamplesNumberType_Key, std::make_any<ChoicesParameter::ValueType>(k_ManualSampling));
 
     args.insertOrAssign(PointSampleTriangleGeometryFilter::k_UseMask_Key, std::make_any<bool>(false));
 
     DataPath triangleGeometryPath = parentPath.createChildPath(triangleGeometryName);
     args.insertOrAssign(PointSampleTriangleGeometryFilter::k_TriangleGeometry_Key, std::make_any<DataPath>(triangleGeometryPath));
 
-    args.insertOrAssign(PointSampleTriangleGeometryFilter::k_ParentGeometry_Key, std::make_any<DataPath>(DataPath{}));
+    // args.insertOrAssign(PointSampleTriangleGeometryFilter::k_ParentGeometry_Key, std::make_any<DataPath>(DataPath{}));
 
     DataPath triangleAreasDataPath = triangleGeometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleAreasName);
     args.insertOrAssign(PointSampleTriangleGeometryFilter::k_TriangleAreasArrayPath_Key, std::make_any<DataPath>(triangleAreasDataPath));
@@ -138,37 +179,43 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);
-    if(preflightResult.outputActions.invalid())
-    {
-      for(const auto& error : preflightResult.outputActions.errors())
-      {
-        std::cout << error.code << ": " << error.message << std::endl;
-      }
-    }
-
     REQUIRE(preflightResult.outputActions.valid());
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataGraph, args);
     REQUIRE(executeResult.result.valid());
 
+    DataPath vertGeometryDataPath = parentPath.createChildPath(vertexGeometryName);
+    VertexGeom& vertGeom = dataGraph.getDataRefAs<VertexGeom>(vertGeometryDataPath);
+    usize numVerts = vertGeom.getNumberOfVertices();
+    AbstractGeometry::SharedVertexList* vertices = vertGeom.getVertices();
+    std::array<float, 6> minMaxVerts = FindMinMaxCoord(vertices, numVerts);
+
+    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(triangleGeometryPath);
+    AbstractGeometry::SharedVertexList* triVerts = triangleGeom.getVertices();
+    usize triNumVerts = triangleGeom.getNumberOfVertices();
+    std::array<float, 6> minMaxTriVerts = FindMinMaxCoord(triVerts, triNumVerts);
+
+    // Compare the min/max vertex coords from the input Triangle Geometry and the output vertex geometry. These
+    // should be without reasonable bounds of each other. This test will only catch if the algorithm has
+    // completely gone off the rails.
+    for(size_t i = 0; i < 6; i++)
+    {
+      REQUIRE((minMaxVerts[i] > minMaxTriVerts[i] - 1.0 && minMaxVerts[i] < minMaxTriVerts[i] + 1));
+    }
+
     // We need to insert this small data set for the XDMF to work correctly.
     DataPath xdmfVertsDataPath = parentPath.createChildPath(vertexGeometryName).createChildPath("Verts");
     DataObject::IdType parentId = dataGraph.getId(parentPath.createChildPath(vertexGeometryName)).value();
-
-    DataPath vertGeometryDataPath = parentPath.createChildPath(vertexGeometryName);
-    VertexGeom& vertGeom = dataGraph.getDataRefAs<VertexGeom>(vertGeometryDataPath);
     std::vector<usize> tupleShape = {vertGeom.getNumberOfVertices()};
     std::vector<usize> componentShape = {1};
-
     DataArray<int64_t>* vertsArray = DataArray<int64_t>::CreateWithStore<DataStore<int64_t>>(dataGraph, "Verts", tupleShape, componentShape, parentId);
     for(int64_t i = 0; i < tupleShape[0]; i++)
     {
       (*vertsArray)[i] = i;
     }
-
     std::string outputFilePath = fmt::format("{}/{}", unit_test::k_BinaryDir, k_OutputFile);
-    std::cout << "Writing Output file to " << outputFilePath << std::endl;
+    // std::cout << "Writing Output file to " << outputFilePath << std::endl;
     Result<H5::FileWriter> result = H5::FileWriter::CreateFile(outputFilePath);
     H5::FileWriter fileWriter = std::move(result.value());
 
@@ -176,13 +223,3 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
     REQUIRE(err >= 0);
   }
 }
-
-// TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter: Valid filter execution")
-//{
-//
-//}
-
-// TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter: InValid filter execution")
-//{
-//
-//}

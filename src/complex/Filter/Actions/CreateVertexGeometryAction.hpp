@@ -16,7 +16,7 @@
 namespace complex
 {
 /**
- * @brief Action for creating an ImageGeometry in a DataStructure
+ * @brief Action for creating a Vertex Geometry in a DataStructure
  */
 
 class CreateVertexGeometryAction : public IDataAction

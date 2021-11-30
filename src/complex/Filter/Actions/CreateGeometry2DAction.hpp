@@ -17,7 +17,7 @@
 namespace complex
 {
 /**
- * @brief Action for creating an ImageGeometry in a DataStructure
+ * @brief Action for creating a Triangle or QuadGeometry in a DataStructure
  */
 template <typename Geometry2DType>
 class CreateGeometry2DAction : public IDataAction

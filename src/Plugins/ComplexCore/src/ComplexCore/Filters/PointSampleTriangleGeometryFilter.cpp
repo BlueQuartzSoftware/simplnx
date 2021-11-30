@@ -55,10 +55,10 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SamplesNumberType_Key, "Source for Number of Samples", "", 0, ChoicesParameter::Choices{"Manual", "Other Geometry"}));
+  // params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SamplesNumberType_Key, "Source for Number of Samples", "", 0, ChoicesParameter::Choices{"Manual", "Other Geometry"}));
   params.insert(std::make_unique<Int32Parameter>(k_NumberOfSamples_Key, "Number of Sample Points", "", 1000));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_TriangleGeometry_Key, "Triangle Geometry to Sample", "", DataPath{}));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_ParentGeometry_Key, "Source Geometry for Number of Sample Points", "", DataPath{}, true));
+  // params.insert(std::make_unique<DataPathSelectionParameter>(k_ParentGeometry_Key, "Source Geometry for Number of Sample Points", "", DataPath{}, true));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "", false));
   params.insertSeparator(Parameters::Separator{"Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleAreasArrayPath_Key, "Face Areas", "", DataPath{}));
@@ -73,8 +73,8 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
   params.insert(std::make_unique<ArrayCreationParameter>(k_VertexData_DataPath_Key, "Vertex Data", "", DataPath{}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_SamplesNumberType_Key, k_NumberOfSamples_Key, 0);
-  params.linkParameters(k_SamplesNumberType_Key, k_ParentGeometry_Key, 1);
+  //  params.linkParameters(k_SamplesNumberType_Key, k_NumberOfSamples_Key, 0);
+  //  params.linkParameters(k_SamplesNumberType_Key, k_ParentGeometry_Key, 1);
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
   return params;
@@ -95,11 +95,11 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pSamplesNumberType = filterArgs.value<ChoicesParameter::ValueType>(k_SamplesNumberType_Key);
+  // auto pSamplesNumberType = filterArgs.value<ChoicesParameter::ValueType>(k_SamplesNumberType_Key);
   auto pNumberOfSamples = filterArgs.value<int32>(k_NumberOfSamples_Key);
   auto pUseMask = filterArgs.value<bool>(k_UseMask_Key);
   auto pTriangleGeometry = filterArgs.value<DataPath>(k_TriangleGeometry_Key);
-  auto pParentGeometry = filterArgs.value<DataPath>(k_ParentGeometry_Key);
+  // auto pParentGeometry = filterArgs.value<DataPath>(k_ParentGeometry_Key);
   auto pTriangleAreasArrayPath = filterArgs.value<DataPath>(k_TriangleAreasArrayPath_Key);
   auto pMaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pSelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
@@ -144,6 +144,17 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
+  // Ensure that if pMaskValue is TRUE that the Mask Path is valid
+  if(pUseMask)
+  {
+    const DataObject* maskArray = dataStructure.getData(pMaskArrayPath);
+    if(nullptr == maskArray)
+    {
+      Error result = {-500, fmt::format("'Use Mask Array' is selected but the DataPath '{}' does not exist. Please ensure the mask array exists in the DataStructure.", pMaskArrayPath.toString())};
+      resultOutputActions.errors().push_back(result);
+    }
+  }
+
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -157,11 +168,11 @@ Result<> PointSampleTriangleGeometryFilter::executeImpl(DataStructure& dataStruc
 
   PointSampleTriangleGeometryInputs inputs;
 
-  inputs.pSamplesNumberType = filterArgs.value<ChoicesParameter::ValueType>(k_SamplesNumberType_Key);
+  // inputs.pSamplesNumberType = filterArgs.value<ChoicesParameter::ValueType>(k_SamplesNumberType_Key);
   inputs.pNumberOfSamples = filterArgs.value<int32>(k_NumberOfSamples_Key);
   inputs.pUseMask = filterArgs.value<bool>(k_UseMask_Key);
   inputs.pTriangleGeometry = filterArgs.value<DataPath>(k_TriangleGeometry_Key);
-  inputs.pParentGeometry = filterArgs.value<DataPath>(k_ParentGeometry_Key);
+  // inputs.pParentGeometry = filterArgs.value<DataPath>(k_ParentGeometry_Key);
   inputs.pTriangleAreasArrayPath = filterArgs.value<DataPath>(k_TriangleAreasArrayPath_Key);
   inputs.pMaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputs.pSelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);

@@ -140,7 +140,7 @@ void TriangleGeom::setVertexIdsForFace(usize faceId, usize verts[3])
   const usize offset = faceId * k_NumVerts;
   for(usize i = 0; i < k_NumVerts; i++)
   {
-    (*tris)[offset + i] = verts[i];
+    (*faces)[offset + i] = verts[i];
   }
 }
 

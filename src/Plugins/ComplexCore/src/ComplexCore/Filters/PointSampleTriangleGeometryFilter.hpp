@@ -25,11 +25,11 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_VertexParentGroup_Key = "VertexGeometryParentGroup";
-  static inline constexpr StringLiteral k_SamplesNumberType_Key = "SamplesNumberType";
+  // static inline constexpr StringLiteral k_SamplesNumberType_Key = "SamplesNumberType";
   static inline constexpr StringLiteral k_NumberOfSamples_Key = "NumberOfSamples";
   static inline constexpr StringLiteral k_UseMask_Key = "UseMask";
   static inline constexpr StringLiteral k_TriangleGeometry_Key = "TriangleGeometry";
-  static inline constexpr StringLiteral k_ParentGeometry_Key = "ParentGeometry";
+  // static inline constexpr StringLiteral k_ParentGeometry_Key = "ParentGeometry";
   static inline constexpr StringLiteral k_TriangleAreasArrayPath_Key = "TriangleAreasArrayPath";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
   static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "SelectedDataArrayPaths";
