@@ -16,6 +16,8 @@ class COMPLEX_EXPORT TriangleGeom : public AbstractGeometry2D
 public:
   friend class DataStructure;
 
+  static inline constexpr usize k_NumVerts = 3;
+
   /**
    * @brief
    * @param ds
@@ -48,6 +50,9 @@ public:
   TriangleGeom(TriangleGeom&& other) noexcept;
 
   virtual ~TriangleGeom();
+
+  TriangleGeom& operator=(const TriangleGeom&) = delete;
+  TriangleGeom& operator=(TriangleGeom&&) noexcept = delete;
 
   /**
    * @brief Returns typename of the DataObject as a std::string.
@@ -106,19 +111,19 @@ public:
 
   /**
    * @brief
-   * @param triId
+   * @param faceId
    * @param verts
    */
-  void getVertexIdsForFace(usize triId, usize verts[3]) const;
+  void getVertexIdsForFace(usize faceId, usize verts[3]) const;
 
   /**
    * @brief
-   * @param triId
+   * @param faceId
    * @param vert1
    * @param vert2
    * @param vert3
    */
-  void getVertexCoordsForFace(usize triId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3) const;
+  void getVertexCoordsForFace(usize faceId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3) const;
 
   /**
    * @brief
@@ -324,7 +329,7 @@ protected:
    * @param vertices
    * @param allocate
    */
-  TriangleGeom(DataStructure& ds, std::string name, usize numTriangles, const SharedVertexList* vertices, bool allocate);
+  // TriangleGeom(DataStructure& ds, std::string name, usize numTriangles, const SharedVertexList* vertices, bool allocate);
 
   /**
    * @brief
@@ -333,7 +338,7 @@ protected:
    * @param triangles
    * @param vertices
    */
-  TriangleGeom(DataStructure& ds, std::string name, const SharedTriList* triangles, const SharedVertexList* vertices);
+  // TriangleGeom(DataStructure& ds, std::string name, const SharedTriList* triangles, const SharedVertexList* vertices);
 
   /**
    * @brief

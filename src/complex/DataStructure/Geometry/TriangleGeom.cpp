@@ -21,15 +21,15 @@ TriangleGeom::TriangleGeom(DataStructure& ds, std::string name, IdType importId)
 {
 }
 
-TriangleGeom::TriangleGeom(DataStructure& ds, std::string name, usize numTriangles, const SharedVertexList* vertices, bool allocate)
-: AbstractGeometry2D(ds, std::move(name))
-{
-}
-
-TriangleGeom::TriangleGeom(DataStructure& ds, std::string name, const SharedTriList* triangles, const SharedVertexList* vertices)
-: AbstractGeometry2D(ds, std::move(name))
-{
-}
+// TriangleGeom::TriangleGeom(DataStructure& ds, std::string name, usize numTriangles, const SharedVertexList* vertices, bool allocate)
+//: AbstractGeometry2D(ds, std::move(name))
+//{
+//}
+//
+// TriangleGeom::TriangleGeom(DataStructure& ds, std::string name, const SharedTriList* triangles, const SharedVertexList* vertices)
+//: AbstractGeometry2D(ds, std::move(name))
+//{
+//}
 
 TriangleGeom::TriangleGeom(const TriangleGeom& other)
 : AbstractGeometry2D(other)
@@ -112,7 +112,7 @@ void TriangleGeom::resizeFaceList(usize newNumTris)
 
 void TriangleGeom::setFaces(const SharedTriList* triangles)
 {
-  if(!triangles)
+  if(triangles == nullptr)
   {
     m_TriListId.reset();
     return;
@@ -130,44 +130,46 @@ const AbstractGeometry::SharedTriList* TriangleGeom::getFaces() const
   return dynamic_cast<const SharedTriList*>(getDataStructure()->getData(m_TriListId));
 }
 
-void TriangleGeom::setVertexIdsForFace(usize triId, usize verts[3])
+void TriangleGeom::setVertexIdsForFace(usize faceId, usize verts[3])
 {
-  auto tris = getFaces();
-  if(!tris)
+  auto faces = getFaces();
+  if(faces == nullptr)
   {
     return;
   }
-  for(usize i = 0; i < 3; i++)
+  const usize offset = faceId * k_NumVerts;
+  for(usize i = 0; i < k_NumVerts; i++)
   {
-    (*tris)[i] = verts[i];
+    (*faces)[offset + i] = verts[i];
   }
 }
 
-void TriangleGeom::getVertexIdsForFace(usize triId, usize verts[3]) const
+void TriangleGeom::getVertexIdsForFace(usize faceId, usize verts[3]) const
 {
-  auto tris = getFaces();
-  if(!tris)
+  auto faces = getFaces();
+  if(faces == nullptr)
   {
     return;
   }
-  for(usize i = 0; i < 3; i++)
+  const usize offset = faceId * k_NumVerts;
+  for(usize i = 0; i < k_NumVerts; i++)
   {
-    verts[i] = tris->at(i);
+    verts[i] = faces->at(offset + i);
   }
 }
 
-void TriangleGeom::getVertexCoordsForFace(usize triId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3) const
+void TriangleGeom::getVertexCoordsForFace(usize faceId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3) const
 {
-  if(!getFaces())
+  if(getFaces() == nullptr)
   {
     return;
   }
-  if(!getVertices())
+  if(getVertices() == nullptr)
   {
     return;
   }
-  usize verts[3];
-  getVertexIdsForFace(triId, verts);
+  usize verts[k_NumVerts];
+  getVertexIdsForFace(faceId, verts);
   vert1 = getCoords(verts[0]);
   vert2 = getCoords(verts[1]);
   vert3 = getCoords(verts[2]);
@@ -175,12 +177,12 @@ void TriangleGeom::getVertexCoordsForFace(usize triId, Point3D<float32>& vert1, 
 
 usize TriangleGeom::getNumberOfFaces() const
 {
-  auto tris = getFaces();
-  if(!tris)
+  auto faces = getFaces();
+  if(faces == nullptr)
   {
     return 0;
   }
-  return tris->getNumberOfTuples();
+  return faces->getNumberOfTuples();
 }
 
 void TriangleGeom::initializeWithZeros()

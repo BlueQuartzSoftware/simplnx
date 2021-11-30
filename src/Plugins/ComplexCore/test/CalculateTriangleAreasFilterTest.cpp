@@ -18,7 +18,7 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 
-TEST_CASE("ComplexCore::CalculateTriangleAreasFilter: Instantiation and Parameter Check", "[ComplexCore][CalculateTriangleAreasFilter]")
+TEST_CASE("ComplexCore::CalculateTriangleAreasFilter", "[ComplexCore][CalculateTriangleAreasFilter]")
 {
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "Face Data";

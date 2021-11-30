@@ -43,7 +43,7 @@ const fs::path k_TestFile = "CreateImageGeometry_Test.dream3d";
 
 } // namespace CreateImageGeometryUnitTest
 
-TEST_CASE("ComplexCore::CreateImageGeometry: Instantiation and Parameter Check", "[ComplexCore]")
+TEST_CASE("ComplexCore::CreateImageGeometry", "[ComplexCore]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
 

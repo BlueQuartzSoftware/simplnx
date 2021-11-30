@@ -49,6 +49,9 @@ public:
 
   virtual ~EdgeGeom();
 
+  EdgeGeom& operator=(const EdgeGeom&) = delete;
+  EdgeGeom& operator=(EdgeGeom&&) noexcept = delete;
+
   /**
    * @brief Returns typename of the DataObject as a std::string.
    * @return std::string

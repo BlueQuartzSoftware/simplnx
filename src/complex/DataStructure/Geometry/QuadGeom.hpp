@@ -16,6 +16,8 @@ class COMPLEX_EXPORT QuadGeom : public AbstractGeometry2D
 public:
   friend class DataStructure;
 
+  static inline constexpr usize k_NumVerts = 4;
+
   /**
    * @brief
    * @param ds
@@ -48,6 +50,9 @@ public:
   QuadGeom(QuadGeom&& other) noexcept;
 
   ~QuadGeom() override;
+
+  QuadGeom& operator=(const QuadGeom&) = delete;
+  QuadGeom& operator=(QuadGeom&&) noexcept = delete;
 
   /**
    * @brief Returns typename of the DataObject as a std::string.
@@ -89,7 +94,7 @@ public:
    * @brief
    * @return SharedQuadList*
    */
-  SharedQuadList* setFaces();
+  SharedQuadList* getFaces();
 
   /**
    * @brief
@@ -102,24 +107,24 @@ public:
    * @param quadId
    * @param verts
    */
-  void setVertsAtQuad(usize quadId, usize verts[4]);
+  void setVertexIdsForFace(usize quadId, usize verts[4]);
 
   /**
    * @brief
-   * @param quadId
+   * @param faceId
    * @param verts
    */
-  void getVertsAtQuad(usize quadId, usize verts[4]) const;
+  void getVertexIdsForFace(usize faceId, usize verts[4]) const;
 
   /**
    * @brief
-   * @param quadId
+   * @param faceId
    * @param vert1
    * @param vert2
    * @param vert3
    * @param vert4
    */
-  void getVertCoordsAtQuad(usize quadId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const;
+  void getVertexCoordsForFace(usize faceId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const;
 
   /**
    * @brief Returns the number of quads in the geometry. If the quad list has
@@ -326,7 +331,7 @@ protected:
    * @param vertices
    * @param allocate
    */
-  QuadGeom(DataStructure& ds, std::string name, usize numQuads, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
+  // QuadGeom(DataStructure& ds, std::string name, usize numQuads, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
 
   /**
    * @brief
@@ -335,7 +340,7 @@ protected:
    * @param quads
    * @param vertices
    */
-  QuadGeom(DataStructure& ds, std::string name, const std::shared_ptr<SharedQuadList>& quads, const std::shared_ptr<SharedVertexList>& vertices);
+  // QuadGeom(DataStructure& ds, std::string name, const std::shared_ptr<SharedQuadList>& quads, const std::shared_ptr<SharedVertexList>& vertices);
 
   /**
    * @brief

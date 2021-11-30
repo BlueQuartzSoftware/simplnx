@@ -48,6 +48,9 @@ public:
 
   ~TetrahedralGeom() override;
 
+  TetrahedralGeom& operator=(const TetrahedralGeom&) = delete;
+  TetrahedralGeom& operator=(TetrahedralGeom&&) noexcept = delete;
+
   /**
    * @brief Returns typename of the DataObject as a std::string.
    * @return std::string
@@ -352,7 +355,7 @@ protected:
    * @param vertices
    * @param allocate = true
    */
-  TetrahedralGeom(DataStructure& ds, std::string name, usize numTets, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
+  // TetrahedralGeom(DataStructure& ds, std::string name, usize numTets, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
 
   /**
    * @brief
@@ -361,7 +364,7 @@ protected:
    * @param tets
    * @param vertices
    */
-  TetrahedralGeom(DataStructure& ds, std::string name, const std::shared_ptr<SharedTetList>& tets, const std::shared_ptr<SharedVertexList>& vertices);
+  // TetrahedralGeom(DataStructure& ds, std::string name, const std::shared_ptr<SharedTetList>& tets, const std::shared_ptr<SharedVertexList>& vertices);
 
   /**
    * @brief

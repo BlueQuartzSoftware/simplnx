@@ -49,6 +49,9 @@ public:
 
   virtual ~RectGridGeom();
 
+  RectGridGeom& operator=(const RectGridGeom&) = delete;
+  RectGridGeom& operator=(RectGridGeom&&) noexcept = delete;
+
   /**
    * @brief Returns typename of the DataObject as a std::string.
    * @return std::string
