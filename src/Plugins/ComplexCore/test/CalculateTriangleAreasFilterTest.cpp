@@ -5,7 +5,7 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
-#include "UnitTestCommon.hpp"
+#include "complex/Utilities/UnitTestCommon.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/CalculateTriangleAreasFilter.hpp"

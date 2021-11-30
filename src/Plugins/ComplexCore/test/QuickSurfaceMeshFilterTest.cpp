@@ -1,18 +1,16 @@
 
 #include <catch2/catch.hpp>
 
-#include "UnitTestCommon.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/Utilities/UnitTestCommon.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/QuickSurfaceMeshFilter.hpp"
-
-#include <filesystem>
 
 using namespace complex;
 using namespace complex::UnitTest;
