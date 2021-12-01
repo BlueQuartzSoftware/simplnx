@@ -121,13 +121,13 @@ function(create_complex_plugin)
   #------------------------------------------------------------------------------
   # Plugin Headers
   set(${ARGS_NAME}_Plugin_HDRS
-    ${${ARGS_NAME}_SOURCE_DIR}/${ARGS_NAME}Plugin.hpp
+    ${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/${ARGS_NAME}Plugin.hpp
     )
 
   #------------------------------------------------------------------------------
   # Plugin Headers
   set(${ARGS_NAME}_Plugin_SRCS
-    ${${ARGS_NAME}_SOURCE_DIR}/${ARGS_NAME}Plugin.cpp
+    ${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/${ARGS_NAME}Plugin.cpp
     )
 
   #------------------------------------------------------------------------------
