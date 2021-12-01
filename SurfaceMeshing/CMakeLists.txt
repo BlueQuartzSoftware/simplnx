@@ -16,6 +16,7 @@ set(FilterList
   TriangleCentroidFilter
   TriangleDihedralAngleFilter
   TriangleNormalFilter
+
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}

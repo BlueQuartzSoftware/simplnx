@@ -12,7 +12,6 @@ std::map<complex::Uuid, complex::Uuid> k_SimplToComplexFilterMapping = {
     {Uuid::FromString("{26765457-89fb-5686-87f6-878ca549f0df}").value(), Uuid::FromString("42bcb963-047c-58ab-a6a6-034c9c1f840d").value()}, /* FindTriangleGeomShapes */
     {Uuid::FromString("{9157ef1c-7cbc-5840-b6e7-26089c0b0f88}").value(), Uuid::FromString("ada04e57-bafd-5edb-8bd1-078f4a5a2da4").value()}, /* FindTriangleGeomSizes */
     {Uuid::FromString("{ea565056-784e-52c5-b705-92f6799714c7}").value(), Uuid::FromString("e4c2ad48-b6f8-5b59-9592-dfa9ca23140d").value()}, /* GenerateGeometryConnectivity */
-    {Uuid::FromString("{07b49e30-3900-5c34-862a-f1fb48bad568}").value(), Uuid::FromString("1a36c497-2e93-580a-9fa6-b8a217a32492").value()}, /* QuickSurfaceMeshFilter */
     {Uuid::FromString("{9b9fb9e1-074d-54b6-a6ce-0be21ab4496d}").value(), Uuid::FromString("9844a992-a520-5611-aa20-aab712caa337").value()}, /* ReverseTriangleWinding */
     {Uuid::FromString("{15c743db-5936-53a2-92cf-edf00526486d}").value(), Uuid::FromString("27e919af-b100-58fe-b844-3c1bfb3a4bdf").value()}, /* SharedFeatureFaceFilter */
     {Uuid::FromString("{7aa33007-4186-5d7f-ba9d-d0a561b3351d}").value(), Uuid::FromString("6eb7f1f4-c26a-5f93-88a6-ed0fbd689ede").value()}, /* TriangleCentroidFilter */
