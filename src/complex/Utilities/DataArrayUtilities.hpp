@@ -211,7 +211,7 @@ COMPLEX_EXPORT Result<> ConditionalReplaceValueInArray(const std::string& valueA
  * @return
  */
 template <class T>
-std::unique_ptr<IDataStore<T>> CreateDataStore(const typename IDataStore<T>::ShapeType& tupleShape, const typename IDataStore<T>::ShapeType& componentShape, IDataAction::Mode mode)
+std::unique_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore::ShapeType& tupleShape, const typename IDataStore::ShapeType& componentShape, IDataAction::Mode mode)
 {
   switch(mode)
   {

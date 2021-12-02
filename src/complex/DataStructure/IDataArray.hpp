@@ -1,9 +1,14 @@
 #pragma once
 
 #include "complex/DataStructure/DataObject.hpp"
+#include "complex/DataStructure/IDataStore.hpp"
 
 namespace complex
 {
+/**
+ * @class IDataArray
+ * @brief The IDataArray class is a typeless interface for the templated DataArray class.
+ */
 class COMPLEX_EXPORT IDataArray : public DataObject
 {
 public:
@@ -42,6 +47,31 @@ public:
    * @param to
    */
   virtual void copyTuple(usize from, usize to) = 0;
+
+  /**
+   * @brief Returns a pointer to the array's IDataStore.
+   * @return IDataStore*
+   */
+  virtual IDataStore* getIDataStore() = 0;
+
+  /**
+   * @brief Returns a pointer to the array's IDataStore.
+   * @return const IDataStore*
+   */
+  virtual const IDataStore* getIDataStore() const = 0;
+
+  /**
+   * @brief Returns the DataArray's value type as an enum
+   * @return DataType
+   */
+  virtual DataType getDataType() const
+  {
+    if(auto store = getIDataStore())
+    {
+      return store->getDataType();
+    }
+    return DataType::error;
+  }
 
 protected:
   IDataArray(DataStructure& dataStructure, std::string name)

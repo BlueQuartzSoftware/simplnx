@@ -33,7 +33,7 @@ constexpr int64 k_MissingOrIncorrectGoodVoxelsArray = -602;
 class TSpecificCompareFunctorBool : public SegmentFeatures::CompareFunctor
 {
 public:
-  TSpecificCompareFunctorBool(void* data, int64 length, bool tolerance, IDataStore<int32>* featureIds)
+  TSpecificCompareFunctorBool(void* data, int64 length, bool tolerance, AbstractDataStore<int32>* featureIds)
   : m_Length(length)
   , featureIdsArray(featureIds)
   {
@@ -61,9 +61,9 @@ protected:
   TSpecificCompareFunctorBool() = default;
 
 private:
-  bool* m_Data = nullptr;                       // The data that is being compared
-  int64 m_Length = 0;                           // Length of the Data Array
-  IDataStore<int32>* featureIdsArray = nullptr; // The Feature Ids
+  bool* m_Data = nullptr;                              // The data that is being compared
+  int64 m_Length = 0;                                  // Length of the Data Array
+  AbstractDataStore<int32>* featureIdsArray = nullptr; // The Feature Ids
 };
 
 /**
@@ -73,7 +73,7 @@ template <class T>
 class TSpecificCompareFunctor : public SegmentFeatures::CompareFunctor
 {
 public:
-  TSpecificCompareFunctor(void* data, int64 length, T tolerance, IDataStore<int32>* featureIds)
+  TSpecificCompareFunctor(void* data, int64 length, T tolerance, AbstractDataStore<int32>* featureIds)
   : m_Length(length)
   , m_Tolerance(tolerance)
   , featureIdsArray(featureIds)
@@ -113,10 +113,10 @@ protected:
   TSpecificCompareFunctor() = default;
 
 private:
-  T* m_Data = nullptr;                          // The data that is being compared
-  int64 m_Length = 0;                           // Length of the Data Array
-  T m_Tolerance = static_cast<T>(0);            // The tolerance of the comparison
-  IDataStore<int32>* featureIdsArray = nullptr; // The Feature Ids
+  T* m_Data = nullptr;                                 // The data that is being compared
+  int64 m_Length = 0;                                  // Length of the Data Array
+  T m_Tolerance = static_cast<T>(0);                   // The tolerance of the comparison
+  AbstractDataStore<int32>* featureIdsArray = nullptr; // The Feature Ids
 };
 } // namespace
 

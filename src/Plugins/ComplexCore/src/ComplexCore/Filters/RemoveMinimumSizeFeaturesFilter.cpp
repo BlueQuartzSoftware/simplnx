@@ -330,7 +330,7 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
   if(applyToSinglePhase)
   {
     auto featurePhasesPtr = data.getDataAs<Int32Array>(featurePhasesPath);
-    const IDataStore<int32>* featurePhases = nullptr;
+    const AbstractDataStore<int32>* featurePhases = nullptr;
     if(featurePhasesPtr != nullptr)
     {
       dataArrayPaths.push_back(featurePhasesPath);
