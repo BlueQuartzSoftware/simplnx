@@ -23,9 +23,9 @@ constexpr int32 k_MismatchedDims = -64;
 template <class T>
 void FindThreshold(const DataArray<T>& inputArray, const Float32Array& gradMagnitudeArray, UInt8Array& maskArray)
 {
-  const IDataStore<T>& inputData = inputArray.getDataStoreRef();
-  const IDataStore<float32>& gradMag = gradMagnitudeArray.getDataStoreRef();
-  IDataStore<uint8>& maskStore = maskArray.getDataStoreRef();
+  const AbstractDataStore<T>& inputData = inputArray.getDataStoreRef();
+  const AbstractDataStore<float32>& gradMag = gradMagnitudeArray.getDataStoreRef();
+  AbstractDataStore<uint8>& maskStore = maskArray.getDataStoreRef();
 
   usize numTuples = inputArray.getNumberOfTuples();
   float numerator = 0;

@@ -25,41 +25,43 @@ public:
   FindDifferencesMap& operator=(FindDifferencesMap&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DataPath_Key = "removed_data_path";
+  static inline constexpr StringLiteral k_FirstInputArrayPath_Key = "first_input_array_path";
+  static inline constexpr StringLiteral k_SecondInputArrayPath_Key = "second_input_array_path";
+  static inline constexpr StringLiteral k_DifferenceMapArrayPath_Key = "difference_map_array_path";
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the name of the filter.
+   * @return std::string
    */
   std::string name() const override;
 
   /**
    * @brief Returns the C++ classname of this filter.
-   * @return
+   * @return std::string
    */
   std::string className() const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the filter's UUID.
+   * @return Uuid
    */
   Uuid uuid() const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the filter name name presented to the user.
+   * @return std::string
    */
   std::string humanName() const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the parameters required to run the filter.
+   * @return Parameters
    */
   Parameters parameters() const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Creates a copy of the filter.
+   * @return IFilter::UniquePointer
    */
   UniquePointer clone() const override;
 

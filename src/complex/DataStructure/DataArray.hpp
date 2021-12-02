@@ -20,10 +20,10 @@ public:
   using value_type = T;
   using reference = T&;
   using const_reference = const T&;
-  using store_type = IDataStore<T>;
-  using weak_store = typename std::weak_ptr<IDataStore<T>>;
-  using Iterator = typename IDataStore<T>::Iterator;
-  using ConstIterator = typename IDataStore<T>::ConstIterator;
+  using store_type = AbstractDataStore<T>;
+  using weak_store = typename std::weak_ptr<AbstractDataStore<T>>;
+  using Iterator = typename AbstractDataStore<T>::Iterator;
+  using ConstIterator = typename AbstractDataStore<T>::ConstIterator;
 
   /**
    * @brief Attempts to create a DataArray with the specified values and add
@@ -162,7 +162,9 @@ public:
    */
   DataObject* deepCopy() override
   {
-    return new DataArray(*getDataStructure(), getName(), getId(), getDataStore()->deepCopy());
+    std::shared_ptr<IDataStore> sharedStore = getDataStore()->deepCopy();
+    std::shared_ptr<store_type> datastore = std::dynamic_pointer_cast<store_type>(sharedStore);
+    return new DataArray(*getDataStructure(), getName(), getId(), datastore);
   }
 
   /**
@@ -306,6 +308,24 @@ public:
   }
 
   /**
+   * @brief Returns a pointer to the array's IDataStore.
+   * @return const IDataStore*
+   */
+  IDataStore* getIDataStore() override
+  {
+    return m_DataStore.get();
+  }
+  
+  /**
+   * @brief Returns a pointer to the array's IDataStore.
+   * @return const IDataStore*
+   */
+  const IDataStore* getIDataStore() const override
+  {
+    return m_DataStore.get();
+  }
+
+  /**
    * @brief Returns a reference to the DataStore.
    * @return DataStore<T>&
    */
@@ -338,7 +358,7 @@ public:
   template <class StoreT>
   const StoreT* getDataStoreAs() const
   {
-    static_assert(std::is_base_of_v<IDataStore<T>, StoreT>);
+    static_assert(std::is_base_of_v<AbstractDataStore<T>, StoreT>);
     return dynamic_cast<const StoreT*>(m_DataStore.get());
   }
 
@@ -349,7 +369,7 @@ public:
   template <class StoreT>
   StoreT* getDataStoreAs()
   {
-    static_assert(std::is_base_of_v<IDataStore<T>, StoreT>);
+    static_assert(std::is_base_of_v<AbstractDataStore<T>, StoreT>);
     return dynamic_cast<StoreT*>(m_DataStore.get());
   }
 
@@ -360,7 +380,7 @@ public:
   template <class StoreT>
   const StoreT& getDataStoreRefAs() const
   {
-    static_assert(std::is_base_of_v<IDataStore<T>, StoreT>);
+    static_assert(std::is_base_of_v<AbstractDataStore<T>, StoreT>);
     return dynamic_cast<const StoreT&>(*m_DataStore);
   }
 
@@ -371,7 +391,7 @@ public:
   template <class StoreT>
   StoreT& getDataStoreRefAs()
   {
-    static_assert(std::is_base_of_v<IDataStore<T>, StoreT>);
+    static_assert(std::is_base_of_v<AbstractDataStore<T>, StoreT>);
     return dynamic_cast<StoreT&>(*m_DataStore);
   }
 
