@@ -1,6 +1,6 @@
 #pragma once
 
-#include "complex/DataStructure/IDataStore.hpp"
+#include "complex/DataStructure/AbstractDataStore.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5AttributeReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
@@ -23,13 +23,13 @@ namespace complex
  * @tparam T
  */
 template <typename T>
-class DataStore : public IDataStore<T>
+class DataStore : public AbstractDataStore<T>
 {
 public:
-  using value_type = typename IDataStore<T>::value_type;
-  using reference = typename IDataStore<T>::reference;
-  using const_reference = typename IDataStore<T>::const_reference;
-  using ShapeType = typename IDataStore<T>::ShapeType;
+  using value_type = typename AbstractDataStore<T>::value_type;
+  using reference = typename AbstractDataStore<T>::reference;
+  using const_reference = typename AbstractDataStore<T>::const_reference;
+  using ShapeType = typename IDataStore::ShapeType;
 
   static constexpr const char k_DataStore[] = "DataStore";
   static constexpr const char k_TupleShape[] = "TupleShape";
@@ -206,7 +206,7 @@ public:
    * @param index
    * @return value_type
    */
-  typename IDataStore<T>::value_type getValue(usize index) const override
+  value_type getValue(usize index) const override
   {
     return m_Data[index];
   }
@@ -227,7 +227,7 @@ public:
    * @param  index
    * @return const_reference
    */
-  typename IDataStore<T>::const_reference operator[](usize index) const override
+  const_reference operator[](usize index) const override
   {
     return m_Data[index];
   }
@@ -238,7 +238,7 @@ public:
    * @param  index
    * @return reference
    */
-  typename IDataStore<T>::reference operator[](usize index) override
+  reference operator[](usize index) override
   {
     return m_Data[index];
   }
@@ -249,9 +249,9 @@ public:
    * @param index
    * @return const_reference
    */
-  typename IDataStore<T>::const_reference at(usize index) const override
+  const_reference at(usize index) const override
   {
-    if(index >= IDataStore<T>::getSize())
+    if(index >= IDataStore::getSize())
       if(index >= this->getSize())
       {
         throw std::runtime_error("");
@@ -263,7 +263,7 @@ public:
    * @brief Returns a deep copy of the data store and all its data.
    * @return std::unique_ptr<IDataStore>
    */
-  std::unique_ptr<IDataStore<T>> deepCopy() const override
+  std::unique_ptr<IDataStore> deepCopy() const override
   {
     auto copy = std::make_unique<DataStore<T>>(*this);
     auto size = this->getSize();

@@ -36,4 +36,20 @@ enum class NumericType : uint8
   float32,
   float64
 };
+
+enum class DataType : uint8
+{
+  int8,
+  uint8,
+  int16,
+  uint16,
+  int32,
+  uint32,
+  int64,
+  uint64,
+  float32,
+  float64,
+  boolean,
+  error = 255
+};
 } // namespace complex
