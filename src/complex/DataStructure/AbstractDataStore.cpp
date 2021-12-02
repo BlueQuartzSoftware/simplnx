@@ -57,6 +57,12 @@ DataType COMPLEX_EXPORT AbstractDataStore<uint64>::getDataType() const
 }
 
 template <>
+DataType COMPLEX_EXPORT AbstractDataStore<unsigned long>::getDataType() const
+{
+  return DataType::uint64;
+}
+
+template <>
 DataType COMPLEX_EXPORT AbstractDataStore<float32>::getDataType() const
 {
   return DataType::float32;

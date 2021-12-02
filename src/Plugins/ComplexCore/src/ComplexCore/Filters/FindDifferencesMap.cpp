@@ -328,6 +328,9 @@ Result<> FindDifferencesMap::executeImpl(DataStructure& data, const Arguments& a
   case DataType::boolean:
     ExecuteFindDifferenceMap<bool>(firstInputArray, secondInputArray, differenceMapArray);
     break;
+  case DataType::error:
+    std::string ss = fmt::format("Cannot handle indeterminate array types");
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-90006, ss}})};
   }
 
   return {};

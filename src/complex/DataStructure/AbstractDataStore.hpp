@@ -292,12 +292,6 @@ public:
   virtual reference operator[](usize index) = 0;
 
   /**
-   * @brief Returns a deep copy of the data store and all its data.
-   * @return std::unique_ptr<IDataStore>
-   */
-  virtual std::unique_ptr<IDataStore> deepCopy() const = 0;
-
-  /**
    * @brief Returns an Iterator to the begining of the DataStore.
    * @return Iterator
    */
