@@ -61,8 +61,8 @@ protected:
   TSpecificCompareFunctorBool() = default;
 
 private:
-  bool* m_Data = nullptr;                       // The data that is being compared
-  int64 m_Length = 0;                           // Length of the Data Array
+  bool* m_Data = nullptr;                              // The data that is being compared
+  int64 m_Length = 0;                                  // Length of the Data Array
   AbstractDataStore<int32>* featureIdsArray = nullptr; // The Feature Ids
 };
 
@@ -113,9 +113,9 @@ protected:
   TSpecificCompareFunctor() = default;
 
 private:
-  T* m_Data = nullptr;                          // The data that is being compared
-  int64 m_Length = 0;                           // Length of the Data Array
-  T m_Tolerance = static_cast<T>(0);            // The tolerance of the comparison
+  T* m_Data = nullptr;                                 // The data that is being compared
+  int64 m_Length = 0;                                  // Length of the Data Array
+  T m_Tolerance = static_cast<T>(0);                   // The tolerance of the comparison
   AbstractDataStore<int32>* featureIdsArray = nullptr; // The Feature Ids
 };
 } // namespace

@@ -107,7 +107,7 @@ Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObjec
 
 #define DAU_BODY(type)                                                                                                                                                                                 \
   DataArray<type>* castInputArray = dynamic_cast<DataArray<type>*>(inputDataArray);                                                                                                                    \
-  IDataStore::ShapeType componentShape = castInputArray->getDataStore()->getComponentShape();                                                                                                    \
+  IDataStore::ShapeType componentShape = castInputArray->getDataStore()->getComponentShape();                                                                                                          \
   dataStructure.removeData(dataPath);                                                                                                                                                                  \
   return CreateArray<type>(dataStructure, tupleShape, componentShape, dataPath, mode);
 

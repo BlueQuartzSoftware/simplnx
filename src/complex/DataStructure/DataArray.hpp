@@ -315,7 +315,7 @@ public:
   {
     return m_DataStore.get();
   }
-  
+
   /**
    * @brief Returns a pointer to the array's IDataStore.
    * @return const IDataStore*
