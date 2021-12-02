@@ -342,6 +342,15 @@ public:
    */
   DataType getDataType() const override;
 
+  /**
+   * @brief Returns the size of the stored type of the data store.
+   * @return usize
+   */
+  usize getTypeSize() const override
+  {
+    return sizeof(T);
+  }
+
 protected:
   /**
    * @brief Default constructor
