@@ -27,8 +27,8 @@ CopyArrayInstanceAction::~CopyArrayInstanceAction() noexcept = default;
 
 #define CAI_BODY(type)                                                                                                                                                                                 \
   DataArray<type>* castInputArray = dynamic_cast<DataArray<type>*>(inputDataArray);                                                                                                                    \
-  IDataStore<type>::ShapeType tupleShape = castInputArray->getDataStore()->getTupleShape();                                                                                                            \
-  IDataStore<type>::ShapeType componentShape = castInputArray->getDataStore()->getComponentShape();                                                                                                    \
+  IDataStore::ShapeType tupleShape = castInputArray->getDataStore()->getTupleShape();                                                                                                            \
+  IDataStore::ShapeType componentShape = castInputArray->getDataStore()->getComponentShape();                                                                                                    \
   return CreateArray<type>(dataStructure, tupleShape, componentShape, m_CreatedDataPath, mode);
 
 Result<> CopyArrayInstanceAction::apply(DataStructure& dataStructure, Mode mode) const

@@ -9,7 +9,7 @@
 #include "ComplexCore/Filters/FindDifferencesMap.hpp"
 
 using namespace complex;
-using namespace complex::UnitTest::Constants;
+using namespace complex::Constants;
 
 TEST_CASE("FindDifferencesMap: Instantiate Filter", "[FindDifferencesMap]")
 {
