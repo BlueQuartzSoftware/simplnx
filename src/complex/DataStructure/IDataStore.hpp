@@ -72,10 +72,22 @@ public:
   virtual DataType getDataType() const = 0;
 
   /**
+   * @brief Returns the size of the stored type of the data store.
+   * @return usize
+   */
+  virtual usize getTypeSize() const = 0;
+
+  /**
    * @brief Returns a deep copy of the data store and all its data.
    * @return std::unique_ptr<IDataStore>
    */
   virtual std::unique_ptr<IDataStore> deepCopy() const = 0;
+
+  /**
+   * @brief Returns a data store of the same type as this but with default initialized data.
+   * @return std::unique_ptr<IDataStore>
+   */
+  virtual std::unique_ptr<IDataStore> createNewInstance() const = 0;
 
   /**
    * @brief Writes the data store to HDF5. Returns the HDF5 error code should

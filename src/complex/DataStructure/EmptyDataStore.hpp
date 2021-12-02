@@ -174,6 +174,15 @@ public:
   }
 
   /**
+   * @brief Returns a data store of the same type as this but with default initialized data.
+   * @return std::unique_ptr<IDataStore>
+   */
+  std::unique_ptr<IDataStore> createNewInstance() const override
+  {
+    return std::make_unique<EmptyDataStore<T>>(this->getTupleShape(), this->getComponentShape());
+  }
+
+  /**
    * @brief Throws a runtime error due to the inability to write values to HDF5.
    * @param datasetWriter
    * @return H5::ErrorType
