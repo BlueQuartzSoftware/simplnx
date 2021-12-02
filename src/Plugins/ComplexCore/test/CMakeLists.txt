@@ -8,6 +8,7 @@
 set(${PLUGIN_NAME}UnitTest_SRCS
   CreateDataArrayTest.cpp
   ConditionalSetValueTest.cpp
+  FindDifferencesMapTest.cpp
   RobustAutomaticThresholdTest.cpp
   CreateImageGeometryTest.cpp
   StlFileReaderTest.cpp

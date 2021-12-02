@@ -16,17 +16,30 @@ constexpr uint64 k_MissingInputArray = -567;
 
 IFilter::PreflightResult validateArrayTypes(const DataStructure& data, const std::vector<DataPath>& dataPaths)
 {
-  for(const auto& dataArray : dataPaths)
+  DataType dataType = DataType::error;
+  for(const auto& dataPath : dataPaths)
   {
-    if(data.getDataAs<BoolArray>(dataArray))
+    if(data.getDataAs<BoolArray>(dataPath))
     {
       std::string ss = fmt::format("Selected Attribute Arrays cannot be of type bool");
       return {nonstd::make_unexpected(std::vector<Error>{Error{-90000, ss}})};
     }
-    if(!data.getDataAs<DataArray<DataType>>(dataArray))
+    if(auto dataArray = data.getDataAs<IDataArray>(dataPath))
     {
-      std::string ss = fmt::format("Selected Attribute Arrays must all be of the same type");
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-90001, ss}})};
+      if(dataType == DataType::error)
+      {
+        dataType = dataArray->getDataType();
+      }
+      else if(dataType != dataArray->getDataType())
+      {
+        std::string ss = fmt::format("Selected Attribute Arrays must all be of the same type");
+        return {nonstd::make_unexpected(std::vector<Error>{Error{-90001, ss}})};
+      }
+    }
+    else
+    {
+      std::string ss = fmt::format("Selected DataPath must point to a DataArray");
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-90002, ss}})};
     }
   }
   return {};
