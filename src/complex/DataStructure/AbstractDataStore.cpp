@@ -56,11 +56,13 @@ DataType COMPLEX_EXPORT AbstractDataStore<uint64>::getDataType() const
   return DataType::uint64;
 }
 
+#if defined(__APPLE__)
 template <>
 DataType COMPLEX_EXPORT AbstractDataStore<unsigned long>::getDataType() const
 {
   return DataType::uint64;
 }
+#endif
 
 template <>
 DataType COMPLEX_EXPORT AbstractDataStore<float32>::getDataType() const
