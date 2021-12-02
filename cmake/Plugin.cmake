@@ -239,7 +239,6 @@ function(create_complex_plugin)
     PUBLIC
       $<BUILD_INTERFACE:${${ARGS_NAME}_SOURCE_DIR}/src>
       $<BUILD_INTERFACE:${ARGS_GENERATED_DIR}>
-      $<BUILD_INTERFACE:${COMPLEX_BINARY_DIR}/Plugins/${ARGS_NAME}>
   )
 
   install(TARGETS ${ARGS_NAME}
