@@ -38,6 +38,46 @@ class ObjectWriter;
 class COMPLEX_EXPORT DataObject
 {
 public:
+  using EnumType = uint32;
+  enum class DataObjectType : EnumType
+  {
+    DataObject = 0,
+
+    DynamicListArray = 1,
+    ScalarData = 2,
+
+    BaseGroup = 3,
+
+    AbstractMontage = 4,
+    DataGroup = 5,
+
+    IDataArray = 6,
+    DataArray = 7,
+
+    AbstractGeometry = 8,
+    VertexGeom = 9,
+    EdgeGeom = 10,
+    AbstractGeometryGrid = 11,
+    RectGridGeom = 12,
+    ImageGeom = 13,
+
+    AbstractGeometry2D = 14,
+    QuadGeom = 15,
+    TriangleGeom = 16,
+
+    AbstractGeometry3D = 17,
+    HexahedralGeom = 18,
+    TetrahedralGeom = 19,
+
+    Unknown = 20
+  };
+
+  /**
+   * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
+   * @return
+   */
+  virtual DataObjectType getType() const;
+
   /**
    * @brief The IdType alias serves as an ID type for DataObjects within their
    * respective DataStructure.

@@ -42,6 +42,10 @@ RectGridGeom::RectGridGeom(RectGridGeom&& other) noexcept
 }
 
 RectGridGeom::~RectGridGeom() = default;
+DataObject::DataObjectType RectGridGeom::getType() const
+{
+  return DataObjectType::RectGridGeom;
+}
 
 RectGridGeom* RectGridGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {

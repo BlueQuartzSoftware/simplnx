@@ -116,7 +116,7 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
   // If your filter is making structural changes to the DataStructure then the filter
   // is going to create OutputActions subclasses that need to be returned. This will
   // store those actions.
-  complex::Result<OutputActions> resultOutputActions;
+  complex::Result<OutputActions> resultOutputActions = {};
 
   // If your filter is going to pass back some `preflight updated values` then this is where you
   // would create the code to store those values in the appropriate object. Note that we
@@ -151,11 +151,11 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
     if(nullptr == maskArray)
     {
       Error result = {-500, fmt::format("'Use Mask Array' is selected but the DataPath '{}' does not exist. Please ensure the mask array exists in the DataStructure.", pMaskArrayPath.toString())};
-      resultOutputActions.errors().push_back(result);
+      return {nonstd::make_unexpected(std::vector<Error>{result})};
     }
   }
 
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
+  // Return both the resultOutputActions and the preflightUpdatedValues  LinkGeometryDataFilter via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 

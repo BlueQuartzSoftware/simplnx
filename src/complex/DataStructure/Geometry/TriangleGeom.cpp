@@ -52,6 +52,10 @@ TriangleGeom::TriangleGeom(TriangleGeom&& other) noexcept
 }
 
 TriangleGeom::~TriangleGeom() = default;
+DataObject::DataObjectType TriangleGeom::getType() const
+{
+  return DataObjectType::TriangleGeom;
+}
 
 TriangleGeom* TriangleGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {

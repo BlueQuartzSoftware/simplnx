@@ -58,6 +58,12 @@ public:
   ~BaseGroup() override;
 
   /**
+   * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
+   * @return
+   */
+  DataObject::DataObjectType getType() const override;
+
+  /**
    * @brief Returns the number of DataObjects in the group.
    *
    * BaseGroups found among the container's children are not expanded during

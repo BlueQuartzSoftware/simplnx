@@ -42,6 +42,12 @@ public:
   ~AbstractMontage() override;
 
   /**
+   * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
+   * @return
+   */
+  DataObject::DataObjectType getType() const override;
+
+  /**
    * @brief Returns the number of tiles in the montage.
    * @return usize
    */

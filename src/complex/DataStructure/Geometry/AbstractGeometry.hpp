@@ -7,7 +7,7 @@
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DynamicListArray.hpp"
-
+#include "complex/DataStructure/Geometry/LinkedGeometryData.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
@@ -148,6 +148,12 @@ public:
   AbstractGeometry(AbstractGeometry&& other) noexcept;
 
   ~AbstractGeometry() override;
+
+  /**
+   * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
+   * @return
+   */
+  DataObject::DataObjectType getType() const override;
 
   /**
    * @brief
@@ -334,6 +340,8 @@ public:
    */
   virtual void initializeWithZeros() = 0;
 
+  std::shared_ptr<LinkedGeometryData> getLinkedGeometryData() const;
+
 protected:
   /**
    * @brief
@@ -412,5 +420,6 @@ private:
   float32 m_TimeValue = 0.0f;
   uint32 m_UnitDimensionality = 3;
   uint32 m_SpacialDimensionality = 3;
+  std::shared_ptr<LinkedGeometryData> m_LinkedGeometryData;
 };
 } // namespace complex

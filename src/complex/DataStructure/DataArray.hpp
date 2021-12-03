@@ -146,6 +146,15 @@ public:
   ~DataArray() override = default;
 
   /**
+   * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
+   * @return
+   */
+  DataObject::DataObjectType getType() const override
+  {
+    return DataObjectType::DataArray;
+  }
+
+  /**
    * @brief Returns a shallow copy of the DataArray without copying data. THE CALLING CODE
    * MUST DISPOSE OF THE RETURNED OBJECT.
    * @return DataObject*

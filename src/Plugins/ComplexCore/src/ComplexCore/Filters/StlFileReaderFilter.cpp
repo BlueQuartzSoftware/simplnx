@@ -113,14 +113,12 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
   {
     Error result = {StlConstants::k_UnsupportedFileType,
                     fmt::format("The Input STL File is ASCII which is not currently supported. Please convert it to a binary STL file using another program.", pStlFilePathValue.string())};
-    resultOutputActions.errors().push_back(result);
-    return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+    return {nonstd::make_unexpected(std::vector<Error>{result})};
   }
   if(stlFileType > 0)
   {
     Error result = {StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the STL file.", pStlFilePathValue.string())};
-    resultOutputActions.errors().push_back(result);
-    return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+    return {nonstd::make_unexpected(std::vector<Error>{result})};
   }
 
   // Now get the number of Triangles according to the STL Header
@@ -128,8 +126,7 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
   if(numTriangles < 0)
   {
     Error result = {StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the STL file.", pStlFilePathValue.string())};
-    resultOutputActions.errors().push_back(result);
-    return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+    return {nonstd::make_unexpected(std::vector<Error>{result})};
   }
 
   // This can happen in a LOT of STL files. Just means the writer didn't go back and update the header.

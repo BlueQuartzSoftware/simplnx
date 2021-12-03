@@ -53,6 +53,11 @@ DataObject::~DataObject() noexcept
   }
 }
 
+DataObject::DataObjectType DataObject::getType() const
+{
+  return DataObjectType::DataObject;
+}
+
 bool DataObject::AttemptToAddObject(DataStructure& ds, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId)
 {
   return ds.finishAddingObject(data, parentId);

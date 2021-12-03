@@ -37,6 +37,10 @@ AbstractGeometry3D::AbstractGeometry3D(AbstractGeometry3D&& other) noexcept
 }
 
 AbstractGeometry3D::~AbstractGeometry3D() = default;
+DataObject::DataObjectType AbstractGeometry3D::getType() const
+{
+  return DataObjectType::AbstractGeometry3D;
+}
 
 AbstractGeometry3D::SharedQuadList* AbstractGeometry3D::createSharedQuadList(usize numQuads)
 {

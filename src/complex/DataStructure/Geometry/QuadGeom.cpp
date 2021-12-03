@@ -51,6 +51,10 @@ QuadGeom::QuadGeom(QuadGeom&& other) noexcept
 }
 
 QuadGeom::~QuadGeom() = default;
+DataObject::DataObjectType QuadGeom::getType() const
+{
+  return DataObjectType::QuadGeom;
+}
 
 QuadGeom* QuadGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {

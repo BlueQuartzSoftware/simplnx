@@ -115,6 +115,11 @@ public:
     }
   }
 
+  DataObject::DataObjectType getType() const override
+  {
+    return DataObjectType::DynamicListArray;
+  }
+
   /**
    * @brief Returns the typename of the DataObject as a std::string.
    * @return std::string
