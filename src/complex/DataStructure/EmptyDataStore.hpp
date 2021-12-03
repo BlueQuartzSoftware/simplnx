@@ -100,6 +100,15 @@ public:
   }
 
   /**
+   * @brief Returns the store type e.g. in memory, out of core, etc.
+   * @return StoreType
+   */
+  IDataStore::StoreType getStoreType() const override
+  {
+    return IDataStore::StoreType::Empty;
+  }
+
+  /**
    * @brief Throws an exception because this should never be called. The
    * EmptyDataStore class contains no data other than its target size.
    * @param tupleShape

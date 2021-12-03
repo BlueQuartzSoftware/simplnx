@@ -145,6 +145,15 @@ public:
     return m_ComponentShape;
   }
 
+  /**
+   * @brief Returns the store type e.g. in memory, out of core, etc.
+   * @return StoreType
+   */
+  IDataStore::StoreType getStoreType() const override
+  {
+    return IDataStore::StoreType::InMemory;
+  }
+
   //  /**
   //   * @brief Resizes the DataStore to handle the specified number of tuples.
   //   * @param numTuples

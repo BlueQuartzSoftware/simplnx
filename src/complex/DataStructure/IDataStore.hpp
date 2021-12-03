@@ -25,6 +25,13 @@ class COMPLEX_EXPORT IDataStore
 public:
   using ShapeType = typename std::vector<usize>;
 
+  enum class StoreType : int32
+  {
+    Unknown = -1,
+    InMemory = 0,
+    Empty,
+  };
+
   virtual ~IDataStore() = default;
 
   /**
@@ -70,6 +77,12 @@ public:
    * @return DataType
    */
   virtual DataType getDataType() const = 0;
+
+  /**
+   * @brief Returns the store type e.g. in memory, out of core, etc.
+   * @return StoreType
+   */
+  virtual StoreType getStoreType() const = 0;
 
   /**
    * @brief Returns the size of the stored type of the data store.
