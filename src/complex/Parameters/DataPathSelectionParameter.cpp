@@ -6,6 +6,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "complex/Common/Any.hpp"
+
 namespace complex
 {
 DataPathSelectionParameter::DataPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty)
@@ -27,7 +29,7 @@ IParameter::AcceptedTypes DataPathSelectionParameter::acceptedTypes() const
 
 nlohmann::json DataPathSelectionParameter::toJson(const std::any& value) const
 {
-  auto path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
   nlohmann::json json = path.toString();
   return json;
 }
@@ -74,7 +76,7 @@ typename DataPathSelectionParameter::ValueType DataPathSelectionParameter::defau
 
 Result<> DataPathSelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
-  auto path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
 
   return validatePath(dataStructure, path);
 }
@@ -103,7 +105,7 @@ Result<> DataPathSelectionParameter::validatePath(const DataStructure& dataStruc
 
 Result<std::any> DataPathSelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
-  auto path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
   DataObject* object = dataStructure.getData(path);
   return {object};
 }

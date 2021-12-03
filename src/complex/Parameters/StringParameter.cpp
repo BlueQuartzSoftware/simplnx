@@ -4,6 +4,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "complex/Common/Any.hpp"
+
 namespace complex
 {
 StringParameter::StringParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
@@ -24,8 +26,8 @@ IParameter::AcceptedTypes StringParameter::acceptedTypes() const
 
 nlohmann::json StringParameter::toJson(const std::any& value) const
 {
-  auto boolValue = std::any_cast<ValueType>(value);
-  nlohmann::json json = boolValue;
+  const auto& stringValue = GetAnyRef<ValueType>(value);
+  nlohmann::json json = stringValue;
   return json;
 }
 
@@ -56,7 +58,7 @@ typename StringParameter::ValueType StringParameter::defaultString() const
 
 Result<> StringParameter::validate(const std::any& value) const
 {
-  [[maybe_unused]] auto castValue = std::any_cast<ValueType>(value);
+  [[maybe_unused]] const auto& stringValue = GetAnyRef<ValueType>(value);
   return {};
 }
 } // namespace complex
