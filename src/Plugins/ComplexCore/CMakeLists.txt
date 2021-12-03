@@ -21,7 +21,6 @@ set(FilterList
   ImportDREAM3DFilter
   ImportTextFilter
   LaplacianSmoothingFilter
-  LinkGeometryDataFilter
   MultiThresholdObjects
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
