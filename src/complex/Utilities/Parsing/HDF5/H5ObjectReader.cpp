@@ -55,11 +55,9 @@ std::string H5::ObjectReader::getName() const
     return "";
   }
 
-  constexpr size_t size = 1024;
-  char buffer[size];
-  H5Iget_name(getId(), buffer, size);
+  std::string path = H5::GetNameFromId(getId());
 
-  return GetNameFromBuffer(buffer);
+  return path;
 }
 
 size_t H5::ObjectReader::getNumAttributes() const
