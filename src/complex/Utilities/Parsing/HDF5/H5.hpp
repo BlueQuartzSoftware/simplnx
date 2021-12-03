@@ -58,18 +58,20 @@ std::string COMPLEX_EXPORT GetNameFromBuffer(const char* buffer);
 
 static constexpr StringLiteral k_DataTypeTag = "DataType";
 
-static constexpr StringLiteral k_DataStoreTag = "DataStore";
-static constexpr StringLiteral k_TupleShapeTag = "TupleShape";
-static constexpr StringLiteral k_ComponentShapeTag = "ComponentShape";
-static constexpr StringLiteral k_DataObjectIdTag = "DataObjectId";
-static constexpr StringLiteral k_DataArrayTag = "DataArray";
+inline constexpr StringLiteral k_DataTypeTag = "DataType";
 
-static constexpr StringLiteral k_ObjectTypeTag = "ObjectType";
-static constexpr StringLiteral k_DataStructureTag = "DataStructure";
+inline constexpr StringLiteral k_DataStoreTag = "DataStore";
+inline constexpr StringLiteral k_TupleShapeTag = "TupleShape";
+inline constexpr StringLiteral k_ComponentShapeTag = "ComponentShape";
+inline constexpr StringLiteral k_DataObjectIdTag = "DataObjectId";
+inline constexpr StringLiteral k_DataArrayTag = "DataArray";
 
-static constexpr StringLiteral k_VertexListIdTag = "VertexListId";
-static constexpr StringLiteral k_SharedVertexListTag = "SharedVertexList";
-static constexpr StringLiteral k_VertexSizesIdTag = "VertexSizesId";
+inline constexpr StringLiteral k_ObjectTypeTag = "ObjectType";
+inline constexpr StringLiteral k_DataStructureTag = "DataStructure";
+
+inline constexpr StringLiteral k_VertexListIdTag = "VertexListId";
+inline constexpr StringLiteral k_SharedVertexListTag = "SharedVertexList";
+inline constexpr StringLiteral k_VertexSizesIdTag = "VertexSizesId";
 
 } // namespace H5
 } // namespace complex
