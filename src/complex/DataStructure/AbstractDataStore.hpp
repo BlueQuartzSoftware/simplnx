@@ -15,8 +15,8 @@ class DatasetWriter;
 } // namespace H5
 
 /**
- * @class IDataStore
- * @brief The IDataStore class serves as an interface class for the
+ * @class AbstractDataStore
+ * @brief The AbstractDataStore class serves as an interface class for the
  * various types of data stores used in DataArrays. The basic API and iterators
  * are defined but the specifics relating to how data is stored are implemented
  * in subclasses.

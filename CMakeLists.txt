@@ -236,6 +236,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/IDataStore.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/NeighborList.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/ScalarData.hpp
 
   ${COMPLEX_SOURCE_DIR}/Filter/AbstractParameter.hpp
@@ -294,6 +295,7 @@ set(COMPLEX_HDRS
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Math/StatisticsCalculations.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.hpp
 
@@ -381,6 +383,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/NeighborList.cpp
 
   ${COMPLEX_SOURCE_DIR}/Filter/AbstractParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Arguments.cpp

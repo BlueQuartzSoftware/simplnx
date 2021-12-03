@@ -18,6 +18,7 @@ set(FilterList
   ExampleFilter2
   ExportDREAM3DFilter
   FindDifferencesMap
+  FindNeighborListStatistics
   ImportDREAM3DFilter
   ImportTextFilter
   LaplacianSmoothingFilter
