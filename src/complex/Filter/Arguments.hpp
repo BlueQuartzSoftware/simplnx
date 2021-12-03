@@ -7,6 +7,7 @@
 #include <string_view>
 #include <type_traits>
 
+#include "complex/Common/Any.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
 
@@ -67,12 +68,7 @@ public:
   template <class T>
   const T& valueRef(std::string_view key) const
   {
-    const T* value = std::any_cast<T>(&at(key));
-    if(value == nullptr)
-    {
-      throw std::bad_any_cast();
-    }
-    return *value;
+    return GetAnyRef<T>(at(key));
   }
 
   /**

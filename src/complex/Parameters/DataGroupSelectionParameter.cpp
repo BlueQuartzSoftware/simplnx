@@ -6,6 +6,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "complex/Common/Any.hpp"
+
 namespace complex
 {
 DataGroupSelectionParameter::DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
@@ -26,7 +28,7 @@ IParameter::AcceptedTypes DataGroupSelectionParameter::acceptedTypes() const
 
 nlohmann::json DataGroupSelectionParameter::toJson(const std::any& value) const
 {
-  auto path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
   nlohmann::json json = path.toString();
   return json;
 }
@@ -66,7 +68,7 @@ typename DataGroupSelectionParameter::ValueType DataGroupSelectionParameter::def
 
 Result<> DataGroupSelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
-  auto path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
 
   return validatePath(dataStructure, path);
 }
@@ -97,7 +99,7 @@ Result<> DataGroupSelectionParameter::validatePath(const DataStructure& dataStru
 
 Result<std::any> DataGroupSelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
-  auto path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
   DataObject* object = dataStructure.getData(path);
   return {object};
 }

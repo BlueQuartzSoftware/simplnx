@@ -1,11 +1,14 @@
 #include "ImageGeometrySelectionParameter.hpp"
 
+#include "complex/Common/Any.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 
 #include <fmt/core.h>
 
 #include <nlohmann/json.hpp>
+
+#include "complex/Common/Any.hpp"
 
 namespace complex
 {
@@ -27,7 +30,7 @@ IParameter::AcceptedTypes ImageGeometrySelectionParameter::acceptedTypes() const
 
 nlohmann::json ImageGeometrySelectionParameter::toJson(const std::any& value) const
 {
-  auto path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
   nlohmann::json json = path.toString();
   return json;
 }
@@ -64,7 +67,7 @@ typename ImageGeometrySelectionParameter::ValueType ImageGeometrySelectionParame
 
 Result<> ImageGeometrySelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
-  auto path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
 
   return validatePath(dataStructure, path);
 }
@@ -93,7 +96,7 @@ Result<> ImageGeometrySelectionParameter::validatePath(const DataStructure& data
 
 Result<std::any> ImageGeometrySelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
-  auto path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
   ImageGeom* object = dataStructure.getDataAs<ImageGeom>(path);
   return {object};
 }

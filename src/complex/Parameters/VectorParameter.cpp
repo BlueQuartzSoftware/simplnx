@@ -4,6 +4,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "complex/Common/Any.hpp"
+
 namespace
 {
 template <class...>
@@ -39,14 +41,10 @@ IParameter::AcceptedTypes VectorParameter<T>::acceptedTypes() const
 template <class T>
 nlohmann::json VectorParameter<T>::toJson(const std::any& value) const
 {
-  const auto* vec = std::any_cast<ValueType>(&value);
-  if(vec == nullptr)
-  {
-    throw std::bad_any_cast();
-  }
+  const auto& vec = GetAnyRef<ValueType>(value);
 
   auto jsonArray = nlohmann::json::array();
-  for(T value : *vec)
+  for(T value : vec)
   {
     jsonArray.push_back(value);
   }
@@ -114,12 +112,8 @@ const typename VectorParameter<T>::ValueType& VectorParameter<T>::defaultVector(
 template <class T>
 Result<> VectorParameter<T>::validate(const std::any& value) const
 {
-  const auto* castValue = std::any_cast<ValueType>(&value);
-  if(castValue == nullptr)
-  {
-    throw std::bad_any_cast();
-  }
-  return validateVector(*castValue);
+  const auto& vec = GetAnyRef<ValueType>(value);
+  return validateVector(vec);
 }
 
 template <class T>

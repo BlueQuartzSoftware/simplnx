@@ -7,6 +7,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "complex/Common/Any.hpp"
+
 namespace fs = std::filesystem;
 
 using namespace complex;
@@ -41,7 +43,7 @@ IParameter::AcceptedTypes Dream3dImportParameter::acceptedTypes() const
 //-----------------------------------------------------------------------------
 nlohmann::json Dream3dImportParameter::toJson(const std::any& value) const
 {
-  ValueType importData = std::any_cast<ValueType>(value);
+  const auto& importData = GetAnyRef<ValueType>(value);
   nlohmann::json json;
   // File path
   json[k_FilePathKey] = importData.FilePath.string();
@@ -141,7 +143,7 @@ std::any Dream3dImportParameter::defaultValue() const
 //-----------------------------------------------------------------------------
 Result<> Dream3dImportParameter::validate(const std::any& value) const
 {
-  auto importData = std::any_cast<ValueType>(value);
+  const auto& importData = GetAnyRef<ValueType>(value);
   return validatePath(importData);
 }
 

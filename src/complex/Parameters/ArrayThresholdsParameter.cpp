@@ -4,6 +4,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "complex/Common/Any.hpp"
+
 namespace complex
 {
 ArrayThresholdsParameter::ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
@@ -24,7 +26,7 @@ IParameter::AcceptedTypes ArrayThresholdsParameter::acceptedTypes() const
 
 nlohmann::json ArrayThresholdsParameter::toJson(const std::any& value) const
 {
-  auto thresholds = std::any_cast<ValueType>(value);
+  const auto& thresholds = GetAnyRef<ValueType>(value);
   nlohmann::json json = thresholds.toJson();
   return json;
 }
@@ -61,7 +63,7 @@ typename ArrayThresholdsParameter::ValueType ArrayThresholdsParameter::defaultPa
 
 Result<> ArrayThresholdsParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
-  auto threshold = std::any_cast<ValueType>(value);
+  const auto& threshold = GetAnyRef<ValueType>(value);
 
   return validatePaths(dataStructure, threshold);
 }

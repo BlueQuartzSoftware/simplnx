@@ -4,6 +4,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "complex/Common/Any.hpp"
+
 namespace complex
 {
 MultiArraySelectionParameter ::MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
@@ -24,7 +26,7 @@ IParameter::AcceptedTypes MultiArraySelectionParameter::acceptedTypes() const
 
 nlohmann::json MultiArraySelectionParameter::toJson(const std::any& value) const
 {
-  auto paths = std::any_cast<ValueType>(value);
+  const auto& paths = GetAnyRef<ValueType>(value);
   nlohmann::json json = nlohmann::json::array();
   for(const auto& path : paths)
   {
@@ -85,7 +87,7 @@ typename MultiArraySelectionParameter::ValueType MultiArraySelectionParameter::d
 
 Result<> MultiArraySelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
-  auto paths = std::any_cast<ValueType>(value);
+  const auto& paths = GetAnyRef<ValueType>(value);
 
   return validatePaths(dataStructure, paths);
 }
@@ -111,7 +113,7 @@ Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataSt
 
 Result<std::any> MultiArraySelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
-  auto paths = std::any_cast<ValueType>(value);
+  const auto& paths = GetAnyRef<ValueType>(value);
   std::vector<DataObject*> objects;
   for(const auto& path : paths)
   {

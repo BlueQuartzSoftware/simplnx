@@ -9,6 +9,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "complex/Common/Any.hpp"
+
 namespace fs = std::filesystem;
 
 namespace complex
@@ -50,7 +52,7 @@ IParameter::AcceptedTypes GeneratedFileListParameter::acceptedTypes() const
 //-----------------------------------------------------------------------------
 nlohmann::json GeneratedFileListParameter::toJson(const std::any& value) const
 {
-  auto data = std::any_cast<ValueType>(value);
+  const auto& data = GetAnyRef<ValueType>(value);
   nlohmann::json json;
   json[k_StartIndex] = data.startIndex;
   json[k_EndIndex] = data.endIndex;
@@ -142,7 +144,7 @@ std::any GeneratedFileListParameter::defaultValue() const
 //-----------------------------------------------------------------------------
 Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
 {
-  auto value = std::any_cast<ValueType>(valueRef);
+  const auto& value = GetAnyRef<ValueType>(valueRef);
   if(value.startIndex >= value.endIndex)
   {
     return MakeErrorResult(-1, "startIndex must be less than endIndex");

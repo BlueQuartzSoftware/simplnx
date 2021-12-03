@@ -1,5 +1,6 @@
 #include "ArraySelectionParameter.hpp"
 
+#include "complex/Common/Any.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
 
@@ -28,7 +29,7 @@ IParameter::AcceptedTypes ArraySelectionParameter::acceptedTypes() const
 
 nlohmann::json ArraySelectionParameter::toJson(const std::any& value) const
 {
-  auto path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
   nlohmann::json json = path.toString();
   return json;
 }
@@ -65,7 +66,7 @@ typename ArraySelectionParameter::ValueType ArraySelectionParameter::defaultPath
 
 Result<> ArraySelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
-  auto path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
 
   return validatePath(dataStructure, path);
 }
@@ -107,7 +108,7 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
 
 Result<std::any> ArraySelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
-  auto path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
   DataObject* object = dataStructure.getData(path);
   return {object};
 }

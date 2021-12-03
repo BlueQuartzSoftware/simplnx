@@ -6,6 +6,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "complex/Common/Any.hpp"
+
 namespace fs = std::filesystem;
 
 using namespace complex;
@@ -90,7 +92,7 @@ IParameter::AcceptedTypes FileSystemPathParameter::acceptedTypes() const
 //-----------------------------------------------------------------------------
 nlohmann::json FileSystemPathParameter::toJson(const std::any& value) const
 {
-  ValueType path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
   nlohmann::json json = path.string();
   return json;
 }
@@ -134,7 +136,7 @@ FileSystemPathParameter::PathType FileSystemPathParameter::getPathType() const
 //-----------------------------------------------------------------------------
 Result<> FileSystemPathParameter::validate(const std::any& value) const
 {
-  auto path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
   return validatePath(path);
 }
 

@@ -4,6 +4,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "complex/Common/Any.hpp"
+
 namespace complex
 {
 ArrayCreationParameter::ArrayCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
@@ -24,7 +26,7 @@ IParameter::AcceptedTypes ArrayCreationParameter::acceptedTypes() const
 
 nlohmann::json ArrayCreationParameter::toJson(const std::any& value) const
 {
-  auto path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
   nlohmann::json json = path.toString();
   return json;
 }
@@ -61,7 +63,7 @@ typename ArrayCreationParameter::ValueType ArrayCreationParameter::defaultPath()
 
 Result<> ArrayCreationParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
-  auto path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
 
   return validatePath(dataStructure, path);
 }
@@ -85,7 +87,7 @@ Result<> ArrayCreationParameter::validatePath(const DataStructure& dataStructure
 
 Result<std::any> ArrayCreationParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
-  auto path = std::any_cast<ValueType>(value);
+  const auto& path = GetAnyRef<ValueType>(value);
   DataObject* object = dataStructure.getData(path);
   return {object};
 }
