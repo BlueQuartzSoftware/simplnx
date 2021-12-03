@@ -6,7 +6,8 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/Utilities/TemplateHelpers.hpp"
+
+#include "TupleTransfer.hpp"
 
 #include <array>
 #include <random>
@@ -54,151 +55,6 @@ struct EdgeHasher
 // -----------------------------------------------------------------------------
 using VertexMap = std::unordered_map<Vertex, AbstractGeometry::MeshIndexType, VertexHasher>;
 using EdgeMap = std::unordered_map<Edge, AbstractGeometry::MeshIndexType, EdgeHasher>;
-
-/**
- * @brief This is the base class that is used to transfer cell data to triangle face data
- * but could be used generally to copy the tuple value from one Data Array to another
- * DataArray of the same type.
- */
-class AbstractTupleTransfer
-{
-public:
-  ~AbstractTupleTransfer() = default;
-
-  AbstractTupleTransfer(const AbstractTupleTransfer&) = delete;
-  AbstractTupleTransfer(AbstractTupleTransfer&&) noexcept = delete;
-  AbstractTupleTransfer& operator=(const AbstractTupleTransfer&) = delete;
-  AbstractTupleTransfer& operator=(AbstractTupleTransfer&&) noexcept = delete;
-
-  /**
-   * @brief
-   * @param faceIndex
-   * @param firstcIndex
-   * @param secondcIndex
-   * @param forceSecondToZero
-   */
-  virtual void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, bool forceSecondToZero = false) = 0;
-
-protected:
-  AbstractTupleTransfer() = default;
-
-  DataPath m_CellDataPath;
-  DataPath m_FaceDataPath;
-  size_t m_NumComps = 0;
-};
-
-template <typename T>
-class TransferTuple : public AbstractTupleTransfer
-{
-public:
-  using DataArrayType = DataArray<T>;
-
-  /**
-   * @brief
-   * @param dataStructure Current DataStructure
-   * @param selectedDataPath The source data path
-   * @param createdArrayPath The destination data path
-   */
-  TransferTuple(DataStructure& dataStructure, const DataPath& selectedDataPath, DataPath& createdArrayPath)
-  {
-    m_CellDataPath = selectedDataPath;
-    m_FaceDataPath = createdArrayPath;
-    IDataArray* cellArray = dataStructure.template getDataAs<IDataArray>(m_CellDataPath);
-    IDataArray* faceArray = dataStructure.template getDataAs<IDataArray>(m_FaceDataPath);
-
-    m_CellPtr = dynamic_cast<DataArrayType*>(cellArray);
-    m_FacePtr = dynamic_cast<DataArrayType*>(faceArray);
-
-    m_NumComps = m_CellPtr->getNumberOfComponents();
-  }
-
-  ~TransferTuple() = default;
-  TransferTuple(const TransferTuple&) = delete;
-  TransferTuple(TransferTuple&&) noexcept = delete;
-  TransferTuple& operator=(const TransferTuple&) = delete;
-  TransferTuple& operator=(TransferTuple&&) noexcept = delete;
-
-  /**
-   * @brief This method does the actual copying of the Tuple values from one DataArray to the other DataArray
-   * @param faceIndex
-   * @param firstcIndex
-   * @param secondcIndex
-   * @param forceSecondToZero
-   */
-  void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, bool forceSecondToZero = false) override
-  {
-    for(size_t i = 0; i < m_NumComps; i++)
-    {
-      (*m_FacePtr)[faceIndex + i] = (*m_CellPtr)[firstcIndex + i];
-    }
-
-    if(!forceSecondToZero)
-    {
-      for(size_t i = 0; i < m_NumComps; i++)
-      {
-        (*m_FacePtr)[faceIndex + i + m_NumComps] = (*m_CellPtr)[secondcIndex + i];
-      }
-    }
-  }
-
-private:
-  DataArrayType* m_CellPtr = nullptr;
-  DataArrayType* m_FacePtr = nullptr;
-};
-
-void AddTupleTransferInstance(DataStructure& dataStructure, const DataPath& selectedDataPath, DataPath& createdDataPath, std::vector<std::shared_ptr<AbstractTupleTransfer>>& tupleTransferFunctions)
-{
-  auto* inputDataArray = dataStructure.getDataAs<IDataArray>(selectedDataPath);
-
-  if(TemplateHelpers::CanDynamicCast<Float32Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<float>>(dataStructure, selectedDataPath, createdDataPath));
-  }
-  if(TemplateHelpers::CanDynamicCast<Float64Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<double>>(dataStructure, selectedDataPath, createdDataPath));
-  }
-  if(TemplateHelpers::CanDynamicCast<Int8Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<int8_t>>(dataStructure, selectedDataPath, createdDataPath));
-  }
-  if(TemplateHelpers::CanDynamicCast<UInt8Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<uint8_t>>(dataStructure, selectedDataPath, createdDataPath));
-  }
-  if(TemplateHelpers::CanDynamicCast<Int16Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<int16_t>>(dataStructure, selectedDataPath, createdDataPath));
-  }
-  if(TemplateHelpers::CanDynamicCast<UInt16Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<uint16_t>>(dataStructure, selectedDataPath, createdDataPath));
-  }
-  if(TemplateHelpers::CanDynamicCast<Int32Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<int32_t>>(dataStructure, selectedDataPath, createdDataPath));
-  }
-  if(TemplateHelpers::CanDynamicCast<UInt32Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<uint32_t>>(dataStructure, selectedDataPath, createdDataPath));
-  }
-  if(TemplateHelpers::CanDynamicCast<Int64Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<int64_t>>(dataStructure, selectedDataPath, createdDataPath));
-  }
-  if(TemplateHelpers::CanDynamicCast<UInt64Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<uint64_t>>(dataStructure, selectedDataPath, createdDataPath));
-  }
-  if(TemplateHelpers::CanDynamicCast<BoolArray>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<bool>>(dataStructure, selectedDataPath, createdDataPath));
-  }
-  if(TemplateHelpers::CanDynamicCast<DataArray<size_t>>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<size_t>>(dataStructure, selectedDataPath, createdDataPath));
-  }
-}
 
 } // namespace
 
@@ -962,12 +818,11 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
   ownerLists.resize(nodeCount);
 
-  // Create a vector of TupleTransferFunctions for each of the Cell to Face Data Arrays
+  // Create a vector of TupleTransferFunctions for each of the Triangle Face to Vertex Data Arrays
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;
-  for(const auto& selectedDataPath : m_Inputs->pSelectedDataArrayPaths)
+  for(size_t i = 0; i < m_Inputs->pSelectedDataArrayPaths.size(); i++)
   {
-    DataPath createdDataPath = m_Inputs->pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
-    ::AddTupleTransferInstance(m_DataStructure, selectedDataPath, createdDataPath, tupleTransferFunctions);
+    ::AddTupleTransferInstance(m_DataStructure, m_Inputs->pSelectedDataArrayPaths[i], m_Inputs->pCreatedDataArrayPaths[i], tupleTransferFunctions);
   }
 
   // Cycle through again assigning coordinates to each node and assigning node numbers and feature labels to each triangle

@@ -26,7 +26,7 @@
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/unit_test/complex_test_dirs.hpp"
 
-#include "UnitTestCommon.hpp"
+#include "complex/Utilities/UnitTestCommon.hpp"
 
 #include "ComplexCore/Filters/CreateImageGeometry.hpp"
 

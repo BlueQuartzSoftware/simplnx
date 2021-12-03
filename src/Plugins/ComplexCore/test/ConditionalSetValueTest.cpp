@@ -1,12 +1,10 @@
 #include <catch2/catch.hpp>
 
-#include "UnitTestCommon.hpp"
-
-#include "ComplexCore/Filters/ConditionalSetValue.hpp"
+#include "complex/Utilities/UnitTestCommon.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/ConditionalSetValue.hpp"
 
-#include <iostream>
 #include <string>
 
 using namespace complex;

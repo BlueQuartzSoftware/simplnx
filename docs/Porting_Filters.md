@@ -100,5 +100,17 @@ Note the use of a _Reference Variable_ instead of the pointer. The developer can
 code such as `vertex[index]` to get/set a value but the code `vertex = i` to move a pointer
 **will not work**.
 
+## Selecting Geometry from a Parameter ##
 
+If you need to have the user select a Geometry then you should use a `DataPathSelectionParameter`.
 
+```c++
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_TriangleGeometry_Key, "Triangle Geometry to Sample", "", DataPath{}));
+```
+
+## Transferring Data from one Geometry to Another ##
+
+There are several filters (those that create a new geometry from an existing one) where
+the user is allowed to "transfer" data from the source geometry onto the newly created
+geometry. QuickSurfaceMeshFilter and PointSampleTriangleGeometryFilter both are examples
+of how to perform this transfer of data.

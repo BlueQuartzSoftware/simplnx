@@ -16,7 +16,6 @@ MATH(EXPR COMPLEX_PLUGIN_COUNT "${COMPLEX_PLUGIN_COUNT}+2")
 
 add_executable(complex_test 
   ${COMPLEX_TEST_DIRS_HEADER}
-  UnitTestCommon.hpp
   complex_test_main.cpp
   ArgumentsTest.cpp
   DataStructTest.cpp

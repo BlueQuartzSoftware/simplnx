@@ -9,25 +9,26 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${complex_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 set(FilterList
   CalculateFeatureSizesFilter
   CalculateTriangleAreasFilter
+  ConditionalSetValue
   CreateDataArray
   CreateDataGroup
   CreateImageGeometry
-  ConditionalSetValue
   DeleteData
+  ExampleFilter1
+  ExampleFilter2
   ExportDREAM3DFilter
   FindDifferencesMap
   ImportDREAM3DFilter
   ImportTextFilter
   LaplacianSmoothingFilter
-  RemoveMinimumSizeFeaturesFilter
   MultiThresholdObjects
+  PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
+  RemoveMinimumSizeFeaturesFilter
   RobustAutomaticThreshold
   ScalarSegmentFeatures
   SegmentFeatures
   StlFileReaderFilter
-  ExampleFilter1
-  ExampleFilter2
 )
 
 set(ActionList
@@ -37,6 +38,8 @@ set(AlgorithmList
   StlFileReader
   LaplacianSmoothing
   QuickSurfaceMesh
+  PointSampleTriangleGeometry
+  TupleTransfer
   )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
