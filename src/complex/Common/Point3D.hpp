@@ -334,4 +334,7 @@ protected:
 private:
   ArrayType m_Pos;
 };
+
+using Point3Df = Point3D<float>;
+using Point3Dd = Point3D<double>;
 } // namespace complex

@@ -6,7 +6,7 @@
 namespace complex
 {
 /**
- * @brief Action for creating DataArrays in a DataStructure
+ * @brief Action that will copy a Source DataArray to a Destination DataPath.
  */
 class COMPLEX_EXPORT CopyArrayInstanceAction : public IDataAction
 {

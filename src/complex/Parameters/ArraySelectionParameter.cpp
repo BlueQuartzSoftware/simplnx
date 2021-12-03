@@ -9,9 +9,10 @@
 
 namespace complex
 {
-ArraySelectionParameter ::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+ArraySelectionParameter ::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty)
 : MutableDataParameter(name, humanName, helpText, Category::Created)
 , m_DefaultValue(defaultValue)
+, m_AllowEmpty(allowEmpty)
 {
 }
 
@@ -49,7 +50,7 @@ Result<std::any> ArraySelectionParameter::fromJson(const nlohmann::json& json) c
 
 IParameter::UniquePointer ArraySelectionParameter::clone() const
 {
-  return std::make_unique<ArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue);
+  return std::make_unique<ArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowEmpty);
 }
 
 std::any ArraySelectionParameter::defaultValue() const
@@ -72,6 +73,11 @@ Result<> ArraySelectionParameter::validate(const DataStructure& dataStructure, c
 Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
 {
   const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
+
+  if(value.empty() && m_AllowEmpty)
+  {
+    return {};
+  }
 
   if(value.empty())
   {

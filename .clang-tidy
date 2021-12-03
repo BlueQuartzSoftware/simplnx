@@ -18,6 +18,7 @@ Checks: '
   moderize-*,
   -modernize-use-trailing-return-type,
   -modernize-use-nodiscard,
+  -moderize-use-auto,
   -mpi-*,
   -objc-*,
   -openmp-*,
@@ -28,6 +29,7 @@ Checks: '
   -readability-function-size,
   -readability-identifier-naming,
   -readability-uppercase-literal-suffix,
+  -readability-magic-numbers
 '
 WarningsAsErrors: '*'
 HeaderFilterRegex: 'complex/.*\.hpp'

@@ -17,16 +17,12 @@
 namespace complex
 {
 /**
- * @brief Action for creating an ImageGeometry in a DataStructure
+ * @brief Action for creating a Triangle or QuadGeometry in a DataStructure
  */
 template <typename Geometry2DType>
 class CreateGeometry2DAction : public IDataAction
 {
 public:
-  using DimensionType = std::vector<size_t>;
-  using OriginType = std::vector<float>;
-  using SpacingType = std::vector<float>;
-
   CreateGeometry2DAction() = delete;
 
   CreateGeometry2DAction(DataPath geometryPath, AbstractGeometry::MeshIndexType numFaces, AbstractGeometry::MeshIndexType numVertices)

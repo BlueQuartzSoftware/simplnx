@@ -5,6 +5,10 @@
 
 namespace complex
 {
+
+/**
+ * @brief Action to create a DataGroup with the DataStructure
+ */
 class COMPLEX_EXPORT CreateDataGroupAction : public IDataAction
 {
 public:
