@@ -102,11 +102,14 @@ IFilter::PreflightResult LinkGeometryDataFilter::preflightImpl(const DataStructu
   // NOTE: That using std::move() means that you can *NOT* use the outputAction variable
   // past this point, we are going to scope each section so that we don't accidentally introduce bugs
 
+  // Collect all the errors
+  std::vector<Error> errors;
+
   const AbstractGeometry* geometry = dataStructure.getDataAs<AbstractGeometry>(pGeomDataPath);
   if(geometry == nullptr)
   {
     Error result = {-600, fmt::format("DataPath '{}' is not a Geometry", pGeomDataPath.toString())};
-    return {nonstd::make_unexpected(std::vector<Error>{result})};
+    errors.push_back(result);
   }
   // This could fail at runtime. we just do a basic sanity check here.
   for(const auto& selectedDataPath : pSelectedVertexDataArrayPaths)
@@ -114,7 +117,7 @@ IFilter::PreflightResult LinkGeometryDataFilter::preflightImpl(const DataStructu
     if(!dataStructure.getId(selectedDataPath).has_value())
     {
       Error result = {-601, fmt::format("DataPath '{}' does not exist in the DataStructure", selectedDataPath.toString())};
-      return {nonstd::make_unexpected(std::vector<Error>{result})};
+      errors.push_back(result);
     }
   }
   for(const auto& selectedDataPath : pSelectedEdgeDataArrayPaths)
@@ -122,7 +125,7 @@ IFilter::PreflightResult LinkGeometryDataFilter::preflightImpl(const DataStructu
     if(!dataStructure.getId(selectedDataPath).has_value())
     {
       Error result = {-601, fmt::format("DataPath '{}' does not exist in the DataStructure", selectedDataPath.toString())};
-      return {nonstd::make_unexpected(std::vector<Error>{result})};
+      errors.push_back(result);
     }
   }
   for(const auto& selectedDataPath : pSelectedFaceDataArrayPaths)
@@ -130,7 +133,7 @@ IFilter::PreflightResult LinkGeometryDataFilter::preflightImpl(const DataStructu
     if(!dataStructure.getId(selectedDataPath).has_value())
     {
       Error result = {-601, fmt::format("DataPath '{}' does not exist in the DataStructure", selectedDataPath.toString())};
-      return {nonstd::make_unexpected(std::vector<Error>{result})};
+      errors.push_back(result);
     }
   }
   for(const auto& selectedDataPath : pSelectedVolumeDataArrayPaths)
@@ -138,8 +141,13 @@ IFilter::PreflightResult LinkGeometryDataFilter::preflightImpl(const DataStructu
     if(!dataStructure.getId(selectedDataPath).has_value())
     {
       Error result = {-601, fmt::format("DataPath '{}' does not exist in the DataStructure", selectedDataPath.toString())};
-      return {nonstd::make_unexpected(std::vector<Error>{result})};
+      errors.push_back(result);
     }
+  }
+
+  if(!errors.empty())
+  {
+    return {nonstd::make_unexpected(std::move(errors))};
   }
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using

@@ -107,18 +107,21 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
 
+  // Collect all the errors
+  std::vector<Error> errors;
+
   // Validate that the STL File is binary and readable.
   int32_t stlFileType = StlUtilities::DetermineStlFileType(pStlFilePathValue);
   if(stlFileType < 0)
   {
     Error result = {StlConstants::k_UnsupportedFileType,
                     fmt::format("The Input STL File is ASCII which is not currently supported. Please convert it to a binary STL file using another program.", pStlFilePathValue.string())};
-    return {nonstd::make_unexpected(std::vector<Error>{result})};
+    errors.push_back(result);
   }
   if(stlFileType > 0)
   {
     Error result = {StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the STL file.", pStlFilePathValue.string())};
-    return {nonstd::make_unexpected(std::vector<Error>{result})};
+    errors.push_back(result);
   }
 
   // Now get the number of Triangles according to the STL Header
@@ -126,7 +129,12 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
   if(numTriangles < 0)
   {
     Error result = {StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the STL file.", pStlFilePathValue.string())};
-    return {nonstd::make_unexpected(std::vector<Error>{result})};
+    errors.push_back(result);
+  }
+
+  if(!errors.empty())
+  {
+    return {nonstd::make_unexpected(std::move(errors))};
   }
 
   // This can happen in a LOT of STL files. Just means the writer didn't go back and update the header.
