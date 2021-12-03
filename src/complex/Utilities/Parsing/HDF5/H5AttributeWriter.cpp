@@ -61,11 +61,9 @@ std::string H5::AttributeWriter::getObjectName() const
     return "";
   }
 
-  const size_t size = 1024;
-  char buffer[size];
-  H5Iget_name(getObjectId(), buffer, size);
+  std::string path = H5::GetNameFromId(getObjectId());
 
-  return H5::GetNameFromBuffer(buffer);
+  return path;
 }
 
 std::string H5::AttributeWriter::getAttributeName() const

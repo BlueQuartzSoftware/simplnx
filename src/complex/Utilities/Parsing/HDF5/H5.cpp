@@ -1,6 +1,7 @@
 #include "H5.hpp"
 
 #include <stdexcept>
+#include <vector>
 
 #include <H5Apublic.h>
 
@@ -82,13 +83,33 @@ H5::IdType H5::getIdForType(Type type)
   }
 }
 
-std::string H5::GetNameFromBuffer(const char* buffer)
+std::string H5::GetNameFromBuffer(std::string_view buffer)
 {
-  std::string fullname(buffer);
-  size_t substrIndex = fullname.find_last_of('/');
+  usize substrIndex = buffer.find_last_of('/');
   if(substrIndex > 0)
   {
     substrIndex++;
   }
-  return fullname.substr(substrIndex);
+  return std::string(buffer.substr(substrIndex));
+}
+
+std::string H5::GetPathFromId(IdType id)
+{
+  ssize_t nameLength = H5Iget_name(id, nullptr, 0);
+  if(nameLength <= 0)
+  {
+    throw std::runtime_error("complex::H5::Support::GetName failed: H5Iget_name call failed");
+  }
+  std::string buffer(nameLength, 'A');
+  ssize_t size = H5Iget_name(id, buffer.data(), buffer.size() + 1);
+  if(size <= 0)
+  {
+    throw std::runtime_error("complex::H5::Support::GetName failed: H5Iget_name call failed");
+  }
+  return buffer;
+}
+
+std::string H5::GetNameFromId(IdType id)
+{
+  return GetNameFromBuffer(GetPathFromId(id));
 }

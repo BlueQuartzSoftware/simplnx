@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 
 #include "complex/complex_export.hpp"
 
@@ -48,15 +49,29 @@ Type COMPLEX_EXPORT getTypeFromId(IdType typeId);
 H5::IdType COMPLEX_EXPORT getIdForType(Type type);
 
 /**
- * @brief Returns a std::string representation from the provided const char*
+ * @brief Returns a std::string representation from the provided view
  * buffer. If the buffer contains segments divided by '/', only the last
  * segment is returned.
  * @param buffer
  * @return std::string
  */
-std::string COMPLEX_EXPORT GetNameFromBuffer(const char* buffer);
+std::string COMPLEX_EXPORT GetNameFromBuffer(std::string_view buffer);
 
-static constexpr StringLiteral k_DataTypeTag = "DataType";
+/**
+ * @brief Returns a std::string of a valid path to the object with the given id.
+ * Uses H5Iget_name internally.
+ * @param id
+ * @return std::string
+ */
+std::string COMPLEX_EXPORT GetPathFromId(IdType id);
+
+/**
+ * @brief Returns a std::string of the name of the given object.
+ * Equivalent to GetNameFromBuffer(GetPathFromId(id)).
+ * @param id
+ * @return std::string
+ */
+std::string COMPLEX_EXPORT GetNameFromId(IdType id);
 
 inline constexpr StringLiteral k_DataTypeTag = "DataType";
 
