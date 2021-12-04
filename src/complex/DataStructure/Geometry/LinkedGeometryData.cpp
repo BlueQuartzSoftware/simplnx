@@ -7,140 +7,76 @@ LinkedGeometryData::LinkedGeometryData() = default;
 
 LinkedGeometryData::~LinkedGeometryData() = default;
 
-void LinkedGeometryData::addVertexData(DataObject::IdType dataId, LinkedGeometryData::IDataArrayShrdPtrType& dataArray)
+void LinkedGeometryData::addVertexData(const DataPath& dataPath)
 {
-  m_VertexData[dataId] = dataArray;
+  m_VertexData.insert(dataPath);
 }
-void LinkedGeometryData::removeVertexData(DataObject::IdType dataId)
+void LinkedGeometryData::removeVertexData(const DataPath& dataPath)
 {
-  m_VertexData.erase(dataId);
+  m_VertexData.erase(dataPath);
 }
 void LinkedGeometryData::clearVertexData()
 {
   m_VertexData.clear();
 }
-LinkedGeometryData::IDataArrayShrdPtrType LinkedGeometryData::getVertexDataArray(DataObject::IdType dataArrayId)
+
+std::set<DataPath> LinkedGeometryData::getVertexDataPaths()
 {
-  return (m_VertexData[dataArrayId].expired() ? nullptr : m_VertexData[dataArrayId].lock());
-}
-std::vector<LinkedGeometryData::IDataArrayShrdPtrType> LinkedGeometryData::getVertexData(bool onlyValid)
-{
-  std::vector<LinkedGeometryData::IDataArrayShrdPtrType> dataArrays;
-  for(auto& keyValue : m_VertexData)
-  {
-    IDataArrayWeakPtrType dataArrayWeakPtr = keyValue.second;
-    if(onlyValid && !dataArrayWeakPtr.expired())
-    {
-      dataArrays.push_back(dataArrayWeakPtr.lock());
-    }
-    else
-    {
-      dataArrays.push_back((dataArrayWeakPtr.expired() ? nullptr : dataArrayWeakPtr.lock()));
-    }
-  }
-  return dataArrays;
+  return m_VertexData;
 }
 
-void LinkedGeometryData::addEdgeData(DataObject::IdType dataId, LinkedGeometryData::IDataArrayShrdPtrType& dataArray)
+void LinkedGeometryData::addEdgeData(const DataPath& dataPath)
 {
-  m_EdgeData[dataId] = dataArray;
+  m_EdgeData.insert(dataPath);
 }
-void LinkedGeometryData::removeEdgeData(DataObject::IdType dataId)
+void LinkedGeometryData::removeEdgeData(const DataPath& dataPath)
 {
-  m_EdgeData.erase(dataId);
+  m_EdgeData.erase(dataPath);
 }
 void LinkedGeometryData::clearEdgeData()
 {
   m_EdgeData.clear();
 }
-LinkedGeometryData::IDataArrayShrdPtrType LinkedGeometryData::getEdgeDataArray(DataObject::IdType dataArrayId)
+
+std::set<DataPath> LinkedGeometryData::getEdgeDataPaths()
 {
-  return (m_EdgeData[dataArrayId].expired() ? nullptr : m_EdgeData[dataArrayId].lock());
-}
-std::vector<LinkedGeometryData::IDataArrayShrdPtrType> LinkedGeometryData::getEdgeData(bool onlyValid)
-{
-  std::vector<LinkedGeometryData::IDataArrayShrdPtrType> dataArrays;
-  for(auto& keyValue : m_EdgeData)
-  {
-    IDataArrayWeakPtrType dataArrayWeakPtr = keyValue.second;
-    if(onlyValid && !dataArrayWeakPtr.expired())
-    {
-      dataArrays.push_back(dataArrayWeakPtr.lock());
-    }
-    else
-    {
-      dataArrays.push_back((dataArrayWeakPtr.expired() ? nullptr : dataArrayWeakPtr.lock()));
-    }
-  }
-  return dataArrays;
+  return m_EdgeData;
 }
 
-void LinkedGeometryData::addFaceData(DataObject::IdType dataId, LinkedGeometryData::IDataArrayShrdPtrType& dataArray)
+void LinkedGeometryData::addFaceData(const DataPath& dataPath)
 {
-  m_FaceData[dataId] = dataArray;
+  m_FaceData.insert(dataPath);
 }
-void LinkedGeometryData::removeFaceData(DataObject::IdType dataId)
+void LinkedGeometryData::removeFaceData(const DataPath& dataPath)
 {
-  m_FaceData.erase(dataId);
+  m_FaceData.erase(dataPath);
 }
 
 void LinkedGeometryData::clearFaceData()
 {
   m_FaceData.clear();
 }
-LinkedGeometryData::IDataArrayShrdPtrType LinkedGeometryData::getFaceDataArray(DataObject::IdType dataArrayId)
+
+std::set<DataPath> LinkedGeometryData::getFaceDataPaths()
 {
-  return (m_FaceData[dataArrayId].expired() ? nullptr : m_FaceData[dataArrayId].lock());
-}
-std::vector<LinkedGeometryData::IDataArrayShrdPtrType> LinkedGeometryData::getFaceData(bool onlyValid)
-{
-  std::vector<LinkedGeometryData::IDataArrayShrdPtrType> dataArrays;
-  for(auto& keyValue : m_FaceData)
-  {
-    IDataArrayWeakPtrType dataArrayWeakPtr = keyValue.second;
-    if(onlyValid && !dataArrayWeakPtr.expired())
-    {
-      dataArrays.push_back(dataArrayWeakPtr.lock());
-    }
-    else
-    {
-      dataArrays.push_back((dataArrayWeakPtr.expired() ? nullptr : dataArrayWeakPtr.lock()));
-    }
-  }
-  return dataArrays;
+  return m_FaceData;
 }
 
-void LinkedGeometryData::addCellData(DataObject::IdType dataId, LinkedGeometryData::IDataArrayShrdPtrType& dataArray)
+void LinkedGeometryData::addCellData(const DataPath& dataPath)
 {
-  m_CellData[dataId] = dataArray;
+  m_CellData.insert(dataPath);
 }
-void LinkedGeometryData::removeCellData(DataObject::IdType dataId)
+void LinkedGeometryData::removeCellData(const DataPath& dataPath)
 {
-  m_CellData.erase(dataId);
+  m_CellData.erase(dataPath);
 }
 
 void LinkedGeometryData::clearCellData()
 {
   m_CellData.clear();
 }
-LinkedGeometryData::IDataArrayShrdPtrType LinkedGeometryData::getCellDataArray(DataObject::IdType dataArrayId)
+
+std::set<DataPath> LinkedGeometryData::getCellDataPaths()
 {
-  return (m_CellData[dataArrayId].expired() ? nullptr : m_CellData[dataArrayId].lock());
-}
-std::vector<LinkedGeometryData::IDataArrayShrdPtrType> LinkedGeometryData::getCellData(bool onlyValid)
-{
-  std::vector<LinkedGeometryData::IDataArrayShrdPtrType> dataArrays;
-  for(auto& keyValue : m_CellData)
-  {
-    IDataArrayWeakPtrType dataArrayWeakPtr = keyValue.second;
-    if(onlyValid && !dataArrayWeakPtr.expired())
-    {
-      dataArrays.push_back(dataArrayWeakPtr.lock());
-    }
-    else
-    {
-      dataArrays.push_back((dataArrayWeakPtr.expired() ? nullptr : dataArrayWeakPtr.lock()));
-    }
-  }
-  return dataArrays;
+  return m_CellData;
 }

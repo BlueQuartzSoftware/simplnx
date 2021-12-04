@@ -57,6 +57,7 @@ public:
     Vertex = 1,
     Edge = 3,
     Triangle = 5,
+
     Quad = 9,
     Tetrahedral = 10,
     Hexahedral = 12,
@@ -153,7 +154,7 @@ public:
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */
-  DataObject::DataObjectType getType() const override;
+  DataObject::DataObjectType getDataObjectType() const override;
 
   /**
    * @brief
@@ -340,7 +341,12 @@ public:
    */
   virtual void initializeWithZeros() = 0;
 
-  std::shared_ptr<LinkedGeometryData> getLinkedGeometryData() const;
+  /**
+   *
+   * @return
+   */
+  const LinkedGeometryData& getLinkedGeometryData() const;
+  LinkedGeometryData& getLinkedGeometryData();
 
 protected:
   /**
@@ -420,6 +426,6 @@ private:
   float32 m_TimeValue = 0.0f;
   uint32 m_UnitDimensionality = 3;
   uint32 m_SpacialDimensionality = 3;
-  std::shared_ptr<LinkedGeometryData> m_LinkedGeometryData;
+  LinkedGeometryData m_LinkedGeometryData;
 };
 } // namespace complex

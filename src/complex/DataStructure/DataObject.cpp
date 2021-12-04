@@ -53,7 +53,7 @@ DataObject::~DataObject() noexcept
   }
 }
 
-DataObject::DataObjectType DataObject::getType() const
+DataObject::DataObjectType DataObject::getDataObjectType() const
 {
   return DataObjectType::DataObject;
 }

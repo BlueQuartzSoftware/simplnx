@@ -52,7 +52,7 @@ TriangleGeom::TriangleGeom(TriangleGeom&& other) noexcept
 }
 
 TriangleGeom::~TriangleGeom() = default;
-DataObject::DataObjectType TriangleGeom::getType() const
+DataObject::DataObjectType TriangleGeom::getDataObjectType() const
 {
   return DataObjectType::TriangleGeom;
 }

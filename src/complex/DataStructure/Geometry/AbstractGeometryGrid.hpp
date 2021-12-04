@@ -20,7 +20,7 @@ public:
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */
-  DataObject::DataObjectType getType() const override;
+  DataObject::DataObjectType getDataObjectType() const override;
 
   /**
    * @brief

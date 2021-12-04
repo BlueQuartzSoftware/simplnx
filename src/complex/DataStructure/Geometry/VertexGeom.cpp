@@ -47,7 +47,7 @@ VertexGeom::VertexGeom(VertexGeom&& other) noexcept
 }
 
 VertexGeom::~VertexGeom() = default;
-DataObject::DataObjectType VertexGeom::getType() const
+DataObject::DataObjectType VertexGeom::getDataObjectType() const
 {
   return DataObjectType::VertexGeom;
 }

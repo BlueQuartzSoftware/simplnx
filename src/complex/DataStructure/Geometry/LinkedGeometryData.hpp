@@ -5,6 +5,8 @@
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/complex_export.hpp"
 
+#include <set>
+
 namespace complex
 {
 
@@ -17,45 +19,41 @@ public:
   LinkedGeometryData();
   ~LinkedGeometryData();
 
-  LinkedGeometryData(const LinkedGeometryData&) = delete;
-  LinkedGeometryData(LinkedGeometryData&&) noexcept = delete;
+  LinkedGeometryData(const LinkedGeometryData&) = default;
+  LinkedGeometryData(LinkedGeometryData&&) noexcept = default;
 
-  LinkedGeometryData& operator=(const LinkedGeometryData&) = delete;
-  LinkedGeometryData& operator=(LinkedGeometryData&&) noexcept = delete;
+  LinkedGeometryData& operator=(const LinkedGeometryData&) = default;
+  LinkedGeometryData& operator=(LinkedGeometryData&&) noexcept = default;
 
   using IDataArrayShrdPtrType = std::shared_ptr<IDataArray>;
   using IDataArrayWeakPtrType = std::weak_ptr<IDataArray>;
 
-  void addVertexData(DataObject::IdType dataId, IDataArrayShrdPtrType& dataArray);
-  void removeVertexData(DataObject::IdType dataId);
+  void addVertexData(const DataPath& dataPath);
+  void removeVertexData(const DataPath& dataPath);
   void clearVertexData();
-  IDataArrayShrdPtrType getVertexDataArray(DataObject::IdType dataArrayId);
-  std::vector<IDataArrayShrdPtrType> getVertexData(bool onlyValid = false);
+  std::set<DataPath> getVertexDataPaths();
 
-  void addEdgeData(DataObject::IdType dataId, IDataArrayShrdPtrType& dataArray);
-  void removeEdgeData(DataObject::IdType dataId);
+  void addEdgeData(const DataPath& dataPath);
+  void removeEdgeData(const DataPath& dataPath);
   void clearEdgeData();
-  IDataArrayShrdPtrType getEdgeDataArray(DataObject::IdType dataArrayId);
-  std::vector<IDataArrayShrdPtrType> getEdgeData(bool onlyValid = false);
+  std::set<DataPath> getEdgeDataPaths();
 
-  void addFaceData(DataObject::IdType dataId, IDataArrayShrdPtrType& dataArray);
-  void removeFaceData(DataObject::IdType dataId);
+  void addFaceData(const DataPath& dataPath);
+  void removeFaceData(const DataPath& dataPath);
   void clearFaceData();
-  IDataArrayShrdPtrType getFaceDataArray(DataObject::IdType dataArrayId);
-  std::vector<IDataArrayShrdPtrType> getFaceData(bool onlyValid = false);
+  std::set<DataPath> getFaceDataPaths();
 
-  void addCellData(DataObject::IdType dataId, IDataArrayShrdPtrType& dataArray);
-  void removeCellData(DataObject::IdType dataId);
+  void addCellData(const DataPath& dataPath);
+  void removeCellData(const DataPath& dataPath);
   void clearCellData();
-  IDataArrayShrdPtrType getCellDataArray(DataObject::IdType dataArrayId);
-  std::vector<IDataArrayShrdPtrType> getCellData(bool onlyValid = false);
+  std::set<DataPath> getCellDataPaths();
 
 protected:
 private:
-  std::map<DataObject::IdType, IDataArrayWeakPtrType> m_VertexData;
-  std::map<DataObject::IdType, IDataArrayWeakPtrType> m_EdgeData;
-  std::map<DataObject::IdType, IDataArrayWeakPtrType> m_FaceData;
-  std::map<DataObject::IdType, IDataArrayWeakPtrType> m_CellData;
+  std::set<DataPath> m_VertexData;
+  std::set<DataPath> m_EdgeData;
+  std::set<DataPath> m_FaceData;
+  std::set<DataPath> m_CellData;
 };
 
 } // namespace complex

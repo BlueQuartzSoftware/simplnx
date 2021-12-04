@@ -41,7 +41,7 @@ EdgeGeom::EdgeGeom(EdgeGeom&& other) noexcept
 }
 
 EdgeGeom::~EdgeGeom() = default;
-DataObject::DataObjectType EdgeGeom::getType() const
+DataObject::DataObjectType EdgeGeom::getDataObjectType() const
 {
   return DataObjectType::EdgeGeom;
 }

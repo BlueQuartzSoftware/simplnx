@@ -25,7 +25,7 @@ AbstractGeometry2D::AbstractGeometry2D(AbstractGeometry2D&& other) noexcept
 }
 
 AbstractGeometry2D::~AbstractGeometry2D() = default;
-DataObject::DataObjectType AbstractGeometry2D::getType() const
+DataObject::DataObjectType AbstractGeometry2D::getDataObjectType() const
 {
   return DataObjectType::AbstractGeometry2D;
 }

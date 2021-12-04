@@ -51,7 +51,7 @@ QuadGeom::QuadGeom(QuadGeom&& other) noexcept
 }
 
 QuadGeom::~QuadGeom() = default;
-DataObject::DataObjectType QuadGeom::getType() const
+DataObject::DataObjectType QuadGeom::getDataObjectType() const
 {
   return DataObjectType::QuadGeom;
 }

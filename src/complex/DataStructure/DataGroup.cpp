@@ -33,7 +33,7 @@ DataGroup::DataGroup(DataGroup&& other) noexcept
 }
 
 DataGroup::~DataGroup() = default;
-DataObject::DataObjectType DataGroup::getType() const
+DataObject::DataObjectType DataGroup::getDataObjectType() const
 {
   return DataObjectType::DataGroup;
 }

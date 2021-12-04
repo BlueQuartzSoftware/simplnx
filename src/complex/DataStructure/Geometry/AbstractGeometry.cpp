@@ -85,16 +85,18 @@ AbstractGeometry::AbstractGeometry(DataStructure& ds, std::string name, IdType i
 
 AbstractGeometry::AbstractGeometry(const AbstractGeometry& other)
 : BaseGroup(other)
+, m_LinkedGeometryData(other.m_LinkedGeometryData)
 {
 }
 
 AbstractGeometry::AbstractGeometry(AbstractGeometry&& other) noexcept
 : BaseGroup(std::move(other))
+, m_LinkedGeometryData(std::move(other.m_LinkedGeometryData))
 {
 }
 
 AbstractGeometry::~AbstractGeometry() = default;
-DataObject::DataObjectType AbstractGeometry::getType() const
+DataObject::DataObjectType AbstractGeometry::getDataObjectType() const
 {
   return DataObjectType::AbstractGeometry;
 }
@@ -203,7 +205,11 @@ H5::ErrorType AbstractGeometry::WriteH5DataId(H5::ObjectWriter& objectWriter, co
   return attribute.writeValue<IdType>(0);
 }
 
-std::shared_ptr<LinkedGeometryData> AbstractGeometry::getLinkedGeometryData() const
+const LinkedGeometryData& AbstractGeometry::getLinkedGeometryData() const
+{
+  return m_LinkedGeometryData;
+}
+LinkedGeometryData& AbstractGeometry::getLinkedGeometryData()
 {
   return m_LinkedGeometryData;
 }

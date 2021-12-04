@@ -76,7 +76,7 @@ public:
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */
-  virtual DataObjectType getType() const;
+  virtual DataObjectType getDataObjectType() const;
 
   /**
    * @brief The IdType alias serves as an ID type for DataObjects within their

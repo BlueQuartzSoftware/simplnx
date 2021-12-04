@@ -168,33 +168,33 @@ Result<> LinkGeometryDataFilter::executeImpl(DataStructure& dataStructure, const
   auto pSelectedVolumeDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedVolumeDataArrayPaths_Key);
 
   AbstractGeometry& geometry = dataStructure.getDataRefAs<AbstractGeometry>(pGeomDataPath);
-  std::shared_ptr<LinkedGeometryData> geometryData = geometry.getLinkedGeometryData();
+  LinkedGeometryData& geometryData = geometry.getLinkedGeometryData();
 
   using IDataArrayShrdPtrType = std::shared_ptr<IDataArray>;
 
   for(const auto& selectedDataPath : pSelectedVertexDataArrayPaths)
   {
-    IDataArrayShrdPtrType dataArray = dataStructure.getSharedDataAs<IDataArray>(selectedDataPath);
-    DataObject::IdType dataId = dataStructure.getId(selectedDataPath).value();
-    geometryData->addVertexData(dataId, dataArray);
+    //    IDataArrayShrdPtrType dataArray = dataStructure.getSharedDataAs<IDataArray>(selectedDataPath);
+    //    DataObject::IdType dataId = dataStructure.getId(selectedDataPath).value();
+    geometryData.addVertexData(selectedDataPath);
   }
   for(const auto& selectedDataPath : pSelectedEdgeDataArrayPaths)
   {
-    IDataArrayShrdPtrType dataArray = dataStructure.getSharedDataAs<IDataArray>(selectedDataPath);
-    DataObject::IdType dataId = dataStructure.getId(selectedDataPath).value();
-    geometryData->addVertexData(dataId, dataArray);
+    //    IDataArrayShrdPtrType dataArray = dataStructure.getSharedDataAs<IDataArray>(selectedDataPath);
+    //    DataObject::IdType dataId = dataStructure.getId(selectedDataPath).value();
+    geometryData.addVertexData(selectedDataPath);
   }
   for(const auto& selectedDataPath : pSelectedFaceDataArrayPaths)
   {
-    IDataArrayShrdPtrType dataArray = dataStructure.getSharedDataAs<IDataArray>(selectedDataPath);
-    DataObject::IdType dataId = dataStructure.getId(selectedDataPath).value();
-    geometryData->addVertexData(dataId, dataArray);
+    //    IDataArrayShrdPtrType dataArray = dataStructure.getSharedDataAs<IDataArray>(selectedDataPath);
+    //    DataObject::IdType dataId = dataStructure.getId(selectedDataPath).value();
+    geometryData.addVertexData(selectedDataPath);
   }
   for(const auto& selectedDataPath : pSelectedVolumeDataArrayPaths)
   {
-    IDataArrayShrdPtrType dataArray = dataStructure.getSharedDataAs<IDataArray>(selectedDataPath);
-    DataObject::IdType dataId = dataStructure.getId(selectedDataPath).value();
-    geometryData->addVertexData(dataId, dataArray);
+    //    IDataArrayShrdPtrType dataArray = dataStructure.getSharedDataAs<IDataArray>(selectedDataPath);
+    //    DataObject::IdType dataId = dataStructure.getId(selectedDataPath).value();
+    geometryData.addVertexData(selectedDataPath);
   }
 
   /****************************************************************************

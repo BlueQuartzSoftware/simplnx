@@ -51,7 +51,7 @@ HexahedralGeom::HexahedralGeom(HexahedralGeom&& other) noexcept
 }
 
 HexahedralGeom::~HexahedralGeom() = default;
-DataObject::DataObjectType HexahedralGeom::getType() const
+DataObject::DataObjectType HexahedralGeom::getDataObjectType() const
 {
   return DataObjectType::HexahedralGeom;
 }

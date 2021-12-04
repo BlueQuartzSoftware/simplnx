@@ -115,7 +115,7 @@ public:
     }
   }
 
-  DataObject::DataObjectType getType() const override
+  DataObject::DataObjectType getDataObjectType() const override
   {
     return DataObjectType::DynamicListArray;
   }

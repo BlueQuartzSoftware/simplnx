@@ -40,7 +40,7 @@ ImageGeom::ImageGeom(ImageGeom&& other) noexcept
 }
 
 ImageGeom::~ImageGeom() = default;
-DataObject::DataObjectType ImageGeom::getType() const
+DataObject::DataObjectType ImageGeom::getDataObjectType() const
 {
   return DataObjectType::ImageGeom;
 }
