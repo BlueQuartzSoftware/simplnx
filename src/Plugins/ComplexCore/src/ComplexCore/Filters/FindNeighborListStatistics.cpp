@@ -202,7 +202,7 @@ OutputActions FindNeighborListStatistics::createCompatibleArrays(const DataStruc
   auto findStdDeviation = args.value<bool>(k_FindStandardDeviation_Key);
   auto findSummation = args.value<bool>(k_FindSummation_Key);
 
-  auto inputArrayPath = args.value<DataPath>(k_InputArrays_Key);
+  auto inputArrayPath = args.value<DataPath>(k_InputArray_Key);
   auto inputArray = data.getDataAs<IDataArray>(inputArrayPath);
   std::vector<usize> tupleDims{inputArray->getNumberOfTuples()};
   auto dataType = static_cast<NumericType>(inputArray->getDataType());
@@ -223,7 +223,6 @@ OutputActions FindNeighborListStatistics::createCompatibleArrays(const DataStruc
   if(findMax)
   {
     auto arrayPath = args.value<DataPath>(k_Maximum_Key);
-    auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, 1, arrayPath);
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, 1, arrayPath);
     actions.actions.push_back(std::move(action));
   }
@@ -288,7 +287,7 @@ Parameters FindNeighborListStatistics::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_FindSummation_Key, "Find Summation", "Specifies whether or not the filter creates the Summation array during calculations", true));
 
   params.insert(
-      std::make_unique<ArraySelectionParameter>(k_InputArrays_Key, "Arrays to Compute Statistics", "Specifies whether or not the filter creates the Summation array during calculations", DataPath()));
+      std::make_unique<ArraySelectionParameter>(k_InputArray_Key, "Arrays to Compute Statistics", "Specifies whether or not the filter creates the Summation array during calculations", DataPath()));
 
   params.insert(std::make_unique<ArrayCreationParameter>(k_Length_Key, "Length", "Path to create the Length array during calculations", DataPath()));
   params.insert(std::make_unique<ArrayCreationParameter>(k_Minimum_Key, "Minimum", "Path to create the Minimum array during calculations", DataPath()));
@@ -315,7 +314,7 @@ IFilter::PreflightResult FindNeighborListStatistics::preflightImpl(const DataStr
   auto findStdDeviation = args.value<bool>(k_FindStandardDeviation_Key);
   auto findSummation = args.value<bool>(k_FindSummation_Key);
 
-  auto inputArrayPath = args.value<DataPath>(k_InputArrays_Key);
+  auto inputArrayPath = args.value<DataPath>(k_InputArray_Key);
 
   //
   if(!findMin && !findMax && !findMean && !findMedian && !findStdDeviation && !findSummation && !findLength)
@@ -364,7 +363,7 @@ Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Argu
     return {};
   }
 
-  auto inputArrayPath = args.value<DataPath>(k_InputArrays_Key);
+  auto inputArrayPath = args.value<DataPath>(k_InputArray_Key);
   auto inputArray = data.getDataAs<IDataArray>(inputArrayPath);
 
   std::vector<IDataArray*> arrays(7, nullptr);

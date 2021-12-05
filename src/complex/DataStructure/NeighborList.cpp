@@ -1,11 +1,12 @@
 #include "NeighborList.hpp"
 
+#include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 using namespace complex;
 
 template <typename T>
-NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string name, usize numTuples)
+NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples)
 : IDataArray(dataStructure, name)
 , m_NumTuples(numTuples)
 , m_IsAllocated(false)
@@ -13,9 +14,30 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string na
 }
 
 template <typename T>
+NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<SharedVectorType>& dataVector, IdType importId)
+: IDataArray(dataStructure, name, importId)
+, m_Array(dataVector)
+, m_NumTuples(m_Array.size())
+, m_IsAllocated(true)
+{
+}
+
+template <typename T>
 NeighborList<T>* NeighborList<T>::Create(DataStructure& ds, const std::string& name, usize numTuples, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<NeighborList>(new NeighborList(ds, std::move(name), numTuples));
+  auto data = std::shared_ptr<NeighborList>(new NeighborList(ds, name, numTuples));
+  if(!AttemptToAddObject(ds, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+template <typename T>
+NeighborList<T>* NeighborList<T>::Import(DataStructure& ds, const std::string& name, IdType importId, const std::vector<SharedVectorType>& dataVector, const std::optional<IdType>& parentId)
+{
+
+  auto data = std::shared_ptr<NeighborList>(new NeighborList(ds, name, dataVector, importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
@@ -312,6 +334,14 @@ H5::ErrorType NeighborList<T>::writeHdf5(H5::DataStructureWriter& dataStructureW
 {
   auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
   return writeH5ObjectAttributes(dataStructureWriter, datasetWriter);
+}
+
+template <typename T>
+std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadHdf5Data(const H5::DatasetReader& dataReader)
+{
+  std::vector<SharedVectorType> dataVector;
+
+  return dataVector;
 }
 
 #if !defined(__APPLE__) && !defined(_MSC_VER)

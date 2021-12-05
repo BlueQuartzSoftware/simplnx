@@ -4,6 +4,12 @@
 
 namespace complex
 {
+namespace H5
+{
+class DatasetReader;
+class NeighborListFactory;
+} // namespace H5
+
 /**
  * @class NeighborList
  * @brief
@@ -12,6 +18,8 @@ namespace complex
 template <typename T>
 class NeighborList : public IDataArray
 {
+  friend class H5::NeighborListFactory;
+
 public:
   using value_type = T;
   using VectorType = std::vector<T>;
@@ -24,8 +32,20 @@ public:
    * @param numTuples
    * @param parentId = {}
    * @tparam T
+   * @return NeighborList<T>*
    */
   static NeighborList* Create(DataStructure& ds, const std::string& name, usize numTuples, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
+   * @param ds
+   * @param name
+   * @param importId
+   * @param data
+   * @param parentId
+   * @return NeighborList<T>*
+   */
+  static NeighborList* Import(DataStructure& ds, const std::string& name, IdType importId, const std::vector<SharedVectorType>& data, const std::optional<IdType>& parentId = {});
 
   ~NeighborList() override = default;
 
@@ -227,7 +247,19 @@ protected:
   /**
    * @brief NeighborList
    */
-  NeighborList(DataStructure& dataStructure, const std::string name, usize numTuples);
+  NeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples);
+
+  /**
+   * @brief NeighborList
+   */
+  NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<SharedVectorType>& dataVector, IdType importId);
+
+  /**
+   * @brief Read the data vector from HDF5.
+   * @param dataReader
+   * @return std::vector<SharedVectorType>
+   */
+  static std::vector<SharedVectorType> ReadHdf5Data(const H5::DatasetReader& dataReader);
 
 private:
   std::string m_NumNeighborsArrayName;

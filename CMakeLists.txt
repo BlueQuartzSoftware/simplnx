@@ -182,6 +182,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/GridMontageFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/HexahedralGeomFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ImageGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/NeighborListFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/QuadGeomFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/RectGridGeomFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ScalarDataFactory.hpp
@@ -341,6 +342,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/GridMontageFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/HexahedralGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ImageGeomFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/NeighborListFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/QuadGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/RectGridGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ScalarDataFactory.cpp
