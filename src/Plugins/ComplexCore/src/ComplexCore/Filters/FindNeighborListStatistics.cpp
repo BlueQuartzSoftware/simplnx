@@ -21,7 +21,9 @@ template <typename T>
 class FindNeighborListStatisticsImpl
 {
 public:
-  FindNeighborListStatisticsImpl(const IFilter* filter, IDataArray* source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
+  using NeighborListType = NeighborList<T>;
+
+  FindNeighborListStatisticsImpl(const IFilter* filter, NeighborListType* source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
                                  std::vector<IDataArray*>& arrays)
   : m_Filter(filter)
   , m_Source(source)
@@ -40,12 +42,9 @@ public:
 
   void compute(usize start, usize end) const
   {
-    using NeighborListType = NeighborList<T>;
-    auto* inputDataPtr = dynamic_cast<NeighborListType*>(m_Source);
-
     for(usize i = start; i < end; i++)
     {
-      std::vector<T>& tmpList = (*inputDataPtr)[i];
+      std::vector<T>& tmpList = (*m_Source)[i];
 
       if(m_Length)
       {
@@ -115,7 +114,7 @@ public:
 
 private:
   const IFilter* m_Filter = nullptr;
-  IDataArray* m_Source;
+  NeighborListType* m_Source;
   bool m_Length = false;
   bool m_Min = false;
   bool m_Max = false;
@@ -131,7 +130,8 @@ template <typename DataType>
 void findStatisticsImpl(const IFilter* filter, IDataArray* source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation, std::vector<IDataArray*>& arrays)
 {
   usize numTuples = source->getNumberOfTuples();
-  FindNeighborListStatisticsImpl<int8> algorithm(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays);
+  auto sourceList = dynamic_cast<NeighborList<DataType>*>(source);
+  FindNeighborListStatisticsImpl<DataType> algorithm(filter, sourceList, length, min, max, mean, median, stdDeviation, summation, arrays);
   algorithm.compute(0, numTuples - 1);
 
 #if 0
@@ -176,9 +176,6 @@ void findStatistics(const IFilter* filter, IDataArray* source, bool length, bool
     return;
   case DataType::uint64:
     findStatisticsImpl<uint64>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays);
-    return;
-  case DataType::boolean:
-    findStatisticsImpl<bool>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays);
     return;
   case DataType::float32:
     findStatisticsImpl<float32>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays);

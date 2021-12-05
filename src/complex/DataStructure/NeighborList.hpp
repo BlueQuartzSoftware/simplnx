@@ -234,6 +234,12 @@ public:
   const IDataStore* getIDataStore() const override;
 
   /**
+   * @brief Returns the DataArray's value type as an enum
+   * @return DataType
+   */
+  DataType getDataType() const override;
+
+  /**
    * @brief Writes the DataArray to HDF5 using the provided group ID.
    *
    * This method will fail if no DataStore has been set.

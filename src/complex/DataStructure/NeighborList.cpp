@@ -329,6 +329,86 @@ const IDataStore* NeighborList<T>::getIDataStore() const
   return nullptr;
 }
 
+template <typename ValueType>
+DataType NeighborList<ValueType>::getDataType() const
+{
+  return DataType::error;
+}
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<int8>::getDataType() const
+{
+  return DataType::int8;
+}
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<int16>::getDataType() const
+{
+  return DataType::int16;
+}
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<int32>::getDataType() const
+{
+  return DataType::int32;
+}
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<int64>::getDataType() const
+{
+  return DataType::int64;
+}
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<uint8>::getDataType() const
+{
+  return DataType::uint8;
+}
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<uint16>::getDataType() const
+{
+  return DataType::uint16;
+}
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<uint32>::getDataType() const
+{
+  return DataType::uint32;
+}
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<uint64>::getDataType() const
+{
+  return DataType::uint64;
+}
+
+#if defined(__APPLE__)
+template <>
+DataType COMPLEX_EXPORT NeighborList<unsigned long>::getDataType() const
+{
+  return DataType::uint64;
+}
+#endif
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<float32>::getDataType() const
+{
+  return DataType::float32;
+}
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<float64>::getDataType() const
+{
+  return DataType::float64;
+}
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<bool>::getDataType() const
+{
+  return DataType::boolean;
+}
+
 template <typename T>
 H5::ErrorType NeighborList<T>::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
 {
