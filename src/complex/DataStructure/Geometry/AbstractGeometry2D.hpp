@@ -64,6 +64,8 @@ public:
    */
   const SharedVertexList* getVertices() const;
 
+  DataObject::IdType getVertListId() const;
+
   /**
    * @brief Returns the Point3D<float32> coordinate for the specified vertex ID.
    * @param vertId

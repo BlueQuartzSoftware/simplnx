@@ -134,6 +134,11 @@ const AbstractGeometry::SharedTriList* TriangleGeom::getFaces() const
   return dynamic_cast<const SharedTriList*>(getDataStructure()->getData(m_TriListId));
 }
 
+DataObject::IdType TriangleGeom::getTriangleArrayId()
+{
+  return m_TriListId.value();
+}
+
 void TriangleGeom::setVertexIdsForFace(usize faceId, usize verts[3])
 {
   auto faces = getFaces();

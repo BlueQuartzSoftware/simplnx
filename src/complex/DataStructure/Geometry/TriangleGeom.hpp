@@ -108,6 +108,8 @@ public:
    */
   const SharedTriList* getFaces() const;
 
+  DataObject::IdType getTriangleArrayId();
+
   /**
    * @brief
    * @param triId
