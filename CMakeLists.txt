@@ -182,6 +182,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/GridMontageFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/HexahedralGeomFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ImageGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/NeighborListFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/QuadGeomFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/RectGridGeomFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ScalarDataFactory.hpp
@@ -236,6 +237,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/IDataStore.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/NeighborList.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/ScalarData.hpp
 
   ${COMPLEX_SOURCE_DIR}/Filter/AbstractParameter.hpp
@@ -294,6 +296,7 @@ set(COMPLEX_HDRS
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Math/StatisticsCalculations.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.hpp
 
@@ -339,6 +342,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/GridMontageFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/HexahedralGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ImageGeomFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/NeighborListFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/QuadGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/RectGridGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ScalarDataFactory.cpp
@@ -381,6 +385,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/NeighborList.cpp
 
   ${COMPLEX_SOURCE_DIR}/Filter/AbstractParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Arguments.cpp
