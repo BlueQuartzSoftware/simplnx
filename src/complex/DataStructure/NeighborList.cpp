@@ -3,8 +3,8 @@
 #include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
-using namespace complex;
-
+namespace complex
+{
 template <typename T>
 NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples)
 : IDataArray(dataStructure, name)
@@ -449,3 +449,4 @@ template class COMPLEX_EXPORT NeighborList<float64>;
 #if defined(__APPLE__) || defined(_MSC_VER)
 template class COMPLEX_EXPORT NeighborList<usize>;
 #endif
+} // namespace complex

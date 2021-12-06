@@ -183,6 +183,7 @@ void findStatistics(const IFilter* filter, IDataArray* source, bool length, bool
   case DataType::float64:
     findStatisticsImpl<float64>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays);
     return;
+  case DataType::boolean:
   case DataType::error:
     return;
   }
