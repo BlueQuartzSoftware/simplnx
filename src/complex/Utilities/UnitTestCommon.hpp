@@ -7,6 +7,7 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
+#include "complex/DataStructure/NeighborList.hpp"
 
 using namespace complex;
 
@@ -79,6 +80,15 @@ DataArray<T>* CreateTestDataArray(DataStructure& dataGraph, const std::string& n
   return dataArray;
 }
 
+template <typename T>
+NeighborList<T>* CreateTestNeighborList(DataStructure& dataGraph, const std::string& name, usize numTuples, DataObject::IdType parentId)
+{
+  using NeighborListType = NeighborList<T>;
+  auto* neighborList = NeighborListType::Create(dataGraph, name, numTuples, parentId);
+  neighborList->resizeTotalElements(numTuples);
+  return neighborList;
+}
+
 /**
  * @brief Creates a DataStructure that mimics an EBSD data set
  * @return
@@ -117,6 +127,8 @@ inline DataStructure CreateDataStructure()
   numComponents = 1;
   usize numTuples = 2;
   Int32Array* laue_data = CreateTestDataArray<int32>(dataGraph, "Laue Class", {numTuples}, {numComponents}, ensembleGroup->getId());
+
+  NeighborList<float32>* neighborList = CreateTestNeighborList<float32>(dataGraph, "Neighbor List", numTuples, scanData->getId());
 
   return dataGraph;
 }
