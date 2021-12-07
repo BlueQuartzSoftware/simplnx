@@ -17,6 +17,12 @@ public:
   ~AbstractGeometryGrid() override;
 
   /**
+   * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
+   * @return
+   */
+  DataObject::DataObjectType getDataObjectType() const override;
+
+  /**
    * @brief
    * @return SizeVec3
    */

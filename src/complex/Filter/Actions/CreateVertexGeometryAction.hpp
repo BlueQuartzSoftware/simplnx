@@ -47,33 +47,36 @@ public:
   {
     const std::string k_VertexDataName("SharedVertexList");
 
+    // Check for empty Geometry DataPath
     if(m_GeometryPath.empty())
     {
-      return MakeErrorResult(-220, "CreateVertexGeometryAction: Geometry Path cannot be empty");
+      return MakeErrorResult(-220, "CreateGeometry2DAction: Geometry Path cannot be empty");
     }
 
-    usize size = m_GeometryPath.getLength();
-    std::string name = (size == 1 ? m_GeometryPath[0] : m_GeometryPath[size - 1]);
-
-    std::optional<DataObject::IdType> parentId;
-    if(size > 1)
+    // Check if the Geometry Path already exists
+    BaseGroup* parentObject = dataStructure.getDataAs<BaseGroup>(m_GeometryPath);
+    if(parentObject != nullptr)
     {
-      DataPath parentPath = m_GeometryPath.getParent();
-      parentId = dataStructure.getId(parentPath);
-      if(!parentId.has_value())
+      return MakeErrorResult(-222, fmt::format("CreateGeometry2DAction: DataObject already exists at path '{}'", m_GeometryPath.toString()));
+    }
+
+    DataPath parentPath = m_GeometryPath.getParent();
+    if(!parentPath.empty())
+    {
+      Result<LinkedPath> geomPath = dataStructure.makePath(parentPath);
+      if(geomPath.invalid())
       {
-        return MakeErrorResult(-221, "CreateVertexGeometryAction Invalid path");
+        return MakeErrorResult(-223, fmt::format("CreateGeometry2DAction: Geometry could not be created at path:'{}'", m_GeometryPath.toString()));
       }
     }
-
-    BaseGroup* parentObject = dataStructure.getDataAs<BaseGroup>(parentId);
-    if(parentObject->contains(name))
+    // Get the Parent ID
+    if(!dataStructure.getId(parentPath).has_value())
     {
-      return MakeErrorResult(-222, fmt::format("CreateVertexGeometryAction DataObject already exists at path '{}'", m_GeometryPath.toString()));
+      return MakeErrorResult(-224, fmt::format("CreateGeometry2DAction: Parent Id was not available for path:'{}'", parentPath.toString()));
     }
 
     // Create the VertexGeom
-    VertexGeom* geometry2d = VertexGeom::Create(dataStructure, name, parentId);
+    VertexGeom* geometry2d = VertexGeom::Create(dataStructure, m_GeometryPath.getTargetName(), dataStructure.getId(parentPath).value());
 
     using MeshIndexType = AbstractGeometry::MeshIndexType;
 

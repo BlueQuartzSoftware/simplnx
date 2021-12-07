@@ -210,6 +210,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/LinkedGeometryData.hpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
@@ -370,6 +371,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/LinkedGeometryData.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/AbstractMontage.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/AbstractTileIndex.cpp

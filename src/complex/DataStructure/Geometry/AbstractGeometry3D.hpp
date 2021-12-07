@@ -29,6 +29,12 @@ public:
   virtual ~AbstractGeometry3D();
 
   /**
+   * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
+   * @return
+   */
+  DataObject::DataObjectType getDataObjectType() const override;
+
+  /**
    * @brief Resizes the vertex array to the match the target number of vertices.
    * @param newNumVertices
    */

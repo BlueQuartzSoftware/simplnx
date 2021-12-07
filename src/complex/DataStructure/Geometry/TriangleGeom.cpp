@@ -52,6 +52,10 @@ TriangleGeom::TriangleGeom(TriangleGeom&& other) noexcept
 }
 
 TriangleGeom::~TriangleGeom() = default;
+DataObject::DataObjectType TriangleGeom::getDataObjectType() const
+{
+  return DataObjectType::TriangleGeom;
+}
 
 TriangleGeom* TriangleGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
@@ -128,6 +132,11 @@ AbstractGeometry::SharedTriList* TriangleGeom::getFaces()
 const AbstractGeometry::SharedTriList* TriangleGeom::getFaces() const
 {
   return dynamic_cast<const SharedTriList*>(getDataStructure()->getData(m_TriListId));
+}
+
+DataObject::IdType TriangleGeom::getTriangleArrayId()
+{
+  return m_TriListId.value();
 }
 
 void TriangleGeom::setVertexIdsForFace(usize faceId, usize verts[3])

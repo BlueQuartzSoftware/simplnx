@@ -62,8 +62,7 @@ Result<> PointSampleTriangleGeometry::operator()()
   TriangleGeom& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(triangleGeometryDataPath);
   int64_t numTris = static_cast<int64_t>(triangle.getNumberOfFaces());
 
-  DataPath vertexGeometryDataPath = m_Inputs->pVertexGeomParentGroup.createChildPath(m_Inputs->pVertexGeometryName);
-  VertexGeom& vertex = m_DataStructure.getDataRefAs<VertexGeom>(vertexGeometryDataPath);
+  VertexGeom& vertex = m_DataStructure.getDataRefAs<VertexGeom>(m_Inputs->pVertexGeometryPath);
   vertex.resizeVertexList(m_Inputs->pNumberOfSamples);
 
   std::mt19937_64::result_type seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());

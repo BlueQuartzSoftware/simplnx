@@ -23,3 +23,7 @@ AbstractGeometryGrid::AbstractGeometryGrid(AbstractGeometryGrid&& other) noexcep
 }
 
 AbstractGeometryGrid::~AbstractGeometryGrid() = default;
+DataObject::DataObjectType AbstractGeometryGrid::getDataObjectType() const
+{
+  return DataObjectType::AbstractGeometryGrid;
+}

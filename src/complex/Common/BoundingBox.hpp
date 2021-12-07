@@ -73,6 +73,43 @@ public:
   ~BoundingBox() = default;
 
   /**
+   * @brief Returns the Min point
+   * @return
+   */
+  std::array<ValueType, 3> getMinPoint() const
+  {
+    return {m_Bounds[0], m_Bounds[1], m_Bounds[2]};
+  }
+
+  /**
+   * @brief Returns the Max point
+   * @return
+   */
+  std::array<ValueType, 3> getMaxPoint() const
+  {
+    return {m_Bounds[3], m_Bounds[4], m_Bounds[5]};
+  }
+
+  /**
+   * @brief Compute the length of each side of the bounding box
+   * @return
+   */
+  std::array<ValueType, 3> sideLengths() const
+  {
+    return {m_Bounds[3] - m_Bounds[0], m_Bounds[4] - m_Bounds[1], m_Bounds[5] - m_Bounds[2]};
+  }
+
+  /**
+   * @brief compute the center of the bounding box.
+   * @return
+   */
+  std::array<ValueType, 3> center() const
+  {
+    std::array<ValueType, 3> boxSize = sideLengths();
+    return {m_Bounds[0] + boxSize[0] / 2.0, m_Bounds[1] + boxSize[1] / 2.0, m_Bounds[2] + boxSize[2] / 2.0};
+  }
+
+  /**
    * @brief Returns the current minimum X value.
    * @return ValueType
    */

@@ -7,7 +7,7 @@
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DynamicListArray.hpp"
-
+#include "complex/DataStructure/Geometry/LinkedGeometryData.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
@@ -57,6 +57,7 @@ public:
     Vertex = 1,
     Edge = 3,
     Triangle = 5,
+
     Quad = 9,
     Tetrahedral = 10,
     Hexahedral = 12,
@@ -148,6 +149,12 @@ public:
   AbstractGeometry(AbstractGeometry&& other) noexcept;
 
   ~AbstractGeometry() override;
+
+  /**
+   * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
+   * @return
+   */
+  DataObject::DataObjectType getDataObjectType() const override;
 
   /**
    * @brief
@@ -334,6 +341,13 @@ public:
    */
   virtual void initializeWithZeros() = 0;
 
+  /**
+   *
+   * @return
+   */
+  const LinkedGeometryData& getLinkedGeometryData() const;
+  LinkedGeometryData& getLinkedGeometryData();
+
 protected:
   /**
    * @brief
@@ -412,5 +426,6 @@ private:
   float32 m_TimeValue = 0.0f;
   uint32 m_UnitDimensionality = 3;
   uint32 m_SpacialDimensionality = 3;
+  LinkedGeometryData m_LinkedGeometryData;
 };
 } // namespace complex
