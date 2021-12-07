@@ -1,7 +1,7 @@
 #include "NeighborListFactory.hpp"
 
-#include "complex/DataStructure/NeighborList.hpp"
 #include "complex/DataStructure/DataStore.hpp"
+#include "complex/DataStructure/NeighborList.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DataStructureReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
