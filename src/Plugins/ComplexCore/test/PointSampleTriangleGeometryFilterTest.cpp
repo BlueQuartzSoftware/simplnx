@@ -79,24 +79,23 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
   std::string vertexGeometryName = "[Vertex Geometry]";
   std::string vertexNodeDataGroup = "Vertex Data";
   DataStructure dataGraph;
-  DataPath parentPath = DataPath({k_LevelZero});
+
   // Read in the STL File to load a Triangle Geometry to sample
   {
-    StlFileReaderFilter filter;
     Arguments args;
+    StlFileReaderFilter filter;
 
-    DataGroup::Create(dataGraph, k_LevelZero);
-
-    DataPath normalsDataPath = parentPath.createChildPath(triangleGeometryName).createChildPath(triangleFaceDataGroupName).createChildPath(normalsDataArrayName);
+    DataPath triangleGeomDataPath({triangleGeometryName});
+    DataPath triangleFaceDataGroupDataPath({triangleGeometryName, triangleFaceDataGroupName});
+    DataPath normalsDataPath({triangleGeometryName, triangleFaceDataGroupName, normalsDataArrayName});
 
     std::string inputFile = fmt::format("{}/ASTMD638_specimen.stl", unit_test::k_ComplexTestDataSourceDir.view());
 
     // Create default Parameters for the filter.
     args.insertOrAssign(StlFileReaderFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
-    args.insertOrAssign(StlFileReaderFilter::k_ParentDataGroupPath_Key, std::make_any<DataPath>(parentPath));
-    args.insertOrAssign(StlFileReaderFilter::k_GeometryName_Key, std::make_any<std::string>(triangleGeometryName));
-    args.insertOrAssign(StlFileReaderFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(triangleFaceDataGroupName));
-    args.insertOrAssign(StlFileReaderFilter::k_FaceNormalsArrayName_Key, std::make_any<DataPath>(normalsDataPath));
+    args.insertOrAssign(StlFileReaderFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(triangleGeomDataPath));
+    args.insertOrAssign(StlFileReaderFilter::k_FaceGroupDataPath_Key, std::make_any<DataPath>(triangleFaceDataGroupDataPath));
+    args.insertOrAssign(StlFileReaderFilter::k_FaceNormalsDataPath_Key, std::make_any<DataPath>(normalsDataPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);
@@ -106,7 +105,7 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
     auto executeResult = filter.execute(dataGraph, args);
     REQUIRE(executeResult.result.valid());
 
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(parentPath.createChildPath(triangleGeometryName));
+    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 92);
     REQUIRE(triangleGeom.getNumberOfVertices() == 48);
   }
@@ -115,8 +114,9 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
   {
     CalculateTriangleAreasFilter filter;
     Arguments args;
+    std::string triangleAreasName = "Triangle Areas";
 
-    DataPath geometryPath = DataPath({k_LevelZero, triangleGeometryName});
+    DataPath geometryPath = DataPath({triangleGeometryName});
 
     // Create default Parameters for the filter.
     DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleAreasName);
@@ -150,19 +150,12 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
     PointSampleTriangleGeometryFilter filter;
     Arguments args;
 
-    //    const ChoicesParameter::ValueType k_ManualSampling = 0;
-    //    const int32_t k_GeometrySampling = 1;
-
     // Create default Parameters for the filter.
     args.insertOrAssign(PointSampleTriangleGeometryFilter::k_NumberOfSamples_Key, std::make_any<int32>(200));
-    // args.insertOrAssign(PointSampleTriangleGeometryFilter::k_SamplesNumberType_Key, std::make_any<ChoicesParameter::ValueType>(k_ManualSampling));
-
     args.insertOrAssign(PointSampleTriangleGeometryFilter::k_UseMask_Key, std::make_any<bool>(false));
 
-    DataPath triangleGeometryPath = parentPath.createChildPath(triangleGeometryName);
+    DataPath triangleGeometryPath({triangleGeometryName});
     args.insertOrAssign(PointSampleTriangleGeometryFilter::k_TriangleGeometry_Key, std::make_any<DataPath>(triangleGeometryPath));
-
-    // args.insertOrAssign(PointSampleTriangleGeometryFilter::k_ParentGeometry_Key, std::make_any<DataPath>(DataPath{}));
 
     DataPath triangleAreasDataPath = triangleGeometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleAreasName);
     args.insertOrAssign(PointSampleTriangleGeometryFilter::k_TriangleAreasArrayPath_Key, std::make_any<DataPath>(triangleAreasDataPath));
@@ -172,10 +165,10 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
 
     args.insertOrAssign(PointSampleTriangleGeometryFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
 
-    args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexParentGroup_Key, std::make_any<DataPath>(parentPath));
-    args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexGeometryName_Key, std::make_any<StringParameter::ValueType>(vertexGeometryName));
-    DataPath vertexDataGroupPath = parentPath.createChildPath(vertexGeometryName).createChildPath(vertexNodeDataGroup);
-    args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexData_DataPath_Key, std::make_any<DataPath>(vertexDataGroupPath));
+    DataPath vertGeometryDataPath({vertexGeometryName});
+    args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexGeometryPath_Key, std::make_any<DataPath>(vertGeometryDataPath));
+    DataPath vertexDataGroupPath = vertGeometryDataPath.createChildPath(vertexNodeDataGroup);
+    args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexDataGroupPath_Key, std::make_any<DataPath>(vertexDataGroupPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);
@@ -185,7 +178,6 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
     auto executeResult = filter.execute(dataGraph, args);
     REQUIRE(executeResult.result.valid());
 
-    DataPath vertGeometryDataPath = parentPath.createChildPath(vertexGeometryName);
     VertexGeom& vertGeom = dataGraph.getDataRefAs<VertexGeom>(vertGeometryDataPath);
     usize numVerts = vertGeom.getNumberOfVertices();
     AbstractGeometry::SharedVertexList* vertices = vertGeom.getVertices();
@@ -205,8 +197,8 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
     }
 
     // We need to insert this small data set for the XDMF to work correctly.
-    DataPath xdmfVertsDataPath = parentPath.createChildPath(vertexGeometryName).createChildPath("Verts");
-    DataObject::IdType parentId = dataGraph.getId(parentPath.createChildPath(vertexGeometryName)).value();
+    DataPath xdmfVertsDataPath = vertGeometryDataPath.createChildPath("Verts");
+    DataObject::IdType parentId = dataGraph.getId(vertGeometryDataPath).value();
     std::vector<usize> tupleShape = {vertGeom.getNumberOfVertices()};
     std::vector<usize> componentShape = {1};
     DataArray<int64_t>* vertsArray = DataArray<int64_t>::CreateWithStore<DataStore<int64_t>>(dataGraph, "Verts", tupleShape, componentShape, parentId);

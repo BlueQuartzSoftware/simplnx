@@ -24,17 +24,17 @@ public:
   PointSampleTriangleGeometryFilter& operator=(PointSampleTriangleGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_VertexParentGroup_Key = "VertexGeometryParentGroup";
+  // static inline constexpr StringLiteral k_VertexParentGroup_Key = "VertexGeometryParentGroup";
   // static inline constexpr StringLiteral k_SamplesNumberType_Key = "SamplesNumberType";
   static inline constexpr StringLiteral k_NumberOfSamples_Key = "NumberOfSamples";
   static inline constexpr StringLiteral k_UseMask_Key = "UseMask";
-  static inline constexpr StringLiteral k_TriangleGeometry_Key = "TriangleGeometry";
+  static inline constexpr StringLiteral k_TriangleGeometry_Key = "TriangleGeometryPath";
   // static inline constexpr StringLiteral k_ParentGeometry_Key = "ParentGeometry";
   static inline constexpr StringLiteral k_TriangleAreasArrayPath_Key = "TriangleAreasArrayPath";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
   static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "SelectedDataArrayPaths";
-  static inline constexpr StringLiteral k_VertexGeometryName_Key = "VertexGeometry";
-  static inline constexpr StringLiteral k_VertexData_DataPath_Key = "VertexAttributeMatrixName";
+  static inline constexpr StringLiteral k_VertexGeometryPath_Key = "VertexGeometryPath";
+  static inline constexpr StringLiteral k_VertexDataGroupPath_Key = "VertexDataGroupPath";
 
   /**
    * @brief Returns the name of the filter.

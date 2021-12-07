@@ -96,7 +96,7 @@ public:
    */
   std::array<ValueType, 3> sideLengths() const
   {
-    return {m_Bounds[3] - m_Bounds[0], m_Bounds[4]-m_Bounds[1], m_Bounds[5]-m_Bounds[2]};
+    return {m_Bounds[3] - m_Bounds[0], m_Bounds[4] - m_Bounds[1], m_Bounds[5] - m_Bounds[2]};
   }
 
   /**
@@ -106,7 +106,7 @@ public:
   std::array<ValueType, 3> center() const
   {
     std::array<ValueType, 3> boxSize = sideLengths();
-    return { m_Bounds[0] + boxSize[0]/2.0,  m_Bounds[1] + boxSize[1]/2.0,  m_Bounds[2] + boxSize[2]/2.0};
+    return {m_Bounds[0] + boxSize[0] / 2.0, m_Bounds[1] + boxSize[1] / 2.0, m_Bounds[2] + boxSize[2] / 2.0};
   }
 
   /**

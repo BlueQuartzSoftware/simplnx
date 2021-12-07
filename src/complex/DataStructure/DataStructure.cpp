@@ -101,6 +101,10 @@ void DataStructure::clear()
 
 std::optional<DataObject::IdType> DataStructure::getId(const DataPath& path) const
 {
+  if(path.empty())
+  {
+    return {0};
+  }
   return getData(path)->getId();
 }
 

@@ -65,21 +65,21 @@ private:
   complex::Int64DataStore& m_UniqueIds;
 };
 
-class StdFileSentinel
+class StlFileSentinel
 {
 public:
-  StdFileSentinel(FILE* file)
+  StlFileSentinel(FILE* file)
   : m_File(file)
   {
   }
-  ~StdFileSentinel()
+  ~StlFileSentinel()
   {
     std::ignore = std::fclose(m_File);
   }
-  StdFileSentinel(const StdFileSentinel&) = delete;            // Copy Constructor Not Implemented
-  StdFileSentinel(StdFileSentinel&&) = delete;                 // Move Constructor Not Implemented
-  StdFileSentinel& operator=(const StdFileSentinel&) = delete; // Copy Assignment Not Implemented
-  StdFileSentinel& operator=(StdFileSentinel&&) = delete;      // Move Assignment Not Implemented
+  StlFileSentinel(const StlFileSentinel&) = delete;            // Copy Constructor Not Implemented
+  StlFileSentinel(StlFileSentinel&&) = delete;                 // Move Constructor Not Implemented
+  StlFileSentinel& operator=(const StlFileSentinel&) = delete; // Copy Assignment Not Implemented
+  StlFileSentinel& operator=(StlFileSentinel&&) = delete;      // Move Assignment Not Implemented
 
 private:
   FILE* m_File = nullptr;
@@ -93,14 +93,12 @@ std::array<float, 6> CreateMinMaxCoords()
 
 } // End anonymous namespace
 
-StlFileReader::StlFileReader(DataStructure& data, fs::path stlFilePath, const DataPath& parentDataPath, std::string geometryName, std::string faceGroupName, DataPath faceNormalsDataPath,
-                             const IFilter* filter)
+StlFileReader::StlFileReader(DataStructure& data, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, const IFilter* filter)
 : m_DataStructure(data)
 , m_FilePath(std::move(stlFilePath))
-, m_ParentDataPath(parentDataPath)
-, m_GeometryName(std::move(geometryName))
-, m_FaceGroupName(std::move(faceGroupName))
-, m_FaceNormalsDataPath(std::move(faceNormalsDataPath))
+, m_GeometryDataPath(geometryPath)
+, m_FaceGroupPath(faceGroupPath)
+, m_FaceNormalsDataPath(faceNormalsDataPath)
 , m_Filter(filter)
 {
 }
@@ -118,7 +116,7 @@ Result<> StlFileReader::operator()()
   {
     return MakeErrorResult(complex::StlConstants::k_ErrorOpeningFile, "Error opening STL file");
   }
-  StdFileSentinel fileSentinel(f); // Will ensure that the file is closed when this method returns
+  StlFileSentinel fileSentinel(f); // Will ensure that the file is closed when this method returns
 
   // Read Header
   std::array<char, complex::StlConstants::k_STL_HEADER_LENGTH> stlHeader = {0};
@@ -149,8 +147,7 @@ Result<> StlFileReader::operator()()
     return MakeErrorResult(complex::StlConstants::k_TriangleCountParseError, "Error reading number of triangles from file. This is bad.");
   }
 
-  DataPath triangleGeometryDataPath = m_ParentDataPath.createChildPath(m_GeometryName);
-  TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(triangleGeometryDataPath);
+  TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_GeometryDataPath);
 
   triangleGeom.resizeFaceList(triCount);
   triangleGeom.resizeVertexList(triCount * 3);
@@ -286,8 +283,7 @@ Result<> StlFileReader::operator()()
 
 Result<> StlFileReader::eliminate_duplicate_nodes()
 {
-  DataPath triangleGeometryDataPath = m_ParentDataPath.createChildPath(m_GeometryName);
-  TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(triangleGeometryDataPath);
+  TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_GeometryDataPath);
 
   using SharedTriList = AbstractGeometry::MeshIndexArrayType;
   using SharedVertList = AbstractGeometry::SharedVertexList;
