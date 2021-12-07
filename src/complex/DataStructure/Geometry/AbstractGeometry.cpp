@@ -85,15 +85,21 @@ AbstractGeometry::AbstractGeometry(DataStructure& ds, std::string name, IdType i
 
 AbstractGeometry::AbstractGeometry(const AbstractGeometry& other)
 : BaseGroup(other)
+, m_LinkedGeometryData(other.m_LinkedGeometryData)
 {
 }
 
 AbstractGeometry::AbstractGeometry(AbstractGeometry&& other) noexcept
 : BaseGroup(std::move(other))
+, m_LinkedGeometryData(std::move(other.m_LinkedGeometryData))
 {
 }
 
 AbstractGeometry::~AbstractGeometry() = default;
+DataObject::DataObjectType AbstractGeometry::getDataObjectType() const
+{
+  return DataObjectType::AbstractGeometry;
+}
 
 bool AbstractGeometry::canInsert(const DataObject* obj) const
 {
@@ -197,4 +203,13 @@ H5::ErrorType AbstractGeometry::WriteH5DataId(H5::ObjectWriter& objectWriter, co
     return attribute.writeValue<IdType>(dataId.value());
   }
   return attribute.writeValue<IdType>(0);
+}
+
+const LinkedGeometryData& AbstractGeometry::getLinkedGeometryData() const
+{
+  return m_LinkedGeometryData;
+}
+LinkedGeometryData& AbstractGeometry::getLinkedGeometryData()
+{
+  return m_LinkedGeometryData;
 }

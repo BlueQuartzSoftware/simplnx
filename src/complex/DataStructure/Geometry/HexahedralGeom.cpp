@@ -51,6 +51,10 @@ HexahedralGeom::HexahedralGeom(HexahedralGeom&& other) noexcept
 }
 
 HexahedralGeom::~HexahedralGeom() = default;
+DataObject::DataObjectType HexahedralGeom::getDataObjectType() const
+{
+  return DataObjectType::HexahedralGeom;
+}
 
 HexahedralGeom* HexahedralGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {

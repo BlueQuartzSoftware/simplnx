@@ -8,6 +8,7 @@
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
@@ -58,11 +59,13 @@ Parameters StlFileReaderFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<FileSystemPathParameter>(k_StlFilePath_Key, "STL File", "Input STL File", fs::path("*.stl"), FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_ParentDataGroupPath_Key, "Parent DataGroup", "", DataPath{}));
+  // params.insert(std::make_unique<DataGroupSelectionParameter>(k_ParentDataGroupPath_Key, "Parent DataGroup", "", DataPath{}));
+
   params.insertSeparator(Parameters::Separator{"Created Objects"});
-  params.insert(std::make_unique<StringParameter>(k_GeometryName_Key, "Geometry Name [Data Group]", "", std::string("[Triangle Geometry]")));
-  params.insert(std::make_unique<StringParameter>(k_FaceDataGroupName_Key, "Triangle Face Data [DataGroup]", "", std::string("Triangle Face Data")));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FaceNormalsArrayName_Key, "Face Normals [Data Array]", "", DataPath{}));
+
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryDataPath_Key, "Geometry Name [Data Group]", "", DataPath({"[Triangle Geometry]"})));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_FaceGroupDataPath_Key, "Triangle Face Data [Data Group]", "", DataPath({"[Triangle Geometry]", "Triangle Face Data"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_FaceNormalsDataPath_Key, "Face Normals [Data Array]", "", DataPath({"[Triangle Geometry]", "Triangle Face Data", "Normals"})));
 
   return params;
 }
@@ -82,10 +85,9 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
    * do not need some of them remove them.
    */
   auto pStlFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
-  auto pParentDataGroupPath = filterArgs.value<DataPath>(k_ParentDataGroupPath_Key);
-  auto pFaceGeometryName = filterArgs.value<std::string>(k_GeometryName_Key);
-  auto pFaceDataGroupName = filterArgs.value<std::string>(k_FaceDataGroupName_Key);
-  auto pFaceNormalsArrayNameValue = filterArgs.value<DataPath>(k_FaceNormalsArrayName_Key);
+  auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_GeometryDataPath_Key);
+  auto pFaceDataGroupName = filterArgs.value<DataPath>(k_FaceGroupDataPath_Key);
+  auto pFaceNormalsPath = filterArgs.value<DataPath>(k_FaceNormalsDataPath_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -107,20 +109,21 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
 
+  // Collect all the errors
+  std::vector<Error> errors;
+
   // Validate that the STL File is binary and readable.
   int32_t stlFileType = StlUtilities::DetermineStlFileType(pStlFilePathValue);
   if(stlFileType < 0)
   {
     Error result = {StlConstants::k_UnsupportedFileType,
                     fmt::format("The Input STL File is ASCII which is not currently supported. Please convert it to a binary STL file using another program.", pStlFilePathValue.string())};
-    resultOutputActions.errors().push_back(result);
-    return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+    errors.push_back(result);
   }
   if(stlFileType > 0)
   {
     Error result = {StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the STL file.", pStlFilePathValue.string())};
-    resultOutputActions.errors().push_back(result);
-    return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+    errors.push_back(result);
   }
 
   // Now get the number of Triangles according to the STL Header
@@ -128,8 +131,12 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
   if(numTriangles < 0)
   {
     Error result = {StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the STL file.", pStlFilePathValue.string())};
-    resultOutputActions.errors().push_back(result);
-    return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+    errors.push_back(result);
+  }
+
+  if(!errors.empty())
+  {
+    return {nonstd::make_unexpected(std::move(errors))};
   }
 
   // This can happen in a LOT of STL files. Just means the writer didn't go back and update the header.
@@ -137,8 +144,6 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
   {
     numTriangles = 1;
   }
-
-  DataPath geometryDataPath = pParentDataGroupPath.createChildPath(pFaceGeometryName);
 
   // Assign the outputAction to the Result<OutputActions>::actions vector via a push_back
   // Assuming this filter did make some structural changes to the DataStructure then store
@@ -148,18 +153,17 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
 
   // Create the Triangle Geometry action and store it
   {
-    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(geometryDataPath, numTriangles, 1);
+    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numTriangles, 1);
     resultOutputActions.value().actions.push_back(std::move(createTriangleGeometryAction));
   }
   // Create Triangle FaceData (for the Normals) action and store it
   {
-    DataPath faceGroupDataPath = geometryDataPath.createChildPath(pFaceDataGroupName);
-    auto createDataGroupAction = std::make_unique<CreateDataGroupAction>(faceGroupDataPath);
+    auto createDataGroupAction = std::make_unique<CreateDataGroupAction>(pFaceDataGroupName);
     resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
   }
   // Create the face Normals DataArray action and store it
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::float64, std::vector<usize>{static_cast<usize>(numTriangles)}, 3, pFaceNormalsArrayNameValue);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::float64, std::vector<usize>{static_cast<usize>(numTriangles)}, 3, pFaceNormalsPath);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
@@ -174,13 +178,12 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
 Result<> StlFileReaderFilter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   auto pStlFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
-  auto pParentDataGroupPath = filterArgs.value<DataPath>(k_ParentDataGroupPath_Key);
-  auto pFaceGeometryName = filterArgs.value<std::string>(k_GeometryName_Key);
-  auto pFaceDataGroupName = filterArgs.value<std::string>(k_FaceDataGroupName_Key);
-  auto pFaceNormalsArrayNameValue = filterArgs.value<DataPath>(k_FaceNormalsArrayName_Key);
+  auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_GeometryDataPath_Key);
+  auto pFaceDataGroupPath = filterArgs.value<DataPath>(k_FaceGroupDataPath_Key);
+  auto pFaceNormalsPath = filterArgs.value<DataPath>(k_FaceNormalsDataPath_Key);
 
   // The actual STL File Reading is placed in a separate class `StlFileReader`
-  Result<> result = StlFileReader(data, pStlFilePathValue, pParentDataGroupPath, pFaceGeometryName, pFaceDataGroupName, pFaceNormalsArrayNameValue, this)();
+  Result<> result = StlFileReader(data, pStlFilePathValue, pTriangleGeometryPath, pFaceDataGroupPath, pFaceNormalsPath, this)();
   return result;
 }
 

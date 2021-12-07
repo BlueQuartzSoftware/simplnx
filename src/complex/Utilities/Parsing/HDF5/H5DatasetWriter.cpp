@@ -40,7 +40,7 @@ bool H5::DatasetWriter::tryOpeningDataset(const std::string& datasetName, H5::Ty
   }
 
   // Check type
-  if(getType() != dataType)
+  if(getDataObjectType() != dataType)
   {
     closeHdf5();
     return false;

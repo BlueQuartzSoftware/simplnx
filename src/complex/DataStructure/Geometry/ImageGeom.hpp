@@ -2,12 +2,18 @@
 
 #include "complex/Common/Array.hpp"
 #include "complex/Common/BoundingBox.hpp"
+#include "complex/DataStructure/DataObject.hpp"
+#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
 
 #include "complex/complex_export.hpp"
 
+#include <map>
+#include <vector>
+
 namespace complex
 {
+
 /**
  * @class ImageGeom
  * @brief
@@ -36,7 +42,7 @@ public:
    * @param parentId = {}
    * @return ImageGeom*
    */
-  static ImageGeom* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
+  static ImageGeom* Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -46,7 +52,7 @@ public:
    * @param parentId = {}
    * @return ImageGeom*
    */
-  static ImageGeom* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
+  static ImageGeom* Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -61,6 +67,12 @@ public:
   ImageGeom(ImageGeom&& other) noexcept;
 
   virtual ~ImageGeom();
+
+  /**
+   * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
+   * @return
+   */
+  DataObject::DataObjectType getDataObjectType() const override;
 
   /**
    * @brief Returns typename of the DataObject as a std::string.

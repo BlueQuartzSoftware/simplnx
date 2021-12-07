@@ -25,6 +25,10 @@ AbstractGeometry2D::AbstractGeometry2D(AbstractGeometry2D&& other) noexcept
 }
 
 AbstractGeometry2D::~AbstractGeometry2D() = default;
+DataObject::DataObjectType AbstractGeometry2D::getDataObjectType() const
+{
+  return DataObjectType::AbstractGeometry2D;
+}
 
 void AbstractGeometry2D::resizeVertexList(usize numVertices)
 {
@@ -51,6 +55,11 @@ const AbstractGeometry::SharedVertexList* AbstractGeometry2D::getVertices() cons
 {
   const DataObject* data = getDataStructure()->getData(m_VertexListId);
   return dynamic_cast<const SharedVertexList*>(data);
+}
+
+DataObject::IdType AbstractGeometry2D::getVertListId() const
+{
+  return m_VertexListId.value();
 }
 
 AbstractGeometry::SharedEdgeList* AbstractGeometry2D::getEdges()

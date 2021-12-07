@@ -8,6 +8,7 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
@@ -68,9 +69,9 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Created Objects"});
 
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_VertexParentGroup_Key, "Created Vertex Geometry Parent [Data Group]", "", DataPath{}));
-  params.insert(std::make_unique<StringParameter>(k_VertexGeometryName_Key, "Vertex Geometry Name", "", "[Vertex Geometry]"));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_VertexData_DataPath_Key, "Vertex Data", "", DataPath{}));
+  // params.insert(std::make_unique<DataGroupSelectionParameter>(k_VertexParentGroup_Key, "Created Vertex Geometry Parent [Data Group]", "", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_VertexGeometryPath_Key, "Vertex Geometry Name", "", DataPath({"[Vertex Geometry]"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_VertexDataGroupPath_Key, "Vertex Data", "", DataPath({"[Vertex Geometry]", "Vertex Data"})));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   //  params.linkParameters(k_SamplesNumberType_Key, k_NumberOfSamples_Key, 0);
@@ -95,17 +96,14 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  // auto pSamplesNumberType = filterArgs.value<ChoicesParameter::ValueType>(k_SamplesNumberType_Key);
   auto pNumberOfSamples = filterArgs.value<int32>(k_NumberOfSamples_Key);
   auto pUseMask = filterArgs.value<bool>(k_UseMask_Key);
   auto pTriangleGeometry = filterArgs.value<DataPath>(k_TriangleGeometry_Key);
-  // auto pParentGeometry = filterArgs.value<DataPath>(k_ParentGeometry_Key);
   auto pTriangleAreasArrayPath = filterArgs.value<DataPath>(k_TriangleAreasArrayPath_Key);
   auto pMaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pSelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
-  auto pVertexGeomParentGroup = filterArgs.value<DataPath>(k_VertexParentGroup_Key);
-  auto pVertexGeometryName = filterArgs.value<StringParameter::ValueType>(k_VertexGeometryName_Key);
-  auto pVertexGroupDataPath = filterArgs.value<DataPath>(k_VertexData_DataPath_Key);
+  auto pVertexGeometryDataPath = filterArgs.value<DataPath>(k_VertexGeometryPath_Key);
+  auto pVertexGroupDataPath = filterArgs.value<DataPath>(k_VertexDataGroupPath_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -116,7 +114,7 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
   // If your filter is making structural changes to the DataStructure then the filter
   // is going to create OutputActions subclasses that need to be returned. This will
   // store those actions.
-  complex::Result<OutputActions> resultOutputActions;
+  complex::Result<OutputActions> resultOutputActions = {};
 
   // If your filter is going to pass back some `preflight updated values` then this is where you
   // would create the code to store those values in the appropriate object. Note that we
@@ -124,10 +122,9 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
   // the std::vector<PreflightValue> object.
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  DataPath geometryDataPath = pVertexGeomParentGroup.createChildPath(pVertexGeometryName);
   // Create the Vertex Geometry action and store it
   {
-    auto createVertexGeometryAction = std::make_unique<CreateVertexGeometryAction>(geometryDataPath, pNumberOfSamples);
+    auto createVertexGeometryAction = std::make_unique<CreateVertexGeometryAction>(pVertexGeometryDataPath, pNumberOfSamples);
     resultOutputActions.value().actions.push_back(std::move(createVertexGeometryAction));
   }
 
@@ -144,6 +141,9 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
+  // Collect all the errors
+  std::vector<Error> errors;
+
   // Ensure that if pMaskValue is TRUE that the Mask Path is valid
   if(pUseMask)
   {
@@ -151,11 +151,16 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
     if(nullptr == maskArray)
     {
       Error result = {-500, fmt::format("'Use Mask Array' is selected but the DataPath '{}' does not exist. Please ensure the mask array exists in the DataStructure.", pMaskArrayPath.toString())};
-      resultOutputActions.errors().push_back(result);
+      errors.push_back(result);
     }
   }
 
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
+  if(!errors.empty())
+  {
+    return {nonstd::make_unexpected(std::move(errors))};
+  }
+
+  // Return both the resultOutputActions and the preflightUpdatedValues  LinkGeometryDataFilter via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
@@ -168,17 +173,14 @@ Result<> PointSampleTriangleGeometryFilter::executeImpl(DataStructure& dataStruc
 
   PointSampleTriangleGeometryInputs inputs;
 
-  // inputs.pSamplesNumberType = filterArgs.value<ChoicesParameter::ValueType>(k_SamplesNumberType_Key);
   inputs.pNumberOfSamples = filterArgs.value<int32>(k_NumberOfSamples_Key);
   inputs.pUseMask = filterArgs.value<bool>(k_UseMask_Key);
   inputs.pTriangleGeometry = filterArgs.value<DataPath>(k_TriangleGeometry_Key);
-  // inputs.pParentGeometry = filterArgs.value<DataPath>(k_ParentGeometry_Key);
   inputs.pTriangleAreasArrayPath = filterArgs.value<DataPath>(k_TriangleAreasArrayPath_Key);
   inputs.pMaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputs.pSelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
-  inputs.pVertexGeomParentGroup = filterArgs.value<DataPath>(k_VertexParentGroup_Key);
-  inputs.pVertexGeometryName = filterArgs.value<StringParameter::ValueType>(k_VertexGeometryName_Key);
-  inputs.pVertexGroupDataPath = filterArgs.value<DataPath>(k_VertexData_DataPath_Key);
+  inputs.pVertexGeometryPath = filterArgs.value<DataPath>(k_VertexGeometryPath_Key);
+  inputs.pVertexGroupDataPath = filterArgs.value<DataPath>(k_VertexDataGroupPath_Key);
 
   MultiArraySelectionParameter::ValueType createdDataPaths;
   for(const auto& selectedDataPath : inputs.pSelectedDataArrayPaths)

@@ -33,6 +33,10 @@ DataGroup::DataGroup(DataGroup&& other) noexcept
 }
 
 DataGroup::~DataGroup() = default;
+DataObject::DataObjectType DataGroup::getDataObjectType() const
+{
+  return DataObjectType::DataGroup;
+}
 
 DataGroup* DataGroup::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {

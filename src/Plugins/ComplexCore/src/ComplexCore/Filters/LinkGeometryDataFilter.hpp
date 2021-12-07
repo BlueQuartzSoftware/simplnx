@@ -7,34 +7,25 @@
 
 namespace complex
 {
-/**
- * @class PointSampleTriangleGeometryFilter
- * @brief This filter will ....
- */
-class COMPLEXCORE_EXPORT PointSampleTriangleGeometryFilter : public IFilter
+class COMPLEXCORE_EXPORT LinkGeometryDataFilter : public IFilter
 {
+
 public:
-  PointSampleTriangleGeometryFilter() = default;
-  ~PointSampleTriangleGeometryFilter() noexcept override = default;
+  LinkGeometryDataFilter() = default;
+  ~LinkGeometryDataFilter() noexcept override = default;
 
-  PointSampleTriangleGeometryFilter(const PointSampleTriangleGeometryFilter&) = delete;
-  PointSampleTriangleGeometryFilter(PointSampleTriangleGeometryFilter&&) noexcept = delete;
+  LinkGeometryDataFilter(const LinkGeometryDataFilter&) = delete;
+  LinkGeometryDataFilter(LinkGeometryDataFilter&&) noexcept = delete;
 
-  PointSampleTriangleGeometryFilter& operator=(const PointSampleTriangleGeometryFilter&) = delete;
-  PointSampleTriangleGeometryFilter& operator=(PointSampleTriangleGeometryFilter&&) noexcept = delete;
+  LinkGeometryDataFilter& operator=(const LinkGeometryDataFilter&) = delete;
+  LinkGeometryDataFilter& operator=(LinkGeometryDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  // static inline constexpr StringLiteral k_VertexParentGroup_Key = "VertexGeometryParentGroup";
-  // static inline constexpr StringLiteral k_SamplesNumberType_Key = "SamplesNumberType";
-  static inline constexpr StringLiteral k_NumberOfSamples_Key = "NumberOfSamples";
-  static inline constexpr StringLiteral k_UseMask_Key = "UseMask";
-  static inline constexpr StringLiteral k_TriangleGeometry_Key = "TriangleGeometryPath";
-  // static inline constexpr StringLiteral k_ParentGeometry_Key = "ParentGeometry";
-  static inline constexpr StringLiteral k_TriangleAreasArrayPath_Key = "TriangleAreasArrayPath";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "SelectedDataArrayPaths";
-  static inline constexpr StringLiteral k_VertexGeometryPath_Key = "VertexGeometryPath";
-  static inline constexpr StringLiteral k_VertexDataGroupPath_Key = "VertexDataGroupPath";
+  static inline constexpr StringLiteral k_GeometryDataPath_Key = "GeometryDataPath";
+  static inline constexpr StringLiteral k_SelectedVertexDataArrayPaths_Key = "SelectedVertexDataArrayPaths";
+  static inline constexpr StringLiteral k_SelectedEdgeDataArrayPaths_Key = "SelectedEdgeDataArrayPaths";
+  static inline constexpr StringLiteral k_SelectedFaceDataArrayPaths_Key = "SelectedFaceDataArrayPaths";
+  static inline constexpr StringLiteral k_SelectedVolumeDataArrayPaths_Key = "SelectedVolumeElementDataArrayPaths";
 
   /**
    * @brief Returns the name of the filter.
@@ -100,6 +91,7 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const override;
 };
+
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, PointSampleTriangleGeometryFilter, "ee34ef95-aa04-5ad3-8232-5783a880d279");
+COMPLEX_DEF_FILTER_TRAITS(complex, LinkGeometryDataFilter, "a33ace9e-5e8a-4299-8531-4b4da6f91f70");

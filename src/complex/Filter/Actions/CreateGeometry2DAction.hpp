@@ -50,33 +50,36 @@ public:
     const std::string k_TriangleDataName("SharedTriList");
     const std::string k_VertexDataName("SharedVertexList");
 
+    // Check for empty Geometry DataPath
     if(m_GeometryPath.empty())
     {
       return MakeErrorResult(-220, "CreateGeometry2DAction: Geometry Path cannot be empty");
     }
 
-    usize size = m_GeometryPath.getLength();
-    std::string name = (size == 1 ? m_GeometryPath[0] : m_GeometryPath[size - 1]);
-
-    std::optional<DataObject::IdType> parentId;
-    if(size > 1)
-    {
-      DataPath parentPath = m_GeometryPath.getParent();
-      parentId = dataStructure.getId(parentPath);
-      if(!parentId.has_value())
-      {
-        return MakeErrorResult(-221, "CreateGeometry2DAction: Invalid path");
-      }
-    }
-
-    BaseGroup* parentObject = dataStructure.getDataAs<BaseGroup>(parentId);
-    if(parentObject->contains(name))
+    // Check if the Geometry Path already exists
+    BaseGroup* parentObject = dataStructure.getDataAs<BaseGroup>(m_GeometryPath);
+    if(parentObject != nullptr)
     {
       return MakeErrorResult(-222, fmt::format("CreateGeometry2DAction: DataObject already exists at path '{}'", m_GeometryPath.toString()));
     }
 
+    DataPath parentPath = m_GeometryPath.getParent();
+    if(!parentPath.empty())
+    {
+      Result<LinkedPath> geomPath = dataStructure.makePath(parentPath);
+      if(geomPath.invalid())
+      {
+        return MakeErrorResult(-223, fmt::format("CreateGeometry2DAction: Geometry could not be created at path:'{}'", m_GeometryPath.toString()));
+      }
+    }
+    // Get the Parent ID
+    if(!dataStructure.getId(parentPath).has_value())
+    {
+      return MakeErrorResult(-224, fmt::format("CreateGeometry2DAction: Parent Id was not available for path:'{}'", parentPath.toString()));
+    }
+
     // Create the TriangleGeometry
-    auto geometry2d = Geometry2DType::Create(dataStructure, name, parentId);
+    auto geometry2d = Geometry2DType::Create(dataStructure, m_GeometryPath.getTargetName(), dataStructure.getId(parentPath).value());
 
     using MeshIndexType = AbstractGeometry::MeshIndexType;
     using SharedTriList = AbstractGeometry::SharedTriList;
