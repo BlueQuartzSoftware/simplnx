@@ -25,10 +25,19 @@ public:
   InterpolatePointCloudToRegularGridFilter& operator=(InterpolatePointCloudToRegularGridFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_NumericType_Key = "numeric_type";
-  static inline constexpr StringLiteral k_NumComps_Key = "component_count";
-  static inline constexpr StringLiteral k_NumTuples_Key = "tuple_count";
-  static inline constexpr StringLiteral k_DataPath_Key = "output_data_array";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static inline constexpr StringLiteral k_StoreKernelDistances_Key = "store_kernel_distances";
+  static inline constexpr StringLiteral k_InterpolationTechnique_Key = "interpolation_technique";
+  static inline constexpr StringLiteral k_KernelSize_Key = "kernel_size";
+  static inline constexpr StringLiteral k_GaussianSigmas_Key = "guassian_sigmas";
+  static inline constexpr StringLiteral k_VertexGeom_Key = "vertex_geom";
+  static inline constexpr StringLiteral k_ImageGeom_Key = "image_geom";
+  static inline constexpr StringLiteral k_VoxelIndices_Key = "voxel_indices";
+  static inline constexpr StringLiteral k_Mask_Key = "mask";
+  static inline constexpr StringLiteral k_InterpolateArrays_Key = "interpolate_arrays";
+  static inline constexpr StringLiteral k_CopyArrays_Key = "copy_arrays";
+  static inline constexpr StringLiteral k_InterpolatedGroup_Key = "interpolated_group";
+  static inline constexpr StringLiteral k_KernelDistancesGroup_Key = "kernel_distances_group";
 
   /**
    * @brief Returns the filter's name.

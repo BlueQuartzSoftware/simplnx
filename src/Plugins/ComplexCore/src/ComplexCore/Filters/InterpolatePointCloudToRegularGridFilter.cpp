@@ -1,32 +1,43 @@
 #include "InterpolatePointCloudToRegularGridFilter.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/NeighborList.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
+#include "complex/DataStructure/NeighborList.hpp"
+#include "complex/Filter/Actions/CopyArrayInstanceAction.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
+#include "complex/Filter/Actions/CreateNeighborListAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/DataPathSelectionParameter.hpp"
+#include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
+#include "complex/Parameters/VectorParameter.hpp"
 
 namespace complex
 {
 namespace
 {
+constexpr int64 k_MissingVertexGeom = -24500;
+constexpr int64 k_MissingImageGeom = -24501;
+
 template <typename T>
-void createCompatibleNeighborList(IFilter* filter, const DataPath& path, const std::vector<usize>& cDims, std::vector<IDataArray*>& dynamicArrays)
+void createCompatibleNeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples, DataObject::IdType parentId, std::vector<IDataArray*>& dynamicArrays)
 {
-  IDataArray::WeakPointer ptr = filter->getDataContainerArray()->createNonPrereqArrayFromPath<NeighborList<T>>(filter, path, 0, cDims);
+  NeighborList<T>::Create(dataStructure, name, numTuples, parentId);
+  std::make_unique<CreateNeighborListAction>() IDataArray* ptr = filter->getDataContainerArray()->createNonPrereqArrayFromPath<NeighborList<T>>(filter, path, 0, cDims);
   dynamicArrays.push_back(ptr);
 }
 
 template <typename T>
-void mapPointCloudDataByKernel(IDataArray* source, IDataArray* dynamic, std::vector<float>& kernelVals, int64 kernel[3], usize dims[3], usize curX, usize curY, usize curZ,
-                               usize vertIdx)
+void mapPointCloudDataByKernel(IDataArray* source, IDataArray* dynamic, std::vector<float>& kernelVals, int64 kernel[3], usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
 {
   DataArray<T>* inputDataPtr = dynamic_cast<DataArray<T>*>(source);
-  auto inputData = inputDataPtr->getDataStore();
+  auto& inputData = *inputDataPtr->getDataStore();
   NeighborList<T>* interpolatedDataPtr = dynamic_cast<NeighborList<T>*>(dynamic);
 
   usize index = 0;
@@ -60,7 +71,51 @@ void mapPointCloudDataByKernel(IDataArray* source, IDataArray* dynamic, std::vec
   }
 }
 
-void determineKernel(int32 interpolationTechnique, const FloatVec3& sigmas, int64 kernelNumVoxels[3])
+void mapPointCloudDataByKernel(IDataArray* source, IDataArray* dynamic, std::vector<float>& kernelVals, int64 kernel[3], usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
+{
+  if(dynamic_cast<DataArray<int8>*>(source))
+  {
+    mapPointCloudDataByKernel<int8>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+  }
+  else if(dynamic_cast<DataArray<int16>*>(source))
+  {
+    mapPointCloudDataByKernel<int16>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+  }
+  else if(dynamic_cast<DataArray<int32>*>(source))
+  {
+    mapPointCloudDataByKernel<int32>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+  }
+  else if(dynamic_cast<DataArray<int64>*>(source))
+  {
+    mapPointCloudDataByKernel<int64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+  }
+  else if(dynamic_cast<DataArray<uint8>*>(source))
+  {
+    mapPointCloudDataByKernel<uint8>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+  }
+  else if(dynamic_cast<DataArray<uint16>*>(source))
+  {
+    mapPointCloudDataByKernel<uint16>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+  }
+  else if(dynamic_cast<DataArray<uint32>*>(source))
+  {
+    mapPointCloudDataByKernel<uint32>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+  }
+  else if(dynamic_cast<DataArray<uint64>*>(source))
+  {
+    mapPointCloudDataByKernel<uint64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+  }
+  else if(dynamic_cast<DataArray<float32>*>(source))
+  {
+    mapPointCloudDataByKernel<float32>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+  }
+  else if(dynamic_cast<DataArray<float64>*>(source))
+  {
+    mapPointCloudDataByKernel<float64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+  }
+}
+
+void determineKernel(uint64 interpolationTechnique, const FloatVec3& sigmas, std::vector<float32>& kernel, int64 kernelNumVoxels[3])
 {
   usize counter = 0;
 
@@ -102,7 +157,7 @@ void determineKernelDistances(std::vector<float32>& kernelValDistances, int64 ke
   }
 }
 
-void mapKernelDistances(NeighborList<float32>* kernelDistances, int64 kernel[3], usize dims[3], usize curX, usize curY, usize curZ)
+void mapKernelDistances(NeighborList<float32>* kernelDistances, std::vector<float32>& kernelValDistances, int64 kernel[3], usize dims[3], usize curX, usize curY, usize curZ)
 {
   usize index = 0;
   int64 startKernel[3] = {0, 0, 0};
@@ -159,10 +214,20 @@ std::string InterpolatePointCloudToRegularGridFilter::humanName() const
 Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<NumericTypeParameter>(k_NumericType_Key, "Numeric Type", "Numeric Type of data to create", NumericType::int32));
-  params.insert(std::make_unique<UInt64Parameter>(k_NumComps_Key, "Number of Components", "Number of components", 1));
-  params.insert(std::make_unique<UInt64Parameter>(k_NumTuples_Key, "Number of Tuples", "Number of tuples", 0));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_DataPath_Key, "Created Array", "Array storing the file data", DataPath{}));
+  params.insert(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Specifies whether or not to use a mask array", true));
+  params.insert(std::make_unique<BoolParameter>(k_StoreKernelDistances_Key, "Store Kernel Distances", "Specifies whether or not to store kernel distances", true));
+  params.insert(std::make_unique<ChoicesParameter>(k_InterpolationTechnique_Key, "Interpolation Technique", "Selected Interpolation Technique", 0, std::vector<std::string>{"Uniform", "Gaussian"}));
+
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_KernelSize_Key, "Kernel Size", "Specifies the kernel size", std::vector<float32>{0, 0, 0}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_GaussianSigmas_Key, "Gaussian Sigmas", "Specifies the guassian sigmas", std::vector<float32>{0, 0, 0}));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_VertexGeom_Key, "Vertex Geometry to Interpolate", "DataPath to geometry to interpolate", DataPath{}));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_ImageGeom_Key, "Interpolated Image Geometry", "DataPath to interpolated geometry", DataPath{}));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_VoxelIndices_Key, "Voxel Indices", "DataPath to voxel indices", DataPath{}));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_Mask_Key, "Mask", "DataPath to mask array", DataPath{}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_InterpolateArrays_Key, "Attribute Arrays to Interpolate", "DataPaths to interpolate", std::vector<DataPath>()));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyArrays_Key, "Attribute Arrays to Copy", "DataPaths to copy", std::vector<DataPath>()));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_InterpolatedGroup_Key, "Interpolated Group", "DataPath to created DataGroup for interpolated data", DataPath()));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_KernelDistancesGroup_Key, "Kernel Distances Group", "DataPath to created DataGroup for kernel distances data", DataPath()));
   return params;
 }
 
@@ -173,18 +238,30 @@ IFilter::UniquePointer InterpolatePointCloudToRegularGridFilter::clone() const
 
 IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  auto vertexGeomPath = args.value<DataPath>(k_InterpolationTechnique_Key);
-  auto interpolatedDataPath = args.value<DataPath>(k_InterpolationTechnique_Key);
+  auto vertexGeomPath = args.value<DataPath>(k_VertexGeom_Key);
+  auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
+  auto interpolatedGroupPath = args.value<DataPath>(k_InterpolatedGroup_Key);
+  auto kernelDistancesDataPath = args.value<DataPath>(k_KernelDistancesGroup_Key);
 
-  auto interpolationTechnique = args.value<int32>(k_InterpolationTechnique_Key);
-  auto kernelSize = args.value<FloatVec3>(k_InterpolationTechnique_Key);
-  auto sigmas = args.value<FloatVec3>(k_InterpolationTechnique_Key);
-  //
+  auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndices_Key);
+
+  auto interpolatedDataPaths = args.value<std::vector<DataPath>>(k_InterpolateArrays_Key);
+  auto copyDataPaths = args.value<std::vector<DataPath>>(k_CopyArrays_Key);
+
+  auto useMask = args.value<bool>(k_UseMask_Key);
+  auto storeKernelDistances = args.value<bool>(k_StoreKernelDistances_Key);
+
+  auto maskArrayPath = args.value<DataPath>(k_Mask_Key);
+
+  auto interpolationTechnique = args.value<uint64>(k_InterpolationTechnique_Key);
+  auto kernelSize = args.value<std::vector<float32>>(k_KernelSize_Key);
+  auto sigmas = args.value<std::vector<float32>>(k_GaussianSigmas_Key);
+
   std::vector<const IDataArray*> dataArrays;
   OutputActions actions;
 
   auto vertexGeom = data.getDataAs<VertexGeom>(vertexGeomPath);
-  auto image = data.getDataAs<ImageGeom>(interpolatedDataPath);
+  auto image = data.getDataAs<ImageGeom>(imageGeomPath);
 
   if(vertexGeom == nullptr)
   {
@@ -221,73 +298,35 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     return {nonstd::make_unexpected(std::vector<Error>{Error{-11000, ss}})};
   }
 
+  // Create Output Groups
+  {
+    auto createGroupAction = std::make_unique<CreateDataGroupAction>(interpolatedGroupPath);
+    actions.actions.push_back(std::move(createGroupAction));
+  }
+  {
+    auto createGroupAction = std::make_unique<CreateDataGroupAction>(kernelDistancesDataPath);
+    actions.actions.push_back(std::move(createGroupAction));
+  }
+
   // Get the list of all attribute matrices in the input data container and add them to the regular grid data container
-  auto m = data.getDataAs<DataGroup>(dataGroupPath);
-  auto interpolatedDC = data.getDataAs<DataGroup>(interpolatedDataPath);
-  m_AttrMatList = m->getAttributeMatrixNames();
-  SizeVec3 dims = image->getDimensions();
-  std::vector<usize> tDims = {dims[0], dims[1], dims[2]};
-  std::list<std::string> tempDataArrayList;
-  DataPath tempPath;
-  std::string tempAttrMatName;
+  // auto m = data.getDataAs<DataGroup>(dataGroupPath);
+  // auto interpolatedDC = data.getDataAs<DataGroup>(interpolatedDataPath);
+  // m_AttrMatList = m->getAttributeMatrixNames();
+  // SizeVec3 dims = image->getDimensions();
+  // std::vector<usize> tDims = {dims[0], dims[1], dims[2]};
+  // std::list<std::string> tempDataArrayList;
+  // DataPath tempPath;
+  // std::string tempAttrMatName;
 
   // All vertex data in the original point cloud will be interpolated to the regular grid's cells
   // Feature/Ensemble attribute matrices will remain unchanged and are deep copied to the new data container below
   // Create the attribute matrix where all the interpolated data will be stored
-  
-  //auto action = std::make_unique<CreateArrayAction>(NumericType::float32, path, std::vector<usize>{0}, cDims, dataArrayPath);
-  interpolatedDC->createNonPrereqAttributeMatrix(this, getInterpolatedAttributeMatrixName(), tDims, AttributeMatrix::Type::Cell);
 
-  std::vector<DataPath> interpolatePaths = getArraysToInterpolate();
-  std::vector<DataPath> copyPaths = getArraysToCopy();
-
-  #if 0
-  if(!DataPath::ValidateVector(interpolatePaths) || !DataPath::ValidateVector(copyPaths))
   {
-    std::string ss = fmt::format("There are Attribute Arrays selected that are not contained in the same Attribute Matrix. All selected Attribute Arrays must belong to the same Attribute Matrix");
-    setErrorCondition(-11002, ss);
-  }
-
-  DataPath path(getDataContainerName().getDataContainerName(), "", "");
-
-  if(!interpolatePaths.empty())
-  {
-    if(!interpolatePaths[0].hasSameDataContainer(path))
-    {
-      std::string ss = fmt::format("Attribute Arrays selected for interpolating must belong to the same Data Container selected for interpolation");
-      setErrorCondition(-11002, ss);
-    }
-  }
-
-  if(!copyPaths.empty())
-  {
-    if(!copyPaths[0].hasSameDataContainer(path))
-    {
-      std::string ss = fmt::format("Attribute Arrays selected for copying must belong to the same Data Container selected for interpolation");
-      setErrorCondition(-11002, ss);
-    }
-  }
-
-  if(!interpolatePaths.empty() && !copyPaths.empty())
-  {
-    if(!interpolatePaths[0].hasSameAttributeMatrixPath(copyPaths[0]))
-    {
-      std::string ss = fmt::format("Attribute Arrays selected for interpolation and copying must belong to the same Data Container and Attribute Matrix");
-      setErrorCondition(-11002, ss);
-    }
-  }
-  #endif
-
-  std::string attrMatName;
-
-  if(attrMatName.empty() && !interpolatePaths.empty())
-  {
-    attrMatName = interpolatePaths[0].getAttributeMatrixName();
-  }
-
-  if(attrMatName.empty() && !copyPaths.empty())
-  {
-    attrMatName = copyPaths[0].getAttributeMatrixName();
+    auto interpolatedDataAction = std::make_unique<CreateDataGroupAction>(interpolatedGroupPath);
+    auto kernelDistancesDataAction = std::make_unique<CreateDataGroupAction>(kernelDistancesDataPath);
+    actions.actions.push_back(std::move(interpolatedDataAction));
+    actions.actions.push_back(std::move(kernelDistancesDataAction));
   }
 
   // Loop through all the attribute matrices in the original data container
@@ -296,65 +335,50 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
 
   std::vector<usize> cDims(1, 1);
 
-  if(!getDataContainerName().empty())
+  for(const auto& interpolatePath : interpolatedDataPaths)
   {
-    for(auto it = m_AttrMatList.begin(); it != m_AttrMatList.end(); ++it)
-    {
-      AttributeMatrix* tmpAttrMat = m->getPrereqAttributeMatrix(this, *it, -301);
-      if(getErrorCode() >= 0)
-      {
-        tempAttrMatName = tmpAttrMat->getName();
-        if(tempAttrMatName != attrMatName)
-        {
-          AttributeMatrix* attrMat = tmpAttrMat->deepCopy();
-          interpolatedDC->addOrReplaceAttributeMatrix(attrMat);
-        }
-        else
-        {
-          for(int32 i = 0; i < interpolatePaths.size(); i++)
-          {
-            tempPath.update(getInterpolatedDataContainerName().getDataContainerName(), getInterpolatedAttributeMatrixName(), interpolatePaths[i].getDataArrayName() + "Interpolation");
-            IDataArray::Pointer tmpDataArray = tmpAttrMat->getPrereqIDataArray(this, interpolatePaths[i].getDataArrayName(), -90002);
-            if(getErrorCode() >= 0)
-            {
-              sourceArraysToInterpolate.push_back(tmpDataArray);
-              dataArrays.push_back(tmpDataArray);
-              std::vector<usize> tmpDims = tmpDataArray->getComponentDimensions();
-              if(tmpDims != cDims)
-              {
-                std::string ss = fmt::format("Attribute Arrays selected for interpolation must be scalar arrays");
-                return {nonstd::make_unexpected(std::vector<Error>{Error{-11002, ss}})};
-              }
-              createCompatibleNeighborList(tmpDataArray, this, tempPath, cDims, m_DynamicArraysToInterpolate);
-            }
-          }
+    auto targetArray = data.getDataAs<IDataArray>(interpolatePath);
+    auto targetPath = interpolatedGroupPath.createChildPath(targetArray->getName());
+    auto copyAction = std::make_unique<CopyArrayInstanceAction>(interpolatePath, targetPath);
+    actions.actions.push_back(std::move(copyAction));
 
-          for(int32 i = 0; i < copyPaths.size(); i++)
-          {
-            tempPath.update(getInterpolatedDataContainerName().getDataContainerName(), getInterpolatedAttributeMatrixName(), copyPaths[i].getDataArrayName() + "Copy");
-            IDataArray::Pointer tmpDataArray = tmpAttrMat->getPrereqIDataArray(this, copyPaths[i].getDataArrayName(), -90002);
-            if(getErrorCode() >= 0)
-            {
-              sourceArraysToCopy.push_back(tmpDataArray);
-              dataArrays.push_back(tmpDataArray);
-              std::vector<usize> tmpDims = tmpDataArray->getComponentDimensions();
-              if(tmpDims != cDims)
-              {
-                std::string ss = fmt::format("Attribute Arrays selected for copying must be scalar arrays");
-                return {nonstd::make_unexpected(std::vector<Error>{Error{-11002, ss}})};
-              }
-              createCompatibleNeighborList(tmpDataArray, this, tempPath, cDims, m_DynamicArraysToCopy);
-            }
-          }
-        }
-      }
+    dataArrays.push_back(targetArray);
+    auto tmpDims = targetArray->getNumberOfComponents();
+    if(tmpDims != 1)
+    {
+      std::string ss = fmt::format("Attribute Arrays selected for copying must be scalar arrays");
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-11002, ss}})};
     }
+    auto dataType = static_cast<NumericType>(targetArray->getDataType());
+    auto neighborPath = interpolatedGroupPath.createChildPath(targetArray->getName() + " Neighbors");
+    auto neighborAction = std::make_unique<CreateNeighborListAction>(dataType, targetArray->getNumberOfTuples(), neighborPath);
+    actions.actions.push_back(std::move(neighborAction));
   }
 
-  auto voxelIndicesPtr = data.getDataAs<USizeArray>(voxelIndicesArrayPath);
+  for(const auto& copyPath : copyDataPaths)
+  {
+    auto targetArray = data.getDataAs<IDataArray>(copyPath);
+    auto targetPath = interpolatedGroupPath.createChildPath(targetArray->getName());
+    auto copyAction = std::make_unique<CopyArrayInstanceAction>(copyPath, targetPath);
+    actions.actions.push_back(std::move(copyAction));
+
+    dataArrays.push_back(targetArray);
+    auto tmpDims = targetArray->getNumberOfComponents();
+    if(tmpDims != 1)
+    {
+      std::string ss = fmt::format("Attribute Arrays selected for copying must be scalar arrays");
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-11002, ss}})};
+    }
+    auto dataType = static_cast<NumericType>(targetArray->getDataType());
+    auto neighborPath = interpolatedGroupPath.createChildPath(targetArray->getName() + " Neighbors");
+    auto neighborAction = std::make_unique<CreateNeighborListAction>(dataType, targetArray->getNumberOfTuples(), neighborPath);
+    actions.actions.push_back(std::move(neighborAction));
+  }
+
+  auto voxelIndicesPtr = data.getDataAs<USizeArray>(voxelIndicesPath);
   if(nullptr != voxelIndicesPtr)
   {
-    voxelIndices = voxelIndicesPtr->getDataStore();
+    // voxelIndices = voxelIndicesPtr->getDataStore();
     /* Now assign the raw pointer to data from the DataArray<T> object */
     dataArrays.push_back(voxelIndicesPtr);
   }
@@ -364,36 +388,47 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     auto maskPtr = data.getDataAs<BoolArray>(maskArrayPath);
     if(nullptr != maskPtr)
     {
-      mask = maskPtr->getDataStore();
+      // mask = maskPtr->getDataStore();
       /* Now assign the raw pointer to data from the DataArray<T> object */
       dataArrays.push_back(maskPtr);
     }
   }
 
-  path.update(getInterpolatedDataContainerName().getDataContainerName(), getInterpolatedAttributeMatrixName(), getKernelDistancesArrayName());
-
   if(storeKernelDistances)
   {
-    auto action = std::make_unique<CreateArrayAction>(NumericType::float32, path, std::vector<usize>{0}, cDims, dataArrayPath);
-    // kernelDistances = getDataContainerArray()->createNonPrereqArrayFromPath<NeighborList<float>>(this, path, 0, cDims);
+    auto action = std::make_unique<CreateArrayAction>(NumericType::float32, kernelDistancesDataPath, std::vector<usize>{0}, cDims, kernelDistancesDataPath);
     actions.actions.push_back(std::move(action));
   }
 
-  data.validateNumberOfTuples(dataArrays);
+  // data.validateNumberOfTuples(dataArrays);
 
   return {std::move(actions)};
 }
 
 Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
-  auto numericType = args.value<NumericType>(k_NumericType_Key);
-  auto components = args.value<uint64>(k_NumComps_Key);
-  auto numTuples = args.value<uint64>(k_NumTuples_Key);
-  auto path = args.value<DataPath>(k_DataPath_Key);
+  auto vertexGeomPath = args.value<DataPath>(k_VertexGeom_Key);
+  auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
+  auto interpolatedDataPath = args.value<DataPath>(k_InterpolatedGroup_Key);
+  auto kernelDistancesDataPath = args.value<DataPath>(k_KernelDistancesGroup_Key);
+
+  auto interpolatedDataPaths = args.value<std::vector<DataPath>>(k_InterpolateArrays_Key);
+  auto copyDataPaths = args.value<std::vector<DataPath>>(k_CopyArrays_Key);
+
+  auto useMask = args.value<bool>(k_UseMask_Key);
+  auto storeKernelDistances = args.value<bool>(k_StoreKernelDistances_Key);
+  auto maskPath = args.value<DataPath>(k_Mask_Key);
+  auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndices_Key);
+
+  auto interpolationTechnique = args.value<uint64>(k_InterpolationTechnique_Key);
+  auto kernelSize = args.value<std::vector<float32>>(k_KernelSize_Key);
+  auto sigmas = args.value<std::vector<float32>>(k_GaussianSigmas_Key);
+
+  auto interpolatedTechnique = args.value<uint64>(k_InterpolationTechnique_Key);
 
   //
   auto vertices = data.getDataAs<VertexGeom>(vertexGeomPath);
-  auto image = data.getDataAs<ImageGeom>(interpolatedImagePath); // Interpolated group
+  auto image = data.getDataAs<ImageGeom>(imageGeomPath);
   SizeVec3 dims = image->getDimensions();
   FloatVec3 res = image->getSpacing();
   int64 kernelNumVoxels[3] = {0, 0, 0};
@@ -403,6 +438,14 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
   usize x = 0;
   usize y = 0;
   usize z = 0;
+
+  std::vector<float32> kernel;
+
+  auto maskArray = data.getDataAs<DataArray<uint8>>(maskPath);
+  auto mask = maskArray->getDataStore();
+
+  auto voxelIndicesArray = data.getDataAs<DataArray<usize>>(voxelIndicesPath);
+  auto voxelIndices = voxelIndicesArray->getDataStore();
 
   usize maxImageIndex = ((dims[2] - 1) * dims[0] * dims[1]) + ((dims[1] - 1) * dims[0]) + (dims[0] - 1);
 
@@ -423,27 +466,28 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
     kernelNumVoxels[2] = 0;
   }
 
-  int64 kernelSize[3] = {1, 1, 1};
+  int64 tmpKernelSize[3] = {1, 1, 1};
   int64 totalKernel = 0;
 
   for(usize i = 0; i < 3; i++)
   {
-    kernelSize[i] *= (kernelNumVoxels[i] * 2) + 1;
+    tmpKernelSize[i] *= (kernelNumVoxels[i] * 2) + 1;
   }
 
-  totalKernel = kernelSize[0] * kernelSize[1] * kernelSize[2];
+  totalKernel = tmpKernelSize[0] * tmpKernelSize[1] * tmpKernelSize[2];
 
   kernel.resize(totalKernel);
   std::fill(kernel.begin(), kernel.end(), 0.0f);
-  determineKernel(kernelNumVoxels);
+  determineKernel(interpolatedTechnique, sigmas, kernel, kernelNumVoxels);
 
   std::vector<float> uniformKernel(totalKernel, 1.0f);
 
+  std::vector<float32> kernelValDistances;
   if(storeKernelDistances)
   {
     kernelValDistances.resize(totalKernel);
     std::fill(kernelValDistances.begin(), kernelValDistances.end(), 0.0f);
-    determineKernelDistances(kernelNumVoxels, res);
+    determineKernelDistances(kernelValDistances, kernelNumVoxels, res);
   }
 
   usize progIncrement = numVerts / 100;
@@ -452,54 +496,60 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
 
   for(usize i = 0; i < numVerts; i++)
   {
-    if(getCancel())
-    {
-      break;
-    }
     if(useMask)
     {
-      if(!mask[i])
+      if(!mask->getValue(i))
       {
         continue;
       }
     }
-    index = voxelIndices[i];
+    index = voxelIndices->getValue(i);
     if(index > maxImageIndex)
     {
       std::string ss = fmt::format("Index present in the selected Voxel Indices array that falls outside the selected Image Geometry for interpolation.\n Index = %1\n Max Image Index = %2\n", index,
                                    maxImageIndex);
-      setErrorCondition(-1, ss);
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-1, ss}})};
     }
     x = index % dims[0];
     y = (index / dims[0]) % dims[1];
     z = index / (dims[0] * dims[1]);
 
-    if(!sourceArraysToInterpolate.empty())
+    if(!interpolatedDataPaths.empty())
     {
-      for(usize j = 0; sourceArraysToInterpolate.size(); j++)
+      for(const auto& interpolatedDataPath : interpolatedDataPaths)
       {
-        mapPointCloudDataByKernel(sourceArraysToInterpolate[j].lock(), sourceArraysToInterpolate[j].lock(), dynamicArraysToInterpolate[j].lock(), kernel, kernelNumVoxels, dims.data(), x, y, z, i);
+        auto parentPath = interpolatedDataPath.getParent();
+        auto dynamicArrayPath = parentPath.createChildPath(interpolatedDataPath.getTargetName() + "Neighbors");
+        auto dynamicArrayToInterpolate = data.getDataAs<IDataArray>(dynamicArrayPath);
+        auto interpolatedArray = data.getDataAs<IDataArray>(interpolatedDataPath);
+        mapPointCloudDataByKernel(interpolatedArray, dynamicArrayToInterpolate, kernel, kernelNumVoxels, dims.data(), x, y, z, i);
       }
     }
 
-    if(sourceArraysToCopy.size() > 0)
+    if(copyDataPaths.size() > 0)
     {
-      for(usize j = 0; j < sourceArraysToCopy.size(); j++)
+      for(const auto& copyDataPath : copyDataPaths)
       {
-        mapPointCloudDataByKernel(sourceArraysToCopy[j].lock(), sourceArraysToCopy[j].lock(), dynamicArraysToCopy[j].lock(), uniformKernel, kernelNumVoxels, dims.data(), x, y, z, i);
+        auto parentPath = copyDataPath.getParent();
+        auto dynamicArrayPath = parentPath.createChildPath(copyDataPath.getTargetName() + "Neighbors");
+        auto dynamicArrayToCopy = data.getDataAs<IDataArray>(dynamicArrayPath);
+        auto copyArray = data.getDataAs<IDataArray>(copyDataPath);
+        mapPointCloudDataByKernel(copyArray, dynamicArrayToCopy, uniformKernel, kernelNumVoxels, dims.data(), x, y, z, i);
       }
     }
 
     if(storeKernelDistances)
     {
-      mapKernelDistances(kernelNumVoxels, dims.data(), x, y, z);
+      auto kernelDistancesNeighborsPath = kernelDistancesDataPath.createChildPath("Neighbor List");
+      auto kernelDistances = data.getDataAs<FloatNeighborListType>(kernelDistancesDataPath);
+      mapKernelDistances(kernelDistances, kernelValDistances, kernelNumVoxels, dims.data(), x, y, z);
     }
 
     if(i > prog)
     {
       progressInt = static_cast<int64>((static_cast<float>(i) / numVerts) * 100.0f);
       std::string ss = fmt::format("Interpolating Point Cloud || {}% Completed", progressInt);
-      notifyStatusMessage(ss);
+      // notifyStatusMessage(ss);
       prog = prog + progIncrement;
     }
   }
