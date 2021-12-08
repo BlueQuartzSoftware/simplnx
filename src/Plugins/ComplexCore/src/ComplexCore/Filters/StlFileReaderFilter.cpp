@@ -9,7 +9,6 @@
 #include "complex/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 
