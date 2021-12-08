@@ -1,16 +1,17 @@
 #pragma once
 
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <utility>
 
+#include "complex/Pipeline/Pipeline.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
 class DataStructure;
-class Pipeline;
 
 namespace H5
 {
@@ -58,6 +59,22 @@ COMPLEX_EXPORT FileData ReadFile(const H5::FileReader& fileReader, H5::ErrorType
  * @return H5::ErrorType
  */
 COMPLEX_EXPORT H5::ErrorType WriteFile(H5::FileWriter& fileWriter, const FileData& fileData);
+
+/**
+ * @brief Writes a .dream3d file with the specified data.
+ * @param fileWriter
+ * @param fileData
+ * @return H5::ErrorType
+ */
+COMPLEX_EXPORT H5::ErrorType WriteFile(H5::FileWriter& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure);
+
+/**
+ * @brief Writes a .dream3d file with the specified data.
+ * @param path
+ * @param dataStructure
+ * @return bool
+ */
+COMPLEX_EXPORT bool WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline = {});
 
 /**
  * @brief Imports and returns the DataStructure from the target .dream3d file.

@@ -506,17 +506,41 @@ H5::ErrorType WriteFileVersion(H5::FileWriter& fileWriter)
 
 H5::ErrorType complex::DREAM3D::WriteFile(H5::FileWriter& fileWriter, const FileData& fileData)
 {
+  return WriteFile(fileWriter, fileData.first, fileData.second);
+}
+
+H5::ErrorType complex::DREAM3D::WriteFile(H5::FileWriter& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure)
+{
   auto errorCode = WriteFileVersion(fileWriter);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WritePipeline(fileWriter, fileData.first);
+  errorCode = WritePipeline(fileWriter, pipeline);
   if(errorCode < 0)
   {
     return errorCode;
   }
-  errorCode = WriteDataStructure(fileWriter, fileData.second);
+  errorCode = WriteDataStructure(fileWriter, dataStructure);
   return errorCode;
+}
+
+bool complex::DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline)
+{
+  Result<H5::FileWriter> fileWriterResult = H5::FileWriter::CreateFile(path);
+  if(fileWriterResult.invalid())
+  {
+    return false;
+  }
+
+  H5::FileWriter fileWriter = std::move(fileWriterResult.value());
+
+  H5::ErrorType error = WriteFile(fileWriter, Pipeline(), dataStructure);
+  if(error < 0)
+  {
+    return false;
+  }
+
+  return true;
 }
