@@ -120,13 +120,12 @@ std::vector<std::string> DataPath::getPathVector() const
 
 DataPath DataPath::getParent() const
 {
-  if(empty())
+  if(getLength() <= 1)
   {
     return {};
   }
 
-  std::vector<std::string> parentPath = m_Path;
-  parentPath.pop_back();
+  std::vector<std::string> parentPath(m_Path.cbegin(), m_Path.cend() - 1);
   return DataPath(std::move(parentPath));
 }
 
