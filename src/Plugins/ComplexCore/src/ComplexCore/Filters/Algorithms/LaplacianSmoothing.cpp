@@ -41,8 +41,6 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
   // Generate the Lambda Array
   std::vector<float> lambdas = generateLambdaArray();
 
-  float* lambda = lambdas.data();
-
   //  Generate the Unique Edges
   if(nullptr == surfaceMesh.getEdges())
   {
@@ -56,12 +54,9 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
   AbstractGeometry::SharedEdgeList& uedges = *(surfaceMesh.getEdges());
   AbstractGeometry::MeshIndexType nedges = uedges.getNumberOfTuples();
 
-  std::vector<int32_t> numConnections(nvert);
-  numConnections.assign({0});
-  int32_t* ncon = numConnections.data();
+  std::vector<int32_t> numConnections(nvert, 0);
 
   std::vector<double> deltaArray(nvert * 3);
-  double* delta = deltaArray.data();
   double dlta = 0.0;
 
   for(int32_t q = 0; q < m_InputValues->pIterationSteps; q++)
@@ -85,11 +80,11 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
         Q_ASSERT(static_cast<size_t>(3 * in2 + j) < static_cast<size_t>(nvert * 3));
 #endif
         dlta = static_cast<double>(verts[3 * in2 + j] - verts[3 * in1 + j]);
-        delta[3 * in1 + j] += dlta;
-        delta[3 * in2 + j] += -1.0 * dlta;
+        deltaArray[3 * in1 + j] += dlta;
+        deltaArray[3 * in2 + j] += -1.0 * dlta;
       }
-      ncon[in1] += 1;
-      ncon[in2] += 1;
+      numConnections[in1] += 1;
+      numConnections[in2] += 1;
     }
 
     // Move each point
@@ -99,13 +94,13 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
       for(AbstractGeometry::MeshIndexType j = 0; j < 3; j++)
       {
         AbstractGeometry::MeshIndexType in0 = 3 * i + j;
-        dlta = delta[in0] / ncon[i];
+        dlta = deltaArray[in0] / numConnections[i];
 
-        ll = lambda[i];
+        ll = lambdas[i];
         verts[3 * i + j] += ll * dlta;
-        delta[in0] = 0.0; // reset for next iteration
+        deltaArray[in0] = 0.0; // reset for next iteration
       }
-      ncon[i] = 0; // reset for next iteration
+      numConnections[i] = 0; // reset for next iteration
     }
 
     // Now optionally apply a negative lambda based on the mu Factor value.
@@ -133,11 +128,11 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
           Q_ASSERT(static_cast<size_t>(3 * in2 + j) < static_cast<size_t>(nvert * 3));
 #endif
           dlta = verts[3 * in2 + j] - verts[3 * in1 + j];
-          delta[3 * in1 + j] += dlta;
-          delta[3 * in2 + j] += -1.0 * dlta;
+          deltaArray[3 * in1 + j] += dlta;
+          deltaArray[3 * in2 + j] += -1.0 * dlta;
         }
-        ncon[in1] += 1;
-        ncon[in2] += 1;
+        numConnections[in1] += 1;
+        numConnections[in2] += 1;
       }
 
       // MOve the points
@@ -147,13 +142,13 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
         for(AbstractGeometry::MeshIndexType j = 0; j < 3; j++)
         {
           AbstractGeometry::MeshIndexType in0 = 3 * i + j;
-          dlta = delta[in0] / ncon[i];
+          dlta = deltaArray[in0] / numConnections[i];
 
-          ll = lambda[i] * m_InputValues->pMuFactor;
+          ll = lambdas[i] * m_InputValues->pMuFactor;
           verts[3 * i + j] += ll * dlta;
-          delta[in0] = 0.0; // reset for next iteration
+          deltaArray[in0] = 0.0; // reset for next iteration
         }
-        ncon[i] = 0; // reset for next iteration
+        numConnections[i] = 0; // reset for next iteration
       }
     }
   }
