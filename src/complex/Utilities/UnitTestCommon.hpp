@@ -33,6 +33,9 @@ inline constexpr StringLiteral k_VertexDataGroupName("Vertex Data");
 inline constexpr StringLiteral k_NodeTypeArrayName("Node Type");
 inline constexpr StringLiteral k_FaceDataGroupName("Face Data");
 inline constexpr StringLiteral k_FaceLabels("Face Labels");
+inline constexpr StringLiteral k_NormalsLabels("Normals");
+inline constexpr StringLiteral k_TriangleAreas("Triangle Areas");
+
 
 inline constexpr StringLiteral k_LevelZero("ZERO");
 inline constexpr StringLiteral k_LevelOne("ONE");
