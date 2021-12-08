@@ -6,6 +6,7 @@
 #include <fmt/format.h>
 
 #include "complex/Common/Types.hpp"
+#include "complex/DataStructure/DataObject.hpp"
 
 using namespace complex;
 
@@ -72,6 +73,13 @@ DataPath::DataPath() = default;
 DataPath::DataPath(std::vector<std::string> path)
 : m_Path(std::move(path))
 {
+  for(const auto& item : m_Path)
+  {
+    if(!DataObject::IsValidName(item))
+    {
+      throw std::invalid_argument("DataPath: Invalid DataObject name");
+    }
+  }
 }
 
 DataPath::DataPath(const DataPath& rhs) = default;
