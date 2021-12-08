@@ -168,8 +168,7 @@ std::vector<float> LaplacianSmoothing::generateLambdaArray()
 
   size_t numNodes = surfaceMeshNodeType.getNumberOfTuples();
 
-  std::vector<float> lambdas(numNodes);
-  lambdas.assign({0.0F});
+  std::vector<float> lambdas(numNodes, 0.0f);
 
   for(size_t i = 0; i < numNodes; ++i)
   {
