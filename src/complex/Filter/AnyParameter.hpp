@@ -2,6 +2,8 @@
 
 #include "complex/Filter/IParameter.hpp"
 
+#include <stdexcept>
+
 namespace complex
 {
 /**
@@ -53,6 +55,24 @@ public:
   const IParameter* operator->() const noexcept
   {
     return m_Parameter.get();
+  }
+
+  IParameter& getRef()
+  {
+    if(m_Parameter == nullptr)
+    {
+      throw std::runtime_error("AnyParameter: Null IParameter");
+    }
+    return *m_Parameter;
+  }
+
+  const IParameter& getRef() const
+  {
+    if(m_Parameter == nullptr)
+    {
+      throw std::runtime_error("AnyParameter: Null IParameter");
+    }
+    return *m_Parameter;
   }
 
   bool isEmpty() const noexcept

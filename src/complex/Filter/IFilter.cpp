@@ -72,8 +72,8 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
     switch(parameter->type())
     {
     case IParameter::Type::Value: {
-      const auto* valueParameter = static_cast<const ValueParameter*>(parameter.get());
-      Result result = valueParameter->validate(constructedArg);
+      const auto& valueParameter = dynamic_cast<const ValueParameter&>(parameter.getRef());
+      Result result = valueParameter.validate(constructedArg);
       moveResult(result, errors, warnings);
       if(!result.valid())
       {
@@ -82,8 +82,8 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
       break;
     }
     case IParameter::Type::Data: {
-      const auto* dataStructureParameter = static_cast<const DataParameter*>(parameter.get());
-      Result result = dataStructureParameter->validate(data, constructedArg);
+      const auto& dataStructureParameter = dynamic_cast<const DataParameter&>(parameter.getRef());
+      Result result = dataStructureParameter.validate(data, constructedArg);
       moveResult(result, errors, warnings);
       if(!result.valid())
       {
