@@ -342,10 +342,17 @@ public:
   virtual void initializeWithZeros() = 0;
 
   /**
-   *
+   * @brief Returns the DataPaths of DataArrays that are associated or "Linked" to
+   * a specific part of the geometry. @see the docs for LinkedGeometryPath.
    * @return
    */
   const LinkedGeometryData& getLinkedGeometryData() const;
+
+  /**
+   * @brief Returns the DataPaths of DataArrays that are associated or "Linked" to
+   * a specific part of the geometry. @see the docs for LinkedGeometryPath. Non-const version
+   * @return
+   */
   LinkedGeometryData& getLinkedGeometryData();
 
 protected:

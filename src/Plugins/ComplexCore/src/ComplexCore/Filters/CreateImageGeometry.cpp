@@ -2,10 +2,10 @@
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
 
 #include <sstream>
 #include <string>
@@ -53,9 +53,6 @@ Parameters CreateImageGeometry::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-//  params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedDataGroup_Key, "Data Group Destination", "", DataPath{}));
- // params.insert(std::make_unique<StringParameter>(k_GeometryName_Key, "Name of Geometry", "", std::string("Image Geometry")));
-
   params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryDataPath_Key, "Geometry Name [Data Group]", "", DataPath({"[Image Geometry]"})));
   params.insert(std::make_unique<VectorUInt64Parameter>(k_Dimensions_Key, "Dimensions", "", std::vector<uint64_t>{20ULL, 60ULL, 200ULL}, std::vector<std::string>{"X"s, "Y"s, "Z"s}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "", std::vector<float32>(3), std::vector<std::string>{"X"s, "Y"s, "Z"s}));
@@ -101,10 +98,9 @@ IFilter::PreflightResult CreateImageGeometry::preflightImpl(const DataStructure&
      << " (delta: " << (static_cast<float>(pDimensionsValue[2]) * pSpacingValue[2]) << ")\n";
   std::string boxDimensions = ss.str();
 
-
   // Define a custom class that generates the changes to the DataStructure.
-  auto createImageGeometryAction =
-      std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, CreateImageGeometryAction::DimensionType({pDimensionsValue[0], pDimensionsValue[1], pDimensionsValue[2]}), pOriginValue, pSpacingValue);
+  auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(
+      pImageGeometryPath, CreateImageGeometryAction::DimensionType({pDimensionsValue[0], pDimensionsValue[1], pDimensionsValue[2]}), pOriginValue, pSpacingValue);
 
   // Assign the createImageGeometryAction to the Result<OutputActions>::actions vector via a push_back
   complex::Result<OutputActions> resultOutputActions;
