@@ -27,7 +27,7 @@ const std::any& Arguments::at(std::string_view key) const
   auto iter = m_Args.find(key);
   if(iter == m_Args.cend())
   {
-    throw std::out_of_range(fmt::format("Key \"{}\" does not exist in Arguments", key));
+    throw std::out_of_range(fmt::format("Key '{}' does not exist in Arguments", key));
   }
   return iter->second;
 }

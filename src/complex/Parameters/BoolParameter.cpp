@@ -33,7 +33,7 @@ Result<std::any> BoolParameter::fromJson(const nlohmann::json& json) const
 {
   if(!json.is_boolean())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not a bool", name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a bool", name()));
   }
   auto boolValue = json.get<ValueType>();
   return {boolValue};

@@ -190,14 +190,14 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
 {
   if(!json.contains(k_FilterKey.view()))
   {
-    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-1, fmt::format("JSON does not contain key \"{}\"", k_FilterKey.view()));
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-1, fmt::format("JSON does not contain key '{}'", k_FilterKey.view()));
   }
 
   const auto& filterObject = json[k_FilterKey];
 
   if(!filterObject.contains(k_FilterUuidKey.view()))
   {
-    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-2, fmt::format("Filter JSON does not contain key \"{}\"", k_FilterUuidKey.view()));
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-2, fmt::format("Filter JSON does not contain key '{}'", k_FilterUuidKey.view()));
   }
 
   const auto& uuidObject = filterObject[k_FilterUuidKey];
@@ -211,17 +211,17 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
   std::optional<Uuid> uuid = Uuid::FromString(uuidString);
   if(!uuid.has_value())
   {
-    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-4, fmt::format("\"{}\" is not a valid UUID", uuidString));
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-4, fmt::format("'{}' is not a valid UUID", uuidString));
   }
   IFilter::UniquePointer filter = filterList.createFilter(*uuid);
   if(filter == nullptr)
   {
-    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-5, fmt::format("Failed to create filter with UUID \"{}\"", uuidString));
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-5, fmt::format("Failed to create filter with UUID '{}'", uuidString));
   }
 
   if(!json.contains(k_ArgsKey.view()))
   {
-    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-6, fmt::format("JSON does not contain key \"{}\"", k_ArgsKey.view()));
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-6, fmt::format("JSON does not contain key '{}'", k_ArgsKey.view()));
   }
 
   const auto& argsJson = json[k_ArgsKey];

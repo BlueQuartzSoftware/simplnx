@@ -21,12 +21,12 @@ Result<> ValidateInputFile(const FileSystemPathParameter::ValueType& path)
 {
   if(!fs::exists(path))
   {
-    return MakeErrorResult(-2, fmt::format("Path \"{}\" does not exist", path.string()));
+    return MakeErrorResult(-2, fmt::format("Path '{}' does not exist", path.string()));
   }
 
   if(!fs::is_regular_file(path))
   {
-    return MakeErrorResult(-3, fmt::format("Path \"{}\" is not a file", path.string()));
+    return MakeErrorResult(-3, fmt::format("Path '{}' is not a file", path.string()));
   }
   return {};
 }
@@ -36,11 +36,11 @@ Result<> ValidateInputDir(const FileSystemPathParameter::ValueType& path)
 {
   if(!fs::exists(path))
   {
-    return MakeErrorResult(-4, fmt::format("Path \"{}\" does not exist", path.string()));
+    return MakeErrorResult(-4, fmt::format("Path '{}' does not exist", path.string()));
   }
   if(!fs::is_directory(path))
   {
-    return MakeErrorResult(-5, fmt::format("Path \"{}\" is not a file", path.string()));
+    return MakeErrorResult(-5, fmt::format("Path '{}' is not a file", path.string()));
   }
   return {};
 }
@@ -50,7 +50,7 @@ Result<> ValidateOutputFile(const FileSystemPathParameter::ValueType& path)
 {
   if(!fs::exists(path))
   {
-    return MakeWarningVoidResult(-6, fmt::format("Path \"{}\" does not exist. It will be created during execution.", path.string()));
+    return MakeWarningVoidResult(-6, fmt::format("Path '{}' does not exist. It will be created during execution.", path.string()));
   }
   return {};
 }
@@ -60,7 +60,7 @@ Result<> ValidateOutputDir(const FileSystemPathParameter::ValueType& path)
 {
   if(!fs::exists(path))
   {
-    return MakeWarningVoidResult(-7, fmt::format("Path \"{}\" does not exist. It will be created during execution.", path.string()));
+    return MakeWarningVoidResult(-7, fmt::format("Path '{}' does not exist. It will be created during execution.", path.string()));
   }
   return {};
 }
@@ -102,7 +102,7 @@ Result<std::any> FileSystemPathParameter::fromJson(const nlohmann::json& json) c
 {
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not a string", name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a string", name()));
   }
   auto pathString = json.get<std::string>();
   std::filesystem::path path = pathString;

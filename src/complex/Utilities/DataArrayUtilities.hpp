@@ -249,7 +249,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
     auto* parentObject = dataStructure.getData(parentPath);
     if(parentObject == nullptr)
     {
-      return MakeErrorResult(-262, fmt::format("Parent object \"{}\" does not exist", parentPath.toString()));
+      return MakeErrorResult(-262, fmt::format("Parent object '{}' does not exist", parentPath.toString()));
     }
 
     id = parentObject->getId();
@@ -269,7 +269,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
   auto dataArray = DataArray<T>::Create(dataStructure, name, std::move(store), id);
   if(dataArray == nullptr)
   {
-    return MakeErrorResult(-264, fmt::format("Unable to create DataArray at \"{}\"", path.toString()));
+    return MakeErrorResult(-264, fmt::format("Unable to create DataArray at '{}'", path.toString()));
   }
 
   return {};

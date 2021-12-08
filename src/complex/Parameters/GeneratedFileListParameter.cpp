@@ -73,7 +73,7 @@ Result<std::any> GeneratedFileListParameter::fromJson(const nlohmann::json& json
 
   if(!json.is_object())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Object, fmt::format("{}The JSON data entry for key \"{}\" is not an object.", prefix.view(), name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Object, fmt::format("{}The JSON data entry for key '{}' is not an object.", prefix.view(), name()));
   }
 
   std::vector<const char*> keys = {k_StartIndex.c_str(), k_EndIndex.c_str(), k_PaddingDigits.c_str(), k_Ordering.c_str(), k_IncrementIndex.c_str()};
@@ -81,11 +81,11 @@ Result<std::any> GeneratedFileListParameter::fromJson(const nlohmann::json& json
   {
     if(!json.contains(key))
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of \"{}\"", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", prefix.view(), key));
     }
     if(!json[key].is_number_integer())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Integer, fmt::format("{}JSON value for key \"{}\" is not an integer", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Integer, fmt::format("{}JSON value for key '{}' is not an integer", prefix.view(), key));
     }
   }
 
@@ -94,24 +94,24 @@ Result<std::any> GeneratedFileListParameter::fromJson(const nlohmann::json& json
   {
     if(!json.contains(key))
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of \"{}\"", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", prefix.view(), key));
     }
     if(!json[key].is_string())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key \"{}\" is not a string", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), key));
     }
   }
 
   auto ordering_check = json[k_Ordering].get<OrderingUnderlyingT>();
   if(ordering_check != static_cast<OrderingUnderlyingT>(Ordering::LowToHigh) && ordering_check != static_cast<OrderingUnderlyingT>(Ordering::HighToLow))
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration, fmt::format("{}JSON value for key \"{}\" was not a valid ordering Value. [{}|{}] allowed.",
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration, fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.",
                                                                                                            prefix.view(), k_Ordering.view(), Ordering::LowToHigh, Ordering::HighToLow));
   }
 
   if(!json[k_PaddingDigits].is_number_unsigned())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Unsigned, fmt::format("{}JSON value for key \"{}\" is not an unsigned int", prefix.view(), k_PaddingDigits.view()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Unsigned, fmt::format("{}JSON value for key '{}' is not an unsigned int", prefix.view(), k_PaddingDigits.view()));
   }
 
   ValueType value;
@@ -157,7 +157,7 @@ Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
   {
     if(!fs::exists(currentFilePath))
     {
-      errors.push_back({-2, fmt::format("FILE DOES NOT EXIST: \"{}\"", currentFilePath)});
+      errors.push_back({-2, fmt::format("FILE DOES NOT EXIST: '{}'", currentFilePath)});
     }
   }
 

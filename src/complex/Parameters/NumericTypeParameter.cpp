@@ -84,7 +84,7 @@ Result<std::any> NumericTypeParameter::fromJson(const nlohmann::json& json) cons
 {
   if(!json.is_number())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not a number", name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a number", name()));
   }
   auto type = json.get<ValueType>();
   return {type};

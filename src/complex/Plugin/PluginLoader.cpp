@@ -70,7 +70,7 @@ auto GetErrorMessage()
                                 reinterpret_cast<LPWSTR>(&messageBuffer), 0, nullptr);
   if(result == 0)
   {
-    return std::wstring(fmt::format(L"Unable to retrieve error message for error code \"{}\"", error));
+    return std::wstring(fmt::format(L"Unable to retrieve error message for error code '{}'", error));
   }
   auto deleter = [](LPWSTR ptr) { LocalFree(ptr); };
   std::unique_ptr<WCHAR, decltype(deleter)> uniqueBuffer(messageBuffer, deleter);
@@ -102,7 +102,7 @@ void PluginLoader::loadPlugin()
   m_Handle = LoadSharedLibrary(m_Path);
   if(m_Handle == nullptr)
   {
-    fmt::print(COMPLEX_TEXT("Could not load library \"{}\" with the following error:\n"), m_Path.c_str());
+    fmt::print(COMPLEX_TEXT("Could not load library '{}' with the following error:\n"), m_Path.c_str());
     fmt::print(GetErrorMessage());
     return;
   }
@@ -111,7 +111,7 @@ void PluginLoader::loadPlugin()
   if(createPluginFunc == nullptr)
   {
     unloadPlugin();
-    fmt::print(COMPLEX_TEXT("Could not retrieve function \"" COMPLEX_CREATE_PLUGIN_FUNC_NAME "\" from library \"{}\" with the following error:\n"), m_Path.c_str());
+    fmt::print(COMPLEX_TEXT("Could not retrieve function \"" COMPLEX_CREATE_PLUGIN_FUNC_NAME "\" from library '{}' with the following error:\n"), m_Path.c_str());
     fmt::print(GetErrorMessage());
     return;
   }
@@ -120,7 +120,7 @@ void PluginLoader::loadPlugin()
   if(destroyPluginFunc == nullptr)
   {
     unloadPlugin();
-    fmt::print(COMPLEX_TEXT("Could not retrieve function \"" COMPLEX_DESTROY_PLUGIN_FUNC_NAME "\" from library \"{}\" with following error:\n"), m_Path.c_str());
+    fmt::print(COMPLEX_TEXT("Could not retrieve function \"" COMPLEX_DESTROY_PLUGIN_FUNC_NAME "\" from library '{}' with following error:\n"), m_Path.c_str());
     fmt::print(GetErrorMessage());
     return;
   }
@@ -137,7 +137,7 @@ void PluginLoader::unloadPlugin()
   m_Plugin = nullptr;
   if(!UnloadSharedLibrary(m_Handle))
   {
-    fmt::print(COMPLEX_TEXT("The following error occurred while unloading library \"{}\":\n"), m_Path.c_str());
+    fmt::print(COMPLEX_TEXT("The following error occurred while unloading library '{}':\n"), m_Path.c_str());
     fmt::print(GetErrorMessage());
   }
   m_Handle = nullptr;

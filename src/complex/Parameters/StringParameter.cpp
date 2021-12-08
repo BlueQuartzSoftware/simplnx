@@ -35,7 +35,7 @@ Result<std::any> StringParameter::fromJson(const nlohmann::json& json) const
 {
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not a string", name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a string", name()));
   }
   auto string = json.get<ValueType>();
   return {string};

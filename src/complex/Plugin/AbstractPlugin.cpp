@@ -69,7 +69,7 @@ void AbstractPlugin::addFilter(FilterCreationFunc filterFunc)
   IFilter::UniquePointer filter = filterFunc();
   if(filter == nullptr)
   {
-    throw std::runtime_error(fmt::format("Failed to instantiate filter in plugin \"{}\"", getName()));
+    throw std::runtime_error(fmt::format("Failed to instantiate filter in plugin '{}'", getName()));
   }
 
   Uuid uuid = filter->uuid();
@@ -77,7 +77,7 @@ void AbstractPlugin::addFilter(FilterCreationFunc filterFunc)
   if(m_InitializerMap.count(uuid) > 0)
   {
     IFilter::UniquePointer existingFilter = m_InitializerMap[uuid]();
-    throw std::runtime_error(fmt::format("Attempted to add filter \"{}\" with uuid \"{}\" in plugin \"{}\", but filter \"{}\" already exists with that uuid", filter->name(), uuid.str(), getName(),
+    throw std::runtime_error(fmt::format("Attempted to add filter '{}' with uuid '{}' in plugin '{}', but filter '{}' already exists with that uuid", filter->name(), uuid.str(), getName(),
                                          existingFilter->name()));
   }
 
