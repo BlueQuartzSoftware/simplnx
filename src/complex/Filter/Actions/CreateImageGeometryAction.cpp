@@ -9,7 +9,7 @@ using namespace complex;
 namespace complex
 {
 CreateImageGeometryAction::CreateImageGeometryAction(DataPath path, DimensionType dims, OriginType origin, SpacingType spacing)
-: m_Path(std::move(path))
+: m_GeometryPath(std::move(path))
 , m_Dims(std::move(dims))
 , m_Origin(std::move(origin))
 , m_Spacing(std::move(spacing))
@@ -20,32 +20,34 @@ CreateImageGeometryAction::~CreateImageGeometryAction() noexcept = default;
 
 Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  if(m_Path.empty())
+  // Check for empty Geometry DataPath
+  if(m_GeometryPath.empty())
   {
-    return MakeErrorResult(-1, "CreateImageGeometryAction: Path cannot be empty");
+    return MakeErrorResult(-220, "CreateImageGeometryAction: Geometry Path cannot be empty");
   }
-
-  usize size = m_Path.getLength();
-  std::string name = size == 1 ? m_Path[0] : m_Path[size - 1];
-
-  std::optional<DataObject::IdType> id;
-  if(size > 1)
+  // Check if the Geometry Path already exists
+  BaseGroup* parentObject = dataStructure.getDataAs<BaseGroup>(m_GeometryPath);
+  if(parentObject != nullptr)
   {
-    DataPath parentPath = m_Path.getParent();
-    id = dataStructure.getId(parentPath);
-    if(!id.has_value())
+    return MakeErrorResult(-222, fmt::format("CreateImageGeometryAction: DataObject already exists at path '{}'", m_GeometryPath.toString()));
+  }
+  DataPath parentPath = m_GeometryPath.getParent();
+  if(!parentPath.empty())
+  {
+    Result<LinkedPath> geomPath = dataStructure.makePath(parentPath);
+    if(geomPath.invalid())
     {
-      return MakeErrorResult(-2, "CreateImageGeometryAction: Invalid path");
+      return MakeErrorResult(-223, fmt::format("CreateGeometry2DAction: Geometry could not be created at path:'{}'", m_GeometryPath.toString()));
     }
   }
-
-  BaseGroup* dataObject = dataStructure.getDataAs<BaseGroup>(id);
-  if(dataObject->contains(name))
+  // Get the Parent ID
+  if(!dataStructure.getId(parentPath).has_value())
   {
-    return MakeErrorResult(-200, fmt::format("CreateImageGeometryAction: DataObject already exists at path '{}'", m_Path.toString()));
+    return MakeErrorResult(-224, fmt::format("CreateGeometry2DAction: Parent Id was not available for path:'{}'", parentPath.toString()));
   }
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, name, id);
+  // Create the ImageGeometry
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, m_GeometryPath.getTargetName(), dataStructure.getId(parentPath).value());
   imageGeom->setDimensions(m_Dims);
   imageGeom->setOrigin(m_Origin);
   imageGeom->setSpacing(m_Spacing);
@@ -55,7 +57,7 @@ Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode mod
 
 const DataPath& CreateImageGeometryAction::path() const
 {
-  return m_Path;
+  return m_GeometryPath;
 }
 
 const CreateImageGeometryAction::DimensionType& CreateImageGeometryAction::dims() const

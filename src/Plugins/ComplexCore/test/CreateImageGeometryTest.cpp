@@ -56,12 +56,11 @@ TEST_CASE("ComplexCore::CreateImageGeometry", "[ComplexCore]")
   DataStructure dataGraph = complex::UnitTest::CreateAllPrimitiveTypes(imageDims);
   //  DataGroup* levelZeroGroup = DataGroup::Create(dataGraph, Complexk_LevelZero);
   //  DataGroup* levelOneGroup = DataGroup::Create(dataGraph, Complexk_LevelOne, levelZeroGroup->getId());
-
-  DataPath selectedDataGroupPath({k_LevelZero, k_LevelOne});
+  const std::string k_ImageGeometryName("[Image Geometry]");
+  DataPath selectedDataGroupPath({k_LevelZero, k_LevelOne, k_ImageGeometryName});
   Arguments args;
   // Create default Parameters for the filter.
-  args.insertOrAssign(CreateImageGeometry::k_SelectedDataGroup_Key, std::make_any<DataPath>(selectedDataGroupPath));
-  args.insertOrAssign(CreateImageGeometry::k_GeometryName_Key, std::make_any<std::string>("Image Geometry"));
+  args.insertOrAssign(CreateImageGeometry::k_GeometryDataPath_Key, std::make_any<DataPath>(selectedDataGroupPath));
   args.insertOrAssign(CreateImageGeometry::k_Dimensions_Key, std::make_any<std::vector<uint64_t>>(inputDims));
   args.insertOrAssign(CreateImageGeometry::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(imageOrigin));
   args.insertOrAssign(CreateImageGeometry::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(imageSpacing));

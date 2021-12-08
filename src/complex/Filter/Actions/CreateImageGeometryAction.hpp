@@ -60,7 +60,7 @@ public:
   const SpacingType& spacing() const;
 
 private:
-  DataPath m_Path;
+  DataPath m_GeometryPath;
   DimensionType m_Dims;
   OriginType m_Origin;
   SpacingType m_Spacing;
