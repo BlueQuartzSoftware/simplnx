@@ -37,14 +37,14 @@ Result<std::any> DataGroupCreationParameter::fromJson(const nlohmann::json& json
 
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}The JSON data entry for key \"{}\" is not a string.", prefix.view(), name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}The JSON data entry for key '{}' is not a string.", prefix.view(), name()));
   }
 
   auto valueString = json.get<std::string>();
   std::optional<DataPath> path = DataPath::FromString(valueString);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse \"{}\" as DataPath for key \"{}\".", prefix.view(), valueString, name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath for key '{}'.", prefix.view(), valueString, name()));
   }
   return {std::move(*path)};
 }

@@ -57,7 +57,7 @@ Result<std::any> VectorParameter<T>::fromJson(const nlohmann::json& json) const
 {
   if(!json.is_array())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not an array", name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not an array", name()));
   }
   ValueType vec;
   for(usize i = 0; i < json.size(); i++)
@@ -67,7 +67,7 @@ Result<std::any> VectorParameter<T>::fromJson(const nlohmann::json& json) const
     {
       if(!element.is_number())
       {
-        return MakeErrorResult<std::any>(-3, fmt::format("JSON value for array index \"{}\" is not a number", i));
+        return MakeErrorResult<std::any>(-3, fmt::format("JSON value for array index '{}' is not a number", i));
       }
     }
     else

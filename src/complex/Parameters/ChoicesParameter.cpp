@@ -54,7 +54,7 @@ Result<std::any> ChoicesParameter::fromJson(const nlohmann::json& json) const
 {
   if(!json.is_number())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not a number", name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a number", name()));
   }
   auto index = json.get<ValueType>();
   return {index};
@@ -85,7 +85,7 @@ Result<> ChoicesParameter::validateIndex(ValueType index) const
 {
   if(index >= m_Choices.size())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("Index \"{}\" must be less than {}", index, m_Choices.size())}})};
+    return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("Index '{}' must be less than {}", index, m_Choices.size())}})};
   }
 
   return {};

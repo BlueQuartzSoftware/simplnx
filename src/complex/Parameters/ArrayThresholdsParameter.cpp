@@ -35,13 +35,13 @@ Result<std::any> ArrayThresholdsParameter::fromJson(const nlohmann::json& json) 
 {
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not a string", name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a string", name()));
   }
   auto string = json.get<std::string>();
   std::optional<DataPath> path = DataPath::FromString(string);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(-3, fmt::format("Failed to parse \"{}\" as DataPath", string));
+    return MakeErrorResult<std::any>(-3, fmt::format("Failed to parse '{}' as DataPath", string));
   }
   return {std::move(*path)};
 }

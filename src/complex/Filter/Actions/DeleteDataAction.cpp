@@ -17,7 +17,7 @@ Result<> RemoveFromParent(DataStructure& dataStructure, const DataPath& path, ID
   DataObject* targetObject = dataStructure.getData(path);
   if(targetObject == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{k_TargetNotFoundErrorCode, fmt::format("Cound not find \"{}\" within DataStructure", path.toString())}})};
+    return {nonstd::make_unexpected(std::vector<Error>{{k_TargetNotFoundErrorCode, fmt::format("Cound not find '{}' within DataStructure", path.toString())}})};
   }
 
   const auto parentPath = path.getParent();

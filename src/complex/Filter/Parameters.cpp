@@ -64,12 +64,12 @@ void Parameters::insertSeparator(Separator separator)
 
 AnyParameter& Parameters::at(std::string_view key)
 {
-  return MapAt(m_Params, key, "Key \"{}\" does not exist in Parameters");
+  return MapAt(m_Params, key, "Key '{}' does not exist in Parameters");
 }
 
 const AnyParameter& Parameters::at(std::string_view key) const
 {
-  return MapAt(m_Params, key, "Key \"{}\" does not exist in Parameters");
+  return MapAt(m_Params, key, "Key '{}' does not exist in Parameters");
 }
 
 void Parameters::insertLinkableParameter(IParameter::UniquePointer parameter, IsActiveFunc func)
@@ -116,9 +116,9 @@ bool Parameters::isParameterActive(std::string_view key, const std::any& value) 
 
   // If a parameter is in a group, it's active if the stored value and argument value pass the stored IsActive function
 
-  const auto& [groupKey, associatedValue] = MapAt(m_ParamGroups, key, "Key \"{}\" does not have group in Parameters");
+  const auto& [groupKey, associatedValue] = MapAt(m_ParamGroups, key, "Key '{}' does not have group in Parameters");
 
-  IsActiveFunc func = MapAt(m_Groups, groupKey, "Group key \"{}\" does not exist in Parameters");
+  IsActiveFunc func = MapAt(m_Groups, groupKey, "Group key '{}' does not exist in Parameters");
 
   const IParameter* groupParameter = at(groupKey).get();
 
@@ -134,7 +134,7 @@ std::string Parameters::getGroup(std::string_view key) const
     return {};
   }
 
-  const auto& pair = MapAt(m_ParamGroups, key, "Key \"{}\" does not have group in Parameters");
+  const auto& pair = MapAt(m_ParamGroups, key, "Key '{}' does not have group in Parameters");
 
   return pair.first;
 }

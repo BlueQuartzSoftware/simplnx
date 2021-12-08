@@ -163,7 +163,7 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
   {
     if(!json.contains(name))
     {
-      warnings.push_back(Warning{-1, fmt::format("JSON does not contain key \"{}\". Falling back to default value.", name)});
+      warnings.push_back(Warning{-1, fmt::format("JSON does not contain key '{}'. Falling back to default value.", name)});
       args.insert(name, param->defaultValue());
       continue;
     }

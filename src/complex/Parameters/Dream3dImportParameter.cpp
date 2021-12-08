@@ -71,7 +71,7 @@ Result<std::any> Dream3dImportParameter::fromJson(const nlohmann::json& json) co
 {
   if(!json.is_object())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not an object", name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not an object", name()));
   }
 
   if(!json.contains(k_FilePathKey.view()))
@@ -111,7 +111,7 @@ Result<std::any> Dream3dImportParameter::fromJson(const nlohmann::json& json) co
       std::optional<DataPath> dataPath = DataPath::FromString(dataPathString);
       if(!dataPath.has_value())
       {
-        errors.push_back(Error{-7, fmt::format("Failed to parse \"{}\" as DataPath", dataPathString)});
+        errors.push_back(Error{-7, fmt::format("Failed to parse '{}' as DataPath", dataPathString)});
         continue;
       }
       dataPaths.push_back(std::move(*dataPath));
@@ -153,18 +153,18 @@ Result<> Dream3dImportParameter::validatePath(const ValueType& importData) const
   std::filesystem::path path = importData.FilePath;
   if(!fs::exists(path))
   {
-    return MakeErrorResult(-2, fmt::format("Path \"{}\" does not exist", path.string()));
+    return MakeErrorResult(-2, fmt::format("Path '{}' does not exist", path.string()));
   }
 
   if(!fs::is_regular_file(path))
   {
-    return MakeErrorResult(-3, fmt::format("Path \"{}\" is not a file", path.string()));
+    return MakeErrorResult(-3, fmt::format("Path '{}' is not a file", path.string()));
   }
 
   H5::FileReader fileReader(path);
   if(!fileReader.isValid())
   {
-    return MakeErrorResult(-4, fmt::format("HDF5 file at path \"{}\" could not be read", path.string()));
+    return MakeErrorResult(-4, fmt::format("HDF5 file at path '{}' could not be read", path.string()));
   }
   return {};
 }

@@ -255,7 +255,7 @@ DataObject& DataStructure::getDataRef(const DataPath& path)
   DataObject* object = getData(path);
   if(object == nullptr)
   {
-    throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Input Path \"{}\" does not exist", path.toString()));
+    throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Input Path '{}' does not exist", path.toString()));
   }
   return *object;
 }
@@ -317,7 +317,7 @@ const DataObject& DataStructure::getDataRef(const DataPath& path) const
   const DataObject* object = getData(path);
   if(object == nullptr)
   {
-    throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Input Path \"{}\" does not exist", path.toString()));
+    throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Input Path '{}' does not exist", path.toString()));
   }
   return *object;
 }

@@ -39,7 +39,7 @@ Result<std::any> MultiArraySelectionParameter::fromJson(const nlohmann::json& js
 {
   if(!json.is_array())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key \"{}\" is not an array", name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not an array", name()));
   }
 
   ValueType paths;
@@ -56,7 +56,7 @@ Result<std::any> MultiArraySelectionParameter::fromJson(const nlohmann::json& js
     auto path = DataPath::FromString(string);
     if(!path.has_value())
     {
-      errors.push_back(Error{-4, fmt::format("Failed to parse \"{}\" as DataPath", string)});
+      errors.push_back(Error{-4, fmt::format("Failed to parse '{}' as DataPath", string)});
       continue;
     }
     paths.push_back(std::move(*path));

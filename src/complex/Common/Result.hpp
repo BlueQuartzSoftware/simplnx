@@ -173,7 +173,7 @@ Result<T> ConvertResultTo(Result<>&& fromResult, T&& value)
  *
  * A Typical invocation would be:
  * @code
- *     return complex::MakeErrorResult<std::any>(-1, fmt::format("{} JSON Data does not contain an entry with a key of \"{}\"", prefix, name()));
+ *     return complex::MakeErrorResult<std::any>(-1, fmt::format("{} JSON Data does not contain an entry with a key of '{}'", prefix, name()));
  * @endcode
  * @tparam T
  * @param code Error Value. Typically negative number

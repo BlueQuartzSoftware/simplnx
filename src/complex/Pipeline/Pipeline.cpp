@@ -567,12 +567,12 @@ Result<Pipeline> Pipeline::FromJson(const nlohmann::json& json, FilterList* filt
 {
   if(!json.contains(k_PipelineNameKey.view()))
   {
-    return MakeErrorResult<Pipeline>(-1, fmt::format("Pipeline JSON did not contain key \"{}\"", k_PipelineNameKey.view()));
+    return MakeErrorResult<Pipeline>(-1, fmt::format("Pipeline JSON did not contain key '{}'", k_PipelineNameKey.view()));
   }
 
   if(!json.contains(k_PipelineItemsKey.view()))
   {
-    return MakeErrorResult<Pipeline>(-2, fmt::format("Pipeline JSON did not contain key \"{}\"", k_PipelineItemsKey.view()));
+    return MakeErrorResult<Pipeline>(-2, fmt::format("Pipeline JSON did not contain key '{}'", k_PipelineItemsKey.view()));
   }
 
   auto name = json[k_PipelineNameKey].get<std::string>();
@@ -617,7 +617,7 @@ Result<Pipeline> Pipeline::FromFile(const std::filesystem::path& path, FilterLis
 
   if(!file.is_open())
   {
-    return MakeErrorResult<Pipeline>(-1, fmt::format("Failed to open file \"{}\"", path.string()));
+    return MakeErrorResult<Pipeline>(-1, fmt::format("Failed to open file '{}'", path.string()));
   }
 
   nlohmann::json pipelineJson;
