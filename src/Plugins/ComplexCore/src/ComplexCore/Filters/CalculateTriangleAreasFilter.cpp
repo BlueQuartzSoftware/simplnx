@@ -122,20 +122,22 @@ IFilter::PreflightResult CalculateTriangleAreasFilter::preflightImpl(const DataS
   auto pCalculatedAreasDataPath = filterArgs.value<DataPath>(k_CalculatedAreasDataPath_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
 
-  // If your filter is making structural changes to the DataStructure then the filter
-  // is going to create OutputActions subclasses that need to be returned. This will
-  // store those actions.
-  complex::Result<OutputActions> resultOutputActions;
-
   // If your filter is going to pass back some `preflight updated values` then this is where you
   // would create the code to store those values in the appropriate object. Note that we
   // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
   // the std::vector<PreflightValue> object.
   std::vector<PreflightValue> preflightUpdatedValues;
+
+  // If your filter is making structural changes to the DataStructure then the filter
+  // is going to create OutputActions subclasses that need to be returned. This will
+  // store those actions.
+  complex::Result<OutputActions> resultOutputActions;
+
+  std::shared_ptr<TriangleGeom> triangleGeom = dataStructure.getSharedDataAs<TriangleGeom>(pTriangleGeometryDataPath);
+  if(triangleGeom != nullptr)
   {
-    const TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
     // Create the face areas DataArray Action and store it into the resultOutputActions
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::float64, std::vector<usize>{triangleGeom.getNumberOfFaces()}, 1, pCalculatedAreasDataPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, 1, pCalculatedAreasDataPath);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
