@@ -281,7 +281,6 @@ using FloatNeighborListType = NeighborList<float>;
 // -----------------------------------------------------------------------------
 // Declare our extern templates
 
-#if 0
 extern template class NeighborList<char>;
 extern template class NeighborList<unsigned char>;
 
@@ -298,5 +297,5 @@ extern template class NeighborList<float32>;
 extern template class NeighborList<float64>;
 
 extern template class NeighborList<usize>;
-#endif
+extern template class NeighborList<bool>;
 } // namespace complex

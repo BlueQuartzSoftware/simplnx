@@ -14,7 +14,7 @@ class COMPLEX_EXPORT CreateNeighborListAction : public IDataAction
 public:
   CreateNeighborListAction() = delete;
 
-  CreateNeighborListAction(NumericType type, usize tupleCount, const DataPath& path);
+  CreateNeighborListAction(DataType type, usize tupleCount, const DataPath& path);
 
   ~CreateNeighborListAction() noexcept override;
 
@@ -32,10 +32,10 @@ public:
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
   /**
-   * @brief Returns the NumericType of the DataArray to be created.
-   * @return NumericType
+   * @brief Returns the DataType of the DataArray to be created.
+   * @return DataType
    */
-  NumericType type() const;
+  DataType type() const;
 
   /**
    * @brief Returns the number of tuples for the NeighborList to be created.
@@ -50,7 +50,7 @@ public:
   DataPath path() const;
 
 private:
-  NumericType m_Type;
+  DataType m_Type;
   usize m_TupleCount;
   DataPath m_Path;
 };

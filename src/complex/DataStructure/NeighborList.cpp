@@ -269,7 +269,7 @@ T NeighborList<T>::getValue(int32 grainId, int32 index, bool& ok) const
   if(index < 0 || static_cast<usize>(index) >= vec->size())
   {
     ok = false;
-    return -1;
+    return static_cast<T>(-1);
   }
   return (*vec)[index];
 }
@@ -383,6 +383,12 @@ DataType COMPLEX_EXPORT NeighborList<uint64>::getDataType() const
   return DataType::uint64;
 }
 
+template <>
+DataType COMPLEX_EXPORT NeighborList<bool>::getDataType() const
+{
+  return DataType::boolean;
+}
+
 #if defined(__APPLE__)
 template <>
 DataType COMPLEX_EXPORT NeighborList<unsigned long>::getDataType() const
@@ -401,12 +407,6 @@ template <>
 DataType COMPLEX_EXPORT NeighborList<float64>::getDataType() const
 {
   return DataType::float64;
-}
-
-template <>
-DataType COMPLEX_EXPORT NeighborList<bool>::getDataType() const
-{
-  return DataType::boolean;
 }
 
 template <typename T>
@@ -445,6 +445,8 @@ template class COMPLEX_EXPORT NeighborList<uint64>;
 
 template class COMPLEX_EXPORT NeighborList<float32>;
 template class COMPLEX_EXPORT NeighborList<float64>;
+
+template class COMPLEX_EXPORT NeighborList<bool>;
 
 #if defined(__APPLE__) || defined(_MSC_VER)
 template class COMPLEX_EXPORT NeighborList<usize>;

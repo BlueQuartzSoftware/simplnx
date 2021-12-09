@@ -8,7 +8,7 @@ using namespace complex;
 
 namespace complex
 {
-CreateNeighborListAction::CreateNeighborListAction(NumericType type, usize tupleCount, const DataPath& path)
+CreateNeighborListAction::CreateNeighborListAction(DataType type, usize tupleCount, const DataPath& path)
 : m_Type(type)
 , m_TupleCount(tupleCount)
 , m_Path(path)
@@ -22,42 +22,45 @@ Result<> CreateNeighborListAction::apply(DataStructure& dataStructure, Mode mode
   // Validate the Numeric Type
   switch(m_Type)
   {
-  case NumericType::int8: {
+  case DataType::int8: {
     return CreateNeighbors<int8>(dataStructure, m_TupleCount, m_Path, mode);
   }
-  case NumericType::uint8: {
+  case DataType::uint8: {
     return CreateNeighbors<uint8>(dataStructure, m_TupleCount, m_Path, mode);
   }
-  case NumericType::int16: {
+  case DataType::int16: {
     return CreateNeighbors<int16>(dataStructure, m_TupleCount, m_Path, mode);
   }
-  case NumericType::uint16: {
+  case DataType::uint16: {
     return CreateNeighbors<uint16>(dataStructure, m_TupleCount, m_Path, mode);
   }
-  case NumericType::int32: {
+  case DataType::int32: {
     return CreateNeighbors<int32>(dataStructure, m_TupleCount, m_Path, mode);
   }
-  case NumericType::uint32: {
+  case DataType::uint32: {
     return CreateNeighbors<uint32>(dataStructure, m_TupleCount, m_Path, mode);
   }
-  case NumericType::int64: {
+  case DataType::int64: {
     return CreateNeighbors<int64>(dataStructure, m_TupleCount, m_Path, mode);
   }
-  case NumericType::uint64: {
+  case DataType::uint64: {
     return CreateNeighbors<uint64>(dataStructure, m_TupleCount, m_Path, mode);
   }
-  case NumericType::float32: {
+  case DataType::float32: {
     return CreateNeighbors<float32>(dataStructure, m_TupleCount, m_Path, mode);
   }
-  case NumericType::float64: {
+  case DataType::float64: {
     return CreateNeighbors<float64>(dataStructure, m_TupleCount, m_Path, mode);
+  }
+  case DataType::boolean: {
+    return CreateNeighbors<bool>(dataStructure, m_TupleCount, m_Path, mode);
   }
   default:
     throw std::runtime_error(fmt::format("CreateNeighborListAction: Invalid Numeric Type '{}'", m_Type));
   }
 }
 
-NumericType CreateNeighborListAction::type() const
+DataType CreateNeighborListAction::type() const
 {
   return m_Type;
 }
