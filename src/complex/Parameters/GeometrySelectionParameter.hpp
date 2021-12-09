@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <string>
 
 #include "complex/Filter/MutableDataParameter.hpp"
@@ -10,17 +11,17 @@ namespace complex
 {
 /**
  * @brief This Filter Parameter describes a specific DataPath where the last DataObject in
- * the path is an ImageGeometry.
+ * the path is a geometry of the specified type.
  */
 class COMPLEX_EXPORT GeometrySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
   using AllowedType = DataObject::Type;
-  using AllowedTypes = std::vector<AllowedType>;
+  using AllowedTypes = std::set<AllowedType>;
 
   GeometrySelectionParameter() = delete;
-  GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowTypes);
+  GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes);
   ~GeometrySelectionParameter() override = default;
 
   GeometrySelectionParameter(const GeometrySelectionParameter&) = delete;
@@ -68,16 +69,16 @@ public:
   std::any defaultValue() const override;
 
   /**
-   * @brief
+   * @brief Returns the default path.
    * @return
    */
-  ValueType defaultPath() const;
+  const ValueType& defaultPath() const;
 
   /**
-   * @brief
+   * @brief Returns the list of allowed DataObject types.
    * @return
    */
-  AllowedTypes getAllowedTypes() const;
+  const AllowedTypes& getAllowedTypes() const;
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
