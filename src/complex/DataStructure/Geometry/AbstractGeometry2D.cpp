@@ -25,9 +25,9 @@ AbstractGeometry2D::AbstractGeometry2D(AbstractGeometry2D&& other) noexcept
 }
 
 AbstractGeometry2D::~AbstractGeometry2D() = default;
-DataObject::DataObjectType AbstractGeometry2D::getDataObjectType() const
+DataObject::Type AbstractGeometry2D::getDataObjectType() const
 {
-  return DataObjectType::AbstractGeometry2D;
+  return DataObject::Type::AbstractGeometry2D;
 }
 
 void AbstractGeometry2D::resizeVertexList(usize numVertices)

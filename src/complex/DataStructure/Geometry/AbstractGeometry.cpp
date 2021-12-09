@@ -96,9 +96,9 @@ AbstractGeometry::AbstractGeometry(AbstractGeometry&& other) noexcept
 }
 
 AbstractGeometry::~AbstractGeometry() = default;
-DataObject::DataObjectType AbstractGeometry::getDataObjectType() const
+DataObject::Type AbstractGeometry::getDataObjectType() const
 {
-  return DataObjectType::AbstractGeometry;
+  return DataObject::Type::AbstractGeometry;
 }
 
 bool AbstractGeometry::canInsert(const DataObject* obj) const

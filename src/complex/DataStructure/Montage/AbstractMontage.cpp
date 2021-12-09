@@ -27,9 +27,9 @@ AbstractMontage::AbstractMontage(AbstractMontage&& other) noexcept
 }
 
 AbstractMontage::~AbstractMontage() = default;
-DataObject::DataObjectType AbstractMontage::getDataObjectType() const
+DataObject::Type AbstractMontage::getDataObjectType() const
 {
-  return DataObjectType::AbstractMontage;
+  return Type::AbstractMontage;
 }
 
 AbstractMontage::CollectionType AbstractMontage::getGeometries() const
