@@ -55,9 +55,9 @@ TetrahedralGeom::TetrahedralGeom(TetrahedralGeom&& other) noexcept
 }
 
 TetrahedralGeom::~TetrahedralGeom() = default;
-DataObject::DataObjectType TetrahedralGeom::getDataObjectType() const
+DataObject::Type TetrahedralGeom::getDataObjectType() const
 {
-  return DataObjectType::TetrahedralGeom;
+  return DataObject::Type::TetrahedralGeom;
 }
 
 TetrahedralGeom* TetrahedralGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)

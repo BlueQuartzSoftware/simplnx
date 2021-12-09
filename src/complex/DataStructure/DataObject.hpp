@@ -39,7 +39,7 @@ class COMPLEX_EXPORT DataObject
 {
 public:
   using EnumType = uint32;
-  enum class DataObjectType : EnumType
+  enum class Type : EnumType
   {
     DataObject = 0,
 
@@ -69,14 +69,15 @@ public:
     HexahedralGeom = 18,
     TetrahedralGeom = 19,
 
-    Unknown = 20
+    Unknown = 999,
+    Any = 4294967295U
   };
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */
-  virtual DataObjectType getDataObjectType() const;
+  virtual Type getDataObjectType() const;
 
   /**
    * @brief The IdType alias serves as an ID type for DataObjects within their

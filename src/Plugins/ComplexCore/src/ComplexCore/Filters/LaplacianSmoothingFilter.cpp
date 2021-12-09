@@ -4,6 +4,7 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
 #include "ComplexCore/Filters/Algorithms/LaplacianSmoothing.hpp"
@@ -47,20 +48,22 @@ Parameters LaplacianSmoothingFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry", "", DataPath{}));
-  params.insert(std::make_unique<Int32Parameter>(k_IterationSteps_Key, "Iteration Steps", "", 1234356));
-  params.insert(std::make_unique<Float32Parameter>(k_Lambda_Key, "Default Lambda", "", 1.23345f));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseTaubinSmoothing_Key, "Use Taubin Smoothing", "", false));
-  params.insert(std::make_unique<Float32Parameter>(k_MuFactor_Key, "Mu Factor", "", 1.23345f));
-  params.insert(std::make_unique<Float32Parameter>(k_TripleLineLambda_Key, "Triple Line Lambda", "", 1.23345f));
-  params.insert(std::make_unique<Float32Parameter>(k_QuadPointLambda_Key, "Quadruple Points Lambda", "", 1.23345f));
-  params.insert(std::make_unique<Float32Parameter>(k_SurfacePointLambda_Key, "Outer Points Lambda", "", 1.23345f));
-  params.insert(std::make_unique<Float32Parameter>(k_SurfaceTripleLineLambda_Key, "Outer Triple Line Lambda", "", 1.23345f));
-  params.insert(std::make_unique<Float32Parameter>(k_SurfaceQuadPointLambda_Key, "Outer Quadruple Points Lambda", "", 1.23345f));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry", "", DataPath{},
+                                                             std::vector<DataObject::Type>{DataObject::Type::TriangleGeom, DataObject::Type::TetrahedralGeom}));
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshNodeTypeArrayPath_Key, "Node Type", "", DataPath{}));
-  // params.insertSeparator(Parameters::Separator{"Face Data"});
-  // params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}));
+  params.insertSeparator(Parameters::Separator{"Smoothing Values"});
+
+  params.insert(std::make_unique<Int32Parameter>(k_IterationSteps_Key, "Iteration Steps", "", 25));
+  params.insert(std::make_unique<Float32Parameter>(k_Lambda_Key, "Default Lambda", "", 0.2F));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseTaubinSmoothing_Key, "Use Taubin Smoothing", "", false));
+  params.insert(std::make_unique<Float32Parameter>(k_MuFactor_Key, "Mu Factor", "", 0.2F));
+  params.insert(std::make_unique<Float32Parameter>(k_TripleLineLambda_Key, "Triple Line Lambda", "", 0.1f));
+  params.insert(std::make_unique<Float32Parameter>(k_QuadPointLambda_Key, "Quadruple Points Lambda", "", 0.1f));
+  params.insert(std::make_unique<Float32Parameter>(k_SurfacePointLambda_Key, "Outer Points Lambda", "", 0.0f));
+  params.insert(std::make_unique<Float32Parameter>(k_SurfaceTripleLineLambda_Key, "Outer Triple Line Lambda", "", 0.0f));
+  params.insert(std::make_unique<Float32Parameter>(k_SurfaceQuadPointLambda_Key, "Outer Quadruple Points Lambda", "", 0.0f));
+
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseTaubinSmoothing_Key, k_MuFactor_Key, true);
 

@@ -40,9 +40,9 @@ ImageGeom::ImageGeom(ImageGeom&& other) noexcept
 }
 
 ImageGeom::~ImageGeom() = default;
-DataObject::DataObjectType ImageGeom::getDataObjectType() const
+DataObject::Type ImageGeom::getDataObjectType() const
 {
-  return DataObjectType::ImageGeom;
+  return DataObject::Type::ImageGeom;
 }
 
 ImageGeom* ImageGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)

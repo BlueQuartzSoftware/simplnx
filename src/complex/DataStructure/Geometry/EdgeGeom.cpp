@@ -41,9 +41,9 @@ EdgeGeom::EdgeGeom(EdgeGeom&& other) noexcept
 }
 
 EdgeGeom::~EdgeGeom() = default;
-DataObject::DataObjectType EdgeGeom::getDataObjectType() const
+DataObject::Type EdgeGeom::getDataObjectType() const
 {
-  return DataObjectType::EdgeGeom;
+  return DataObject::Type::EdgeGeom;
 }
 
 EdgeGeom* EdgeGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)

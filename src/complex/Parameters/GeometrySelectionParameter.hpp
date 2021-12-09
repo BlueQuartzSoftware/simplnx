@@ -12,20 +12,22 @@ namespace complex
  * @brief This Filter Parameter describes a specific DataPath where the last DataObject in
  * the path is an ImageGeometry.
  */
-class COMPLEX_EXPORT ImageGeometrySelectionParameter : public MutableDataParameter
+class COMPLEX_EXPORT GeometrySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
+  using AllowedType = DataObject::Type;
+  using AllowedTypes = std::vector<AllowedType>;
 
-  ImageGeometrySelectionParameter() = delete;
-  ImageGeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
-  ~ImageGeometrySelectionParameter() override = default;
+  GeometrySelectionParameter() = delete;
+  GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowTypes);
+  ~GeometrySelectionParameter() override = default;
 
-  ImageGeometrySelectionParameter(const ImageGeometrySelectionParameter&) = delete;
-  ImageGeometrySelectionParameter(ImageGeometrySelectionParameter&&) noexcept = delete;
+  GeometrySelectionParameter(const GeometrySelectionParameter&) = delete;
+  GeometrySelectionParameter(GeometrySelectionParameter&&) noexcept = delete;
 
-  ImageGeometrySelectionParameter& operator=(const ImageGeometrySelectionParameter&) = delete;
-  ImageGeometrySelectionParameter& operator=(ImageGeometrySelectionParameter&&) noexcept = delete;
+  GeometrySelectionParameter& operator=(const GeometrySelectionParameter&) = delete;
+  GeometrySelectionParameter& operator=(GeometrySelectionParameter&&) noexcept = delete;
 
   /**
    * @brief Returns the parameter's uuid.
@@ -72,6 +74,12 @@ public:
   ValueType defaultPath() const;
 
   /**
+   * @brief
+   * @return
+   */
+  AllowedTypes getAllowedTypes() const;
+
+  /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
    * @param dataStructure The active DataStructure to use during validation
    * @param value The value to validate
@@ -98,7 +106,8 @@ public:
 
 private:
   ValueType m_DefaultValue = {};
+  AllowedTypes m_AllowedTypes = {DataObject::Type::Any};
 };
 } // namespace complex
 
-COMPLEX_DEF_PARAMETER_TRAITS(complex::ImageGeometrySelectionParameter, "3804cd7f-4ee4-400f-80ad-c5af17735de2");
+COMPLEX_DEF_PARAMETER_TRAITS(complex::GeometrySelectionParameter, "3804cd7f-4ee4-400f-80ad-c5af17735de2");

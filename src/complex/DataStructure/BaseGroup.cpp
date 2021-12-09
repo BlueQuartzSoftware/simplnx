@@ -36,9 +36,9 @@ BaseGroup::BaseGroup(BaseGroup&& other) noexcept
 
 BaseGroup::~BaseGroup() = default;
 
-DataObject::DataObjectType BaseGroup::getDataObjectType() const
+DataObject::Type BaseGroup::getDataObjectType() const
 {
-  return DataObjectType::BaseGroup;
+  return Type::BaseGroup;
 }
 
 const DataMap& BaseGroup::getDataMap() const

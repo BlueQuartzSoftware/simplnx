@@ -47,9 +47,9 @@ VertexGeom::VertexGeom(VertexGeom&& other) noexcept
 }
 
 VertexGeom::~VertexGeom() = default;
-DataObject::DataObjectType VertexGeom::getDataObjectType() const
+DataObject::Type VertexGeom::getDataObjectType() const
 {
-  return DataObjectType::VertexGeom;
+  return DataObject::Type::VertexGeom;
 }
 
 VertexGeom* VertexGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)

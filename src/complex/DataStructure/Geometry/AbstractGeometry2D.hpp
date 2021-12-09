@@ -36,7 +36,7 @@ public:
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */
-  DataObject::DataObjectType getDataObjectType() const override;
+  DataObject::Type getDataObjectType() const override;
 
   /**
    * @brief Resizes the vertex list with the new number of vertices.
