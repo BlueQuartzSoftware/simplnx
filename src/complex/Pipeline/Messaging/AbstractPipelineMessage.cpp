@@ -7,7 +7,7 @@ AbstractPipelineMessage::AbstractPipelineMessage(AbstractPipelineNode* node)
 {
 }
 
-AbstractPipelineMessage ::~AbstractPipelineMessage() = default;
+AbstractPipelineMessage::~AbstractPipelineMessage() = default;
 
 AbstractPipelineNode* AbstractPipelineMessage::getNode() const
 {
