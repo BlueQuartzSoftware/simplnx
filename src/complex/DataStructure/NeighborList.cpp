@@ -269,7 +269,7 @@ T NeighborList<T>::getValue(int32 grainId, int32 index, bool& ok) const
   if(index < 0 || static_cast<usize>(index) >= vec->size())
   {
     ok = false;
-    return static_cast<T>(-1);
+    return -1;
   }
   return (*vec)[index];
 }
