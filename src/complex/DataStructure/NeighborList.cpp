@@ -223,7 +223,7 @@ void NeighborList<T>::resizeTuples(usize numTuples)
 template <typename T>
 void NeighborList<T>::addEntry(int32 grainId, value_type value)
 {
-  if(grainId >= static_cast<int>(m_Array.size()))
+  if(grainId >= static_cast<int32>(m_Array.size()))
   {
     usize old = m_Array.size();
     m_Array.resize(grainId + 1);
@@ -248,7 +248,7 @@ void NeighborList<T>::clearAllLists()
 template <typename T>
 void NeighborList<T>::setList(int32 grainId, SharedVectorType neighborList)
 {
-  if(grainId >= static_cast<int>(m_Array.size()))
+  if(grainId >= static_cast<int32>(m_Array.size()))
   {
     usize old = m_Array.size();
     m_Array.resize(grainId + 1);
@@ -277,13 +277,13 @@ T NeighborList<T>::getValue(int32 grainId, int32 index, bool& ok) const
 template <typename T>
 int32 NeighborList<T>::getNumberOfLists() const
 {
-  return static_cast<int>(m_Array.size());
+  return static_cast<int32>(m_Array.size());
 }
 
 template <typename T>
 int32 NeighborList<T>::getListSize(int32 grainId) const
 {
-  return static_cast<int>(m_Array[grainId]->size());
+  return static_cast<int32>(m_Array[grainId]->size());
 }
 
 template <typename T>
