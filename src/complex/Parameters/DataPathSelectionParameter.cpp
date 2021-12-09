@@ -11,7 +11,7 @@
 namespace complex
 {
 DataPathSelectionParameter::DataPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty)
-: MutableDataParameter(name, humanName, helpText, Category::Created)
+: MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
 , m_AllowEmpty(allowEmpty)
 {
