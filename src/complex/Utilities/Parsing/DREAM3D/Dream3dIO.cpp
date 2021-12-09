@@ -421,6 +421,20 @@ complex::DataStructure complex::DREAM3D::ImportDataStructureFromFile(const H5::F
   return DataStructure();
 }
 
+Result<complex::DataStructure> complex::DREAM3D::ImportDataStructureFromFile(const std::filesystem::path& filePath)
+{
+  H5::FileReader fileReader(filePath);
+  if(!fileReader.isValid())
+  {
+    return MakeErrorResult<DataStructure>(-1, fmt::format("complex::DREAM3D::ImportDataStructureFromFile: Unable to open '{}' for reading", filePath.string()));
+  }
+
+  H5::ErrorType error = 0;
+  DataStructure dataStructure = ImportDataStructureFromFile(fileReader, error);
+
+  return {std::move(dataStructure)};
+}
+
 complex::Pipeline complex::DREAM3D::ImportPipelineFromFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode)
 {
   errorCode = 0;
@@ -447,6 +461,20 @@ complex::Pipeline complex::DREAM3D::ImportPipelineFromFile(const H5::FileReader&
   return std::move(pipelineResult.value());
 }
 
+Result<complex::Pipeline> complex::DREAM3D::ImportPipelineFromFile(const std::filesystem::path& filePath)
+{
+  H5::FileReader fileReader(filePath);
+  if(!fileReader.isValid())
+  {
+    return MakeErrorResult<Pipeline>(-1, fmt::format("complex::DREAM3D::ImportPipelineFromFile: Unable to open '{}' for reading", filePath.string()));
+  }
+
+  H5::ErrorType error = 0;
+  Pipeline pipeline = ImportPipelineFromFile(fileReader, error);
+
+  return {std::move(pipeline)};
+}
+
 complex::DREAM3D::FileData complex::DREAM3D::ReadFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode)
 {
   errorCode = 0;
@@ -464,6 +492,19 @@ complex::DREAM3D::FileData complex::DREAM3D::ReadFile(const H5::FileReader& file
   }
 
   return {pipeline, dataStructure};
+}
+
+Result<complex::DREAM3D::FileData> complex::DREAM3D::ReadFile(const std::filesystem::path& path)
+{
+  H5::FileReader reader(path);
+  H5::ErrorType error = 0;
+
+  FileData fileData = ReadFile(reader, error);
+  if(error < 0)
+  {
+    return MakeErrorResult<FileData>(-1, fmt::format("complex::DREAM3D::ReadFile: Unable to read '{}'", path.string()));
+  }
+  return {std::move(fileData)};
 }
 
 H5::ErrorType WritePipeline(H5::FileWriter& fileWriter, const Pipeline& pipeline)
