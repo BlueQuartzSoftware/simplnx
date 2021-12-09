@@ -275,6 +275,44 @@ private:
   value_type m_InitValue;
 };
 
+template <>
+DataType COMPLEX_EXPORT NeighborList<int8>::getDataType() const;
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<int16>::getDataType() const;
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<int32>::getDataType() const;
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<int64>::getDataType() const;
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<uint8>::getDataType() const;
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<uint16>::getDataType() const;
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<uint32>::getDataType() const;
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<uint64>::getDataType() const;
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<bool>::getDataType() const;
+
+#if defined(__APPLE__)
+template <>
+DataType COMPLEX_EXPORT NeighborList<unsigned long>::getDataType() const;
+#endif
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<float32>::getDataType() const;
+
+template <>
+DataType COMPLEX_EXPORT NeighborList<float64>::getDataType() const;
+
 using Int32NeighborListType = NeighborList<int32_t>;
 using FloatNeighborListType = NeighborList<float>;
 
