@@ -40,7 +40,7 @@ static const AbstractGeometry::SharedFaceList* createFaceList(AbstractGeometry* 
 {
   auto ds = geom->getDataStructure();
   auto dataStore = std::make_unique<DataStore<AbstractGeometry::MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{4});
-  auto dataArr = AbstractGeometry::SharedFaceList ::Create(*ds, "Faces", std::move(dataStore), geom->getId());
+  auto dataArr = AbstractGeometry::SharedFaceList::Create(*ds, "Faces", std::move(dataStore), geom->getId());
   REQUIRE(dataArr != nullptr);
   return dynamic_cast<const AbstractGeometry::SharedFaceList*>(dataArr);
 }
