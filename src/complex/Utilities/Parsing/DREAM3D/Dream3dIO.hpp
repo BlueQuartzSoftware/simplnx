@@ -53,6 +53,18 @@ COMPLEX_EXPORT PipelineVersionType GetPipelineVersion(const H5::FileReader& file
 COMPLEX_EXPORT FileData ReadFile(const H5::FileReader& fileReader, H5::ErrorType& errorType);
 
 /**
+ * @brief Imports and returns the Pipeline / DataStructure pair from the target
+ * .dream3d file. If an error occurs while reading the file, the provided error
+ * code is updated accordingly.
+ *
+ * This method imports both current and legacy DataStructures but will return
+ * an empty Pipeline when given a legacy file.
+ * @param path
+ * @return Result<FileData>
+ */
+COMPLEX_EXPORT Result<FileData> ReadFile(const std::filesystem::path& path);
+
+/**
  * @brief Writes a .dream3d file with the specified data.
  * @param fileWriter
  * @param fileData
@@ -89,6 +101,14 @@ COMPLEX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataS
 COMPLEX_EXPORT complex::DataStructure ImportDataStructureFromFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode);
 
 /**
+ * @brief Imports and returns the DataStructure from the target .dream3d file.
+ * This method imports both current and legacy DataStructures.
+ * @param filePath
+ * @return complex::DataStructure
+ */
+COMPLEX_EXPORT Result<complex::DataStructure> ImportDataStructureFromFile(const std::filesystem::path& filePath);
+
+/**
  * @brief Imports and returns a Pipeline from the target .dream3d file.
  * If an error occurs while reading the file, the provided error code is updated accordingly.
  *
@@ -98,5 +118,14 @@ COMPLEX_EXPORT complex::DataStructure ImportDataStructureFromFile(const H5::File
  * @return complex::Pipeline
  */
 COMPLEX_EXPORT complex::Pipeline ImportPipelineFromFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode);
+
+/**
+ * @brief Imports and returns a Pipeline from the target .dream3d file.
+ * This method does not import legacy Pipelines.
+ * @param fileReader
+ * @param errorCode
+ * @return complex::Pipeline
+ */
+COMPLEX_EXPORT Result<complex::Pipeline> ImportPipelineFromFile(const std::filesystem::path& filePath);
 } // namespace DREAM3D
 } // namespace complex
