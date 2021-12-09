@@ -90,13 +90,6 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
     return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exists at path '{}'", prefix, value.toString()));
   }
 
-  const DataGroup* dataGroup = dynamic_cast<const DataGroup*>(object);
-  if(dataGroup != nullptr)
-  {
-    return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Type_Error,
-                                      fmt::format("{}Object at path '{}' is a DataGroup but needs to be a DataArray.", prefix, value.toString()));
-  }
-
   const IDataArray* dataArray = dynamic_cast<const IDataArray*>(object);
   if(dataArray == nullptr)
   {
