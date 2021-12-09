@@ -526,12 +526,12 @@ H5::ErrorType complex::DREAM3D::WriteFile(H5::FileWriter& fileWriter, const Pipe
   return errorCode;
 }
 
-bool complex::DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline)
+Result<> complex::DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline)
 {
   Result<H5::FileWriter> fileWriterResult = H5::FileWriter::CreateFile(path);
   if(fileWriterResult.invalid())
   {
-    return false;
+    return ConvertResult(std::move(fileWriterResult));
   }
 
   H5::FileWriter fileWriter = std::move(fileWriterResult.value());
@@ -539,8 +539,8 @@ bool complex::DREAM3D::WriteFile(const std::filesystem::path& path, const DataSt
   H5::ErrorType error = WriteFile(fileWriter, Pipeline(), dataStructure);
   if(error < 0)
   {
-    return false;
+    return MakeErrorResult(-2, fmt::format("complex::DREAM3D::WriteFile: Unable to write DREAM3D file with HDF5 error {}", error));
   }
 
-  return true;
+  return {};
 }
