@@ -13,7 +13,7 @@
 namespace complex
 {
 GeometrySelectionParameter::GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                        const AllowedTypes& allowedTypes)
+                                                       const AllowedTypes& allowedTypes)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
 , m_AllowedTypes(allowedTypes)
