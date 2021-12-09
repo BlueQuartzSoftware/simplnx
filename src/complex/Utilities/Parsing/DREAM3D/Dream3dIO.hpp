@@ -74,7 +74,7 @@ COMPLEX_EXPORT H5::ErrorType WriteFile(H5::FileWriter& fileWriter, const Pipelin
  * @param dataStructure
  * @return bool
  */
-COMPLEX_EXPORT bool WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline = {});
+COMPLEX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline = {});
 
 /**
  * @brief Imports and returns the DataStructure from the target .dream3d file.
