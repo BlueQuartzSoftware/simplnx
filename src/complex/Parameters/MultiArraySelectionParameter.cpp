@@ -104,7 +104,7 @@ Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataSt
     const DataObject* object = dataStructure.getData(path);
     if(object == nullptr)
     {
-      return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exists at path '{}'", prefix, path.toString()));
+      return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, path.toString()));
     }
   }
 

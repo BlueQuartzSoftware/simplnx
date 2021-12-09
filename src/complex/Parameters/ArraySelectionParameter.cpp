@@ -87,7 +87,7 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
   const DataObject* object = dataStructure.getData(value);
   if(object == nullptr)
   {
-    return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exists at path '{}'", prefix, value.toString()));
+    return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
   const IDataArray* dataArray = dynamic_cast<const IDataArray*>(object);
