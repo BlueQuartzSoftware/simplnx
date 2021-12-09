@@ -77,8 +77,8 @@ void AbstractPlugin::addFilter(FilterCreationFunc filterFunc)
   if(m_InitializerMap.count(uuid) > 0)
   {
     IFilter::UniquePointer existingFilter = m_InitializerMap[uuid]();
-    throw std::runtime_error(fmt::format("Attempted to add filter '{}' with uuid '{}' in plugin '{}', but filter '{}' already exists with that uuid", filter->name(), uuid.str(), getName(),
-                                         existingFilter->name()));
+    throw std::runtime_error(
+        fmt::format("Attempted to add filter '{}' with uuid '{}' in plugin '{}', but filter '{}' already exists with that uuid", filter->name(), uuid.str(), getName(), existingFilter->name()));
   }
 
   m_FilterHandles.insert(FilterHandle(filter->humanName(), filter->className(), uuid, getId()));
