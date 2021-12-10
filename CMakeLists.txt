@@ -494,6 +494,12 @@ target_include_directories(complex
     $<INSTALL_INTERFACE:include>
 )
 
+
+get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
+if("${ComplexPluginTargets}" STREQUAL "")
+  set_property(GLOBAL PROPERTY ComplexPluginTargets "")
+endif()
+
 #------------------------------------------------------------------------------
 # Add in the ComplexCore Plugin
 set(P_PLUGIN_NAME "ComplexCore")

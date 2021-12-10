@@ -185,6 +185,14 @@ function(create_complex_plugin)
   add_library(${ARGS_NAME} SHARED)
   add_library(complex::${ARGS_NAME} ALIAS ${ARGS_NAME})
 
+
+  #------------------------------------------------------------------------------
+  # Add the plugin to the global list of plugins. This is needed for installation.
+  #------------------------------------------------------------------------------  
+  get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
+  set(ComplexPluginTargets ${ComplexPluginTargets} ${ARGS_NAME})
+  set_property(GLOBAL PROPERTY ComplexPluginTargets ${ComplexPluginTargets})
+  
   set_target_properties(${ARGS_NAME}
     PROPERTIES
       FOLDER "Plugins/${ARGS_NAME}"
@@ -241,20 +249,22 @@ function(create_complex_plugin)
       $<BUILD_INTERFACE:${ARGS_GENERATED_DIR}>
   )
 
-  install(TARGETS ${ARGS_NAME}
-    PUBLIC_HEADER
-      DESTINATION include/${ARGS_NAME}
-    RUNTIME
-      DESTINATION ${CMAKE_INSTALL_BINDIR}
-      COMPONENT ${ARGS_NAME}_Runtime
-    LIBRARY
-      DESTINATION ${CMAKE_INSTALL_LIBDIR}
-      COMPONENT ${ARGS_NAME}_Runtime
-      NAMELINK_COMPONENT ${ARGS_NAME}_Development
-    ARCHIVE
-      DESTINATION ${CMAKE_INSTALL_LIBDIR}
-      COMPONENT ${ARGS_NAME}_Development
-  )
+  if(COMPLEX_ENABLE_INSTALL)
+    install(TARGETS ${ARGS_NAME}
+      PUBLIC_HEADER
+        DESTINATION include/${ARGS_NAME}
+      RUNTIME
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        COMPONENT ${ARGS_NAME}_Runtime
+      LIBRARY
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        COMPONENT ${ARGS_NAME}_Runtime
+        NAMELINK_COMPONENT ${ARGS_NAME}_Development
+      ARCHIVE
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        COMPONENT ${ARGS_NAME}_Development
+    )
+  endif()
 endfunction()
 
 # -----------------------------------------------------------------------------
