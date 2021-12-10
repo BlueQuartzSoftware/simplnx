@@ -21,6 +21,7 @@ set(FilterList
   FindNeighborListStatistics
   ImportDREAM3DFilter
   ImportTextFilter
+  InterpolatePointCloudToRegularGridFilter
   LaplacianSmoothingFilter
   LinkGeometryDataFilter
   MultiThresholdObjects

@@ -7,6 +7,7 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 
@@ -43,6 +44,7 @@ inline constexpr StringLiteral k_SmallIN1002("Small IN1002");
 inline constexpr StringLiteral k_SmallIN100("Small IN100");
 inline constexpr StringLiteral k_EbsdScanData("EBSD Scan Data");
 inline constexpr StringLiteral k_ImageGeometry("Image Geometry");
+inline constexpr StringLiteral k_VertexGeometry("Vertex Geometry");
 inline constexpr StringLiteral k_ConfidenceIndex("Confidence Index");
 inline constexpr StringLiteral k_FeatureIds("FeatureIds");
 inline constexpr StringLiteral k_ImageQuality("Image Quality");
@@ -133,6 +135,9 @@ inline DataStructure CreateDataStructure()
   SizeVec3 imageGeomDims = {40, 60, 80};
   imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
 
+  // Create an Vertex Geometry grid for the Scan Data
+  VertexGeom* vertexGeom = VertexGeom::Create(dataGraph, Constants::k_VertexGeometry, scanData->getId());
+
   // Create some DataArrays; The DataStructure keeps a shared_ptr<> to the DataArray so DO NOT put
   // it into another shared_ptr<>
   usize numComponents = 1;
@@ -141,6 +146,7 @@ inline DataStructure CreateDataStructure()
   Float32Array* ci_data = CreateTestDataArray<float>(dataGraph, Constants::k_ConfidenceIndex, tupleShape, {numComponents}, scanData->getId());
   Int32Array* feature_ids_data = CreateTestDataArray<int32>(dataGraph, Constants::k_FeatureIds, tupleShape, {numComponents}, scanData->getId());
   Int32Array* phases_data = CreateTestDataArray<int32>(dataGraph, "Phases", tupleShape, {numComponents}, scanData->getId());
+  USizeArray* voxelIndices = CreateTestDataArray<usize>(dataGraph, "Voxel Indices", tupleShape, {numComponents}, scanData->getId());
 
   BoolArray* conditionalArray = CreateTestDataArray<bool>(dataGraph, "ConditionalArray", tupleShape, {1}, scanData->getId());
   conditionalArray->fill(true);
