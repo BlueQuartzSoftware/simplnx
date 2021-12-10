@@ -137,7 +137,7 @@ void determineKernel(uint64 interpolationTechnique, const FloatVec3& sigmas, std
         }
         else if(interpolationTechnique == 1)
         {
-          kernel[counter] = std::expf(-((x * x) / (2 * sigmas[0] * sigmas[0]) + (y * y) / (2 * sigmas[1] * sigmas[1]) + (z * z) / (2 * sigmas[2] * sigmas[2])));
+          kernel[counter] = static_cast<float32>(std::exp(-((x * x) / (2 * sigmas[0] * sigmas[0]) + (y * y) / (2 * sigmas[1] * sigmas[1]) + (z * z) / (2 * sigmas[2] * sigmas[2]))));
         }
         counter++;
       }
@@ -156,7 +156,7 @@ void determineKernelDistances(std::vector<float32>& kernelValDistances, int64 ke
       for(int64 x = -kernelNumVoxels[0]; x <= kernelNumVoxels[0]; x++)
       {
         kernelValDistances[counter] = (x * x * res[0] * res[0]) + (y * y * res[1] * res[1]) + (z * z * res[2] * res[2]);
-        kernelValDistances[counter] = std::sqrtf(kernelValDistances[counter]);
+        kernelValDistances[counter] = static_cast<float32>(std::sqrt(kernelValDistances[counter]));
         counter++;
       }
     }
