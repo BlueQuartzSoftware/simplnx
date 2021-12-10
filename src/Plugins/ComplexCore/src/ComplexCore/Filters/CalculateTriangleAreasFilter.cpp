@@ -135,7 +135,7 @@ IFilter::PreflightResult CalculateTriangleAreasFilter::preflightImpl(const DataS
   // store those actions.
   complex::Result<OutputActions> resultOutputActions;
 
-  std::shared_ptr<TriangleGeom> triangleGeom = dataStructure.getSharedDataAs<TriangleGeom>(pTriangleGeometryDataPath);
+  const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
   if(triangleGeom != nullptr)
   {
     // Create the face areas DataArray Action and store it into the resultOutputActions
