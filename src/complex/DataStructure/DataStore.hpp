@@ -62,6 +62,19 @@ public:
   }
 
   /**
+   * @brief Constructs a DataStore from an existing buffer.
+   * @param buffer
+   * @param tupleShape
+   * @param componentShape
+   */
+  DataStore(std::unique_ptr<value_type[]> buffer, ShapeType tupleShape, ShapeType componentShape)
+  : m_ComponentShape(std::move(componentShape))
+  , m_TupleShape(std::move(tupleShape))
+  , m_Data(std::move(buffer))
+  {
+  }
+
+  /**
    * @brief Copy constructor
    * @param other
    */
@@ -88,6 +101,20 @@ public:
   , m_Data(std::move(other.m_Data))
   {
   }
+
+  /**
+   * @brief Copy assignment.
+   * @param rhs
+   * @return
+   */
+  DataStore& operator=(const DataStore& rhs) = delete;
+
+  /**
+   * @brief Move assignment.
+   * @param rhs
+   * @return
+   */
+  DataStore& operator=(DataStore&& rhs) = default;
 
   ~DataStore() override = default;
 
