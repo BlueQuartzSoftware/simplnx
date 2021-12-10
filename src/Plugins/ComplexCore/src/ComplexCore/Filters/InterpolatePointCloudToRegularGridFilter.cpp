@@ -1,5 +1,7 @@
 #include "InterpolatePointCloudToRegularGridFilter.hpp"
 
+#include <cmath>
+
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
@@ -135,7 +137,7 @@ void determineKernel(uint64 interpolationTechnique, const FloatVec3& sigmas, std
         }
         else if(interpolationTechnique == 1)
         {
-          kernel[counter] = expf(-((x * x) / (2 * sigmas[0] * sigmas[0]) + (y * y) / (2 * sigmas[1] * sigmas[1]) + (z * z) / (2 * sigmas[2] * sigmas[2])));
+          kernel[counter] = std::expf(-((x * x) / (2 * sigmas[0] * sigmas[0]) + (y * y) / (2 * sigmas[1] * sigmas[1]) + (z * z) / (2 * sigmas[2] * sigmas[2])));
         }
         counter++;
       }
@@ -154,7 +156,7 @@ void determineKernelDistances(std::vector<float32>& kernelValDistances, int64 ke
       for(int64 x = -kernelNumVoxels[0]; x <= kernelNumVoxels[0]; x++)
       {
         kernelValDistances[counter] = (x * x * res[0] * res[0]) + (y * y * res[1] * res[1]) + (z * z * res[2] * res[2]);
-        kernelValDistances[counter] = sqrtf(kernelValDistances[counter]);
+        kernelValDistances[counter] = std::sqrtf(kernelValDistances[counter]);
         counter++;
       }
     }
@@ -454,9 +456,9 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
 
   usize maxImageIndex = ((dims[2] - 1) * dims[0] * dims[1]) + ((dims[1] - 1) * dims[0]) + (dims[0] - 1);
 
-  kernelNumVoxels[0] = int64(ceil((kernelSize[0] / res[0]) * 0.5f));
-  kernelNumVoxels[1] = int64(ceil((kernelSize[1] / res[1]) * 0.5f));
-  kernelNumVoxels[2] = int64(ceil((kernelSize[2] / res[2]) * 0.5f));
+  kernelNumVoxels[0] = int64(std::ceil((kernelSize[0] / res[0]) * 0.5f));
+  kernelNumVoxels[1] = int64(std::ceil((kernelSize[1] / res[1]) * 0.5f));
+  kernelNumVoxels[2] = int64(std::ceil((kernelSize[2] / res[2]) * 0.5f));
 
   if(kernelSize[0] < res[0])
   {
