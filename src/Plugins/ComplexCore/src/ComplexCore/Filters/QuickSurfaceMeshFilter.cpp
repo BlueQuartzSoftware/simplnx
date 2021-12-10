@@ -144,7 +144,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   }
   // Create the face NodesType DataArray action and store it
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::int8, std::vector<usize>{static_cast<usize>(3)}, 1, pNodeTypesDataPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::int8, std::vector<usize>{3}, std::vector<usize>{1}, pNodeTypesDataPath);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
   // Create Triangle FaceData (for the Normals) action and store it
@@ -154,7 +154,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   }
   // Create the face Labels DataArray action and store it
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::int32, std::vector<usize>{static_cast<usize>(1)}, 2, pFaceLabelsDataPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::int32, std::vector<usize>{1}, std::vector<usize>{2}, pFaceLabelsDataPath);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 

@@ -13,7 +13,7 @@ class COMPLEX_EXPORT CreateArrayAction : public IDataAction
 public:
   CreateArrayAction() = delete;
 
-  CreateArrayAction(NumericType type, const std::vector<usize>& dims, uint64 nComp, const DataPath& path);
+  CreateArrayAction(NumericType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path);
 
   ~CreateArrayAction() noexcept override;
 
@@ -40,24 +40,24 @@ public:
    * @brief Returns the dimensions of the DataArray to be created.
    * @return
    */
-  std::vector<usize> dims() const;
+  const std::vector<usize>& dims() const;
 
   /**
-   * @brief Returns the number of components of the DataArray to be created.
+   * @brief Returns the component dimensions of the DataArray to be created.
    * @return
    */
-  uint64 numComponents() const;
+  const std::vector<usize>& componentDims() const;
 
   /**
    * @brief Returns the path of the DataArray to be created.
    * @return
    */
-  DataPath path() const;
+  const DataPath& path() const;
 
 private:
   NumericType m_Type;
   std::vector<usize> m_Dims;
-  uint64 m_NComp;
+  std::vector<usize> m_CDims;
   DataPath m_Path;
 };
 } // namespace complex

@@ -66,7 +66,7 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
   auto numTuples = args.value<uint64>(k_NumTuples_Key);
   auto dataArrayPath = args.value<DataPath>(k_DataPath_Key);
 
-  auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{numTuples}, components, dataArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{numTuples}, std::vector<usize>{components}, dataArrayPath);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));
