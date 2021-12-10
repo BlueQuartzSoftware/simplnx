@@ -166,6 +166,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Common/ScopeGuard.hpp
   ${COMPLEX_SOURCE_DIR}/Common/StringLiteral.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Types.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/TypesUtility.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Uuid.hpp
 
   ${COMPLEX_SOURCE_DIR}/Common/ComplexRange.hpp
