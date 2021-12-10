@@ -5,6 +5,7 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
+#include "complex/DataStructure/NeighborList.hpp"
 #include "complex/Filter/Output.hpp"
 #include "complex/Utilities/TemplateHelpers.hpp"
 #include "complex/complex_export.hpp"
@@ -270,6 +271,46 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
   if(dataArray == nullptr)
   {
     return MakeErrorResult(-264, fmt::format("Unable to create DataArray at '{}'", path.toString()));
+  }
+
+  return {};
+}
+
+/**
+ * @brief Creates a NeighborList array with the given properties
+ * @tparam T Primitive Type (int, float, ...)
+ * @param dataStructure The DataStructure to use
+ * @param tupleShape The Tuple Dimensions
+ * @param path The DataPath to where the list  will be stored.
+ * @param mode The mode to assume: PREFLIGHT or EXECUTE. Preflight will NOT allocate any storage. EXECUTE will allocate the memory/storage
+ * @return
+ */
+template <class T>
+Result<> CreateNeighbors(DataStructure& dataStructure, usize numTuples, const DataPath& path, IDataAction::Mode mode)
+{
+  auto parentPath = path.getParent();
+
+  std::optional<DataObject::IdType> id;
+
+  if(parentPath.getLength() != 0)
+  {
+    auto* parentObject = dataStructure.getData(parentPath);
+    if(parentObject == nullptr)
+    {
+      return MakeErrorResult(-262, fmt::format("Parent object \"{}\" does not exist", parentPath.toString()));
+    }
+
+    id = parentObject->getId();
+  }
+
+  usize last = path.getLength() - 1;
+
+  std::string name = path[last];
+
+  auto neighborList = NeighborList<T>::Create(dataStructure, name, numTuples, id);
+  if(neighborList == nullptr)
+  {
+    return MakeErrorResult(-264, fmt::format("Unable to create NeighborList at \"{}\"", path.toString()));
   }
 
   return {};

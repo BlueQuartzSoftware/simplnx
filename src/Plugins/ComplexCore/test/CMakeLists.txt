@@ -10,6 +10,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ConditionalSetValueTest.cpp
   FindDifferencesMapTest.cpp
   FindNeighborListStatisticsTest.cpp
+  InterpolatePointCloudToRegularGridTest.cpp
   RobustAutomaticThresholdTest.cpp
   CreateImageGeometryTest.cpp
   StlFileReaderTest.cpp
