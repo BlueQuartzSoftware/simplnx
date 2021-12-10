@@ -260,12 +260,12 @@ inline constexpr bool operator>=(const Uuid& lhs, const Uuid& rhs) noexcept
 namespace std
 {
 template <>
-struct hash<complex::Uuid>
+struct hash<::complex::Uuid>
 {
-  std::size_t operator()(const complex::Uuid& value) const noexcept
+  std::size_t operator()(const ::complex::Uuid& value) const noexcept
   {
-    std::uint64_t v1 = complex::bit_cast_ptr<std::uint64_t>(value.data.data());
-    std::uint64_t v2 = complex::bit_cast_ptr<std::uint64_t>(value.data.data() + sizeof(v1));
+    std::uint64_t v1 = ::complex::bit_cast_ptr<std::uint64_t>(value.data.data());
+    std::uint64_t v2 = ::complex::bit_cast_ptr<std::uint64_t>(value.data.data() + sizeof(v1));
     return v1 ^ v2;
   }
 };
