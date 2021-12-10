@@ -59,8 +59,7 @@ std::string TooltipGenerator::generateHTML() const
 {
   TooltipRowItem spacer;
 
-  std::string html;
-  std::stringstream ss(html);
+  std::stringstream ss;
 
   ss << "<html><head></head>\n";
   ss << "<body>\n";
@@ -75,13 +74,12 @@ std::string TooltipGenerator::generateHTML() const
   ss << rowToHTML(spacer);
   ss << "</tbody></table>\n";
   ss << "</body></html>";
-  return html;
+  return ss.str();
 }
 
 std::string TooltipGenerator::rowToHTML(const TooltipRowItem& row) const
 {
-  std::string html;
-  std::stringstream ss(html);
+  std::stringstream ss;
 
   switch(row.getType())
   {
@@ -96,5 +94,5 @@ std::string TooltipGenerator::rowToHTML(const TooltipRowItem& row) const
     break;
   }
 
-  return html;
+  return ss.str();
 }
