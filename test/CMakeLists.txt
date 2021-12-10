@@ -14,6 +14,8 @@ add_subdirectory(${complex_SOURCE_DIR}/src/Plugins/TestOne ${complex_BINARY_DIR}
 add_subdirectory(${complex_SOURCE_DIR}/src/Plugins/TestTwo ${complex_BINARY_DIR}/Plugins/TestTwo)
 MATH(EXPR COMPLEX_PLUGIN_COUNT "${COMPLEX_PLUGIN_COUNT}+2")
 
+add_subdirectory(UnitTestCommon)
+
 add_executable(complex_test 
   ${COMPLEX_TEST_DIRS_HEADER}
   complex_test_main.cpp
@@ -41,6 +43,7 @@ target_link_libraries(complex_test
     complex
     ComplexCore
     Catch2::Catch2
+    complex::UnitTestCommon
 )
 
 # Require that the test plugins are built before tests because some tests

@@ -293,7 +293,6 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/UnitTestCommon.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp

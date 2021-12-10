@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Common/Result.hpp"
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataObject.hpp"
@@ -9,7 +10,30 @@
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 
-using namespace complex;
+#include <catch2/catch.hpp>
+
+#include <fmt/format.h>
+
+#define COMPLEX_RESULT_CATCH_PRINT(result)                                                                                                                                                             \
+  for(const auto& warning : result.warnings())                                                                                                                                                         \
+  {                                                                                                                                                                                                    \
+    WARN(fmt::format("{} : {}", warning.code, warning.message));                                                                                                                                       \
+  }                                                                                                                                                                                                    \
+  if(result.invalid())                                                                                                                                                                                 \
+  {                                                                                                                                                                                                    \
+    for(const auto& error : result.errors())                                                                                                                                                           \
+    {                                                                                                                                                                                                  \
+      UNSCOPED_INFO(fmt::format("{} : {}", error.code, error.message));                                                                                                                                \
+    }                                                                                                                                                                                                  \
+  }
+
+#define COMPLEX_RESULT_REQUIRE_VALID(result)                                                                                                                                                           \
+  COMPLEX_RESULT_CATCH_PRINT(result);                                                                                                                                                                  \
+  REQUIRE(result.valid());
+
+#define COMPLEX_RESULT_REQUIRE_INVALID(result)                                                                                                                                                         \
+  COMPLEX_RESULT_CATCH_PRINT(result);                                                                                                                                                                  \
+  REQUIRE(result.invalid());
 
 namespace complex
 {
