@@ -4,7 +4,7 @@
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/unit_test/complex_test_dirs.hpp"
 
-#include "complex/Utilities/UnitTestCommon.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "ComplexCore/Filters/DeleteData.hpp"
 

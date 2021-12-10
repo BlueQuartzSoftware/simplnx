@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Utilities/UnitTestCommon.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/ConditionalSetValue.hpp"

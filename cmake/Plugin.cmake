@@ -225,7 +225,7 @@ function(create_complex_plugin)
   set(${ARGS_NAME}_ALL_HDRS
     ${${ARGS_NAME}_Plugin_HDRS}
     ${${ARGS_NAME}_GENERATED_HEADERS}
-    )
+  )
 
   target_sources(${ARGS_NAME}
     PRIVATE
@@ -299,6 +299,7 @@ function(create_complex_plugin_unit_test)
       complex
       ${ARGS_PLUGIN_NAME}
       Catch2::Catch2
+      complex::UnitTestCommon
   )
 
   #------------------------------------------------------------------------------
