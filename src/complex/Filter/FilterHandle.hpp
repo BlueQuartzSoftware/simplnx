@@ -143,16 +143,16 @@ bool COMPLEX_EXPORT operator!=(const FilterHandle& lhs, const FilterHandle& rhs)
 namespace std
 {
 template <>
-struct hash<complex::FilterHandle>
+struct hash<::complex::FilterHandle>
 {
   /**
    * @brief Hash operator for placing in a collection that requires hashing values.
    * @param value
    * @return std::size_t
    */
-  std::size_t operator()(const complex::FilterHandle& value) const noexcept
+  std::size_t operator()(const ::complex::FilterHandle& value) const noexcept
   {
-    std::hash<complex::FilterHandle::FilterIdType> hasher;
+    std::hash<::complex::FilterHandle::FilterIdType> hasher;
     std::size_t h1 = hasher(value.getPluginId());
     std::size_t h2 = hasher(value.getFilterId());
     return h1 ^ (h2 << 1);
