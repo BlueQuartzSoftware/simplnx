@@ -403,7 +403,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
 
   if(storeKernelDistances)
   {
-    auto action = std::make_unique<CreateArrayAction>(NumericType::float32, std::vector<usize>{0}, cDims, kernelDistancesDataPath);
+    auto action = std::make_unique<CreateArrayAction>(NumericType::float32, std::vector<usize>{0}, std::vector<usize>{cDims}, kernelDistancesDataPath);
     actions.actions.push_back(std::move(action));
   }
 

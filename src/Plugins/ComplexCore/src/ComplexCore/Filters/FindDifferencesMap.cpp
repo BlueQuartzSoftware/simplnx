@@ -272,7 +272,7 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
   auto cDims = firstInputArray->getNumberOfComponents();
   auto tDims = firstInputArray->getNumberOfTuples();
   auto numericType = getNumericType(firstInputArray);
-  auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{tDims}, cDims, differenceMapArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{tDims}, std::vector<usize>{cDims}, differenceMapArrayPath);
 
   //
   OutputActions actions;

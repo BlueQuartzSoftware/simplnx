@@ -162,7 +162,7 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
   }
   // Create the face Normals DataArray action and store it
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::float64, std::vector<usize>{static_cast<usize>(numTriangles)}, 3, pFaceNormalsPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::float64, std::vector<usize>{static_cast<usize>(numTriangles)}, std::vector<usize>{3}, pFaceNormalsPath);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 

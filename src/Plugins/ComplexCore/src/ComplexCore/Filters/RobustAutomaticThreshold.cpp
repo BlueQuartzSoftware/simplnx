@@ -172,7 +172,7 @@ IFilter::PreflightResult RobustAutomaticThreshold::preflightImpl(const DataStruc
     return {MakeErrorResult<OutputActions>(k_IncorrectInputArrayType, "Input array and gradient array have mismatched dimensions")};
   }
 
-  auto action = std::make_unique<CreateArrayAction>(NumericType::uint8, tupleDims, numComponents, createdMaskPath);
+  auto action = std::make_unique<CreateArrayAction>(NumericType::uint8, tupleDims, std::vector<usize>{numComponents}, createdMaskPath);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));

@@ -75,7 +75,7 @@ IFilter::PreflightResult ImportTextFilter::preflightImpl(const DataStructure& da
   auto arrayPath = args.value<DataPath>(k_DataArrayKey);
   auto nTuples = args.value<uint64>(k_NTuplesKey);
   auto nComp = args.value<uint64>(k_NCompKey);
-  auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{nTuples}, nComp, arrayPath);
+  auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{nTuples}, std::vector<usize>{nComp}, arrayPath);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));

@@ -80,7 +80,7 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
   }
 
   std::vector<usize> dims = getDims(data, thresholdPaths);
-  auto action = std::make_unique<CreateArrayAction>(NumericType::uint8, dims, 1, maskArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(NumericType::uint8, dims, std::vector<usize>{1}, maskArrayPath);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));

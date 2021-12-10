@@ -139,7 +139,7 @@ IFilter::PreflightResult CalculateTriangleAreasFilter::preflightImpl(const DataS
   if(triangleGeom != nullptr)
   {
     // Create the face areas DataArray Action and store it into the resultOutputActions
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, 1, pCalculatedAreasDataPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{1}, pCalculatedAreasDataPath);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
