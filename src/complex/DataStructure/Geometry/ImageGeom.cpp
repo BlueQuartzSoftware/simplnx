@@ -557,7 +557,7 @@ H5::ErrorType ImageGeom::readHdf5(H5::DataStructureReader& dataStructureReader, 
   // Read DataObject ID
   m_VoxelSizesId = ReadH5DataId(groupReader, H5Constants::k_VoxelSizesTag);
 
-  return 0;
+  return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
 H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
