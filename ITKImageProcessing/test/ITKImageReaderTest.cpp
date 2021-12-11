@@ -1,67 +1,66 @@
-/**
- * This file is auto generated from the original ITKImageProcessing/ITKImageReader
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
- *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
- *
- * 4: Add additional unit tests to actually test each code path within the filter
- *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
- *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
- *
- * When you start working on this unit test remove "[ITKImageReader][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
- */
-
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "ITKImageProcessing/Filters/ITKImageReader.hpp"
+#include "ITKImageProcessing/ITKImageProcessingPlugin.hpp"
+#include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
+
+#include "ITKImageProcessing/Filters/ITKImageWriter.hpp"
+
+#include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataStore.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
+
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
-namespace fs = std::filesystem;
 
-#include "ITKImageProcessing/Filters/ITKImageReader.hpp"
-#include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
+namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKImageReader: Instantiation and Parameter Check", "[ITKImageProcessing][ITKImageReader][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKImageReader: Read PNG", "[ITKImageProcessing][ITKImageReader]")
 {
-  // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKImageReader filter;
   DataStructure ds;
   Arguments args;
 
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insertOrAssign(ITKImageReader::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ITKImageReader::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ITKImageReader::k_ImageDataArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  fs::path filePath = fs::path(unit_test::k_SourceDir.view()) / "test/data/PngTest.png";
+  DataPath arrayPath{{"ImageGeom", "ImageArray"}};
+  DataPath imagePath = arrayPath.getParent();
+  args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
+  args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, imagePath);
+  args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, arrayPath);
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(ds, args);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const auto* imageGeom = ds.getDataAs<ImageGeom>(imagePath);
+  REQUIRE(imageGeom != nullptr);
+
+  SizeVec3 imageDims = imageGeom->getDimensions();
+  const SizeVec3 expectedImageDims = {64, 64, 1};
+  REQUIRE(imageDims == expectedImageDims);
+
+  FloatVec3 imageOrigin = imageGeom->getOrigin();
+  const FloatVec3 expectedImageOrigin = {0.0f, 0.0f, 0.0f};
+  REQUIRE(imageOrigin == expectedImageOrigin);
+
+  FloatVec3 imageSpacing = imageGeom->getSpacing();
+  const FloatVec3 expectedImageSpacing = {1.0f, 1.0f, 1.0f};
+  REQUIRE(imageSpacing == expectedImageSpacing);
+
+  const auto* dataArray = ds.getDataAs<DataArray<uint8>>(arrayPath);
+  REQUIRE(dataArray != nullptr);
+
+  const auto& dataStore = dataArray->getIDataStoreRefAs<DataStore<uint8>>();
+  std::vector<usize> arrayDims = dataStore.getTupleShape();
+  const std::vector<usize> expectedArrayDims = {1, 64, 64};
+  REQUIRE(arrayDims == expectedArrayDims);
+
+  std::vector<usize> arrayComponentDims = dataStore.getComponentShape();
+  const std::vector<usize> expectedArrayComponentDims = {3};
+  REQUIRE(arrayComponentDims == expectedArrayComponentDims);
 }
-
-// TEST_CASE("ITKImageProcessing::ITKImageReader: Valid filter execution")
-//{
-//
-//}
-
-// TEST_CASE("ITKImageProcessing::ITKImageReader: InValid filter execution")
-//{
-//
-//}

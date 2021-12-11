@@ -1,6 +1,7 @@
 include("${complex_SOURCE_DIR}/cmake/Plugin.cmake")
 
 set(PLUGIN_NAME "ITKImageProcessing")
+
 #------------------------------------------------------------------------------
 # These are all the filters in the plugin. All filters should be kept in the
 # ITKImageProcessing/src/ITKImageProcessing/Filters/ directory.
@@ -121,43 +122,45 @@ set(FilterList
   ImportAxioVisionV4Montage
   #ImportVectorImageStack # MISSING 1 or more Parameter Implementations
   ImportZenInfoMontage
-
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
-                      FILTER_LIST ${FilterList}
-                      DESCRIPTION "Plugin for ${PLUGIN_NAME}"
-                      VERSION "0.1.0"
+  FILTER_LIST ${FilterList}
+  DESCRIPTION "Plugin for ${PLUGIN_NAME}"
+  VERSION "0.1.0"
 )
 
-#------------------------------------------------------------------------------
-# If there are additional library packages that need to be found, this is where
-# to do that using the usual find_package(....) call
-# find_package(....)
+find_package(ITK REQUIRED)
 
+target_link_libraries(${PLUGIN_NAME}
+  PUBLIC
+    ITKCommon
+    ITKIOImageBase
+    ITKIOBMP
+    ITKIOBioRad
+    ITKIOGE
+    ITKIOGIPL
+    ITKIOJPEG
+    ITKIOMRC
+    ITKIOMeta
+    ITKIONIFTI
+    ITKIONRRD
+    ITKIOPNG
+    ITKIOStimulate
+    ITKIOTIFF
+    ITKIOVTK
+)
 
-#------------------------------------------------------------------------------
-# If there are additional libraries that this plugin needs to link against you
-# can use the target_link_libraries() cmake call
-# target_link_libraries(${PLUGIN_NAME} PUBLIC [name of library])
+target_compile_options(${PLUGIN_NAME}
+  PUBLIC
+    ${ITK_REQUIRED_CXX_FLAGS}
+)
 
-#------------------------------------------------------------------------------
-# If there are additional source files that need to be compiled for this plugin
-# can use the target_sources(...) cmake call
-# target_sources(${PLUGIN_NAME}
-#   PUBLIC
-#     additional header files
-#   PRIVATE
-#     additional source files
-# )
-
-#------------------------------------------------------------------------------
-# If there are additional include directories that are needed for this plugin
-# you can use the target_include_directories(.....) cmake call
-# target_include_directories(${PLUGIN_NAME}
-#     PUBLIC
-#     additional include directories here
-# )
+target_sources(${PLUGIN_NAME}
+  PRIVATE
+    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/ITKArrayHelper.hpp
+    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/ITKArrayHelper.cpp
+)
 
 #------------------------------------------------------------------------------
 # Add in the unit tests for the filters included in this plugin

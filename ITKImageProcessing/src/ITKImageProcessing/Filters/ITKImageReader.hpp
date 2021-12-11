@@ -25,9 +25,8 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FileName_Key = "FileName";
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_ImageDataArrayName_Key = "ImageDataArrayName";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "GeometryPath";
+  static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "ImageDataArrayPath";
 
   /**
    * @brief Returns the name of the filter.
