@@ -1,23 +1,208 @@
 #include "ITKImageReader.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
+#include "complex/DataStructure/DataStore.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "complex/Parameters/StringParameter.hpp"
 
 #include <filesystem>
+
+#include <itkImageFileReader.h>
+
 namespace fs = std::filesystem;
 
 using namespace complex;
+
+namespace
+{
+//------------------------------------------------------------------------------
+std::optional<NumericType> ConvertComponentToNumericType(itk::ImageIOBase::IOComponentEnum component) noexcept
+{
+  using ComponentType = itk::ImageIOBase::IOComponentEnum;
+
+  switch(component)
+  {
+  case ComponentType::UCHAR:
+    return NumericType::uint8;
+  case ComponentType::CHAR:
+    return NumericType::int8;
+  case ComponentType::USHORT:
+    return NumericType::uint16;
+  case ComponentType::SHORT:
+    return NumericType::int16;
+  case ComponentType::UINT:
+    return NumericType::uint32;
+  case ComponentType::INT:
+    return NumericType::int32;
+  case ComponentType::ULONG:
+    return NumericType::uint64;
+  case ComponentType::LONG:
+    return NumericType::int64;
+  case ComponentType::FLOAT:
+    return NumericType::float32;
+  case ComponentType::DOUBLE:
+    return NumericType::float64;
+  default:
+    return {};
+  }
+}
+
+//------------------------------------------------------------------------------
+template <class T>
+void ReadImageIntoDataArray(DataStructure& dataStructure, const DataPath& arrayPath, itk::ImageIOBase& imageIO)
+{
+  auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(arrayPath);
+  auto& dataStore = dataArray.getIDataStoreRefAs<DataStore<T>>();
+  auto imageSize = imageIO.GetImageSizeInBytes();
+  usize arraySize = dataStore.getSize() * sizeof(T);
+  if(arraySize != imageSize)
+  {
+    throw std::runtime_error("ITKImageReader: Image size not equal to array size");
+  }
+  imageIO.Read(dataStore.data());
+}
+
+//------------------------------------------------------------------------------
+Result<> ReadImageExecute(const std::string& fileName, const DataPath& imageGeomPath, const DataPath& arrayPath, DataStructure& dataStructure)
+{
+  try
+  {
+    itk::ImageIOBase::Pointer imageIO = itk::ImageIOFactory::CreateImageIO(fileName.c_str(), itk::ImageIOFactory::ReadMode);
+    if(imageIO == nullptr)
+    {
+      return MakeErrorResult(-5, fmt::format("ITK could not read the given file \"%1\". Format is likely unsupported.", fileName));
+    }
+
+    imageIO->SetFileName(fileName);
+    imageIO->ReadImageInformation();
+
+    itk::ImageIOBase::IOComponentEnum component = imageIO->GetComponentType();
+
+    std::optional<NumericType> numericType = ConvertComponentToNumericType(component);
+    if(!numericType.has_value())
+    {
+      return MakeErrorResult(-4, fmt::format("Unsupported pixel component: {}", imageIO->GetComponentTypeAsString(component)));
+    }
+
+    switch(*numericType)
+    {
+    case NumericType::uint8: {
+      ReadImageIntoDataArray<uint8>(dataStructure, arrayPath, *imageIO);
+      break;
+    }
+    case NumericType::int8: {
+      ReadImageIntoDataArray<int8>(dataStructure, arrayPath, *imageIO);
+      break;
+    }
+    case NumericType::uint16: {
+      ReadImageIntoDataArray<uint16>(dataStructure, arrayPath, *imageIO);
+      break;
+    }
+    case NumericType::int16: {
+      ReadImageIntoDataArray<int16>(dataStructure, arrayPath, *imageIO);
+      break;
+    }
+    case NumericType::uint32: {
+      ReadImageIntoDataArray<uint32>(dataStructure, arrayPath, *imageIO);
+      break;
+    }
+    case NumericType::int32: {
+      ReadImageIntoDataArray<int32>(dataStructure, arrayPath, *imageIO);
+      break;
+    }
+    case NumericType::uint64: {
+      ReadImageIntoDataArray<uint64>(dataStructure, arrayPath, *imageIO);
+      break;
+    }
+    case NumericType::int64: {
+      ReadImageIntoDataArray<int64>(dataStructure, arrayPath, *imageIO);
+      break;
+    }
+    case NumericType::float32: {
+      ReadImageIntoDataArray<float32>(dataStructure, arrayPath, *imageIO);
+      break;
+    }
+    case NumericType::float64: {
+      ReadImageIntoDataArray<float64>(dataStructure, arrayPath, *imageIO);
+      break;
+    }
+    }
+
+  } catch(const itk::ExceptionObject& err)
+  {
+    return MakeErrorResult(-55557, fmt::format("ITK exception was thrown while processing input file: {}", err.what()));
+  }
+
+  return {};
+}
+
+//------------------------------------------------------------------------------
+Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath imageGeomPath, DataPath arrayPath)
+{
+  OutputActions actions;
+
+  try
+  {
+    itk::ImageIOBase::Pointer imageIO = itk::ImageIOFactory::CreateImageIO(fileName.c_str(), itk::ImageIOFactory::ReadMode);
+    if(imageIO == nullptr)
+    {
+      return MakeErrorResult<OutputActions>(-5, fmt::format("ITK could not read the given file \"{}\". Format is likely unsupported.", fileName));
+    }
+
+    imageIO->SetFileName(fileName);
+    imageIO->ReadImageInformation();
+
+    itk::ImageIOBase::IOComponentEnum component = imageIO->GetComponentType();
+
+    std::optional<NumericType> numericType = ConvertComponentToNumericType(component);
+    if(!numericType.has_value())
+    {
+      return MakeErrorResult<OutputActions>(-4, fmt::format("Unsupported pixel component: {}", imageIO->GetComponentTypeAsString(component)));
+    }
+
+    uint32 nDims = imageIO->GetNumberOfDimensions();
+
+    std::vector<usize> dims = {1, 1, 1};
+    std::vector<float32> origin = {0.0f, 0.0f, 0.0f};
+    std::vector<float32> spacing = {1.0f, 1.0f, 1.0f};
+
+    for(uint32 i = 0; i < nDims; i++)
+    {
+      dims[i] = static_cast<usize>(imageIO->GetDimensions(i));
+      origin[i] = static_cast<float32>(imageIO->GetOrigin(i));
+      spacing[i] = static_cast<float32>(imageIO->GetSpacing(i));
+    }
+
+    uint32 nComponents = imageIO->GetNumberOfComponents();
+
+    // DataArray dimensions are stored slowest to fastest, the opposite of ImageGeometry
+    std::vector<usize> arrayDims(dims.crbegin(), dims.crend());
+
+    std::vector<usize> cDims = {nComponents};
+
+    actions.actions.push_back(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), std::move(origin), std::move(spacing)));
+    actions.actions.push_back(std::make_unique<CreateArrayAction>(*numericType, std::move(arrayDims), std::move(cDims), std::move(arrayPath)));
+  } catch(const itk::ExceptionObject& err)
+  {
+    return MakeErrorResult<OutputActions>(-55557, fmt::format("ITK exception was thrown while processing input file: {}", err.what()));
+  }
+
+  return {std::move(actions)};
+}
+
+} // namespace
 
 namespace complex
 {
 //------------------------------------------------------------------------------
 std::string ITKImageReader::name() const
 {
-  return FilterTraits<ITKImageReader>::name.str();
+  return FilterTraits<ITKImageReader>::name;
 }
 
 //------------------------------------------------------------------------------
@@ -41,7 +226,7 @@ std::string ITKImageReader::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKImageReader::defaultTags() const
 {
-  return {"#IO", "#Input", "#Read", "#Import"};
+  return {"io", "input", "read", "import"};
 }
 
 //------------------------------------------------------------------------------
@@ -49,11 +234,10 @@ Parameters ITKImageReader::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<FileSystemPathParameter>(k_FileName_Key, "File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerName_Key, "Data Container", "", DataPath{}));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_FileName_Key, "File", "Input image file", fs::path(""), FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Image Geometry", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayName_Key, "Image Data", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayPath_Key, "Image Data", "", DataPath{}));
 
   return params;
 }
@@ -67,82 +251,24 @@ IFilter::UniquePointer ITKImageReader::clone() const
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKImageReader::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
-  /****************************************************************************
-   * Write any preflight sanity checking codes in this function
-   ***************************************************************************/
+  auto fileName = filterArgs.value<fs::path>(k_FileName_Key);
+  auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  auto imageDataArrayPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
 
-  /**
-   * These are the values that were gathered from the UI or the pipeline file or
-   * otherwise passed into the filter. These are here for your convenience. If you
-   * do not need some of them remove them.
-   */
-  auto pFileNameValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_FileName_Key);
-  auto pDataContainerNameValue = filterArgs.value<DataPath>(k_DataContainerName_Key);
-  auto pCellAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellAttributeMatrixName_Key);
-  auto pImageDataArrayNameValue = filterArgs.value<DataPath>(k_ImageDataArrayName_Key);
+  std::string fileNameString = fileName.string();
 
-  // Declare the preflightResult variable that will be populated with the results
-  // of the preflight. The PreflightResult type contains the output Actions and
-  // any preflight updated values that you want to be displayed to the user, typically
-  // through a user interface (UI).
-  PreflightResult preflightResult;
-
-  // If your filter is making structural changes to the DataStructure then the filter
-  // is going to create OutputActions subclasses that need to be returned. This will
-  // store those actions.
-  complex::Result<OutputActions> resultOutputActions;
-
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
-  std::vector<PreflightValue> preflightUpdatedValues;
-
-  // If the filter needs to pass back some updated values via a key:value string:string set of values
-  // you can declare and update that string here.
-  // None found in this filter based on the filter parameters
-
-  // If this filter makes changes to the DataStructure in the form of
-  // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
-  // will need to use one of the `*Actions` classes located in complex/Filter/Actions
-  // to relay that information to the preflight and execute methods. This is done by
-  // creating an instance of the Action class and then storing it in the resultOutputActions variable.
-  // This is done through a `push_back()` method combined with a `std::move()`. For the
-  // newly initiated to `std::move` once that code is executed what was once inside the Action class
-  // instance variable is *no longer there*. The memory has been moved. If you try to access that
-  // variable after this line you will probably get a crash or have subtle bugs. To ensure that this
-  // does not happen we suggest using braces `{}` to scope each of the action's declaration and store
-  // so that the programmer is not tempted to use the action instance past where it should be used.
-  // You have to create your own Actions class if there isn't something specific for your filter's needs
-  // These are some proposed Actions based on the FilterParameters used. Please check them for correctness.
-  {
-    auto createDataGroupAction = std::make_unique<CreateDataGroupAction>(pDataContainerNameValue);
-    resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
-  }
-
-  // Store the preflight updated value(s) into the preflightUpdatedValues vector using
-  // the appropriate methods.
-  // None found based on the filter parameters
-
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {ReadImagePreflight(fileNameString, imageGeometryPath, imageDataArrayPath)};
 }
 
 //------------------------------------------------------------------------------
 Result<> ITKImageReader::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
-  /****************************************************************************
-   * Extract the actual input values from the 'filterArgs' object
-   ***************************************************************************/
-  auto pFileNameValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_FileName_Key);
-  auto pDataContainerNameValue = filterArgs.value<DataPath>(k_DataContainerName_Key);
-  auto pCellAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellAttributeMatrixName_Key);
-  auto pImageDataArrayNameValue = filterArgs.value<DataPath>(k_ImageDataArrayName_Key);
+  auto fileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_FileName_Key);
+  auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  auto imageDataArrayPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
 
-  /****************************************************************************
-   * Write your algorithm implementation in this function
-   ***************************************************************************/
+  std::string fileNameString = fileName.string();
 
-  return {};
+  return ReadImageExecute(fileNameString, imageGeometryPath, imageDataArrayPath, dataStructure);
 }
 } // namespace complex

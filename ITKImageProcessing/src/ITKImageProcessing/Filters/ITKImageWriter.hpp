@@ -28,6 +28,11 @@ public:
   static inline constexpr StringLiteral k_FileName_Key = "FileName";
   static inline constexpr StringLiteral k_IndexOffset_Key = "IndexOffset";
   static inline constexpr StringLiteral k_ImageArrayPath_Key = "ImageArrayPath";
+  static inline constexpr StringLiteral k_ImageGeomPath_Key = "ImageGeomPath";
+
+  static inline constexpr usize k_XYPlane = 0;
+  static inline constexpr usize k_XZPlane = 1;
+  static inline constexpr usize k_YZPlane = 2;
 
   /**
    * @brief Returns the name of the filter.

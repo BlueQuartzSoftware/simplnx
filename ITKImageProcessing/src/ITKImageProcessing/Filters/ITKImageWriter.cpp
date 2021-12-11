@@ -1,23 +1,214 @@
 #include "ITKImageWriter.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
+#include "complex/DataStructure/DataStore.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
+#define COMPLEX_ITK_ARRAY_HELPER_USE_Vector 1
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+
+#include "ITKImageProcessing/ITKImageProcessingPlugin.hpp"
+
+#include <itkImageFileWriter.h>
+#include <itkImageSeriesWriter.h>
+#include <itkImportImageFilter.h>
+#include <itkNumericSeriesFileNames.h>
+
+#include <fmt/core.h>
+
+#include <algorithm>
+#include <cmath>
 #include <filesystem>
+#include <iomanip>
+#include <numeric>
+#include <sstream>
+
 namespace fs = std::filesystem;
 
 using namespace complex;
+
+namespace
+{
+bool Is2DFormat(const fs::path& fileName)
+{
+  fs::path ext = fileName.extension();
+  auto supported2DExtensions = ITKImageProcessingPlugin::GetList2DSupportedFileExtensions();
+  auto iter = std::find(supported2DExtensions.cbegin(), supported2DExtensions.cend(), ext);
+  return iter != supported2DExtensions.cend();
+}
+
+template <typename PixelT, uint32 Dimensions>
+void WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& filePath /*, const IFilter::MessageHandler& messanger*/)
+{
+  using ImageType = itk::Image<PixelT, Dimensions>;
+  using FileWriterType = itk::ImageFileWriter<ImageType>;
+  auto writer = FileWriterType::New();
+
+  // messanger(fmt::format("Saving {}", fileName));
+
+  writer->SetInput(&image);
+  writer->SetFileName(filePath.string());
+  writer->UseCompressionOn();
+  writer->Update();
+}
+
+template <typename PixelT, uint32 Dimensions>
+void WriteAs2DStack(itk::Image<PixelT, Dimensions>& image, uint32 z_size, const fs::path& filePath, uint64 indexOffset)
+{
+  auto namesGenerator = itk::NumericSeriesFileNames::New();
+  fs::path parentPath = filePath.parent_path();
+  fs::path fileName = filePath.stem();
+  fs::path extension = filePath.extension();
+  std::string format = fmt::format("{}/{}%03d{}", parentPath.string(), fileName.string(), extension.string());
+  namesGenerator->SetSeriesFormat(format);
+  namesGenerator->SetIncrementIndex(1);
+  namesGenerator->SetStartIndex(indexOffset);
+  namesGenerator->SetEndIndex(z_size - 1);
+  using InputImageType = itk::Image<PixelT, Dimensions>;
+  using OutputImageType = itk::Image<PixelT, Dimensions - 1>;
+  using SeriesWriterType = itk::ImageSeriesWriter<InputImageType, OutputImageType>;
+  auto writer = SeriesWriterType::New();
+  writer->SetInput(&image);
+  writer->SetFileNames(namesGenerator->GetFileNames());
+  writer->UseCompressionOn();
+  writer->Update();
+}
+
+template <class PixelT, uint32 Dimensions>
+Result<> WriteImage(IDataStore& dataStore, const ImageGeom& imageGeom, const fs::path& filePath, uint64 indexOffset)
+{
+  using ImageType = itk::Image<PixelT, Dimensions>;
+
+  auto& typedDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<PixelT>>&>(dataStore);
+
+  try
+  {
+    typename itk::Image<PixelT, Dimensions>::Pointer image = ITK::WrapDataStoreInImage<PixelT, Dimensions>(typedDataStore, imageGeom);
+    if(Is2DFormat(filePath) && Dimensions == 3)
+    {
+      typename ImageType::SizeType size = image->GetLargestPossibleRegion().GetSize();
+      if(size[2] < 2)
+      {
+        return MakeErrorResult(-21012, "Image is 2D, not 3D.");
+      }
+      WriteAs2DStack<PixelT, Dimensions>(*image, size[2], filePath, indexOffset);
+    }
+    else
+    {
+      WriteAsOneFile<PixelT, Dimensions>(*image, filePath);
+    }
+  } catch(const itk::ExceptionObject& err)
+  {
+    return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
+  }
+
+  return {};
+}
+
+template <class InputT, class OutputT, uint32 Dimensions>
+struct WriteImageFunctor
+{
+  Result<> operator()(IDataStore& dataStore, const ImageGeom& imageGeom, const fs::path& filePath, uint64 indexOffset) const
+  {
+    return WriteImage<InputT, Dimensions>(dataStore, imageGeom, filePath, indexOffset);
+  }
+};
+
+template <class T>
+void CopyTupleTyped(const IDataStore& currentData, IDataStore& sliceData, usize nComp, usize index, usize indexNew)
+{
+  const auto& currentDataTyped = dynamic_cast<const DataStore<T>&>(currentData);
+  auto& sliceDataTyped = dynamic_cast<DataStore<T>&>(sliceData);
+
+  const T* sourcePtr = currentDataTyped.data() + (nComp * index);
+  T* destPtr = sliceDataTyped.data() + (nComp * indexNew);
+  std::memcpy(destPtr, sourcePtr, currentData.getTypeSize() * nComp);
+}
+
+void CopyTuple(usize index, usize axisA, usize dB, usize axisB, usize nComp, const IDataStore& currentData, IDataStore& sliceData)
+{
+  usize indexNew = (axisA * dB) + axisB;
+
+  DataType type = currentData.getDataType();
+
+  switch(type)
+  {
+  case DataType::int8: {
+    CopyTupleTyped<int8>(currentData, sliceData, nComp, index, indexNew);
+    break;
+  }
+  case DataType::uint8: {
+    CopyTupleTyped<uint8>(currentData, sliceData, nComp, index, indexNew);
+    break;
+  }
+  case DataType::int16: {
+    CopyTupleTyped<int16>(currentData, sliceData, nComp, index, indexNew);
+    break;
+  }
+  case DataType::uint16: {
+    CopyTupleTyped<uint16>(currentData, sliceData, nComp, index, indexNew);
+    break;
+  }
+  case DataType::int32: {
+    CopyTupleTyped<int32>(currentData, sliceData, nComp, index, indexNew);
+    break;
+  }
+  case DataType::uint32: {
+    CopyTupleTyped<int32>(currentData, sliceData, nComp, index, indexNew);
+    break;
+  }
+  case DataType::int64: {
+    CopyTupleTyped<int64>(currentData, sliceData, nComp, index, indexNew);
+    break;
+  }
+  case DataType::uint64: {
+    CopyTupleTyped<int64>(currentData, sliceData, nComp, index, indexNew);
+    break;
+  }
+  case DataType::float32: {
+    CopyTupleTyped<float32>(currentData, sliceData, nComp, index, indexNew);
+    break;
+  }
+  case DataType::float64: {
+    CopyTupleTyped<float64>(currentData, sliceData, nComp, index, indexNew);
+    break;
+  }
+  default: {
+    throw std::runtime_error("ITKImageWriter: Invalid DataType while attempting to copy tuples");
+  }
+  }
+}
+
+Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const ImageGeom& imageGeom, usize slice, usize maxSlice, uint64 indexOffset)
+{
+  std::stringstream ss;
+  ss << fs::absolute(filePath).parent_path().string() << "/" << filePath.stem().string();
+
+  int32 totalDigits = static_cast<int32>(std::log10(maxSlice) + 1);
+
+  if(maxSlice != 1)
+  {
+    ss << "_" << std::setw(totalDigits) << std::setfill('0') << slice;
+  }
+  ss << filePath.extension().string();
+
+  auto fileName = fs::path(ss.str());
+
+  return ITK::ArraySwitchFunc<WriteImageFunctor>(sliceData, imageGeom, -21010, sliceData, imageGeom, fileName, indexOffset);
+}
+} // namespace
 
 namespace complex
 {
 //------------------------------------------------------------------------------
 std::string ITKImageWriter::name() const
 {
-  return FilterTraits<ITKImageWriter>::name.str();
+  return FilterTraits<ITKImageWriter>::name;
 }
 
 //------------------------------------------------------------------------------
@@ -41,19 +232,19 @@ std::string ITKImageWriter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKImageWriter::defaultTags() const
 {
-  return {"#IO", "#Output", "#Write", "#Export"};
+  return {"io", "output", "write", "export"};
 }
 
 //------------------------------------------------------------------------------
 Parameters ITKImageWriter::parameters() const
 {
   Parameters params;
-  // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ChoicesParameter>(k_Plane_Key, "Plane", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_FileName_Key, "Output File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputFile));
-  params.insert(std::make_unique<Int32Parameter>(k_IndexOffset_Key, "Index Offset", "", 1234356));
-  params.insertSeparator(Parameters::Separator{"Image Data"});
+
+  params.insert(std::make_unique<ChoicesParameter>(k_Plane_Key, "Plane", "", 0, ChoicesParameter::Choices{"XY", "XZ", "YZ"}));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_FileName_Key, "Output File", "", fs::path(), FileSystemPathParameter::PathType::OutputFile));
+  params.insert(std::make_unique<UInt64Parameter>(k_IndexOffset_Key, "Index Offset", "", 0));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ImageArrayPath_Key, "Image", "", DataPath{}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "", DataPath{}, std::set<DataObject::Type>{DataObject::Type::ImageGeom}));
 
   return params;
 }
@@ -67,76 +258,120 @@ IFilter::UniquePointer ITKImageWriter::clone() const
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKImageWriter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
-  /****************************************************************************
-   * Write any preflight sanity checking codes in this function
-   ***************************************************************************/
+  auto plane = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
+  auto filePath = filterArgs.value<fs::path>(k_FileName_Key);
+  auto indexOffset = filterArgs.value<uint64>(k_IndexOffset_Key);
+  auto imageArrayPath = filterArgs.value<DataPath>(k_ImageArrayPath_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
 
-  /**
-   * These are the values that were gathered from the UI or the pipeline file or
-   * otherwise passed into the filter. These are here for your convenience. If you
-   * do not need some of them remove them.
-   */
-  auto pPlaneValue = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
-  auto pFileNameValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_FileName_Key);
-  auto pIndexOffsetValue = filterArgs.value<int32>(k_IndexOffset_Key);
-  auto pImageArrayPathValue = filterArgs.value<DataPath>(k_ImageArrayPath_Key);
+  // Stored fastest to slowest i.e. X Y Z
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  // Stored slowest to fastest i.e. Z Y X
+  const auto& imageArray = dataStructure.getDataRefAs<IDataArray>(imageArrayPath);
 
-  // Declare the preflightResult variable that will be populated with the results
-  // of the preflight. The PreflightResult type contains the output Actions and
-  // any preflight updated values that you want to be displayed to the user, typically
-  // through a user interface (UI).
-  PreflightResult preflightResult;
+  const IDataStore& imageArrayStore = imageArray.getIDataStoreRef();
 
-  // If your filter is making structural changes to the DataStructure then the filter
-  // is going to create OutputActions subclasses that need to be returned. This will
-  // store those actions.
-  complex::Result<OutputActions> resultOutputActions;
+  if(!ITK::DoDimensionsMatch(imageArrayStore, imageGeom))
+  {
+    return {MakeErrorResult<OutputActions>(-1, "Image Array dimensions must match ImageGeometry")};
+  }
 
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
-  std::vector<PreflightValue> preflightUpdatedValues;
-
-  // If the filter needs to pass back some updated values via a key:value string:string set of values
-  // you can declare and update that string here.
-  // None found in this filter based on the filter parameters
-
-  // If this filter makes changes to the DataStructure in the form of
-  // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
-  // will need to use one of the `*Actions` classes located in complex/Filter/Actions
-  // to relay that information to the preflight and execute methods. This is done by
-  // creating an instance of the Action class and then storing it in the resultOutputActions variable.
-  // This is done through a `push_back()` method combined with a `std::move()`. For the
-  // newly initiated to `std::move` once that code is executed what was once inside the Action class
-  // instance variable is *no longer there*. The memory has been moved. If you try to access that
-  // variable after this line you will probably get a crash or have subtle bugs. To ensure that this
-  // does not happen we suggest using braces `{}` to scope each of the action's declaration and store
-  // so that the programmer is not tempted to use the action instance past where it should be used.
-  // You have to create your own Actions class if there isn't something specific for your filter's needs
-
-  // Store the preflight updated value(s) into the preflightUpdatedValues vector using
-  // the appropriate methods.
-  // None found based on the filter parameters
-
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {};
 }
 
 //------------------------------------------------------------------------------
 Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
-  /****************************************************************************
-   * Extract the actual input values from the 'filterArgs' object
-   ***************************************************************************/
-  auto pPlaneValue = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
-  auto pFileNameValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_FileName_Key);
-  auto pIndexOffsetValue = filterArgs.value<int32>(k_IndexOffset_Key);
-  auto pImageArrayPathValue = filterArgs.value<DataPath>(k_ImageArrayPath_Key);
+  auto plane = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
+  auto filePath = filterArgs.value<fs::path>(k_FileName_Key);
+  auto indexOffset = filterArgs.value<uint64>(k_IndexOffset_Key);
+  auto imageArrayPath = filterArgs.value<DataPath>(k_ImageArrayPath_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
 
-  /****************************************************************************
-   * Write your algorithm implementation in this function
-   ***************************************************************************/
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  // Stored fastest to slowest i.e. X Y Z
+  SizeVec3 dims = imageGeom.getDimensions();
+
+  const auto& imageArray = dataStructure.getDataRefAs<IDataArray>(imageArrayPath);
+  usize nComp = imageArray.getNumberOfComponents();
+  const IDataStore& currentData = imageArray.getIDataStoreRef();
+
+  if(currentData.getStoreType() != IDataStore::StoreType::InMemory)
+  {
+    return {MakeErrorResult(-1, "DataArray must be in memory")};
+  }
+
+  std::unique_ptr<IDataStore> sliceData = currentData.createNewInstance();
+
+  switch(plane)
+  {
+  case k_XYPlane: {
+    usize dA = dims.getX();
+    usize dB = dims.getY();
+
+    for(usize slice = 0; slice < dims.getZ(); ++slice)
+    {
+      for(usize axisA = 0; axisA < dA; ++axisA)
+      {
+        for(usize axisB = 0; axisB < dB; ++axisB)
+        {
+          usize index = (slice * dA * dB) + (axisA * dB) + axisB;
+          CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
+        }
+      }
+      Result<> result = SaveImageData(filePath, *sliceData, imageGeom, slice + indexOffset, dims.getZ(), indexOffset);
+      if(result.invalid())
+      {
+        return result;
+      }
+    }
+    break;
+  }
+  case k_XZPlane: {
+    usize dA = dims.getZ();
+    usize dB = dims.getX();
+
+    for(usize slice = 0; slice < dims.getY(); ++slice)
+    {
+      for(usize axisA = 0; axisA < dA; ++axisA)
+      {
+        for(usize axisB = 0; axisB < dB; ++axisB)
+        {
+          usize index = (dims.getY() * axisA * dB) + (slice * dB) + axisB;
+          CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
+        }
+      }
+      Result<> result = SaveImageData(filePath, *sliceData, imageGeom, slice, dims.getY(), indexOffset);
+      if(result.invalid())
+      {
+        return result;
+      }
+    }
+    break;
+  }
+  case k_YZPlane: {
+    usize dA = dims.getZ();
+    usize dB = dims.getY();
+
+    for(usize slice = 0; slice < dims.getX(); ++slice)
+    {
+      for(usize axisA = 0; axisA < dA; ++axisA)
+      {
+        for(usize axisB = 0; axisB < dB; ++axisB)
+        {
+          usize index = (dims.getX() * axisA * dB) + (axisB * dims.getX()) + slice;
+          CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
+        }
+      }
+      Result<> result = SaveImageData(filePath, *sliceData, imageGeom, slice, dims.getX(), indexOffset);
+      if(result.invalid())
+      {
+        return result;
+      }
+    }
+    break;
+  }
+  }
 
   return {};
 }

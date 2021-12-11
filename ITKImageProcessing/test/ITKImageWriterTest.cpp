@@ -1,68 +1,47 @@
-/**
- * This file is auto generated from the original ITKImageProcessing/ITKImageWriter
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
- *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
- *
- * 4: Add additional unit tests to actually test each code path within the filter
- *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
- *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
- *
- * When you start working on this unit test remove "[ITKImageWriter][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
- */
-
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
+#include "ITKImageProcessing/Filters/ITKImageWriter.hpp"
+#include "ITKImageProcessing/ITKImageProcessingPlugin.hpp"
+#include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
+
+#include "complex/Core/Application.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
 #include <filesystem>
-namespace fs = std::filesystem;
 
-#include "ITKImageProcessing/Filters/ITKImageWriter.hpp"
-#include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
+namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKImageWriter: Instantiation and Parameter Check", "[ITKImageProcessing][ITKImageWriter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ITKImageProcessing::ITKImageWriter: Write PNG", "[ITKImageProcessing][ITKImageWriter]")
 {
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  Application app;
+
   ITKImageWriter filter;
-  DataStructure ds;
   Arguments args;
 
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ITKImageWriter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(ITKImageWriter::k_FileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insertOrAssign(ITKImageWriter::k_IndexOffset_Key, std::make_any<int32>(1234356));
-  args.insertOrAssign(ITKImageWriter::k_ImageArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  fs::path dream3dFilePath = fs::path(unit_test::k_SourceDir.view()) / "test/data/PngTest.dream3d";
 
-  // Preflight the filter and check result
+  Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(dream3dFilePath);
+  COMPLEX_RESULT_REQUIRE_VALID(dataStructureResult);
+
+  DataStructure ds = std::move(dataStructureResult.value());
+
+  DataPath arrayPath{{"ImageGeom", "ImageArray"}};
+  DataPath imagePath = arrayPath.getParent();
+
+  fs::path outputPath = fs::path(unit_test::k_BuildDir.view()) / "test/data/PngTestOutput.png";
+
+  args.insertOrAssign(ITKImageWriter::k_ImageGeomPath_Key, std::make_any<DataPath>(imagePath));
+  args.insertOrAssign(ITKImageWriter::k_ImageArrayPath_Key, std::make_any<DataPath>(arrayPath));
+  args.insertOrAssign(ITKImageWriter::k_FileName_Key, std::make_any<fs::path>(outputPath));
+  args.insertOrAssign(ITKImageWriter::k_IndexOffset_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(ITKImageWriter::k_Plane_Key, std::make_any<uint64>(ITKImageWriter::k_XYPlane));
+
   auto preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(ds, args);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 }
-
-// TEST_CASE("ITKImageProcessing::ITKImageWriter: Valid filter execution")
-//{
-//
-//}
-
-// TEST_CASE("ITKImageProcessing::ITKImageWriter: InValid filter execution")
-//{
-//
-//}

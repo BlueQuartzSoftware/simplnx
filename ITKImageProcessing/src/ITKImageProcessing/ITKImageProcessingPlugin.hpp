@@ -11,7 +11,7 @@ class ITKIMAGEPROCESSING_EXPORT ITKImageProcessingPlugin : public complex::Abstr
 {
 public:
   ITKImageProcessingPlugin();
-  ~ITKImageProcessingPlugin() override;
+  ~ITKImageProcessingPlugin() noexcept override;
 
   ITKImageProcessingPlugin(const ITKImageProcessingPlugin&) = delete;
   ITKImageProcessingPlugin(ITKImageProcessingPlugin&&) = delete;
@@ -19,12 +19,16 @@ public:
   ITKImageProcessingPlugin& operator=(const ITKImageProcessingPlugin&) = delete;
   ITKImageProcessingPlugin& operator=(ITKImageProcessingPlugin&&) = delete;
 
+  static void RegisterITKImageIO();
+
   /**
    * @brief Returns a collection of HDF5 DataStructure factories available
    * through the plugin.
    * @return std::vector<complex::IH5DataFactory*>
    */
   std::vector<complex::H5::IDataFactory*> getDataFactories() const override;
+
+  static std::vector<std::string> GetList2DSupportedFileExtensions();
 
 private:
   /**
