@@ -107,4 +107,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, MergeColonies, "1fcdb8cf-c174-51e9-ae3e-14cc18710b26");
+COMPLEX_DEF_FILTER_TRAITS(complex, MergeColonies, "2c4a6d83-6a1b-56d8-9f65-9453b28845b9");

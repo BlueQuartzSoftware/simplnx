@@ -100,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, CAxisSegmentFeatures, "f8a17d84-757e-5820-a0a6-f2211ab5f990");
+COMPLEX_DEF_FILTER_TRAITS(complex, CAxisSegmentFeatures, "bff6be19-1219-5876-8838-1574ad29d965");
