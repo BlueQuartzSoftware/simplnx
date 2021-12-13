@@ -103,4 +103,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKImportFijiMontage, "edd9c7f3-aed0-51db-b7e8-97571ea409e8");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKImportFijiMontage, "5878723b-cc16-5486-ac5f-ff0107107e74");
