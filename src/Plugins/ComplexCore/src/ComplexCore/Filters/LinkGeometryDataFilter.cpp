@@ -182,19 +182,19 @@ Result<> LinkGeometryDataFilter::executeImpl(DataStructure& dataStructure, const
   {
     //    IDataArrayShrdPtrType dataArray = dataStructure.getSharedDataAs<IDataArray>(selectedDataPath);
     //    DataObject::IdType dataId = dataStructure.getId(selectedDataPath).value();
-    geometryData.addVertexData(selectedDataPath);
+    geometryData.addEdgeData(selectedDataPath);
   }
   for(const auto& selectedDataPath : pSelectedFaceDataArrayPaths)
   {
     //    IDataArrayShrdPtrType dataArray = dataStructure.getSharedDataAs<IDataArray>(selectedDataPath);
     //    DataObject::IdType dataId = dataStructure.getId(selectedDataPath).value();
-    geometryData.addVertexData(selectedDataPath);
+    geometryData.addFaceData(selectedDataPath);
   }
   for(const auto& selectedDataPath : pSelectedVolumeDataArrayPaths)
   {
     //    IDataArrayShrdPtrType dataArray = dataStructure.getSharedDataAs<IDataArray>(selectedDataPath);
     //    DataObject::IdType dataId = dataStructure.getId(selectedDataPath).value();
-    geometryData.addVertexData(selectedDataPath);
+    geometryData.addCellData(selectedDataPath);
   }
 
   /****************************************************************************
