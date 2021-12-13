@@ -104,4 +104,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, MergeTwins, "bafbfa3f-7bdc-5e89-9412-2ecfab515090");
+COMPLEX_DEF_FILTER_TRAITS(complex, MergeTwins, "c9af506e-9ea1-5ff5-a882-fa561def5f52");
