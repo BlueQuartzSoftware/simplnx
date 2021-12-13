@@ -96,4 +96,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKDanielssonDistanceMapImage, "0602e360-4255-5744-8ade-8761d2c87143");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKDanielssonDistanceMapImage, "53d5b289-a716-559b-89d9-5ebb34f714ca");

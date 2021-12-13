@@ -95,4 +95,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKGradientMagnitudeRecursiveGaussianImage, "1a852e31-bfd0-58e1-8ccc-026b81a97d42");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKGradientMagnitudeRecursiveGaussianImage, "fd688b32-d90e-5945-905b-2b7187b46265");

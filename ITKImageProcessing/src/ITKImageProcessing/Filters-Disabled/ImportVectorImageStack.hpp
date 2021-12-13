@@ -98,4 +98,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ImportVectorImageStack, "0c8cf5ce-1166-5cbc-8349-c4cd87af7498");
+COMPLEX_DEF_FILTER_TRAITS(complex, ImportVectorImageStack, "c5474cd1-bea9-5a33-a0df-516e5735bab4");

@@ -97,4 +97,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKSigmoidImage, "ef0c0080-21ca-5526-a15e-23546f2a7454");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKSigmoidImage, "e6675be7-e98d-5e0f-a088-ba15cc301038");

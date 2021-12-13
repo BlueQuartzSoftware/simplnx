@@ -93,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, AxioVisionV4ToTileConfiguration, "605faa74-cddd-57b0-b896-29efff0ae42b");
+COMPLEX_DEF_FILTER_TRAITS(complex, AxioVisionV4ToTileConfiguration, "30687f44-9c10-5617-bcb8-4109cbd6e55e");

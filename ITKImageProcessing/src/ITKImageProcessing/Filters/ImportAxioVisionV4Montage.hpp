@@ -106,4 +106,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ImportAxioVisionV4Montage, "f793164c-d8a4-576a-8cd1-846f8f835a6a");
+COMPLEX_DEF_FILTER_TRAITS(complex, ImportAxioVisionV4Montage, "411b008c-006f-51b2-ba05-99e51a01af3c");

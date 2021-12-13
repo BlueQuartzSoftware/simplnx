@@ -103,4 +103,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ImportZenInfoMontage, "59d54885-256e-5860-b37d-70b318e6321b");
+COMPLEX_DEF_FILTER_TRAITS(complex, ImportZenInfoMontage, "774ec947-eed6-5eb2-a01b-ee6470e61521");

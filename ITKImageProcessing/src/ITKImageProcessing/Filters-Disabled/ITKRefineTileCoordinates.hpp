@@ -98,4 +98,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKRefineTileCoordinates, "13f22db0-d406-5ebd-ab59-0ccc0cfa62ba");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKRefineTileCoordinates, "49b5feb1-ec05-5a26-af25-00053151d944");
