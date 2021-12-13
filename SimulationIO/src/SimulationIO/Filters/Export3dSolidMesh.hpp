@@ -113,4 +113,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, Export3dSolidMesh, "e7f02408-6c01-5b56-b970-7813e64c12e2");
+COMPLEX_DEF_FILTER_TRAITS(complex, Export3dSolidMesh, "fcff3b03-bff6-5511-bc65-5e558d12f0a6");

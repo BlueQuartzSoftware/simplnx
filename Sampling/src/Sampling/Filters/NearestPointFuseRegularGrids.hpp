@@ -93,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, NearestPointFuseRegularGrids, "baeeb05b-0d98-5590-998c-2b70bb774f88");
+COMPLEX_DEF_FILTER_TRAITS(complex, NearestPointFuseRegularGrids, "cbaf9e68-5ded-560c-9440-509289100ea8");

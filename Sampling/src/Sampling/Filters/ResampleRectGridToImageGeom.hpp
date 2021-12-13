@@ -96,4 +96,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ResampleRectGridToImageGeom, "75e973cb-3225-55f1-945a-622a21ea464c");
+COMPLEX_DEF_FILTER_TRAITS(complex, ResampleRectGridToImageGeom, "77befd69-4536-5856-9f81-02996d038f73");
