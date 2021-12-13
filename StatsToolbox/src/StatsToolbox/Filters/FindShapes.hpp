@@ -99,4 +99,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindShapes, "759c49f6-f5d4-5981-8967-dc9790c6d292");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindShapes, "3b0ababf-9c8d-538d-96af-e40775c4f0ab");

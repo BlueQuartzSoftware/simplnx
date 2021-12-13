@@ -101,4 +101,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindEuclideanDistMap, "98507d64-483d-5e47-81df-c0b4455e94ac");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindEuclideanDistMap, "933e4b2d-dd61-51c3-98be-00548ba783a3");

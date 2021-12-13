@@ -96,4 +96,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindSurfaceAreaToVolume, "16fff570-cb6f-59ac-ba75-3eab70607590");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindSurfaceAreaToVolume, "5d586366-6b59-566e-8de1-57aa9ae8a91c");

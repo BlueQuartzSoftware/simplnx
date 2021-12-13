@@ -94,4 +94,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindBoundaryElementFractions, "3424e842-ccc8-58f6-9dba-d38fc17cf2c1");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindBoundaryElementFractions, "6357243e-41a6-52c4-be2d-2f6894c39fcc");
