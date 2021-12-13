@@ -96,4 +96,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, IdentifyDislocationSegments, "6bf380da-8016-52af-bd54-f6a729ccd201");
+COMPLEX_DEF_FILTER_TRAITS(complex, IdentifyDislocationSegments, "073798a1-1fb4-5e3c-81f6-e426f60e347a");

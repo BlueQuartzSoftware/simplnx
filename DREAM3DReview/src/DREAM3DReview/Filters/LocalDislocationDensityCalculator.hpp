@@ -99,4 +99,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, LocalDislocationDensityCalculator, "161f56bb-721b-57f6-9a81-fe34c72ebcfe");
+COMPLEX_DEF_FILTER_TRAITS(complex, LocalDislocationDensityCalculator, "620a3022-0f92-5d07-b725-b22604874bbf");

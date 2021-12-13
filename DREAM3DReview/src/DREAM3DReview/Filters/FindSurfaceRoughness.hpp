@@ -94,4 +94,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindSurfaceRoughness, "0fe57d46-5a7d-5f92-b126-7aa2ff178538");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindSurfaceRoughness, "4178c7f9-5f90-5e95-8cf1-a67ca2a98a60");

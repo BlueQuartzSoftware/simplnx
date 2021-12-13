@@ -94,4 +94,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindMinkowskiBouligandDimension, "1eaa74db-9218-5528-989e-ded856c7ec7e");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindMinkowskiBouligandDimension, "6cc3148c-0bad-53b4-9568-ee1971cadb00");

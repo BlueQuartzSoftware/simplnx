@@ -96,4 +96,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindVertexToTriangleDistances, "1bab3f41-fdf6-5278-9b17-5db0a142392f");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindVertexToTriangleDistances, "fcdde553-36b4-5731-bc88-fc499806cb4e");

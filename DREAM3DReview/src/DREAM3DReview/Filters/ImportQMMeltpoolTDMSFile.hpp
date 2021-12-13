@@ -93,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ImportQMMeltpoolTDMSFile, "f853a936-fd16-54dd-a156-8e81cc9d5f39");
+COMPLEX_DEF_FILTER_TRAITS(complex, ImportQMMeltpoolTDMSFile, "60b75e1c-4c65-5d86-8cb0-8b8086193d23");

@@ -93,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, WaveFrontObjectFileWriter, "29c6512f-5928-5eb4-8ec0-729b34ce97a4");
+COMPLEX_DEF_FILTER_TRAITS(complex, WaveFrontObjectFileWriter, "5d4c38fe-af0a-5cb3-b7fa-fb9e57b2097f");
