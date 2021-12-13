@@ -105,4 +105,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, MatchCrystallography, "ffeb3492-3af0-59ec-a426-1dc276abd427");
+COMPLEX_DEF_FILTER_TRAITS(complex, MatchCrystallography, "7bfb6e4a-6075-56da-8006-b262d99dff30");
