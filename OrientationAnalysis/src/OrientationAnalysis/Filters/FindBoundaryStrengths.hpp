@@ -100,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindBoundaryStrengths, "1fe81a18-79fd-5236-8f20-b0a93d2de9a4");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindBoundaryStrengths, "8071facb-8905-5699-b345-105ae4ac33ff");
