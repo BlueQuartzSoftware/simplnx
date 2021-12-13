@@ -93,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, AverageEdgeFaceCellArrayToVertexArray, "5fa55214-a1e9-5e36-ba95-aa1968c8db8f");
+COMPLEX_DEF_FILTER_TRAITS(complex, AverageEdgeFaceCellArrayToVertexArray, "9df4c18a-f51b-5698-8067-530d37f57c61");

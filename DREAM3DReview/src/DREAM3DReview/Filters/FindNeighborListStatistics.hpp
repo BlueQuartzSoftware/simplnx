@@ -107,4 +107,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindNeighborListStatistics, "1c469a65-3326-53dc-92aa-a96ccaf2fd77");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindNeighborListStatistics, "73ee33b6-7622-5004-8b88-4d145514fb6a");

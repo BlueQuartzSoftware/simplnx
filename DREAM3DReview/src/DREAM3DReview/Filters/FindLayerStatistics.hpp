@@ -100,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindLayerStatistics, "7dce1d58-7445-5ddd-8d80-043078b5e696");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindLayerStatistics, "c85277c7-9f02-5891-8141-04523658737d");

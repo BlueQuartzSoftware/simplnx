@@ -106,4 +106,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, InterpolatePointCloudToRegularGrid, "55c08183-543b-5c6a-b5a4-3d6829fac71f");
+COMPLEX_DEF_FILTER_TRAITS(complex, InterpolatePointCloudToRegularGrid, "4b551c15-418d-5081-be3f-d3aeb62408e5");
