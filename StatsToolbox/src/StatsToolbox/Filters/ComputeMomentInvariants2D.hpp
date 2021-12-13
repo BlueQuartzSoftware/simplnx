@@ -98,4 +98,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ComputeMomentInvariants2D, "d6fd0aca-30d9-53a3-a661-0a38690a4a45");
+COMPLEX_DEF_FILTER_TRAITS(complex, ComputeMomentInvariants2D, "27a132b2-a592-519a-8cb7-38599a7f28ec");

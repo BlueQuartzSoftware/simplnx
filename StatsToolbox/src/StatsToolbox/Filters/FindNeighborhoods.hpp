@@ -97,4 +97,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindNeighborhoods, "b8cd50e0-15c7-56dc-ac85-cf5b09a14207");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindNeighborhoods, "697ed3de-db33-5dd1-a64b-04fb71e7d63e");

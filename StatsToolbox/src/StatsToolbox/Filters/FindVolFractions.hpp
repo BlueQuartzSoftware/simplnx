@@ -93,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindVolFractions, "d0ef7827-cbf1-5a3f-938a-2d184604b49f");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindVolFractions, "68246a67-7f32-5c80-815a-bec82008d7bc");
