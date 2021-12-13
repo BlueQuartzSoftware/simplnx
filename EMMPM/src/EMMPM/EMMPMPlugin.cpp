@@ -6,8 +6,8 @@ namespace
 {
 // This maps previous filters from DREAM.3D Version 6.x to DREAM.3D Version 7.x
 std::map<complex::Uuid, complex::Uuid> k_SimplToComplexFilterMapping = {
-    {Uuid::FromString("{4cd8f98b-75d0-5293-bf8e-d0f9f6211f58}").value(), Uuid::FromString("32609c42-936d-56dd-81f7-dd747d755014").value()}, /* EMMPMFilter */
-    {Uuid::FromString("{b2847755-dd39-5989-b624-98b1fdc9db5b}").value(), Uuid::FromString("da0cd175-99d4-5d23-a76d-9fb72a422966").value()}, /* MultiEmmpmFilter */
+    {Uuid::FromString("{4cd8f98b-75d0-5293-bf8e-d0f9f6211f58}").value(), Uuid::FromString("4cd8f98b-75d0-5293-bf8e-d0f9f6211f58").value()}, /* EMMPMFilter */
+    {Uuid::FromString("{b2847755-dd39-5989-b624-98b1fdc9db5b}").value(), Uuid::FromString("b2847755-dd39-5989-b624-98b1fdc9db5b").value()}, /* MultiEmmpmFilter */
 };
 // Plugin Uuid
 constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("cd34edc4-d9d0-555c-855b-e846bb81085c");
