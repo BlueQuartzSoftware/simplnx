@@ -95,4 +95,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindTriangleGeomNeighbors, "c1a2cc33-4db8-5d9b-ad80-153062a17976");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindTriangleGeomNeighbors, "749dc8ae-a402-5ee7-bbca-28d5734c60df");

@@ -92,4 +92,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, TriangleDihedralAngleFilter, "4658b821-26de-5930-80a9-d3bb2e94d4ea");
+COMPLEX_DEF_FILTER_TRAITS(complex, TriangleDihedralAngleFilter, "0541c5eb-1976-5797-9468-be50a93d44e2");
