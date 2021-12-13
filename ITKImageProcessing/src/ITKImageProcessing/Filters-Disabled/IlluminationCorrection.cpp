@@ -16,7 +16,24 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+
 using namespace complex;
+
+#include <itkIlluminationCorrectionFilter.h>
+namespace
+{
+struct ITKIlluminationCorrectionFilterCreationFunctor
+{
+  template <class InputImageType, class OutputImageType>
+  auto operator()() const
+  {
+    using FilterType = itk::IlluminationCorrectionFilter<InputImageType, OutputImageType>;
+    FilterType filter = FilterType::New();
+    return filter;
+  }
+};
+} // namespace
 
 namespace complex
 {
@@ -59,16 +76,13 @@ Parameters IlluminationCorrection::parameters() const
   params.insert(std::make_unique<StringParameter>(k_CellAttributeMatrixName_Key, "Input Attribute Matrix Name", "", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_ImageDataArrayName_Key, "Input Image Array Name", "", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_CorrectedImageDataArrayName_Key, "Corrected Image Name", "", "SomeString"));
-  params.insertSeparator(Parameters::Separator{"Created Background Image Name"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_BackgroundDataContainerPath_Key, "Created Data Container (Corrected)", "", DataPath{}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_BackgroundCellAttributeMatrixPath_Key, "Created Attribute Matrix (Corrected)", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_BackgroundImageArrayPath_Key, "Created Image Array Name (Corrected)", "", DataPath{}));
   params.insert(std::make_unique<Int32Parameter>(k_LowThreshold_Key, "Lowest allowed Image value (Image Value)", "", 1234356));
   params.insert(std::make_unique<Int32Parameter>(k_HighThreshold_Key, "Highest allowed Image value (Image Value)", "", 1234356));
-  params.insertSeparator(Parameters::Separator{"Background Image Processing"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplyMedianFilter_Key, "Apply median filter to background image", "", false));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MedianRadius_Key, "MedianRadius", "", std::vector<float32>(3), std::vector<std::string>(3)));
-  params.insertSeparator(Parameters::Separator{"Process Input Images"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplyCorrection_Key, "Apply Background Correction to Input Images", "", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ExportCorrectedImages_Key, "Export Corrected Images", "", false));
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputDir));
@@ -110,10 +124,7 @@ IFilter::PreflightResult IlluminationCorrection::preflightImpl(const DataStructu
   auto pBackgroundImageArrayPathValue = filterArgs.value<DataPath>(k_BackgroundImageArrayPath_Key);
   auto pLowThresholdValue = filterArgs.value<int32>(k_LowThreshold_Key);
   auto pHighThresholdValue = filterArgs.value<int32>(k_HighThreshold_Key);
-  auto pApplyMedianFilterValue = filterArgs.value<bool>(k_ApplyMedianFilter_Key);
   auto pMedianRadiusValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MedianRadius_Key);
-  auto pApplyCorrectionValue = filterArgs.value<bool>(k_ApplyCorrection_Key);
-  auto pExportCorrectedImagesValue = filterArgs.value<bool>(k_ExportCorrectedImages_Key);
   auto pOutputPathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
   auto pFileExtensionValue = filterArgs.value<StringParameter::ValueType>(k_FileExtension_Key);
 
@@ -122,17 +133,18 @@ IFilter::PreflightResult IlluminationCorrection::preflightImpl(const DataStructu
   // any preflight updated values that you want to be displayed to the user, typically
   // through a user interface (UI).
   PreflightResult preflightResult;
+  // If your filter is going to pass back some `preflight updated values` then this is where you
+  // would create the code to store those values in the appropriate object. Note that we
+  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
+  // the std::vector<PreflightValue> object.
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   // If your filter is making structural changes to the DataStructure then the filter
   // is going to create OutputActions subclasses that need to be returned. This will
   // store those actions.
   complex::Result<OutputActions> resultOutputActions;
 
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
-  std::vector<PreflightValue> preflightUpdatedValues;
+  resultOutputActions = ITK::DataCheck(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath);
 
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
@@ -188,10 +200,7 @@ Result<> IlluminationCorrection::executeImpl(DataStructure& dataStructure, const
   auto pBackgroundImageArrayPathValue = filterArgs.value<DataPath>(k_BackgroundImageArrayPath_Key);
   auto pLowThresholdValue = filterArgs.value<int32>(k_LowThreshold_Key);
   auto pHighThresholdValue = filterArgs.value<int32>(k_HighThreshold_Key);
-  auto pApplyMedianFilterValue = filterArgs.value<bool>(k_ApplyMedianFilter_Key);
   auto pMedianRadiusValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MedianRadius_Key);
-  auto pApplyCorrectionValue = filterArgs.value<bool>(k_ApplyCorrection_Key);
-  auto pExportCorrectedImagesValue = filterArgs.value<bool>(k_ExportCorrectedImages_Key);
   auto pOutputPathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
   auto pFileExtensionValue = filterArgs.value<StringParameter::ValueType>(k_FileExtension_Key);
 
@@ -199,6 +208,6 @@ Result<> IlluminationCorrection::executeImpl(DataStructure& dataStructure, const
    * Write your algorithm implementation in this function
    ***************************************************************************/
 
-  return {};
+  return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, IlluminationCorrectionFilterCreationFunctor{});
 }
 } // namespace complex

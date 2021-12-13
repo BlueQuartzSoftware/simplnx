@@ -6,7 +6,37 @@
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+
 using namespace complex;
+
+#include <itkPCMTileRegistrationFilter.h>
+namespace
+{
+struct ITKPCMTileRegistrationFilterCreationFunctor
+{
+  VectorInt32Parameter::ValueType m_ColumnMontageLimits;
+  VectorInt32Parameter::ValueType m_RowMontageLimits;
+  int32 m_DataContainerPaddingDigits;
+  StringParameter::ValueType m_DataContainerPrefix;
+  StringParameter::ValueType m_CommonAttributeMatrixName;
+  StringParameter::ValueType m_CommonDataArrayName;
+
+  template <class InputImageType, class OutputImageType>
+  auto operator()() const
+  {
+    using FilterType = itk::PCMTileRegistrationFilter<InputImageType, OutputImageType>;
+    typename FilterType::Pointer filter = FilterType::New();
+    filter->SetColumnMontageLimits(m_ColumnMontageLimits);
+    filter->SetRowMontageLimits(m_RowMontageLimits);
+    filter->SetDataContainerPaddingDigits(m_DataContainerPaddingDigits);
+    filter->SetDataContainerPrefix(m_DataContainerPrefix);
+    filter->SetCommonAttributeMatrixName(m_CommonAttributeMatrixName);
+    filter->SetCommonDataArrayName(m_CommonDataArrayName);
+    return filter;
+  }
+};
+} // namespace
 
 namespace complex
 {
@@ -73,29 +103,30 @@ IFilter::PreflightResult ITKPCMTileRegistration::preflightImpl(const DataStructu
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pColumnMontageLimitsValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_ColumnMontageLimits_Key);
-  auto pRowMontageLimitsValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_RowMontageLimits_Key);
-  auto pDataContainerPaddingDigitsValue = filterArgs.value<int32>(k_DataContainerPaddingDigits_Key);
-  auto pDataContainerPrefixValue = filterArgs.value<StringParameter::ValueType>(k_DataContainerPrefix_Key);
-  auto pCommonAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_CommonAttributeMatrixName_Key);
-  auto pCommonDataArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_CommonDataArrayName_Key);
+  auto pColumnMontageLimits = filterArgs.value<VectorInt32Parameter::ValueType>(k_ColumnMontageLimits_Key);
+  auto pRowMontageLimits = filterArgs.value<VectorInt32Parameter::ValueType>(k_RowMontageLimits_Key);
+  auto pDataContainerPaddingDigits = filterArgs.value<int32>(k_DataContainerPaddingDigits_Key);
+  auto pDataContainerPrefix = filterArgs.value<StringParameter::ValueType>(k_DataContainerPrefix_Key);
+  auto pCommonAttributeMatrixName = filterArgs.value<StringParameter::ValueType>(k_CommonAttributeMatrixName_Key);
+  auto pCommonDataArrayName = filterArgs.value<StringParameter::ValueType>(k_CommonDataArrayName_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
   // any preflight updated values that you want to be displayed to the user, typically
   // through a user interface (UI).
   PreflightResult preflightResult;
+  // If your filter is going to pass back some `preflight updated values` then this is where you
+  // would create the code to store those values in the appropriate object. Note that we
+  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
+  // the std::vector<PreflightValue> object.
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   // If your filter is making structural changes to the DataStructure then the filter
   // is going to create OutputActions subclasses that need to be returned. This will
   // store those actions.
   complex::Result<OutputActions> resultOutputActions;
 
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
-  std::vector<PreflightValue> preflightUpdatedValues;
+  resultOutputActions = ITK::DataCheck(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath);
 
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
@@ -128,17 +159,24 @@ Result<> ITKPCMTileRegistration::executeImpl(DataStructure& dataStructure, const
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pColumnMontageLimitsValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_ColumnMontageLimits_Key);
-  auto pRowMontageLimitsValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_RowMontageLimits_Key);
-  auto pDataContainerPaddingDigitsValue = filterArgs.value<int32>(k_DataContainerPaddingDigits_Key);
-  auto pDataContainerPrefixValue = filterArgs.value<StringParameter::ValueType>(k_DataContainerPrefix_Key);
-  auto pCommonAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_CommonAttributeMatrixName_Key);
-  auto pCommonDataArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_CommonDataArrayName_Key);
+  auto pColumnMontageLimits = filterArgs.value<VectorInt32Parameter::ValueType>(k_ColumnMontageLimits_Key);
+  auto pRowMontageLimits = filterArgs.value<VectorInt32Parameter::ValueType>(k_RowMontageLimits_Key);
+  auto pDataContainerPaddingDigits = filterArgs.value<int32>(k_DataContainerPaddingDigits_Key);
+  auto pDataContainerPrefix = filterArgs.value<StringParameter::ValueType>(k_DataContainerPrefix_Key);
+  auto pCommonAttributeMatrixName = filterArgs.value<StringParameter::ValueType>(k_CommonAttributeMatrixName_Key);
+  auto pCommonDataArrayName = filterArgs.value<StringParameter::ValueType>(k_CommonDataArrayName_Key);
 
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
+  ::ITKPCMTileRegistrationFilterCreationFunctor itkFunctor;
+  itkFunctor.m_ColumnMontageLimits = pColumnMontageLimits;
+  itkFunctor.m_RowMontageLimits = pRowMontageLimits;
+  itkFunctor.m_DataContainerPaddingDigits = pDataContainerPaddingDigits;
+  itkFunctor.m_DataContainerPrefix = pDataContainerPrefix;
+  itkFunctor.m_CommonAttributeMatrixName = pCommonAttributeMatrixName;
+  itkFunctor.m_CommonDataArrayName = pCommonDataArrayName;
 
-  return {};
+  return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

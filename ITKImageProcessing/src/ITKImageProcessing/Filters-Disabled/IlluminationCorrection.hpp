@@ -39,6 +39,7 @@ public:
   static inline constexpr StringLiteral k_ExportCorrectedImages_Key = "ExportCorrectedImages";
   static inline constexpr StringLiteral k_OutputPath_Key = "OutputPath";
   static inline constexpr StringLiteral k_FileExtension_Key = "FileExtension";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.
