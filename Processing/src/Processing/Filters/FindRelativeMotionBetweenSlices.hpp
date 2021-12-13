@@ -99,4 +99,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindRelativeMotionBetweenSlices, "b81d0944-9f3e-5a7f-8c2d-9cc8d3d41bb3");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindRelativeMotionBetweenSlices, "801008ce-1dcb-5604-8f16-a86526e28cf9");
