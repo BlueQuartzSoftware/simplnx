@@ -100,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, WriteStatsGenOdfAngleFile, "40288ce5-92cd-5dcd-b136-3e61569b4b23");
+COMPLEX_DEF_FILTER_TRAITS(complex, WriteStatsGenOdfAngleFile, "a4952f40-22dd-54ec-8c38-69c3fcd0e6f7");

@@ -104,4 +104,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindSchmids, "89c291a9-1c4d-59c2-ba69-b47beb4de594");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindSchmids, "e67ca06a-176f-58fc-a676-d6ee5553511a");

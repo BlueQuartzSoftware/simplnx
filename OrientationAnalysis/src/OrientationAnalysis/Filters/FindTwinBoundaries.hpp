@@ -101,4 +101,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindTwinBoundaries, "dba17c3c-26a7-5390-8d8c-bacbb234d8cf");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindTwinBoundaries, "a10124f3-05d0-5f49-93a0-e93926f5b48b");
