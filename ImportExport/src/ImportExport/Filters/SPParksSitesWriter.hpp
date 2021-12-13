@@ -93,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, SPParksSitesWriter, "2ab0a9c4-569c-59a7-9950-f68be3e01605");
+COMPLEX_DEF_FILTER_TRAITS(complex, SPParksSitesWriter, "bcf2f246-610f-5575-a434-241d04114b9f");

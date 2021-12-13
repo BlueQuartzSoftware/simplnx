@@ -96,4 +96,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, AbaqusHexahedronWriter, "1c0a7657-c853-5798-ad55-09ec9cca2528");
+COMPLEX_DEF_FILTER_TRAITS(complex, AbaqusHexahedronWriter, "0559aa37-c5ad-549a-82d4-bff4bfcb6cc6");
