@@ -125,4 +125,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, CreateGeometry, "4b74464d-82ad-5b0a-b4a7-4d824c9c8196");
+COMPLEX_DEF_FILTER_TRAITS(complex, CreateGeometry, "9ac220b9-14f9-581a-9bac-5714467589cc");

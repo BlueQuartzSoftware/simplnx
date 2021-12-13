@@ -96,4 +96,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, SetOriginResolutionImageGeom, "f279660d-9348-557e-927a-e163bf536f14");
+COMPLEX_DEF_FILTER_TRAITS(complex, SetOriginResolutionImageGeom, "6d3a3852-6251-5d2e-b749-6257fd0d8951");

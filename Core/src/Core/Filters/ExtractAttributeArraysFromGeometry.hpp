@@ -106,4 +106,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ExtractAttributeArraysFromGeometry, "d8680574-fae2-5561-9b08-3d31e2da4fd7");
+COMPLEX_DEF_FILTER_TRAITS(complex, ExtractAttributeArraysFromGeometry, "2060a933-b6f5-50fd-9382-a008a5cef17f");

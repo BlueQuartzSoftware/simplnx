@@ -94,4 +94,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, GenerateColorTable, "6180ed13-d8f9-574c-8743-82a0461a973e");
+COMPLEX_DEF_FILTER_TRAITS(complex, GenerateColorTable, "0d0a6535-6565-51c5-a3fc-fbc00008606d");
