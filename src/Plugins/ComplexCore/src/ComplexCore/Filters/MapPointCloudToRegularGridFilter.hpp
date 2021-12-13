@@ -25,10 +25,14 @@ public:
   MapPointCloudToRegularGridFilter& operator=(MapPointCloudToRegularGridFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_NumericType_Key = "numeric_type";
-  static inline constexpr StringLiteral k_NumComps_Key = "component_count";
-  static inline constexpr StringLiteral k_NumTuples_Key = "tuple_count";
-  static inline constexpr StringLiteral k_DataPath_Key = "output_data_array";
+  static inline constexpr StringLiteral k_SamplingGridType_Key = "sampling_grid_type";
+  static inline constexpr StringLiteral k_GridDimensions_Key = "grid_dimensions";
+  static inline constexpr StringLiteral k_VertexGeometry_Key = "vertex_geometry";
+  static inline constexpr StringLiteral k_ImageGeometry_Key = "image_geometry";
+  static inline constexpr StringLiteral k_ArraysToMap_Key = "arrays_to_map";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static inline constexpr StringLiteral k_MaskPath_Key = "mask";
+  static inline constexpr StringLiteral k_VoxelIndices_Key = "voxel_indices";
 
   /**
    * @brief

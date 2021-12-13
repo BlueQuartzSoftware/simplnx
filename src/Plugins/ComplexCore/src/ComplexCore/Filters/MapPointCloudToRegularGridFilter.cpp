@@ -1,10 +1,16 @@
 #include "MapPointCloudToRegularGridFilter.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Parameters/DataPathSelectionParameter.hpp"
+#include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
@@ -12,7 +18,166 @@ namespace complex
 {
 namespace
 {
+constexpr int64 k_MissingVertexGeom = -2600;
+constexpr int64 k_BadGridDimensions = -2601;
+constexpr int64 k_MissingVoxelIndicesArray = -2602;
+constexpr int64 k_MissingMaskArray = -2603;
 
+void createRegularGrid(DataStructure& data, const Arguments& args)
+{
+  auto samplingGridType = args.value<uint64>(MapPointCloudToRegularGridFilter::k_SamplingGridType_Key);
+  auto gridDimensions = args.value<std::vector<int32>>(MapPointCloudToRegularGridFilter::k_GridDimensions_Key);
+  auto vertexGeomPath = args.value<DataPath>(MapPointCloudToRegularGridFilter::k_VertexGeometry_Key);
+  auto imageGeomPath = args.value<DataPath>(MapPointCloudToRegularGridFilter::k_ImageGeometry_Key);
+  auto arraysToMap = args.value<std::vector<DataPath>>(MapPointCloudToRegularGridFilter::k_ArraysToMap_Key);
+  auto useMask = args.value<bool>(MapPointCloudToRegularGridFilter::k_UseMask_Key);
+  auto maskArrayPath = args.value<DataPath>(MapPointCloudToRegularGridFilter::k_MaskPath_Key);
+  auto voxelIndicesPath = args.value<DataPath>(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key);
+
+  std::string ss = fmt::format("Creating Regular Grid");
+  //notifyStatusMessage(ss);
+
+  VertexGeom* pointCloud = data.getDataAs<VertexGeom>(vertexGeomPath);
+  ImageGeom* image = data.getDataAs<ImageGeom>(imageGeomPath);
+
+  int64 numVerts = pointCloud->getNumberOfVertices();
+  auto* vertex = pointCloud->getVertices();
+
+  auto mask = data.getDataAs<BoolArray>(maskArrayPath);
+
+  // Find the largest/smallest (x,y,z) dimensions of the incoming data to be used to define the maximum dimensions for the regular grid
+  std::vector<float32> meshMaxExtents;
+  std::vector<float32> meshMinExtents;
+  for(size_t i = 0; i < 3; i++)
+  {
+    meshMaxExtents.push_back(std::numeric_limits<float>::lowest());
+    meshMinExtents.push_back(std::numeric_limits<float>::max());
+  }
+
+  for(int64_t i = 0; i < numVerts; i++)
+  {
+    if(!useMask || (useMask && (*mask)[i]))
+    {
+      if((*vertex)[3 * i] > meshMaxExtents[0])
+      {
+        meshMaxExtents[0] = (*vertex)[3 * i];
+      }
+      if((*vertex)[3 * i + 1] > meshMaxExtents[1])
+      {
+        meshMaxExtents[1] = (*vertex)[3 * i + 1];
+      }
+      if((*vertex)[3 * i + 2] > meshMaxExtents[2])
+      {
+        meshMaxExtents[2] = (*vertex)[3 * i + 2];
+      }
+      if((*vertex)[3 * i] < meshMinExtents[0])
+      {
+        meshMinExtents[0] = (*vertex)[3 * i];
+      }
+      if((*vertex)[3 * i + 1] < meshMinExtents[1])
+      {
+        meshMinExtents[1] = (*vertex)[3 * i + 1];
+      }
+      if((*vertex)[3 * i + 2] < meshMinExtents[2])
+      {
+        meshMinExtents[2] = (*vertex)[3 * i + 2];
+      }
+    }
+  }
+
+  SizeVec3 iDims = image->getDimensions();
+
+  std::vector<float32> iRes(3, 0.0f);
+  std::vector<float32> iOrigin(3, 0.0f);
+
+  if(iDims[0] > 1)
+  {
+    iRes[0] = (meshMaxExtents[0] - meshMinExtents[0]) / (static_cast<float32>(iDims[0]));
+    if(iRes[0] == 0.0)
+    {
+      iRes[0] = 1.0f;
+      iDims[0] = 1;
+    }
+    else
+    {
+      iDims[0] += 1;
+    }
+    iOrigin[0] = meshMinExtents[0] - (iRes[0] / 2.0f);
+  }
+  else
+  {
+    iRes[0] = 1.25f * (meshMaxExtents[0] - meshMinExtents[0]) / (static_cast<float>(iDims[0]));
+    if(iRes[0] == 0.0)
+    {
+      iRes[0] = 1.0f;
+      iOrigin[0] = -0.5f;
+    }
+    else
+    {
+      iOrigin[0] = meshMinExtents[0] - (iRes[0] * 0.1f);
+    }
+  }
+
+  if(iDims[1] > 1)
+  {
+    iRes[1] = (meshMaxExtents[1] - meshMinExtents[1]) / (static_cast<float32>(iDims[1]));
+    if(iRes[1] == 0.0)
+    {
+      iRes[1] = 1.0f;
+      iDims[1] = 1;
+    }
+    else
+    {
+      iDims[1] += 1;
+    }
+    iOrigin[1] = meshMinExtents[1] - (iRes[1] / 2.0f);
+  }
+  else
+  {
+    iRes[1] = 1.25f * (meshMaxExtents[1] - meshMinExtents[1]) / (static_cast<float32>(iDims[1]));
+    if(iRes[1] == 0.0)
+    {
+      iRes[1] = 1.0f;
+      iOrigin[1] = -0.5f;
+    }
+    else
+    {
+      iOrigin[1] = meshMinExtents[1] - (iRes[1] * 0.1f);
+    }
+  }
+
+  if(iDims[2] > 1)
+  {
+    iRes[2] = (meshMaxExtents[2] - meshMinExtents[2]) / (static_cast<float32>(iDims[2]));
+    if(iRes[2] == 0.0)
+    {
+      iRes[2] = 1.0f;
+      iDims[2] = 1;
+    }
+    else
+    {
+      iDims[2] += 1;
+    }
+    iOrigin[2] = meshMinExtents[2] - (iRes[2] / 2.0f);
+  }
+  else
+  {
+    iRes[2] = 1.25f * (meshMaxExtents[2] - meshMinExtents[2]) / (static_cast<float32>(iDims[2]));
+    if(iRes[2] == 0.0)
+    {
+      iRes[2] = 1.0f;
+      iOrigin[2] = -0.5f;
+    }
+    else
+    {
+      iOrigin[2] = meshMinExtents[1] - (iRes[2] * 0.1f);
+    }
+  }
+
+  image->setDimensions(iDims);
+  image->setSpacing(iRes[0], iRes[1], iRes[2]);
+  image->setOrigin(iOrigin[0], iOrigin[1], iOrigin[2]);
+}
 } // namespace
 
 std::string MapPointCloudToRegularGridFilter::name() const
@@ -38,13 +203,15 @@ std::string MapPointCloudToRegularGridFilter::humanName() const
 Parameters MapPointCloudToRegularGridFilter::parameters() const
 {
   Parameters params;
-  //params.insert(std::make_unique<NumericTypeParameter>(k_NumericType_Key, "Numeric Type", "Numeric Type of data to create", NumericType::int32));
-  params.insert(std::make_unique<VectorInt32Parameter>(k_NumComps_Key, "Grid Dimensions", "Target grid size", std::vector<int32>{0,0,0}));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_NumTuples_Key, "Image Geometry", "Path to the target Image Geometry", DataPath()));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_NumTuples_Key, "Arrays to Map", "Path to the target Image Geometry", std::vector<DataPath>()));
-  params.insert(std::make_unique<BoolParameter>(k_DataPath_Key, "Use Mask", "Array storing the file data", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_DataPath_Key, "Mask", "Array storing the file data", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_DataPath_Key, "Voxel Indices", "Array storing the file data", DataPath()));
+  params.insert(std::make_unique<ChoicesParameter>(k_SamplingGridType_Key, "Sampling Grid Type", "Specifies how data is saved or accessed", 1,
+                                                   std::vector<std::string>{"Manual", "Use Existing Image Geometry"}));
+  params.insert(std::make_unique<VectorInt32Parameter>(k_GridDimensions_Key, "Grid Dimensions", "Target grid size", std::vector<int32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_VertexGeometry_Key, "Vertex Geometry", "Path to the target Vertex Geometry", DataPath()));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_ImageGeometry_Key, "Image Geometry", "Path to the target Image Geometry", DataPath()));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraysToMap_Key, "Arrays to Map", "Path to the target Image Geometry", std::vector<DataPath>()));
+  params.insert(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Array storing the file data", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask", "Array storing the file data", DataPath()));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_VoxelIndices_Key, "Voxel Indices", "Array storing the file data", DataPath()));
   return params;
 }
 
@@ -55,171 +222,164 @@ IFilter::UniquePointer MapPointCloudToRegularGridFilter::clone() const
 
 IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
 {
-  auto numericType = args.value<NumericType>(k_NumericType_Key);
-  auto components = args.value<uint64>(k_NumComps_Key);
-  auto numTuples = args.value<uint64>(k_NumTuples_Key);
-  auto dataArrayPath = args.value<DataPath>(k_DataPath_Key);
+  auto samplingGridType = args.value<uint64>(k_SamplingGridType_Key);
+  auto gridDimensions = args.value<std::vector<int32>>(k_GridDimensions_Key);
+  auto vertexGeomPath = args.value<DataPath>(k_VertexGeometry_Key);
+  auto imageGeomPath = args.value<DataPath>(k_ImageGeometry_Key);
+  auto arraysToMap = args.value<std::vector<DataPath>>(k_ArraysToMap_Key);
+  auto useMask = args.value<bool>(k_UseMask_Key);
+  auto maskArrayPath = args.value<DataPath>(k_MaskPath_Key);
+  auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndices_Key);
 
-  //
+  OutputActions actions;
 
-  std::vector<IDataArray*> dataArrays;
+  std::vector<DataPath> dataArrays;
 
-  VertexGeom::Pointer vertex = getDataContainerArray()->getPrereqGeometryFromDataContainer<VertexGeom>(this, getDataContainerName());
-
-  if(getErrorCode() < 0)
+  //VertexGeom::Pointer vertex = getDataContainerArray()->getPrereqGeometryFromDataContainer<VertexGeom>(this, getDataContainerName());
+  auto* vertexGeom = data.getDataAs<VertexGeom>(vertexGeomPath);
+  if(vertexGeom == nullptr)
   {
-    return;
+    std::string ss = fmt::format("Could not find Vertex geometry at {}", vertexGeomPath.toString());
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVertexGeom, ss}})};
+  }
+  else
+  {
+    // dataArrays.push_back(vertex->getVertices());
   }
 
-  dataArrays.push_back(vertex->getVertices());
-
-  if(m_CreateDataContainer == 0)
+  if(samplingGridType == 0)
   {
-    if(getGridDimensions()[0] <= 0 || getGridDimensions()[1] <= 0 || getGridDimensions()[2] <= 0)
+    if(gridDimensions[0] <= 0 || gridDimensions[1] <= 0 || gridDimensions[2] <= 0)
     {
-      QString ss = QObject::tr("All grid dimensions must be positive.\n "
-                               "Current grid dimensions:\n x = %1\n y = %2\n z = %3\n")
-                       .arg(getGridDimensions()[0])
-                       .arg(getGridDimensions()[1])
-                       .arg(getGridDimensions()[2]);
-      setErrorCondition(-11000, ss);
+      std::string ss = fmt::format("All grid dimensions must be positive.\n "
+                               "Current grid dimensions:\n x = {}\n y = {}\n z = {}\n",
+                       gridDimensions[0],
+                       gridDimensions[1],
+                       gridDimensions[2]);
+      return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadGridDimensions, ss}})};
     }
 
-    if(getErrorCode() < 0)
-    {
-      return;
-    }
-
-    ImageGeom::Pointer image = ImageGeom::CreateGeometry(SIMPL::Geometry::ImageGeometry);
-    size_t dims[3] = {static_cast<size_t>(getGridDimensions()[0]), static_cast<size_t>(getGridDimensions()[1]), static_cast<size_t>(getGridDimensions()[2])};
-    image->setDimensions(dims);
-
-    DataContainer::Pointer m = getDataContainerArray()->createNonPrereqDataContainer(this, getImageDataContainerName());
-
-    if(getErrorCode() < 0)
-    {
-      return;
-    }
-
-    m->setGeometry(image);
+    CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(gridDimensions[0]), static_cast<usize>(gridDimensions[1]), static_cast<usize>(gridDimensions[2])};
+    CreateImageGeometryAction::OriginType origin = {0, 0, 0};
+    CreateImageGeometryAction::SpacingType spacing = {1, 1, 1};
+    auto imageAction = std::make_unique<CreateImageGeometryAction>(imageGeomPath, dims, origin, spacing);
+    actions.actions.push_back(std::move(imageAction));
   }
 
-  if(m_CreateDataContainer == 1)
+  if(samplingGridType == 1)
   {
-    ImageGeom* vertex = getDataContainerArray()->getPrereqGeometryFromDataContainer<ImageGeom>(this, getImageDataContainerPath());
-    if(getErrorCode() < 0)
+    auto* vertex = data.getDataAs<ImageGeom>(imageGeomPath);
+    if(vertex == nullptr)
     {
-      return;
+      std::string ss = fmt::format("Could not find Image geometry at {}", imageGeomPath.toString());
+      return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVertexGeom, ss}})};
     }
   }
 
-  std::vector<size_t> cDims(1, 1);
-
-  voxelIndicesPtr = getDataContainerArray()->createNonPrereqArrayFromPath<USizeArray>(this, voxelIndicesArrayPath, 0, cDims);
+  auto* voxelIndicesPtr = data.getDataAs<USizeArray>(voxelIndicesPath);
   if(nullptr != voxelIndicesPtr)
   {
-    m_VoxelIndices = m_VoxelIndicesPtr->getDataStore();
-  } /* Now assign the raw pointer to data from the DataArray<T> object */
-  if(getErrorCode() >= 0)
+    std::string ss = fmt::format("Could not find Voxel Indices array at {}", voxelIndicesPath.toString());
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVoxelIndicesArray, ss}})};
+  }
+  else
   {
-    dataArrays.push_back(m_VoxelIndicesPtr.lock());
+    dataArrays.push_back(voxelIndicesPath);
   }
 
   if(useMask)
   {
-    maskPtr = getDataContainerArray()->getPrereqArrayFromPath<BoolArray>(this, maskArrayPath, cDims);
-    if(nullptr != maskPtr)
+    auto maskPtr = data.getDataAs<BoolArray>(maskArrayPath);
+    if(nullptr == maskPtr)
     {
-      mask = maskPtr->getDataStore();
-    } /* Now assign the raw pointer to data from the DataArray<T> object */
-    if(getErrorCode() >= 0)
+      std::string ss = fmt::format("Could not find Mask array at {}", maskArrayPath.toString());
+      return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingMaskArray, ss}})};
+    }
+    else
     {
-      dataArrays.push_back(maskPtr);
+      dataArrays.push_back(maskArrayPath);
     }
   }
 
-  getDataContainerArray()->validateNumberOfTuples(this, dataArrays);
-
-  //
-  auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{numTuples}, components, dataArrayPath);
-
-  OutputActions actions;
-  actions.actions.push_back(std::move(action));
+  data.validateNumberOfTuples(dataArrays);
 
   return {std::move(actions)};
 }
 
 Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
-  auto numericType = args.value<NumericType>(k_NumericType_Key);
-  auto components = args.value<uint64>(k_NumComps_Key);
-  auto numTuples = args.value<uint64>(k_NumTuples_Key);
-  auto path = args.value<DataPath>(k_DataPath_Key);
+  auto samplingGridType = args.value<uint64>(k_SamplingGridType_Key);
+  auto gridDimensions = args.value<std::vector<int32>>(k_GridDimensions_Key);
+  auto vertexGeomPath = args.value<DataPath>(k_VertexGeometry_Key);
+  auto imageGeomPath = args.value<DataPath>(k_ImageGeometry_Key);
+  auto arraysToMap = args.value<std::vector<DataPath>>(k_ArraysToMap_Key);
+  auto useMask = args.value<bool>(k_UseMask_Key);
+  auto maskArrayPath = args.value<DataPath>(k_MaskPath_Key);
+  auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndices_Key);
 
-  switch(numericType)
+  ImageGeom* image;
+  if(samplingGridType == 0)
   {
-  case NumericType::int8: {
-    auto& dataArray = ArrayFromPath<int8>(data, path);
-    auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0);
-    break;
+    // Create the regular grid
+    createRegularGrid(data, args);
+    image = data.getDataAs<ImageGeom>(imageGeomPath);
   }
-  case NumericType::uint8: {
-    auto& dataArray = ArrayFromPath<uint8>(data, path);
-    auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0);
-    break;
+  else if(samplingGridType == 1)
+  {
+    image = data.getDataAs<ImageGeom>(imageGeomPath);
   }
-  case NumericType::int16: {
-    auto& dataArray = ArrayFromPath<int16>(data, path);
-    auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0);
-    break;
-  }
-  case NumericType::uint16: {
-    auto& dataArray = ArrayFromPath<uint16>(data, path);
-    auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0);
-    break;
-  }
-  case NumericType::int32: {
-    auto& dataArray = ArrayFromPath<int32>(data, path);
-    auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0);
-    break;
-  }
-  case NumericType::uint32: {
-    auto& dataArray = ArrayFromPath<uint32>(data, path);
-    auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0);
-    break;
-  }
-  case NumericType::int64: {
-    auto& dataArray = ArrayFromPath<int64>(data, path);
-    auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0LL);
-    break;
-  }
-  case NumericType::uint64: {
-    auto& dataArray = ArrayFromPath<uint64>(data, path);
-    auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0ULL);
-    break;
-  }
-  case NumericType::float32: {
-    auto& dataArray = ArrayFromPath<float32>(data, path);
-    auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0.0f);
-    break;
-  }
-  case NumericType::float64: {
-    auto& dataArray = ArrayFromPath<float64>(data, path);
-    auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0.0);
-    break;
-  }
-  default:
-    throw std::runtime_error("Invalid type");
+
+  auto* vertices = data.getDataAs<VertexGeom>(vertexGeomPath);
+
+  int64 numVerts = vertices->getNumberOfVertices();
+  SizeVec3 dims = image->getDimensions();
+  FloatVec3 res = image->getSpacing();
+  FloatVec3 origin = image->getOrigin();
+  float32 coords[3] = {0.0f, 0.0f, 0.0f};
+  usize idxs[3] = {0, 0, 0};
+  int64 progIncrement = numVerts / 100;
+  int64 prog = 1;
+  int64 progressInt = 0;
+  int64 counter = 0;
+
+  auto maskPtr = data.getDataAs<BoolArray>(maskArrayPath);
+  auto* voxelIndicesPtr = data.getDataAs<USizeArray>(voxelIndicesPath);
+
+  for(int64 i = 0; i < numVerts; i++)
+  {
+    if(!useMask || (useMask && (*maskPtr)[i]))
+    {
+      auto coords = vertices->getCoords(i);
+
+      for(usize j = 0; j < 3; j++)
+      {
+        /*if((coords[j] - origin[j]) < 0)
+        {
+          std::string ss = fmt::format("Found negative value for index computation of vertex {}, which may result in unsigned underflow", i);
+          setWarningCondition(-1000, ss);
+        }*/
+        idxs[j] = int64(floor((coords[j] - origin[j]) / res[j]));
+      }
+
+      for(usize j = 0; j < 3; j++)
+      {
+        if(idxs[j] >= dims[j])
+        {
+          idxs[j] = (dims[j] - 1);
+        }
+      }
+
+      (*voxelIndicesPtr)[i] = (idxs[2] * dims[1] * dims[0]) + (idxs[1] * dims[0]) + idxs[0];
+
+      if(counter > prog)
+      {
+        progressInt = static_cast<int64>((static_cast<float>(counter) / numVerts) * 100.0f);
+        //std::string ss = fmt::format("Computing Point Cloud Voxel Indices || {}% Completed", progressInt);
+        //notifyStatusMessage(ss);
+        prog = prog + progIncrement;
+      }
+      counter++;
+    }
   }
 
   return {};
