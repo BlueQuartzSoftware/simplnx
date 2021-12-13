@@ -83,6 +83,85 @@ namespace complex
 {
 namespace ITK
 {
+/**
+ * @brief
+ * @tparam T
+ */
+template <class T>
+using UnderlyingType_t = typename itk::NumericTraits<T>::ValueType;
+
+bool DoDimensionsMatch(const IDataStore& dataStore, const ImageGeom& imageGeom);
+
+template <class PixelT>
+std::vector<usize> GetComponentDimensions()
+{
+  return {itk::NumericTraits<PixelT>::GetLength()};
+}
+
+template <class PixelT, uint32 Dimensions>
+typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(DataStore<UnderlyingType_t<PixelT>>& dataStore, const ImageGeom& imageGeom)
+{
+  using T = ITK::UnderlyingType_t<PixelT>;
+
+  static_assert(std::is_standard_layout_v<PixelT>, "complex::ITK::WrapDataStoreInImage: PixelT must be standard layout");
+  static_assert(std::is_trivial_v<PixelT>, "complex::ITK::WrapDataStoreInImage: PixelT must be trivial");
+  static_assert(std::is_arithmetic_v<T>, "complex::ITK::WrapDataStoreInImage: The underlying type T of PixelT must be arithmetic");
+  static_assert(sizeof(PixelT) % sizeof(T) == 0, "complex::ITK::WrapDataStoreInImage: The size of PixelT must be evenly divisible by T");
+
+  using FilterType = itk::ImportImageFilter<PixelT, Dimensions>;
+
+  SizeVec3 geomDims = imageGeom.getDimensions();
+  FloatVec3 geomOrigin = imageGeom.getOrigin();
+  FloatVec3 geomSpacing = imageGeom.getSpacing();
+
+  typename FilterType::SizeType imageSize{};
+  typename FilterType::OriginType imageOrigin{};
+  typename FilterType::SpacingType imageSpacing{};
+
+  for(uint32 i = 0; i < Dimensions; i++)
+  {
+    imageSize[i] = geomDims[i];
+    imageSpacing[i] = geomSpacing[i];
+    imageOrigin[i] = geomOrigin[i];
+  }
+
+  typename FilterType::IndexType imageIndex{};
+
+  typename FilterType::RegionType imageRegion{};
+
+  imageRegion.SetSize(imageSize);
+  imageRegion.SetIndex(imageIndex);
+
+  typename FilterType::DirectionType imageDirection = FilterType::DirectionType::GetIdentity();
+
+  auto importFilter = FilterType::New();
+  importFilter->SetRegion(imageRegion);
+  importFilter->SetOrigin(imageOrigin);
+  importFilter->SetSpacing(imageSpacing);
+  importFilter->SetDirection(imageDirection);
+  importFilter->SetImportPointer(reinterpret_cast<PixelT*>(dataStore.data()), dataStore.getSize(), false);
+  importFilter->Update();
+
+  return importFilter->GetOutput();
+}
+
+template <class PixelT, uint32 Dimension>
+DataStore<UnderlyingType_t<PixelT>> ConvertImageToDataStore(itk::Image<PixelT, Dimension>& image)
+{
+  using ImageType = itk::Image<PixelT, Dimension>;
+  using T = UnderlyingType_t<PixelT>;
+  typename ImageType::SizeType imageSize = image.GetLargestPossibleRegion().GetSize();
+  std::vector<usize> tDims(imageSize.rbegin(), imageSize.rend());
+  std::vector<usize> cDims = GetComponentDimensions<PixelT>();
+  typename ImageType::PixelContainer* pixelContainer = image.GetPixelContainer();
+  // ITK use the global new allocator
+  auto* bufferPtr = pixelContainer->GetBufferPointer();
+  pixelContainer->ContainerManageMemoryOff();
+  std::unique_ptr<T[]> newData(bufferPtr);
+  DataStore<T> dataStore(std::move(newData), std::move(tDims), std::move(cDims));
+  return dataStore;
+}
+
 namespace detail
 {
 template <class InputT, class OutputT, usize Dimensions, class ResultT, template <class, class, uint32> class FunctorT, class... ArgsT>
@@ -222,7 +301,7 @@ struct ITKFilterFunctor
     using OutputImageType = itk::Image<OutputT, Dimension>;
     auto& typedInputDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<InputT>>&>(inputDataStore);
     typename InputImageType::Pointer inputImage = ITK::WrapDataStoreInImage<InputT, Dimension>(typedInputDataStore, imageGeom);
-    auto filter = filterCreationFunctor.operator()<InputImageType, OutputImageType>();
+    auto filter = filterCreationFunctor.template operator()<InputImageType, OutputImageType>();
     filter->SetInput(inputImage);
     filter->Update();
 
@@ -298,85 +377,6 @@ Result<ResultT> ArraySwitchFunc(const IDataStore& dataStore, const ImageGeom& im
     return MakeErrorResult<ResultT>(-1000, "Invalid DataType while attempting to execute");
   }
   }
-}
-
-/**
- * @brief
- * @tparam T
- */
-template <class T>
-using UnderlyingType_t = typename itk::NumericTraits<T>::ValueType;
-
-bool DoDimensionsMatch(const IDataStore& dataStore, const ImageGeom& imageGeom);
-
-template <class PixelT, uint32 Dimensions>
-typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(DataStore<UnderlyingType_t<PixelT>>& dataStore, const ImageGeom& imageGeom)
-{
-  using T = ITK::UnderlyingType_t<PixelT>;
-
-  static_assert(std::is_standard_layout_v<PixelT>, "complex::ITK::WrapDataStoreInImage: PixelT must be standard layout");
-  static_assert(std::is_trivial_v<PixelT>, "complex::ITK::WrapDataStoreInImage: PixelT must be trivial");
-  static_assert(std::is_arithmetic_v<T>, "complex::ITK::WrapDataStoreInImage: The underlying type T of PixelT must be arithmetic");
-  static_assert(sizeof(PixelT) % sizeof(T) == 0, "complex::ITK::WrapDataStoreInImage: The size of PixelT must be evenly divisible by T");
-
-  using FilterType = itk::ImportImageFilter<PixelT, Dimensions>;
-
-  SizeVec3 geomDims = imageGeom.getDimensions();
-  FloatVec3 geomOrigin = imageGeom.getOrigin();
-  FloatVec3 geomSpacing = imageGeom.getSpacing();
-
-  typename FilterType::SizeType imageSize{};
-  typename FilterType::OriginType imageOrigin{};
-  typename FilterType::SpacingType imageSpacing{};
-
-  for(uint32 i = 0; i < Dimensions; i++)
-  {
-    imageSize[i] = geomDims[i];
-    imageSpacing[i] = geomSpacing[i];
-    imageOrigin[i] = geomOrigin[i];
-  }
-
-  typename FilterType::IndexType imageIndex{};
-
-  typename FilterType::RegionType imageRegion{};
-
-  imageRegion.SetSize(imageSize);
-  imageRegion.SetIndex(imageIndex);
-
-  typename FilterType::DirectionType imageDirection = typename FilterType::DirectionType::GetIdentity();
-
-  auto importFilter = FilterType::New();
-  importFilter->SetRegion(imageRegion);
-  importFilter->SetOrigin(imageOrigin);
-  importFilter->SetSpacing(imageSpacing);
-  importFilter->SetDirection(imageDirection);
-  importFilter->SetImportPointer(reinterpret_cast<PixelT*>(dataStore.data()), dataStore.getSize(), false);
-  importFilter->Update();
-
-  return importFilter->GetOutput();
-}
-
-template <class PixelT>
-std::vector<usize> GetComponentDimensions()
-{
-  return {itk::NumericTraits<PixelT>::GetLength()};
-}
-
-template <class PixelT, uint32 Dimension>
-DataStore<UnderlyingType_t<PixelT>> ConvertImageToDataStore(itk::Image<PixelT, Dimension>& image)
-{
-  using ImageType = itk::Image<PixelT, Dimension>;
-  using T = UnderlyingType_t<PixelT>;
-  typename ImageType::SizeType imageSize = image.GetLargestPossibleRegion().GetSize();
-  std::vector<usize> tDims(imageSize.rbegin(), imageSize.rend());
-  std::vector<usize> cDims = GetComponentDimensions<PixelT>();
-  typename ImageType::PixelContainer* pixelContainer = image.GetPixelContainer();
-  // ITK use the global new allocator
-  auto* bufferPtr = pixelContainer->GetBufferPointer();
-  pixelContainer->ContainerManageMemoryOff();
-  std::unique_ptr<T[]> newData(bufferPtr);
-  DataStore<T> dataStore(std::move(newData), std::move(tDims), std::move(cDims));
-  return dataStore;
 }
 
 inline Result<OutputActions> DataCheck(const DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& imageGeomPath, const DataPath& outputArrayPath)

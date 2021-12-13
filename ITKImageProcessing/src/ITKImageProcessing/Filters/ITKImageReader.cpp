@@ -57,7 +57,7 @@ template <class T>
 void ReadImageIntoDataArray(DataStructure& dataStructure, const DataPath& arrayPath, itk::ImageIOBase& imageIO)
 {
   auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(arrayPath);
-  auto& dataStore = dataArray.getIDataStoreRefAs<DataStore<T>>();
+  auto& dataStore = dataArray.template getIDataStoreRefAs<DataStore<T>>();
   auto imageSize = imageIO.GetImageSizeInBytes();
   usize arraySize = dataStore.getSize() * sizeof(T);
   if(arraySize != imageSize)
