@@ -97,4 +97,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ExtractVertexGeometry, "5106c198-e6ad-5746-b8b0-a443b8ef1b0b");
+COMPLEX_DEF_FILTER_TRAITS(complex, ExtractVertexGeometry, "bc8a91ca-0cee-59c6-b5cb-acc1aab8617f");

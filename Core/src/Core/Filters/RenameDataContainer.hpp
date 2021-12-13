@@ -93,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, RenameDataContainer, "595e2dd8-1c90-5b11-b3f9-046d3489d0f5");
+COMPLEX_DEF_FILTER_TRAITS(complex, RenameDataContainer, "d53c808f-004d-5fac-b125-0fffc8cc78d6");

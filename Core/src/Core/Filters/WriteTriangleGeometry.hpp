@@ -94,4 +94,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, WriteTriangleGeometry, "bb06c259-ebeb-5d63-b86b-ef5197f6bef5");
+COMPLEX_DEF_FILTER_TRAITS(complex, WriteTriangleGeometry, "5e523ec1-49ac-541e-a4ba-6fa725798b91");

@@ -95,4 +95,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, PostSlackMessage, "395adbcc-0efc-5d65-84fb-1db0eba53236");
+COMPLEX_DEF_FILTER_TRAITS(complex, PostSlackMessage, "0ca83462-8564-54ea-9f4e-e5141974f30b");
