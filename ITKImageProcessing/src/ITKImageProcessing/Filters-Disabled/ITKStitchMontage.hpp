@@ -30,6 +30,7 @@ public:
   static inline constexpr StringLiteral k_MontageDataContainerName_Key = "MontageDataContainerName";
   static inline constexpr StringLiteral k_MontageAttributeMatrixName_Key = "MontageAttributeMatrixName";
   static inline constexpr StringLiteral k_MontageDataArrayName_Key = "MontageDataArrayName";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

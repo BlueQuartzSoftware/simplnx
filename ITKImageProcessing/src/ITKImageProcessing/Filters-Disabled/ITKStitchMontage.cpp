@@ -5,7 +5,37 @@
 #include "complex/Parameters/MontageSelectionFilterParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+
 using namespace complex;
+
+#include <itkStitchMontageFilter.h>
+namespace
+{
+struct ITKStitchMontageFilterCreationFunctor
+{
+  <<<NOT_IMPLEMENTED>>> m_MontageSelection;
+  StringParameter::ValueType m_CommonAttributeMatrixName;
+  StringParameter::ValueType m_CommonDataArrayName;
+  StringParameter::ValueType m_MontageDataContainerName;
+  StringParameter::ValueType m_MontageAttributeMatrixName;
+  StringParameter::ValueType m_MontageDataArrayName;
+
+  template <class InputImageType, class OutputImageType>
+  auto operator()() const
+  {
+    using FilterType = itk::StitchMontageFilter<InputImageType, OutputImageType>;
+    typename FilterType::Pointer filter = FilterType::New();
+    filter->SetMontageSelection(m_MontageSelection);
+    filter->SetCommonAttributeMatrixName(m_CommonAttributeMatrixName);
+    filter->SetCommonDataArrayName(m_CommonDataArrayName);
+    filter->SetMontageDataContainerName(m_MontageDataContainerName);
+    filter->SetMontageAttributeMatrixName(m_MontageAttributeMatrixName);
+    filter->SetMontageDataArrayName(m_MontageDataArrayName);
+    return filter;
+  }
+};
+} // namespace
 
 namespace complex
 {
@@ -72,29 +102,30 @@ IFilter::PreflightResult ITKStitchMontage::preflightImpl(const DataStructure& da
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pMontageSelectionValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_MontageSelection_Key);
-  auto pCommonAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_CommonAttributeMatrixName_Key);
-  auto pCommonDataArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_CommonDataArrayName_Key);
-  auto pMontageDataContainerNameValue = filterArgs.value<StringParameter::ValueType>(k_MontageDataContainerName_Key);
-  auto pMontageAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_MontageAttributeMatrixName_Key);
-  auto pMontageDataArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_MontageDataArrayName_Key);
+  auto pMontageSelection = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_MontageSelection_Key);
+  auto pCommonAttributeMatrixName = filterArgs.value<StringParameter::ValueType>(k_CommonAttributeMatrixName_Key);
+  auto pCommonDataArrayName = filterArgs.value<StringParameter::ValueType>(k_CommonDataArrayName_Key);
+  auto pMontageDataContainerName = filterArgs.value<StringParameter::ValueType>(k_MontageDataContainerName_Key);
+  auto pMontageAttributeMatrixName = filterArgs.value<StringParameter::ValueType>(k_MontageAttributeMatrixName_Key);
+  auto pMontageDataArrayName = filterArgs.value<StringParameter::ValueType>(k_MontageDataArrayName_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
   // any preflight updated values that you want to be displayed to the user, typically
   // through a user interface (UI).
   PreflightResult preflightResult;
+  // If your filter is going to pass back some `preflight updated values` then this is where you
+  // would create the code to store those values in the appropriate object. Note that we
+  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
+  // the std::vector<PreflightValue> object.
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   // If your filter is making structural changes to the DataStructure then the filter
   // is going to create OutputActions subclasses that need to be returned. This will
   // store those actions.
   complex::Result<OutputActions> resultOutputActions;
 
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
-  std::vector<PreflightValue> preflightUpdatedValues;
+  resultOutputActions = ITK::DataCheck(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath);
 
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
@@ -127,17 +158,24 @@ Result<> ITKStitchMontage::executeImpl(DataStructure& dataStructure, const Argum
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pMontageSelectionValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_MontageSelection_Key);
-  auto pCommonAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_CommonAttributeMatrixName_Key);
-  auto pCommonDataArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_CommonDataArrayName_Key);
-  auto pMontageDataContainerNameValue = filterArgs.value<StringParameter::ValueType>(k_MontageDataContainerName_Key);
-  auto pMontageAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_MontageAttributeMatrixName_Key);
-  auto pMontageDataArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_MontageDataArrayName_Key);
+  auto pMontageSelection = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_MontageSelection_Key);
+  auto pCommonAttributeMatrixName = filterArgs.value<StringParameter::ValueType>(k_CommonAttributeMatrixName_Key);
+  auto pCommonDataArrayName = filterArgs.value<StringParameter::ValueType>(k_CommonDataArrayName_Key);
+  auto pMontageDataContainerName = filterArgs.value<StringParameter::ValueType>(k_MontageDataContainerName_Key);
+  auto pMontageAttributeMatrixName = filterArgs.value<StringParameter::ValueType>(k_MontageAttributeMatrixName_Key);
+  auto pMontageDataArrayName = filterArgs.value<StringParameter::ValueType>(k_MontageDataArrayName_Key);
 
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
+  ::ITKStitchMontageFilterCreationFunctor itkFunctor;
+  itkFunctor.m_MontageSelection = pMontageSelection;
+  itkFunctor.m_CommonAttributeMatrixName = pCommonAttributeMatrixName;
+  itkFunctor.m_CommonDataArrayName = pCommonDataArrayName;
+  itkFunctor.m_MontageDataContainerName = pMontageDataContainerName;
+  itkFunctor.m_MontageAttributeMatrixName = pMontageAttributeMatrixName;
+  itkFunctor.m_MontageDataArrayName = pMontageDataArrayName;
 
-  return {};
+  return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

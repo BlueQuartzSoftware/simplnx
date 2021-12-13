@@ -5,9 +5,36 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
+
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
 using namespace complex;
+
+#include <itkHistogramMatchingImageFilter.h>
+namespace
+{
+struct ITKHistogramMatchingImageFilterCreationFunctor
+{
+  float64 m_NumberOfHistogramLevels;
+  float64 m_NumberOfMatchPoints;
+  bool m_ThresholdAtMeanIntensity;
+  DataPath m_SelectedCellArrayPath;
+  DataPath m_ReferenceCellArrayPath;
+
+  template <class InputImageType, class OutputImageType>
+  auto operator()() const
+  {
+    using FilterType = itk::HistogramMatchingImageFilter<InputImageType, OutputImageType>;
+    typename FilterType::Pointer filter = FilterType::New();
+    filter->SetNumberOfHistogramLevels(m_NumberOfHistogramLevels);
+    filter->SetNumberOfMatchPoints(m_NumberOfMatchPoints);
+    filter->SetThresholdAtMeanIntensity(m_ThresholdAtMeanIntensity);
+    filter->SetSelectedCellArrayPath(m_SelectedCellArrayPath);
+    filter->SetReferenceCellArrayPath(m_ReferenceCellArrayPath);
+    return filter;
+  }
+};
+} // namespace
 
 namespace complex
 {
@@ -49,11 +76,9 @@ Parameters ITKHistogramMatchingImage::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_NumberOfHistogramLevels_Key, "NumberOfHistogramLevels", "", 2.3456789));
   params.insert(std::make_unique<Float64Parameter>(k_NumberOfMatchPoints_Key, "NumberOfMatchPoints", "", 2.3456789));
   params.insert(std::make_unique<BoolParameter>(k_ThresholdAtMeanIntensity_Key, "ThresholdAtMeanIntensity", "", false));
-  params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Input Attribute Array to filter", "", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ReferenceCellArrayPath_Key, "Reference Attribute Array to filter", "", DataPath{}));
-  params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<StringParameter>(k_NewCellArrayName_Key, "Filtered Array", "", "SomeString"));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NewCellArrayName_Key, "Filtered Array", "", DataPath{}));
 
   return params;
 }
@@ -76,29 +101,30 @@ IFilter::PreflightResult ITKHistogramMatchingImage::preflightImpl(const DataStru
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pNumberOfHistogramLevelsValue = filterArgs.value<float64>(k_NumberOfHistogramLevels_Key);
-  auto pNumberOfMatchPointsValue = filterArgs.value<float64>(k_NumberOfMatchPoints_Key);
-  auto pThresholdAtMeanIntensityValue = filterArgs.value<bool>(k_ThresholdAtMeanIntensity_Key);
-  auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pReferenceCellArrayPathValue = filterArgs.value<DataPath>(k_ReferenceCellArrayPath_Key);
-  auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
+  auto pNumberOfHistogramLevels = filterArgs.value<float64>(k_NumberOfHistogramLevels_Key);
+  auto pNumberOfMatchPoints = filterArgs.value<float64>(k_NumberOfMatchPoints_Key);
+  auto pThresholdAtMeanIntensity = filterArgs.value<bool>(k_ThresholdAtMeanIntensity_Key);
+  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
+  auto pReferenceCellArrayPath = filterArgs.value<DataPath>(k_ReferenceCellArrayPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
   // any preflight updated values that you want to be displayed to the user, typically
   // through a user interface (UI).
   PreflightResult preflightResult;
+  // If your filter is going to pass back some `preflight updated values` then this is where you
+  // would create the code to store those values in the appropriate object. Note that we
+  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
+  // the std::vector<PreflightValue> object.
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   // If your filter is making structural changes to the DataStructure then the filter
   // is going to create OutputActions subclasses that need to be returned. This will
   // store those actions.
   complex::Result<OutputActions> resultOutputActions;
 
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
-  std::vector<PreflightValue> preflightUpdatedValues;
+  resultOutputActions = ITK::DataCheck(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath);
 
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
@@ -131,17 +157,23 @@ Result<> ITKHistogramMatchingImage::executeImpl(DataStructure& dataStructure, co
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pNumberOfHistogramLevelsValue = filterArgs.value<float64>(k_NumberOfHistogramLevels_Key);
-  auto pNumberOfMatchPointsValue = filterArgs.value<float64>(k_NumberOfMatchPoints_Key);
-  auto pThresholdAtMeanIntensityValue = filterArgs.value<bool>(k_ThresholdAtMeanIntensity_Key);
-  auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pReferenceCellArrayPathValue = filterArgs.value<DataPath>(k_ReferenceCellArrayPath_Key);
-  auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
+  auto pNumberOfHistogramLevels = filterArgs.value<float64>(k_NumberOfHistogramLevels_Key);
+  auto pNumberOfMatchPoints = filterArgs.value<float64>(k_NumberOfMatchPoints_Key);
+  auto pThresholdAtMeanIntensity = filterArgs.value<bool>(k_ThresholdAtMeanIntensity_Key);
+  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
+  auto pReferenceCellArrayPath = filterArgs.value<DataPath>(k_ReferenceCellArrayPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
 
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
+  ::ITKHistogramMatchingImageFilterCreationFunctor itkFunctor;
+  itkFunctor.m_NumberOfHistogramLevels = pNumberOfHistogramLevels;
+  itkFunctor.m_NumberOfMatchPoints = pNumberOfMatchPoints;
+  itkFunctor.m_ThresholdAtMeanIntensity = pThresholdAtMeanIntensity;
+  itkFunctor.m_SelectedCellArrayPath = pSelectedCellArrayPath;
+  itkFunctor.m_ReferenceCellArrayPath = pReferenceCellArrayPath;
 
-  return {};
+  return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

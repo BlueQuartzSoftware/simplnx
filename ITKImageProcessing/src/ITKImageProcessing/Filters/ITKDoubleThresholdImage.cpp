@@ -2,12 +2,45 @@
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
+#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
+
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
 using namespace complex;
+
+#include <itkDoubleThresholdImageFilter.h>
+namespace
+{
+struct ITKDoubleThresholdImageFilterCreationFunctor
+{
+  float64 m_Threshold1;
+  float64 m_Threshold2;
+  float64 m_Threshold3;
+  float64 m_Threshold4;
+  int32 m_InsideValue;
+  int32 m_OutsideValue;
+  bool m_FullyConnected;
+
+  template <class InputImageType, class OutputImageType>
+  auto operator()() const
+  {
+    using FilterType = itk::DoubleThresholdImageFilter<InputImageType, OutputImageType>;
+    typename FilterType::Pointer filter = FilterType::New();
+    filter->SetThreshold1(m_Threshold1);
+    filter->SetThreshold2(m_Threshold2);
+    filter->SetThreshold3(m_Threshold3);
+    filter->SetThreshold4(m_Threshold4);
+    filter->SetInsideValue(m_InsideValue);
+    filter->SetOutsideValue(m_OutsideValue);
+    filter->SetFullyConnected(m_FullyConnected);
+    return filter;
+  }
+};
+} // namespace
 
 namespace complex
 {
@@ -53,10 +86,9 @@ Parameters ITKDoubleThresholdImage::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_InsideValue_Key, "InsideValue", "", 1234356));
   params.insert(std::make_unique<Int32Parameter>(k_OutsideValue_Key, "OutsideValue", "", 1234356));
   params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "FullyConnected", "", false));
-  params.insertSeparator(Parameters::Separator{"Cell Data"});
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{DataObject::Type::ImageGeom}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to filter", "", DataPath{}));
-  params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<StringParameter>(k_NewCellArrayName_Key, "Filtered Array", "", "SomeString"));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NewCellArrayName_Key, "Filtered Array", "", DataPath{}));
 
   return params;
 }
@@ -79,32 +111,34 @@ IFilter::PreflightResult ITKDoubleThresholdImage::preflightImpl(const DataStruct
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pThreshold1Value = filterArgs.value<float64>(k_Threshold1_Key);
-  auto pThreshold2Value = filterArgs.value<float64>(k_Threshold2_Key);
-  auto pThreshold3Value = filterArgs.value<float64>(k_Threshold3_Key);
-  auto pThreshold4Value = filterArgs.value<float64>(k_Threshold4_Key);
+  auto pThreshold1 = filterArgs.value<float64>(k_Threshold1_Key);
+  auto pThreshold2 = filterArgs.value<float64>(k_Threshold2_Key);
+  auto pThreshold3 = filterArgs.value<float64>(k_Threshold3_Key);
+  auto pThreshold4 = filterArgs.value<float64>(k_Threshold4_Key);
   auto pInsideValue = filterArgs.value<int32>(k_InsideValue_Key);
   auto pOutsideValue = filterArgs.value<int32>(k_OutsideValue_Key);
-  auto pFullyConnectedValue = filterArgs.value<bool>(k_FullyConnected_Key);
-  auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
+  auto pFullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
+  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
+  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
   // any preflight updated values that you want to be displayed to the user, typically
   // through a user interface (UI).
   PreflightResult preflightResult;
+  // If your filter is going to pass back some `preflight updated values` then this is where you
+  // would create the code to store those values in the appropriate object. Note that we
+  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
+  // the std::vector<PreflightValue> object.
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   // If your filter is making structural changes to the DataStructure then the filter
   // is going to create OutputActions subclasses that need to be returned. This will
   // store those actions.
   complex::Result<OutputActions> resultOutputActions;
 
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
-  std::vector<PreflightValue> preflightUpdatedValues;
+  resultOutputActions = ITK::DataCheck(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath);
 
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
@@ -137,20 +171,29 @@ Result<> ITKDoubleThresholdImage::executeImpl(DataStructure& dataStructure, cons
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pThreshold1Value = filterArgs.value<float64>(k_Threshold1_Key);
-  auto pThreshold2Value = filterArgs.value<float64>(k_Threshold2_Key);
-  auto pThreshold3Value = filterArgs.value<float64>(k_Threshold3_Key);
-  auto pThreshold4Value = filterArgs.value<float64>(k_Threshold4_Key);
+  auto pThreshold1 = filterArgs.value<float64>(k_Threshold1_Key);
+  auto pThreshold2 = filterArgs.value<float64>(k_Threshold2_Key);
+  auto pThreshold3 = filterArgs.value<float64>(k_Threshold3_Key);
+  auto pThreshold4 = filterArgs.value<float64>(k_Threshold4_Key);
   auto pInsideValue = filterArgs.value<int32>(k_InsideValue_Key);
   auto pOutsideValue = filterArgs.value<int32>(k_OutsideValue_Key);
-  auto pFullyConnectedValue = filterArgs.value<bool>(k_FullyConnected_Key);
-  auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
+  auto pFullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
+  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
+  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
 
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
+  ::ITKDoubleThresholdImageFilterCreationFunctor itkFunctor;
+  itkFunctor.m_Threshold1 = pThreshold1;
+  itkFunctor.m_Threshold2 = pThreshold2;
+  itkFunctor.m_Threshold3 = pThreshold3;
+  itkFunctor.m_Threshold4 = pThreshold4;
+  itkFunctor.m_InsideValue = pInsideValue;
+  itkFunctor.m_OutsideValue = pOutsideValue;
+  itkFunctor.m_FullyConnected = pFullyConnected;
 
-  return {};
+  return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

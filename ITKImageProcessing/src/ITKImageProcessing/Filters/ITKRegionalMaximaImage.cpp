@@ -2,12 +2,39 @@
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
+#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
+
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
 using namespace complex;
+
+#include <itkRegionalMaximaImageFilter.h>
+namespace
+{
+struct ITKRegionalMaximaImageFilterCreationFunctor
+{
+  float64 m_BackgroundValue;
+  float64 m_ForegroundValue;
+  bool m_FullyConnected;
+  bool m_FlatIsMaxima;
+
+  template <class InputImageType, class OutputImageType>
+  auto operator()() const
+  {
+    using FilterType = itk::RegionalMaximaImageFilter<InputImageType, OutputImageType>;
+    typename FilterType::Pointer filter = FilterType::New();
+    filter->SetBackgroundValue(m_BackgroundValue);
+    filter->SetForegroundValue(m_ForegroundValue);
+    filter->SetFullyConnected(m_FullyConnected);
+    filter->SetFlatIsMaxima(m_FlatIsMaxima);
+    return filter;
+  }
+};
+} // namespace
 
 namespace complex
 {
@@ -50,10 +77,9 @@ Parameters ITKRegionalMaximaImage::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_ForegroundValue_Key, "ForegroundValue", "", 2.3456789));
   params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "FullyConnected", "", false));
   params.insert(std::make_unique<BoolParameter>(k_FlatIsMaxima_Key, "FlatIsMaxima", "", false));
-  params.insertSeparator(Parameters::Separator{"Cell Data"});
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{DataObject::Type::ImageGeom}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to filter", "", DataPath{}));
-  params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<StringParameter>(k_NewCellArrayName_Key, "Filtered Array", "", "SomeString"));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NewCellArrayName_Key, "Filtered Array", "", DataPath{}));
 
   return params;
 }
@@ -78,27 +104,29 @@ IFilter::PreflightResult ITKRegionalMaximaImage::preflightImpl(const DataStructu
    */
   auto pBackgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   auto pForegroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
-  auto pFullyConnectedValue = filterArgs.value<bool>(k_FullyConnected_Key);
-  auto pFlatIsMaximaValue = filterArgs.value<bool>(k_FlatIsMaxima_Key);
-  auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
+  auto pFullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
+  auto pFlatIsMaxima = filterArgs.value<bool>(k_FlatIsMaxima_Key);
+  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
+  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
   // any preflight updated values that you want to be displayed to the user, typically
   // through a user interface (UI).
   PreflightResult preflightResult;
+  // If your filter is going to pass back some `preflight updated values` then this is where you
+  // would create the code to store those values in the appropriate object. Note that we
+  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
+  // the std::vector<PreflightValue> object.
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   // If your filter is making structural changes to the DataStructure then the filter
   // is going to create OutputActions subclasses that need to be returned. This will
   // store those actions.
   complex::Result<OutputActions> resultOutputActions;
 
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
-  std::vector<PreflightValue> preflightUpdatedValues;
+  resultOutputActions = ITK::DataCheck(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath);
 
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
@@ -133,15 +161,21 @@ Result<> ITKRegionalMaximaImage::executeImpl(DataStructure& dataStructure, const
    ***************************************************************************/
   auto pBackgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   auto pForegroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
-  auto pFullyConnectedValue = filterArgs.value<bool>(k_FullyConnected_Key);
-  auto pFlatIsMaximaValue = filterArgs.value<bool>(k_FlatIsMaxima_Key);
-  auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pNewCellArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_NewCellArrayName_Key);
+  auto pFullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
+  auto pFlatIsMaxima = filterArgs.value<bool>(k_FlatIsMaxima_Key);
+  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
+  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
 
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
+  ::ITKRegionalMaximaImageFilterCreationFunctor itkFunctor;
+  itkFunctor.m_BackgroundValue = pBackgroundValue;
+  itkFunctor.m_ForegroundValue = pForegroundValue;
+  itkFunctor.m_FullyConnected = pFullyConnected;
+  itkFunctor.m_FlatIsMaxima = pFlatIsMaxima;
 
-  return {};
+  return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

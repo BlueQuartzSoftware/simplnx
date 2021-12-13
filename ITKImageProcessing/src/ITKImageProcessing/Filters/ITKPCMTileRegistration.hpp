@@ -30,6 +30,7 @@ public:
   static inline constexpr StringLiteral k_DataContainerPrefix_Key = "DataContainerPrefix";
   static inline constexpr StringLiteral k_CommonAttributeMatrixName_Key = "CommonAttributeMatrixName";
   static inline constexpr StringLiteral k_CommonDataArrayName_Key = "CommonDataArrayName";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

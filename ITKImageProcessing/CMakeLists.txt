@@ -6,123 +6,129 @@ set(PLUGIN_NAME "ITKImageProcessing")
 # These are all the filters in the plugin. All filters should be kept in the
 # ITKImageProcessing/src/ITKImageProcessing/Filters/ directory.
 set(FilterList
-  #ApplyDewarpParameters # MISSING 1 or more Parameter Implementations
-  AxioVisionV4ToTileConfiguration
-  #CalcDewarpParameters # MISSING 1 or more Parameter Implementations
   ITKAbsImage
   ITKAcosImage
-  ITKAdaptiveHistogramEqualizationImage
   ITKApproximateSignedDistanceMapImage
   ITKAsinImage
   ITKAtanImage
   ITKBilateralImage
-  ITKBinaryClosingByReconstructionImage
   ITKBinaryContourImage
-  ITKBinaryDilateImage
-  ITKBinaryErodeImage
-  ITKBinaryMorphologicalClosingImage
-  ITKBinaryMorphologicalOpeningImage
-  ITKBinaryOpeningByReconstructionImage
   ITKBinaryProjectionImage
   ITKBinaryThinningImage
   ITKBinaryThresholdImage
   ITKBinomialBlurImage
-  ITKBlackTopHatImage
   ITKBoundedReciprocalImage
-  ITKBoxMeanImage
-  ITKCastImage
-  ITKClosingByReconstructionImage
-  ITKConnectedComponentImage
   ITKCosImage
-  ITKCurvatureAnisotropicDiffusionImage
-  ITKCurvatureFlowImage
-  ITKDanielssonDistanceMapImage
-  ITKDilateObjectMorphologyImage
-  ITKDiscreteGaussianImage
   ITKDoubleThresholdImage
-  ITKErodeObjectMorphologyImage
   ITKExpImage
   ITKExpNegativeImage
-  ITKFFTNormalizedCorrelationImage
-  ITKGradientAnisotropicDiffusionImage
-  ITKGradientMagnitudeImage
-  ITKGradientMagnitudeRecursiveGaussianImage
-  ITKGrayscaleDilateImage
-  ITKGrayscaleErodeImage
   ITKGrayscaleFillholeImage
-  ITKGrayscaleGrindPeakImage
-  ITKGrayscaleMorphologicalClosingImage
-  ITKGrayscaleMorphologicalOpeningImage
   ITKHConvexImage
   ITKHMaximaImage
   ITKHMinimaImage
-  ITKHistogramMatchingImage
-  ITKImageReader
-  ITKImageWriter
-  ITKImportFijiMontage
-  ITKImportImageStack
-  ITKImportRoboMetMontage
   ITKIntensityWindowingImage
   ITKInvertIntensityImage
-  ITKIsoContourDistanceImage
   ITKLabelContourImage
-  ITKLaplacianRecursiveGaussianImage
   ITKLaplacianSharpeningImage
   ITKLog10Image
   ITKLogImage
-  ITKMaskImage
   ITKMaximumProjectionImage
   ITKMeanProjectionImage
-  ITKMedianImage
-  ITKMedianProjectionImage
-  ITKMinMaxCurvatureFlowImage
-  ITKMinimumProjectionImage
-  ITKMorphologicalGradientImage
-  ITKMorphologicalWatershedFromMarkersImage
-  ITKMorphologicalWatershedImage
-  ITKMultiScaleHessianBasedObjectnessImage
   ITKNormalizeImage
   ITKNormalizeToConstantImage
   ITKNotImage
-  ITKOpeningByReconstructionImage
   ITKOtsuMultipleThresholdsImage
-  ITKPCMTileRegistration
-  ITKPatchBasedDenoisingImage
-  ITKProxTVImage
-  ITKRGBToLuminanceImage
-  #ITKRefineTileCoordinates # MISSING 1 or more Parameter Implementations
   ITKRegionalMaximaImage
   ITKRegionalMinimaImage
   ITKRelabelComponentImage
-  ITKRescaleIntensityImage
   ITKSaltAndPepperNoiseImage
   ITKShiftScaleImage
   ITKShotNoiseImage
   ITKSigmoidImage
-  ITKSignedDanielssonDistanceMapImage
-  ITKSignedMaurerDistanceMapImage
   ITKSinImage
-  ITKSmoothingRecursiveGaussianImage
-  ITKSpeckleNoiseImage
   ITKSqrtImage
   ITKSquareImage
-  ITKStandardDeviationProjectionImage
-  #ITKStitchMontage # MISSING 1 or more Parameter Implementations
-  ITKSumProjectionImage
   ITKTanImage
-  ITKThresholdImage
-  ITKThresholdMaximumConnectedComponentsImage
-  ITKValuedRegionalMaximaImage
-  ITKValuedRegionalMinimaImage
-  ITKVectorConnectedComponentImage
-  ITKVectorRescaleIntensityImage
-  ITKWhiteTopHatImage
-  ITKZeroCrossingImage
-  #IlluminationCorrection # MISSING 1 or more Parameter Implementations
-  ImportAxioVisionV4Montage
-  #ImportVectorImageStack # MISSING 1 or more Parameter Implementations
-  ImportZenInfoMontage
-)
+
+  )
+
+set(Filters_Disabled
+
+  #----------------
+    ApplyDewarpParameters # MISSING 1 or more Parameter Implementations
+    AxioVisionV4ToTileConfiguration
+    CalcDewarpParameters # MISSING 1 or more Parameter Implementations
+    IlluminationCorrection # MISSING 1 or more Parameter Implementations
+    ImportAxioVisionV4Montage
+    ImportVectorImageStack # MISSING 1 or more Parameter Implementations
+    ImportZenInfoMontage
+    ITKCurvatureAnisotropicDiffusionImage
+    ITKCurvatureFlowImage
+    ITKDanielssonDistanceMapImage
+    ITKDilateObjectMorphologyImage
+    ITKErodeObjectMorphologyImage
+    ITKFFTNormalizedCorrelationImage
+    ITKGradientAnisotropicDiffusionImage
+    ITKGradientMagnitudeImage
+    ITKGradientMagnitudeRecursiveGaussianImage
+    ITKGrayscaleDilateImage
+    ITKGrayscaleErodeImage
+    ITKGrayscaleGrindPeakImage
+    ITKGrayscaleMorphologicalClosingImage
+    ITKGrayscaleMorphologicalOpeningImage
+    ITKHistogramMatchingImage
+    ITKImageReader
+    ITKImageWriter
+    ITKImportFijiMontage
+    ITKImportImageStack
+    ITKImportRoboMetMontage
+    ITKIsoContourDistanceImage
+    ITKMedianProjectionImage
+    ITKMinimumProjectionImage
+    ITKMinMaxCurvatureFlowImage
+    ITKMorphologicalGradientImage
+    ITKMorphologicalWatershedFromMarkersImage
+    ITKMorphologicalWatershedImage
+    ITKMultiScaleHessianBasedObjectnessImage
+    ITKOpeningByReconstructionImage
+    ITKPatchBasedDenoisingImage
+    ITKPCMTileRegistration
+    ITKProxTVImage
+    ITKRefineTileCoordinates # MISSING 1 or more Parameter Implementations
+    ITKRGBToLuminanceImage
+    ITKSignedDanielssonDistanceMapImage
+    ITKSignedMaurerDistanceMapImage
+    ITKSmoothingRecursiveGaussianImage
+    ITKSpeckleNoiseImage
+    ITKStandardDeviationProjectionImage
+    ITKStitchMontage # MISSING 1 or more Parameter Implementations
+    ITKSumProjectionImage
+    ITKThresholdMaximumConnectedComponentsImage
+    ITKValuedRegionalMaximaImage
+    ITKValuedRegionalMinimaImage
+    ITKVectorConnectedComponentImage
+    ITKVectorRescaleIntensityImage
+    ITKWhiteTopHatImage
+    ITKZeroCrossingImage
+    ITKAdaptiveHistogramEqualizationImage
+    ITKBinaryClosingByReconstructionImage
+    ITKBinaryDilateImage
+    ITKBinaryErodeImage
+    ITKBinaryMorphologicalClosingImage
+    ITKBinaryMorphologicalOpeningImage
+    ITKBinaryOpeningByReconstructionImage
+    ITKBlackTopHatImage
+    ITKBoxMeanImage
+    ITKCastImage
+    ITKClosingByReconstructionImage
+    ITKConnectedComponentImage
+    ITKDiscreteGaussianImage
+    ITKLaplacianRecursiveGaussianImage  # Link error due to missing enums
+    ITKMaskImage
+    ITKMedianImage
+    ITKRescaleIntensityImage
+    ITKThresholdImage
+  )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
   FILTER_LIST ${FilterList}
@@ -149,6 +155,7 @@ target_link_libraries(${PLUGIN_NAME}
     ITKIOStimulate
     ITKIOTIFF
     ITKIOVTK
+    ITKStatistics
 )
 
 target_compile_options(${PLUGIN_NAME}
@@ -167,4 +174,4 @@ target_include_directories(${PLUGIN_NAME} PUBLIC  ${ITK_INCLUDE_DIRS})
 #------------------------------------------------------------------------------
 # Add in the unit tests for the filters included in this plugin
 enable_testing()
-add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
+# add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)

@@ -39,6 +39,7 @@ public:
   static inline constexpr StringLiteral k_KernelBandwidthFractionPixelsForEstimation_Key = "KernelBandwidthFractionPixelsForEstimation";
   static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
   static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.
