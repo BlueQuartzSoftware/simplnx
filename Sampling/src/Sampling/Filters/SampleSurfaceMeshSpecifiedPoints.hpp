@@ -94,4 +94,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, SampleSurfaceMeshSpecifiedPoints, "b940c282-f89d-5058-96ba-3767c843ccbb");
+COMPLEX_DEF_FILTER_TRAITS(complex, SampleSurfaceMeshSpecifiedPoints, "0f44da6f-5272-5d69-8378-9bf0bc4ae4f9");
