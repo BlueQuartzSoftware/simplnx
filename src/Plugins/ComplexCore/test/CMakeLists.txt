@@ -11,6 +11,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindDifferencesMapTest.cpp
   FindNeighborListStatisticsTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
+  MapPointCloudToRegularGridTest.cpp
   RobustAutomaticThresholdTest.cpp
   CreateImageGeometryTest.cpp
   StlFileReaderTest.cpp
