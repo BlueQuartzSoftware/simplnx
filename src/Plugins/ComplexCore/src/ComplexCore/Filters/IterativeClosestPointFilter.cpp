@@ -23,6 +23,7 @@ namespace
 constexpr int64 k_MissingMovingVertex = -4500;
 constexpr int64 k_MissingTargetVertex = -4501;
 constexpr int64 k_BadNumIterations = -4502;
+constexpr int64 k_MissingVertices = -4503;
 
 template <typename Derived>
 struct VertexGeomAdaptor
@@ -151,9 +152,31 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
   auto movingVertexGeom = data.getDataAs<VertexGeom>(movingVertexPath);
   auto targetVertexGeom = data.getDataAs<VertexGeom>(targetVertexPath);
 
+  if(movingVertexGeom == nullptr)
+  {
+    auto ss = fmt::format("Moving Vertex Geometry not found at path '{}'", movingVertexPath.toString());
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVertices, ss}})};
+  }
+  if(targetVertexGeom == nullptr)
+  {
+    auto ss = fmt::format("Target Vertex Geometry not found at path '{}'", targetVertexPath.toString());
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVertices, ss}})};
+  }
+
   auto* movingPtr = movingVertexGeom->getVertices();
   auto* movingCopyPtr = movingVertexGeom->getVertices();
   auto* targetPtr = targetVertexGeom->getVertices();
+
+  if(movingPtr == nullptr)
+  {
+    auto ss = fmt::format("Moving Vertex Geometry does not contain a vertex array");
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVertices, ss}})};
+  }
+  if(targetPtr == nullptr)
+  {
+    auto ss = fmt::format("Target Vertex Geometry does not contain a vertex array");
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVertices, ss}})};
+  }
 
   auto* movingStore = movingCopyPtr->getDataStore();
   std::vector<float32> movingData(movingStore->begin(), movingStore->end());

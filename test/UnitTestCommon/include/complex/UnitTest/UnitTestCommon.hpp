@@ -165,6 +165,10 @@ inline DataStructure CreateDataStructure()
   usize numTuples = 2;
   Int32Array* laue_data = CreateTestDataArray<int32>(dataGraph, "Laue Class", {numTuples}, {numComponents}, ensembleGroup->getId());
 
+  // Create an Vertex Geometry grid for the Scan Data
+  VertexGeom* vertexGeom = VertexGeom::Create(dataGraph, Constants::k_VertexGeometry, scanData->getId());
+  // vertexGeom->setVertices(euler_data);
+
   NeighborList<float32>* neighborList = CreateTestNeighborList<float32>(dataGraph, "Neighbor List", numTuples, scanData->getId());
 
   return dataGraph;
