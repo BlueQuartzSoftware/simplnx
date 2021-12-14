@@ -217,12 +217,12 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
                                                    std::vector<std::string>{"Manual", "Use Existing Image Geometry"}));
   params.insert(std::make_unique<VectorInt32Parameter>(k_GridDimensions_Key, "Grid Dimensions", "Target grid size", std::vector<int32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_VertexGeometry_Key, "Vertex Geometry", "Path to the target Vertex Geometry", DataPath()));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewImageGeometry_Key, "Image Geometry", "Path to the target Image Geometry", DataPath()));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewImageGeometry_Key, "Image Geometry", "Path to create the Image Geometry", DataPath()));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_ExistingImageGeometry_Key, "Image Geometry", "Path to the target Image Geometry", DataPath()));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraysToMap_Key, "Arrays to Map", "Path to the target Image Geometry", std::vector<DataPath>()));
-  params.insert(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Array storing the file data", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask", "Array storing the file data", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_VoxelIndices_Key, "Voxel Indices", "Array storing the file data", DataPath()));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraysToMap_Key, "Arrays to Map", "Paths to map to the grid geometry", std::vector<DataPath>()));
+  params.insert(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Specifies if a mask array should be used", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask", "Path to the target mask array", DataPath()));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_VoxelIndices_Key, "Voxel Indices", "Path to create the Voxel Indices array", DataPath()));
   return params;
 }
 
