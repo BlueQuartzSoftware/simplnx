@@ -97,4 +97,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, InterpolatePointCloudToRegularGridFilter, "38766252-1200-4c8c-a38a-5c4d97da0f2d");
+COMPLEX_DEF_FILTER_TRAITS(complex, InterpolatePointCloudToRegularGridFilter, "4b551c15-418d-5081-be3f-d3aeb62408e5");
