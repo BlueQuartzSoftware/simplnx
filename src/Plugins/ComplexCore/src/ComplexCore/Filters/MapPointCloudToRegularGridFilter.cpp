@@ -224,7 +224,7 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraysToMap_Key, "Arrays to Map", "Paths to map to the grid geometry", std::vector<DataPath>()));
   params.insert(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Specifies if a mask array should be used", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask", "Path to the target mask array", DataPath()));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_VoxelIndices_Key, "Voxel Indices", "Path to the Voxel Indices array", DataPath()));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_VoxelIndices_Key, "Voxel Indices", "Path to create the Voxel Indices array", DataPath()));
   return params;
 }
 
