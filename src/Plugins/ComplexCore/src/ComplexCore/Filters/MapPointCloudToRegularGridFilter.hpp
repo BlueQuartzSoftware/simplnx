@@ -92,4 +92,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, MapPointCloudToRegularGridFilter, "f0134a19-3aad-4c56-ab4a-a0ccb54a7fca");
+COMPLEX_DEF_FILTER_TRAITS(complex, MapPointCloudToRegularGridFilter, "9fe34deb-99e1-5f3a-a9cc-e90c655b47ee");
