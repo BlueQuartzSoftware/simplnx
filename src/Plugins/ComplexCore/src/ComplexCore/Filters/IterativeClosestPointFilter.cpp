@@ -213,7 +213,11 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
     {
       Eigen::Vector4f position((*movingCopyPtr)[3 * j + 0], (*movingCopyPtr)[3 * j + 1], (*movingCopyPtr)[3 * j + 2], 1);
       Eigen::Vector4f transformedPosition = transform * position;
-      std::memcpy(movingCopyPtr + (3 * j), transformedPosition.data(), sizeof(float) * 3);
+      float* transformPositionData = transformedPosition.data();
+      for(usize k = 0; k < 3; k++)
+      {
+        (*movingCopyPtr)[3 * j + k] = transformPositionData[k];
+      }
     }
 
     globalTransform = transform * globalTransform;
@@ -236,12 +240,19 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
     {
       Eigen::Vector4f position((*movingPtr)[3 * j + 0], (*movingPtr)[3 * j + 1], (*movingPtr)[3 * j + 2], 1);
       Eigen::Vector4f transformedPosition = globalTransform * position;
-      std::memcpy(movingPtr + (3 * j), transformedPosition.data(), sizeof(float) * 3);
+      auto transformedPositionData = transformedPosition.data();
+      for(usize k = 0; k < 3; k++)
+      {
+        (*movingPtr)[3 * j + k] = transformedPosition.data()[k];
+      }
     }
   }
 
   globalTransform.transposeInPlace();
-  std::memcpy(transformPtr, globalTransform.data(), sizeof(float) * 16);
+  for(usize j = 0; j < 16; j++)
+  {
+    (*transformPtr)[j] = globalTransform.data()[j];
+  }
 
   return {};
 }
