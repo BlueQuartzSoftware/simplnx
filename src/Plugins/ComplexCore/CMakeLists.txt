@@ -24,6 +24,7 @@ set(FilterList
   InterpolatePointCloudToRegularGridFilter
   LaplacianSmoothingFilter
   LinkGeometryDataFilter
+  MapPointCloudToRegularGridFilter
   MultiThresholdObjects
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
