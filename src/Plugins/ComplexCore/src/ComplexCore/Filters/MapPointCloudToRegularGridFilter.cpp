@@ -1,5 +1,7 @@
 #include "MapPointCloudToRegularGridFilter.hpp"
 
+#include <cmath>
+
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
@@ -369,7 +371,7 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, cons
           std::string ss = fmt::format("Found negative value for index computation of vertex {}, which may result in unsigned underflow", i);
           setWarningCondition(-1000, ss);
         }*/
-        idxs[j] = int64(floor((coords[j] - origin[j]) / res[j]));
+        idxs[j] = int64(std::floor((coords[j] - origin[j]) / res[j]));
       }
 
       for(usize j = 0; j < 3; j++)
