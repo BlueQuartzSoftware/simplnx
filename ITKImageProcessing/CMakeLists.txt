@@ -49,7 +49,8 @@ set(FilterList
   ITKSqrtImage
   ITKSquareImage
   ITKTanImage
-
+  ITKImageReader
+  ITKImageWriter
   )
 
 set(Filters_Disabled
@@ -77,8 +78,7 @@ set(Filters_Disabled
     ITKGrayscaleMorphologicalClosingImage
     ITKGrayscaleMorphologicalOpeningImage
     ITKHistogramMatchingImage
-    ITKImageReader
-    ITKImageWriter
+
     ITKImportFijiMontage
     ITKImportImageStack
     ITKImportRoboMetMontage

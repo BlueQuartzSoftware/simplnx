@@ -269,6 +269,9 @@ Result<> ITKImageReader::executeImpl(DataStructure& dataStructure, const Argumen
 
   std::string fileNameString = fileName.string();
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
+  imageGeom.getLinkedGeometryData().addCellData(imageDataArrayPath);
+
   return ReadImageExecute(fileNameString, imageGeometryPath, imageDataArrayPath, dataStructure);
 }
 } // namespace complex
