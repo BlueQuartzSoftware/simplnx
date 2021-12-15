@@ -35,7 +35,7 @@ Uuid ExportDREAM3DFilter::uuid() const
 
 std::string ExportDREAM3DFilter::humanName() const
 {
-  return "Write DREAM.3D File";
+  return "Write DREAM3D NX File (V8)";
 }
 
 Parameters ExportDREAM3DFilter::parameters() const
