@@ -316,18 +316,37 @@ Result<> CreateNeighbors(DataStructure& dataStructure, usize numTuples, const Da
   return {};
 }
 
+/**
+ * @brief Attempts to retrieve a DataArray at a given DataPath in the DataStructure.
+ * @tparam T
+ * @param data
+ * @param path
+ * @return
+ */
 template <class T>
-DataArray<T>* ArrayFromPath(DataStructure& dataGraph, const DataPath& path)
+DataArray<T>* ArrayFromPath(DataStructure& dataStructure, const DataPath& path)
 {
-  DataObject* object = dataGraph.getData(path);
-  DataArray<T>* dataArray = dynamic_cast<DataArray<T>*>(object);
+  using DataArrayType = DataArray<T>;
+  DataObject* object = dataStructure.getData(path);
+  DataArrayType* dataArray = dynamic_cast<DataArrayType*>(object);
   if(dataArray == nullptr)
   {
-    throw std::runtime_error("Can't obtain DataArray");
+    throw std::runtime_error(fmt::format("DataArray either does not exist at DataPath or the DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
   }
   return dataArray;
 }
 
+/**
+ * @brief
+ * @tparam T
+ * @param filename
+ * @param name
+ * @param dataGraph
+ * @param tupleShape
+ * @param componentShape
+ * @param parentId
+ * @return
+ */
 template <typename T>
 DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::string& name, DataStructure* dataGraph, const std::vector<size_t>& tupleShape, const std::vector<size_t>& componentShape,
                                    DataObject::IdType parentId = {})
