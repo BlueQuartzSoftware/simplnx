@@ -153,8 +153,10 @@ Result<> CalculateTriangleAreasFilter::executeImpl(DataStructure& dataStructure,
   auto pCalculatedAreasDataPath = filterArgs.value<DataPath>(k_CalculatedAreasDataPath_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
 
-  const TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
+  TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
   Float64Array& faceAreas = dataStructure.getDataRefAs<Float64Array>(pCalculatedAreasDataPath);
+  // Associate the calculated face areas with the Face Data in the Triangle Geometry
+  triangleGeom.getLinkedGeometryData().addFaceData(pCalculatedAreasDataPath);
 
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;

@@ -795,9 +795,8 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   MeshIndexType nodeId3 = 0;
   MeshIndexType nodeId4 = 0;
 
-  // MeshIndexType cIndex1 = 0, cIndex2 = 0;
-
   TriangleGeom* triangleGeom = m_DataStructure.getDataAs<TriangleGeom>(m_Inputs->pParentDataGroupPath.createChildPath(m_Inputs->pTriangleGeometryName));
+  LinkedGeometryData& linkedGeometryData = triangleGeom->getLinkedGeometryData();
 
   std::vector<size_t> tDims = {nodeCount};
   triangleGeom->resizeVertexList(nodeCount);
@@ -807,11 +806,13 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   m_DataStructure.removeData(m_Inputs->pFaceLabelsDataPath);
   Result<> faceLabelResult = complex::CreateArray<int32_t>(m_DataStructure, {triangleCount}, {2}, m_Inputs->pFaceLabelsDataPath, IDataAction::Mode::Execute);
   Int32Array& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFaceLabelsDataPath);
+  linkedGeometryData.addFaceData(m_Inputs->pFaceLabelsDataPath);
 
   // Remove and then insert a properly sized int8 for the NodeTypes
   m_DataStructure.removeData(m_Inputs->pNodeTypesDataPath);
   Result<> nodeTypeResult = complex::CreateArray<int8_t>(m_DataStructure, {nodeCount}, {1}, m_Inputs->pNodeTypesDataPath, IDataAction::Mode::Execute);
   Int32Array& nodeTypes = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFaceLabelsDataPath);
+  linkedGeometryData.addVertexData(m_Inputs->pFaceLabelsDataPath);
 
   AbstractGeometry::SharedVertexList& vertex = *(triangleGeom->getVertices());
   AbstractGeometry::SharedTriList& triangle = *(triangleGeom->getFaces());
@@ -822,6 +823,8 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;
   for(size_t i = 0; i < m_Inputs->pSelectedDataArrayPaths.size(); i++)
   {
+    // Associate these arrays with the Triangle Face Data.
+    linkedGeometryData.addFaceData(m_Inputs->pSelectedDataArrayPaths[i]);
     ::AddTupleTransferInstance(m_DataStructure, m_Inputs->pSelectedDataArrayPaths[i], m_Inputs->pCreatedDataArrayPaths[i], tupleTransferFunctions);
   }
 
