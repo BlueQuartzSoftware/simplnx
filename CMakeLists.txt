@@ -457,7 +457,9 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectReader.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectWriter.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.cpp
-)
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.cpp
+  )
 
 
 # Add Core FilterParameters

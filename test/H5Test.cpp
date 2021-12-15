@@ -307,7 +307,7 @@ void CreateVertexGeometry(DataStructure& dataGraph)
   REQUIRE(vertexCount == 144);
   complex::Result result = complex::CreateArray<float>(dataGraph, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = complex::CsvParser::ArrayFromPath<float>(dataGraph, path);
+  auto vertexArray = complex::ArrayFromPath<float>(dataGraph, path);
   CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
   vertexGeometry->setVertices(vertexArray);
   REQUIRE(vertexGeometry->getNumberOfVertices() == 144);
@@ -344,7 +344,7 @@ void CreateTriangleGeometry(DataStructure& dataGraph)
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
   complex::Result result = complex::CreateArray<MeshIndexType>(dataGraph, {faceCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto dataArray = complex::CsvParser::ArrayFromPath<MeshIndexType>(dataGraph, path);
+  auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataGraph, path);
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
   triangleGeom->setFaces(dataArray);
 
@@ -355,7 +355,7 @@ void CreateTriangleGeometry(DataStructure& dataGraph)
   REQUIRE(vertexCount == 144);
   result = complex::CreateArray<float>(dataGraph, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = complex::CsvParser::ArrayFromPath<float>(dataGraph, path);
+  auto vertexArray = complex::ArrayFromPath<float>(dataGraph, path);
   CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
   triangleGeom->setVertices(vertexArray);
 }
@@ -378,8 +378,8 @@ void CreateQuadGeometry(DataStructure& dataGraph)
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
   complex::Result result = complex::CreateArray<MeshIndexType>(dataGraph, {faceCount}, {4}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto dataArray = complex::CsvParser::ArrayFromPath<MeshIndexType>(dataGraph, path);
-  CsvParser::ReadFile<MeshIndexType , MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
+  auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataGraph, path);
+  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
   geometry->setFaces(dataArray);
 
   // Create the Vertex Array with a component size of 3
@@ -389,7 +389,7 @@ void CreateQuadGeometry(DataStructure& dataGraph)
   REQUIRE(vertexCount == 144);
   result = complex::CreateArray<float>(dataGraph, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = complex::CsvParser::ArrayFromPath<float>(dataGraph, path);
+  auto vertexArray = complex::ArrayFromPath<float>(dataGraph, path);
   CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
   geometry->setVertices(vertexArray);
 }
@@ -412,7 +412,7 @@ void CreateEdgeGeometry(DataStructure& dataGraph)
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
   complex::Result result = complex::CreateArray<MeshIndexType>(dataGraph, {faceCount}, {2}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto dataArray = complex::CsvParser::ArrayFromPath<MeshIndexType>(dataGraph, path);
+  auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataGraph, path);
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
   geometry->setEdges(dataArray);
 
@@ -423,7 +423,7 @@ void CreateEdgeGeometry(DataStructure& dataGraph)
   REQUIRE(vertexCount == 144);
   result = complex::CreateArray<float>(dataGraph, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = complex::CsvParser::ArrayFromPath<float>(dataGraph, path);
+  auto vertexArray = complex::ArrayFromPath<float>(dataGraph, path);
   CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
   geometry->setVertices(vertexArray);
 }

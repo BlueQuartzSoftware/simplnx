@@ -1,6 +1,12 @@
 #pragma once
 
+#include "complex/Common/Result.hpp"
+#include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
+#include "complex/complex_export.hpp"
+
+#include <fmt/core.h>
 
 #include <filesystem>
 #include <fstream>
@@ -10,8 +16,6 @@
 #include <vector>
 
 namespace fs = std::filesystem;
-
-
 
 namespace complex
 {
@@ -23,107 +27,71 @@ constexpr int32_t k_RBR_FILE_NOT_OPEN = -1000;
 constexpr int32_t k_RBR_FILE_TOO_SMALL = -1010;
 constexpr int32_t k_RBR_FILE_TOO_BIG = -1020;
 constexpr int32_t k_RBR_READ_EOF = -1030;
+constexpr int32_t k_RBR_READ_FAIL = -1035;
 constexpr int32_t k_RBR_READ_ERROR = 1040;
+constexpr int32_t k_RBR_READ_BAD = 1045;
 constexpr int32_t k_RBR_FILE_NOT_EXIST = 1050;
 
 constexpr size_t k_BufferSize = 1024;
 
-// -----------------------------------------------------------------------------
-int32_t readLine(std::istream& in, char* result, size_t length)
+class DelimiterType : public std::ctype<char>
 {
-  in.getline(result, length);
-  if(in.fail())
+  std::ctype<char>::mask my_table[std::ctype<char>::table_size];
+
+public:
+  DelimiterType(char delimiter, size_t refs = 0)
+  : std::ctype<char>(&my_table[0], false, refs)
   {
-    if(in.eof())
-    {
-      return 0;
-    }
-    if(in.gcount() == static_cast<std::streamsize>(length))
-    {
-      // Read kBufferSize chars; ignoring the rest of the line.
-      in.clear();
-      in.ignore(std::numeric_limits<int>::max(), '\n');
-    }
+    std::copy_n(std::ctype<char>::classic_table(), table_size, my_table);
+    my_table[static_cast<std::ctype<char>::mask>(delimiter)] = (std::ctype<char>::mask)space;
   }
-  return 1;
-}
+};
+
+/**
+ * @brief Converts an index that could come from a GUI to the associated delimiter
+ * @param index
+ * @return The delimiter associated with that delimiter.
+ */
+COMPLEX_EXPORT char IndexToDelimiter(uint64_t index);
+
+/**
+ * @brief Checks the error bits of the input stream
+ * @param fileStream file stream
+ * @return Integer error code
+ */
+COMPLEX_EXPORT int CheckErrorBits(std::ifstream* fileStream);
 
 /**
  * @brief Returns the number of lines in a text file.
  * @param inputPath The file to check
  * @return
  */
-uint64 LineCount(const fs::path& inputPath)
-{
-  uint64 lineCount = 0;
-  {
-    std::string buf;
-
-    std::ifstream in(inputPath, std::ios_base::binary);
-
-    while(!in.eof())
-    {
-      std::getline(in, buf);
-      lineCount++;
-    }
-    // Put the input stream back to the start
-    in.clear();                 // clear fail and eof bits
-    in.seekg(0, std::ios::beg); // back to the start!
-  }
-  return lineCount - 1;
-}
-
-class DelimiterType : public std::ctype<char>
-{
-  mask my_table[table_size];
-
-public:
-  DelimiterType(char delimiter, usize refs = 0)
-  : std::ctype<char>(&my_table[0], false, refs)
-  {
-    std::copy_n(classic_table(), table_size, my_table);
-    my_table[static_cast<mask>(delimiter)] = (mask)space;
-  }
-};
-
-// -----------------------------------------------------------------------------
-int check_error_bits(std::ifstream* f)
-{
-  int stop = k_RBR_NO_ERROR;
-  if(f->eof())
-  {
-    // std::perror("stream eofbit. error state");
-    stop = k_RBR_READ_EOF;
-  }
-  else if(f->fail())
-  {
-    // std::perror("stream failbit (or badbit). error state");
-    stop = k_RBR_READ_ERROR;
-  }
-  else if(f->bad())
-  {
-    // std::perror("stream badbit. error state");
-    stop = k_RBR_READ_ERROR;
-  }
-  return stop;
-}
+COMPLEX_EXPORT uint64_t LineCount(const fs::path& inputPath);
 
 /**
- *
- * @tparam T
- * @tparam K
- * @param filename
- * @param data
- * @param skipHeaderLines
- * @param delimiter
- * @param inputIsBool
+ * @brief Reads a line from the input stream and returns the result of that operations, Data is read into the buffer
+ * @param in The input file stream
+ * @param buffer The buffer to store the bytes into
+ * @param length Max number of bytes to read from the file
  * @return
  */
-template <typename T, typename K>
-Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64 skipHeaderLines, char delimiter, bool inputIsBool = false)
-{
+COMPLEX_EXPORT int32_t ReadLine(std::istream& in, char* buffer, size_t length);
 
-  int32_t err = 0;
+/**
+ * @brief Reads a Text file that contains numeric values into a single DataArray<T>.
+ * @tparam T Final Target type of the value being read
+ * @tparam K Intermediate type to be used to initially read the value from the file
+ * @param filename The input path to the text file
+ * @param data The Target DataArray<T>
+ * @param skipHeaderLines Number of "header lines" that should be skipped before parsing begins
+ * @param delimiter The delimiter to use: Comma, Space, Tab
+ * @param inputIsBool Are the values being read Booleans
+ * @return Result<> with any errors or warnings that were encountered.
+ */
+template <typename T, typename K>
+Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64_t skipHeaderLines, char delimiter, bool inputIsBool = false)
+{
+  int32_t err = k_RBR_NO_ERROR;
   fs::exists(filename);
   if(err < 0)
   {
@@ -138,7 +106,7 @@ Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64 skipHeade
 
   in.imbue(std::locale(std::locale(), new complex::CsvParser::DelimiterType(delimiter)));
 
-  std::array<char, k_BufferSize> buf;
+  std::array<char, k_BufferSize> buf = {};
   char* buffer = buf.data();
 
   // Skip some header bytes by just reading those bytes into the pointer knowing that the next
@@ -146,7 +114,7 @@ Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64 skipHeade
   for(int i = 0; i < skipHeaderLines; i++)
   {
     buf.fill(0x00);                                               // Splat Null Chars across the line
-    err = complex::CsvParser::readLine(in, buffer, k_BufferSize); // Read Line 1 - VTK Version Info
+    err = complex::CsvParser::ReadLine(in, buffer, k_BufferSize); // Read Line 1 - VTK Version Info
     if(err < 0)
     {
       return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Could not read data from file while skipping header lines: {}", filename.string()));
@@ -157,12 +125,11 @@ Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64 skipHeade
   int scalarNumComp = data.getNumberOfComponents();
 
   size_t totalSize = numTuples * static_cast<size_t>(scalarNumComp);
-  err = k_RBR_NO_ERROR;
+
   if(inputIsBool)
   {
     double value = 0.0;
     int64_t* si64Ptr = reinterpret_cast<int64_t*>(&value);
-
     for(size_t i = 0; i < totalSize; ++i)
     {
       in >> value;
@@ -174,7 +141,7 @@ Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64 skipHeade
       {
         data[i] = true;
       }
-      err = check_error_bits(&in);
+      err = CheckErrorBits(&in);
       if(err == k_RBR_READ_EOF && i < totalSize - 1)
       {
         return MakeErrorResult(k_RBR_READ_EOF, fmt::format("Read past End Of File (EOF) while parsing file: {}", filename.string()));
@@ -192,7 +159,7 @@ Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64 skipHeade
     {
       in >> value;
       data[i] = static_cast<T>(value);
-      err = check_error_bits(&in);
+      err = CheckErrorBits(&in);
       if(err == k_RBR_READ_EOF && i < totalSize - 1)
       {
         return MakeErrorResult(k_RBR_READ_EOF, fmt::format("Read past End Of File (EOF) while parsing file: {}", filename.string()));
@@ -207,87 +174,7 @@ Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64 skipHeade
   return {};
 }
 
-template <class T>
-DataArray<T>* ArrayFromPath(DataStructure& data, const DataPath& path)
-{
-  using DataArrayType = DataArray<T>;
-  DataObject* object = data.getData(path);
-  DataArrayType* dataArray = dynamic_cast<DataArrayType*>(object);
-  if(dataArray == nullptr)
-  {
-    throw std::runtime_error("Can't obtain DataArray");
-  }
-  return dataArray;
-}
+COMPLEX_EXPORT std::vector<float> ParseVertices(const std::string& inputFile, const std::string& delimiter, bool headerLine);
 
-char IndexToDelimiter(uint64 index)
-{
-  switch(index)
-  {
-  case 0:
-    return ',';
-  case 1:
-    return ';';
-  case 2:
-    return ' ';
-  case 3:
-    return ':';
-  case 4:
-    return '\t';
-  default:
-    throw std::runtime_error("Invalid index");
-  }
-}
-
-std::vector<float> ParseVertices(const std::string& inputFile, const std::string& delimiter, bool headerLine)
-{
-  std::fstream in(inputFile, std::ios_base::in);
-  if(!in.is_open())
-  {
-    std::cout << "Could not open input file: " << inputFile << std::endl;
-    return {};
-  }
-
-  std::vector<float> data;
-  char delim = delimiter.at(0);
-  std::string buf;
-  // Scan the file to figure out about how many values will be in the file
-  size_t lineCount = 1;
-  if(headerLine)
-  {
-    std::getline(in, buf);
-  }
-  while(!in.eof())
-  {
-    std::getline(in, buf);
-    lineCount++;
-  }
-  // Put the input stream back to the start
-  in.clear();                 // clear fail and eof bits
-  in.seekg(0, std::ios::beg); // back to the start!
-  if(headerLine)
-  {
-    std::getline(in, buf);
-  }
-  data.reserve(lineCount * 3); // Just reserve the worst case possible.
-  while(!in.eof())
-  {
-    std::getline(in, buf);
-    if(buf.empty())
-    {
-      continue;
-    }
-    std::vector<std::string> tokens = complex::StringUtilities::split(buf, delim);
-    float value = std::atof(tokens[0].c_str());
-    data.push_back(value);
-    value = std::atof(tokens[1].c_str());
-    data.push_back(value);
-    value = std::atof(tokens[2].c_str());
-    data.push_back(value);
-  }
-  in.close();
-
-  return data;
-}
 } // namespace CsvParser
 } // namespace complex
