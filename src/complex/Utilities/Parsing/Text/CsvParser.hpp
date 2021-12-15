@@ -1,5 +1,3 @@
-
-
 #pragma once
 
 #include "complex/Utilities/StringUtilities.hpp"
@@ -13,10 +11,42 @@
 
 namespace fs = std::filesystem;
 
+
+
 namespace complex
 {
 namespace CsvParser
 {
+
+constexpr int32_t k_RBR_NO_ERROR = 0;
+constexpr int32_t k_RBR_FILE_NOT_OPEN = -1000;
+constexpr int32_t k_RBR_FILE_TOO_SMALL = -1010;
+constexpr int32_t k_RBR_FILE_TOO_BIG = -1020;
+constexpr int32_t k_RBR_READ_EOF = -1030;
+constexpr int32_t k_RBR_READ_ERROR = 1040;
+constexpr int32_t k_RBR_FILE_NOT_EXIST = 1050;
+
+constexpr size_t k_BufferSize = 1024;
+
+// -----------------------------------------------------------------------------
+int32_t readLine(std::istream& in, char* result, size_t length)
+{
+  in.getline(result, length);
+  if(in.fail())
+  {
+    if(in.eof())
+    {
+      return 0;
+    }
+    if(in.gcount() == static_cast<std::streamsize>(length))
+    {
+      // Read kBufferSize chars; ignoring the rest of the line.
+      in.clear();
+      in.ignore(std::numeric_limits<int>::max(), '\n');
+    }
+  }
+  return 1;
+}
 
 /**
  * @brief Returns the number of lines in a text file.
@@ -56,36 +86,123 @@ public:
   }
 };
 
-template <class T>
-Result<> ReadFile(const fs::path& inputPath, DataArray<T>& data, uint64 skipLines, char delimiter)
+// -----------------------------------------------------------------------------
+int check_error_bits(std::ifstream* f)
+{
+  int stop = k_RBR_NO_ERROR;
+  if(f->eof())
+  {
+    // std::perror("stream eofbit. error state");
+    stop = k_RBR_READ_EOF;
+  }
+  else if(f->fail())
+  {
+    // std::perror("stream failbit (or badbit). error state");
+    stop = k_RBR_READ_ERROR;
+  }
+  else if(f->bad())
+  {
+    // std::perror("stream badbit. error state");
+    stop = k_RBR_READ_ERROR;
+  }
+  return stop;
+}
+
+/**
+ *
+ * @tparam T
+ * @tparam K
+ * @param filename
+ * @param data
+ * @param skipHeaderLines
+ * @param delimiter
+ * @param inputIsBool
+ * @return
+ */
+template <typename T, typename K>
+Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64 skipHeaderLines, char delimiter, bool inputIsBool = false)
 {
 
-  std::ifstream inputFile(inputPath, std::ios_base::binary);
-
-  for(uint64 i = 0; i < skipLines; i++)
+  int32_t err = 0;
+  fs::exists(filename);
+  if(err < 0)
   {
-    inputFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    return MakeErrorResult(k_RBR_FILE_NOT_EXIST, fmt::format("Input file does not exist: {}", filename.string()));
   }
 
-  inputFile.imbue(std::locale(std::locale(), new DelimiterType(delimiter)));
-
-  usize numTuples = data.getNumberOfTuples();
-  usize scalarNumComp = data.getNumberOfComponents();
-
-  usize totalSize = numTuples * scalarNumComp;
-  T value = {};
-  for(usize i = 0; i < totalSize; i++)
+  std::ifstream in(filename.c_str(), std::ios_base::in | std::ios_base::binary);
+  if(!in.is_open())
   {
-    inputFile >> value;
-    if(inputFile.fail())
+    return MakeErrorResult(k_RBR_FILE_NOT_OPEN, fmt::format("Could not open file for reading: {}", filename.string()));
+  }
+
+  in.imbue(std::locale(std::locale(), new complex::CsvParser::DelimiterType(delimiter)));
+
+  std::array<char, k_BufferSize> buf;
+  char* buffer = buf.data();
+
+  // Skip some header bytes by just reading those bytes into the pointer knowing that the next
+  // thing we are going to do it over write those bytes with the real data that we are after.
+  for(int i = 0; i < skipHeaderLines; i++)
+  {
+    buf.fill(0x00);                                               // Splat Null Chars across the line
+    err = complex::CsvParser::readLine(in, buffer, k_BufferSize); // Read Line 1 - VTK Version Info
+    if(err < 0)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-1, "Unable to convert value"}})};
+      return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Could not read data from file while skipping header lines: {}", filename.string()));
     }
-    data[i] = value;
   }
 
-  Result<> result;
-  result.warnings().push_back(Warning{-1, "Test Warning"});
+  size_t numTuples = data.getNumberOfTuples();
+  int scalarNumComp = data.getNumberOfComponents();
+
+  size_t totalSize = numTuples * static_cast<size_t>(scalarNumComp);
+  err = k_RBR_NO_ERROR;
+  if(inputIsBool)
+  {
+    double value = 0.0;
+    int64_t* si64Ptr = reinterpret_cast<int64_t*>(&value);
+
+    for(size_t i = 0; i < totalSize; ++i)
+    {
+      in >> value;
+      if(*si64Ptr == 0)
+      {
+        data[i] = false;
+      }
+      else
+      {
+        data[i] = true;
+      }
+      err = check_error_bits(&in);
+      if(err == k_RBR_READ_EOF && i < totalSize - 1)
+      {
+        return MakeErrorResult(k_RBR_READ_EOF, fmt::format("Read past End Of File (EOF) while parsing file: {}", filename.string()));
+      }
+      if(err == k_RBR_READ_ERROR)
+      {
+        return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Read error while parsing file: {}", filename.string()));
+      }
+    }
+  }
+  else
+  {
+    K value = static_cast<T>(0.0);
+    for(size_t i = 0; i < totalSize; ++i)
+    {
+      in >> value;
+      data[i] = static_cast<T>(value);
+      err = check_error_bits(&in);
+      if(err == k_RBR_READ_EOF && i < totalSize - 1)
+      {
+        return MakeErrorResult(k_RBR_READ_EOF, fmt::format("Read past End Of File (EOF) while parsing file: {}", filename.string()));
+      }
+      if(err == k_RBR_READ_ERROR)
+      {
+        return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Read error while parsing file: {}", filename.string()));
+      }
+    }
+  }
 
   return {};
 }
