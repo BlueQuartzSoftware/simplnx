@@ -43,7 +43,7 @@ constexpr StringLiteral k_Group2Name = "Second-Level";
 constexpr StringLiteral k_Group3Name = "Third-Level";
 
 constexpr StringLiteral k_CreateDataFilterName = "Create Data Group";
-constexpr StringLiteral k_ExportD3DFilterName = "Write DREAM.3D File";
+constexpr StringLiteral k_ExportD3DFilterName = "Write DREAM3D NX File (V8)";
 } // namespace DataNames
 
 const FilterHandle k_CreateDataGroupHandle(Uuid::FromString("e7d2f9b8-4131-4b28-a843-ea3c6950f101").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
