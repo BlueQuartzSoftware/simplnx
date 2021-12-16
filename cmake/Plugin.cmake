@@ -20,6 +20,11 @@ function(complex_COMPILE_PLUGIN)
     get_property(PluginNumFilters GLOBAL PROPERTY ${ARGS_PLUGIN_NAME}_filter_count)
 
     message(STATUS "${ARGS_PLUGIN_NAME} [ENABLED] ${PluginNumFilters} Filters")
+
+    get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
+    set(ComplexPluginTargets ${ComplexPluginTargets} ${ARGS_PLUGIN_NAME)
+    set_property(GLOBAL PROPERTY ComplexPluginTargets ${ComplexPluginTargets})
+
     #- Now set up the dependency between the main application and each of the plugins so that
     #- things like Visual Studio are forced to rebuild the plugins when launching
     #- the sandbox application
@@ -76,7 +81,7 @@ function(complex_add_plugin)
   if(DEFINED COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR AND DEFINED ${ARGS_PLUGIN_NAME}_IMPORT_FILE)
     #message(STATUS "Plugin: Adding Plugin ${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}")
     complex_COMPILE_PLUGIN(PLUGIN_NAME ${ARGS_PLUGIN_NAME}
-      PLUGIN_SOURCE_DIR ${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}
+                           PLUGIN_SOURCE_DIR ${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}
     )
     # Increment the plugin count
     get_property(PLUGIN_COUNT GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT)
