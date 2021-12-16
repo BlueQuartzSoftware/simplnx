@@ -522,14 +522,15 @@ endforeach()
 
 set(COMPLEX_PACKAGE_NAMESPACE "complex::")
 
-install(TARGETS complex
-  EXPORT complexTargets
-)
-
-export(EXPORT complexTargets NAMESPACE ${COMPLEX_PACKAGE_NAMESPACE})
-
 option(COMPLEX_ENABLE_INSTALL "Enables COMPLEX install rules" ON)
 if(COMPLEX_ENABLE_INSTALL)
+
+  install(TARGETS complex
+    EXPORT complexTargets
+  )
+
+  export(EXPORT complexTargets NAMESPACE ${COMPLEX_PACKAGE_NAMESPACE})
+
   include(CMakePackageConfigHelpers)
 
   set(COMPLEX_INSTALL_CMAKE_PREFIX "lib/cmake")
