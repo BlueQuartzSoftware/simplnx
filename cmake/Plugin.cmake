@@ -22,7 +22,7 @@ function(complex_COMPILE_PLUGIN)
     message(STATUS "${ARGS_PLUGIN_NAME} [ENABLED] ${PluginNumFilters} Filters")
 
     get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
-    set(ComplexPluginTargets ${ComplexPluginTargets} ${ARGS_PLUGIN_NAME)
+    set(ComplexPluginTargets ${ComplexPluginTargets} ${ARGS_PLUGIN_NAME})
     set_property(GLOBAL PROPERTY ComplexPluginTargets ${ComplexPluginTargets})
 
     #- Now set up the dependency between the main application and each of the plugins so that
