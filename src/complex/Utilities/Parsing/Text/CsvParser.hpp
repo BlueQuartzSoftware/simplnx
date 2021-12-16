@@ -92,8 +92,7 @@ template <typename T, typename K>
 Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64_t skipHeaderLines, char delimiter, bool inputIsBool = false)
 {
   int32_t err = k_RBR_NO_ERROR;
-  fs::exists(filename);
-  if(err < 0)
+  if(!fs::exists(filename))
   {
     return MakeErrorResult(k_RBR_FILE_NOT_EXIST, fmt::format("Input file does not exist: {}", filename.string()));
   }
