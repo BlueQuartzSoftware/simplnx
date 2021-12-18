@@ -12,18 +12,18 @@
 using namespace complex;
 
 #include <itkGradientMagnitudeImageFilter.h>
+
 namespace
 {
 struct ITKGradientMagnitudeImageFilterCreationFunctor
 {
   bool m_UseImageSpacing;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::GradientMagnitudeImageFilter<InputImageType, OutputImageType>;
+    typedef itk::GradientMagnitudeImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetUseImageSpacing(m_UseImageSpacing);
+    filter->SetUseImageSpacing(static_cast<bool>(m_UseImageSpacing));
     return filter;
   }
 };

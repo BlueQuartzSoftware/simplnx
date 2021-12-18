@@ -15,24 +15,47 @@
 using namespace complex;
 
 #include <itkBinaryErodeImageFilter.h>
+#include <itkFlatStructuringElement.h>
+
 namespace
 {
 struct ITKBinaryErodeImageFilterCreationFunctor
 {
+  ChoicesParameter::ValueType m_KernelType;
   float64 m_BackgroundValue;
   float64 m_ForegroundValue;
   bool m_BoundaryToForeground;
   VectorFloat32Parameter::ValueType m_KernelRadius;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::BinaryErodeImageFilter<InputImageType, OutputImageType>;
+    typedef itk::FlatStructuringElement<Dimension> StructuringElementType;
+    typedef typename StructuringElementType::RadiusType RadiusType;
+    RadiusType elementRadius = complex::ITK::CastVec3ToITK<complex::FloatVec3, RadiusType, typename RadiusType::SizeValueType>(m_KernelRadius, RadiusType::Dimension);
+    StructuringElementType structuringElement;
+    switch(m_KernelType)
+    {
+    case 0:
+      structuringElement = StructuringElementType::Annulus(elementRadius, false);
+      break;
+    case 1:
+      structuringElement = StructuringElementType::Ball(elementRadius, false);
+      break;
+    case 2:
+      structuringElement = StructuringElementType::Box(elementRadius);
+      break;
+    case 3:
+      structuringElement = StructuringElementType::Cross(elementRadius);
+      break;
+    default:
+      break;
+    }
+    typedef itk::BinaryErodeImageFilter<InputImageType, OutputImageType, StructuringElementType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetBackgroundValue(m_BackgroundValue);
-    filter->SetForegroundValue(m_ForegroundValue);
-    filter->SetBoundaryToForeground(m_BoundaryToForeground);
-    filter->SetKernelRadius(m_KernelRadius);
+    filter->SetBackgroundValue(static_cast<double>(m_BackgroundValue));
+    filter->SetForegroundValue(static_cast<double>(m_ForegroundValue));
+    filter->SetBoundaryToForeground(static_cast<bool>(m_BoundaryToForeground));
+    filter->SetKernel(structuringElement);
     return filter;
   }
 };

@@ -13,20 +13,22 @@
 using namespace complex;
 
 #include <itkSmoothingRecursiveGaussianImageFilter.h>
+
 namespace
 {
 struct ITKSmoothingRecursiveGaussianImageFilterCreationFunctor
 {
   VectorFloat32Parameter::ValueType m_Sigma;
   bool m_NormalizeAcrossScale;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::SmoothingRecursiveGaussianImageFilter<InputImageType, OutputImageType>;
+    typedef itk::SmoothingRecursiveGaussianImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetSigma(m_Sigma);
-    filter->SetNormalizeAcrossScale(m_NormalizeAcrossScale);
+    typename FilterType::SigmaArrayType itkVecSigma =
+        complex::ITK::CastVec3ToITK<complex::FloatVec3, typename FilterType::SigmaArrayType, typename FilterType::SigmaArrayType::ValueType>(this->getSigma(), FilterType::SigmaArrayType::Dimension);
+    filter->SetSigmaArray(itkVecSigma);
+    filter->SetNormalizeAcrossScale(static_cast<bool>(m_NormalizeAcrossScale));
     return filter;
   }
 };

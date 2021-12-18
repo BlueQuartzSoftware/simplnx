@@ -10,6 +10,7 @@
 using namespace complex;
 
 #include <itkFFTNormalizedCorrelationImageFilter.h>
+
 namespace
 {
 struct ITKFFTNormalizedCorrelationImageFilterCreationFunctor
@@ -18,17 +19,67 @@ struct ITKFFTNormalizedCorrelationImageFilterCreationFunctor
   float64 m_RequiredFractionOfOverlappingPixels;
   DataPath m_SelectedCellArrayPath;
   DataPath m_MovingCellArrayPath;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::FFTNormalizedCorrelationImageFilter<InputImageType, OutputImageType>;
+    typedef itk::Image<OutputPixelType, Dimension> IntermediateImageType;
+
+    typedef itk::FFTNormalizedCorrelationImageFilter<InputImageType, IntermediateImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetRequiredNumberOfOverlappingPixels(m_RequiredNumberOfOverlappingPixels);
-    filter->SetRequiredFractionOfOverlappingPixels(m_RequiredFractionOfOverlappingPixels);
-    filter->SetSelectedCellArrayPath(m_SelectedCellArrayPath);
-    filter->SetMovingCellArrayPath(m_MovingCellArrayPath);
-    return filter;
+
+    filter->SetRequiredNumberOfOverlappingPixels(static_cast<itk::SizeValueType>(m_RequiredNumberOfOverlappingPixels));
+    filter->SetRequiredFractionOfOverlappingPixels(static_cast<double>(m_RequiredFractionOfOverlappingPixels));
+
+    typedef itk::InPlaceDream3DDataToImageFilter<InputPixelType, Dimension> toITKType;
+    DataArrayPath dapMoving = getMovingCellArrayPath();
+    DataContainer::Pointer dcMoving = getDataContainerArray()->getDataContainer(dapMoving.getDataContainerName());
+    typename toITKType::Pointer toITKMoving = toITKType::New();
+    toITKMoving->SetInput(dcMoving);
+    toITKMoving->SetInPlace(true);
+    toITKMoving->SetAttributeMatrixArrayName(getMovingCellArrayPath().getAttributeMatrixName().toStdString());
+    toITKMoving->SetDataArrayName(getMovingCellArrayPath().getDataArrayName().toStdString());
+    filter->SetMovingImage(toITKMoving->GetOutput());
+
+    try
+    {
+      DataArrayPath dap = getSelectedCellArrayPath();
+      DataContainer::Pointer dc = getDataContainerArray()->getDataContainer(dap.getDataContainerName());
+
+      typename toITKType::Pointer toITK = toITKType::New();
+      toITK->SetInput(dc);
+      toITK->SetInPlace(true);
+      toITK->SetAttributeMatrixArrayName(getSelectedCellArrayPath().getAttributeMatrixName().toStdString());
+      toITK->SetDataArrayName(getSelectedCellArrayPath().getDataArrayName().toStdString());
+
+      itk::Dream3DFilterInterruption::Pointer interruption = itk::Dream3DFilterInterruption::New();
+      interruption->SetFilter(this);
+
+      filter->SetFixedImage(toITK->GetOutput());
+      filter->AddObserver(itk::ProgressEvent(), interruption);
+
+      typedef itk::CastImageFilter<IntermediateImageType, OutputImageType> CasterType;
+      typename CasterType::Pointer caster = CasterType::New();
+      caster->SetInput(filter->GetOutput());
+      caster->Update();
+
+      typename OutputImageType::Pointer image = OutputImageType::New();
+      image = caster->GetOutput();
+      image->DisconnectPipeline();
+      std::string outputArrayName(getNewCellArrayName().toStdString());
+
+      typedef itk::InPlaceImageToDream3DDataFilter<OutputPixelType, Dimension> toDream3DType;
+      typename toDream3DType::Pointer toDream3DFilter = toDream3DType::New();
+      toDream3DFilter->SetInput(image);
+      toDream3DFilter->SetInPlace(true);
+      toDream3DFilter->SetAttributeMatrixArrayName(getSelectedCellArrayPath().getAttributeMatrixName().toStdString());
+      toDream3DFilter->SetDataArrayName(outputArrayName);
+      toDream3DFilter->SetDataContainer(dc);
+      toDream3DFilter->Update();
+    } catch(itk::ExceptionObject& err)
+    {
+      QString errorMessage = "ITK exception was thrown while filtering input image: %1";
+      break;
+    }
   }
 };
 } // namespace

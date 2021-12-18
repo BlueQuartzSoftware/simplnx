@@ -12,7 +12,9 @@
 
 using namespace complex;
 
-#include <itkMultiScaleHessianBasedObjectnessImageFilter.h>
+#include <itkHessianToObjectnessMeasureImageFilter.h>
+#include <itkMultiScaleHessianBasedMeasureImageFilter.h>
+
 namespace
 {
 struct ITKMultiScaleHessianBasedObjectnessImageFilterCreationFunctor
@@ -27,20 +29,32 @@ struct ITKMultiScaleHessianBasedObjectnessImageFilterCreationFunctor
   float64 m_SigmaMaximum;
   float64 m_NumberOfSigmaSteps;
 
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::MultiScaleHessianBasedObjectnessImageFilter<InputImageType, OutputImageType>;
+
+    using InputPixelType = typename InputImageType::PixelType;
+    typedef typename itk::NumericTraits<InputPixelType>::RealType RealType;
+    typedef itk::SymmetricSecondRankTensor<RealType, Dimension> HessianPixelType;
+    typedef itk::Image<HessianPixelType, Dimension> HessianImageType;
+
+    typedef itk::HessianToObjectnessMeasureImageFilter<HessianImageType, OutputImageType> ObjectnessFilterType;
+    typename ObjectnessFilterType::Pointer objectnessFilter = ObjectnessFilterType::New();
+    objectnessFilter->SetObjectDimension(static_cast<unsigned int>(m_ObjectDimension));
+    objectnessFilter->SetAlpha(static_cast<double>(m_Alpha));
+    objectnessFilter->SetBeta(static_cast<double>(m_Beta));
+    objectnessFilter->SetGamma(static_cast<double>(m_Gamma));
+    objectnessFilter->SetBrightObject(static_cast<bool>(m_BrightObject));
+    objectnessFilter->SetScaleObjectnessMeasure(static_cast<bool>(m_ScaleObjectnessMeasure));
+
+    typedef itk::MultiScaleHessianBasedMeasureImageFilter<InputImageType, HessianImageType, OutputImageType> FilterType;
+
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetObjectDimension(m_ObjectDimension);
-    filter->SetAlpha(m_Alpha);
-    filter->SetBeta(m_Beta);
-    filter->SetGamma(m_Gamma);
-    filter->SetBrightObject(m_BrightObject);
-    filter->SetScaleObjectnessMeasure(m_ScaleObjectnessMeasure);
-    filter->SetSigmaMinimum(m_SigmaMinimum);
-    filter->SetSigmaMaximum(m_SigmaMaximum);
-    filter->SetNumberOfSigmaSteps(m_NumberOfSigmaSteps);
+    filter->SetSigmaMinimum(static_cast<double>(m_SigmaMinimum));
+    filter->SetSigmaMaximum(static_cast<double>(m_SigmaMaximum));
+    filter->SetNumberOfSigmaSteps(static_cast<double>(m_NumberOfSigmaSteps));
+    filter->SetHessianToMeasureFilter(objectnessFilter);
+
     return filter;
   }
 };

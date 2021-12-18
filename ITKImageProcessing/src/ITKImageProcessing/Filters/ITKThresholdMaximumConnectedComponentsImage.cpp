@@ -12,6 +12,7 @@
 using namespace complex;
 
 #include <itkThresholdMaximumConnectedComponentsImageFilter.h>
+
 namespace
 {
 struct ITKThresholdMaximumConnectedComponentsImageFilterCreationFunctor
@@ -20,16 +21,15 @@ struct ITKThresholdMaximumConnectedComponentsImageFilterCreationFunctor
   float64 m_UpperBoundary;
   int32 m_InsideValue;
   int32 m_OutsideValue;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::ThresholdMaximumConnectedComponentsImageFilter<InputImageType, OutputImageType>;
+    typedef itk::ThresholdMaximumConnectedComponentsImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetMinimumObjectSizeInPixels(m_MinimumObjectSizeInPixels);
-    filter->SetUpperBoundary(m_UpperBoundary);
-    filter->SetInsideValue(m_InsideValue);
-    filter->SetOutsideValue(m_OutsideValue);
+    filter->SetMinimumObjectSizeInPixels(static_cast<uint32_t>(m_MinimumObjectSizeInPixels));
+    filter->SetUpperBoundary(static_cast<typename InputImageType::PixelType>(std::min<double>(this->m_UpperBoundary, itk::NumericTraits<typename InputImageType::PixelType>::max())));
+    filter->SetInsideValue(static_cast<uint8_t>(m_InsideValue));
+    filter->SetOutsideValue(static_cast<uint8_t>(m_OutsideValue));
     return filter;
   }
 };

@@ -12,20 +12,46 @@
 using namespace complex;
 
 #include <itkMaskImageFilter.h>
+
 namespace
 {
 struct ITKMaskImageFilterCreationFunctor
 {
   float64 m_OutsideValue;
   DataPath m_MaskCellArrayPath;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::MaskImageFilter<InputImageType, OutputImageType>;
+    typedef itk::Image<uint32_t, Dimension> MaskImageType;
+    typedef itk::MaskImageFilter<InputImageType, MaskImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetOutsideValue(m_OutsideValue);
-    filter->SetMaskCellArrayPath(m_MaskCellArrayPath);
+    try
+    {
+      DataArrayPath dap = getMaskCellArrayPath();
+      DataContainer::Pointer dcMask = getMaskContainerArray()->getDataContainer(dap.getDataContainerName());
+      typedef itk::InPlaceDream3DDataToImageFilter<uint32_t, Dimension> toITKType;
+      typename toITKType::Pointer toITK = toITKType::New();
+      toITK->SetInput(dcMask);
+      toITK->SetInPlace(true);
+      toITK->SetAttributeMatrixArrayName(dap.getAttributeMatrixName().toStdString());
+      toITK->SetDataArrayName(dap.getDataArrayName().toStdString());
+      toITK->Update();
+      filter->SetMaskImage(toITK->GetOutput());
+    } catch(itk::ExceptionObject& err)
+    {
+      QString errorMessage = "ITK exception was thrown while converting mask image: %1";
+      break;
+    }
+    typename OutputImageType::PixelType v;
+    size_t NumberOfComponents = 1;
+    std::vector<size_t> cDims = ITKDream3DHelper::GetComponentsDimensions<InputPixelType>();
+    for(int ii = 0; ii < cDims.size(); ii++)
+    {
+      NumberOfComponents *= cDims[ii];
+    }
+    itk::NumericTraits<typename OutputImageType::PixelType>::SetLength(v, NumberOfComponents);
+    v = static_cast<OutputPixelType>(m_OutsideValue);
+    filter->SetOutsideValue(v);
     return filter;
   }
 };

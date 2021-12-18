@@ -13,6 +13,7 @@
 using namespace complex;
 
 #include <itkOtsuMultipleThresholdsImageFilter.h>
+
 namespace
 {
 struct ITKOtsuMultipleThresholdsImageFilterCreationFunctor
@@ -21,16 +22,15 @@ struct ITKOtsuMultipleThresholdsImageFilterCreationFunctor
   int32 m_LabelOffset;
   float64 m_NumberOfHistogramBins;
   bool m_ValleyEmphasis;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::OtsuMultipleThresholdsImageFilter<InputImageType, OutputImageType>;
+    typedef itk::OtsuMultipleThresholdsImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetNumberOfThresholds(m_NumberOfThresholds);
-    filter->SetLabelOffset(m_LabelOffset);
-    filter->SetNumberOfHistogramBins(m_NumberOfHistogramBins);
-    filter->SetValleyEmphasis(m_ValleyEmphasis);
+    filter->SetNumberOfThresholds(static_cast<uint8_t>(m_NumberOfThresholds));
+    filter->SetLabelOffset(static_cast<uint8_t>(m_LabelOffset));
+    filter->SetNumberOfHistogramBins(static_cast<uint32_t>(m_NumberOfHistogramBins));
+    filter->SetValleyEmphasis(static_cast<bool>(m_ValleyEmphasis));
     return filter;
   }
 };

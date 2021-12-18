@@ -13,6 +13,7 @@
 using namespace complex;
 
 #include <itkRegionalMaximaImageFilter.h>
+
 namespace
 {
 struct ITKRegionalMaximaImageFilterCreationFunctor
@@ -21,16 +22,15 @@ struct ITKRegionalMaximaImageFilterCreationFunctor
   float64 m_ForegroundValue;
   bool m_FullyConnected;
   bool m_FlatIsMaxima;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::RegionalMaximaImageFilter<InputImageType, OutputImageType>;
+    typedef itk::RegionalMaximaImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetBackgroundValue(m_BackgroundValue);
-    filter->SetForegroundValue(m_ForegroundValue);
-    filter->SetFullyConnected(m_FullyConnected);
-    filter->SetFlatIsMaxima(m_FlatIsMaxima);
+    filter->SetBackgroundValue(static_cast<double>(m_BackgroundValue));
+    filter->SetForegroundValue(static_cast<double>(m_ForegroundValue));
+    filter->SetFullyConnected(static_cast<bool>(m_FullyConnected));
+    filter->SetFlatIsMaxima(static_cast<bool>(m_FlatIsMaxima));
     return filter;
   }
 };

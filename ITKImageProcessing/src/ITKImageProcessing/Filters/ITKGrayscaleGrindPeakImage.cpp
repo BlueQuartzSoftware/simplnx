@@ -12,18 +12,18 @@
 using namespace complex;
 
 #include <itkGrayscaleGrindPeakImageFilter.h>
+
 namespace
 {
 struct ITKGrayscaleGrindPeakImageFilterCreationFunctor
 {
   bool m_FullyConnected;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::GrayscaleGrindPeakImageFilter<InputImageType, OutputImageType>;
+    typedef itk::GrayscaleGrindPeakImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetFullyConnected(m_FullyConnected);
+    filter->SetFullyConnected(static_cast<bool>(m_FullyConnected));
     return filter;
   }
 };

@@ -14,6 +14,7 @@
 using namespace complex;
 
 #include <itkPatchBasedDenoisingImageFilter.h>
+
 namespace
 {
 struct ITKPatchBasedDenoisingImageFilterCreationFunctor
@@ -31,26 +32,51 @@ struct ITKPatchBasedDenoisingImageFilterCreationFunctor
   float64 m_KernelBandwidthMultiplicationFactor;
   float64 m_KernelBandwidthUpdateFrequency;
   float64 m_KernelBandwidthFractionPixelsForEstimation;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::PatchBasedDenoisingImageFilter<InputImageType, OutputImageType>;
+    typedef itk::Image<OutputPixelType, Dimension> RealImageType;
+    typedef itk::PatchBasedDenoisingImageFilter<RealImageType, RealImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetNoiseModel(m_NoiseModel);
-    filter->SetKernelBandwidthSigma(m_KernelBandwidthSigma);
-    filter->SetPatchRadius(m_PatchRadius);
-    filter->SetNumberOfIterations(m_NumberOfIterations);
-    filter->SetNumberOfSamplePatches(m_NumberOfSamplePatches);
-    filter->SetSampleVariance(m_SampleVariance);
-    filter->SetNoiseSigma(m_NoiseSigma);
-    filter->SetNoiseModelFidelityWeight(m_NoiseModelFidelityWeight);
-    filter->SetAlwaysTreatComponentsAsEuclidean(m_AlwaysTreatComponentsAsEuclidean);
-    filter->SetKernelBandwidthEstimation(m_KernelBandwidthEstimation);
-    filter->SetKernelBandwidthMultiplicationFactor(m_KernelBandwidthMultiplicationFactor);
-    filter->SetKernelBandwidthUpdateFrequency(m_KernelBandwidthUpdateFrequency);
-    filter->SetKernelBandwidthFractionPixelsForEstimation(m_KernelBandwidthFractionPixelsForEstimation);
-    return filter;
+    typedef itk::InPlaceDream3DDataToImageFilter<InputPixelType, Dimension> toITKType;
+    DataArrayPath dap = getSelectedCellArrayPath();
+    DataContainer::Pointer dc = getDataContainerArray()->getDataContainer(dap.getDataContainerName());
+    typename toITKType::Pointer toITK = toITKType::New();
+    toITK->SetInput(dc);
+    toITK->SetInPlace(true);
+    toITK->SetAttributeMatrixArrayName(getSelectedCellArrayPath().getAttributeMatrixName().toStdString());
+    toITK->SetDataArrayName(getSelectedCellArrayPath().getDataArrayName().toStdString());
+    typename FilterType::RealArrayType a(toITK->GetOutput()->GetNumberOfComponentsPerPixel());
+    a.Fill(m_KernelBandwidthSigma);
+    filter->SetKernelBandwidthSigma(a);
+    filter->SetPatchRadius(static_cast<uint32_t>(m_PatchRadius));
+    filter->SetNumberOfIterations(static_cast<uint32_t>(m_NumberOfIterations));
+    if(this->m_NoiseSigma != 0.0)
+    {
+      filter->SetNoiseSigma(this->m_NoiseSigma);
+    }
+    filter->SetNoiseModelFidelityWeight(static_cast<double>(m_NoiseModelFidelityWeight));
+    filter->SetAlwaysTreatComponentsAsEuclidean(static_cast<bool>(m_AlwaysTreatComponentsAsEuclidean));
+    filter->SetKernelBandwidthEstimation(static_cast<bool>(m_KernelBandwidthEstimation));
+    filter->SetKernelBandwidthMultiplicationFactor(static_cast<double>(m_KernelBandwidthMultiplicationFactor));
+    filter->SetKernelBandwidthUpdateFrequency(static_cast<uint32_t>(m_KernelBandwidthUpdateFrequency));
+    filter->SetKernelBandwidthFractionPixelsForEstimation(static_cast<double>(m_KernelBandwidthFractionPixelsForEstimation));
+#if ITK_VERSION_MAJOR >= 5
+    filter->SetNumberOfWorkUnits(this->getNumberOfThreads());
+#else
+    filter->SetNumberOfThreads(this->getNumberOfThreads());
+#endif
+    typedef itk::Statistics::GaussianRandomSpatialNeighborSubsampler<typename FilterType::PatchSampleType, typename RealImageType::RegionType> SamplerType;
+    typename SamplerType::Pointer sampler = SamplerType::New();
+    sampler->SetVariance(m_SampleVariance);
+    sampler->SetRadius(itk::Math::Floor<unsigned int>(std::sqrt(m_SampleVariance) * 2.5));
+    sampler->SetNumberOfResultsRequested(m_NumberOfSamplePatches);
+    filter->SetSampler(sampler);
+    typedef typename itk::PatchBasedDenoisingBaseImageFilter<RealImageType, RealImageType>::NoiseModelType NoiseModelType;
+    NoiseModelType noiseModel = static_cast<NoiseModelType>(m_NoiseModel);
+    filter->SetNoiseModel(noiseModel);
+
+    return filter; /*   this->ITKImageProcessingBase::filterCastToFloat<InputPixelType, OutputPixelType, Dimension, FilterType, RealImageType>(filter); */
   }
 };
 } // namespace

@@ -12,6 +12,7 @@
 using namespace complex;
 
 #include <itkBinaryProjectionImageFilter.h>
+
 namespace
 {
 struct ITKBinaryProjectionImageFilterCreationFunctor
@@ -19,15 +20,14 @@ struct ITKBinaryProjectionImageFilterCreationFunctor
   float64 m_ProjectionDimension;
   float64 m_ForegroundValue;
   float64 m_BackgroundValue;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::BinaryProjectionImageFilter<InputImageType, OutputImageType>;
+    typedef itk::BinaryProjectionImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetProjectionDimension(m_ProjectionDimension);
-    filter->SetForegroundValue(m_ForegroundValue);
-    filter->SetBackgroundValue(m_BackgroundValue);
+    filter->SetProjectionDimension(static_cast<unsigned int>(m_ProjectionDimension));
+    filter->SetForegroundValue(static_cast<double>(m_ForegroundValue));
+    filter->SetBackgroundValue(static_cast<double>(m_BackgroundValue));
     return filter;
   }
 };

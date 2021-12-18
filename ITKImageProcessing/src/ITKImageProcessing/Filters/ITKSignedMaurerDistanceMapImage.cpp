@@ -13,6 +13,7 @@
 using namespace complex;
 
 #include <itkSignedMaurerDistanceMapImageFilter.h>
+
 namespace
 {
 struct ITKSignedMaurerDistanceMapImageFilterCreationFunctor
@@ -21,16 +22,15 @@ struct ITKSignedMaurerDistanceMapImageFilterCreationFunctor
   bool m_SquaredDistance;
   bool m_UseImageSpacing;
   float64 m_BackgroundValue;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::SignedMaurerDistanceMapImageFilter<InputImageType, OutputImageType>;
+    typedef itk::SignedMaurerDistanceMapImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetInsideIsPositive(m_InsideIsPositive);
-    filter->SetSquaredDistance(m_SquaredDistance);
-    filter->SetUseImageSpacing(m_UseImageSpacing);
-    filter->SetBackgroundValue(m_BackgroundValue);
+    filter->SetInsideIsPositive(static_cast<bool>(m_InsideIsPositive));
+    filter->SetSquaredDistance(static_cast<bool>(m_SquaredDistance));
+    filter->SetUseImageSpacing(static_cast<bool>(m_UseImageSpacing));
+    filter->SetBackgroundValue(static_cast<double>(m_BackgroundValue));
     return filter;
   }
 };

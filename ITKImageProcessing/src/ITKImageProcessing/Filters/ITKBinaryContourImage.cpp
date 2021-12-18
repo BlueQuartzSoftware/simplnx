@@ -13,6 +13,7 @@
 using namespace complex;
 
 #include <itkBinaryContourImageFilter.h>
+
 namespace
 {
 struct ITKBinaryContourImageFilterCreationFunctor
@@ -20,15 +21,14 @@ struct ITKBinaryContourImageFilterCreationFunctor
   bool m_FullyConnected;
   float64 m_BackgroundValue;
   float64 m_ForegroundValue;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::BinaryContourImageFilter<InputImageType, OutputImageType>;
+    typedef itk::BinaryContourImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetFullyConnected(m_FullyConnected);
-    filter->SetBackgroundValue(m_BackgroundValue);
-    filter->SetForegroundValue(m_ForegroundValue);
+    filter->SetFullyConnected(static_cast<bool>(m_FullyConnected));
+    filter->SetBackgroundValue(static_cast<double>(m_BackgroundValue));
+    filter->SetForegroundValue(static_cast<double>(m_ForegroundValue));
     return filter;
   }
 };

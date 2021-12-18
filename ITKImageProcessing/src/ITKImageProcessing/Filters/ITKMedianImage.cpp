@@ -12,18 +12,18 @@
 using namespace complex;
 
 #include <itkMedianImageFilter.h>
+
 namespace
 {
 struct ITKMedianImageFilterCreationFunctor
 {
   VectorFloat32Parameter::ValueType m_Radius;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
     using FilterType = itk::MedianImageFilter<InputImageType, OutputImageType>;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetRadius(m_Radius);
+    filter->SetRadius(complex::ITK::CastVec3ToITK<complex::FloatVec3, typename FilterType::RadiusType, typename FilterType::RadiusType::SizeValueType>(m_Radius, FilterType::RadiusType::Dimension));
     return filter;
   }
 };

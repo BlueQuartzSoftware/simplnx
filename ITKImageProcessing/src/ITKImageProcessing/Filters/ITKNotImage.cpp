@@ -11,15 +11,15 @@
 using namespace complex;
 
 #include <itkNotImageFilter.h>
+
 namespace
 {
 struct ITKNotImageFilterCreationFunctor
 {
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::NotImageFilter<InputImageType, OutputImageType>;
+    typedef itk::NotImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
     return filter;
   }

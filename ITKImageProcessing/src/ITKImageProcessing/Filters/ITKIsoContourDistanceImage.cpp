@@ -12,20 +12,20 @@
 using namespace complex;
 
 #include <itkIsoContourDistanceImageFilter.h>
+
 namespace
 {
 struct ITKIsoContourDistanceImageFilterCreationFunctor
 {
   float64 m_LevelSetValue;
   float64 m_FarValue;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::IsoContourDistanceImageFilter<InputImageType, OutputImageType>;
+    typedef itk::IsoContourDistanceImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetLevelSetValue(m_LevelSetValue);
-    filter->SetFarValue(m_FarValue);
+    filter->SetLevelSetValue(static_cast<double>(m_LevelSetValue));
+    filter->SetFarValue(static_cast<double>(m_FarValue));
     return filter;
   }
 };

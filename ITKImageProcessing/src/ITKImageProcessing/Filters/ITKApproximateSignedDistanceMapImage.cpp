@@ -12,20 +12,20 @@
 using namespace complex;
 
 #include <itkApproximateSignedDistanceMapImageFilter.h>
+
 namespace
 {
 struct ITKApproximateSignedDistanceMapImageFilterCreationFunctor
 {
   float64 m_InsideValue;
   float64 m_OutsideValue;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::ApproximateSignedDistanceMapImageFilter<InputImageType, OutputImageType>;
+    typedef itk::ApproximateSignedDistanceMapImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetInsideValue(m_InsideValue);
-    filter->SetOutsideValue(m_OutsideValue);
+    filter->SetInsideValue(static_cast<double>(m_InsideValue));
+    filter->SetOutsideValue(static_cast<double>(m_OutsideValue));
     return filter;
   }
 };

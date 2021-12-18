@@ -12,20 +12,23 @@
 using namespace complex;
 
 #include <itkSaltAndPepperNoiseImageFilter.h>
+
 namespace
 {
 struct ITKSaltAndPepperNoiseImageFilterCreationFunctor
 {
   float64 m_Probability;
   float64 m_Seed;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::SaltAndPepperNoiseImageFilter<InputImageType, OutputImageType>;
+    typedef itk::SaltAndPepperNoiseImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetProbability(m_Probability);
-    filter->SetSeed(m_Seed);
+    filter->SetProbability(static_cast<double>(m_Probability));
+    if(m_Seed)
+    {
+      filter->SetSeed(m_Seed);
+    }
     return filter;
   }
 };

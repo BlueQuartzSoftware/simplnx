@@ -13,6 +13,7 @@
 using namespace complex;
 
 #include <itkRescaleIntensityImageFilter.h>
+
 namespace
 {
 struct ITKRescaleIntensityImageFilterCreationFunctor
@@ -20,15 +21,13 @@ struct ITKRescaleIntensityImageFilterCreationFunctor
   ChoicesParameter::ValueType m_OutputType;
   float64 m_OutputMinimum;
   float64 m_OutputMaximum;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::RescaleIntensityImageFilter<InputImageType, OutputImageType>;
+    typedef itk::RescaleIntensityImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetOutputType(m_OutputType);
-    filter->SetOutputMinimum(m_OutputMinimum);
-    filter->SetOutputMaximum(m_OutputMaximum);
+    filter->SetOutputMinimum(static_cast<double>(m_OutputMinimum));
+    filter->SetOutputMaximum(static_cast<double>(m_OutputMaximum));
     return filter;
   }
 };

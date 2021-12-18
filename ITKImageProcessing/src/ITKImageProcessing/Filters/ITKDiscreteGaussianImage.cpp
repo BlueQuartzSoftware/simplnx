@@ -14,6 +14,7 @@
 using namespace complex;
 
 #include <itkDiscreteGaussianImageFilter.h>
+
 namespace
 {
 struct ITKDiscreteGaussianImageFilterCreationFunctor
@@ -22,16 +23,16 @@ struct ITKDiscreteGaussianImageFilterCreationFunctor
   int32 m_MaximumKernelWidth;
   VectorFloat32Parameter::ValueType m_MaximumError;
   bool m_UseImageSpacing;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
     using FilterType = itk::DiscreteGaussianImageFilter<InputImageType, OutputImageType>;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetVariance(m_Variance);
-    filter->SetMaximumKernelWidth(m_MaximumKernelWidth);
-    filter->SetMaximumError(m_MaximumError);
-    filter->SetUseImageSpacing(m_UseImageSpacing);
+    filter->SetVariance(complex::ITK::CastVec3ToITK<complex::FloatVec3, typename FilterType::ArrayType, typename FilterType::ArrayType::ValueType>(m_Variance, FilterType::ArrayType::Dimension));
+    filter->SetMaximumKernelWidth(static_cast<unsigned int>(m_MaximumKernelWidth));
+    filter->SetMaximumError(
+        complex::ITK::CastVec3ToITK<complex::FloatVec3, typename FilterType::ArrayType, typename FilterType::ArrayType::ValueType>(m_MaximumError, FilterType::ArrayType::Dimension));
+    filter->SetUseImageSpacing(static_cast<bool>(m_UseImageSpacing));
     return filter;
   }
 };

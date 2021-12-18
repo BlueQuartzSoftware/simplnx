@@ -13,20 +13,20 @@
 using namespace complex;
 
 #include <itkRelabelComponentImageFilter.h>
+
 namespace
 {
 struct ITKRelabelComponentImageFilterCreationFunctor
 {
   float64 m_MinimumObjectSize;
   bool m_SortByObjectSize;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::RelabelComponentImageFilter<InputImageType, OutputImageType>;
+    typedef itk::RelabelComponentImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetMinimumObjectSize(m_MinimumObjectSize);
-    filter->SetSortByObjectSize(m_SortByObjectSize);
+    filter->SetMinimumObjectSize(static_cast<uint64_t>(m_MinimumObjectSize));
+    filter->SetSortByObjectSize(static_cast<bool>(m_SortByObjectSize));
     return filter;
   }
 };

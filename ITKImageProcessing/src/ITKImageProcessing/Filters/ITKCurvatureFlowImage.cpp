@@ -12,21 +12,25 @@
 using namespace complex;
 
 #include <itkCurvatureFlowImageFilter.h>
+
 namespace
 {
 struct ITKCurvatureFlowImageFilterCreationFunctor
 {
   float64 m_TimeStep;
   float64 m_NumberOfIterations;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::CurvatureFlowImageFilter<InputImageType, OutputImageType>;
+    using InputPixelType = typename InputImageType::PixelType;
+    typedef typename itk::NumericTraits<InputPixelType>::RealType FloatPixelType;
+    typedef itk::Image<FloatPixelType, Dimension> FloatImageType;
+    typedef itk::CurvatureFlowImageFilter<FloatImageType, FloatImageType> FilterType;
+
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetTimeStep(m_TimeStep);
-    filter->SetNumberOfIterations(m_NumberOfIterations);
-    return filter;
+    filter->SetTimeStep(static_cast<double>(m_TimeStep));
+    filter->SetNumberOfIterations(static_cast<uint32_t>(m_NumberOfIterations));
+    return filter; /*   this->ITKImageProcessingBase::filterCastToFloat<InputPixelType, InputPixelType, Dimension, FilterType, FloatImageType>(filter); */
   }
 };
 } // namespace

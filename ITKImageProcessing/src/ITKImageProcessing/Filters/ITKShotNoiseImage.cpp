@@ -12,20 +12,23 @@
 using namespace complex;
 
 #include <itkShotNoiseImageFilter.h>
+
 namespace
 {
 struct ITKShotNoiseImageFilterCreationFunctor
 {
   float64 m_Scale;
   float64 m_Seed;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::ShotNoiseImageFilter<InputImageType, OutputImageType>;
+    typedef itk::ShotNoiseImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetScale(m_Scale);
-    filter->SetSeed(m_Seed);
+    filter->SetScale(static_cast<double>(m_Scale));
+    if(m_Seed)
+    {
+      filter->SetSeed(m_Seed);
+    }
     return filter;
   }
 };

@@ -12,6 +12,7 @@
 using namespace complex;
 
 #include <itkMinMaxCurvatureFlowImageFilter.h>
+
 namespace
 {
 struct ITKMinMaxCurvatureFlowImageFilterCreationFunctor
@@ -19,16 +20,19 @@ struct ITKMinMaxCurvatureFlowImageFilterCreationFunctor
   float64 m_TimeStep;
   float64 m_NumberOfIterations;
   int32 m_StencilRadius;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::MinMaxCurvatureFlowImageFilter<InputImageType, OutputImageType>;
+    using InputPixelType = typename InputImageType::PixelType;
+    typedef typename itk::NumericTraits<InputPixelType>::RealType FloatPixelType;
+    typedef itk::Image<FloatPixelType, Dimension> FloatImageType;
+    typedef itk::MinMaxCurvatureFlowImageFilter<FloatImageType, FloatImageType> FilterType;
+
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetTimeStep(m_TimeStep);
-    filter->SetNumberOfIterations(m_NumberOfIterations);
-    filter->SetStencilRadius(m_StencilRadius);
-    return filter;
+    filter->SetTimeStep(static_cast<double>(m_TimeStep));
+    filter->SetNumberOfIterations(static_cast<uint32_t>(m_NumberOfIterations));
+    filter->SetStencilRadius(static_cast<int>(m_StencilRadius));
+    return filter; /*   this->ITKImageProcessingBase::filterCastToFloat<InputPixelType, InputPixelType, Dimension, FilterType, FloatImageType>(filter); */
   }
 };
 } // namespace

@@ -12,6 +12,7 @@
 using namespace complex;
 
 #include <itkIntensityWindowingImageFilter.h>
+
 namespace
 {
 struct ITKIntensityWindowingImageFilterCreationFunctor
@@ -20,16 +21,15 @@ struct ITKIntensityWindowingImageFilterCreationFunctor
   float64 m_WindowMaximum;
   float64 m_OutputMinimum;
   float64 m_OutputMaximum;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::IntensityWindowingImageFilter<InputImageType, OutputImageType>;
+    typedef itk::IntensityWindowingImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetWindowMinimum(m_WindowMinimum);
-    filter->SetWindowMaximum(m_WindowMaximum);
-    filter->SetOutputMinimum(m_OutputMinimum);
-    filter->SetOutputMaximum(m_OutputMaximum);
+    filter->SetWindowMinimum(static_cast<double>(m_WindowMinimum));
+    filter->SetWindowMaximum(static_cast<double>(m_WindowMaximum));
+    filter->SetOutputMinimum(static_cast<double>(m_OutputMinimum));
+    filter->SetOutputMaximum(static_cast<double>(m_OutputMaximum));
     return filter;
   }
 };

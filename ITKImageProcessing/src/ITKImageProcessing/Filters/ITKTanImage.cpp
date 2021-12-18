@@ -11,15 +11,15 @@
 using namespace complex;
 
 #include <itkTanImageFilter.h>
+
 namespace
 {
 struct ITKTanImageFilterCreationFunctor
 {
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::TanImageFilter<InputImageType, OutputImageType>;
+    typedef itk::TanImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
     return filter;
   }

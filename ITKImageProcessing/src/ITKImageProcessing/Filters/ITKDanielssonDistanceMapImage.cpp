@@ -12,6 +12,7 @@
 using namespace complex;
 
 #include <itkDanielssonDistanceMapImageFilter.h>
+
 namespace
 {
 struct ITKDanielssonDistanceMapImageFilterCreationFunctor
@@ -19,15 +20,14 @@ struct ITKDanielssonDistanceMapImageFilterCreationFunctor
   bool m_InputIsBinary;
   bool m_SquaredDistance;
   bool m_UseImageSpacing;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::DanielssonDistanceMapImageFilter<InputImageType, OutputImageType>;
+    typedef itk::DanielssonDistanceMapImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetInputIsBinary(m_InputIsBinary);
-    filter->SetSquaredDistance(m_SquaredDistance);
-    filter->SetUseImageSpacing(m_UseImageSpacing);
+    filter->SetInputIsBinary(static_cast<bool>(m_InputIsBinary));
+    filter->SetSquaredDistance(static_cast<bool>(m_SquaredDistance));
+    filter->SetUseImageSpacing(static_cast<bool>(m_UseImageSpacing));
     return filter;
   }
 };

@@ -12,18 +12,18 @@
 using namespace complex;
 
 #include <itkMinimumProjectionImageFilter.h>
+
 namespace
 {
 struct ITKMinimumProjectionImageFilterCreationFunctor
 {
   float64 m_ProjectionDimension;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::MinimumProjectionImageFilter<InputImageType, OutputImageType>;
+    typedef itk::MinimumProjectionImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetProjectionDimension(m_ProjectionDimension);
+    filter->SetProjectionDimension(static_cast<unsigned int>(m_ProjectionDimension));
     return filter;
   }
 };

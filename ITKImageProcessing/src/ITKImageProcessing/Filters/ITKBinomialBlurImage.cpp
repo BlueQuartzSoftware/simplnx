@@ -12,18 +12,18 @@
 using namespace complex;
 
 #include <itkBinomialBlurImageFilter.h>
+
 namespace
 {
 struct ITKBinomialBlurImageFilterCreationFunctor
 {
   float64 m_Repetitions;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::BinomialBlurImageFilter<InputImageType, OutputImageType>;
+    typedef itk::BinomialBlurImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetRepetitions(m_Repetitions);
+    filter->SetRepetitions(static_cast<unsigned int>(m_Repetitions));
     return filter;
   }
 };

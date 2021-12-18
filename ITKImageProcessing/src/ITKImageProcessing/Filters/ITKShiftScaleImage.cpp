@@ -12,20 +12,20 @@
 using namespace complex;
 
 #include <itkShiftScaleImageFilter.h>
+
 namespace
 {
 struct ITKShiftScaleImageFilterCreationFunctor
 {
   float64 m_Shift;
   float64 m_Scale;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::ShiftScaleImageFilter<InputImageType, OutputImageType>;
+    typedef itk::ShiftScaleImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetShift(m_Shift);
-    filter->SetScale(m_Scale);
+    filter->SetShift(static_cast<double>(m_Shift));
+    filter->SetScale(static_cast<double>(m_Scale));
     return filter;
   }
 };
