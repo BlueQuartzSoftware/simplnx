@@ -11,6 +11,7 @@
 using namespace complex;
 
 #include <itkPCMTileRegistrationFilter.h>
+
 namespace
 {
 struct ITKPCMTileRegistrationFilterCreationFunctor
@@ -21,20 +22,6 @@ struct ITKPCMTileRegistrationFilterCreationFunctor
   StringParameter::ValueType m_DataContainerPrefix;
   StringParameter::ValueType m_CommonAttributeMatrixName;
   StringParameter::ValueType m_CommonDataArrayName;
-
-  template <class InputImageType, class OutputImageType>
-  auto operator()() const
-  {
-    using FilterType = itk::PCMTileRegistrationFilter<InputImageType, OutputImageType>;
-    typename FilterType::Pointer filter = FilterType::New();
-    filter->SetColumnMontageLimits(m_ColumnMontageLimits);
-    filter->SetRowMontageLimits(m_RowMontageLimits);
-    filter->SetDataContainerPaddingDigits(m_DataContainerPaddingDigits);
-    filter->SetDataContainerPrefix(m_DataContainerPrefix);
-    filter->SetCommonAttributeMatrixName(m_CommonAttributeMatrixName);
-    filter->SetCommonDataArrayName(m_CommonDataArrayName);
-    return filter;
-  }
 };
 } // namespace
 

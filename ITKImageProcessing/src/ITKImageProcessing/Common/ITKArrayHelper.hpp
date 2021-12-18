@@ -84,6 +84,29 @@ namespace complex
 namespace ITK
 {
 /**
+ * @brief CastVec3ToITK Input type should be FloatVec3Type or IntVec3Type, Output
+   type should be some kind of ITK "array" (itk::Size, itk::Index,...)
+ */
+template <typename InputType, typename OutputType, typename ComponentType>
+OutputType CastVec3ToITK(const InputType& inputVec3, unsigned int dimension)
+{
+  OutputType output;
+  if(dimension > 0)
+  {
+    output[0] = static_cast<ComponentType>(inputVec3[0]);
+    if(dimension > 1)
+    {
+      output[1] = static_cast<ComponentType>(inputVec3[1]);
+      if(dimension > 2)
+      {
+        output[2] = static_cast<ComponentType>(inputVec3[2]);
+      }
+    }
+  }
+  return output;
+}
+
+/**
  * @brief
  * @tparam T
  */
@@ -301,7 +324,7 @@ struct ITKFilterFunctor
     using OutputImageType = itk::Image<OutputT, Dimension>;
     auto& typedInputDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<InputT>>&>(inputDataStore);
     typename InputImageType::Pointer inputImage = ITK::WrapDataStoreInImage<InputT, Dimension>(typedInputDataStore, imageGeom);
-    auto filter = filterCreationFunctor.template operator()<InputImageType, OutputImageType>();
+    auto filter = filterCreationFunctor.template operator()<InputImageType, OutputImageType, Dimension>();
     filter->SetInput(inputImage);
     filter->Update();
 

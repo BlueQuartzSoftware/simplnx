@@ -12,18 +12,18 @@
 using namespace complex;
 
 #include <itkHMaximaImageFilter.h>
+
 namespace
 {
 struct ITKHMaximaImageFilterCreationFunctor
 {
   float64 m_Height;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::HMaximaImageFilter<InputImageType, OutputImageType>;
+    typedef itk::HMaximaImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetHeight(m_Height);
+    filter->SetHeight(static_cast<double>(m_Height));
     return filter;
   }
 };

@@ -13,6 +13,7 @@
 using namespace complex;
 
 #include <itkProxTVImageFilter.h>
+
 namespace
 {
 struct ITKProxTVImageFilterCreationFunctor
@@ -20,15 +21,14 @@ struct ITKProxTVImageFilterCreationFunctor
   float64 m_MaximumNumberOfIterations;
   VectorFloat32Parameter::ValueType m_Weights;
   VectorFloat32Parameter::ValueType m_Norms;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::ProxTVImageFilter<InputImageType, OutputImageType>;
+    typedef itk::ProxTVImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetMaximumNumberOfIterations(m_MaximumNumberOfIterations);
-    filter->SetWeights(m_Weights);
-    filter->SetNorms(m_Norms);
+    filter->SetMaximumNumberOfIterations(static_cast<unsigned int>(m_MaximumNumberOfIterations));
+    filter->SetWeights(complex::ITK::CastVec3ToITK<complex::FloatVec3, typename FilterType::ArrayType, typename FilterType::ArrayType::ValueType>(m_Weights, FilterType::ArrayType::Dimension));
+    filter->SetNorms(complex::ITK::CastVec3ToITK<complex::FloatVec3, typename FilterType::ArrayType, typename FilterType::ArrayType::ValueType>(m_Norms, FilterType::ArrayType::Dimension));
     return filter;
   }
 };

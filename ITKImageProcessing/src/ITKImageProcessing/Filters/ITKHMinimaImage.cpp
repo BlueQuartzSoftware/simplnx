@@ -13,20 +13,20 @@
 using namespace complex;
 
 #include <itkHMinimaImageFilter.h>
+
 namespace
 {
 struct ITKHMinimaImageFilterCreationFunctor
 {
   float64 m_Height;
   bool m_FullyConnected;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::HMinimaImageFilter<InputImageType, OutputImageType>;
+    typedef itk::HMinimaImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetHeight(m_Height);
-    filter->SetFullyConnected(m_FullyConnected);
+    filter->SetHeight(static_cast<double>(m_Height));
+    filter->SetFullyConnected(static_cast<bool>(m_FullyConnected));
     return filter;
   }
 };

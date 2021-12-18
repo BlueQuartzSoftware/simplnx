@@ -13,6 +13,7 @@
 using namespace complex;
 
 #include <itkRegionalMinimaImageFilter.h>
+
 namespace
 {
 struct ITKRegionalMinimaImageFilterCreationFunctor
@@ -21,16 +22,15 @@ struct ITKRegionalMinimaImageFilterCreationFunctor
   float64 m_ForegroundValue;
   bool m_FullyConnected;
   bool m_FlatIsMinima;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::RegionalMinimaImageFilter<InputImageType, OutputImageType>;
+    typedef itk::RegionalMinimaImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetBackgroundValue(m_BackgroundValue);
-    filter->SetForegroundValue(m_ForegroundValue);
-    filter->SetFullyConnected(m_FullyConnected);
-    filter->SetFlatIsMinima(m_FlatIsMinima);
+    filter->SetBackgroundValue(static_cast<double>(m_BackgroundValue));
+    filter->SetForegroundValue(static_cast<double>(m_ForegroundValue));
+    filter->SetFullyConnected(static_cast<bool>(m_FullyConnected));
+    filter->SetFlatIsMinima(static_cast<bool>(m_FlatIsMinima));
     return filter;
   }
 };

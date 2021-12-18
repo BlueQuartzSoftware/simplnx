@@ -12,6 +12,7 @@
 using namespace complex;
 
 #include <itkGradientAnisotropicDiffusionImageFilter.h>
+
 namespace
 {
 struct ITKGradientAnisotropicDiffusionImageFilterCreationFunctor
@@ -20,17 +21,20 @@ struct ITKGradientAnisotropicDiffusionImageFilterCreationFunctor
   float64 m_ConductanceParameter;
   float64 m_ConductanceScalingUpdateInterval;
   float64 m_NumberOfIterations;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::GradientAnisotropicDiffusionImageFilter<InputImageType, OutputImageType>;
+    using InputPixelType = typename InputImageType::PixelType;
+    typedef typename itk::NumericTraits<InputPixelType>::RealType FloatPixelType;
+    typedef itk::Image<FloatPixelType, Dimension> FloatImageType;
+    typedef itk::GradientAnisotropicDiffusionImageFilter<FloatImageType, FloatImageType> FilterType;
+
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetTimeStep(m_TimeStep);
-    filter->SetConductanceParameter(m_ConductanceParameter);
-    filter->SetConductanceScalingUpdateInterval(m_ConductanceScalingUpdateInterval);
-    filter->SetNumberOfIterations(m_NumberOfIterations);
-    return filter;
+    filter->SetTimeStep(static_cast<double>(m_TimeStep));
+    filter->SetConductanceParameter(static_cast<double>(m_ConductanceParameter));
+    filter->SetConductanceScalingUpdateInterval(static_cast<unsigned int>(m_ConductanceScalingUpdateInterval));
+    filter->SetNumberOfIterations(static_cast<uint32_t>(m_NumberOfIterations));
+    return filter; /*   this->ITKImageProcessingBase::filterCastToFloat<InputPixelType, OutputPixelType, Dimension, FilterType, FloatImageType>(filter); */
   }
 };
 } // namespace

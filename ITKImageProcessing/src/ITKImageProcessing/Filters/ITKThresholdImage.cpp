@@ -12,6 +12,7 @@
 using namespace complex;
 
 #include <itkThresholdImageFilter.h>
+
 namespace
 {
 struct ITKThresholdImageFilterCreationFunctor
@@ -19,15 +20,14 @@ struct ITKThresholdImageFilterCreationFunctor
   float64 m_Lower;
   float64 m_Upper;
   float64 m_OutsideValue;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::ThresholdImageFilter<InputImageType, OutputImageType>;
+    typedef itk::ThresholdImageFilter<InputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetLower(m_Lower);
-    filter->SetUpper(m_Upper);
-    filter->SetOutsideValue(m_OutsideValue);
+    filter->SetLower(static_cast<double>(m_Lower));
+    filter->SetUpper(static_cast<double>(m_Upper));
+    filter->SetOutsideValue(static_cast<double>(m_OutsideValue));
     return filter;
   }
 };

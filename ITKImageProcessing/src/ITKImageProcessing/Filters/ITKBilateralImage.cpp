@@ -12,6 +12,7 @@
 using namespace complex;
 
 #include <itkBilateralImageFilter.h>
+
 namespace
 {
 struct ITKBilateralImageFilterCreationFunctor
@@ -19,15 +20,14 @@ struct ITKBilateralImageFilterCreationFunctor
   float64 m_DomainSigma;
   float64 m_RangeSigma;
   float64 m_NumberOfRangeGaussianSamples;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::BilateralImageFilter<InputImageType, OutputImageType>;
+    typedef itk::BilateralImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetDomainSigma(m_DomainSigma);
-    filter->SetRangeSigma(m_RangeSigma);
-    filter->SetNumberOfRangeGaussianSamples(m_NumberOfRangeGaussianSamples);
+    filter->SetDomainSigma(static_cast<double>(m_DomainSigma));
+    filter->SetRangeSigma(static_cast<double>(m_RangeSigma));
+    filter->SetNumberOfRangeGaussianSamples(static_cast<unsigned int>(m_NumberOfRangeGaussianSamples));
     return filter;
   }
 };

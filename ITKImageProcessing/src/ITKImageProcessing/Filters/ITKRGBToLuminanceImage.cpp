@@ -10,18 +10,43 @@
 
 using namespace complex;
 
+#include <itkRGBAPixel.h>
+#include <itkRGBPixel.h>
 #include <itkRGBToLuminanceImageFilter.h>
 namespace
 {
 struct ITKRGBToLuminanceImageFilterCreationFunctor
 {
 
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::RGBToLuminanceImageFilter<InputImageType, OutputImageType>;
-    typename FilterType::Pointer filter = FilterType::New();
-    return filter;
+    using InputPixelType = typename InputImageType::PixelType;
+    typedef typename itk::NumericTraits<InputPixelType>::ValueType ScalarPixelType;
+
+    typedef itk::RGBPixel<ScalarPixelType> RGBPixelType;
+    typedef itk::Image<RGBPixelType, Dimension> RGBImageType;
+    typedef itk::RGBToLuminanceImageFilter<RGBImageType, OutputImageType> RGBFilterType;
+    typename RGBFilterType::Pointer rgbFilter = RGBFilterType::New();
+
+    typedef itk::RGBAPixel<ScalarPixelType> RGBAPixelType;
+    typedef itk::Image<RGBAPixelType, Dimension> RGBAImageType;
+    typedef itk::RGBToLuminanceImageFilter<RGBAImageType, OutputImageType> RGBAFilterType;
+    typename RGBAFilterType::Pointer rgbaFilter = RGBAFilterType::New();
+
+    const unsigned int length = itk::NumericTraits<InputPixelType>::GetLength();
+    switch(length)
+    {
+    case 3:
+      return rgbFilter;
+      break;
+    case 4:
+      return rgbaFilter;
+      break;
+    default:
+      break;
+    }
+    return nullptr;
   }
 };
 } // namespace

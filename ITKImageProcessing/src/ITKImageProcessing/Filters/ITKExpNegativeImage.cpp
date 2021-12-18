@@ -11,15 +11,15 @@
 using namespace complex;
 
 #include <itkExpNegativeImageFilter.h>
+
 namespace
 {
 struct ITKExpNegativeImageFilterCreationFunctor
 {
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::ExpNegativeImageFilter<InputImageType, OutputImageType>;
+    typedef itk::ExpNegativeImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
     return filter;
   }

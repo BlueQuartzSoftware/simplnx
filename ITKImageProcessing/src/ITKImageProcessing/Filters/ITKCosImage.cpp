@@ -11,15 +11,15 @@
 using namespace complex;
 
 #include <itkCosImageFilter.h>
+
 namespace
 {
 struct ITKCosImageFilterCreationFunctor
 {
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::CosImageFilter<InputImageType, OutputImageType>;
+    typedef itk::CosImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
     return filter;
   }

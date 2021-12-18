@@ -11,15 +11,15 @@
 using namespace complex;
 
 #include <itkBinaryThinningImageFilter.h>
+
 namespace
 {
 struct ITKBinaryThinningImageFilterCreationFunctor
 {
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::BinaryThinningImageFilter<InputImageType, OutputImageType>;
+    typedef itk::BinaryThinningImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
     return filter;
   }

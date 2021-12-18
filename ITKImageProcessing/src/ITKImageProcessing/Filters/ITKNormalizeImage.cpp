@@ -11,15 +11,15 @@
 using namespace complex;
 
 #include <itkNormalizeImageFilter.h>
+
 namespace
 {
 struct ITKNormalizeImageFilterCreationFunctor
 {
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::NormalizeImageFilter<InputImageType, OutputImageType>;
+    typedef itk::NormalizeImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
     return filter;
   }

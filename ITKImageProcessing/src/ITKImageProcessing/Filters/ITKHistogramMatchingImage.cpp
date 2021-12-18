@@ -11,6 +11,7 @@
 using namespace complex;
 
 #include <itkHistogramMatchingImageFilter.h>
+
 namespace
 {
 struct ITKHistogramMatchingImageFilterCreationFunctor
@@ -20,17 +21,23 @@ struct ITKHistogramMatchingImageFilterCreationFunctor
   bool m_ThresholdAtMeanIntensity;
   DataPath m_SelectedCellArrayPath;
   DataPath m_ReferenceCellArrayPath;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::HistogramMatchingImageFilter<InputImageType, OutputImageType>;
+    typedef itk::HistogramMatchingImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetNumberOfHistogramLevels(m_NumberOfHistogramLevels);
-    filter->SetNumberOfMatchPoints(m_NumberOfMatchPoints);
-    filter->SetThresholdAtMeanIntensity(m_ThresholdAtMeanIntensity);
-    filter->SetSelectedCellArrayPath(m_SelectedCellArrayPath);
-    filter->SetReferenceCellArrayPath(m_ReferenceCellArrayPath);
+    filter->SetNumberOfHistogramLevels(static_cast<uint32_t>(m_NumberOfHistogramLevels));
+    filter->SetNumberOfMatchPoints(static_cast<uint32_t>(m_NumberOfMatchPoints));
+    filter->SetThresholdAtMeanIntensity(static_cast<bool>(m_ThresholdAtMeanIntensity));
+    typedef itk::InPlaceDream3DDataToImageFilter<InputPixelType, Dimension> toITKType;
+    DataArrayPath dap = getReferenceCellArrayPath();
+    DataContainer::Pointer dc = getDataContainerArray()->getDataContainer(dap.getDataContainerName());
+    typename toITKType::Pointer toITK = toITKType::New();
+    toITK->SetInput(dc);
+    toITK->SetInPlace(true);
+    toITK->SetAttributeMatrixArrayName(getReferenceCellArrayPath().getAttributeMatrixName().toStdString());
+    toITK->SetDataArrayName(getReferenceCellArrayPath().getDataArrayName().toStdString());
+    filter->SetReferenceImage(toITK->GetOutput());
     return filter;
   }
 };

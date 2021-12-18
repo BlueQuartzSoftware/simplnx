@@ -13,20 +13,20 @@
 using namespace complex;
 
 #include <itkVectorConnectedComponentImageFilter.h>
+
 namespace
 {
 struct ITKVectorConnectedComponentImageFilterCreationFunctor
 {
   float64 m_DistanceThreshold;
   bool m_FullyConnected;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::VectorConnectedComponentImageFilter<InputImageType, OutputImageType>;
+    typedef itk::VectorConnectedComponentImageFilter<InputImageType, OutputImageType, itk::Image<uint8_t, InputImageType::ImageDimension>> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetDistanceThreshold(m_DistanceThreshold);
-    filter->SetFullyConnected(m_FullyConnected);
+    filter->SetDistanceThreshold(static_cast<typename FilterType::InputValueType>(this->m_DistanceThreshold));
+    filter->SetFullyConnected(static_cast<bool>(m_FullyConnected));
     return filter;
   }
 };

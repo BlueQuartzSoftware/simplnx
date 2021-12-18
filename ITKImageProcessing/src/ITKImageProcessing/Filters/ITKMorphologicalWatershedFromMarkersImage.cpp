@@ -12,6 +12,7 @@
 using namespace complex;
 
 #include <itkMorphologicalWatershedFromMarkersImageFilter.h>
+
 namespace
 {
 struct ITKMorphologicalWatershedFromMarkersImageFilterCreationFunctor
@@ -19,16 +20,32 @@ struct ITKMorphologicalWatershedFromMarkersImageFilterCreationFunctor
   bool m_MarkWatershedLine;
   bool m_FullyConnected;
   DataPath m_MarkerCellArrayPath;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::MorphologicalWatershedFromMarkersImageFilter<InputImageType, OutputImageType>;
+    typedef itk::MorphologicalWatershedFromMarkersImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetMarkWatershedLine(m_MarkWatershedLine);
-    filter->SetFullyConnected(m_FullyConnected);
-    filter->SetMarkerCellArrayPath(m_MarkerCellArrayPath);
+    filter->SetMarkWatershedLine(static_cast<bool>(m_MarkWatershedLine));
+    filter->SetFullyConnected(static_cast<bool>(m_FullyConnected));
+    try
+    {
+      DataArrayPath dap = getMarkerCellArrayPath();
+      DataContainer::Pointer dcMarker = getMarkerContainerArray()->getDataContainer(dap.getDataContainerName());
+      typedef itk::InPlaceDream3DDataToImageFilter<uint16_t, Dimension> toITKType;
+      typename toITKType::Pointer toITK = toITKType::New();
+      toITK->SetInput(dcMarker);
+      toITK->SetInPlace(true);
+      toITK->SetAttributeMatrixArrayName(dap.getAttributeMatrixName().toStdString());
+      toITK->SetDataArrayName(dap.getDataArrayName().toStdString());
+      toITK->Update();
+      filter->SetMarkerImage(toITK->GetOutput());
+    } catch(itk::ExceptionObject& err)
+    {
+      QString errorMessage = "ITK exception was thrown while converting marker image: %1";
+      break;
+    }
     return filter;
+    m_MarkerContainerArray = nullptr; // Free the memory used by the casted marker image
   }
 };
 } // namespace

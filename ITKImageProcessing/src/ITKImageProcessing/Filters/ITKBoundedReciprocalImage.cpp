@@ -11,15 +11,15 @@
 using namespace complex;
 
 #include <itkBoundedReciprocalImageFilter.h>
+
 namespace
 {
 struct ITKBoundedReciprocalImageFilterCreationFunctor
 {
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::BoundedReciprocalImageFilter<InputImageType, OutputImageType>;
+    typedef itk::BoundedReciprocalImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
     return filter;
   }

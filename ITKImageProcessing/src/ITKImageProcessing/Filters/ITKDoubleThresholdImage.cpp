@@ -13,6 +13,7 @@
 using namespace complex;
 
 #include <itkDoubleThresholdImageFilter.h>
+
 namespace
 {
 struct ITKDoubleThresholdImageFilterCreationFunctor
@@ -24,19 +25,18 @@ struct ITKDoubleThresholdImageFilterCreationFunctor
   int32 m_InsideValue;
   int32 m_OutsideValue;
   bool m_FullyConnected;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::DoubleThresholdImageFilter<InputImageType, OutputImageType>;
+    typedef itk::DoubleThresholdImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetThreshold1(m_Threshold1);
-    filter->SetThreshold2(m_Threshold2);
-    filter->SetThreshold3(m_Threshold3);
-    filter->SetThreshold4(m_Threshold4);
-    filter->SetInsideValue(m_InsideValue);
-    filter->SetOutsideValue(m_OutsideValue);
-    filter->SetFullyConnected(m_FullyConnected);
+    filter->SetThreshold1(static_cast<double>(m_Threshold1));
+    filter->SetThreshold2(static_cast<double>(m_Threshold2));
+    filter->SetThreshold3(static_cast<double>(m_Threshold3));
+    filter->SetThreshold4(static_cast<double>(m_Threshold4));
+    filter->SetInsideValue(static_cast<uint8_t>(m_InsideValue));
+    filter->SetOutsideValue(static_cast<uint8_t>(m_OutsideValue));
+    filter->SetFullyConnected(static_cast<bool>(m_FullyConnected));
     return filter;
   }
 };

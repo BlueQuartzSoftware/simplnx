@@ -11,15 +11,15 @@
 using namespace complex;
 
 #include <itkSqrtImageFilter.h>
+
 namespace
 {
 struct ITKSqrtImageFilterCreationFunctor
 {
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::SqrtImageFilter<InputImageType, OutputImageType>;
+    typedef itk::SqrtImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
     return filter;
   }

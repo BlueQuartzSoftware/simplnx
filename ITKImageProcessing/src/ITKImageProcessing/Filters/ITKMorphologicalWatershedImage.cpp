@@ -13,6 +13,7 @@
 using namespace complex;
 
 #include <itkMorphologicalWatershedImageFilter.h>
+
 namespace
 {
 struct ITKMorphologicalWatershedImageFilterCreationFunctor
@@ -20,15 +21,14 @@ struct ITKMorphologicalWatershedImageFilterCreationFunctor
   float64 m_Level;
   bool m_MarkWatershedLine;
   bool m_FullyConnected;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::MorphologicalWatershedImageFilter<InputImageType, OutputImageType>;
+    typedef itk::MorphologicalWatershedImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetLevel(m_Level);
-    filter->SetMarkWatershedLine(m_MarkWatershedLine);
-    filter->SetFullyConnected(m_FullyConnected);
+    filter->SetLevel(static_cast<double>(m_Level));
+    filter->SetMarkWatershedLine(static_cast<bool>(m_MarkWatershedLine));
+    filter->SetFullyConnected(static_cast<bool>(m_FullyConnected));
     return filter;
   }
 };

@@ -12,6 +12,7 @@
 using namespace complex;
 
 #include <itkSigmoidImageFilter.h>
+
 namespace
 {
 struct ITKSigmoidImageFilterCreationFunctor
@@ -20,16 +21,15 @@ struct ITKSigmoidImageFilterCreationFunctor
   float64 m_Beta;
   float64 m_OutputMaximum;
   float64 m_OutputMinimum;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::SigmoidImageFilter<InputImageType, OutputImageType>;
+    typedef itk::SigmoidImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetAlpha(m_Alpha);
-    filter->SetBeta(m_Beta);
-    filter->SetOutputMaximum(m_OutputMaximum);
-    filter->SetOutputMinimum(m_OutputMinimum);
+    filter->SetAlpha(static_cast<double>(m_Alpha));
+    filter->SetBeta(static_cast<double>(m_Beta));
+    filter->SetOutputMaximum(static_cast<double>(m_OutputMaximum));
+    filter->SetOutputMinimum(static_cast<double>(m_OutputMinimum));
     return filter;
   }
 };

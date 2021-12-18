@@ -13,20 +13,23 @@
 using namespace complex;
 
 #include <itkVectorRescaleIntensityImageFilter.h>
+
 namespace
 {
 struct ITKVectorRescaleIntensityImageFilterCreationFunctor
 {
   ChoicesParameter::ValueType m_OutputType;
   float64 m_OutputMaximumMagnitude;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::VectorRescaleIntensityImageFilter<InputImageType, OutputImageType>;
+    using OutputPixelType = typename OutputImageType::PixelType;
+    using InputPixelType = typename InputImageType::PixelType;
+    typedef itk::Vector<OutputPixelType, InputPixelType::Dimension> VectorOutputPixelType;
+    typedef itk::Image<VectorOutputPixelType, Dimension> VectorOutputImageType;
+    typedef itk::VectorRescaleIntensityImageFilter<InputImageType, VectorOutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetOutputType(m_OutputType);
-    filter->SetOutputMaximumMagnitude(m_OutputMaximumMagnitude);
+    filter->SetOutputMaximumMagnitude(static_cast<double>(m_OutputMaximumMagnitude));
     return filter;
   }
 };

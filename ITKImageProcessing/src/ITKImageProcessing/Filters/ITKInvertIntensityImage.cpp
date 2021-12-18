@@ -12,18 +12,18 @@
 using namespace complex;
 
 #include <itkInvertIntensityImageFilter.h>
+
 namespace
 {
 struct ITKInvertIntensityImageFilterCreationFunctor
 {
   float64 m_Maximum;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::InvertIntensityImageFilter<InputImageType, OutputImageType>;
+    typedef itk::InvertIntensityImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetMaximum(m_Maximum);
+    filter->SetMaximum(static_cast<double>(m_Maximum));
     return filter;
   }
 };

@@ -12,18 +12,17 @@
 using namespace complex;
 
 #include <itkCastImageFilter.h>
+
 namespace
 {
 struct ITKCastImageFilterCreationFunctor
 {
   ChoicesParameter::ValueType m_CastingType;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::CastImageFilter<InputImageType, OutputImageType>;
+    typedef itk::CastImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetCastingType(m_CastingType);
     return filter;
   }
 };

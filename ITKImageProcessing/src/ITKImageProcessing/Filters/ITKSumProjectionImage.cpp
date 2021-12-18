@@ -12,18 +12,18 @@
 using namespace complex;
 
 #include <itkSumProjectionImageFilter.h>
+
 namespace
 {
 struct ITKSumProjectionImageFilterCreationFunctor
 {
   float64 m_ProjectionDimension;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::SumProjectionImageFilter<InputImageType, OutputImageType>;
+    typedef itk::SumProjectionImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetProjectionDimension(m_ProjectionDimension);
+    filter->SetProjectionDimension(static_cast<unsigned int>(m_ProjectionDimension));
     return filter;
   }
 };

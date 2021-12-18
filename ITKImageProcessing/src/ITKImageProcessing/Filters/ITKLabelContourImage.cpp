@@ -13,20 +13,20 @@
 using namespace complex;
 
 #include <itkLabelContourImageFilter.h>
+
 namespace
 {
 struct ITKLabelContourImageFilterCreationFunctor
 {
   bool m_FullyConnected;
   float64 m_BackgroundValue;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::LabelContourImageFilter<InputImageType, OutputImageType>;
+    typedef itk::LabelContourImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetFullyConnected(m_FullyConnected);
-    filter->SetBackgroundValue(m_BackgroundValue);
+    filter->SetFullyConnected(static_cast<bool>(m_FullyConnected));
+    filter->SetBackgroundValue(static_cast<double>(m_BackgroundValue));
     return filter;
   }
 };

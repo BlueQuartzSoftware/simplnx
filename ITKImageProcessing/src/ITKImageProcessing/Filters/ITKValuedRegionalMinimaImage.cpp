@@ -12,18 +12,18 @@
 using namespace complex;
 
 #include <itkValuedRegionalMinimaImageFilter.h>
+
 namespace
 {
 struct ITKValuedRegionalMinimaImageFilterCreationFunctor
 {
   bool m_FullyConnected;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::ValuedRegionalMinimaImageFilter<InputImageType, OutputImageType>;
+    typedef itk::ValuedRegionalMinimaImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetFullyConnected(m_FullyConnected);
+    filter->SetFullyConnected(static_cast<bool>(m_FullyConnected));
     return filter;
   }
 };

@@ -13,20 +13,20 @@
 using namespace complex;
 
 #include <itkLaplacianRecursiveGaussianImageFilter.h>
+
 namespace
 {
 struct ITKLaplacianRecursiveGaussianImageFilterCreationFunctor
 {
   float64 m_Sigma;
   bool m_NormalizeAcrossScale;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::LaplacianRecursiveGaussianImageFilter<InputImageType, OutputImageType>;
+    typedef itk::LaplacianRecursiveGaussianImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetSigma(m_Sigma);
-    filter->SetNormalizeAcrossScale(m_NormalizeAcrossScale);
+    filter->SetSigma(static_cast<double>(m_Sigma));
+    filter->SetNormalizeAcrossScale(static_cast<bool>(m_NormalizeAcrossScale));
     return filter;
   }
 };

@@ -15,22 +15,45 @@
 using namespace complex;
 
 #include <itkBinaryClosingByReconstructionImageFilter.h>
+#include <itkFlatStructuringElement.h>
+
 namespace
 {
 struct ITKBinaryClosingByReconstructionImageFilterCreationFunctor
 {
+  ChoicesParameter::ValueType m_KernelType;
   float64 m_ForegroundValue;
   bool m_FullyConnected;
   VectorFloat32Parameter::ValueType m_KernelRadius;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::BinaryClosingByReconstructionImageFilter<InputImageType, OutputImageType>;
+    typedef itk::FlatStructuringElement<Dimension> StructuringElementType;
+    typedef typename StructuringElementType::RadiusType RadiusType;
+    RadiusType elementRadius = complex::ITK::CastVec3ToITK<complex::FloatVec3, RadiusType, typename RadiusType::SizeValueType>(m_KernelRadius, RadiusType::Dimension);
+    StructuringElementType structuringElement;
+    switch(m_KernelType)
+    {
+    case 0:
+      structuringElement = StructuringElementType::Annulus(elementRadius, false);
+      break;
+    case 1:
+      structuringElement = StructuringElementType::Ball(elementRadius, false);
+      break;
+    case 2:
+      structuringElement = StructuringElementType::Box(elementRadius);
+      break;
+    case 3:
+      structuringElement = StructuringElementType::Cross(elementRadius);
+      break;
+    default:
+      break;
+    }
+    typedef itk::BinaryClosingByReconstructionImageFilter<InputImageType, StructuringElementType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetForegroundValue(m_ForegroundValue);
-    filter->SetFullyConnected(m_FullyConnected);
-    filter->SetKernelRadius(m_KernelRadius);
+    filter->SetForegroundValue(static_cast<double>(m_ForegroundValue));
+    filter->SetFullyConnected(static_cast<bool>(m_FullyConnected));
+    filter->SetKernel(structuringElement);
     return filter;
   }
 };

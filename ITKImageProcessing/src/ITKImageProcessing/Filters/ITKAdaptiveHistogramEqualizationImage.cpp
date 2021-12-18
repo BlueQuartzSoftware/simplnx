@@ -13,6 +13,7 @@
 using namespace complex;
 
 #include <itkAdaptiveHistogramEqualizationImageFilter.h>
+
 namespace
 {
 struct ITKAdaptiveHistogramEqualizationImageFilterCreationFunctor
@@ -20,15 +21,14 @@ struct ITKAdaptiveHistogramEqualizationImageFilterCreationFunctor
   VectorFloat32Parameter::ValueType m_Radius;
   float32 m_Alpha;
   float32 m_Beta;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::AdaptiveHistogramEqualizationImageFilter<InputImageType, OutputImageType>;
+    typedef itk::AdaptiveHistogramEqualizationImageFilter<InputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetRadius(m_Radius);
-    filter->SetAlpha(m_Alpha);
-    filter->SetBeta(m_Beta);
+    filter->SetRadius(complex::ITK::CastVec3ToITK<complex::FloatVec3, typename FilterType::RadiusType, typename FilterType::RadiusType::SizeValueType>(m_Radius, FilterType::RadiusType::Dimension));
+    filter->SetAlpha(static_cast<float>(m_Alpha));
+    filter->SetBeta(static_cast<float>(m_Beta));
     return filter;
   }
 };

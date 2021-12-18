@@ -11,15 +11,15 @@
 using namespace complex;
 
 #include <itkAsinImageFilter.h>
+
 namespace
 {
 struct ITKAsinImageFilterCreationFunctor
 {
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::AsinImageFilter<InputImageType, OutputImageType>;
+    typedef itk::AsinImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
     return filter;
   }

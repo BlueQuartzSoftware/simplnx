@@ -10,6 +10,7 @@
 using namespace complex;
 
 #include <itkStitchMontageFilter.h>
+
 namespace
 {
 struct ITKStitchMontageFilterCreationFunctor
@@ -20,20 +21,6 @@ struct ITKStitchMontageFilterCreationFunctor
   StringParameter::ValueType m_MontageDataContainerName;
   StringParameter::ValueType m_MontageAttributeMatrixName;
   StringParameter::ValueType m_MontageDataArrayName;
-
-  template <class InputImageType, class OutputImageType>
-  auto operator()() const
-  {
-    using FilterType = itk::StitchMontageFilter<InputImageType, OutputImageType>;
-    typename FilterType::Pointer filter = FilterType::New();
-    filter->SetMontageSelection(m_MontageSelection);
-    filter->SetCommonAttributeMatrixName(m_CommonAttributeMatrixName);
-    filter->SetCommonDataArrayName(m_CommonDataArrayName);
-    filter->SetMontageDataContainerName(m_MontageDataContainerName);
-    filter->SetMontageAttributeMatrixName(m_MontageAttributeMatrixName);
-    filter->SetMontageDataArrayName(m_MontageDataArrayName);
-    return filter;
-  }
 };
 } // namespace
 

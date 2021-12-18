@@ -12,18 +12,18 @@
 using namespace complex;
 
 #include <itkNormalizeToConstantImageFilter.h>
+
 namespace
 {
 struct ITKNormalizeToConstantImageFilterCreationFunctor
 {
   float64 m_Constant;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::NormalizeToConstantImageFilter<InputImageType, OutputImageType>;
+    typedef itk::NormalizeToConstantImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetConstant(m_Constant);
+    filter->SetConstant(static_cast<double>(m_Constant));
     return filter;
   }
 };

@@ -12,20 +12,20 @@
 using namespace complex;
 
 #include <itkZeroCrossingImageFilter.h>
+
 namespace
 {
 struct ITKZeroCrossingImageFilterCreationFunctor
 {
   int32 m_ForegroundValue;
   int32 m_BackgroundValue;
-
-  template <class InputImageType, class OutputImageType>
+  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    using FilterType = itk::ZeroCrossingImageFilter<InputImageType, OutputImageType>;
+    typedef itk::ZeroCrossingImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetForegroundValue(m_ForegroundValue);
-    filter->SetBackgroundValue(m_BackgroundValue);
+    filter->SetForegroundValue(static_cast<uint8_t>(m_ForegroundValue));
+    filter->SetBackgroundValue(static_cast<uint8_t>(m_BackgroundValue));
     return filter;
   }
 };
