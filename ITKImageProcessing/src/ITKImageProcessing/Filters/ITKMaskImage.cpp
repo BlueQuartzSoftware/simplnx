@@ -189,6 +189,9 @@ Result<> ITKMaskImage::executeImpl(DataStructure& dataStructure, const Arguments
   itkFunctor.m_OutsideValue = pOutsideValue;
   itkFunctor.m_MaskCellArrayPath = pMaskCellArrayPath;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

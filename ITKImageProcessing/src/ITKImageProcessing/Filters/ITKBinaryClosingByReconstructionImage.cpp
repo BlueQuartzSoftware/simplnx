@@ -198,6 +198,9 @@ Result<> ITKBinaryClosingByReconstructionImage::executeImpl(DataStructure& dataS
   itkFunctor.m_FullyConnected = pFullyConnected;
   itkFunctor.m_KernelRadius = pKernelRadius;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

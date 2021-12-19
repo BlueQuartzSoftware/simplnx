@@ -157,6 +157,9 @@ Result<> ITKBoxMeanImage::executeImpl(DataStructure& dataStructure, const Argume
   ::ITKBoxMeanImageFilterCreationFunctor itkFunctor;
   itkFunctor.m_Radius = pRadius;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

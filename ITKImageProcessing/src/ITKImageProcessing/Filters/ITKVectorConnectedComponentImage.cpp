@@ -164,6 +164,9 @@ Result<> ITKVectorConnectedComponentImage::executeImpl(DataStructure& dataStruct
   itkFunctor.m_DistanceThreshold = pDistanceThreshold;
   itkFunctor.m_FullyConnected = pFullyConnected;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

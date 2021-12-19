@@ -181,6 +181,9 @@ Result<> ITKHistogramMatchingImage::executeImpl(DataStructure& dataStructure, co
   itkFunctor.m_SelectedCellArrayPath = pSelectedCellArrayPath;
   itkFunctor.m_ReferenceCellArrayPath = pReferenceCellArrayPath;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

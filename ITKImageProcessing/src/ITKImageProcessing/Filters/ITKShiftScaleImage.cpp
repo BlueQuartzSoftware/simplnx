@@ -163,6 +163,9 @@ Result<> ITKShiftScaleImage::executeImpl(DataStructure& dataStructure, const Arg
   itkFunctor.m_Shift = pShift;
   itkFunctor.m_Scale = pScale;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

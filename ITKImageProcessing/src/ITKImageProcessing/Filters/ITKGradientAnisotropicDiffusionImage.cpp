@@ -179,6 +179,9 @@ Result<> ITKGradientAnisotropicDiffusionImage::executeImpl(DataStructure& dataSt
   itkFunctor.m_ConductanceScalingUpdateInterval = pConductanceScalingUpdateInterval;
   itkFunctor.m_NumberOfIterations = pNumberOfIterations;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

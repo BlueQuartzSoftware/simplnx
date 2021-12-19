@@ -218,6 +218,9 @@ Result<> ITKFFTNormalizedCorrelationImage::executeImpl(DataStructure& dataStruct
   itkFunctor.m_SelectedCellArrayPath = pSelectedCellArrayPath;
   itkFunctor.m_MovingCellArrayPath = pMovingCellArrayPath;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

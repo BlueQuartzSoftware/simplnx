@@ -170,6 +170,9 @@ Result<> ITKAdaptiveHistogramEqualizationImage::executeImpl(DataStructure& dataS
   itkFunctor.m_Alpha = pAlpha;
   itkFunctor.m_Beta = pBeta;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

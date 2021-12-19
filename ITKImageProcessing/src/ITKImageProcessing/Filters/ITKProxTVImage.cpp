@@ -170,6 +170,9 @@ Result<> ITKProxTVImage::executeImpl(DataStructure& dataStructure, const Argumen
   itkFunctor.m_Weights = pWeights;
   itkFunctor.m_Norms = pNorms;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

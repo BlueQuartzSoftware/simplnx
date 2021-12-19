@@ -166,6 +166,9 @@ Result<> ITKSaltAndPepperNoiseImage::executeImpl(DataStructure& dataStructure, c
   itkFunctor.m_Probability = pProbability;
   itkFunctor.m_Seed = pSeed;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

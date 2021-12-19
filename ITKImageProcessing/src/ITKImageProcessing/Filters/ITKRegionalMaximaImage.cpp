@@ -176,6 +176,9 @@ Result<> ITKRegionalMaximaImage::executeImpl(DataStructure& dataStructure, const
   itkFunctor.m_FullyConnected = pFullyConnected;
   itkFunctor.m_FlatIsMaxima = pFlatIsMaxima;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

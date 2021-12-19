@@ -11,6 +11,7 @@
 #include "complex/Filter/Output.hpp"
 
 #include <itkImage.h>
+#include <itkImageFileWriter.h>
 #include <itkImportImageFilter.h>
 #include <itkNumericTraits.h>
 #include <itkVector.h>
@@ -72,6 +73,9 @@
 #ifndef COMPLEX_ITK_ARRAY_HELPER_USE_RGB_RGBA
 #define COMPLEX_ITK_ARRAY_HELPER_USE_RGB_RGBA 0
 #endif
+
+#include <itkFlatStructuringElement.h>
+
 
 /*
  * The original implementation seemed to short circuit to vector if both were activate, but it's
@@ -330,9 +334,21 @@ struct ITKFilterFunctor
 
     typename OutputImageType::Pointer outputImage = filter->GetOutput();
     outputImage->DisconnectPipeline();
-    auto& typedOuputDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<OutputT>>&>(inputDataStore);
+#if 0
+    using ImageType = itk::Image<OutputT, Dimension>;
+    using FileWriterType = itk::ImageFileWriter<ImageType>;
+    auto writer = FileWriterType::New();
+    writer->SetInput(outputImage);
+    writer->SetFileName("/tmp/output_image.tiff");
+    writer->UseCompressionOff();
+    writer->Update();
+    writer->SetInput(inputImage);
+    writer->SetFileName("/tmp/input_image.tiff");
+    writer->Update();
+#endif
+    auto& typedOutputDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<OutputT>>&>(inputDataStore);
     auto imageDataStore = ITK::ConvertImageToDataStore(*outputImage);
-    typedOuputDataStore = std::move(imageDataStore);
+    typedOutputDataStore = std::move(imageDataStore);
 
     return {};
   }
@@ -425,8 +441,100 @@ Result<> Execute(DataStructure& dataStructure, const DataPath& inputArrayPath, c
     return ArraySwitchFunc<detail::ITKFilterFunctor>(inputDataStore, imageGeom, -1, inputDataStore, imageGeom, outputDataStore, filterCreationFunctor);
   } catch(const itk::ExceptionObject& exception)
   {
-    return MakeErrorResult(-2, exception.GetDescription());
+    return MakeErrorResult(-222, exception.GetDescription());
   }
 }
 } // namespace ITK
 } // namespace complex
+
+
+// Copied from sitkKernel.h (SimpleITK)
+// Copied from sitkCreateKernel.h (SimpleITK)
+namespace itk
+{
+namespace simple
+{
+enum PixelIDValueEnum
+{
+  sitkUnknown = -1,
+  sitkInt8 = -2,
+  sitkUInt8 = -3
+};
+enum KernelEnum
+{
+  sitkAnnulus = 0,
+  sitkBall = 1,
+  sitkBox = 2,
+  sitkCross = 3
+};
+
+enum SeedEnum
+{
+  /// A sentinel value used for "seed" parameters to indicate it
+  /// should be initialized by the wall clock for pseudo-random behavior.
+  sitkWallClock = 0
+};
+
+template< unsigned int Dimension >
+itk::FlatStructuringElement< Dimension >
+CreateKernel( KernelEnum kernelType, const std::vector<uint32_t> &size )
+{
+  typedef itk::FlatStructuringElement<Dimension> StructuringElementType;
+  typedef typename StructuringElementType::RadiusType RadiusType;
+  RadiusType elementRadius = complex::ITK::CastVec3ToITK<complex::FloatVec3, RadiusType, typename RadiusType::SizeValueType>(kernelType, RadiusType::Dimension);
+  StructuringElementType structuringElement;
+  switch(kernelType)
+  {
+  case KernelEnum::sitkAnnulus:
+    structuringElement = StructuringElementType::Annulus(elementRadius, false);
+    break;
+  case KernelEnum::sitkBall:
+    structuringElement = StructuringElementType::Ball(elementRadius, false);
+    break;
+  case KernelEnum::sitkBox:
+    structuringElement = StructuringElementType::Box(elementRadius);
+    break;
+  case KernelEnum::sitkCross:
+    structuringElement = StructuringElementType::Cross(elementRadius);
+    break;
+  default:
+    break;
+  }
+  return structuringElement;
+}
+template< unsigned int Dimension >
+itk::FlatStructuringElement< Dimension >
+CreateKernel( KernelEnum kernelType, const std::vector<float> &sizef )
+{
+  std::vector<uint32_t> size;
+  for(const auto& f : sizef)
+  {
+    size.push_back(static_cast<uint32_t>(f));
+  }
+  typedef itk::FlatStructuringElement<Dimension> StructuringElementType;
+  typedef typename StructuringElementType::RadiusType RadiusType;
+  RadiusType elementRadius = complex::ITK::CastVec3ToITK<complex::UIntVec3, RadiusType, typename RadiusType::SizeValueType>(size, RadiusType::Dimension);
+  StructuringElementType structuringElement;
+  switch(kernelType)
+  {
+  case 0:
+    structuringElement = StructuringElementType::Annulus(elementRadius, false);
+    break;
+  case 1:
+    structuringElement = StructuringElementType::Ball(elementRadius, false);
+    break;
+  case 2:
+    structuringElement = StructuringElementType::Box(elementRadius);
+    break;
+  case 3:
+    structuringElement = StructuringElementType::Cross(elementRadius);
+    break;
+  default:
+    break;
+  }
+  return structuringElement;
+}
+
+} // end namespace simple
+} // end namespace itk
+

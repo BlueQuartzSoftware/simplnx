@@ -178,6 +178,9 @@ Result<> ITKDiscreteGaussianImage::executeImpl(DataStructure& dataStructure, con
   itkFunctor.m_MaximumError = pMaximumError;
   itkFunctor.m_UseImageSpacing = pUseImageSpacing;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

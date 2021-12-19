@@ -221,6 +221,9 @@ Result<> ITKMultiScaleHessianBasedObjectnessImage::executeImpl(DataStructure& da
   itkFunctor.m_SigmaMaximum = pSigmaMaximum;
   itkFunctor.m_NumberOfSigmaSteps = pNumberOfSigmaSteps;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

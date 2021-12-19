@@ -164,6 +164,9 @@ Result<> ITKRelabelComponentImage::executeImpl(DataStructure& dataStructure, con
   itkFunctor.m_MinimumObjectSize = pMinimumObjectSize;
   itkFunctor.m_SortByObjectSize = pSortByObjectSize;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

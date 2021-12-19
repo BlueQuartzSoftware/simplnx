@@ -198,6 +198,9 @@ Result<> ITKBinaryMorphologicalClosingImage::executeImpl(DataStructure& dataStru
   itkFunctor.m_SafeBorder = pSafeBorder;
   itkFunctor.m_KernelRadius = pKernelRadius;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

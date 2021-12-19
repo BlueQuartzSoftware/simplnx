@@ -26,31 +26,12 @@ struct ITKGrayscaleMorphologicalClosingImageFilterCreationFunctor
   template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
   auto operator()() const
   {
-    typedef itk::FlatStructuringElement<Dimension> StructuringElementType;
-    typedef typename StructuringElementType::RadiusType RadiusType;
-    RadiusType elementRadius = complex::ITK::CastVec3ToITK<complex::FloatVec3, RadiusType, typename RadiusType::SizeValueType>(m_KernelRadius, RadiusType::Dimension);
-    StructuringElementType structuringElement;
-    switch(m_KernelType)
-    {
-    case 0:
-      structuringElement = StructuringElementType::Annulus(elementRadius, false);
-      break;
-    case 1:
-      structuringElement = StructuringElementType::Ball(elementRadius, false);
-      break;
-    case 2:
-      structuringElement = StructuringElementType::Box(elementRadius);
-      break;
-    case 3:
-      structuringElement = StructuringElementType::Cross(elementRadius);
-      break;
-    default:
-      break;
-    }
-    typedef itk::GrayscaleMorphologicalClosingImageFilter<InputImageType, OutputImageType, StructuringElementType> FilterType;
+    using FilterType = itk::GrayscaleMorphologicalClosingImageFilter<InputImageType, OutputImageType, itk::FlatStructuringElement< InputImageType::ImageDimension > >;
     typename FilterType::Pointer filter = FilterType::New();
     filter->SetSafeBorder(static_cast<bool>(m_SafeBorder));
-    filter->SetKernel(structuringElement);
+    auto kernel = itk::simple::CreateKernel<Dimension>( static_cast<itk::simple::KernelEnum>(m_KernelType), m_KernelRadius);
+    filter->SetKernel(kernel);
+
     return filter;
   }
 };
@@ -190,6 +171,9 @@ Result<> ITKGrayscaleMorphologicalClosingImage::executeImpl(DataStructure& dataS
   ::ITKGrayscaleMorphologicalClosingImageFilterCreationFunctor itkFunctor;
   itkFunctor.m_SafeBorder = pSafeBorder;
   itkFunctor.m_KernelRadius = pKernelRadius;
+
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
 
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }

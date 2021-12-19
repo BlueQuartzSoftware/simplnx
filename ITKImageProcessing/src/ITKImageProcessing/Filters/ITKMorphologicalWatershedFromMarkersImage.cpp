@@ -187,6 +187,9 @@ Result<> ITKMorphologicalWatershedFromMarkersImage::executeImpl(DataStructure& d
   itkFunctor.m_FullyConnected = pFullyConnected;
   itkFunctor.m_MarkerCellArrayPath = pMarkerCellArrayPath;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

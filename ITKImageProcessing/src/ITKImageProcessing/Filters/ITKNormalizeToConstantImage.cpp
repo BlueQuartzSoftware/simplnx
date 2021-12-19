@@ -157,6 +157,9 @@ Result<> ITKNormalizeToConstantImage::executeImpl(DataStructure& dataStructure, 
   ::ITKNormalizeToConstantImageFilterCreationFunctor itkFunctor;
   itkFunctor.m_Constant = pConstant;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

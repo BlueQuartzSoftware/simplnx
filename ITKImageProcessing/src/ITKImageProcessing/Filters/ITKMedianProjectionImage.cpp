@@ -157,6 +157,9 @@ Result<> ITKMedianProjectionImage::executeImpl(DataStructure& dataStructure, con
   ::ITKMedianProjectionImageFilterCreationFunctor itkFunctor;
   itkFunctor.m_ProjectionDimension = pProjectionDimension;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

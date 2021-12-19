@@ -5,13 +5,12 @@ set(PLUGIN_NAME "ITKImageProcessing")
 #------------------------------------------------------------------------------
 # These are all the filters in the plugin. All filters should be kept in the
 # ITKImageProcessing/src/ITKImageProcessing/Filters/ directory.
+
 set(FilterList
   ITKImageReader
   ITKImageWriter
-
   ITKAbsImage
   ITKAcosImage
-  ITKAdaptiveHistogramEqualizationImage
   ITKAsinImage
   ITKAtanImage
   ITKBilateralImage
@@ -26,11 +25,9 @@ set(FilterList
   ITKBinaryThinningImage
   ITKBinomialBlurImage
   ITKBlackTopHatImage
-  ITKBoxMeanImage
   ITKClosingByReconstructionImage
   ITKCosImage
   ITKDilateObjectMorphologyImage
-  ITKDiscreteGaussianImage
   ITKErodeObjectMorphologyImage
   ITKExpImage
   ITKExpNegativeImage
@@ -50,7 +47,6 @@ set(FilterList
   ITKLog10Image
   ITKLogImage
   ITKMaximumProjectionImage
-  ITKMedianImage
   ITKMedianProjectionImage
   ITKMinimumProjectionImage
   ITKMorphologicalGradientImage
@@ -58,7 +54,6 @@ set(FilterList
   ITKNotImage
   ITKOpeningByReconstructionImage
   ITKRelabelComponentImage
-  ITKRescaleIntensityImage
   ITKSaltAndPepperNoiseImage
   ITKShiftScaleImage
   ITKShotNoiseImage
@@ -74,7 +69,20 @@ set(FilterList
   ITKWhiteTopHatImage
   )
 
+set(FilterList_Bak
+
+  )
+
 set(Filters_Disabled
+  #-----------------------------------------------------------------------------
+  # These filters have issues with the generated unit test
+  #-----------------------------------------------------------------------------
+  ITKRescaleIntensityImage
+  ITKBoxMeanImage
+  ITKAdaptiveHistogramEqualizationImage
+  ITKMedianImage
+  ITKDiscreteGaussianImage
+
   #-----------------------------------------------------------------------------
   # These filters are custom written filters by BQ and do not conform to the
   # standard ITK filter wrapping
@@ -191,4 +199,4 @@ target_include_directories(${PLUGIN_NAME} PUBLIC  ${ITK_INCLUDE_DIRS})
 #------------------------------------------------------------------------------
 # Add in the unit tests for the filters included in this plugin
 enable_testing()
-# add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
+add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)

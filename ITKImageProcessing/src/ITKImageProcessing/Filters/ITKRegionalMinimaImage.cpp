@@ -176,6 +176,9 @@ Result<> ITKRegionalMinimaImage::executeImpl(DataStructure& dataStructure, const
   itkFunctor.m_FullyConnected = pFullyConnected;
   itkFunctor.m_FlatIsMinima = pFlatIsMinima;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

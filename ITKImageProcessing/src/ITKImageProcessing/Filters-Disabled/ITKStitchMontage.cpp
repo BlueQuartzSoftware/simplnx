@@ -163,6 +163,9 @@ Result<> ITKStitchMontage::executeImpl(DataStructure& dataStructure, const Argum
   itkFunctor.m_MontageAttributeMatrixName = pMontageAttributeMatrixName;
   itkFunctor.m_MontageDataArrayName = pMontageDataArrayName;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

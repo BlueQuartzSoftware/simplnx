@@ -169,6 +169,9 @@ Result<> ITKBilateralImage::executeImpl(DataStructure& dataStructure, const Argu
   itkFunctor.m_RangeSigma = pRangeSigma;
   itkFunctor.m_NumberOfRangeGaussianSamples = pNumberOfRangeGaussianSamples;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

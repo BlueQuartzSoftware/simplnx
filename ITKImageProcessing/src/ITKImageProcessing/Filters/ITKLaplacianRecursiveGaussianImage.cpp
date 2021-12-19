@@ -164,6 +164,9 @@ Result<> ITKLaplacianRecursiveGaussianImage::executeImpl(DataStructure& dataStru
   itkFunctor.m_Sigma = pSigma;
   itkFunctor.m_NormalizeAcrossScale = pNormalizeAcrossScale;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

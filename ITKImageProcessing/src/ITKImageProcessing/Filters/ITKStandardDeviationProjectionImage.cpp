@@ -157,6 +157,9 @@ Result<> ITKStandardDeviationProjectionImage::executeImpl(DataStructure& dataStr
   ::ITKStandardDeviationProjectionImageFilterCreationFunctor itkFunctor;
   itkFunctor.m_ProjectionDimension = pProjectionDimension;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex
