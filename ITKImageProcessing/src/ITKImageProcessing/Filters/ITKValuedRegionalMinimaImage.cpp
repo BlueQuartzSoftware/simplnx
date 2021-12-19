@@ -157,6 +157,9 @@ Result<> ITKValuedRegionalMinimaImage::executeImpl(DataStructure& dataStructure,
   ::ITKValuedRegionalMinimaImageFilterCreationFunctor itkFunctor;
   itkFunctor.m_FullyConnected = pFullyConnected;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

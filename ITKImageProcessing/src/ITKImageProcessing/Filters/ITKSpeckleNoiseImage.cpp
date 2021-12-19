@@ -166,6 +166,9 @@ Result<> ITKSpeckleNoiseImage::executeImpl(DataStructure& dataStructure, const A
   itkFunctor.m_StandardDeviation = pStandardDeviation;
   itkFunctor.m_Seed = pSeed;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

@@ -163,6 +163,9 @@ Result<> ITKIsoContourDistanceImage::executeImpl(DataStructure& dataStructure, c
   itkFunctor.m_LevelSetValue = pLevelSetValue;
   itkFunctor.m_FarValue = pFarValue;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

@@ -175,6 +175,9 @@ Result<> ITKSigmoidImage::executeImpl(DataStructure& dataStructure, const Argume
   itkFunctor.m_OutputMaximum = pOutputMaximum;
   itkFunctor.m_OutputMinimum = pOutputMinimum;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

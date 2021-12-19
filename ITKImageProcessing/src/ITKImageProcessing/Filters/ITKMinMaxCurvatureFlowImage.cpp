@@ -173,6 +173,9 @@ Result<> ITKMinMaxCurvatureFlowImage::executeImpl(DataStructure& dataStructure, 
   itkFunctor.m_NumberOfIterations = pNumberOfIterations;
   itkFunctor.m_StencilRadius = pStencilRadius;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

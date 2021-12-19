@@ -208,6 +208,9 @@ Result<> IlluminationCorrection::executeImpl(DataStructure& dataStructure, const
    * Write your algorithm implementation in this function
    ***************************************************************************/
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, IlluminationCorrectionFilterCreationFunctor{});
 }
 } // namespace complex

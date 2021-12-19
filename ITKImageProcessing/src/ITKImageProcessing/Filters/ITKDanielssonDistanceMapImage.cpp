@@ -169,6 +169,9 @@ Result<> ITKDanielssonDistanceMapImage::executeImpl(DataStructure& dataStructure
   itkFunctor.m_SquaredDistance = pSquaredDistance;
   itkFunctor.m_UseImageSpacing = pUseImageSpacing;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

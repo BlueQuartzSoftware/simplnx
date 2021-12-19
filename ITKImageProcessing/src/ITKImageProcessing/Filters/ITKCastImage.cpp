@@ -156,6 +156,9 @@ Result<> ITKCastImage::executeImpl(DataStructure& dataStructure, const Arguments
   ::ITKCastImageFilterCreationFunctor itkFunctor;
   itkFunctor.m_CastingType = pCastingType;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

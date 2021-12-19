@@ -167,6 +167,9 @@ Result<> ITKVectorRescaleIntensityImage::executeImpl(DataStructure& dataStructur
   itkFunctor.m_OutputType = pOutputType;
   itkFunctor.m_OutputMaximumMagnitude = pOutputMaximumMagnitude;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

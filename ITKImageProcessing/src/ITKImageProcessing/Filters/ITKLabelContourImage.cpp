@@ -164,6 +164,9 @@ Result<> ITKLabelContourImage::executeImpl(DataStructure& dataStructure, const A
   itkFunctor.m_FullyConnected = pFullyConnected;
   itkFunctor.m_BackgroundValue = pBackgroundValue;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

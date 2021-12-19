@@ -164,6 +164,9 @@ Result<> ITKPCMTileRegistration::executeImpl(DataStructure& dataStructure, const
   itkFunctor.m_CommonAttributeMatrixName = pCommonAttributeMatrixName;
   itkFunctor.m_CommonDataArrayName = pCommonDataArrayName;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

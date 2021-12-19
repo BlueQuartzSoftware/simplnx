@@ -157,6 +157,9 @@ Result<> ITKBinomialBlurImage::executeImpl(DataStructure& dataStructure, const A
   ::ITKBinomialBlurImageFilterCreationFunctor itkFunctor;
   itkFunctor.m_Repetitions = pRepetitions;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

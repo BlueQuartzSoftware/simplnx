@@ -176,6 +176,9 @@ Result<> ITKThresholdMaximumConnectedComponentsImage::executeImpl(DataStructure&
   itkFunctor.m_InsideValue = pInsideValue;
   itkFunctor.m_OutsideValue = pOutsideValue;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

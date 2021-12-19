@@ -150,6 +150,9 @@ Result<> ITKAcosImage::executeImpl(DataStructure& dataStructure, const Arguments
    ***************************************************************************/
   ::ITKAcosImageFilterCreationFunctor itkFunctor;
 
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex
