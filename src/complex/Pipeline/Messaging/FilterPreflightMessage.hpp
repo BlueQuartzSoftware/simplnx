@@ -47,8 +47,13 @@ public:
    */
   std::vector<complex::Error> getErrors() const;
 
+  /**
+   * @brief Returns a string representation of the message.
+   * @return std::string
+   */
+  std::string toString() const override;
+
 private:
-  PipelineFilter* m_FilteNode;
   std::vector<complex::Warning> m_Warnings;
   std::vector<complex::Error> m_Errors;
 };

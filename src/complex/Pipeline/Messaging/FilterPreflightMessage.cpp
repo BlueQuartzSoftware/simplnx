@@ -16,7 +16,7 @@ FilterPreflightMessage::~FilterPreflightMessage() = default;
 
 complex::PipelineFilter* FilterPreflightMessage::getFilterNode() const
 {
-  return m_FilteNode;
+  return dynamic_cast<PipelineFilter*>(getNode());
 }
 
 std::vector<complex::Warning> FilterPreflightMessage::getWarnings() const
@@ -27,4 +27,21 @@ std::vector<complex::Warning> FilterPreflightMessage::getWarnings() const
 std::vector<complex::Error> FilterPreflightMessage::getErrors() const
 {
   return m_Errors;
+}
+
+std::string FilterPreflightMessage::toString() const
+{
+  std::string output = "Preflight: " + getFilterNode()->getName();
+
+  for(const auto& warning : getWarnings())
+  {
+    output += "\n" + std::to_string(warning.code) + warning.message;
+  }
+
+  for(const auto& error : getErrors())
+  {
+    output += "\n" + std::to_string(error.code) + error.message;
+  }
+
+  return output;
 }

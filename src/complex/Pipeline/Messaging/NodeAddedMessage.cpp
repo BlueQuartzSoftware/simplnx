@@ -22,3 +22,8 @@ usize NodeAddedMessage::getIndex() const
 {
   return m_Index;
 }
+
+std::string NodeAddedMessage::toString() const
+{
+  return fmt::format("Added {} at {}", getNewNode()->getName(), getIndex());
+}

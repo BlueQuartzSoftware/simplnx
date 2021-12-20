@@ -1,6 +1,8 @@
 #include "complex/Pipeline/Messaging/NodeMovedMessage.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
 
+#include "fmt/format.h"
+
 using namespace complex;
 
 NodeMovedMessage::NodeMovedMessage(Pipeline* pipeline, usize fromIndex, usize toIndex)
@@ -20,4 +22,9 @@ usize NodeMovedMessage::getOldIndex() const
 usize NodeMovedMessage::getNewIndex() const
 {
   return m_NewIndex;
+}
+
+std::string NodeMovedMessage::toString() const
+{
+  return fmt::format("Moved {} from {} to {}", getNode()->getName(), getOldIndex(), getNewIndex());
 }
