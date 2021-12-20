@@ -42,7 +42,7 @@ TEST_CASE("ApproximatePointCloudHull: Test Filter", "[ApproximatePointCloudHull]
   DataStructure dataGraph = UnitTest::CreateDataStructure();
   Arguments args;
 
-  std::vector<float32> gridResolution = {1,1,1};
+  std::vector<float32> gridResolution = {1, 1, 1};
   uint64 minEmptyNeighbors = 0;
   DataPath vertexGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_VertexGeometry});
   DataPath hullVertexGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Hull Vertex Geometry"});
