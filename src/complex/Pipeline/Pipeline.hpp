@@ -510,7 +510,7 @@ public:
    */
   nlohmann::json toJson() const override;
 
-  protected:
+protected:
   /**
    * @brief Called when the specified pipeline node emits a message.
    * @param node

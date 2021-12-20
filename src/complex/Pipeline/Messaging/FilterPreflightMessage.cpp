@@ -31,8 +31,8 @@ std::vector<complex::Error> FilterPreflightMessage::getErrors() const
 
 std::string FilterPreflightMessage::toString() const
 {
-  std::string output = "Preflight: " +  getFilterNode()->getName();
-  
+  std::string output = "Preflight: " + getFilterNode()->getName();
+
   for(const auto& warning : getWarnings())
   {
     output += "\n" + std::to_string(warning.code) + warning.message;
