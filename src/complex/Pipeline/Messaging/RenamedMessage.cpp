@@ -2,6 +2,8 @@
 
 #include "complex/Pipeline/Pipeline.hpp"
 
+#include "fmt/format.h"
+
 using namespace complex;
 
 RenamedMessage::RenamedMessage(Pipeline* pipeline, const std::string& newName, const std::string& oldName)
@@ -21,4 +23,9 @@ std::string RenamedMessage::getNewName() const
 std::string RenamedMessage::getPreviousName() const
 {
   return m_OldName;
+}
+
+std::string RenamedMessage::toString() const
+{
+  return fmt::format("Renamed node from '{}' to '{}'", getPreviousName(), getNewName());
 }

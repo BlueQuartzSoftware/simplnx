@@ -28,7 +28,13 @@ public:
    * @brief Returns the IFilter::Message
    * @return IFilter::Message
    */
-  IFilter::Message getFilterMessage();
+  IFilter::Message getFilterMessage() const;
+
+  /**
+   * @brief Returns a string representation of the message.
+   * @return std::string
+   */
+  std::string toString() const override;
 
 private:
   IFilter::Message m_FilterMessage;

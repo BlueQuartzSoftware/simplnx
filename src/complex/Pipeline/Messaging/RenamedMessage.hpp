@@ -40,6 +40,12 @@ public:
    */
   std::string getPreviousName() const;
 
+  /**
+   * @brief Returns a string representation of the message.
+   * @return std::string
+   */
+  std::string toString() const override;
+
 private:
   std::string m_NewName;
   std::string m_OldName;

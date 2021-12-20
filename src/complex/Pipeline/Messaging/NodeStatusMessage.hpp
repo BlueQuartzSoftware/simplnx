@@ -31,6 +31,12 @@ public:
    */
   AbstractPipelineNode::Status getStatus() const;
 
+  /**
+   * @brief Returns a string representation of the message.
+   * @return std::string
+   */
+  std::string toString() const override;
+
 private:
   AbstractPipelineNode::Status m_Status;
 };
