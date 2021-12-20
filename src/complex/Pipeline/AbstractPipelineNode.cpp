@@ -52,9 +52,18 @@ const DataStructure& AbstractPipelineNode::getDataStructure() const
   return m_DataStructure;
 }
 
-void AbstractPipelineNode::setDataStructure(const DataStructure& ds)
+void AbstractPipelineNode::setDataStructure(const DataStructure& ds, bool success)
 {
   m_DataStructure = ds;
+
+  if(success)
+  {
+    setStatus(Status::Completed);
+  }
+  else
+  {
+    markDirty();
+  }
 }
 
 const DataStructure& AbstractPipelineNode::getPreflightStructure() const
@@ -62,10 +71,15 @@ const DataStructure& AbstractPipelineNode::getPreflightStructure() const
   return m_PreflightStructure;
 }
 
-void AbstractPipelineNode::setPreflightStructure(const DataStructure& ds)
+void AbstractPipelineNode::setPreflightStructure(const DataStructure& ds, bool success)
 {
   m_PreflightStructure = ds;
-  m_IsPreflighted = true;
+  m_IsPreflighted = success;
+
+  if(!success)
+  {
+    m_Status = Status::Dirty;
+  }
 }
 
 void AbstractPipelineNode::clearDataStructure()
