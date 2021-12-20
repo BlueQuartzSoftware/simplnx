@@ -160,7 +160,10 @@ Result<> ApproximatePointCloudHull::executeImpl(DataStructure& data, const Argum
   bboxMax[1] = static_cast<int64>(std::floor(meshMaxExtents[1] * inverseResolution[1]));
   bboxMax[2] = static_cast<int64>(std::floor(meshMaxExtents[2] * inverseResolution[2]));
 
-  SizeVec3 dims({static_cast<usize>(bboxMax[0] - bboxMin[0] + 1), static_cast<usize>(bboxMax[1] - bboxMin[1] + 1), static_cast<usize>(bboxMax[2] - bboxMin[2] + 1)});
+  usize dims1 = static_cast<usize>(bboxMax[0] - bboxMin[0] + 1);
+  usize dims2 = static_cast<usize>(bboxMax[1] - bboxMin[1] + 1);
+  usize dims3 = static_cast<usize>(bboxMax[2] - bboxMin[2] + 1);
+  SizeVec3 dims(std::vector<usize>{dims1, dims2, dims3});
   samplingGrid->setDimensions(dims);
 
   int64 multiplier[3] = {1, static_cast<int64>(samplingGrid->getNumXPoints()), static_cast<int64>(samplingGrid->getNumXPoints() * samplingGrid->getNumYPoints())};
@@ -263,7 +266,11 @@ Result<> ApproximatePointCloudHull::executeImpl(DataStructure& data, const Argum
   auto* hull = data.getDataAs<VertexGeom>(hullVertexGeomPath);
   hull->resizeVertexList(tmpVerts.size() / 3);
   auto* hullVerts = hull->getVertices();
-  std::memcpy(hullVerts, tmpVerts.data(), hull->getNumberOfVertices() * 3 * sizeof(float));
+  auto tmpVertData = tmpVerts.data();
+  for(usize i = 0; i < hull->getNumberOfVertices() * 3; i++)
+  {
+    (*hullVerts)[i] = tmpVertData[i];
+  }
 
   return {};
 }
