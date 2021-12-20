@@ -6,6 +6,7 @@
 #include "complex/Pipeline/Messaging/NodeAddedMessage.hpp"
 #include "complex/Pipeline/Messaging/NodeMovedMessage.hpp"
 #include "complex/Pipeline/Messaging/NodeRemovedMessage.hpp"
+#include "complex/Pipeline/Messaging/PipelineNodeMessage.hpp"
 #include "complex/Pipeline/PipelineFilter.hpp"
 
 #include <algorithm>
@@ -167,11 +168,14 @@ bool Pipeline::preflightFrom(const index_type& index, DataStructure& ds)
 
   for(auto iter = begin() + index; iter != end(); iter++)
   {
+    startObservingNode(iter->get());
     if(!iter->get()->preflight(ds))
     {
+      stopObservingNode();
       return false;
     }
   }
+  stopObservingNode();
   return true;
 }
 
@@ -212,9 +216,13 @@ bool Pipeline::executeFrom(const index_type& index, DataStructure& ds)
   }
   for(auto iter = begin() + index; iter != end(); iter++)
   {
-    if(!iter->get()->execute(ds))
+    startObservingNode(iter->get());
+    bool success = iter->get()->execute(ds);
+    stopObservingNode();
+    if(!success)
     {
-      clearDataStructure();
+      setDataStructure(ds);
+      setStatus(Status::Dirty);
       return false;
     }
   }
@@ -631,4 +639,9 @@ Result<Pipeline> Pipeline::FromFile(const std::filesystem::path& path, FilterLis
   }
 
   return FromJson(pipelineJson, filterList);
+}
+
+void Pipeline::onNotify(AbstractPipelineNode* node, const std::shared_ptr<AbstractPipelineMessage>& msg)
+{
+  notify(std::make_shared<PipelineNodeMessage>(node, msg));
 }

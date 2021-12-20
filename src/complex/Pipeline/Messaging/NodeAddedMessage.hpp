@@ -39,6 +39,12 @@ public:
    */
   usize getIndex() const;
 
+  /**
+   * @brief Returns a string representation of the message.
+   * @return std::string
+   */
+  std::string toString() const override;
+
 private:
   AbstractPipelineNode* m_Node;
   usize m_Index;

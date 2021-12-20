@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "complex/complex_export.hpp"
 
 namespace complex
@@ -26,6 +28,12 @@ public:
    * @return AbstractPipelineNode*
    */
   AbstractPipelineNode* getNode() const;
+
+  /**
+   * @brief Returns a string representation of the message.
+   * @return std::string
+   */
+  virtual std::string toString() const = 0;
 
 private:
   AbstractPipelineNode* m_Node = nullptr;

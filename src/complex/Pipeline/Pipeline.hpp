@@ -22,7 +22,7 @@ class FilterList;
  * As a subclass of AbstractPipelineNode, Pipelines can be nested within other
  * Pipelines.
  */
-class COMPLEX_EXPORT Pipeline : public AbstractPipelineNode
+class COMPLEX_EXPORT Pipeline : public AbstractPipelineNode, protected PipelineNodeObserver
 {
   using node_type = std::shared_ptr<AbstractPipelineNode>;
   using collection_type = std::vector<node_type>;
@@ -509,6 +509,14 @@ public:
    * @return
    */
   nlohmann::json toJson() const override;
+
+protected:
+  /**
+   * @brief Called when the specified pipeline node emits a message.
+   * @param node
+   * @param msg
+   */
+  void onNotify(AbstractPipelineNode* node, const std::shared_ptr<AbstractPipelineMessage>& msg) override;
 
 private:
   /**
