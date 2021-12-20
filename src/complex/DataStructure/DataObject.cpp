@@ -142,6 +142,11 @@ void DataObject::replaceParent(BaseGroup* oldParent, BaseGroup* newParent)
 
 std::vector<DataPath> DataObject::getDataPaths() const
 {
+  if(getDataStructure() == nullptr)
+  {
+    return {};
+  }
+
   if(m_ParentList.empty())
   {
     return {DataPath({getName()})};
