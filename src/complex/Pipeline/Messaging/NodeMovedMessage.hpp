@@ -39,6 +39,12 @@ public:
    */
   usize getNewIndex() const;
 
+  /**
+   * @brief Returns a string representation of the message.
+   * @return std::string
+   */
+  std::string toString() const override;
+
 private:
   usize m_OldIndex;
   usize m_NewIndex;
