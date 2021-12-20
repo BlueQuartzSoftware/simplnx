@@ -84,7 +84,7 @@ bool PipelineFilter::preflight(DataStructure& data)
   {
     m_Errors = std::move(result.outputActions.errors());
 
-    clearPreflightStructure();
+    setPreflightStructure(data, false);
     notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
     return false;
   }
@@ -101,7 +101,7 @@ bool PipelineFilter::preflight(DataStructure& data)
     if(actionResult.invalid())
     {
       m_Errors = std::move(actionResult.errors());
-      clearPreflightStructure();
+      setPreflightStructure(data, false);
       notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
       return false;
     }
@@ -124,8 +124,7 @@ bool PipelineFilter::execute(DataStructure& data)
     m_Warnings = result.result.warnings();
     m_Errors = result.result.errors();
 
-    clearPreflightStructure();
-    markDirty();
+    setDataStructure(data, false);
     return false;
   }
   else
