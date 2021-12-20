@@ -6,6 +6,7 @@
 #------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
+  ApproximatePointCloudHullTest.cpp
   CreateDataArrayTest.cpp
   ConditionalSetValueTest.cpp
   FindDifferencesMapTest.cpp
