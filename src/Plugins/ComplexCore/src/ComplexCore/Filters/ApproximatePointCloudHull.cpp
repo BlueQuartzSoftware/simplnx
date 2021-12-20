@@ -1,5 +1,7 @@
 #include "ApproximatePointCloudHull.hpp"
 
+#include <cmath>
+
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Filter/Actions/CreateVertexGeometryAction.hpp"
