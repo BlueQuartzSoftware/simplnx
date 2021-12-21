@@ -138,6 +138,7 @@ set(CoreParameters
   DataGroupCreationParameter
   DataGroupSelectionParameter
   DataPathSelectionParameter
+  DynamicTableParameter
   FileSystemPathParameter
   GeneratedFileListParameter
   GeometrySelectionParameter
@@ -266,6 +267,8 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/EmptyAction.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableData.hpp
 
   ${COMPLEX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.hpp
@@ -409,6 +412,8 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateNeighborListAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableData.cpp
 
   ${COMPLEX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.cpp
