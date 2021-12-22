@@ -84,6 +84,16 @@ public:
     return std::any_cast<T>(at(key));
   }
 
+  template <class T>
+  T value(std::string_view key, T defaultValue) const
+  {
+    if(contains(key))
+    {
+      return std::any_cast<T>(at(key));
+    }
+    return defaultValue;
+  }
+
   /**
    * @brief Returns a reference to the value at the given key cast to T if the value is a std::reference_wrapper<T>.
    * Throws if T doesn't match the contained type.
