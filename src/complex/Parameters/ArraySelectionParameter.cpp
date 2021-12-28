@@ -40,6 +40,10 @@ Result<std::any> ArraySelectionParameter::fromJson(const nlohmann::json& json) c
   {
     return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a string", name()));
   }
+  if(json.is_string() && json.get<std::string>().empty())
+  {
+    return {DataPath()};
+  }
   auto string = json.get<std::string>();
   std::optional<DataPath> path = DataPath::FromString(string);
   if(!path.has_value())
