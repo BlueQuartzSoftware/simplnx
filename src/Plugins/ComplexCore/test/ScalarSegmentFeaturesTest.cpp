@@ -15,7 +15,8 @@
 using namespace complex;
 using namespace complex::UnitTest;
 using namespace complex::Constants;
-
+namespace Reconstruction
+{
 std::shared_ptr<DataStructure> CreateEbsdTestDataStructure()
 {
   std::shared_ptr<DataStructure> dataGraph = std::shared_ptr<DataStructure>(new DataStructure);
@@ -60,12 +61,13 @@ std::shared_ptr<DataStructure> CreateEbsdTestDataStructure()
 
   return dataGraph;
 }
+}
 
 TEST_CASE("Reconstruction::ScalarSegmentFeatures", "[Reconstruction][ScalarSegmentFeatures]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
-  std::shared_ptr<DataStructure> dataGraphPtr = CreateEbsdTestDataStructure();
+  std::shared_ptr<DataStructure> dataGraphPtr = Reconstruction::CreateEbsdTestDataStructure();
   DataStructure& dataGraph = *dataGraphPtr;
 
   std::vector<size_t> imageDims = {100, 100, 100};
