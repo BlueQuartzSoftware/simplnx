@@ -13,18 +13,21 @@ using namespace complex;
 namespace
 {
 template <class T = std::string_view>
-std::vector<T> split(std::string_view string, char delimiter, bool ignoreEmpty = false)
+std::vector<T> split(std::string_view inputString, char delimiter, bool ignoreEmpty = false)
 {
   std::vector<T> parts;
-
+  if(inputString.empty())
+  {
+    return parts;
+  }
   usize start = 0;
   usize end = start;
 
   if(ignoreEmpty)
   {
-    for(usize i = 0; i < string.size(); i++)
+    for(usize i = 0; i < inputString.size(); i++)
     {
-      if(string[i] == delimiter)
+      if(inputString[i] == delimiter)
       {
         if(start == end)
         {
@@ -32,7 +35,7 @@ std::vector<T> split(std::string_view string, char delimiter, bool ignoreEmpty =
           end = start;
           continue;
         }
-        parts.push_back(T{string.substr(start, end - start)});
+        parts.push_back(T{inputString.substr(start, end - start)});
         start = i + 1;
         end = start;
         continue;
@@ -42,24 +45,24 @@ std::vector<T> split(std::string_view string, char delimiter, bool ignoreEmpty =
 
     if(start != end)
     {
-      parts.push_back(T{string.substr(start, end - start)});
+      parts.push_back(T{inputString.substr(start, end - start)});
     }
   }
   else
   {
-    for(usize i = 0; i < string.size(); i++)
+    for(usize i = 0; i < inputString.size(); i++)
     {
-      if(string[i] == delimiter)
+      if(inputString[i] == delimiter)
       {
-        parts.push_back(T{string.substr(start, end - start)});
+        parts.push_back(T{inputString.substr(start, end - start)});
         start = i + 1;
         end = start;
         continue;
       }
       end++;
     }
-
-    parts.push_back(T{string.substr(start, end - start)});
+    // If the string is empty, this gets called which is a bug.
+    parts.push_back(T{inputString.substr(start, end - start)});
   }
 
   return parts;
