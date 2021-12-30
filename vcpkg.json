@@ -3,26 +3,28 @@
   "name": "complex",
   "version": "0.1.0",
   "dependencies": [
-    {
-      "name": "fmt"
-    },
-    {
-      "name": "nlohmann-json"
-    },
-    {
-      "name": "expected-lite"
-    },
-    {
-      "name": "eigen3"
-    },
+    "fmt", "nlohmann-json", "expected-lite",  "eigen3", "span-lite", 
+    "tbb", "h5support", "ebsdlib",
     {
       "name": "hdf5",
       "features": [
         "cpp"
       ]
+    }
+  ],
+  "builtin-baseline": "ae91542c8e71634cb937d467f05920653084cc0b",
+  "overrides": [
+    {
+      "name": "ebsdlib",
+      "version-string": "v1.0.6"
     },
     {
-      "name": "span-lite"
+      "name": "h5support",
+      "version-string": "v1.0.4"
+    },
+    {
+      "name": "tbb",
+      "version-string": "v2021.4.0#7"
     }
   ],
   "features": {
