@@ -2,6 +2,7 @@
 
 #include "complex/DataStructure/AbstractDataStore.hpp"
 
+#include <numeric>
 #include <stdexcept>
 #include <vector>
 

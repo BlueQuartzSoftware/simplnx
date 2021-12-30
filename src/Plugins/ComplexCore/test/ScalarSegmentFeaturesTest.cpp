@@ -61,7 +61,7 @@ std::shared_ptr<DataStructure> CreateEbsdTestDataStructure()
 
   return dataGraph;
 }
-}
+} // namespace Reconstruction
 
 TEST_CASE("Reconstruction::ScalarSegmentFeatures", "[Reconstruction][ScalarSegmentFeatures]")
 {
@@ -115,8 +115,6 @@ TEST_CASE("Reconstruction::ScalarSegmentFeatures", "[Reconstruction][ScalarSegme
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataGraph, args);
     REQUIRE(executeResult.result.valid());
-
-
 
     // Let's sum up all the areas.
     UInt8Array& actives = dataGraph.getDataRefAs<UInt8Array>(activeArrayDataPath);

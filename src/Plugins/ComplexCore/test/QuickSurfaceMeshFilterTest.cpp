@@ -60,7 +60,7 @@ std::shared_ptr<DataStructure> CreateEbsdTestDataStructure()
 
   return dataGraph;
 }
-}
+} // namespace SurfaceMeshingTest
 TEST_CASE("SurfaceMeshing::QuickSurfaceMeshFilter", "[SurfaceMeshing][QuickSurfaceMeshFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
