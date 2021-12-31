@@ -88,4 +88,48 @@ inline constexpr usize GetNumericTypeSize(NumericType numericType)
     throw std::runtime_error("complex::GetNumericTypeSize: Unsupported type");
   }
 }
+/**
+ * @brief Returns a string representation of the passed in complex::NumericType
+ * @param numericType
+ * @return String or 'UNKNOWN TYPE' if the type is not known
+ */
+std::string NumericTypeToString(complex::NumericType numericType)
+{
+  switch(numericType)
+  {
+  case NumericType::int8: {
+    return "Int8";
+  }
+  case NumericType::uint8: {
+    return "UInt8";
+  }
+  case NumericType::int16: {
+    return "Int16";
+  }
+  case NumericType::uint16: {
+    return "UInt16";
+  }
+  case NumericType::int32: {
+    return "Int32";
+  }
+  case NumericType::uint32: {
+    return "UInt32";
+  }
+  case NumericType::int64: {
+    return "Int64";
+  }
+  case NumericType::uint64: {
+    return "UInt64";
+  }
+  case NumericType::float32: {
+    return "Float32";
+  }
+  case NumericType::float64: {
+    return "Float64";
+  }
+  default:
+    return fmt::format("UNKNOWN TYPE:{}", numericType);
+  }
+}
+
 } // namespace complex

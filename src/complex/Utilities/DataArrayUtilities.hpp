@@ -255,12 +255,28 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
 
     id = parentObject->getId();
   }
+  // Validate Number of Tuples
+  if(compShape.empty())
+  {
+    return MakeErrorResult(-261, fmt::format("CreateArrayAction: Tuple Shape was empty. Please set the number of tuples."));
+  }
+  size_t numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+  if(numTuples == 0 && mode == IDataAction::Mode::Execute)
+  {
+    return MakeErrorResult(-263, fmt::format("CreateArrayAction: Number of tuples is ZERO. Please set the number of components."));
+  }
 
   // Validate Number of Components
   if(compShape.empty())
   {
-    return MakeErrorResult(-261, fmt::format("CreateArrayAction: Number of components is ZERO. Please set the number of components."));
+    return MakeErrorResult(-261, fmt::format("CreateArrayAction: Component Shape was empty. Please set the number of components."));
   }
+  size_t numComponents = std::accumulate(compShape.cbegin(), compShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+  if(numComponents == 0 && mode == IDataAction::Mode::Execute)
+  {
+    return MakeErrorResult(-263, fmt::format("CreateArrayAction: Number of components is ZERO. Please set the number of components."));
+  }
+
 
   usize last = path.getLength() - 1;
 
@@ -317,7 +333,7 @@ Result<> CreateNeighbors(DataStructure& dataStructure, usize numTuples, const Da
 }
 
 /**
- * @brief Attempts to retrieve a DataArray at a given DataPath in the DataStructure.
+ * @brief Attempts to retrieve a DataArray at a given DataPath in the DataStructure. Throws runtime_error on error
  * @tparam T
  * @param data
  * @param path
@@ -328,13 +344,32 @@ DataArray<T>* ArrayFromPath(DataStructure& dataStructure, const DataPath& path)
 {
   using DataArrayType = DataArray<T>;
   DataObject* object = dataStructure.getData(path);
+  if(object == nullptr)
+  {
+    throw std::runtime_error(fmt::format("DataArray does not exist at DataPath: '{}'", path.toString()));
+  }
   DataArrayType* dataArray = dynamic_cast<DataArrayType*>(object);
   if(dataArray == nullptr)
   {
-    throw std::runtime_error(fmt::format("DataArray either does not exist at DataPath or the DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
+    throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
   }
   return dataArray;
 }
+
+template <class T>
+DataArray<T>& ArrayRefFromPath(DataStructure& data, const DataPath& path)
+{
+DataObject* object = data.getData(path);
+DataArray<T>* dataArray = dynamic_cast<DataArray<T>*>(object);
+if(dataArray == nullptr)
+{
+throw std::runtime_error("Can't obtain DataArray");
+}
+return *dataArray;
+}
+
+
+
 
 /**
  * @brief
@@ -405,13 +440,31 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
 }
 
 /**
- * @brief
+ * @brief This function will Resize and DataArray and then replace and exisint DataArray in the DataStructure
  * @param dataStructure
- * @param dataPath
- * @param tupleShape
- * @param mode
+ * @param dataPath The path of the target DataArray
+ * @param tupleShape The tuple shape of the resized array
+ * @param mode The mode: Preflight or Execute
  * @return
  */
 COMPLEX_EXPORT Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath& dataPath, std::vector<usize>& tupleShape, complex::IDataAction::Mode mode);
+
+/**
+ * @brief This function will ensure that a user entered numeric value can correctly be parsed into the selected NumericType
+ * 
+ * @param value The string value that is to be parsed
+ * @param numericType The NumericType to parse the value into. 
+ * @return COMPLEX_EXPORT 
+ */
+COMPLEX_EXPORT Result<> CheckInitValueConverts(const std::string& value, complex::NumericType numericType);
+
+/**
+ * @brief This function will ensure that a user entered numeric value can correctly be parsed into the selected DataArray
+ * 
+ * @param value The string value that is to be parsed
+ * @param inputDataArray The DataArray that the value would be inserted into.
+ * @return COMPLEX_EXPORT 
+ */
+COMPLEX_EXPORT Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObject& inputDataArray);
 
 } // namespace complex
