@@ -19,8 +19,6 @@ using namespace complex;
 namespace complex
 {
 
-constexpr int32_t k_RbrFileNameEmpty = -387;
-constexpr int32_t k_RbrFileNotExist = -388;
 constexpr int32_t k_RbrZeroComponentsError = -391;
 constexpr int32_t k_RbrNumComponentsError = -392;
 constexpr int32_t k_RbrWrongType = -393;

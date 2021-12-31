@@ -45,9 +45,9 @@
 #include "complex/DataStructure/DataStore.hpp"
 
 #if defined(_MSC_VER)
-#define FSEEK _fseeki64
+const auto FSEEK = _fseeki64;
 #else
-#define FSEEK std::fseek
+const auto FSEEK = std::fseek;
 #endif
 
 namespace complex
@@ -65,7 +65,6 @@ constexpr int32_t k_RbrNoError = 0;
 constexpr int32_t k_RbrFileNotOpen = -1000;
 constexpr int32_t k_RbrFileTooSmall = -1010;
 constexpr int32_t k_RbrFileTooBig = -1020;
-constexpr int32_t k_RbrReadEOF = -1030;
 constexpr int32_t k_RbrDAError = -1040;
 constexpr int32_t k_RbrComponentError = -1050;
 constexpr int32_t k_RbrDANull = -1060;
