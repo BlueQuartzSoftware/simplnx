@@ -185,7 +185,7 @@ Result<> RawBinaryReader::execute()
     return MakeErrorResult(k_RbrComponentError, "Failed to acquire DataArray from path '" + m_InputValues->createdAttributeArrayPathValue.toString() + "' with the correct number of components.");
   }
 
-  const std::string inputFile = m_InputValues->inputFileValue;
+  const std::string inputFile = m_InputValues->inputFileValue.string();
 
   int32_t err = 0;
   switch(m_InputValues->scalarTypeValue)

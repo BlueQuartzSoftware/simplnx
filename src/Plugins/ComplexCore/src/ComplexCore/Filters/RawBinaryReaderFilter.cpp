@@ -93,7 +93,7 @@ IFilter::PreflightResult RawBinaryReaderFilter::preflightImpl(const DataStructur
 
   complex::Result<OutputActions> resultOutputActions;
 
-  uint32 inputFileSize = std::filesystem::file_size(std::filesystem::path{pInputFileValue});
+  uint32 inputFileSize = std::filesystem::file_size(pInputFileValue);
   if(inputFileSize == 0)
   {
     auto error = MakeErrorResult<OutputActions>(k_RbrEmptyFile, "File '" + pInputFileValue.string() + "' is empty.");
