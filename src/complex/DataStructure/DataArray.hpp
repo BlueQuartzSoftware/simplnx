@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Common/Bit.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
@@ -256,6 +257,17 @@ public:
       auto value = m_DataStore->getValue(fromCompIndex);
       usize toCompIndex = to * numComponents;
       m_DataStore->setValue(toCompIndex, value);
+    }
+  }
+
+  /**
+   * @brief Byte swaps all elements in the data array
+   */
+  void byteSwapElements()
+  {
+    for(auto& value : *this)
+    {
+      value = complex::byteswap(value);
     }
   }
 
