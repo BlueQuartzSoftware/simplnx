@@ -30,7 +30,6 @@ TEST_CASE("CreateDataArray(Invalid Parameters)", "[ComplexCore][CreateDataArray]
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;
 
-
   DataPath dataPath({"foo"});
   {
     CreateDataArray filter;

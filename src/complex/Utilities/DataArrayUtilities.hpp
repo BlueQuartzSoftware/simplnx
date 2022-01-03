@@ -277,7 +277,6 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
     return MakeErrorResult(-263, fmt::format("CreateArrayAction: Number of components is ZERO. Please set the number of components."));
   }
 
-
   usize last = path.getLength() - 1;
 
   std::string name = path[last];
@@ -359,17 +358,14 @@ DataArray<T>* ArrayFromPath(DataStructure& dataStructure, const DataPath& path)
 template <class T>
 DataArray<T>& ArrayRefFromPath(DataStructure& data, const DataPath& path)
 {
-DataObject* object = data.getData(path);
-DataArray<T>* dataArray = dynamic_cast<DataArray<T>*>(object);
-if(dataArray == nullptr)
-{
-throw std::runtime_error("Can't obtain DataArray");
+  DataObject* object = data.getData(path);
+  DataArray<T>* dataArray = dynamic_cast<DataArray<T>*>(object);
+  if(dataArray == nullptr)
+  {
+    throw std::runtime_error("Can't obtain DataArray");
+  }
+  return *dataArray;
 }
-return *dataArray;
-}
-
-
-
 
 /**
  * @brief
@@ -451,19 +447,19 @@ COMPLEX_EXPORT Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, 
 
 /**
  * @brief This function will ensure that a user entered numeric value can correctly be parsed into the selected NumericType
- * 
+ *
  * @param value The string value that is to be parsed
- * @param numericType The NumericType to parse the value into. 
- * @return COMPLEX_EXPORT 
+ * @param numericType The NumericType to parse the value into.
+ * @return COMPLEX_EXPORT
  */
 COMPLEX_EXPORT Result<> CheckInitValueConverts(const std::string& value, complex::NumericType numericType);
 
 /**
  * @brief This function will ensure that a user entered numeric value can correctly be parsed into the selected DataArray
- * 
+ *
  * @param value The string value that is to be parsed
  * @param inputDataArray The DataArray that the value would be inserted into.
- * @return COMPLEX_EXPORT 
+ * @return COMPLEX_EXPORT
  */
 COMPLEX_EXPORT Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObject& inputDataArray);
 
