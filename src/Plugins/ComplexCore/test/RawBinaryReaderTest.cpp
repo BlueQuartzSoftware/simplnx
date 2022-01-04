@@ -36,7 +36,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-const std::string k_TestOutput = (fs::path(complex::unit_test::k_BinaryDir).append("RawBinaryReaderTest").append("Output.bin")).string();
+const std::string k_TestOutput = (fs::path(complex::unit_test::k_BinaryDir.str()).append("RawBinaryReaderTest").append("Output.bin")).string();
 const DataPath k_CreatedArrayPath = DataPath(std::vector<std::string>{"Test_Array"});
 
 constexpr int32_t k_RbrNumComponentsError = -392;
