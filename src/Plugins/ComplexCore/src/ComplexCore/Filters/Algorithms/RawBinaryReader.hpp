@@ -8,11 +8,13 @@
 namespace complex
 {
 
+constexpr int32 k_UnsupportedScalarType = -1070;
+
 struct COMPLEXCORE_EXPORT RawBinaryReaderInputValues
 {
   FileSystemPathParameter::ValueType inputFileValue;
   NumericType scalarTypeValue;
-  int32 numberOfComponentsValue;
+  uint64 numberOfComponentsValue;
   ChoicesParameter::ValueType endianValue;
   uint64 skipHeaderBytesValue;
   DataPath createdAttributeArrayPathValue;

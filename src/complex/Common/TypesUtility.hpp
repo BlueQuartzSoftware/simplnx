@@ -2,6 +2,8 @@
 
 #include "complex/Common/Types.hpp"
 
+#include <stdexcept>
+
 #include <type_traits>
 
 namespace complex
@@ -56,5 +58,47 @@ constexpr NumericType GetNumericType() noexcept
   {
     static_assert(AlwaysFalse_v<T>, "complex::GetNumericType: Unsupported type");
   }
+}
+
+inline constexpr usize GetNumericTypeSize(const NumericType& numericType)
+{
+  usize typeSize = 0;
+  switch(numericType)
+  {
+  case NumericType::int8:
+    typeSize = sizeof(int8);
+    break;
+  case NumericType::uint8:
+    typeSize = sizeof(uint8);
+    break;
+  case NumericType::int16:
+    typeSize = sizeof(int16);
+    break;
+  case NumericType::uint16:
+    typeSize = sizeof(uint16);
+    break;
+  case NumericType::int32:
+    typeSize = sizeof(int32);
+    break;
+  case NumericType::uint32:
+    typeSize = sizeof(uint32);
+    break;
+  case NumericType::int64:
+    typeSize = sizeof(int64);
+    break;
+  case NumericType::uint64:
+    typeSize = sizeof(uint64);
+    break;
+  case NumericType::float32:
+    typeSize = sizeof(float32);
+    break;
+  case NumericType::float64:
+    typeSize = sizeof(float64);
+    break;
+  default:
+    throw std::runtime_error("complex::GetNumericTypeSize: Unsupported type");
+  }
+
+  return typeSize;
 }
 } // namespace complex

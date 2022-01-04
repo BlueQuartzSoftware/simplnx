@@ -39,38 +39,35 @@
 #include <algorithm>
 #include <cstddef>
 
+#include "complex/Common/Bit.hpp"
 #include "complex/Common/ComplexConstants.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 
+namespace fs = std::filesystem;
+using namespace complex;
+
+namespace
+{
 #if defined(_MSC_VER)
 const auto FSEEK = _fseeki64;
 #else
 const auto FSEEK = std::fseek;
 #endif
 
-namespace complex
-{
-
-namespace
-{
-#ifdef CMP_WORDS_BIGENDIAN
-constexpr int32_t k_EndianCheck = 0;
+#if COMPLEX_BYTE_ORDER == little
+constexpr int32 k_EndianCheck = 0;
 #else
-constexpr int32_t k_EndianCheck = 1;
+constexpr int32 k_EndianCheck = 1;
 #endif
 
-constexpr int32_t k_RbrNoError = 0;
-constexpr int32_t k_RbrFileNotOpen = -1000;
-constexpr int32_t k_RbrFileTooSmall = -1010;
-constexpr int32_t k_RbrFileTooBig = -1020;
-constexpr int32_t k_RbrDAError = -1040;
-constexpr int32_t k_RbrComponentError = -1050;
-constexpr int32_t k_RbrDANull = -1060;
+constexpr int32 k_RbrFileNotOpen = -1000;
+constexpr int32 k_RbrFileTooSmall = -1010;
+constexpr int32 k_RbrFileTooBig = -1020;
 
 // -----------------------------------------------------------------------------
-int32_t SanityCheckFileSizeVersusAllocatedSize(size_t allocatedBytes, size_t fileSize, size_t skipHeaderBytes)
+int32 SanityCheckFileSizeVersusAllocatedSize(usize allocatedBytes, usize fileSize, usize skipHeaderBytes)
 {
   if(fileSize - skipHeaderBytes < allocatedBytes)
   {
@@ -86,34 +83,29 @@ int32_t SanityCheckFileSizeVersusAllocatedSize(size_t allocatedBytes, size_t fil
 
 // -----------------------------------------------------------------------------
 template <typename T>
-int32_t readBinaryFile(IDataArray* dataArrayPtr, const std::string& filename, uint64_t skipHeaderBytes, ChoicesParameter::ValueType endian)
+Result<> readBinaryFile(IDataArray& dataArrayPtr, const std::string& filename, uint64 skipHeaderBytes, ChoicesParameter::ValueType endian)
 {
-  constexpr size_t k_DefaultBlocksize = 1048576;
+  constexpr usize k_DefaultBlocksize = 1048576;
 
-  DataArray<T>* dataArray = dynamic_cast<DataArray<T>*>(dataArrayPtr);
+  DataArray<T>& dataArray = dynamic_cast<DataArray<T>&>(dataArrayPtr);
 
-  if(dataArray == nullptr)
-  {
-    return k_RbrDANull;
-  }
-
-  const size_t fileSize = std::filesystem::file_size(filename);
-  const size_t numBytesToRead = dataArray->getSize() * sizeof(T);
-  int32_t err = SanityCheckFileSizeVersusAllocatedSize(numBytesToRead, fileSize, skipHeaderBytes);
+  const usize fileSize = fs::file_size(filename);
+  const usize numBytesToRead = dataArray.getSize() * sizeof(T);
+  int32 err = SanityCheckFileSizeVersusAllocatedSize(numBytesToRead, fileSize, skipHeaderBytes);
 
   if(err < 0)
   {
-    return k_RbrFileTooSmall;
+    return MakeErrorResult(k_RbrFileTooSmall, "The file size is smaller than the allocated size");
   }
   if(err > 0)
   {
-    return k_RbrFileTooBig;
+    return MakeWarningVoidResult(k_RbrFileTooBig, "The file size is larger than the allocated size");
   }
 
   FILE* f = std::fopen(filename.c_str(), "rb");
   if(f == nullptr)
   {
-    return k_RbrFileNotOpen;
+    return MakeErrorResult(k_RbrFileNotOpen, "Unable to open the specified file");
   }
 
   // Skip some header bytes if the user asked for it.
@@ -123,19 +115,19 @@ int32_t readBinaryFile(IDataArray* dataArrayPtr, const std::string& filename, ui
   }
 
   //  std::byte* chunkptr = reinterpret_cast<std::byte*>(dataArray->data());
-  std::byte* chunkptr = reinterpret_cast<std::byte*>(dataArray->template getIDataStoreAs<DataStore<T>>()->data());
+  std::byte* chunkptr = reinterpret_cast<std::byte*>(dataArray.template getIDataStoreAs<DataStore<T>>()->data());
 
   // Now start reading the data in chunks if needed.
-  size_t chunkSize = std::min(numBytesToRead, k_DefaultBlocksize);
+  usize chunkSize = std::min(numBytesToRead, k_DefaultBlocksize);
 
-  size_t master_counter = 0;
+  usize master_counter = 0;
   while(master_counter < numBytesToRead)
   {
-    size_t bytes_read = std::fread(chunkptr, sizeof(std::byte), chunkSize, f);
+    usize bytes_read = std::fread(chunkptr, sizeof(std::byte), chunkSize, f);
     chunkptr += bytes_read;
     master_counter += bytes_read;
 
-    size_t bytesLeft = numBytesToRead - master_counter;
+    usize bytesLeft = numBytesToRead - master_counter;
 
     if(bytesLeft < chunkSize)
     {
@@ -143,18 +135,16 @@ int32_t readBinaryFile(IDataArray* dataArrayPtr, const std::string& filename, ui
     }
   }
 
-  if(endian == k_EndianCheck)
+  if(endian != k_EndianCheck)
   {
-    dataArray->byteSwapElements();
+    dataArray.byteSwapElements();
   }
 
   std::fclose(f);
 
-  return k_RbrNoError;
+  return {};
 }
 } // namespace
-
-using namespace complex;
 
 RawBinaryReader::RawBinaryReader(DataStructure& dataStructure, RawBinaryReaderInputValues* inputValues, const IFilter* filter, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
@@ -174,72 +164,39 @@ Result<> RawBinaryReader::operator()()
 // -----------------------------------------------------------------------------
 Result<> RawBinaryReader::execute()
 {
-  IDataArray* binaryIDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->createdAttributeArrayPathValue);
-  if(binaryIDataArray == nullptr)
-  {
-    return MakeErrorResult(k_RbrDAError, "Can't obtain DataArray from path '" + m_InputValues->createdAttributeArrayPathValue.toString() + "'.");
-  }
+  IDataArray& binaryIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->createdAttributeArrayPathValue);
 
-  if(binaryIDataArray->getNumberOfComponents() != static_cast<size_t>(m_InputValues->numberOfComponentsValue))
+  if(binaryIDataArray.getNumberOfComponents() != static_cast<usize>(m_InputValues->numberOfComponentsValue))
   {
-    return MakeErrorResult(k_RbrComponentError, "Failed to acquire DataArray from path '" + m_InputValues->createdAttributeArrayPathValue.toString() + "' with the correct number of components.");
+    // This was already validated in preflight, so something more fundamental has gone wrong
+    throw std::runtime_error(fmt::format("Failed to acquire DataArray from path '{}' with the correct number of components.", m_InputValues->createdAttributeArrayPathValue.toString()));
   }
 
   const std::string inputFile = m_InputValues->inputFileValue.string();
 
-  int32_t err = 0;
   switch(m_InputValues->scalarTypeValue)
   {
   case NumericType::int8:
-    err = readBinaryFile<int8_t>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
-    break;
+    return readBinaryFile<int8>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
   case NumericType::uint8:
-    err = readBinaryFile<uint8_t>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
-    break;
+    return readBinaryFile<uint8>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
   case NumericType::int16:
-    err = readBinaryFile<int16_t>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
-    break;
+    return readBinaryFile<int16>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
   case NumericType::uint16:
-    err = readBinaryFile<uint16_t>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
-    break;
+    return readBinaryFile<uint16>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
   case NumericType::int32:
-    err = readBinaryFile<int32_t>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
-    break;
+    return readBinaryFile<int32>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
   case NumericType::uint32:
-    err = readBinaryFile<uint32_t>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
-    break;
+    return readBinaryFile<uint32>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
   case NumericType::int64:
-    err = readBinaryFile<int64_t>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
-    break;
+    return readBinaryFile<int64>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
   case NumericType::uint64:
-    err = readBinaryFile<uint64_t>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
-    break;
+    return readBinaryFile<uint64>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
   case NumericType::float32:
-    err = readBinaryFile<float>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
-    break;
+    return readBinaryFile<float32>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
   case NumericType::float64:
-    err = readBinaryFile<double>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
-    break;
-    //  case NumericType::boolean:
-    //    err = readBinaryFile<uint8_t>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
-    //    break;
+    return readBinaryFile<float64>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
   default:
-    throw std::runtime_error("The chosen scalar type is not supported.");
-  }
-
-  switch(err)
-  {
-  case k_RbrFileNotOpen:
-    return MakeErrorResult(k_RbrFileNotOpen, "Unable to open the specified file");
-  case k_RbrFileTooSmall:
-    return MakeErrorResult(k_RbrFileTooSmall, "The file size is smaller than the allocated size");
-  case k_RbrFileTooBig:
-    return MakeWarningVoidResult(k_RbrFileTooBig, "The file size is larger than the allocated size");
-  case k_RbrDANull:
-    return MakeErrorResult(k_RbrDANull, "Failed DataArray cast");
-  default:
-    return {};
+    return MakeErrorResult(complex::k_UnsupportedScalarType, "The chosen scalar type is not supported by this filter.");
   }
 }
-
-} // namespace complex

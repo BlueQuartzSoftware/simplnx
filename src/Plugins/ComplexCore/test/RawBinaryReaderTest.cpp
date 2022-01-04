@@ -28,7 +28,6 @@
 #include "complex/Parameters/NumericTypeParameter.hpp"
 
 #include <filesystem>
-#include <fstream>
 namespace fs = std::filesystem;
 
 #include "ComplexCore/Filters/RawBinaryReaderFilter.hpp"
@@ -61,7 +60,7 @@ Arguments createFilterArguments(complex::NumericType scalarType, usize N, usize 
 
   args.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(k_TestOutput)));
   args.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, std::make_any<NumericType>(scalarType));
-  args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<int32>(N));
+  args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<uint64>(N));
   args.insertOrAssign(RawBinaryReaderFilter::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(Detail::Little));
   args.insertOrAssign(RawBinaryReaderFilter::k_SkipHeaderBytes_Key, std::make_any<uint64>(skipBytes));
   args.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, k_CreatedArrayPath);
@@ -375,7 +374,7 @@ void testCase4_TestPrimitives(complex::NumericType scalarType)
 }
 
 // Case1: This tests when skipHeaderBytes equals 0, and checks to see if the data read is the same as the data written.
-TEST_CASE("Core::RawBinaryReaderFilter: Case1")
+TEST_CASE("RawBinaryReaderFilter(Case1)", "[ComplexCore][RawBinaryReaderFilter][Case1]")
 {
   // Create the parent directory path
   fs::create_directories(fs::path(k_TestOutput).parent_path());
@@ -393,7 +392,7 @@ TEST_CASE("Core::RawBinaryReaderFilter: Case1")
 }
 
 // Case2: This tests when the wrong scalar type is selected. (The total number of bytes in the file does not evenly divide by the scalar type size).
-TEST_CASE("Core::RawBinaryReaderFilter: Case2")
+TEST_CASE("RawBinaryReaderFilter(Case2)", "[ComplexCore][RawBinaryReaderFilter][Case2]")
 {
   // Create the parent directory path
   fs::create_directories(fs::path(k_TestOutput).parent_path());
@@ -402,7 +401,7 @@ TEST_CASE("Core::RawBinaryReaderFilter: Case2")
 }
 
 // Case3: This tests when the wrong component size is chosen. (The total number of scalar elements in the file does not evenly divide by the chosen component size).
-TEST_CASE("Core::RawBinaryReaderFilter: Case3")
+TEST_CASE("RawBinaryReaderFilter(Case3)", "[ComplexCore][RawBinaryReaderFilter][Case3]")
 {
   // Create the parent directory path
   fs::create_directories(fs::path(k_TestOutput).parent_path());
@@ -411,7 +410,7 @@ TEST_CASE("Core::RawBinaryReaderFilter: Case3")
 }
 
 // Case4: This tests when skipHeaderBytes is non-zero, and checks to see if the data read is the same as the data written.
-TEST_CASE("Core::RawBinaryReaderFilter: Case4")
+TEST_CASE("RawBinaryReaderFilter(Case4)", "[ComplexCore][RawBinaryReaderFilter][Case4]")
 {
   // Create the parent directory path
   fs::create_directories(fs::path(k_TestOutput).parent_path());
@@ -429,7 +428,7 @@ TEST_CASE("Core::RawBinaryReaderFilter: Case4")
 }
 
 // Case5: This tests when skipHeaderBytes equals the file size
-TEST_CASE("Core::RawBinaryReaderFilter: Case5")
+TEST_CASE("RawBinaryReaderFilter(Case5)", "[ComplexCore][RawBinaryReaderFilter][Case5]")
 {
   // Create the parent directory path
   fs::create_directories(fs::path(k_TestOutput).parent_path());

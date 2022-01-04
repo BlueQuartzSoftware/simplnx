@@ -24,6 +24,11 @@ enum class endian : uint8
   native = COMPLEX_BYTE_ORDER
 };
 
+inline constexpr uint16 byteswap16(uint16 value) noexcept
+{
+  return ((value >> 8) & 0xFFu) | ((value & 0xFFu) << 8);
+}
+
 inline constexpr uint32 byteswap32(uint32 value) noexcept
 {
   return ((value & 0x000000FFu) << 24) | ((value & 0x00FF0000u) >> 8) | ((value & 0x0000FF00u) << 8) | ((value & 0xFF000000u) >> 24);
@@ -83,14 +88,14 @@ To bit_cast(const From& src) noexcept
 template <class T>
 inline constexpr T byteswap(T value) noexcept
 {
-  static_assert(std::is_arithmetic_v<T>, "byteSwap only works on arithmetic types");
+  static_assert(std::is_arithmetic_v<T>, "byteswap only works on arithmetic types");
   if constexpr(sizeof(T) == sizeof(uint8))
   {
     return value;
   }
   else if constexpr(sizeof(T) == sizeof(uint16))
   {
-    return ((value >> 8) & 0xFFu) | ((value & 0xFFu) << 8);
+    return byteswap16(value);
   }
   else if constexpr(sizeof(T) == sizeof(uint32))
   {

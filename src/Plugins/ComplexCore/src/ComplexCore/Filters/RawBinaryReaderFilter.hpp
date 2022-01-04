@@ -9,7 +9,12 @@ namespace complex
 {
 /**
  * @class RawBinaryReaderFilter
- * @brief This filter will ....
+ * @brief This filter reads data stored in files on the user's system
+ * in binary form. The user should know exactly how the data is stored
+ * in the file and properly define this in the user interface. Not
+ * correctly identifying the type of data can cause serious issues since
+ * this filter is simply reading the data into a pre-allocated array
+ * interpreted as the user defines.
  */
 class COMPLEXCORE_EXPORT RawBinaryReaderFilter : public IFilter
 {
