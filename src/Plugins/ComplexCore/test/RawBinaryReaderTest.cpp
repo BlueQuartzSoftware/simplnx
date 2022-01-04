@@ -1,30 +1,26 @@
-/**
- * This file is auto generated from the original Core/RawBinaryReaderFilter
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
+/** Testing Notes:
  *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
+ *  Case1: This tests when skipHeaderBytes equals 0, and checks to see if the data read is the same as the data written.
  *
- * 4: Add additional unit tests to actually test each code path within the filter
+ *  Case2: This tests when the wrong scalar type is selected. (The total number of bytes in the file does not evenly divide by the scalar type size).
  *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
+ *  Case3: This tests when the wrong component size is chosen. (The total number of scalar elements in the file does not evenly divide by the chosen component size).
  *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
+ *  Case4: This tests when skipHeaderBytes is non-zero, and checks to see if the data read is the same as the data written.
  *
- * When you start working on this unit test remove "[RawBinaryReaderFilter][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
+ *  Case5: This tests when skipHeaderBytes equals the file size
+ */
+
+/** we are going to use a fairly large array size because we want to exercise the
+ * possibilty that we can not write the data or read the data from the file in one
+ * step in the filter
  */
 
 #include <catch2/catch.hpp>
 
-#include <fstream>
-
+#include "complex/Common/ScopeGuard.hpp"
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
@@ -40,109 +36,412 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("Core::RawBinaryReaderFilter: Valid filter execution")
+const std::string k_TestOutput = (fs::path(complex::unit_test::k_BinaryDir).append("RawBinaryReaderTest").append("Output.bin")).string();
+const DataPath k_CreatedArrayPath = DataPath(std::vector<std::string>{"Test_Array"});
+
+constexpr int32_t k_RbrNumComponentsError = -392;
+constexpr int32_t k_RbrWrongType = -393;
+constexpr int32_t k_RbrSkippedTooMuch = -395;
+
+namespace Detail
 {
-  std::string inputFile = (fs::temp_directory_path() /= "raw_binary_reader_data.bin").string();
-  std::string arrayName = "Imported Array";
-  DataPath createdAttributeArrayPathValue = DataPath(std::vector<std::string>{arrayName});
+enum Endian
+{
+  Little = 0,
+  Big
+};
+} // namespace Detail
 
-  // Write binary file
-  std::array<char, 10> buffer = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-  std::fstream myFile(inputFile, std::ios::out | std::ios::binary);
-  myFile.write(buffer.data(), buffer.size());
-  myFile.close();
-
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  RawBinaryReaderFilter filter;
-  DataStructure ds;
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+Arguments createFilterArguments(complex::NumericType scalarType, usize N, usize skipBytes)
+{
   Arguments args;
 
-  // Create default Parameters for the filter.
-  args.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
-  args.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, std::make_any<NumericType>(NumericType::uint8));
-  args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<int32>(1));
-  args.insertOrAssign(RawBinaryReaderFilter::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(RawBinaryReaderFilter::k_SkipHeaderBytes_Key, std::make_any<uint64>(0));
-  args.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(createdAttributeArrayPathValue));
+  args.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(k_TestOutput)));
+  args.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, std::make_any<NumericType>(scalarType));
+  args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<int32>(N));
+  args.insertOrAssign(RawBinaryReaderFilter::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(Detail::Little));
+  args.insertOrAssign(RawBinaryReaderFilter::k_SkipHeaderBytes_Key, std::make_any<uint64>(skipBytes));
+  args.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, k_CreatedArrayPath);
 
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  return args;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+template <typename T>
+bool createAndWriteToFile(std::string filePath, T* dataArray, usize dataSize)
+{
+  // Create the output file to dump some data into
+  FILE* f = fopen(filePath.c_str(), "wb");
+
+  // Write the data to the file
+  usize numWritten = 0;
+  while(1)
+  {
+    numWritten += fwrite(dataArray, sizeof(T), dataSize, f);
+    if(numWritten == dataSize)
+    {
+      break;
+    }
+    dataArray = dataArray + numWritten;
+  }
+
+  // Close the file
+  fclose(f);
+
+  // Return successful
+  return true;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+// Case1: This tests when skipHeaderBytes equals 0, and checks to see if the data read is the same as the data written.
+template <typename T, usize N>
+void testCase1_Execute(complex::NumericType scalarType)
+{
+  usize dataArraySize = 10000000 * N;
+  usize skipHeaderBytes = 0;
+  DataStructure ds;
+
+  // Allocate an array, and get the dataArray from that array
+  std::shared_ptr<DataStore<T>> store = std::make_shared<DataStore<T>>(dataArraySize);
+  T* dataArray = store->data();
+
+  // Write some data into the data array
+  for(usize i = 0; i < dataArraySize; ++i)
+  {
+    dataArray[i] = static_cast<T>(i);
+  }
+
+  // Create scope guard to remove file after this test goes out of scope
+  fs::path testPath = k_TestOutput;
+  auto fileGuard = MakeScopeGuard([testPath]() noexcept { fs::remove(testPath); });
+
+  // Create the file and write to it.  If any of the information is wrong, the result will be false
+  bool result = createAndWriteToFile(k_TestOutput, dataArray, dataArraySize);
+
+  // Test to make sure that the file was created and written to successfully
+  REQUIRE(result == true);
+
+  // Create the filter, passing in the skipHeaderBytes
+  RawBinaryReaderFilter filt;
+  Arguments args = createFilterArguments(scalarType, N, skipHeaderBytes);
+
+  // Preflight, get the error condition, and check that there are no errors
+  auto preflightResult = filt.preflight(ds, args);
   REQUIRE(preflightResult.outputActions.valid());
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  // Execute the filter, check that there are no errors, and compare the data
+  auto executeResult = filt.execute(ds, args);
   REQUIRE(executeResult.result.valid());
 
-  // Check the results
-  auto* resultArray = ds.getDataAs<DataArray<uint8>>(createdAttributeArrayPathValue);
-  for(int i = 0; i < 10; i++)
+  DataArray<T>* createdData = ds.getDataAs<DataArray<T>>(k_CreatedArrayPath);
+  for(usize i = 0; i < dataArraySize; ++i)
   {
-    uint8 resultVal = resultArray->at(i);
-    REQUIRE(resultVal == i);
+    T d = createdData->at(i);
+    T p = store->getValue(i);
+    REQUIRE(d == p);
   }
 }
 
-TEST_CASE("Core::RawBinaryReaderFilter: Invalid filter execution")
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+template <typename T>
+void testCase1_TestPrimitives(complex::NumericType scalarType)
 {
-  std::string arrayName = "Imported Array";
-  DataPath createdAttributeArrayPathValue = DataPath(std::vector<std::string>{arrayName});
+  testCase1_Execute<T, 1>(scalarType);
+  testCase1_Execute<T, 2>(scalarType);
+  testCase1_Execute<T, 3>(scalarType);
+}
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  RawBinaryReaderFilter filter;
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+// Case2: This tests when the wrong scalar type is selected. (The total number of bytes in the file does not evenly divide by the scalar type size).
+void testCase2_Execute()
+{
+  usize dataArraySize = 10000001; // We need the data array size to not be divisible by 2 (int16 byte size)
+  usize skipHeaderBytes = 0;
+  usize N = 1;
+  complex::NumericType scalarType = complex::NumericType::int16;
   DataStructure ds;
-  Arguments args;
 
-  // Test empty input file
-  std::string inputFile;
+  // Allocate an array, and get the dataArray from that array
+  std::shared_ptr<DataStore<int8>> store = std::make_shared<DataStore<int8>>(dataArraySize);
+  int8* dataArray = store->data();
 
-  args.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
-  args.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, std::make_any<NumericType>(NumericType::uint8));
-  args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<int32>(1));
-  args.insertOrAssign(RawBinaryReaderFilter::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(RawBinaryReaderFilter::k_SkipHeaderBytes_Key, std::make_any<uint64>(0));
-  args.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(createdAttributeArrayPathValue));
+  // Write some data into the data array
+  for(usize i = 0; i < dataArraySize; ++i)
+  {
+    dataArray[i] = static_cast<int8>(i);
+  }
 
-  auto preflightResult = filter.preflight(ds, args);
+  // Create scope guard to remove file after this test goes out of scope
+  fs::path testPath = k_TestOutput;
+  auto fileGuard = MakeScopeGuard([testPath]() noexcept { fs::remove(testPath); });
+
+  // Create the file and write to it.  If any of the information is wrong, the result will be false
+  bool result = createAndWriteToFile(k_TestOutput, dataArray, dataArraySize);
+
+  // Test to make sure that the file was created and written to successfully
+  REQUIRE(result == true);
+
+  // Create the filter, passing in the skipHeaderBytes
+  RawBinaryReaderFilter filt;
+  Arguments args = createFilterArguments(scalarType, N, skipHeaderBytes);
+
+  // Preflight, get the error condition, and check that there are no errors
+  auto preflightResult = filt.preflight(ds, args);
   REQUIRE(preflightResult.outputActions.invalid());
 
-  // Test non-existent input file
-  inputFile = "/tmp/this_does_not_exist.bin";
-  args.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
-  preflightResult = filter.preflight(ds, args);
+  std::vector<Error> errors = preflightResult.outputActions.errors();
+  REQUIRE(errors.size() == 1);
+  REQUIRE(errors[0].code == k_RbrWrongType);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+// Case2: This tests when the wrong scalar type is selected. (The total number of bytes in the file does not evenly divide by the scalar type size).
+void testCase3_Execute()
+{
+  usize dataArraySize = 1000001; // We need the data array size to not be divisible by 2 (int16 byte size)
+  usize skipHeaderBytes = 0;
+  usize N = 3;
+  complex::NumericType scalarType = complex::NumericType::int64;
+  DataStructure ds;
+
+  // Allocate an array, and get the dataArray from that array
+  std::shared_ptr<DataStore<int64>> store = std::make_shared<DataStore<int64>>(dataArraySize);
+  int64* dataArray = store->data();
+
+  // Write some data into the data array
+  for(usize i = 0; i < dataArraySize; ++i)
+  {
+    dataArray[i] = static_cast<int64>(i);
+  }
+
+  // Create scope guard to remove file after this test goes out of scope
+  fs::path testPath = k_TestOutput;
+  auto fileGuard = MakeScopeGuard([testPath]() noexcept { fs::remove(testPath); });
+
+  // Create the file and write to it.  If any of the information is wrong, the result will be false
+  bool result = createAndWriteToFile(k_TestOutput, dataArray, dataArraySize);
+
+  // Test to make sure that the file was created and written to successfully
+  REQUIRE(result == true);
+
+  // Create the filter, passing in the skipHeaderBytes
+  RawBinaryReaderFilter filt;
+  Arguments args = createFilterArguments(scalarType, N, skipHeaderBytes);
+
+  // Preflight, get the error condition, and check that there are no errors
+  auto preflightResult = filt.preflight(ds, args);
   REQUIRE(preflightResult.outputActions.invalid());
 
-  // Update InputFile to the correct path and write the file so it exists
-  inputFile = (fs::temp_directory_path() /= "raw_binary_reader_data.bin").string();
-  args.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
+  std::vector<Error> errors = preflightResult.outputActions.errors();
+  REQUIRE(errors.size() == 1);
+  REQUIRE(errors[0].code == k_RbrNumComponentsError);
+}
 
-  std::array<char, 10> buffer = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-  std::fstream myFile(inputFile, std::ios::out | std::ios::binary);
-  myFile.write(buffer.data(), 10);
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+// Case4: This tests when skipHeaderBytes is non-zero, and checks to see if the data read is the same as the data written.
+template <typename T, usize N>
+void testCase4_Execute(complex::NumericType scalarType)
+{
+  usize dataArraySize = 10000000 * N;
+  usize skipHeaderBytes = 100 * N * sizeof(T);
+  DataStructure ds;
 
-  // Test empty input file
-  preflightResult = filter.preflight(ds, args);
+  // Allocate an array, and get the dataArray from that array
+  std::shared_ptr<DataStore<T>> store = std::make_shared<DataStore<T>>(dataArraySize);
+  T* exemplaryData = store->data();
+
+  // Write some data into the data array
+  for(usize i = 0; i < dataArraySize; ++i)
+  {
+    exemplaryData[i] = static_cast<T>(i);
+  }
+
+  // Create scope guard to remove file after this test goes out of scope
+  fs::path testPath = k_TestOutput;
+  auto fileGuard = MakeScopeGuard([testPath]() noexcept { fs::remove(testPath); });
+
+  // Create the file and write to it.  If any of the information is wrong, the result will be false
+  bool result = createAndWriteToFile(k_TestOutput, exemplaryData, dataArraySize);
+
+  // Test to make sure that the file was created and written to successfully
+  REQUIRE(result == true);
+
+  // Create the filter, passing in the skipHeaderBytes
+  RawBinaryReaderFilter filt;
+  Arguments args = createFilterArguments(scalarType, N, skipHeaderBytes);
+
+  // Preflight, get the error condition, and check that there are no errors
+  auto preflightResult = filt.preflight(ds, args);
+  REQUIRE(preflightResult.outputActions.valid());
+
+  // Execute the filter, check that there are no errors, and compare the data
+  auto executeResult = filt.execute(ds, args);
+  REQUIRE(executeResult.result.valid());
+
+  DataArray<T>* createdArray = ds.getDataAs<DataArray<T>>(k_CreatedArrayPath);
+  REQUIRE(createdArray != nullptr);
+  DataStore<T>* createdStore = createdArray->template getIDataStoreAs<DataStore<T>>();
+  REQUIRE(createdStore != nullptr);
+  T* createdData = createdStore->data();
+
+  usize elementOffset = skipHeaderBytes / sizeof(T);
+  for(usize i = 0; i < createdStore->getSize(); ++i)
+  {
+    T c = createdData[i];
+    T e = exemplaryData[i + elementOffset];
+    REQUIRE(c == e);
+  }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+// Case5: This tests when skipHeaderBytes equals the file size
+template <typename T, usize N>
+void testCase5_Execute(complex::NumericType scalarType)
+{
+  usize dataArraySize = 10000000 * N;
+  usize skipHeaderBytes = 10000000 * N * sizeof(T);
+  DataStructure ds;
+
+  // Allocate an array, and get the dataArray from that array
+  std::shared_ptr<DataStore<T>> store = std::make_shared<DataStore<T>>(dataArraySize);
+  T* exemplaryData = store->data();
+
+  // Write some data into the data array
+  for(usize i = 0; i < dataArraySize; ++i)
+  {
+    exemplaryData[i] = static_cast<T>(i);
+  }
+
+  // Create scope guard to remove file after this test goes out of scope
+  fs::path testPath = k_TestOutput;
+  auto fileGuard = MakeScopeGuard([testPath]() noexcept { fs::remove(testPath); });
+
+  // Create the file and write to it.  If any of the information is wrong, the result will be false
+  bool result = createAndWriteToFile(k_TestOutput, exemplaryData, dataArraySize);
+
+  // Test to make sure that the file was created and written to successfully
+  REQUIRE(result == true);
+
+  // Create the filter, passing in the skipHeaderBytes
+  RawBinaryReaderFilter filt;
+  Arguments args = createFilterArguments(scalarType, N, skipHeaderBytes);
+
+  // Preflight, get the error condition, and check that there are no errors
+  auto preflightResult = filt.preflight(ds, args);
   REQUIRE(preflightResult.outputActions.invalid());
-  myFile.close();
 
-  // Test zero components
-  args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<int32>(0));
-  preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<int32>(1));
+  std::vector<Error> errors = preflightResult.outputActions.errors();
+  REQUIRE(errors.size() == 1);
+  REQUIRE(errors[0].code == k_RbrSkippedTooMuch);
+}
 
-  // Test incorrect scalar type
-  args.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, std::make_any<NumericType>(NumericType::uint32));
-  preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  args.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, std::make_any<NumericType>(NumericType::uint8));
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+template <typename T>
+void testCase5_TestPrimitives(complex::NumericType scalarType)
+{
+  testCase5_Execute<T, 1>(scalarType);
+  testCase5_Execute<T, 2>(scalarType);
+  testCase5_Execute<T, 3>(scalarType);
+}
 
-  // Test incorrect components
-  args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<int32>(3));
-  preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<int32>(1));
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+template <typename T>
+void testCase4_TestPrimitives(complex::NumericType scalarType)
+{
+  testCase4_Execute<T, 1>(scalarType);
+  testCase4_Execute<T, 2>(scalarType);
+  testCase4_Execute<T, 3>(scalarType);
+}
 
-  //  // Execute the filter and check the result
-  //  auto executeResult = filter.execute(ds, args);
-  //  REQUIRE(executeResult.result.valid());
+// Case1: This tests when skipHeaderBytes equals 0, and checks to see if the data read is the same as the data written.
+TEST_CASE("Core::RawBinaryReaderFilter: Case1")
+{
+  // Create the parent directory path
+  fs::create_directories(fs::path(k_TestOutput).parent_path());
+
+  testCase1_TestPrimitives<int8_t>(complex::NumericType::int8);
+  testCase1_TestPrimitives<uint8_t>(complex::NumericType::uint8);
+  testCase1_TestPrimitives<int16_t>(complex::NumericType::int16);
+  testCase1_TestPrimitives<uint16_t>(complex::NumericType::uint16);
+  testCase1_TestPrimitives<int32_t>(complex::NumericType::int32);
+  testCase1_TestPrimitives<uint32_t>(complex::NumericType::uint32);
+  testCase1_TestPrimitives<int64_t>(complex::NumericType::int64);
+  testCase1_TestPrimitives<uint64_t>(complex::NumericType::uint64);
+  testCase1_TestPrimitives<float>(complex::NumericType::float32);
+  testCase1_TestPrimitives<double>(complex::NumericType::float64);
+}
+
+// Case2: This tests when the wrong scalar type is selected. (The total number of bytes in the file does not evenly divide by the scalar type size).
+TEST_CASE("Core::RawBinaryReaderFilter: Case2")
+{
+  // Create the parent directory path
+  fs::create_directories(fs::path(k_TestOutput).parent_path());
+
+  testCase2_Execute();
+}
+
+// Case3: This tests when the wrong component size is chosen. (The total number of scalar elements in the file does not evenly divide by the chosen component size).
+TEST_CASE("Core::RawBinaryReaderFilter: Case3")
+{
+  // Create the parent directory path
+  fs::create_directories(fs::path(k_TestOutput).parent_path());
+
+  testCase3_Execute();
+}
+
+// Case4: This tests when skipHeaderBytes is non-zero, and checks to see if the data read is the same as the data written.
+TEST_CASE("Core::RawBinaryReaderFilter: Case4")
+{
+  // Create the parent directory path
+  fs::create_directories(fs::path(k_TestOutput).parent_path());
+
+  testCase4_TestPrimitives<int8_t>(complex::NumericType::int8);
+  testCase4_TestPrimitives<uint8_t>(complex::NumericType::uint8);
+  testCase4_TestPrimitives<int16_t>(complex::NumericType::int16);
+  testCase4_TestPrimitives<uint16_t>(complex::NumericType::uint16);
+  testCase4_TestPrimitives<int32_t>(complex::NumericType::int32);
+  testCase4_TestPrimitives<uint32_t>(complex::NumericType::uint32);
+  testCase4_TestPrimitives<int64_t>(complex::NumericType::int64);
+  testCase4_TestPrimitives<uint64_t>(complex::NumericType::uint64);
+  testCase4_TestPrimitives<float>(complex::NumericType::float32);
+  testCase4_TestPrimitives<double>(complex::NumericType::float64);
+}
+
+// Case5: This tests when skipHeaderBytes equals the file size
+TEST_CASE("Core::RawBinaryReaderFilter: Case5")
+{
+  // Create the parent directory path
+  fs::create_directories(fs::path(k_TestOutput).parent_path());
+
+  testCase5_TestPrimitives<int8_t>(complex::NumericType::int8);
+  testCase5_TestPrimitives<uint8_t>(complex::NumericType::uint8);
+  testCase5_TestPrimitives<int16_t>(complex::NumericType::int16);
+  testCase5_TestPrimitives<uint16_t>(complex::NumericType::uint16);
+  testCase5_TestPrimitives<int32_t>(complex::NumericType::int32);
+  testCase5_TestPrimitives<uint32_t>(complex::NumericType::uint32);
+  testCase5_TestPrimitives<int64_t>(complex::NumericType::int64);
+  testCase5_TestPrimitives<uint64_t>(complex::NumericType::uint64);
+  testCase5_TestPrimitives<float>(complex::NumericType::float32);
+  testCase5_TestPrimitives<double>(complex::NumericType::float64);
 }
