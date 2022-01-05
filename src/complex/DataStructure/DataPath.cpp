@@ -99,6 +99,10 @@ DataPath::~DataPath() noexcept = default;
 
 std::optional<DataPath> DataPath::FromString(std::string_view inputPath, char delimiter)
 {
+  if (inputPath.empty())
+  {
+    return {};
+  }
   std::string finalString(inputPath.data(), inputPath.size());
   if(inputPath.back() == delimiter)
   {
