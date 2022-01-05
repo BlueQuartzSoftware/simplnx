@@ -3,6 +3,7 @@
 #include "complex/Common/Types.hpp"
 
 #include <stdexcept>
+#include <fmt/format.h>
 
 #include <type_traits>
 
