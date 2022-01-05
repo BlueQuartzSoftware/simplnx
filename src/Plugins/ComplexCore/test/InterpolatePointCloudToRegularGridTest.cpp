@@ -16,7 +16,7 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 
-TEST_CASE("InterpolatePointCloudToRegularGridFilter: Create Filter", "[DREAM3DReview][InterpolatePointCloudToRegularGridFilter]")
+TEST_CASE("InterpolatePointCloudToRegularGridFilter: Create Filter", "[DREAM3DReview][InterpolatePointCloudToRegularGridFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   InterpolatePointCloudToRegularGridFilter filter;
   DataStructure dataGraph;
@@ -45,7 +45,7 @@ TEST_CASE("InterpolatePointCloudToRegularGridFilter: Create Filter", "[DREAM3DRe
   REQUIRE(executeResult.result.invalid());
 }
 
-TEST_CASE("InterpolatePointCloudToRegularGridFilter: Test Algorithm 1", "[DREAM3DReview][InterpolatePointCloudToRegularGridFilter]")
+TEST_CASE("InterpolatePointCloudToRegularGridFilter: Test Algorithm 1", "[DREAM3DReview][InterpolatePointCloudToRegularGridFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   InterpolatePointCloudToRegularGridFilter filter;
   DataStructure dataGraph = UnitTest::CreateDataStructure();

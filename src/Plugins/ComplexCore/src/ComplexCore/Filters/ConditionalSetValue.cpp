@@ -6,7 +6,6 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/Utilities/TemplateHelpers.hpp"
 
 namespace
 {
@@ -45,7 +44,7 @@ std::vector<std::string> ConditionalSetValue::defaultTags() const
 Parameters ConditionalSetValue::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<StringParameter>(k_ReplaceValue_Key, "New Value", "", "2.3456789"));
+  params.insert(std::make_unique<StringParameter>(k_ReplaceValue_Key, "New Value", "", ""));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ConditionalArrayPath_Key, "Conditional Array", "", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array", "", DataPath{}));
   return params;

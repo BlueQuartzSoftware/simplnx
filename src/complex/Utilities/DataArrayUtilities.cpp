@@ -1,7 +1,49 @@
 #include "DataArrayUtilities.hpp"
 
+#include "complex/Common/TypesUtility.hpp"
+
 namespace complex
 {
+//-----------------------------------------------------------------------------
+Result<> CheckInitValueConverts(const std::string& value, complex::NumericType numericType)
+{
+  switch(numericType)
+  {
+  case NumericType::int8: {
+    return CheckValuesSignedInt<int8>(value, Constants::k_Int8);
+  }
+  case NumericType::uint8: {
+    return CheckValuesUnsignedInt<uint8>(value, Constants::k_UInt8);
+  }
+  case NumericType::int16: {
+    return CheckValuesSignedInt<int16>(value, Constants::k_Int16);
+  }
+  case NumericType::uint16: {
+    return CheckValuesUnsignedInt<uint16>(value, Constants::k_UInt16);
+  }
+  case NumericType::int32: {
+    return CheckValuesSignedInt<int32>(value, Constants::k_Int32);
+  }
+  case NumericType::uint32: {
+    return CheckValuesUnsignedInt<uint32>(value, Constants::k_UInt32);
+  }
+  case NumericType::int64: {
+    return CheckValuesSignedInt<int64>(value, Constants::k_Int64);
+  }
+  case NumericType::uint64: {
+    return CheckValuesUnsignedInt<uint64>(value, Constants::k_UInt64);
+  }
+  case NumericType::float32: {
+    return CheckValuesFloatDouble<float32>(value, Constants::k_Float32);
+  }
+  case NumericType::float64: {
+    return CheckValuesFloatDouble<float64>(value, Constants::k_Float64);
+  }
+  }
+  return MakeErrorResult(-10102, fmt::format("CheckInitValueConverts: Cannot convert input value '{}' to type '{}'", value, NumericTypeToString(numericType)));
+}
+
+//-----------------------------------------------------------------------------
 Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObject& inputDataArray)
 {
   if(TemplateHelpers::CanDynamicCast<Float32Array>()(&inputDataArray))
@@ -52,6 +94,7 @@ Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObjec
   return {MakeErrorResult(-259, fmt::format("Input DataObject could not be cast to any primitive type."))};
 }
 
+//-----------------------------------------------------------------------------
 Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const BoolArray& conditionalDataArray)
 {
   if(ConditionalReplaceValueInArrayFromString<float32>(valueAsStr, inputDataObject, conditionalDataArray))
@@ -105,6 +148,7 @@ Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObjec
   return {MakeErrorResult(-260, fmt::format("Input DataObject could not be cast to any primitive type."))};
 }
 
+//-----------------------------------------------------------------------------
 #define DAU_BODY(type)                                                                                                                                                                                 \
   DataArray<type>* castInputArray = dynamic_cast<DataArray<type>*>(inputDataArray);                                                                                                                    \
   IDataStore::ShapeType componentShape = castInputArray->getDataStore()->getComponentShape();                                                                                                          \

@@ -19,6 +19,12 @@ public:
   ExampleFilter1& operator=(const ExampleFilter1&) = delete;
   ExampleFilter1& operator=(ExampleFilter1&&) noexcept = delete;
 
+  // Parameter Keys
+  static inline constexpr StringLiteral k_InputDir_Key = "input_dir";
+  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
+  static inline constexpr StringLiteral k_OutputDir_Key = "output_dir";
+  static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
+
   /**
    * @brief
    * @return

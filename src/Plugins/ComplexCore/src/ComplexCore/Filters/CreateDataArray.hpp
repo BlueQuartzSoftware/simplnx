@@ -25,6 +25,7 @@ public:
   static inline constexpr StringLiteral k_NumComps_Key = "component_count";
   static inline constexpr StringLiteral k_NumTuples_Key = "tuple_count";
   static inline constexpr StringLiteral k_DataPath_Key = "output_data_array";
+  static inline constexpr StringLiteral k_InitilizationValue_Key = "initialization_value";
 
   /**
    * @brief
@@ -66,21 +67,21 @@ protected:
   /**
    * @brief
    * @param data
-   * @param args
+   * @param filterArgs
    * @param messageHandler
    * @return Result<OutputActions>
    */
-  PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const override;
+  PreflightResult preflightImpl(const DataStructure& data, const Arguments& filterArgs, const MessageHandler& messageHandler) const override;
 
   /**
    * @brief
-   * @param data
+   * @param dataStructure
    * @param args
    * @param pipelineNode
    * @param messageHandler
    * @return Result<>
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const override;
 };
 } // namespace complex
 

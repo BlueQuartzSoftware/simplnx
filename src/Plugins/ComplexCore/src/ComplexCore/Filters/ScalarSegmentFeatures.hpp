@@ -31,14 +31,13 @@ public:
   ScalarSegmentFeatures& operator=(ScalarSegmentFeatures&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DataPath_Key = "scalar_segment_path";
-
+  // static inline constexpr StringLiteral k_DataPath_Key = "scalar_segment_path";
   static inline constexpr StringLiteral k_ScalarToleranceKey = "scalar tolerance";
   static inline constexpr StringLiteral k_InputArrayPathKey = "input array path";
   static inline constexpr StringLiteral k_UseGoodVoxelsKey = "use mask";
   static inline constexpr StringLiteral k_GoodVoxelsPathKey = "mask path";
   static inline constexpr StringLiteral k_FeatureIdsPathKey = "feature ids path";
-  static inline constexpr StringLiteral k_CellFeaturePathKey = "cell feature group path";
+  // static inline constexpr StringLiteral k_CellFeaturePathKey = "cell feature group path";
   static inline constexpr StringLiteral k_ActiveArrayPathKey = "active array path";
   static inline constexpr StringLiteral k_RandomizeFeaturesKey = "randomize features";
 
