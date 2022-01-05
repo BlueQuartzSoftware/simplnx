@@ -46,6 +46,9 @@ inline constexpr StringLiteral k_EbsdScanData("EBSD Scan Data");
 inline constexpr StringLiteral k_ImageGeometry("Image Geometry");
 inline constexpr StringLiteral k_VertexGeometry("Vertex Geometry");
 inline constexpr StringLiteral k_ConfidenceIndex("Confidence Index");
+inline constexpr StringLiteral k_FeatureGroupName("Feature Data");
+inline constexpr StringLiteral k_ActiveName("Active");
+
 inline constexpr StringLiteral k_FeatureIds("FeatureIds");
 inline constexpr StringLiteral k_ImageQuality("Image Quality");
 inline constexpr StringLiteral k_Phases("Phases");
