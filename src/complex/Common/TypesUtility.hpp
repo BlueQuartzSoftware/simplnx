@@ -94,7 +94,7 @@ inline constexpr usize GetNumericTypeSize(NumericType numericType)
  * @param numericType
  * @return String or 'UNKNOWN TYPE' if the type is not known
  */
-std::string NumericTypeToString(complex::NumericType numericType)
+inline constexpr const complex::StringLiteral NumericTypeToString(complex::NumericType numericType)
 {
   switch(numericType)
   {
@@ -129,7 +129,7 @@ std::string NumericTypeToString(complex::NumericType numericType)
     return "Float64";
   }
   default:
-    return fmt::format("UNKNOWN TYPE:{}", numericType);
+    throw std::runtime_error("complex::NumericTypeToString: Unknown NumericType");
   }
 }
 

@@ -23,7 +23,7 @@ namespace
 using FeatureIdsArrayType = Int32Array;
 using GoodVoxelsArrayType = UInt8Array;
 
-inline constexpr StringLiteral k_CompareFunctKey = "Compare Function";
+constexpr StringLiteral k_CompareFunctKey = "Compare Function";
 
 constexpr int64 k_IncorrectInputArray = -600;
 constexpr int64 k_MissingInputArray = -601;

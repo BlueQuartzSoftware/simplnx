@@ -38,17 +38,17 @@ Result<std::any> ArraySelectionParameter::fromJson(const nlohmann::json& json) c
 {
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a string", name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a jsonStrValue", name()));
   }
-  if(json.is_string() && json.get<std::string>().empty())
+  auto jsonStrValue = json.get<std::string>();
+  if(jsonStrValue.empty())
   {
     return {DataPath()};
   }
-  auto string = json.get<std::string>();
-  std::optional<DataPath> path = DataPath::FromString(string);
+  std::optional<DataPath> path = DataPath::FromString(jsonStrValue);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(-3, fmt::format("Failed to parse '{}' as DataPath", string));
+    return MakeErrorResult<std::any>(-3, fmt::format("Failed to parse '{}' as DataPath", jsonStrValue));
   }
   return {std::move(*path)};
 }

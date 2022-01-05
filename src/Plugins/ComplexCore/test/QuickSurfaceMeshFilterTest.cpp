@@ -15,7 +15,7 @@
 using namespace complex;
 using namespace complex::UnitTest;
 using namespace complex::Constants;
-namespace SurfaceMeshingTest
+namespace
 {
 std::shared_ptr<DataStructure> CreateEbsdTestDataStructure()
 {
@@ -60,12 +60,12 @@ std::shared_ptr<DataStructure> CreateEbsdTestDataStructure()
 
   return dataGraph;
 }
-} // namespace SurfaceMeshingTest
+} // namespace
 TEST_CASE("SurfaceMeshing::QuickSurfaceMeshFilter", "[SurfaceMeshing][QuickSurfaceMeshFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
-  std::shared_ptr<DataStructure> dataGraphPtr = SurfaceMeshingTest::CreateEbsdTestDataStructure();
+  std::shared_ptr<DataStructure> dataGraphPtr = ::CreateEbsdTestDataStructure();
   DataStructure& dataGraph = *dataGraphPtr;
 
   std::vector<size_t> imageDims = {100, 100, 100};
