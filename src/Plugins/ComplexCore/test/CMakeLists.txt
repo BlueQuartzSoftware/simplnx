@@ -14,6 +14,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   InterpolatePointCloudToRegularGridTest.cpp
   MapPointCloudToRegularGridTest.cpp
   RobustAutomaticThresholdTest.cpp
+  RawBinaryReaderTest.cpp
   CreateImageGeometryTest.cpp
   StlFileReaderTest.cpp
   CalculateTriangleAreasFilterTest.cpp

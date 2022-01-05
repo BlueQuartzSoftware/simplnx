@@ -24,27 +24,20 @@ enum class endian : uint8
   native = COMPLEX_BYTE_ORDER
 };
 
-template <class T>
-inline constexpr T byteswap(T value) noexcept
+inline constexpr uint16 byteswap16(uint16 value) noexcept
 {
-  static_assert(std::is_integral_v<T>);
-  if constexpr(sizeof(T) == sizeof(uint8))
-  {
-    return value;
-  }
-  else if constexpr(sizeof(T) == sizeof(uint16))
-  {
-    return ((value >> 8) & 0xFFu) | ((value & 0xFFu) << 8);
-  }
-  else if constexpr(sizeof(T) == sizeof(uint32))
-  {
-    return ((value & 0x000000FFu) << 24) | ((value & 0x00FF0000u) >> 8) | ((value & 0x0000FF00u) << 8) | ((value & 0xFF000000u) >> 24);
-  }
-  else if constexpr(sizeof(T) == sizeof(uint64))
-  {
-    return (((value & 0xFF00000000000000ull) >> 56) | ((value & 0x00FF000000000000ull) >> 40) | ((value & 0x0000FF0000000000ull) >> 24) | ((value & 0x000000FF00000000ull) >> 8) |
-            ((value & 0x00000000FF000000ull) << 8) | ((value & 0x0000000000FF0000ull) << 24) | ((value & 0x000000000000FF00ull) << 40) | ((value & 0x00000000000000FFull) << 56));
-  }
+  return ((value >> 8) & 0xFFu) | ((value & 0xFFu) << 8);
+}
+
+inline constexpr uint32 byteswap32(uint32 value) noexcept
+{
+  return ((value & 0x000000FFu) << 24) | ((value & 0x00FF0000u) >> 8) | ((value & 0x0000FF00u) << 8) | ((value & 0xFF000000u) >> 24);
+}
+
+inline constexpr uint64 byteswap64(uint64 value) noexcept
+{
+  return (((value & 0xFF00000000000000ull) >> 56) | ((value & 0x00FF000000000000ull) >> 40) | ((value & 0x0000FF0000000000ull) >> 24) | ((value & 0x000000FF00000000ull) >> 8) |
+          ((value & 0x00000000FF000000ull) << 8) | ((value & 0x0000000000FF0000ull) << 24) | ((value & 0x000000000000FF00ull) << 40) | ((value & 0x00000000000000FFull) << 56));
 }
 
 template <class T, endian Endianness = endian::native, usize Size = sizeof(T)>
@@ -90,5 +83,41 @@ To bit_cast(const From& src) noexcept
   To dst;
   std::memcpy(&dst, &src, sizeof(To));
   return dst;
+}
+
+template <class T>
+inline constexpr T byteswap(T value) noexcept
+{
+  static_assert(std::is_arithmetic_v<T>, "byteswap only works on arithmetic types");
+  if constexpr(sizeof(T) == sizeof(uint8))
+  {
+    return value;
+  }
+  else if constexpr(sizeof(T) == sizeof(uint16))
+  {
+    return byteswap16(value);
+  }
+  else if constexpr(sizeof(T) == sizeof(uint32))
+  {
+    if constexpr(std::is_floating_point_v<T>)
+    {
+      return bit_cast<T>(byteswap32(bit_cast<uint32>(value)));
+    }
+    else
+    {
+      return byteswap32(value);
+    }
+  }
+  else if constexpr(sizeof(T) == sizeof(uint64))
+  {
+    if constexpr(std::is_floating_point_v<T>)
+    {
+      return bit_cast<T>(byteswap64(bit_cast<uint64>(value)));
+    }
+    else
+    {
+      return byteswap64(value);
+    }
+  }
 }
 } // namespace complex
