@@ -137,7 +137,7 @@ void testCase1_Execute(complex::NumericType scalarType)
 
   // Execute the filter, check that there are no errors, and compare the data
   auto executeResult = filt.execute(ds, args);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
   DataArray<T>* createdData = ds.getDataAs<DataArray<T>>(k_CreatedArrayPath);
   for(usize i = 0; i < dataArraySize; ++i)
