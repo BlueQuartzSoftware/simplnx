@@ -35,21 +35,15 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
+namespace
+{
 const std::string k_TestOutput = (fs::path(complex::unit_test::k_BinaryDir.str()).append("RawBinaryReaderTest").append("Output.bin")).string();
 const DataPath k_CreatedArrayPath = DataPath(std::vector<std::string>{"Test_Array"});
 
-constexpr int32_t k_RbrNumComponentsError = -392;
-constexpr int32_t k_RbrWrongType = -393;
-constexpr int32_t k_RbrSkippedTooMuch = -395;
-
-namespace Detail
-{
-enum Endian
-{
-  Little = 0,
-  Big
-};
-} // namespace Detail
+constexpr int32 k_RbrNumComponentsError = -392;
+constexpr int32 k_RbrWrongType = -393;
+constexpr int32 k_RbrSkippedTooMuch = -395;
+} // namespace
 
 // -----------------------------------------------------------------------------
 //
@@ -61,7 +55,7 @@ Arguments createFilterArguments(complex::NumericType scalarType, usize N, usize 
   args.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(k_TestOutput)));
   args.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, std::make_any<NumericType>(scalarType));
   args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<uint64>(N));
-  args.insertOrAssign(RawBinaryReaderFilter::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(Detail::Little));
+  args.insertOrAssign(RawBinaryReaderFilter::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<uint64>(complex::endian::little)));
   args.insertOrAssign(RawBinaryReaderFilter::k_SkipHeaderBytes_Key, std::make_any<uint64>(skipBytes));
   args.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, k_CreatedArrayPath);
 
@@ -72,20 +66,23 @@ Arguments createFilterArguments(complex::NumericType scalarType, usize N, usize 
 //
 // -----------------------------------------------------------------------------
 template <typename T>
-bool createAndWriteToFile(std::string filePath, T* dataArray, usize dataSize)
+bool createTestDataFile(const std::vector<T>& exemplaryData)
 {
+  auto* dataArray = exemplaryData.data();
+
   // Create the output file to dump some data into
-  FILE* f = fopen(filePath.c_str(), "wb");
+  FILE* f = fopen(k_TestOutput.c_str(), "wb");
 
   // Write the data to the file
   usize numWritten = 0;
-  while(1)
+  while(true)
   {
-    numWritten += fwrite(dataArray, sizeof(T), dataSize, f);
-    if(numWritten == dataSize)
+    numWritten += fwrite(dataArray, sizeof(T), exemplaryData.size(), f);
+    if(numWritten == exemplaryData.size())
     {
       break;
     }
+
     dataArray = dataArray + numWritten;
   }
 
@@ -105,24 +102,16 @@ void testCase1_Execute(complex::NumericType scalarType)
 {
   usize dataArraySize = 10000000 * N;
   usize skipHeaderBytes = 0;
-  DataStructure ds;
 
-  // Allocate an array, and get the dataArray from that array
-  std::shared_ptr<DataStore<T>> store = std::make_shared<DataStore<T>>(dataArraySize);
-  T* dataArray = store->data();
-
-  // Write some data into the data array
-  for(usize i = 0; i < dataArraySize; ++i)
-  {
-    dataArray[i] = static_cast<T>(i);
-  }
+  std::vector<T> exemplaryData(dataArraySize);
+  std::iota(std::begin(exemplaryData), std::end(exemplaryData), 0);
 
   // Create scope guard to remove file after this test goes out of scope
   fs::path testPath = k_TestOutput;
   auto fileGuard = MakeScopeGuard([testPath]() noexcept { fs::remove(testPath); });
 
   // Create the file and write to it.  If any of the information is wrong, the result will be false
-  bool result = createAndWriteToFile(k_TestOutput, dataArray, dataArraySize);
+  bool result = createTestDataFile<T>(exemplaryData);
 
   // Test to make sure that the file was created and written to successfully
   REQUIRE(result);
@@ -131,19 +120,21 @@ void testCase1_Execute(complex::NumericType scalarType)
   RawBinaryReaderFilter filt;
   Arguments args = createFilterArguments(scalarType, N, skipHeaderBytes);
 
+  DataStructure ds;
+
   // Preflight, get the error condition, and check that there are no errors
   auto preflightResult = filt.preflight(ds, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter, check that there are no errors, and compare the data
   auto executeResult = filt.execute(ds, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE(executeResult.result.valid());
 
   DataArray<T>* createdData = ds.getDataAs<DataArray<T>>(k_CreatedArrayPath);
   for(usize i = 0; i < dataArraySize; ++i)
   {
     T d = createdData->at(i);
-    T p = store->getValue(i);
+    T p = exemplaryData[i];
     REQUIRE(d == p);
   }
 }
@@ -169,24 +160,16 @@ void testCase2_Execute()
   usize skipHeaderBytes = 0;
   usize N = 1;
   complex::NumericType scalarType = complex::NumericType::int16;
-  DataStructure ds;
 
-  // Allocate an array, and get the dataArray from that array
-  std::shared_ptr<DataStore<int8>> store = std::make_shared<DataStore<int8>>(dataArraySize);
-  int8* dataArray = store->data();
-
-  // Write some data into the data array
-  for(usize i = 0; i < dataArraySize; ++i)
-  {
-    dataArray[i] = static_cast<int8>(i);
-  }
+  std::vector<int8> exemplaryData(dataArraySize);
+  std::iota(std::begin(exemplaryData), std::end(exemplaryData), 0);
 
   // Create scope guard to remove file after this test goes out of scope
   fs::path testPath = k_TestOutput;
   auto fileGuard = MakeScopeGuard([testPath]() noexcept { fs::remove(testPath); });
 
   // Create the file and write to it.  If any of the information is wrong, the result will be false
-  bool result = createAndWriteToFile(k_TestOutput, dataArray, dataArraySize);
+  bool result = createTestDataFile<int8>(exemplaryData);
 
   // Test to make sure that the file was created and written to successfully
   REQUIRE(result == true);
@@ -194,6 +177,8 @@ void testCase2_Execute()
   // Create the filter, passing in the skipHeaderBytes
   RawBinaryReaderFilter filt;
   Arguments args = createFilterArguments(scalarType, N, skipHeaderBytes);
+
+  DataStructure ds;
 
   // Preflight, get the error condition, and check that there are no errors
   auto preflightResult = filt.preflight(ds, args);
@@ -214,24 +199,16 @@ void testCase3_Execute()
   usize skipHeaderBytes = 0;
   usize N = 3;
   complex::NumericType scalarType = complex::NumericType::int64;
-  DataStructure ds;
 
-  // Allocate an array, and get the dataArray from that array
-  std::shared_ptr<DataStore<int64>> store = std::make_shared<DataStore<int64>>(dataArraySize);
-  int64* dataArray = store->data();
-
-  // Write some data into the data array
-  for(usize i = 0; i < dataArraySize; ++i)
-  {
-    dataArray[i] = static_cast<int64>(i);
-  }
+  std::vector<int64> exemplaryData(dataArraySize);
+  std::iota(std::begin(exemplaryData), std::end(exemplaryData), 0);
 
   // Create scope guard to remove file after this test goes out of scope
   fs::path testPath = k_TestOutput;
   auto fileGuard = MakeScopeGuard([testPath]() noexcept { fs::remove(testPath); });
 
   // Create the file and write to it.  If any of the information is wrong, the result will be false
-  bool result = createAndWriteToFile(k_TestOutput, dataArray, dataArraySize);
+  bool result = createTestDataFile<int64>(exemplaryData);
 
   // Test to make sure that the file was created and written to successfully
   REQUIRE(result == true);
@@ -239,6 +216,8 @@ void testCase3_Execute()
   // Create the filter, passing in the skipHeaderBytes
   RawBinaryReaderFilter filt;
   Arguments args = createFilterArguments(scalarType, N, skipHeaderBytes);
+
+  DataStructure ds;
 
   // Preflight, get the error condition, and check that there are no errors
   auto preflightResult = filt.preflight(ds, args);
@@ -258,24 +237,16 @@ void testCase4_Execute(complex::NumericType scalarType)
 {
   usize dataArraySize = 10000000 * N;
   usize skipHeaderBytes = 100 * N * sizeof(T);
-  DataStructure ds;
 
-  // Allocate an array, and get the dataArray from that array
-  std::shared_ptr<DataStore<T>> store = std::make_shared<DataStore<T>>(dataArraySize);
-  T* exemplaryData = store->data();
-
-  // Write some data into the data array
-  for(usize i = 0; i < dataArraySize; ++i)
-  {
-    exemplaryData[i] = static_cast<T>(i);
-  }
+  std::vector<T> exemplaryData(dataArraySize);
+  std::iota(std::begin(exemplaryData), std::end(exemplaryData), 0);
 
   // Create scope guard to remove file after this test goes out of scope
   fs::path testPath = k_TestOutput;
   auto fileGuard = MakeScopeGuard([testPath]() noexcept { fs::remove(testPath); });
 
   // Create the file and write to it.  If any of the information is wrong, the result will be false
-  bool result = createAndWriteToFile(k_TestOutput, exemplaryData, dataArraySize);
+  bool result = createTestDataFile<T>(exemplaryData);
 
   // Test to make sure that the file was created and written to successfully
   REQUIRE(result == true);
@@ -283,6 +254,8 @@ void testCase4_Execute(complex::NumericType scalarType)
   // Create the filter, passing in the skipHeaderBytes
   RawBinaryReaderFilter filt;
   Arguments args = createFilterArguments(scalarType, N, skipHeaderBytes);
+
+  DataStructure ds;
 
   // Preflight, get the error condition, and check that there are no errors
   auto preflightResult = filt.preflight(ds, args);
@@ -316,24 +289,16 @@ void testCase5_Execute(complex::NumericType scalarType)
 {
   usize dataArraySize = 10000000 * N;
   usize skipHeaderBytes = 10000000 * N * sizeof(T);
-  DataStructure ds;
 
-  // Allocate an array, and get the dataArray from that array
-  std::shared_ptr<DataStore<T>> store = std::make_shared<DataStore<T>>(dataArraySize);
-  T* exemplaryData = store->data();
+  std::vector<T> exemplaryData(dataArraySize);
+  std::iota(std::begin(exemplaryData), std::end(exemplaryData), 0);
 
-  // Write some data into the data array
-  for(usize i = 0; i < dataArraySize; ++i)
-  {
-    exemplaryData[i] = static_cast<T>(i);
-  }
-
-  // Create scope guard to remove file after this test goes out of scope
+  // Create scope guard to remove test file after this test goes out of scope
   fs::path testPath = k_TestOutput;
   auto fileGuard = MakeScopeGuard([testPath]() noexcept { fs::remove(testPath); });
 
-  // Create the file and write to it.  If any of the information is wrong, the result will be false
-  bool result = createAndWriteToFile(k_TestOutput, exemplaryData, dataArraySize);
+  // Create the test file
+  bool result = createTestDataFile<T>(exemplaryData);
 
   // Test to make sure that the file was created and written to successfully
   REQUIRE(result == true);
@@ -341,6 +306,8 @@ void testCase5_Execute(complex::NumericType scalarType)
   // Create the filter, passing in the skipHeaderBytes
   RawBinaryReaderFilter filt;
   Arguments args = createFilterArguments(scalarType, N, skipHeaderBytes);
+
+  DataStructure ds;
 
   // Preflight, get the error condition, and check that there are no errors
   auto preflightResult = filt.preflight(ds, args);

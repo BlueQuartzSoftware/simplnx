@@ -60,45 +60,32 @@ constexpr NumericType GetNumericType() noexcept
   }
 }
 
-inline constexpr usize GetNumericTypeSize(const NumericType& numericType)
+inline constexpr usize GetNumericTypeSize(NumericType numericType)
 {
-  usize typeSize = 0;
   switch(numericType)
   {
   case NumericType::int8:
-    typeSize = sizeof(int8);
-    break;
+    return sizeof(int8);
   case NumericType::uint8:
-    typeSize = sizeof(uint8);
-    break;
+    return sizeof(uint8);
   case NumericType::int16:
-    typeSize = sizeof(int16);
-    break;
+    return sizeof(int16);
   case NumericType::uint16:
-    typeSize = sizeof(uint16);
-    break;
+    return sizeof(uint16);
   case NumericType::int32:
-    typeSize = sizeof(int32);
-    break;
+    return sizeof(int32);
   case NumericType::uint32:
-    typeSize = sizeof(uint32);
-    break;
+    return sizeof(uint32);
   case NumericType::int64:
-    typeSize = sizeof(int64);
-    break;
+    return sizeof(int64);
   case NumericType::uint64:
-    typeSize = sizeof(uint64);
-    break;
+    return sizeof(uint64);
   case NumericType::float32:
-    typeSize = sizeof(float32);
-    break;
+    return sizeof(float32);
   case NumericType::float64:
-    typeSize = sizeof(float64);
-    break;
+    return sizeof(float64);
   default:
     throw std::runtime_error("complex::GetNumericTypeSize: Unsupported type");
   }
-
-  return typeSize;
 }
 } // namespace complex

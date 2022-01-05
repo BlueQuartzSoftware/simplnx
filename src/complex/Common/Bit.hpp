@@ -112,7 +112,7 @@ inline constexpr T byteswap(T value) noexcept
   {
     if constexpr(std::is_floating_point_v<T>)
     {
-      return bit_cast<T>(byteswap64(bit_cast<uint64_t>(value)));
+      return bit_cast<T>(byteswap64(bit_cast<uint64>(value)));
     }
     else
     {
