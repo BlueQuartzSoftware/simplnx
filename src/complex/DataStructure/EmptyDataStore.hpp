@@ -2,6 +2,7 @@
 
 #include "complex/DataStructure/AbstractDataStore.hpp"
 
+#include <numeric>
 #include <stdexcept>
 #include <vector>
 
@@ -69,7 +70,7 @@ public:
    */
   usize getNumberOfTuples() const override
   {
-    return 0;
+    return std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
   }
 
   /**
@@ -78,7 +79,7 @@ public:
    */
   size_t getNumberOfComponents() const override
   {
-    return 0;
+    return std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>());
   }
 
   /**

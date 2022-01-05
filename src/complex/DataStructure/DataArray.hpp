@@ -167,7 +167,7 @@ public:
 
   /**
    * @brief Returns a deep copy of the DataArray including a deep copy of the
-   * data store.
+   * data store. The object will be owned by the DataStructure.
    * @return DataObject*
    */
   DataObject* deepCopy() override

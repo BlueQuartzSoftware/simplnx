@@ -21,6 +21,10 @@ std::pair<std::vector<std::string>, bool> GenerateFileList(int32 start, int32 en
   {
     return std::make_pair(std::move(fileList), true);
   }
+  if(increment < 1)
+  {
+    return std::make_pair(std::move(fileList), true);
+  }
   int32 index = 0;
 
   std::string format_string = fmt::format("{{}}/{{}}{{:0{}d}}{{}}{{}}", paddingDigits);

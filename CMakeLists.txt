@@ -45,6 +45,24 @@ if(COMPLEX_ENABLE_MULTICORE)
   if(NOT TBB_FOUND)
     message(FATAL_ERROR "TBB was not found on your system. Set the TBB_DIR variable to the 'cmake' directory in your installation of TBB")
   endif()
+  include(${complex_SOURCE_DIR}/cmake/TBBSupport.cmake)
+  if(MSVC_IDE)
+    set(BUILD_TYPES Debug Release)
+  else()
+    set(BUILD_TYPES "${CMAKE_BUILD_TYPE}")
+    if("${BUILD_TYPES}" STREQUAL "")
+        set(BUILD_TYPES "Debug")
+    endif()
+  endif()
+
+  AddTBBCopyInstallRules(LIBVAR tbb
+    LIBNAME tbb
+    TYPES ${BUILD_TYPES}
+  )
+  AddTBBCopyInstallRules(LIBVAR tbbmalloc
+    LIBNAME tbbmalloc
+    TYPES ${BUILD_TYPES}
+  )
 endif()
 
 add_library(complex SHARED)

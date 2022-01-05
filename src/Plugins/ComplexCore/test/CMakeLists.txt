@@ -7,20 +7,21 @@
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
   ApproximatePointCloudHullTest.cpp
-  CreateDataArrayTest.cpp
+  CalculateTriangleAreasFilterTest.cpp
   ConditionalSetValueTest.cpp
+  CreateDataArrayTest.cpp
+  CreateImageGeometryTest.cpp
   FindDifferencesMapTest.cpp
   FindNeighborListStatisticsTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
+  LaplacianSmoothingFilterTest.cpp
   MapPointCloudToRegularGridTest.cpp
+  PointSampleTriangleGeometryFilterTest.cpp
+  QuickSurfaceMeshFilterTest.cpp
   RobustAutomaticThresholdTest.cpp
   RawBinaryReaderTest.cpp
-  CreateImageGeometryTest.cpp
+  ScalarSegmentFeaturesTest.cpp
   StlFileReaderTest.cpp
-  CalculateTriangleAreasFilterTest.cpp
-  LaplacianSmoothingFilterTest.cpp
-  QuickSurfaceMeshFilterTest.cpp
-  PointSampleTriangleGeometryFilterTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}

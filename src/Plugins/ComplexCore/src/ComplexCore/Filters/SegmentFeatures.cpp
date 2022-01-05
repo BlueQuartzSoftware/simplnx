@@ -153,10 +153,12 @@ Result<> SegmentFeatures::executeImpl(DataStructure& data, const Arguments& args
       gnum++;
       if(gnum % 100 == 0)
       {
-        // std::string ss = fmt::format("Total Features: {}", gnum);
+        std::string ss = fmt::format("Current Feature Count: {}", gnum);
+        messageHandler({Message::Type::Info, ss});
       }
     }
   }
+  messageHandler({Message::Type::Info, fmt::format("Total Features Found: {}", gnum)});
 
   return {};
 }

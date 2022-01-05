@@ -7,24 +7,29 @@
 
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataObject.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;
 
+#if 0
 namespace
 {
 template <class T = std::string_view>
-std::vector<T> split(std::string_view string, char delimiter, bool ignoreEmpty = false)
+std::vector<T> split(std::string_view inputString, char delimiter, bool ignoreEmpty = false)
 {
   std::vector<T> parts;
-
+  if(inputString.empty())
+  {
+    return parts;
+  }
   usize start = 0;
   usize end = start;
 
   if(ignoreEmpty)
   {
-    for(usize i = 0; i < string.size(); i++)
+    for(usize i = 0; i < inputString.size(); i++)
     {
-      if(string[i] == delimiter)
+      if(inputString[i] == delimiter)
       {
         if(start == end)
         {
@@ -32,7 +37,7 @@ std::vector<T> split(std::string_view string, char delimiter, bool ignoreEmpty =
           end = start;
           continue;
         }
-        parts.push_back(T{string.substr(start, end - start)});
+        parts.push_back(T{inputString.substr(start, end - start)});
         start = i + 1;
         end = start;
         continue;
@@ -42,30 +47,30 @@ std::vector<T> split(std::string_view string, char delimiter, bool ignoreEmpty =
 
     if(start != end)
     {
-      parts.push_back(T{string.substr(start, end - start)});
+      parts.push_back(T{inputString.substr(start, end - start)});
     }
   }
   else
   {
-    for(usize i = 0; i < string.size(); i++)
+    for(usize i = 0; i < inputString.size(); i++)
     {
-      if(string[i] == delimiter)
+      if(inputString[i] == delimiter)
       {
-        parts.push_back(T{string.substr(start, end - start)});
+        parts.push_back(T{inputString.substr(start, end - start)});
         start = i + 1;
         end = start;
         continue;
       }
       end++;
     }
-
-    parts.push_back(T{string.substr(start, end - start)});
+    // If the string is empty, this gets called which is a bug.
+    parts.push_back(T{inputString.substr(start, end - start)});
   }
 
   return parts;
 }
 } // namespace
-
+#endif
 namespace complex
 {
 DataPath::DataPath() = default;
@@ -92,9 +97,18 @@ DataPath& DataPath::operator=(DataPath&& rhs) noexcept = default;
 
 DataPath::~DataPath() noexcept = default;
 
-std::optional<DataPath> DataPath::FromString(std::string_view string, char delimiter)
+std::optional<DataPath> DataPath::FromString(std::string_view inputPath, char delimiter)
 {
-  auto parts = split<std::string>(string, delimiter);
+  if(inputPath.empty())
+  {
+    return {};
+  }
+  std::string finalString(inputPath.data(), inputPath.size());
+  if(inputPath.back() == delimiter)
+  {
+    finalString = std::string(inputPath.data(), inputPath.size() - 1);
+  }
+  auto parts = complex::StringUtilities::split(finalString, delimiter);
   if(parts.empty())
   {
     return {};

@@ -121,6 +121,14 @@ TEST_CASE("DataPathTest")
 
   dataStr.removeData(child2Id);
   REQUIRE(dataStr.getData(gcPath2) == nullptr);
+
+  DataPath fromStringTest = DataPath::FromString("/Group/Data").value();
+  REQUIRE(fromStringTest.getLength() == 2);
+  fromStringTest = DataPath::FromString("/Group/").value();
+  REQUIRE(fromStringTest.getLength() == 1);
+
+  REQUIRE(DataPath::FromString("/").has_value() == false);
+  REQUIRE(DataPath::FromString("").has_value() == false);
 }
 
 TEST_CASE("LinkedPathTest")

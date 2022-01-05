@@ -30,7 +30,7 @@ public:
 
   /**
    * @brief Insert the given key value pair IF and ONLY IF there isn't a key already in the underlying map.
-   * If you want to overwrite the current value then use ther insert_or_assign() function
+   * If you want to overwrite the current value then use there insert_or_assign() function
    * @param key
    * @param value
    * @return bool if the insert worked.
@@ -82,6 +82,23 @@ public:
   T value(std::string_view key) const
   {
     return std::any_cast<T>(at(key));
+  }
+
+  /**
+   * @brief Returns the value or a default value
+   * @tparam T
+   * @param key
+   * @param defaultValue
+   * @return
+   */
+  template <class T>
+  T valueOrDefault(std::string_view key, T defaultValue) const
+  {
+    if(contains(key))
+    {
+      return value<T>(key);
+    }
+    return defaultValue;
   }
 
   /**

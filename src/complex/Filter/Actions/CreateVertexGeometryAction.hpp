@@ -88,7 +88,7 @@ public:
     Result<> result = complex::CreateArray<float>(dataStructure, tupleShape, componentShape, vertexPath, mode);
     if(result.invalid())
     {
-      return MakeErrorResult(-224, fmt::format("CreateVertexGeometryAction Could not allocate SharedVertList '{}'", m_GeometryPath.toString()));
+      return result;
     }
     Float32Array* vertexArray = complex::ArrayFromPath<float>(dataStructure, vertexPath);
     geometry2d->setVertices(vertexArray);

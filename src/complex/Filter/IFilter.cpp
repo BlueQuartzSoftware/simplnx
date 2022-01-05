@@ -103,7 +103,7 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
     return {nonstd::make_unexpected(std::move(errors)), std::move(warnings)};
   }
 
-  PreflightResult implResult = preflightImpl(data, args, messageHandler);
+  PreflightResult implResult = preflightImpl(data, resolvedArgs, messageHandler);
 
   for(auto&& warning : warnings)
   {
@@ -116,12 +116,25 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
 IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler) const
 {
   // determine required parameters
+  Parameters params = parameters();
+  Arguments resolvedArgs;
 
+  for(auto&& [name, arg] : args)
+  {
+    resolvedArgs.insert(name, arg);
+  }
   // substitute defaults
 
+  for(auto&& [name, parameter] : params)
+  {
+    if(!resolvedArgs.contains(name))
+    {
+      resolvedArgs.insert(name, parameter->defaultValue());
+    }
+  }
   // resolve dependencies
 
-  PreflightResult preflightResult = preflight(data, args);
+  PreflightResult preflightResult = preflight(data, resolvedArgs);
   if(!preflightResult.outputActions.valid())
   {
     return ExecuteResult{ConvertResult(std::move(preflightResult.outputActions)), std::move(preflightResult.outputValues)};
@@ -136,7 +149,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& ar
     }
   }
 
-  Result<> executeImplResult = executeImpl(data, args, pipelineFilter, messageHandler);
+  Result<> executeImplResult = executeImpl(data, resolvedArgs, pipelineFilter, messageHandler);
 
   return ExecuteResult{std::move(executeImplResult), std::move(preflightResult.outputValues)};
 }
