@@ -125,7 +125,7 @@ void testCase1_Execute(complex::NumericType scalarType)
   bool result = createAndWriteToFile(k_TestOutput, dataArray, dataArraySize);
 
   // Test to make sure that the file was created and written to successfully
-  REQUIRE(result == true);
+  REQUIRE(result);
 
   // Create the filter, passing in the skipHeaderBytes
   RawBinaryReaderFilter filt;
