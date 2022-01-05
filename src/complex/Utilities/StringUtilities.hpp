@@ -69,7 +69,7 @@ void for_each_token(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_
   }
 }
 
-template<typename T = std::string>
+template <typename T = std::string>
 inline StringTokenType split(const T& str, char delim)
 {
   StringTokenType tokens;
@@ -184,7 +184,7 @@ inline std::string trimmed(const std::string& s)
   return out;
 }
 
-template<typename T = std::string>
+template <typename T = std::string>
 inline std::string chop(const std::string& s, size_t numElements)
 {
   return s.substr(0, s.size() - numElements);

@@ -1,6 +1,5 @@
 #include "CreateDataArray.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
@@ -8,6 +7,8 @@
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+
+#include <string>
 
 namespace
 {
@@ -86,67 +87,78 @@ Result<> CreateDataArray::executeImpl(DataStructure& data, const Arguments& args
   auto components = args.value<uint64>(k_NumComps_Key);
   auto numTuples = args.value<uint64>(k_NumTuples_Key);
   auto path = args.value<DataPath>(k_DataPath_Key);
+  auto initValue = args.value<std::string>(k_InitilizationValue_Key);
 
   switch(numericType)
   {
   case NumericType::int8: {
+    int8_t value = static_cast<int8>(std::stoull(initValue));
     auto& dataArray = ArrayRefFromPath<int8>(data, path);
     auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0);
+    std::fill(v.begin(), v.end(), value);
     break;
   }
   case NumericType::uint8: {
+    uint8 value = static_cast<uint8>(std::stoull(initValue));
     auto& dataArray = ArrayRefFromPath<uint8>(data, path);
     auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0);
+    std::fill(v.begin(), v.end(), value);
     break;
   }
   case NumericType::int16: {
+    int16 value = static_cast<int16>(std::stoull(initValue));
     auto& dataArray = ArrayRefFromPath<int16>(data, path);
     auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0);
+    std::fill(v.begin(), v.end(), value);
     break;
   }
   case NumericType::uint16: {
+    uint16 value = static_cast<uint16>(std::stoull(initValue));
     auto& dataArray = ArrayRefFromPath<uint16>(data, path);
     auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0);
+    std::fill(v.begin(), v.end(), value);
     break;
   }
   case NumericType::int32: {
+    int32 value = static_cast<int32>(std::stoull(initValue));
     auto& dataArray = ArrayRefFromPath<int32>(data, path);
     auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0);
+    std::fill(v.begin(), v.end(), value);
     break;
   }
   case NumericType::uint32: {
+    uint32 value = static_cast<uint32>(std::stoull(initValue));
     auto& dataArray = ArrayRefFromPath<uint32>(data, path);
     auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0);
+    std::fill(v.begin(), v.end(), value);
     break;
   }
   case NumericType::int64: {
+    int64 value = static_cast<int64>(std::stoull(initValue));
     auto& dataArray = ArrayRefFromPath<int64>(data, path);
     auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0LL);
+    std::fill(v.begin(), v.end(), value);
     break;
   }
   case NumericType::uint64: {
+    uint64 value = static_cast<uint64>(std::stoull(initValue));
     auto& dataArray = ArrayRefFromPath<uint64>(data, path);
     auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0ULL);
+    std::fill(v.begin(), v.end(), value);
     break;
   }
   case NumericType::float32: {
+    float32 value = static_cast<float32>(std::stof(initValue));
     auto& dataArray = ArrayRefFromPath<float32>(data, path);
     auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0.0f);
+    std::fill(v.begin(), v.end(), value);
     break;
   }
   case NumericType::float64: {
+    float64 value = static_cast<float64>(std::stod(initValue));
     auto& dataArray = ArrayRefFromPath<float64>(data, path);
     auto& v = *(dataArray.getDataStore());
-    std::fill(v.begin(), v.end(), 0.0);
+    std::fill(v.begin(), v.end(), value);
     break;
   }
   default:

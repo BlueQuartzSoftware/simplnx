@@ -4,7 +4,6 @@
 
 namespace complex
 {
-
 //-----------------------------------------------------------------------------
 Result<> CheckInitValueConverts(const std::string& value, complex::NumericType numericType)
 {

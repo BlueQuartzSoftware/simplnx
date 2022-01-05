@@ -129,7 +129,6 @@ TEST_CASE("DataPathTest")
 
   REQUIRE(DataPath::FromString("/").has_value() == false);
   REQUIRE(DataPath::FromString("").has_value() == false);
-
 }
 
 TEST_CASE("LinkedPathTest")

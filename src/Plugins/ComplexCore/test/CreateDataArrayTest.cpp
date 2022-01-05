@@ -83,4 +83,55 @@ TEST_CASE("CreateDataArray(Invalid Parameters)", "[ComplexCore][CreateDataArray]
     auto result = filter.execute(ds, args);
     REQUIRE(result.result.invalid());
   }
+  {
+    CreateDataArray filter;
+    DataStructure ds;
+    Arguments args;
+    args.insert(CreateDataArray::k_NumericType_Key, std::make_any<NumericType>(NumericType::int8));
+    args.insert(CreateDataArray::k_NumComps_Key, std::make_any<uint64>(1));
+    args.insert(CreateDataArray::k_NumTuples_Key, std::make_any<uint64>(1));
+    args.insert(CreateDataArray::k_DataPath_Key, std::make_any<DataPath>(dataPath));
+    args.insert(CreateDataArray::k_InitilizationValue_Key, std::make_any<std::string>(""));
+
+    auto result = filter.execute(ds, args);
+    REQUIRE(result.result.invalid());
+  }
+  {
+    CreateDataArray filter;
+    DataStructure ds;
+    Arguments args;
+    args.insert(CreateDataArray::k_NumericType_Key, std::make_any<NumericType>(NumericType::int8));
+    args.insert(CreateDataArray::k_NumComps_Key, std::make_any<uint64>(1));
+    args.insert(CreateDataArray::k_NumTuples_Key, std::make_any<uint64>(1));
+    args.insert(CreateDataArray::k_DataPath_Key, std::make_any<DataPath>(dataPath));
+    args.insert(CreateDataArray::k_InitilizationValue_Key, std::make_any<std::string>("1000"));
+
+    auto result = filter.execute(ds, args);
+    REQUIRE(result.result.invalid());
+
+    args.insert(CreateDataArray::k_NumericType_Key, std::make_any<NumericType>(NumericType::uint8));
+    args.insert(CreateDataArray::k_InitilizationValue_Key, std::make_any<std::string>("-1"));
+    result = filter.execute(ds, args);
+    REQUIRE(result.result.invalid());
+
+    args.insert(CreateDataArray::k_NumericType_Key, std::make_any<NumericType>(NumericType::int16));
+    args.insert(CreateDataArray::k_InitilizationValue_Key, std::make_any<std::string>("70000"));
+    result = filter.execute(ds, args);
+    REQUIRE(result.result.invalid());
+
+    args.insert(CreateDataArray::k_NumericType_Key, std::make_any<NumericType>(NumericType::uint16));
+    args.insert(CreateDataArray::k_InitilizationValue_Key, std::make_any<std::string>("-1"));
+    result = filter.execute(ds, args);
+    REQUIRE(result.result.invalid());
+
+    args.insert(CreateDataArray::k_NumericType_Key, std::make_any<NumericType>(NumericType::int32));
+    args.insert(CreateDataArray::k_InitilizationValue_Key, std::make_any<std::string>("4294967297"));
+    result = filter.execute(ds, args);
+    REQUIRE(result.result.invalid());
+
+    args.insert(CreateDataArray::k_NumericType_Key, std::make_any<NumericType>(NumericType::int32));
+    args.insert(CreateDataArray::k_InitilizationValue_Key, std::make_any<std::string>("-4294967297"));
+    result = filter.execute(ds, args);
+    REQUIRE(result.result.invalid());
+  }
 }
