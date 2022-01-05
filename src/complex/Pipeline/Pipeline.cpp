@@ -188,7 +188,6 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& ds)
       return false;
     }
   }
-  stopObservingNode();
   return true;
 }
 
