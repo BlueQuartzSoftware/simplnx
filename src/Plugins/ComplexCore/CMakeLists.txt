@@ -29,6 +29,7 @@ set(FilterList
   MultiThresholdObjects
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
+  RawBinaryReaderFilter
   RemoveMinimumSizeFeaturesFilter
   RobustAutomaticThreshold
   ScalarSegmentFeatures
@@ -45,6 +46,7 @@ set(AlgorithmList
   QuickSurfaceMesh
   PointSampleTriangleGeometry
   TupleTransfer
+  RawBinaryReader
   )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
