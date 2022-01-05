@@ -7,9 +7,11 @@
 
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataObject.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;
 
+#if 0
 namespace
 {
 template <class T = std::string_view>
@@ -68,7 +70,7 @@ std::vector<T> split(std::string_view inputString, char delimiter, bool ignoreEm
   return parts;
 }
 } // namespace
-
+#endif
 namespace complex
 {
 DataPath::DataPath() = default;
@@ -95,9 +97,14 @@ DataPath& DataPath::operator=(DataPath&& rhs) noexcept = default;
 
 DataPath::~DataPath() noexcept = default;
 
-std::optional<DataPath> DataPath::FromString(std::string_view string, char delimiter)
+std::optional<DataPath> DataPath::FromString(std::string_view inputPath, char delimiter)
 {
-  auto parts = split<std::string>(string, delimiter);
+  std::string finalString(inputPath.data(), inputPath.size());
+  if(inputPath.back() == delimiter)
+  {
+    finalString = std::string(inputPath.data(), inputPath.size() - 1);
+  }
+  auto parts = complex::StringUtilities::split(finalString, delimiter);
   if(parts.empty())
   {
     return {};
