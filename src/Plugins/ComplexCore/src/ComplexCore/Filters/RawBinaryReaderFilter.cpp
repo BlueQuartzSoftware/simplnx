@@ -20,11 +20,11 @@ using namespace complex;
 namespace complex
 {
 
-constexpr int32_t k_RbrZeroComponentsError = -391;
-constexpr int32_t k_RbrNumComponentsError = -392;
-constexpr int32_t k_RbrWrongType = -393;
-constexpr int32_t k_RbrEmptyFile = -394;
-constexpr int32_t k_RbrSkippedTooMuch = -395;
+int32 k_RbrZeroComponentsError = -391;
+int32 k_RbrNumComponentsError = -392;
+int32 k_RbrWrongType = -393;
+int32 k_RbrEmptyFile = -394;
+int32 k_RbrSkippedTooMuch = -395;
 
 //------------------------------------------------------------------------------
 std::string RawBinaryReaderFilter::name() const
