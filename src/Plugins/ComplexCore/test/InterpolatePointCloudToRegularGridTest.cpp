@@ -1,15 +1,15 @@
-#include <iostream>
-#include <string>
-
 #include <catch2/catch.hpp>
+
+#include "ComplexCore/Filters/InterpolatePointCloudToRegularGridFilter.hpp"
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/InterpolatePointCloudToRegularGridFilter.hpp"
 
 #include <filesystem>
+#include <iostream>
 #include <limits>
+#include <string>
 
 namespace fs = std::filesystem;
 
@@ -38,11 +38,7 @@ TEST_CASE("InterpolatePointCloudToRegularGridFilter: Create Filter", "[DREAM3DRe
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
-  REQUIRE(executeResult.result.invalid());
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 }
 
 TEST_CASE("InterpolatePointCloudToRegularGridFilter: Test Algorithm 1", "[DREAM3DReview][InterpolatePointCloudToRegularGridFilter][.][UNIMPLEMENTED][!mayfail]")
@@ -81,11 +77,11 @@ TEST_CASE("InterpolatePointCloudToRegularGridFilter: Test Algorithm 1", "[DREAM3
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataGraph, args);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
 TEST_CASE("InterpolatePointCloudToRegularGridFilter: Test Algorithm 2", "[DREAM3DReview][InterpolatePointCloudToRegularGridFilter]")
@@ -124,9 +120,9 @@ TEST_CASE("InterpolatePointCloudToRegularGridFilter: Test Algorithm 2", "[DREAM3
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataGraph, args);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 }
