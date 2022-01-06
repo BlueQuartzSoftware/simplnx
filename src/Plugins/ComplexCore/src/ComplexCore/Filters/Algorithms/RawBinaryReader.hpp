@@ -7,8 +7,7 @@
 
 namespace complex
 {
-
-constexpr int32 k_UnsupportedScalarType = -1070;
+inline constexpr int32 k_UnsupportedScalarType = -1070;
 
 struct COMPLEXCORE_EXPORT RawBinaryReaderInputValues
 {
@@ -23,7 +22,7 @@ struct COMPLEXCORE_EXPORT RawBinaryReaderInputValues
 class COMPLEXCORE_EXPORT RawBinaryReader
 {
 public:
-  RawBinaryReader(DataStructure& data, RawBinaryReaderInputValues* inputValues, const IFilter* filter, const IFilter::MessageHandler& mesgHandler);
+  RawBinaryReader(DataStructure& data, const RawBinaryReaderInputValues& inputValues, const IFilter& filter, const IFilter::MessageHandler& mesgHandler);
   ~RawBinaryReader() noexcept;
 
   RawBinaryReader(const RawBinaryReader&) = delete;
@@ -35,11 +34,10 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const RawBinaryReaderInputValues* m_InputValues = nullptr;
-  const IFilter* m_Filter = nullptr;
+  const RawBinaryReaderInputValues& m_InputValues;
+  const IFilter& m_Filter;
   const IFilter::MessageHandler& m_MessageHandler;
 
   Result<> execute();
 };
-
 } // namespace complex
