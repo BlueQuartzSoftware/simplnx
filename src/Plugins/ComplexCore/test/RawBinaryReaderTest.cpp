@@ -113,7 +113,7 @@ void TestCase1_Execute(NumericType scalarType)
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataArray<T>& createdData = ds.getDataRefAs<DataArray<T>>(k_CreatedArrayPath);
-  const DataStore<T>& store = createdData.getIDataStoreRefAs<DataStore<T>>();
+  const DataStore<T>& store = createdData.template getIDataStoreRefAs<DataStore<T>>();
   bool isSame = true;
   for(usize i = 0; i < dataArraySize; ++i)
   {
@@ -243,7 +243,7 @@ void TestCase4_Execute(NumericType scalarType)
 
   DataArray<T>* createdArray = ds.getDataAs<DataArray<T>>(k_CreatedArrayPath);
   REQUIRE(createdArray != nullptr);
-  DataStore<T>* createdStore = createdArray->getIDataStoreAs<DataStore<T>>();
+  DataStore<T>* createdStore = createdArray->template getIDataStoreAs<DataStore<T>>();
   REQUIRE(createdStore != nullptr);
   T* createdData = createdStore->data();
 
