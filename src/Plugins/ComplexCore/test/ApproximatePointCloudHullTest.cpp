@@ -112,10 +112,16 @@ TEST_CASE("ApproximatePointCloudHull: Instantiate Filter", "[ApproximatePointClo
     VertexGeom& vertexGeom1 = dataGraph.getDataRefAs<VertexGeom>(hullVertexGeomPath);
     REQUIRE(vertexGeom1.getNumberOfVertices() == 48);
     Float32Array* vertices = vertexGeom1.getVertices();
+    bool verticesEqual = true;
     for(size_t eIdx = 0; eIdx < vertices->getSize(); eIdx++)
     {
-      REQUIRE((*vertices)[eIdx] == s_Vertices[eIdx]);
+      if((*vertices)[eIdx] != s_Vertices[eIdx])
+      {
+        verticesEqual = false;
+        break;
+      }
     }
+    REQUIRE(verticesEqual);
   }
 
   // Write out the DataStructure
