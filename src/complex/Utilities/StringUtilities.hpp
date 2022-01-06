@@ -31,11 +31,14 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #pragma once
 
+#include "complex/Common/StringLiteral.hpp"
+#include "complex/Common/Types.hpp"
+
 #include <array>
 #include <cctype>
-#include <regex>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 /*' '(0x20)space(SPC)
@@ -50,10 +53,8 @@ namespace complex
 {
 namespace StringUtilities
 {
+inline constexpr StringLiteral k_Whitespaces = " \t\f\v\n\r";
 
-using StringTokenType = std::vector<std::string>;
-
-// 5 statements
 template <class InputIt, class ForwardIt, class BinOp>
 void for_each_token(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_last, BinOp binary_op)
 {
@@ -69,125 +70,98 @@ void for_each_token(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_
   }
 }
 
-template <typename T = std::string>
-inline StringTokenType split(const T& str, char delim)
+inline std::vector<std::string> split(std::string_view str, char delim)
 {
-  StringTokenType tokens;
-  T temp(str);
+  std::vector<std::string> tokens;
   std::array<char, 1> delims = {delim};
-  auto endPos = std::end(temp);
-  for_each_token(std::begin(temp), endPos, std::cbegin(delims), std::cend(delims), [&endPos, &tokens](auto first, auto second) {
+  auto endPos = str.end();
+  for_each_token(str.begin(), endPos, delims.cbegin(), delims.cend(), [&endPos, &tokens](auto first, auto second) {
     if(first != second)
     {
-      if(second != endPos)
-      {
-        *second = '\0';
-      }
-      tokens.push_back({&*first});
+      tokens.push_back({first, second});
     }
   });
-  // std::cout << "Tokens: " << tokens.size() << std::endl;
   return tokens;
 }
 
-inline StringTokenType split_2(const std::string& line, char delimiter)
+inline std::vector<std::string> split_2(const std::string& line, char delimiter)
 {
   std::stringstream ss(line);
 
-  StringTokenType tokens;
-  std::string temp_str;
+  std::vector<std::string> tokens;
+  std::string tempStr;
 
-  while(getline(ss, temp_str, delimiter))
+  while(std::getline(ss, tempStr, delimiter))
   {
-    tokens.push_back(temp_str);
+    tokens.push_back(tempStr);
   }
   return tokens;
 }
 
-inline std::string replace(std::string str, const std::string& from, const std::string& to)
+inline std::string replace(std::string str, std::string_view from, std::string_view to)
 {
-  size_t start_pos = 0;
-  while((start_pos = str.find(from, start_pos)) != std::string::npos)
+  usize startPos = 0;
+  while((startPos = str.find(from, startPos)) != std::string::npos)
   {
-    str.replace(start_pos, from.length(), to);
-    start_pos += to.length();
+    str.replace(startPos, from.length(), to);
+    startPos += to.length();
   }
   return str;
 }
 
-inline std::string ltrim(const std::string& s)
+inline std::string ltrim(std::string_view str)
 {
-  std::string out = s;
-  if(out.empty())
+  if(str.empty())
   {
-    return out;
+    return "";
   }
-  std::string whitespaces(" \t\f\v\n\r");
-  std::string::size_type front = out.find_first_not_of(whitespaces);
-  if(front != std::string::npos)
+
+  std::string::size_type front = str.find_first_not_of(k_Whitespaces);
+  if(front == std::string::npos)
   {
-    out = out.substr(front);
+    return "";
   }
-  else
-  {
-    out.clear();
-  }
-  return out;
+
+  return std::string(str.substr(front));
 }
 
-inline std::string rtrim(const std::string& s)
+inline std::string rtrim(std::string_view str)
 {
-  std::string out = s;
-  if(out.empty())
+  if(str.empty())
   {
-    return out;
+    return "";
   }
-  std::string whitespaces(" \t\f\v\n\r");
-  std::string::size_type back = out.find_last_not_of(whitespaces);
-  if(back != std::string::npos)
+
+  std::string::size_type back = str.find_last_not_of(k_Whitespaces);
+  if(back == std::string::npos)
   {
-    out.erase(back + 1);
+    return "";
   }
-  else
-  {
-    out.clear();
-  }
-  return out;
+
+  return std::string(str.substr(0, back + 1));
 }
 
-inline std::string trimmed(const std::string& s)
+inline std::string trimmed(std::string_view str)
 {
-  std::string out = s;
-  if(out.empty())
+  if(str.empty())
   {
-    return out;
+    return "";
   }
-  std::string whitespaces(" \t\f\v\n\r");
-  std::string::size_type back = out.find_last_not_of(whitespaces);
-  if(back != std::string::npos)
+
+  std::string::size_type back = str.find_last_not_of(k_Whitespaces);
+  if(back == std::string::npos)
   {
-    out.erase(back + 1);
+    return "";
   }
-  else
-  {
-    out.clear();
-  }
-  std::string::size_type front = out.find_first_not_of(whitespaces);
-  if(front != std::string::npos)
-  {
-    out = out.substr(front);
-  }
-  else
-  {
-    out.clear();
-  }
-  return out;
+
+  std::string::size_type front = str.find_first_not_of(k_Whitespaces);
+
+  return std::string(str.substr(front, back - front + 1));
 }
 
-template <typename T = std::string>
-inline std::string chop(const std::string& s, size_t numElements)
+inline std::string chop(std::string_view str, usize numElements)
 {
-  return s.substr(0, s.size() - numElements);
+  return std::string(str.substr(0, str.size() - numElements));
 }
 
 template <typename T>
@@ -198,18 +172,17 @@ inline std::string number(T arg)
   return ss.str();
 }
 
-inline std::string simplified(const std::string& text)
+inline std::string simplified(std::string_view text)
 {
   if(text.empty())
   {
-    return {""};
+    return "";
   }
-  std::string out;
-  out = trimmed(text);
+  std::string out = trimmed(text);
   std::string finalString;
-  for(const auto& c : out)
+  for(char c : out)
   {
-    if(std::isspace(c) == 0)
+    if(std::isspace(static_cast<unsigned char>(c)) == 0)
     {
       finalString += c;
     }
@@ -220,6 +193,5 @@ inline std::string simplified(const std::string& text)
   }
   return finalString;
 }
-
 } // namespace StringUtilities
 } // namespace complex
