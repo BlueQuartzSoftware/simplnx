@@ -13,13 +13,13 @@
 #include "ComplexCore/Filters/Algorithms/RawBinaryReader.hpp"
 
 #include <filesystem>
+
 namespace fs = std::filesystem;
 
 using namespace complex;
 
 namespace complex
 {
-
 int32 k_RbrZeroComponentsError = -391;
 int32 k_RbrNumComponentsError = -392;
 int32 k_RbrWrongType = -393;
@@ -29,7 +29,7 @@ int32 k_RbrSkippedTooMuch = -395;
 //------------------------------------------------------------------------------
 std::string RawBinaryReaderFilter::name() const
 {
-  return FilterTraits<RawBinaryReaderFilter>::name.str();
+  return FilterTraits<RawBinaryReaderFilter>::name;
 }
 
 //------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ std::vector<std::string> RawBinaryReaderFilter::defaultTags() const
 Parameters RawBinaryReaderFilter::parameters() const
 {
   Parameters params;
-  // Create the parameter descriptors that are needed for this filter
+
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "", fs::path(), FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Scalar Type", "", NumericType::int8));
   params.insert(std::make_unique<UInt64Parameter>(k_NumberOfComponents_Key, "Number of Components", "", 0));
@@ -91,7 +91,7 @@ IFilter::PreflightResult RawBinaryReaderFilter::preflightImpl(const DataStructur
     return {MakeErrorResult<OutputActions>(k_RbrZeroComponentsError, "The number of components must be positive.")};
   }
 
-  complex::Result<OutputActions> resultOutputActions;
+  Result<OutputActions> resultOutputActions;
 
   usize inputFileSize = fs::file_size(pInputFileValue);
   if(inputFileSize == 0)
@@ -137,20 +137,13 @@ IFilter::PreflightResult RawBinaryReaderFilter::preflightImpl(const DataStructur
     resultOutputActions.value().actions.push_back(std::move(action));
   }
 
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
-  std::vector<PreflightValue> preflightUpdatedValues;
-
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
 Result<> RawBinaryReaderFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
-  complex::RawBinaryReaderInputValues inputValues;
+  RawBinaryReaderInputValues inputValues;
 
   inputValues.inputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   inputValues.scalarTypeValue = filterArgs.value<NumericType>(k_ScalarType_Key);
@@ -160,6 +153,6 @@ Result<> RawBinaryReaderFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.createdAttributeArrayPathValue = filterArgs.value<DataPath>(k_CreatedAttributeArrayPath_Key);
 
   // Let the Algorithm instance do the work
-  return RawBinaryReader(dataStructure, &inputValues, this, messageHandler)();
+  return RawBinaryReader(dataStructure, inputValues, *this, messageHandler)();
 }
 } // namespace complex

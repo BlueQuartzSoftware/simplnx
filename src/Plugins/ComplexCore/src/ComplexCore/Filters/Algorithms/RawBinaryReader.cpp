@@ -51,15 +51,9 @@ using namespace complex;
 namespace
 {
 #if defined(_MSC_VER)
-const auto FSEEK = _fseeki64;
+#define FSEEK64 _fseeki64
 #else
-const auto FSEEK = std::fseek;
-#endif
-
-#if COMPLEX_BYTE_ORDER == little
-constexpr int32 k_EndianCheck = 0;
-#else
-constexpr int32 k_EndianCheck = 1;
+#define FSEEK64 std::fseek
 #endif
 
 constexpr int32 k_RbrFileNotOpen = -1000;
@@ -83,7 +77,7 @@ int32 SanityCheckFileSizeVersusAllocatedSize(usize allocatedBytes, usize fileSiz
 
 // -----------------------------------------------------------------------------
 template <typename T>
-Result<> readBinaryFile(IDataArray& dataArrayPtr, const std::string& filename, uint64 skipHeaderBytes, ChoicesParameter::ValueType endian)
+Result<> ReadBinaryFile(IDataArray& dataArrayPtr, const std::string& filename, uint64 skipHeaderBytes, ChoicesParameter::ValueType endian)
 {
   constexpr usize k_DefaultBlocksize = 1048576;
 
@@ -111,10 +105,9 @@ Result<> readBinaryFile(IDataArray& dataArrayPtr, const std::string& filename, u
   // Skip some header bytes if the user asked for it.
   if(skipHeaderBytes > 0)
   {
-    FSEEK(f, skipHeaderBytes, SEEK_SET);
+    FSEEK64(f, skipHeaderBytes, SEEK_SET);
   }
 
-  //  std::byte* chunkptr = reinterpret_cast<std::byte*>(dataArray->data());
   std::byte* chunkptr = reinterpret_cast<std::byte*>(dataArray.template getIDataStoreAs<DataStore<T>>()->data());
 
   // Now start reading the data in chunks if needed.
@@ -135,7 +128,7 @@ Result<> readBinaryFile(IDataArray& dataArrayPtr, const std::string& filename, u
     }
   }
 
-  if(endian != k_EndianCheck)
+  if(endian != static_cast<ChoicesParameter::ValueType>(complex::endian::native))
   {
     dataArray.byteSwapElements();
   }
@@ -146,7 +139,9 @@ Result<> readBinaryFile(IDataArray& dataArrayPtr, const std::string& filename, u
 }
 } // namespace
 
-RawBinaryReader::RawBinaryReader(DataStructure& dataStructure, RawBinaryReaderInputValues* inputValues, const IFilter* filter, const IFilter::MessageHandler& mesgHandler)
+namespace complex
+{
+RawBinaryReader::RawBinaryReader(DataStructure& dataStructure, const RawBinaryReaderInputValues& inputValues, const IFilter& filter, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_Filter(filter)
@@ -164,39 +159,40 @@ Result<> RawBinaryReader::operator()()
 // -----------------------------------------------------------------------------
 Result<> RawBinaryReader::execute()
 {
-  IDataArray& binaryIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->createdAttributeArrayPathValue);
+  IDataArray& binaryIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues.createdAttributeArrayPathValue);
 
-  if(binaryIDataArray.getNumberOfComponents() != static_cast<usize>(m_InputValues->numberOfComponentsValue))
+  if(binaryIDataArray.getNumberOfComponents() != static_cast<usize>(m_InputValues.numberOfComponentsValue))
   {
     // This was already validated in preflight, so something more fundamental has gone wrong
-    throw std::runtime_error(fmt::format("Failed to acquire DataArray from path '{}' with the correct number of components.", m_InputValues->createdAttributeArrayPathValue.toString()));
+    throw std::runtime_error(fmt::format("Failed to acquire DataArray from path '{}' with the correct number of components.", m_InputValues.createdAttributeArrayPathValue.toString()));
   }
 
-  const std::string inputFile = m_InputValues->inputFileValue.string();
+  const std::string inputFile = m_InputValues.inputFileValue.string();
 
-  switch(m_InputValues->scalarTypeValue)
+  switch(m_InputValues.scalarTypeValue)
   {
   case NumericType::int8:
-    return readBinaryFile<int8>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
+    return ReadBinaryFile<int8>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::uint8:
-    return readBinaryFile<uint8>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
+    return ReadBinaryFile<uint8>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::int16:
-    return readBinaryFile<int16>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
+    return ReadBinaryFile<int16>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::uint16:
-    return readBinaryFile<uint16>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
+    return ReadBinaryFile<uint16>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::int32:
-    return readBinaryFile<int32>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
+    return ReadBinaryFile<int32>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::uint32:
-    return readBinaryFile<uint32>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
+    return ReadBinaryFile<uint32>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::int64:
-    return readBinaryFile<int64>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
+    return ReadBinaryFile<int64>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::uint64:
-    return readBinaryFile<uint64>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
+    return ReadBinaryFile<uint64>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::float32:
-    return readBinaryFile<float32>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
+    return ReadBinaryFile<float32>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   case NumericType::float64:
-    return readBinaryFile<float64>(binaryIDataArray, inputFile, m_InputValues->skipHeaderBytesValue, m_InputValues->endianValue);
+    return ReadBinaryFile<float64>(binaryIDataArray, inputFile, m_InputValues.skipHeaderBytesValue, m_InputValues.endianValue);
   default:
     return MakeErrorResult(complex::k_UnsupportedScalarType, "The chosen scalar type is not supported by this filter.");
   }
 }
+} // namespace complex
