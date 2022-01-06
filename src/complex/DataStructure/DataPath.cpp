@@ -11,66 +11,6 @@
 
 using namespace complex;
 
-#if 0
-namespace
-{
-template <class T = std::string_view>
-std::vector<T> split(std::string_view inputString, char delimiter, bool ignoreEmpty = false)
-{
-  std::vector<T> parts;
-  if(inputString.empty())
-  {
-    return parts;
-  }
-  usize start = 0;
-  usize end = start;
-
-  if(ignoreEmpty)
-  {
-    for(usize i = 0; i < inputString.size(); i++)
-    {
-      if(inputString[i] == delimiter)
-      {
-        if(start == end)
-        {
-          start = i + 1;
-          end = start;
-          continue;
-        }
-        parts.push_back(T{inputString.substr(start, end - start)});
-        start = i + 1;
-        end = start;
-        continue;
-      }
-      end++;
-    }
-
-    if(start != end)
-    {
-      parts.push_back(T{inputString.substr(start, end - start)});
-    }
-  }
-  else
-  {
-    for(usize i = 0; i < inputString.size(); i++)
-    {
-      if(inputString[i] == delimiter)
-      {
-        parts.push_back(T{inputString.substr(start, end - start)});
-        start = i + 1;
-        end = start;
-        continue;
-      }
-      end++;
-    }
-    // If the string is empty, this gets called which is a bug.
-    parts.push_back(T{inputString.substr(start, end - start)});
-  }
-
-  return parts;
-}
-} // namespace
-#endif
 namespace complex
 {
 DataPath::DataPath() = default;
@@ -103,12 +43,7 @@ std::optional<DataPath> DataPath::FromString(std::string_view inputPath, char de
   {
     return {};
   }
-  std::string finalString(inputPath.data(), inputPath.size());
-  if(inputPath.back() == delimiter)
-  {
-    finalString = std::string(inputPath.data(), inputPath.size() - 1);
-  }
-  auto parts = complex::StringUtilities::split(finalString, delimiter);
+  auto parts = StringUtilities::split(inputPath, delimiter);
   if(parts.empty())
   {
     return {};
