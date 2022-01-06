@@ -1,4 +1,3 @@
-
 #include <catch2/catch.hpp>
 
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
@@ -15,17 +14,18 @@
 using namespace complex;
 using namespace complex::UnitTest;
 using namespace complex::Constants;
+
 namespace
 {
-std::shared_ptr<DataStructure> CreateEbsdTestDataStructure()
+DataStructure CreateEbsdTestDataStructure()
 {
-  std::shared_ptr<DataStructure> dataGraph = std::shared_ptr<DataStructure>(new DataStructure);
+  DataStructure dataGraph;
 
-  DataGroup* group = complex::DataGroup::Create(*dataGraph, complex::Constants::k_SmallIN100);
-  DataGroup* scanData = complex::DataGroup::Create(*dataGraph, complex::Constants::k_EbsdScanData, group->getId());
+  DataGroup* group = complex::DataGroup::Create(dataGraph, complex::Constants::k_SmallIN100);
+  DataGroup* scanData = complex::DataGroup::Create(dataGraph, complex::Constants::k_EbsdScanData, group->getId());
 
   // Create an Image Geometry grid for the Scan Data
-  ImageGeom* imageGeom = ImageGeom::Create(*dataGraph, k_SmallIn100ImageGeom, scanData->getId());
+  ImageGeom* imageGeom = ImageGeom::Create(dataGraph, k_SmallIn100ImageGeom, scanData->getId());
   imageGeom->setSpacing({0.25f, 0.25f, 0.25f});
   imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
   complex::SizeVec3 imageGeomDims = {100, 100, 100};
@@ -39,24 +39,24 @@ std::shared_ptr<DataStructure> CreateEbsdTestDataStructure()
   std::string filePath = complex::unit_test::k_SourceDir.str() + "/data/";
 
   std::string fileName = "ConfidenceIndex.raw";
-  complex::ImportFromBinaryFile<float>(filePath + fileName, k_ConfidenceIndex, dataGraph.get(), tupleDims, compDims, scanData->getId());
+  complex::ImportFromBinaryFile<float>(filePath + fileName, k_ConfidenceIndex, dataGraph, tupleDims, compDims, scanData->getId());
 
   fileName = "FeatureIds.raw";
-  complex::ImportFromBinaryFile<int32_t>(filePath + fileName, k_FeatureIds, dataGraph.get(), tupleDims, compDims, scanData->getId());
+  complex::ImportFromBinaryFile<int32_t>(filePath + fileName, k_FeatureIds, dataGraph, tupleDims, compDims, scanData->getId());
 
   fileName = "ImageQuality.raw";
-  complex::ImportFromBinaryFile<float>(filePath + fileName, k_ImageQuality, dataGraph.get(), tupleDims, compDims, scanData->getId());
+  complex::ImportFromBinaryFile<float>(filePath + fileName, k_ImageQuality, dataGraph, tupleDims, compDims, scanData->getId());
 
   fileName = "Phases.raw";
-  complex::ImportFromBinaryFile<int32_t>(filePath + fileName, k_Phases, dataGraph.get(), tupleDims, compDims, scanData->getId());
+  complex::ImportFromBinaryFile<int32_t>(filePath + fileName, k_Phases, dataGraph, tupleDims, compDims, scanData->getId());
 
   fileName = "IPFColors.raw";
   compDims = {3};
-  complex::ImportFromBinaryFile<uint8_t>(filePath + fileName, k_IpfColors, dataGraph.get(), tupleDims, compDims, scanData->getId());
+  complex::ImportFromBinaryFile<uint8_t>(filePath + fileName, k_IpfColors, dataGraph, tupleDims, compDims, scanData->getId());
 
   // Add in another group that is just information about the grid data.
-  DataGroup* phaseGroup = complex::DataGroup::Create(*dataGraph, k_PhaseData, group->getId());
-  Int32Array::CreateWithStore<Int32DataStore>(*dataGraph, k_LaueClass, {2}, compDims, phaseGroup->getId());
+  DataGroup* phaseGroup = complex::DataGroup::Create(dataGraph, k_PhaseData, group->getId());
+  Int32Array::CreateWithStore<Int32DataStore>(dataGraph, k_LaueClass, {2}, compDims, phaseGroup->getId());
 
   return dataGraph;
 }
@@ -65,8 +65,7 @@ TEST_CASE("SurfaceMeshing::QuickSurfaceMeshFilter", "[SurfaceMeshing][QuickSurfa
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
-  std::shared_ptr<DataStructure> dataGraphPtr = ::CreateEbsdTestDataStructure();
-  DataStructure& dataGraph = *dataGraphPtr;
+  DataStructure dataGraph = ::CreateEbsdTestDataStructure();
 
   std::vector<size_t> imageDims = {100, 100, 100};
   size_t numTuples = imageDims[0] * imageDims[1] * imageDims[2];

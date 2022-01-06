@@ -379,7 +379,7 @@ DataArray<T>& ArrayRefFromPath(DataStructure& data, const DataPath& path)
  * @return
  */
 template <typename T>
-DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::string& name, DataStructure* dataGraph, const std::vector<size_t>& tupleShape, const std::vector<size_t>& componentShape,
+DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::string& name, DataStructure& dataGraph, const std::vector<size_t>& tupleShape, const std::vector<size_t>& componentShape,
                                    DataObject::IdType parentId = {})
 {
   // std::cout << "  Reading file " << filename << std::endl;
@@ -394,7 +394,7 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
   }
 
   std::shared_ptr<DataStoreType> dataStore = std::shared_ptr<DataStoreType>(new DataStoreType({tupleShape}, componentShape));
-  ArrayType* dataArray = ArrayType::Create(*dataGraph, name, dataStore, parentId);
+  ArrayType* dataArray = ArrayType::Create(dataGraph, name, dataStore, parentId);
 
   const size_t fileSize = fs::file_size(filename);
   const size_t numBytesToRead = dataArray->getSize() * sizeof(T);
