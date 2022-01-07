@@ -53,7 +53,7 @@ void createRegularGrid(DataStructure& data, const Arguments& args)
   }
 
   int64 numVerts = pointCloud->getNumberOfVertices();
-  auto* vertex = pointCloud->getVertices();
+  auto* vertex = pointCloud->getVertices(&data);
 
   auto mask = data.getDataAs<BoolArray>(maskArrayPath);
 
@@ -289,7 +289,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
   }
 
   auto* voxelIndicesPtr = data.getDataAs<USizeArray>(voxelIndicesPath);
-  if(nullptr != voxelIndicesPtr)
+  if(nullptr == voxelIndicesPtr)
   {
     std::string ss = fmt::format("Could not find Voxel Indices array at {}", voxelIndicesPath.toString());
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVoxelIndicesArray, ss}})};
@@ -330,7 +330,7 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, cons
   auto maskArrayPath = args.value<DataPath>(k_MaskPath_Key);
   auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndices_Key);
 
-  ImageGeom* image;
+  ImageGeom* image = nullptr;
   if(samplingGridType == 0)
   {
     // Create the regular grid

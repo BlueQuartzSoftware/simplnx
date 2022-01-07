@@ -101,15 +101,17 @@ public:
 
   /**
    * @brief Returns the SharedVertexList.
+   * @param dataStructure
    * @return SharedVertexList*
    */
-  SharedVertexList* getVertices();
+  SharedVertexList* getVertices(DataStructure* dataStructure);
 
   /**
    * @brief Returns the SharedVertexList.
+   * @param dataStructure
    * @return const SharedVertexList*
    */
-  const SharedVertexList* getVertices() const;
+  const SharedVertexList* getVertices(const DataStructure* dataStructure) const;
 
   /**
    * @brief Gets the coordinates at the target vertex ID.

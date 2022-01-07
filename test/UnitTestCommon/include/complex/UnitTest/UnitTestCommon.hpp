@@ -167,7 +167,11 @@ inline DataStructure CreateDataStructure()
 
   // Create an Vertex Geometry grid for the Scan Data
   VertexGeom* vertexGeom = VertexGeom::Create(dataGraph, Constants::k_VertexGeometry, scanData->getId());
-  // vertexGeom->setVertices(euler_data);
+  vertexGeom->setVertices(euler_data);
+
+  VertexGeom* vertexGeom_2 = VertexGeom::Create(dataGraph, "Vertex Geometry 2", scanData->getId());
+  Float32Array* euler_data_2 = CreateTestDataArray<float>(dataGraph, "Euler 2", tupleShape, {numComponents}, scanData->getId());
+  vertexGeom_2->setVertices(euler_data_2);
 
   NeighborList<float32>* neighborList = CreateTestNeighborList<float32>(dataGraph, "Neighbor List", numTuples, scanData->getId());
 

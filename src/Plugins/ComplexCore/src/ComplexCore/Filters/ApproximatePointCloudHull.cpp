@@ -99,14 +99,14 @@ Result<> ApproximatePointCloudHull::executeImpl(DataStructure& data, const Argum
   float inverseResolution[3] = {1.0f / gridResolution[0], 1.0f / gridResolution[1], 1.0f / gridResolution[2]};
 
   auto* source = data.getDataAs<VertexGeom>(vertexGeomPath);
-  auto* verts = source->getVertices();
+  auto* verts = source->getVertices(&data);
 
   DataStructure temp;
   auto* samplingGrid = ImageGeom::Create(temp, "Image Geometry");
   samplingGrid->setSpacing(gridResolution[0], gridResolution[1], gridResolution[2]);
 
   int64 numVerts = source->getNumberOfVertices();
-  auto* vertex = source->getVertices();
+  auto* vertex = source->getVertices(&data);
 
   std::vector<float32> meshMaxExtents;
   std::vector<float32> meshMinExtents;
@@ -267,7 +267,7 @@ Result<> ApproximatePointCloudHull::executeImpl(DataStructure& data, const Argum
 
   auto* hull = data.getDataAs<VertexGeom>(hullVertexGeomPath);
   hull->resizeVertexList(tmpVerts.size() / 3);
-  auto* hullVerts = hull->getVertices();
+  auto* hullVerts = hull->getVertices(&data);
   auto tmpVertData = tmpVerts.data();
   for(usize i = 0; i < hull->getNumberOfVertices() * 3; i++)
   {

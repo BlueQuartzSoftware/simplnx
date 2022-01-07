@@ -31,14 +31,14 @@ TEST_CASE("IterativeClosestPointFilter: Create Filter", "[DREAM3DReview][Iterati
   REQUIRE(executeResult.result.invalid());
 }
 
-TEST_CASE("IterativeClosestPointFilter: Bad Arguments", "[DREAM3DReview][IterativeClosestPointFilter]")
+TEST_CASE("IterativeClosestPointFilter: Test Algorithm", "[DREAM3DReview][IterativeClosestPointFilter]")
 {
   IterativeClosestPointFilter filter;
   DataStructure dataGraph = UnitTest::CreateDataStructure();
   Arguments args;
 
   DataPath movingVertexPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_VertexGeometry});
-  DataPath targetVertexPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_VertexGeometry});
+  DataPath targetVertexPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Vertex Geometry 2"});
   uint64 numIterations = 1;
   bool applyTransformation = true;
   DataPath transformArrayPath({Constants::k_SmallIN100, "Transform Array"});

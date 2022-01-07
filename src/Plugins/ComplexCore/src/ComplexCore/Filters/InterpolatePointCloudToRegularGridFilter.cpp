@@ -281,7 +281,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingImageGeom, ss}})};
   }
 
-  dataArrays.push_back(vertexGeom->getVertices());
+  dataArrays.push_back(vertexGeom->getVertices(&data));
 
   if(interpolationTechnique < 0 || interpolationTechnique > 1)
   {
@@ -537,8 +537,7 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
     {
       for(const auto& copyDataPath : copyDataPaths)
       {
-        auto parentPath = copyDataPath.getParent();
-        auto dynamicArrayPath = parentPath.createChildPath(copyDataPath.getTargetName() + "Neighbors");
+        auto dynamicArrayPath = interpolatedDataPath.createChildPath(copyDataPath.getTargetName() + " Neighbors");
         auto dynamicArrayToCopy = data.getDataAs<IDataArray>(dynamicArrayPath);
         auto copyArray = data.getDataAs<IDataArray>(copyDataPath);
         mapPointCloudDataByKernel(copyArray, dynamicArrayToCopy, uniformKernel, kernelNumVoxels, dims.data(), x, y, z, i);
@@ -548,7 +547,7 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
     if(storeKernelDistances)
     {
       auto kernelDistancesNeighborsPath = kernelDistancesDataPath.createChildPath("Neighbor List");
-      auto kernelDistances = data.getDataAs<FloatNeighborListType>(kernelDistancesDataPath);
+      auto kernelDistances = data.getDataAs<FloatNeighborListType>(kernelDistancesNeighborsPath);
       mapKernelDistances(kernelDistances, kernelValDistances, kernelNumVoxels, dims.data(), x, y, z);
     }
 

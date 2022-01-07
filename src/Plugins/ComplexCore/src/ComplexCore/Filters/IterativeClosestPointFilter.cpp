@@ -47,20 +47,21 @@ struct VertexGeomAdaptor
 
   inline float kdtree_get_pt(const usize idx, const usize dim) const
   {
-    auto derivedVertices = derived()->getVertices();
+    const DataStructure* data = derived()->getDataStructure();
+    auto derivedVertices = derived()->getVertices(data);
     auto numComponents = derivedVertices->getNumberOfComponents();
     auto offset = idx * numComponents;
 
     if(dim == 0)
     {
-      return (*derived()->getVertices())[offset + 0];
+      return (*derived()->getVertices(data))[offset + 0];
     }
     if(dim == 1)
     {
-      return (*derived()->getVertices())[offset + 1];
+      return (*derived()->getVertices(data))[offset + 1];
     }
 
-    return (*derived()->getVertices())[offset + 2];
+    return (*derived()->getVertices(data))[offset + 2];
   }
 
   template <class BBOX>
@@ -133,7 +134,7 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
   }
 
   usize numTuples = 1;
-  auto action = std::make_unique<CreateArrayAction>(NumericType::float32, std::vector<usize>{numTuples}, 16, transformArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(NumericType::float32, std::vector<usize>{numTuples}, std::vector<usize>{16}, transformArrayPath);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));
@@ -163,9 +164,9 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVertices, ss}})};
   }
 
-  auto* movingPtr = movingVertexGeom->getVertices();
-  auto* movingCopyPtr = movingVertexGeom->getVertices();
-  auto* targetPtr = targetVertexGeom->getVertices();
+  auto* movingPtr = movingVertexGeom->getVertices(&data);
+  auto* movingCopyPtr = movingVertexGeom->getVertices(&data);
+  auto* targetPtr = targetVertexGeom->getVertices(&data);
 
   if(movingPtr == nullptr)
   {

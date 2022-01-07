@@ -151,7 +151,13 @@ public:
    */
   usize getNumberOfComponents() const override
   {
-    return std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+    usize numComponents = 1;
+    const usize count = m_ComponentShape.size();
+    for(usize i = 0; i < count; i++)
+    {
+      numComponents *= m_ComponentShape[i];
+    }
+    return numComponents;
   }
 
   /**
