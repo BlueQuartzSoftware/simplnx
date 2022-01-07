@@ -33,17 +33,12 @@ nlohmann::json ArrayThresholdsParameter::toJson(const std::any& value) const
 
 Result<std::any> ArrayThresholdsParameter::fromJson(const nlohmann::json& json) const
 {
-  if(!json.is_string())
+  auto thresholds = ArrayThresholdSet::FromJson(json);
+  if(thresholds == nullptr)
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a string", name()));
+    return MakeErrorResult<std::any>(-3, fmt::format("Failed to parse '{}' as ArrayThresholdSet", name()));
   }
-  auto string = json.get<std::string>();
-  std::optional<DataPath> path = DataPath::FromString(string);
-  if(!path.has_value())
-  {
-    return MakeErrorResult<std::any>(-3, fmt::format("Failed to parse '{}' as DataPath", string));
-  }
-  return {std::move(*path)};
+  return {std::move(*thresholds)};
 }
 
 IParameter::UniquePointer ArrayThresholdsParameter::clone() const
