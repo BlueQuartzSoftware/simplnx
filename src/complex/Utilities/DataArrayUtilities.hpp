@@ -255,16 +255,16 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
 
     id = parentObject->getId();
   }
-  // Validate Number of Tuples
-  if(compShape.empty())
-  {
-    return MakeErrorResult(-261, fmt::format("CreateArrayAction: Tuple Shape was empty. Please set the number of tuples."));
-  }
-  size_t numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
-  if(numTuples == 0 && mode == IDataAction::Mode::Execute)
-  {
-    return MakeErrorResult(-263, fmt::format("CreateArrayAction: Number of tuples is ZERO. Please set the number of components."));
-  }
+
+    if(tupleShape.empty())
+    {
+      return MakeErrorResult(-261, fmt::format("CreateArrayAction: Tuple Shape was empty. Please set the number of tuples."));
+    }
+  //  size_t numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+  //  if(numTuples == 0 && mode == IDataAction::Mode::Execute)
+  //  {
+  //    return MakeErrorResult(-263, fmt::format("CreateArrayAction: Number of tuples is ZERO. Please set the number of tuples."));
+  //  }
 
   // Validate Number of Components
   if(compShape.empty())
