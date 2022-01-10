@@ -14,31 +14,35 @@
 
 #include <string>
 
+using namespace complex;
+
 namespace
 {
-constexpr complex::int32 k_VertexGeomNotFound = -277;
-constexpr complex::int32 k_ArrayNotFound = -278;
+constexpr int32 k_VertexGeomNotFound = -277;
+constexpr int32 k_ArrayNotFound = -278;
 
-template <typename T>
-void copyDataToMaskedGeometry(complex::IDataArray* inputDataPtr, complex::IDataArray* maskedDataPtr, std::vector<int64_t> maskPoints)
+struct RemoveFlaggedVerticesFunctor
 {
-  auto* inputData = dynamic_cast<complex::DataArray<T>*>(inputDataPtr);
-  auto* maskedData = dynamic_cast<complex::DataArray<T>*>(maskedDataPtr);
-
-  size_t nComps = inputData->getNumberOfComponents();
-  size_t tmpIndex = 0;
-  size_t ptrIndex = 0;
-
-  for(std::vector<int64_t>::size_type i = 0; i < maskPoints.size(); i++)
+  // copy data to masked geometry
+  template <class T>
+  void operator()(IDataArray& inputDataPtr, IDataArray& maskedDataPtr, const std::vector<int64>& maskPoints) const
   {
-    for(size_t d = 0; d < nComps; d++)
+    auto& inputData = dynamic_cast<DataArray<T>&>(inputDataPtr);
+    auto& maskedData = dynamic_cast<DataArray<T>&>(maskedDataPtr);
+
+    usize nComps = inputData.getNumberOfComponents();
+
+    for(usize i = 0; i < maskPoints.size(); i++)
     {
-      tmpIndex = nComps * i + d;
-      ptrIndex = nComps * maskPoints[i] + d;
-      (*maskedData)[tmpIndex] = (*inputData)[ptrIndex];
+      for(usize d = 0; d < nComps; d++)
+      {
+        usize tmpIndex = nComps * i + d;
+        usize ptrIndex = nComps * maskPoints[i] + d;
+        maskedData[tmpIndex] = inputData[ptrIndex];
+      }
     }
   }
-}
+};
 } // namespace
 
 namespace complex
@@ -185,10 +189,10 @@ Result<> RemoveFlaggedVertices::executeImpl(DataStructure& data, const Arguments
   for(const auto& targetArrayPath : targetArrayPaths)
   {
     DataPath destinationPath = reducedVertexPath.createChildPath(targetArrayPath.getTargetName());
-    auto* src = data.getDataAs<IDataArray>(targetArrayPath);
-    auto* dest = data.getDataAs<IDataArray>(destinationPath);
+    auto& src = data.getDataRefAs<IDataArray>(targetArrayPath);
+    auto& dest = data.getDataRefAs<IDataArray>(destinationPath);
 
-    EXECUTE_DATA_FUNCTION_TEMPLATE(copyDataToMaskedGeometry, src->getDataType(), src, dest, maskPoints)
+    ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src.getDataType(), src, dest, maskPoints);
   }
 
   return {};
