@@ -57,7 +57,7 @@ Result<std::any> ChoicesParameter::fromJson(const nlohmann::json& json) const
     return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a number", name()));
   }
   auto index = json.get<ValueType>();
-  return {index};
+  return {{index}};
 }
 
 IParameter::UniquePointer ChoicesParameter::clone() const

@@ -49,7 +49,7 @@ Result<std::any> GeometrySelectionParameter::fromJson(const nlohmann::json& json
   {
     return MakeErrorResult<std::any>(-3, fmt::format("Failed to parse '{}' as DataPath", string));
   }
-  return {std::move(*path)};
+  return {{std::move(*path)}};
 }
 
 IParameter::UniquePointer GeometrySelectionParameter::clone() const
@@ -117,6 +117,6 @@ Result<std::any> GeometrySelectionParameter::resolve(DataStructure& dataStructur
 {
   const auto& path = GetAnyRef<ValueType>(value);
   AbstractGeometry* object = dataStructure.getDataAs<AbstractGeometry>(path);
-  return {object};
+  return {{object}};
 }
 } // namespace complex

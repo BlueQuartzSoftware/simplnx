@@ -76,7 +76,7 @@ Result<std::any> VectorParameter<T>::fromJson(const nlohmann::json& json) const
     }
     vec.push_back(element.get<T>());
   }
-  return {std::move(vec)};
+  return {{std::move(vec)}};
 }
 
 template <class T>

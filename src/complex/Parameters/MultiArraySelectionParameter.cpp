@@ -64,10 +64,10 @@ Result<std::any> MultiArraySelectionParameter::fromJson(const nlohmann::json& js
 
   if(!errors.empty())
   {
-    return {nonstd::make_unexpected(std::move(errors))};
+    return {{nonstd::make_unexpected(std::move(errors))}};
   }
 
-  return {std::move(paths)};
+  return {{std::move(paths)}};
 }
 
 IParameter::UniquePointer MultiArraySelectionParameter::clone() const
@@ -119,6 +119,6 @@ Result<std::any> MultiArraySelectionParameter::resolve(DataStructure& dataStruct
   {
     objects.push_back(dataStructure.getData(path));
   }
-  return {objects};
+  return {{objects}};
 }
 } // namespace complex

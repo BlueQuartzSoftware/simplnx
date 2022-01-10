@@ -126,7 +126,7 @@ Result<std::any> GeneratedFileListParameter::fromJson(const nlohmann::json& json
   value.startIndex = json[k_StartIndex].get<int32>();
   value.endIndex = json[k_EndIndex].get<int32>();
 
-  return {std::move(value)};
+  return {{std::move(value)}};
 }
 
 //-----------------------------------------------------------------------------

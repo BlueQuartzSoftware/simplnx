@@ -119,13 +119,13 @@ Result<std::any> Dream3dImportParameter::fromJson(const nlohmann::json& json) co
 
     if(!errors.empty())
     {
-      return {nonstd::make_unexpected(std::move(errors))};
+      return {{nonstd::make_unexpected(std::move(errors))}};
     }
 
     importData.DataPaths = std::move(dataPaths);
   }
 
-  return {std::move(importData)};
+  return {{std::move(importData)}};
 }
 
 //-----------------------------------------------------------------------------
