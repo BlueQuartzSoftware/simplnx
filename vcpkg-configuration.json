@@ -2,7 +2,7 @@
   "registries": [
     {
       "kind": "git",
-      "repository": "https://github.com/BlueQuartzSoftware/complex-registry",
+      "repository": "https://github.com/imikejackson/complex-registry",
       "packages": [
         "catch2",
         "eigen3",
@@ -11,9 +11,10 @@
         "hdf5",
         "nlohmann-json",
         "pybind11",
-        "span-lite"
+        "span-lite",
+        "tbb"
       ],
-      "baseline": "b74f523e4d7ac892270055840b97d1ea066be95d"
+      "baseline": "cd298a0566c392961635db62521d5a17370340a6"
     }
   ]
 }

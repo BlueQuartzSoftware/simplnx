@@ -16,6 +16,9 @@
       "name": "eigen3"
     },
     {
+      "name": "tbb"
+    },
+    {
       "name": "hdf5",
       "features": [
         "cpp"
