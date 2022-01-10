@@ -308,6 +308,7 @@ set(COMPLEX_HDRS
 
   ${COMPLEX_SOURCE_DIR}/Utilities/ArrayThreshold.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/FilterUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/StringUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp

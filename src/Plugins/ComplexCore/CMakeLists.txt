@@ -30,6 +30,7 @@ set(FilterList
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
   RawBinaryReaderFilter
+  RemoveFlaggedVertices
   RemoveMinimumSizeFeaturesFilter
   RobustAutomaticThreshold
   ScalarSegmentFeatures

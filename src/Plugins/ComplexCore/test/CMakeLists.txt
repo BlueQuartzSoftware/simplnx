@@ -18,6 +18,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   MapPointCloudToRegularGridTest.cpp
   PointSampleTriangleGeometryFilterTest.cpp
   QuickSurfaceMeshFilterTest.cpp
+  RemoveFlaggedVerticesTest.cpp
   RobustAutomaticThresholdTest.cpp
   RawBinaryReaderTest.cpp
   ScalarSegmentFeaturesTest.cpp

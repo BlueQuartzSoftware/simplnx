@@ -138,9 +138,6 @@ inline DataStructure CreateDataStructure()
   SizeVec3 imageGeomDims = {40, 60, 80};
   imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
 
-  // Create an Vertex Geometry grid for the Scan Data
-  VertexGeom* vertexGeom = VertexGeom::Create(dataGraph, Constants::k_VertexGeometry, scanData->getId());
-
   // Create some DataArrays; The DataStructure keeps a shared_ptr<> to the DataArray so DO NOT put
   // it into another shared_ptr<>
   usize numComponents = 1;
@@ -157,6 +154,10 @@ inline DataStructure CreateDataStructure()
   numComponents = 3;
   UInt8Array* ipf_color_data = CreateTestDataArray<uint8>(dataGraph, "IPF Colors", tupleShape, {numComponents}, scanData->getId());
   Float32Array* euler_data = CreateTestDataArray<float>(dataGraph, "Euler", tupleShape, {numComponents}, scanData->getId());
+
+  // Create an Vertex Geometry grid for the Scan Data
+  VertexGeom* vertexGeom = VertexGeom::Create(dataGraph, Constants::k_VertexGeometry, scanData->getId());
+  // vertexGeom->setVertices(ci_data);
 
   // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
   DataGroup* ensembleGroup = DataGroup::Create(dataGraph, "Phase Data", topLevelGroup->getId());
