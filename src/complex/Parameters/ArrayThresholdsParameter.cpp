@@ -43,7 +43,7 @@ Result<std::any> ArrayThresholdsParameter::fromJson(const nlohmann::json& json) 
   {
     return MakeErrorResult<std::any>(-3, fmt::format("Failed to parse '{}' as DataPath", string));
   }
-  return {std::move(*path)};
+  return {{std::move(*path)}};
 }
 
 IParameter::UniquePointer ArrayThresholdsParameter::clone() const

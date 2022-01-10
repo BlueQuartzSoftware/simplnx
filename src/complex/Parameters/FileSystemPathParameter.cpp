@@ -106,7 +106,7 @@ Result<std::any> FileSystemPathParameter::fromJson(const nlohmann::json& json) c
   }
   auto pathString = json.get<std::string>();
   std::filesystem::path path = pathString;
-  return {path};
+  return {{path}};
 }
 
 //-----------------------------------------------------------------------------

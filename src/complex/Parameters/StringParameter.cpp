@@ -38,7 +38,7 @@ Result<std::any> StringParameter::fromJson(const nlohmann::json& json) const
     return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a string", name()));
   }
   auto string = json.get<ValueType>();
-  return {string};
+  return {{string}};
 }
 
 IParameter::UniquePointer StringParameter::clone() const

@@ -39,7 +39,7 @@ Result<std::any> DynamicTableParameter::fromJson(const nlohmann::json& json) con
 {
   ValueType table;
   table.readJson(json);
-  return {table};
+  return {{table}};
 }
 
 IParameter::UniquePointer DynamicTableParameter::clone() const

@@ -43,14 +43,14 @@ Result<std::any> ArraySelectionParameter::fromJson(const nlohmann::json& json) c
   auto jsonStrValue = json.get<std::string>();
   if(jsonStrValue.empty())
   {
-    return {DataPath()};
+    return {{DataPath()}};
   }
   std::optional<DataPath> path = DataPath::FromString(jsonStrValue);
   if(!path.has_value())
   {
     return MakeErrorResult<std::any>(-3, fmt::format("Failed to parse '{}' as DataPath", jsonStrValue));
   }
-  return {std::move(*path)};
+  return {{std::move(*path)}};
 }
 
 IParameter::UniquePointer ArraySelectionParameter::clone() const
@@ -107,6 +107,6 @@ Result<std::any> ArraySelectionParameter::resolve(DataStructure& dataStructure, 
 {
   const auto& path = GetAnyRef<ValueType>(value);
   DataObject* object = dataStructure.getData(path);
-  return {object};
+  return {{object}};
 }
 } // namespace complex

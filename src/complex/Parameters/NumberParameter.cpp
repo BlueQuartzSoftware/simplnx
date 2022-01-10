@@ -41,7 +41,7 @@ Result<std::any> NumberParameter<T>::fromJson(const nlohmann::json& json) const
     return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a number", name()));
   }
   auto number = json.get<ValueType>();
-  return {number};
+  return {{number}};
 }
 
 template <class T>
