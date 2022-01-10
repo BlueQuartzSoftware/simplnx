@@ -39,7 +39,6 @@ find_package(expected-lite CONFIG REQUIRED)
 find_package(span-lite CONFIG REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(HDF5 REQUIRED)
-
 option(COMPLEX_ENABLE_MULTICORE "Enable multicore support using Threading Building Blocks" OFF)
 if(COMPLEX_ENABLE_MULTICORE)
   find_package(TBB CONFIG REQUIRED)
