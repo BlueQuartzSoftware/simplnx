@@ -1,46 +1,52 @@
 #pragma once
 
-#include <exception>
+#include <stdexcept>
 
 #include "complex/Common/Types.hpp"
 
-#define EXECUTE_DATA_FUNCTION_TEMPLATE(templateFunct, dataType, ...)                                                                                                                                   \
-  switch(dataType)                                                                                                                                                                                     \
-  {                                                                                                                                                                                                    \
-  case complex::DataType::boolean:                                                                                                                                                                     \
-    templateFunct<bool>(__VA_ARGS__);                                                                                                                                                                  \
-    break;                                                                                                                                                                                             \
-  case complex::DataType::int8:                                                                                                                                                                        \
-    templateFunct<int8_t>(__VA_ARGS__);                                                                                                                                                                \
-    break;                                                                                                                                                                                             \
-  case complex::DataType::int16:                                                                                                                                                                       \
-    templateFunct<int16_t>(__VA_ARGS__);                                                                                                                                                               \
-    break;                                                                                                                                                                                             \
-  case complex::DataType::int32:                                                                                                                                                                       \
-    templateFunct<int32_t>(__VA_ARGS__);                                                                                                                                                               \
-    break;                                                                                                                                                                                             \
-  case complex::DataType::int64:                                                                                                                                                                       \
-    templateFunct<int64_t>(__VA_ARGS__);                                                                                                                                                               \
-    break;                                                                                                                                                                                             \
-  case complex::DataType::uint8:                                                                                                                                                                       \
-    templateFunct<uint8_t>(__VA_ARGS__);                                                                                                                                                               \
-    break;                                                                                                                                                                                             \
-  case complex::DataType::uint16:                                                                                                                                                                      \
-    templateFunct<uint16_t>(__VA_ARGS__);                                                                                                                                                              \
-    break;                                                                                                                                                                                             \
-  case complex::DataType::uint32:                                                                                                                                                                      \
-    templateFunct<uint32_t>(__VA_ARGS__);                                                                                                                                                              \
-    break;                                                                                                                                                                                             \
-  case complex::DataType::uint64:                                                                                                                                                                      \
-    templateFunct<uint64_t>(__VA_ARGS__);                                                                                                                                                              \
-    break;                                                                                                                                                                                             \
-  case complex::DataType::float32:                                                                                                                                                                     \
-    templateFunct<float>(__VA_ARGS__);                                                                                                                                                                 \
-    break;                                                                                                                                                                                             \
-  case complex::DataType::float64:                                                                                                                                                                     \
-    templateFunct<double>(__VA_ARGS__);                                                                                                                                                                \
-    break;                                                                                                                                                                                             \
-  default:                                                                                                                                                                                             \
-    throw std::runtime_error("Invalid DataType");                                                                                                                                                      \
-    break;                                                                                                                                                                                             \
+namespace complex
+{
+template <class FuncT, class... ArgsT>
+auto ExecuteDataFunction(FuncT&& func, DataType dataType, ArgsT&&... args)
+{
+  switch(dataType)
+  {
+  case DataType::boolean: {
+    return func.template operator()<bool>(std::forward<ArgsT>(args)...);
   }
+  case DataType::int8: {
+    return func.template operator()<int8>(std::forward<ArgsT>(args)...);
+  }
+  case DataType::int16: {
+    return func.template operator()<int16>(std::forward<ArgsT>(args)...);
+  }
+  case DataType::int32: {
+    return func.template operator()<int32>(std::forward<ArgsT>(args)...);
+  }
+  case DataType::int64: {
+    return func.template operator()<int64>(std::forward<ArgsT>(args)...);
+  }
+  case DataType::uint8: {
+    return func.template operator()<uint8>(std::forward<ArgsT>(args)...);
+  }
+  case DataType::uint16: {
+    return func.template operator()<uint16>(std::forward<ArgsT>(args)...);
+  }
+  case DataType::uint32: {
+    return func.template operator()<uint32>(std::forward<ArgsT>(args)...);
+  }
+  case DataType::uint64: {
+    return func.template operator()<uint64>(std::forward<ArgsT>(args)...);
+  }
+  case DataType::float32: {
+    return func.template operator()<float32>(std::forward<ArgsT>(args)...);
+  }
+  case DataType::float64: {
+    return func.template operator()<float64>(std::forward<ArgsT>(args)...);
+  }
+  default: {
+    throw std::runtime_error("Invalid DataType");
+  }
+  }
+}
+} // namespace complex
