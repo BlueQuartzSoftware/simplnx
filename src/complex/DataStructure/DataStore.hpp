@@ -271,7 +271,7 @@ public:
    */
   const_reference operator[](usize index) const override
   {
-    return m_Data[index];
+    return m_Data.get()[index];
   }
 
   /**
@@ -282,7 +282,7 @@ public:
    */
   reference operator[](usize index) override
   {
-    return m_Data[index];
+    return m_Data.get()[index];
   }
 
   /**

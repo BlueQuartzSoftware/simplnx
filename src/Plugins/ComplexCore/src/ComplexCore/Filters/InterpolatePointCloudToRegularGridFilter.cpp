@@ -281,7 +281,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingImageGeom, ss}})};
   }
 
-  dataArrays.push_back(vertexGeom->getVertices(&data));
+  dataArrays.push_back(vertexGeom->getVertices());
 
   if(interpolationTechnique < 0 || interpolationTechnique > 1)
   {

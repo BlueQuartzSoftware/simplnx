@@ -103,7 +103,7 @@ std::string VertexGeom::getGeometryTypeAsString() const
 
 void VertexGeom::initializeWithZeros()
 {
-  AbstractGeometry::SharedVertexList* vertices = getVertices(getDataStructure());
+  AbstractGeometry::SharedVertexList* vertices = getVertices();
   if(vertices == nullptr)
   {
     return;
@@ -113,7 +113,7 @@ void VertexGeom::initializeWithZeros()
 
 void VertexGeom::resizeVertexList(usize newNumVertices)
 {
-  AbstractGeometry::SharedVertexList* vertices = getVertices(getDataStructure());
+  AbstractGeometry::SharedVertexList* vertices = getVertices();
   if(vertices == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{newNumVertices}, std::vector<usize>{3});
@@ -137,8 +137,9 @@ void VertexGeom::setVertices(const SharedVertexList* vertices)
   m_VertexListId = vertices->getId();
 }
 
-AbstractGeometry::SharedVertexList* VertexGeom::getVertices(DataStructure* dataStructure)
+AbstractGeometry::SharedVertexList* VertexGeom::getVertices()
 {
+  auto dataStructure = getDataStructure();
   if(!dataStructure)
   {
     return nullptr;
@@ -146,8 +147,9 @@ AbstractGeometry::SharedVertexList* VertexGeom::getVertices(DataStructure* dataS
   return dataStructure->getDataAs<SharedVertexList>(m_VertexListId);
 }
 
-const AbstractGeometry::SharedVertexList* VertexGeom::getVertices(const DataStructure* dataStructure) const
+const AbstractGeometry::SharedVertexList* VertexGeom::getVertices() const
 {
+  auto dataStructure = getDataStructure();
   if(!dataStructure)
   {
     return nullptr;
@@ -157,7 +159,7 @@ const AbstractGeometry::SharedVertexList* VertexGeom::getVertices(const DataStru
 
 Point3D<float32> VertexGeom::getCoords(usize vertId) const
 {
-  auto vertices = getVertices(getDataStructure());
+  auto vertices = getVertices();
   if(vertices == nullptr)
   {
     return {};
@@ -173,7 +175,7 @@ Point3D<float32> VertexGeom::getCoords(usize vertId) const
 
 void VertexGeom::setCoords(usize vertId, const Point3D<float32>& coords)
 {
-  auto vertices = getVertices(getDataStructure());
+  auto vertices = getVertices();
   if(vertices == nullptr)
   {
     return;
@@ -187,7 +189,7 @@ void VertexGeom::setCoords(usize vertId, const Point3D<float32>& coords)
 
 usize VertexGeom::getNumberOfVertices() const
 {
-  auto vertices = getVertices(getDataStructure());
+  auto vertices = getVertices();
   if(vertices == nullptr)
   {
     return 0;

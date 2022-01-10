@@ -53,7 +53,7 @@ void createRegularGrid(DataStructure& data, const Arguments& args)
   }
 
   int64 numVerts = pointCloud->getNumberOfVertices();
-  auto* vertex = pointCloud->getVertices(&data);
+  auto* vertex = pointCloud->getVertices();
 
   auto mask = data.getDataAs<BoolArray>(maskArrayPath);
 

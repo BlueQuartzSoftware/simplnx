@@ -47,21 +47,20 @@ struct VertexGeomAdaptor
 
   inline float kdtree_get_pt(const usize idx, const usize dim) const
   {
-    const DataStructure* data = derived()->getDataStructure();
-    auto derivedVertices = derived()->getVertices(data);
+    auto derivedVertices = derived()->getVertices();
     auto numComponents = derivedVertices->getNumberOfComponents();
     auto offset = idx * numComponents;
 
     if(dim == 0)
     {
-      return (*derived()->getVertices(data))[offset + 0];
+      return (*derived()->getVertices())[offset + 0];
     }
     if(dim == 1)
     {
-      return (*derived()->getVertices(data))[offset + 1];
+      return (*derived()->getVertices())[offset + 1];
     }
 
-    return (*derived()->getVertices(data))[offset + 2];
+    return (*derived()->getVertices())[offset + 2];
   }
 
   template <class BBOX>
@@ -164,9 +163,9 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVertices, ss}})};
   }
 
-  auto* movingPtr = movingVertexGeom->getVertices(&data);
-  auto* movingCopyPtr = movingVertexGeom->getVertices(&data);
-  auto* targetPtr = targetVertexGeom->getVertices(&data);
+  auto* movingPtr = movingVertexGeom->getVertices();
+  auto* movingCopyPtr = movingVertexGeom->getVertices();
+  auto* targetPtr = targetVertexGeom->getVertices();
 
   if(movingPtr == nullptr)
   {
@@ -214,6 +213,8 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
   int64 progressInt = 0;
   int64 counter = 0;
 
+  auto targetData = targetPtr->getDataStore();
+
   for(usize i = 0; i < iters; i++)
   {
     for(usize j = 0; j < numMovingVerts; j++)
@@ -223,9 +224,11 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
       nanoflann::KNNResultSet<float> results(nn);
       results.init(&id, &dist);
       index.findNeighbors(results, movingData.data() + (3 * j), nanoflann::SearchParams());
-      (*dynTargetPtr)[3 * j + 0] = (*targetPtr)[3 * id + 0];
-      (*dynTargetPtr)[3 * j + 1] = (*targetPtr)[3 * id + 1];
-      (*dynTargetPtr)[3 * j + 2] = (*targetPtr)[3 * id + 2];
+      const usize dynOffset = 3 * j;
+      const usize targetOffset = 3 * id;
+      dynTargetPtr->setValue(dynOffset + 0, targetData->getValue(targetOffset + 0));
+      (*dynTargetPtr)[dynOffset + 1] = (*targetData)[targetOffset + 1];
+      (*dynTargetPtr)[dynOffset + 2] = (*targetData)[targetOffset + 2];
     }
 
     Eigen::Map<PointCloud> moving_(movingData.data(), 3, numMovingVerts);

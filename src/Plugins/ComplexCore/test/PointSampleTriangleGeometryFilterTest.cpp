@@ -180,7 +180,7 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
 
     VertexGeom& vertGeom = dataGraph.getDataRefAs<VertexGeom>(vertGeometryDataPath);
     usize numVerts = vertGeom.getNumberOfVertices();
-    AbstractGeometry::SharedVertexList* vertices = vertGeom.getVertices(&dataGraph);
+    AbstractGeometry::SharedVertexList* vertices = vertGeom.getVertices();
     std::array<float, 6> minMaxVerts = FindMinMaxCoord(vertices, numVerts);
 
     TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(triangleGeometryPath);

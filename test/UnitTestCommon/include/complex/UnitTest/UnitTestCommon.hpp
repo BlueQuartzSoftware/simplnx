@@ -156,8 +156,6 @@ inline DataStructure CreateDataStructure()
   Float32Array* euler_data = CreateTestDataArray<float>(dataGraph, "Euler", tupleShape, {numComponents}, scanData->getId());
 
   // Create an Vertex Geometry grid for the Scan Data
-  VertexGeom* vertexGeom = VertexGeom::Create(dataGraph, Constants::k_VertexGeometry, scanData->getId());
-  // vertexGeom->setVertices(ci_data);
 
   // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
   DataGroup* ensembleGroup = DataGroup::Create(dataGraph, "Phase Data", topLevelGroup->getId());
