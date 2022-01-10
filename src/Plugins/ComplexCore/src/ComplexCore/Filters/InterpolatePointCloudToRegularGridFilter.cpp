@@ -226,7 +226,7 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
 
   params.insert(std::make_unique<VectorFloat32Parameter>(k_KernelSize_Key, "Kernel Size", "Specifies the kernel size", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_GaussianSigmas_Key, "Gaussian Sigmas", "Specifies the guassian sigmas", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"x", "y", "z"}));
+      std::make_unique<VectorFloat32Parameter>(k_GaussianSigmas_Key, "Gaussian Sigmas", "Specifies the Gaussian sigmas", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_VertexGeom_Key, "Vertex Geometry to Interpolate", "DataPath to geometry to interpolate", DataPath{}));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_ImageGeom_Key, "Interpolated Image Geometry", "DataPath to interpolated geometry", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_VoxelIndices_Key, "Voxel Indices", "DataPath to voxel indices", DataPath{}));
@@ -285,7 +285,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
 
   if(interpolationTechnique < 0 || interpolationTechnique > 1)
   {
-    std::string ss = fmt::format("Invalid selection for interpolation technique");
+    std::string ss = fmt::format("Interpolation Technique must be 0 [Uniform] or 1 [Gaussian] ");
     return {nonstd::make_unexpected(std::vector<Error>{Error{-11000, ss}})};
   }
 
@@ -301,7 +301,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   {
     std::string ss = fmt::format("All sigmas must be positive.\n "
                                  "Current sigmas:\n x = %1\n y = %2\n z = %3\n",
-                                 kernelSize[0], kernelSize[1], kernelSize[2]);
+                                 sigmas[0], sigmas[1], sigmas[2]);
     return {nonstd::make_unexpected(std::vector<Error>{Error{-11000, ss}})};
   }
 
@@ -403,7 +403,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
 
   if(storeKernelDistances)
   {
-    auto action = std::make_unique<CreateArrayAction>(NumericType::float32, std::vector<usize>{0}, std::vector<usize>{cDims}, kernelDistancesDataPath);
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, 0, kernelDistancesDataPath);
     actions.actions.push_back(std::move(action));
   }
 

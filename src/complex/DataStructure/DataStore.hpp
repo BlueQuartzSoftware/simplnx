@@ -79,8 +79,8 @@ public:
    * @param other
    */
   DataStore(const DataStore& other)
-  : m_TupleShape(other.m_TupleShape)
-  , m_ComponentShape(other.m_ComponentShape)
+  : m_ComponentShape(other.m_ComponentShape)
+  , m_TupleShape(other.m_TupleShape)
   {
     const usize count = other.getSize();
     auto data = new value_type[count];
@@ -399,7 +399,7 @@ public:
 private:
   ShapeType m_ComponentShape;
   ShapeType m_TupleShape;
-  std::unique_ptr<value_type[]> m_Data;
+  std::unique_ptr<value_type[]> m_Data = nullptr;
 };
 
 // Declare aliases

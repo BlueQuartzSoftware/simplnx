@@ -81,7 +81,7 @@ TEST_CASE("CreateDataArray(Invalid Parameters)", "[ComplexCore][CreateDataArray]
     args.insert(CreateDataArray::k_InitilizationValue_Key, std::make_any<std::string>("1"));
 
     auto result = filter.execute(ds, args);
-    REQUIRE(result.result.invalid());
+    REQUIRE(result.result.valid());
   }
   {
     CreateDataArray filter;
