@@ -13,6 +13,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CreateImageGeometryTest.cpp
   FindDifferencesMapTest.cpp
   FindNeighborListStatisticsTest.cpp
+  IterativeClosestPointTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
   LaplacianSmoothingFilterTest.cpp
   MapPointCloudToRegularGridTest.cpp

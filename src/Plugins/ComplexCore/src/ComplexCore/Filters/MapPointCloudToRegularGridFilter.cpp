@@ -224,7 +224,7 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraysToMap_Key, "Arrays to Map", "Paths to map to the grid geometry", std::vector<DataPath>()));
   params.insert(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Specifies if a mask array should be used", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask", "Path to the target mask array", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_VoxelIndices_Key, "Voxel Indices", "Path to create the Voxel Indices array", DataPath()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_VoxelIndices_Key, "Voxel Indices", "Path to the Voxel Indices array", DataPath()));
   return params;
 }
 
@@ -289,7 +289,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
   }
 
   auto* voxelIndicesPtr = data.getDataAs<USizeArray>(voxelIndicesPath);
-  if(nullptr != voxelIndicesPtr)
+  if(nullptr == voxelIndicesPtr)
   {
     std::string ss = fmt::format("Could not find Voxel Indices array at {}", voxelIndicesPath.toString());
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVoxelIndicesArray, ss}})};
@@ -330,7 +330,7 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, cons
   auto maskArrayPath = args.value<DataPath>(k_MaskPath_Key);
   auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndices_Key);
 
-  ImageGeom* image;
+  ImageGeom* image = nullptr;
   if(samplingGridType == 0)
   {
     // Create the regular grid
