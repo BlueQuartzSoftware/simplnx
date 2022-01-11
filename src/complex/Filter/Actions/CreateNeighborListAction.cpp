@@ -2,6 +2,7 @@
 
 #include <fmt/core.h>
 
+#include "complex/Common/TypeTraits.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
 using namespace complex;
@@ -56,7 +57,7 @@ Result<> CreateNeighborListAction::apply(DataStructure& dataStructure, Mode mode
     return CreateNeighbors<bool>(dataStructure, m_TupleCount, m_Path, mode);
   }
   default:
-    throw std::runtime_error(fmt::format("CreateNeighborListAction: Invalid Numeric Type '{}'", static_cast<int8>(m_Type)));
+    throw std::runtime_error(fmt::format("CreateNeighborListAction: Invalid Numeric Type '{}'", to_underlying(m_Type)));
   }
 }
 

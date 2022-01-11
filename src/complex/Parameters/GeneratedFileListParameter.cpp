@@ -10,6 +10,7 @@
 #include <nlohmann/json.hpp>
 
 #include "complex/Common/Any.hpp"
+#include "complex/Common/TypeTraits.hpp"
 
 namespace fs = std::filesystem;
 
@@ -57,7 +58,7 @@ nlohmann::json GeneratedFileListParameter::toJson(const std::any& value) const
   json[k_StartIndex] = data.startIndex;
   json[k_EndIndex] = data.endIndex;
   json[k_PaddingDigits] = data.paddingDigits;
-  json[k_Ordering] = static_cast<std::underlying_type_t<Ordering>>(data.ordering);
+  json[k_Ordering] = to_underlying(data.ordering);
   json[k_IncrementIndex] = data.incrementIndex;
   json[k_InputPath] = data.inputPath;
   json[k_FilePrefix] = data.filePrefix;
@@ -103,11 +104,10 @@ Result<std::any> GeneratedFileListParameter::fromJson(const nlohmann::json& json
   }
 
   auto ordering_check = json[k_Ordering].get<OrderingUnderlyingT>();
-  if(ordering_check != static_cast<OrderingUnderlyingT>(Ordering::LowToHigh) && ordering_check != static_cast<OrderingUnderlyingT>(Ordering::HighToLow))
+  if(ordering_check != to_underlying(Ordering::LowToHigh) && ordering_check != to_underlying(Ordering::HighToLow))
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration,
-                                     fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", prefix.view(), k_Ordering.view(),
-                                                 static_cast<int32>(Ordering::LowToHigh), static_cast<int32>(Ordering::HighToLow)));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration, fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", prefix.view(),
+                                                                                                           k_Ordering.view(), to_underlying(Ordering::LowToHigh), to_underlying(Ordering::HighToLow)));
   }
 
   if(!json[k_PaddingDigits].is_number_unsigned())
