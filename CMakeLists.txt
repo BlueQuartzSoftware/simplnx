@@ -163,6 +163,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Common/RgbColor.hpp
   ${COMPLEX_SOURCE_DIR}/Common/ScopeGuard.hpp
   ${COMPLEX_SOURCE_DIR}/Common/StringLiteral.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/TypeTraits.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Types.hpp
   ${COMPLEX_SOURCE_DIR}/Common/TypesUtility.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Uuid.hpp
