@@ -59,7 +59,7 @@ TEST_CASE("MapPointCloudToRegularGridFilter: Test Algorithm 1", "[MapPointCloudT
   std::vector<DataPath> arraysToMap = std::vector<DataPath>{DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ConfidenceIndex})};
   bool useMask = false;
   DataPath maskPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "ConditionalArray"});
-  DataPath voxelIndicesPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Voxel Indices (New)"});
+  DataPath voxelIndicesPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Voxel Indices"});
 
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_SamplingGridType_Key, std::make_any<uint64>(samplingGridType));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_GridDimensions_Key, std::make_any<std::vector<int32>>(gridDimensions));
@@ -94,7 +94,7 @@ TEST_CASE("MapPointCloudToRegularGridFilter: Test Algorithm 2", "[MapPointCloudT
   std::vector<DataPath> arraysToMap = std::vector<DataPath>{DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ConfidenceIndex})};
   bool useMask = false;
   DataPath maskPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "ConditionalArray"});
-  DataPath voxelIndicesPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Voxel Indices (New)"});
+  DataPath voxelIndicesPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Voxel Indices"});
 
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_SamplingGridType_Key, std::make_any<uint64>(samplingGridType));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_GridDimensions_Key, std::make_any<std::vector<int32>>(gridDimensions));

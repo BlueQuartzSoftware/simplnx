@@ -134,7 +134,7 @@ public:
    * @return T*
    */
   template <class T>
-  T* getDataAs(DataObject::IdType id)
+  inline T* getDataAs(DataObject::IdType id)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T*>(getData(id));
@@ -155,10 +155,11 @@ public:
    * @return T*
    */
   template <class T>
-  T* getDataAs(const std::optional<DataObject::IdType>& id)
+  inline T* getDataAs(const std::optional<DataObject::IdType>& id)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
-    return dynamic_cast<T*>(getData(id));
+    auto* object = getData(id);
+    return dynamic_cast<T*>(object);
   }
 
   /**
@@ -184,7 +185,7 @@ public:
    * @return T*
    */
   template <class T>
-  T* getDataAs(const DataPath& path)
+  inline T* getDataAs(const DataPath& path)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T*>(getData(path));
@@ -197,7 +198,7 @@ public:
    * @return T&
    */
   template <class T>
-  T& getDataRefAs(const DataPath& path)
+  inline T& getDataRefAs(const DataPath& path)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T&>(getDataRef(path));
@@ -218,7 +219,7 @@ public:
    * @return T*
    */
   template <class T>
-  T* getDataAs(const LinkedPath& path)
+  inline T* getDataAs(const LinkedPath& path)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T*>(getData(path));
@@ -239,7 +240,7 @@ public:
    * @return const T*
    */
   template <class T>
-  const T* getDataAs(DataObject::IdType id) const
+  inline const T* getDataAs(DataObject::IdType id) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(id));
@@ -260,7 +261,7 @@ public:
    * @return const T*
    */
   template <class T>
-  const T* getDataAs(const std::optional<DataObject::IdType>& id) const
+  inline const T* getDataAs(const std::optional<DataObject::IdType>& id) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(id));
@@ -289,7 +290,7 @@ public:
    * @return const T*
    */
   template <class T>
-  const T* getDataAs(const DataPath& path) const
+  inline const T* getDataAs(const DataPath& path) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(path));
@@ -302,7 +303,7 @@ public:
    * @return const T&
    */
   template <class T>
-  const T& getDataRefAs(const DataPath& path) const
+  inline const T& getDataRefAs(const DataPath& path) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T&>(getDataRef(path));
@@ -323,7 +324,7 @@ public:
    * @return const T*
    */
   template <class T>
-  const T* getDataAs(const LinkedPath& path) const
+  inline const T* getDataAs(const LinkedPath& path) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(path));
@@ -352,7 +353,7 @@ public:
    * @return std::shared_ptr<DataObject>
    */
   template <class T>
-  std::shared_ptr<T> getSharedDataAs(DataObject::IdType id) const
+  inline std::shared_ptr<T> getSharedDataAs(DataObject::IdType id) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return std::dynamic_pointer_cast<T>(getSharedData(id));
@@ -381,7 +382,7 @@ public:
    * @return std::shared_ptr<DataObject>
    */
   template <class T>
-  std::shared_ptr<T> getSharedDataAs(const DataPath& path) const
+  inline std::shared_ptr<T> getSharedDataAs(const DataPath& path) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return std::dynamic_pointer_cast<T>(getSharedData(path));

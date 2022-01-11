@@ -139,7 +139,7 @@ Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& arg
     return CsvParser::ReadFile<double, double>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   default:
-    return MakeErrorResult(-1001, fmt::format("ImportTextFilter: Parameter NumericType which has a value of '{}' does not match any in complex.", numericType));
+    return MakeErrorResult(-1001, fmt::format("ImportTextFilter: Parameter NumericType which has a value of '{}' does not match any in complex.", static_cast<int8>(numericType)));
   }
 }
 } // namespace complex
