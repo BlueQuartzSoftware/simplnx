@@ -248,7 +248,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   auto vertexGeomPath = args.value<DataPath>(k_VertexGeom_Key);
   auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
   auto interpolatedGroupPath = args.value<DataPath>(k_InterpolatedGroup_Key);
-  auto kernelDistancesDataPath = args.value<DataPath>(k_KernelDistancesGroup_Key);
+  auto kernelDistancesGroupPath = args.value<DataPath>(k_KernelDistancesGroup_Key);
 
   auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndices_Key);
 
@@ -311,7 +311,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     actions.actions.push_back(std::move(createGroupAction));
   }
   {
-    auto createGroupAction = std::make_unique<CreateDataGroupAction>(kernelDistancesDataPath);
+    auto createGroupAction = std::make_unique<CreateDataGroupAction>(kernelDistancesGroupPath);
     actions.actions.push_back(std::move(createGroupAction));
   }
 
@@ -328,13 +328,6 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   // All vertex data in the original point cloud will be interpolated to the regular grid's cells
   // Feature/Ensemble attribute matrices will remain unchanged and are deep copied to the new data container below
   // Create the attribute matrix where all the interpolated data will be stored
-
-  {
-    auto interpolatedDataAction = std::make_unique<CreateDataGroupAction>(interpolatedGroupPath);
-    auto kernelDistancesDataAction = std::make_unique<CreateDataGroupAction>(kernelDistancesDataPath);
-    actions.actions.push_back(std::move(interpolatedDataAction));
-    actions.actions.push_back(std::move(kernelDistancesDataAction));
-  }
 
   // Loop through all the attribute matrices in the original data container
   // If we are in a vertex attribute matrix, create data arrays for all in the new interpolated data attribute matrix
@@ -403,6 +396,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
 
   if(storeKernelDistances)
   {
+    auto kernelDistancesDataPath = kernelDistancesGroupPath.createChildPath("Neighbor List");
     auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, 0, kernelDistancesDataPath);
     actions.actions.push_back(std::move(action));
   }
