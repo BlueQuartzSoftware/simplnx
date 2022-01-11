@@ -183,7 +183,7 @@ Result<T> ConvertResultTo(Result<>&& fromResult, T&& value)
 template <class T = void>
 Result<T> MakeErrorResult(int32 code, std::string message)
 {
-  return {nonstd::make_unexpected(std::vector<Error>{{code, std::move(message)}})};
+  return {{nonstd::make_unexpected(std::vector<Error>{{code, std::move(message)}})}};
 }
 
 /**

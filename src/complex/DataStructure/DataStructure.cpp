@@ -69,7 +69,10 @@ DataStructure::~DataStructure()
   {
     if(auto sharedDataPtr = weakDataPtr.lock())
     {
-      sharedDataPtr->setDataStructure(nullptr);
+      if(sharedDataPtr->getDataStructure() == this)
+      {
+        sharedDataPtr->setDataStructure(nullptr);
+      }
     }
   }
 }

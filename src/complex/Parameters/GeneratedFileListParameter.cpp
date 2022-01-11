@@ -105,8 +105,9 @@ Result<std::any> GeneratedFileListParameter::fromJson(const nlohmann::json& json
   auto ordering_check = json[k_Ordering].get<OrderingUnderlyingT>();
   if(ordering_check != static_cast<OrderingUnderlyingT>(Ordering::LowToHigh) && ordering_check != static_cast<OrderingUnderlyingT>(Ordering::HighToLow))
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration, fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", prefix.view(),
-                                                                                                           k_Ordering.view(), Ordering::LowToHigh, Ordering::HighToLow));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration,
+                                     fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", prefix.view(), k_Ordering.view(),
+                                                 static_cast<int32>(Ordering::LowToHigh), static_cast<int32>(Ordering::HighToLow)));
   }
 
   if(!json[k_PaddingDigits].is_number_unsigned())
@@ -126,7 +127,7 @@ Result<std::any> GeneratedFileListParameter::fromJson(const nlohmann::json& json
   value.startIndex = json[k_StartIndex].get<int32>();
   value.endIndex = json[k_EndIndex].get<int32>();
 
-  return {std::move(value)};
+  return {{std::move(value)}};
 }
 
 //-----------------------------------------------------------------------------

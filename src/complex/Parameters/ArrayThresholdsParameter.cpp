@@ -38,7 +38,7 @@ Result<std::any> ArrayThresholdsParameter::fromJson(const nlohmann::json& json) 
   {
     return MakeErrorResult<std::any>(-3, fmt::format("Failed to parse '{}' as ArrayThresholdSet", name()));
   }
-  return {std::move(*thresholds)};
+  return {{std::move(*thresholds)}};
 }
 
 IParameter::UniquePointer ArrayThresholdsParameter::clone() const

@@ -46,7 +46,7 @@ Result<std::any> DataGroupCreationParameter::fromJson(const nlohmann::json& json
   {
     return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath for key '{}'.", prefix.view(), valueString, name()));
   }
-  return {std::move(*path)};
+  return {{std::move(*path)}};
 }
 
 IParameter::UniquePointer DataGroupCreationParameter::clone() const
@@ -92,6 +92,6 @@ Result<std::any> DataGroupCreationParameter::resolve(DataStructure& dataStructur
 {
   const auto& path = GetAnyRef<ValueType>(value);
   DataObject* object = dataStructure.getData(path);
-  return {object};
+  return {{object}};
 }
 } // namespace complex

@@ -139,12 +139,22 @@ void VertexGeom::setVertices(const SharedVertexList* vertices)
 
 AbstractGeometry::SharedVertexList* VertexGeom::getVertices()
 {
-  return dynamic_cast<SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
+  auto dataStructure = getDataStructure();
+  if(!dataStructure)
+  {
+    return nullptr;
+  }
+  return dataStructure->getDataAs<SharedVertexList>(m_VertexListId);
 }
 
 const AbstractGeometry::SharedVertexList* VertexGeom::getVertices() const
 {
-  return dynamic_cast<const SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
+  auto dataStructure = getDataStructure();
+  if(!dataStructure)
+  {
+    return nullptr;
+  }
+  return dataStructure->getDataAs<SharedVertexList>(m_VertexListId);
 }
 
 Point3D<float32> VertexGeom::getCoords(usize vertId) const
