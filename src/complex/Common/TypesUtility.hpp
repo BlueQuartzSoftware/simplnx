@@ -1,6 +1,7 @@
 #pragma once
 
 #include "complex/Common/StringLiteral.hpp"
+#include "complex/Common/TypeTraits.hpp"
 #include "complex/Common/Types.hpp"
 
 #include <stdexcept>
@@ -8,9 +9,6 @@
 
 namespace complex
 {
-template <class... T>
-inline constexpr bool AlwaysFalse_v = false;
-
 /**
  * @brief Returns the NumericType associated with T.
  * @tparam T
@@ -61,7 +59,7 @@ constexpr NumericType GetNumericType() noexcept
   }
   else
   {
-    static_assert(AlwaysFalse_v<T>, "complex::GetNumericType: Unsupported type");
+    static_assert(dependent_false<T>, "complex::GetNumericType: Unsupported type");
   }
 }
 

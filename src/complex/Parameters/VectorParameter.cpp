@@ -5,12 +5,7 @@
 #include <nlohmann/json.hpp>
 
 #include "complex/Common/Any.hpp"
-
-namespace
-{
-template <class...>
-constexpr std::false_type always_false{};
-}
+#include "complex/Common/TypeTraits.hpp"
 
 namespace complex
 {
@@ -72,7 +67,7 @@ Result<std::any> VectorParameter<T>::fromJson(const nlohmann::json& json) const
     }
     else
     {
-      static_assert(always_false<T>, "JSON conversion not implemented for this type");
+      static_assert(dependent_false<T>, "JSON conversion not implemented for this type");
     }
     vec.push_back(element.get<T>());
   }
