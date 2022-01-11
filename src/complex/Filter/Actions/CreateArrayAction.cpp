@@ -2,6 +2,7 @@
 
 #include <fmt/core.h>
 
+#include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
@@ -55,7 +56,7 @@ Result<> CreateArrayAction::apply(DataStructure& dataStructure, Mode mode) const
     return CreateArray<float64>(dataStructure, m_Dims, m_CDims, m_Path, mode);
   }
   default:
-    throw std::runtime_error(fmt::format("CreateArrayAction: Invalid Numeric Type '{}'", static_cast<int8>(m_Type)));
+    throw std::runtime_error(fmt::format("CreateArrayAction: Invalid Numeric Type '{}'", to_underlying(m_Type)));
   }
 }
 

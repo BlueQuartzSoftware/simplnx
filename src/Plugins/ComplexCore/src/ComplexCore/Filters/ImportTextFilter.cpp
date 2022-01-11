@@ -3,6 +3,7 @@
 #include <filesystem>
 
 #include "complex/Common/StringLiteral.hpp"
+#include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
@@ -139,7 +140,7 @@ Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& arg
     return CsvParser::ReadFile<double, double>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   default:
-    return MakeErrorResult(-1001, fmt::format("ImportTextFilter: Parameter NumericType which has a value of '{}' does not match any in complex.", static_cast<int8>(numericType)));
+    return MakeErrorResult(-1001, fmt::format("ImportTextFilter: Parameter NumericType which has a value of '{}' does not match any in complex.", to_underlying(numericType)));
   }
 }
 } // namespace complex
