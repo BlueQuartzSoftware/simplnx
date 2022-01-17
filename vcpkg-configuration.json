@@ -1,4 +1,5 @@
 {
+  "default-registry": null,
   "registries": [
     {
       "kind": "git",
@@ -11,9 +12,11 @@
         "hdf5",
         "nlohmann-json",
         "pybind11",
-        "span-lite"
+        "span-lite",
+        "vcpkg-cmake",
+        "vcpkg-cmake-config"
       ],
-      "baseline": "b74f523e4d7ac892270055840b97d1ea066be95d"
+      "baseline": "5bec5a82cb1f84be3df54dfb3fd24cc97a5006c1"
     }
   ]
 }
