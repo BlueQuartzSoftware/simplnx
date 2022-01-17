@@ -32,6 +32,10 @@
         "COMPLEX_BUILD_PYTHON": {
           "type": "BOOL",
           "value": "OFF"
+        },
+        "VCPKG_OVERLAY_TRIPLETS": {
+          "type": "STRING",
+          "value": "${sourceDir}/cmake/triplets"
         }
       }
     }

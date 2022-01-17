@@ -42,7 +42,7 @@ jobs:
           -password "${{secrets.GITHUB_TOKEN}}"
       - name: Configure
         run: |
-          cmake --preset ci ${{github.workspace}}
+          cmake --preset ci ${{github.workspace}} -D VCPKG_TARGET_TRIPLET:STRING=x64-osx-dynamic
       - name: Build
         run: |
           cmake --build --preset ci
