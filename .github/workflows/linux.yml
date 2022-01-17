@@ -48,7 +48,7 @@ jobs:
         env:
           CXX: ${{matrix.cxx}}
         run: |
-          cmake --preset ci ${{github.workspace}}
+          cmake --preset ci ${{github.workspace}} -D VCPKG_TARGET_TRIPLET:STRING=x64-linux-dynamic
       - name: Build
         run: |
           cmake --build --preset ci
