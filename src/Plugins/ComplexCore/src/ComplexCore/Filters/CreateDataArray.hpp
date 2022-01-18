@@ -28,38 +28,38 @@ public:
   static inline constexpr StringLiteral k_InitilizationValue_Key = "initialization_value";
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the filter's name.
+   * @return std::string
    */
   std::string name() const override;
 
   /**
    * @brief Returns the C++ classname of this filter.
-   * @return
+   * @return std::string
    */
   std::string className() const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the filter's UUID.
+   * @return Uuid
    */
   Uuid uuid() const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the filter name as a human-readable string.
+   * @return std::string
    */
   std::string humanName() const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns a collection of parameters required to execute the filter.
+   * @return Parameters
    */
   Parameters parameters() const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Creates and returns a copy of the filter.
+   * @return UniquePointer
    */
   UniquePointer clone() const override;
 
