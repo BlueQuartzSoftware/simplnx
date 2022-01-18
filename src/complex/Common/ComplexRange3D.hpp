@@ -36,7 +36,7 @@
 #include "complex/complex_export.hpp"
 
 #include <array>
-#include <stddef.h>
+#include <cstddef>
 
 #ifdef COMPLEX_ENABLE_MULTICORE
 #include <tbb/blocked_range3d.h>
