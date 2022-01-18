@@ -8,6 +8,9 @@ enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_PYTHON FEATURE "python")
 option(COMPLEX_BUILD_TESTS "Enable building COMPLEX tests" ON)
 enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_TESTS FEATURE "tests")
 
+option(COMPLEX_ENABLE_MULTICORE "Enable multicore support" ON)
+enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_MULTICORE FEATURE "parallel")
+
 project(complex
   VERSION 0.1.0
   DESCRIPTION "SIMPL Redesign"
@@ -39,7 +42,7 @@ find_package(expected-lite CONFIG REQUIRED)
 find_package(span-lite CONFIG REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(HDF5 REQUIRED)
-option(COMPLEX_ENABLE_MULTICORE "Enable multicore support using Threading Building Blocks" OFF)
+
 if(COMPLEX_ENABLE_MULTICORE)
   find_package(TBB CONFIG REQUIRED)
 endif()

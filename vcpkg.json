@@ -42,6 +42,14 @@
           "name": "catch2"
         }
       ]
+    },
+    "parallel": {
+      "description": "Parallel support with TBB",
+      "dependencies": [
+        {
+          "name": "tbb"
+        }
+      ]
     }
   }
 }
