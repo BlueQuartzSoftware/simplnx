@@ -40,7 +40,7 @@
 #endif
 
 #include <array>
-#include <stddef.h>
+#include <cstddef>
 
 namespace complex
 {
