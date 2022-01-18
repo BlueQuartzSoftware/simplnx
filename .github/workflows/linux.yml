@@ -23,6 +23,13 @@ jobs:
           - g++-9
           - g++-10
           - clang++-10
+        include:
+          - cxx: g++-9
+            cc: gcc-9
+          - cxx: g++-10
+            cc: gcc-10
+          - cxx: clang++-10
+            cc: clang-10
     runs-on: ${{matrix.os}}
     steps:
       - name: Checkout
@@ -46,6 +53,7 @@ jobs:
           -password "${{secrets.GITHUB_TOKEN}}"
       - name: Configure
         env:
+          CC: ${{matrix.cc}}
           CXX: ${{matrix.cxx}}
         run: |
           cmake --preset ci ${{github.workspace}} -D VCPKG_TARGET_TRIPLET:STRING=x64-linux-dynamic
