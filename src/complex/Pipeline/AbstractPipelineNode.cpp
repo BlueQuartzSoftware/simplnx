@@ -55,7 +55,7 @@ bool AbstractPipelineNode::isEnabled() const
 void AbstractPipelineNode::setDisabled(bool disabled)
 {
   std::bitset<8> statusBits(m_Status);
-  
+
   if(disabled)
   {
     statusBits |= Status::Disabled;

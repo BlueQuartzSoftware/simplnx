@@ -126,7 +126,7 @@ bool PipelineFilter::execute(DataStructure& data)
 
   if(result.result.invalid())
   {
-    m_Errors = result.result.errors(); 
+    m_Errors = result.result.errors();
   }
 
   setDataStructure(data);
