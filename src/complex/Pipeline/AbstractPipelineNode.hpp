@@ -38,11 +38,13 @@ public:
   /**
    * @brief Specific states of pipeline and filter execution.
    */
-  enum class Status
+  enum Status : uint8
   {
-    Dirty = 0,
-    Executing,
-    Completed
+    None = 0,
+    Executing = 1,
+    Error = 2,
+    Warning = 4,
+    Disabled = 8
   };
 
   virtual ~AbstractPipelineNode();
@@ -95,15 +97,51 @@ public:
   virtual std::unique_ptr<AbstractPipelineNode> deepCopy() const = 0;
 
   /**
-   * @brief Marks the node and all of its dependents as dirty.
-   */
-  void markDirty();
-
-  /**
-   * @brief Returns true if node is dirty. Returns false otherwise.
+   * @brief Returns true if the node is currently being executed. Otherwise,
+   * this method returns false.
    * @return bool
    */
-  bool isDirty() const;
+  bool isExecuting() const;
+
+  /**
+   * @brief Returns true if the node has errors. Otherwise, this method returns
+   * false.
+   * @return bool
+   */
+  bool hasErrors() const;
+
+  /**
+   * @brief Returns true if the node has warnings. Otherwise, this method
+   * returns false.
+   * @return bool
+   */
+  bool hasWarnings() const;
+
+  /**
+   * @brief Returns true if the node is disabled. Otherwise, this method
+   * returns false.
+   * @return bool
+   */
+  bool isDisabled() const;
+
+  /**
+   * @brief Returns true if the node is enabled. Otherwise, this method
+   * returns false.
+   * @return bool
+   */
+  bool isEnabled() const;
+
+  /**
+   * @brief Sets whether the node is disabled.
+   * @param disabled = true
+   */
+  void setDisabled(bool disabled = true);
+
+  /**
+   * @brief Sets whether the node is disabled.
+   * @param enabled = true
+   */
+  void setEnabled(bool enabled = true);
 
   /**
    * @brief Returns the pipeline node status.
@@ -169,6 +207,24 @@ protected:
   void setStatus(Status status);
 
   /**
+   * @brief Sets or clears the Warning flag.
+   * @param value = true
+   */
+  void setHasWarnings(bool value = true);
+
+  /**
+   * @brief Sets or clears the Error flag.
+   * @param value = true
+   */
+  void setHasErrors(bool value = true);
+
+  /**
+   * @brief Sets or clears the Executing flag.
+   * @param value = true
+   */
+  void setIsExecuting(bool value = true);
+
+  /**
    * @brief Notifies known observers of the provided message.
    * @param msg
    */
@@ -185,9 +241,8 @@ protected:
    * @brief Updates the stored DataStructure. This should only be called from
    * within the execute(DataStructure&) method.
    * @param ds
-   * @param success = true
    */
-  void setDataStructure(const DataStructure& ds, bool success = true);
+  void setDataStructure(const DataStructure& ds);
 
   /**
    * @brief Updates the stored DataStructure from preflighting the node. This
@@ -205,7 +260,7 @@ protected:
   std::unique_ptr<Pipeline> getPrecedingPipelineSegment() const;
 
 private:
-  Status m_Status = Status::Dirty;
+  Status m_Status = Status::None;
   Pipeline* m_Parent = nullptr;
   DataStructure m_DataStructure;
   DataStructure m_PreflightStructure;

@@ -22,17 +22,23 @@ AbstractPipelineNode::Status NodeStatusMessage::getStatus() const
 std::string NodeStatusMessage::toString() const
 {
   auto output = fmt::format("Node {}: ", getNode()->getName());
-  switch(getStatus())
+
+  if(getNode()->isExecuting())
   {
-  case AbstractPipelineNode::Status::Completed:
-    output += "Completed";
-    break;
-  case AbstractPipelineNode::Status::Dirty:
-    output += "Dirty";
-    break;
-  case AbstractPipelineNode::Status::Executing:
-    output += "Executing";
-    break;
+    output += " is Executing;";
   }
+  if(getNode()->hasErrors())
+  {
+    output += " has Errors;";
+  }
+  if(getNode()->hasWarnings())
+  {
+    output += " has Warnings;";
+  }
+  if(getNode()->isDisabled())
+  {
+    output += " is Disabled;";
+  }
+
   return output;
 }
