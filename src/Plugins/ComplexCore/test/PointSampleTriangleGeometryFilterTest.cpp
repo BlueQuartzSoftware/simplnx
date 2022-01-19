@@ -188,14 +188,6 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
     usize triNumVerts = triangleGeom.getNumberOfVertices();
     std::array<float, 6> minMaxTriVerts = FindMinMaxCoord(triVerts, triNumVerts);
 
-    // Compare the min/max vertex coords from the input Triangle Geometry and the output vertex geometry. These
-    // should be without reasonable bounds of each other. This test will only catch if the algorithm has
-    // completely gone off the rails.
-    for(size_t i = 0; i < 6; i++)
-    {
-      REQUIRE((minMaxVerts[i] > minMaxTriVerts[i] - 1.0 && minMaxVerts[i] < minMaxTriVerts[i] + 1));
-    }
-
     // We need to insert this small data set for the XDMF to work correctly.
     DataPath xdmfVertsDataPath = vertGeometryDataPath.createChildPath("Verts");
     DataObject::IdType parentId = dataGraph.getId(vertGeometryDataPath).value();
@@ -207,11 +199,35 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
       (*vertsArray)[i] = i;
     }
     std::string outputFilePath = fmt::format("{}/{}", unit_test::k_BinaryDir, k_OutputFile);
-    // std::cout << "Writing Output file to " << outputFilePath << std::endl;
+    std::cout << "Writing Output file to " << outputFilePath << std::endl;
     Result<H5::FileWriter> result = H5::FileWriter::CreateFile(outputFilePath);
     H5::FileWriter fileWriter = std::move(result.value());
 
     herr_t err = dataGraph.writeHdf5(fileWriter);
     REQUIRE(err >= 0);
+//    for(size_t i = 0; i < 6; i++)
+//    {
+//      printf("%0.8f    %0.8f\n", minMaxTriVerts[i], minMaxVerts[i]);
+//    }
+
+    // We are just going to make sure that the min value is more positive than a specific
+    // value for this data set and that the max value is less positive than a specific
+    // value for this data set. We are basically allowing the generated points to
+    // fall within the original 3D box that encompasses the triangle geometry
+    // + 0.5 in all directions. This should allow for the randomness in the algorithm
+    // but catch if the algorithm goes off the deep end. Of course if the algorithm
+    // goes off the deep end and puts all the new points on top of each other this
+    // would not be covered in this example. So we should probably check some sort
+    // of spread of the data to ensure that the new points are reasonably distributed
+    // over the triangle geometry.
+    REQUIRE(minMaxVerts[0] >= -0.5f);
+    REQUIRE(minMaxVerts[1] <= 180.5f);
+
+    REQUIRE(minMaxVerts[2] >= -0.5f);
+    REQUIRE(minMaxVerts[3] <= 19.5f);
+
+    REQUIRE(minMaxVerts[4] >= -0.5f);
+    REQUIRE(minMaxVerts[5] <= 3.7f);
+
   }
 }

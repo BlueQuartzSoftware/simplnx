@@ -6,12 +6,12 @@
   <Grid Name="TriangleGeometry" GridType="Uniform">
     <Topology TopologyType="Triangle" NumberOfElements="92">
       <DataItem Format="HDF" NumberType="Int" Dimensions="92 3">
-        PointSampleTriangleGeometryTest.dream3d:/DataStructure/ZERO/[Triangle Geometry]/SharedTriList
+        PointSampleTriangleGeometryTest.dream3d:/DataStructure/[Triangle Geometry]/SharedTriList
       </DataItem>
     </Topology>
     <Geometry Type="XYZ">
       <DataItem Format="HDF"  Dimensions="48 3" NumberType="Float" Precision="4">
-        PointSampleTriangleGeometryTest.dream3d:/DataStructure/ZERO/[Triangle Geometry]/SharedVertexList
+        PointSampleTriangleGeometryTest.dream3d:/DataStructure/[Triangle Geometry]/SharedVertexList
       </DataItem>
     </Geometry>
   </Grid>
@@ -20,12 +20,12 @@
   <Grid Name="VertexDataContainer" GridType="Uniform">
     <Topology TopologyType="Polyvertex" NumberOfElements="200">
       <DataItem Format="HDF" NumberType="Int" Dimensions="200">
-        PointSampleTriangleGeometryTest.dream3d:/DataStructure/ZERO/[Vertex Geometry]/Verts
+        PointSampleTriangleGeometryTest.dream3d:/DataStructure/[Vertex Geometry]/Verts
       </DataItem>
     </Topology>
     <Geometry Type="XYZ">
       <DataItem Format="HDF"  Dimensions="200 3" NumberType="Float" Precision="4">
-        PointSampleTriangleGeometryTest.dream3d:/DataStructure/ZERO/[Vertex Geometry]/SharedVertexList
+        PointSampleTriangleGeometryTest.dream3d:/DataStructure/[Vertex Geometry]/SharedVertexList
       </DataItem>
     </Geometry>
 
