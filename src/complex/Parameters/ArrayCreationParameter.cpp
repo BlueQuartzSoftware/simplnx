@@ -33,15 +33,17 @@ nlohmann::json ArrayCreationParameter::toJson(const std::any& value) const
 
 Result<std::any> ArrayCreationParameter::fromJson(const nlohmann::json& json) const
 {
+  static constexpr StringLiteral prefix = "FilterParameter 'ArrayCreationParameter' JSON Error: ";
+
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a string", name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), name()));
   }
   auto string = json.get<std::string>();
   std::optional<DataPath> path = DataPath::FromString(string);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(-3, fmt::format("Failed to parse '{}' as DataPath", string));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), string));
   }
   return {{std::move(*path)}};
 }

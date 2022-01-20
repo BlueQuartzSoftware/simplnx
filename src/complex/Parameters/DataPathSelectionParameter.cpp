@@ -46,7 +46,7 @@ Result<std::any> DataPathSelectionParameter::fromJson(const nlohmann::json& json
   auto path = DataPath::FromString(valueString);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath for key '{}'", prefix, name(), valueString));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath for key '{}'", prefix, valueString, name()));
   }
   return {{std::move(*path)}};
 }
