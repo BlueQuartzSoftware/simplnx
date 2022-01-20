@@ -36,9 +36,10 @@ nlohmann::json ArraySelectionParameter::toJson(const std::any& value) const
 
 Result<std::any> ArraySelectionParameter::fromJson(const nlohmann::json& json) const
 {
+  static constexpr StringLiteral prefix = "FilterParameter 'ArraySelectionParameter' JSON Error: ";
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a jsonStrValue", name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a jsonStrValue", prefix.view(), name()));
   }
   auto jsonStrValue = json.get<std::string>();
   if(jsonStrValue.empty())
@@ -48,7 +49,7 @@ Result<std::any> ArraySelectionParameter::fromJson(const nlohmann::json& json) c
   std::optional<DataPath> path = DataPath::FromString(jsonStrValue);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(-3, fmt::format("Failed to parse '{}' as DataPath", jsonStrValue));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), jsonStrValue));
   }
   return {{std::move(*path)}};
 }

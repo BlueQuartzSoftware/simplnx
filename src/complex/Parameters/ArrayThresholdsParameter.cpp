@@ -33,10 +33,11 @@ nlohmann::json ArrayThresholdsParameter::toJson(const std::any& value) const
 
 Result<std::any> ArrayThresholdsParameter::fromJson(const nlohmann::json& json) const
 {
+  static constexpr StringLiteral prefix = "FilterParameter 'ArrayThresholdsParameter' JSON Error: ";
   auto thresholds = ArrayThresholdSet::FromJson(json);
   if(thresholds == nullptr)
   {
-    return MakeErrorResult<std::any>(-3, fmt::format("Failed to parse '{}' as ArrayThresholdSet", name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as ArrayThresholdSet", prefix.view(), name()));
   }
   return {{std::move(*thresholds)}};
 }

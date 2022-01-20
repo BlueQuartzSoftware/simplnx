@@ -69,6 +69,7 @@ nlohmann::json Dream3dImportParameter::toJson(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<std::any> Dream3dImportParameter::fromJson(const nlohmann::json& json) const
 {
+  static constexpr StringLiteral prefix = "FilterParameter 'Dream3dImportParameter' JSON Error: ";
   if(!json.is_object())
   {
     return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not an object", name()));
@@ -111,7 +112,7 @@ Result<std::any> Dream3dImportParameter::fromJson(const nlohmann::json& json) co
       std::optional<DataPath> dataPath = DataPath::FromString(dataPathString);
       if(!dataPath.has_value())
       {
-        errors.push_back(Error{-7, fmt::format("Failed to parse '{}' as DataPath", dataPathString)});
+        errors.push_back(Error{FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), dataPathString)});
         continue;
       }
       dataPaths.push_back(std::move(*dataPath));
