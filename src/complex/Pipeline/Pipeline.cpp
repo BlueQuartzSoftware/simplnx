@@ -269,10 +269,15 @@ bool Pipeline::executeFrom(index_type index)
   return executeFrom(index, ds);
 }
 
-void Pipeline::endExecution(DataStructure& dataStructure)
+void Pipeline::setHasBeenExecuted(bool value)
 {
-  setDataStructure(dataStructure);
-  setIsExecuting(false);
+  AbstractPipelineNode::setHasBeenExecuted(value);
+  
+  // Set flag for all child nodes
+  for(const auto& node : m_Collection)
+  {
+    node->setHasBeenExecuted(value);
+  }
 }
 
 bool Pipeline::hasWarningsBeforeIndex(index_type index) const

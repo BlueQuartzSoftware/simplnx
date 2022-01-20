@@ -130,11 +130,10 @@ bool PipelineFilter::execute(DataStructure& data)
     m_Errors = result.result.errors();
   }
 
-  setDataStructure(data);
-  setIsExecuting(false);
-
   setHasWarnings(m_Warnings.size() > 0);
   setHasErrors(m_Errors.size() > 0);
+  endExecution(data);
+
   return result.result.valid();
 }
 

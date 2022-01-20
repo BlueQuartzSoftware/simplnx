@@ -24,6 +24,10 @@ class Pipeline;
 class COMPLEX_EXPORT AbstractPipelineNode
 {
 public:
+  // Making Pipeline a friend class allows Pipelines to set flags of the nodes
+  // they contain.
+  friend class Pipeline;
+
   using SignalType = nod::signal<void(AbstractPipelineNode*, const std::shared_ptr<AbstractPipelineMessage>&)>;
 
   /**
@@ -42,9 +46,10 @@ public:
   {
     None = 0,
     Executing = 1,
-    Error = 2,
-    Warning = 4,
-    Disabled = 8
+    Executed = 2,
+    Error = 4,
+    Warning = 8,
+    Disabled = 16
   };
 
   virtual ~AbstractPipelineNode();
@@ -75,6 +80,12 @@ public:
   void setParentPipeline(Pipeline* parent);
 
   /**
+   * @brief Returns true if the node has a parent pipeline. Returns false otherwise.
+   * @return bool
+   */
+  bool hasParentPipeline() const;
+
+  /**
    * @brief Attempts to preflight the node using the provided DataStructure.
    * Returns true if preflighting succeeded. Otherwise, this returns false.
    * @param data
@@ -102,6 +113,13 @@ public:
    * @return bool
    */
   bool isExecuting() const;
+
+  /**
+   * @brief Returns true if the node is has been executed. Otherwise,
+   * this method returns false.
+   * @return bool
+   */
+  bool hasBeenExecuted() const;
 
   /**
    * @brief Returns true if the node has errors. Otherwise, this method returns
@@ -225,6 +243,12 @@ protected:
   void setIsExecuting(bool value = true);
 
   /**
+   * @brief Sets or clears the Executed flag.
+   * @param value = true
+   */
+  virtual void setHasBeenExecuted(bool value = true);
+
+  /**
    * @brief Notifies known observers of the provided message.
    * @param msg
    */
@@ -251,6 +275,13 @@ protected:
    * @param success = true
    */
   void setPreflightStructure(const DataStructure& ds, bool success = true);
+
+  /**
+   * @brief Called when ending pipeline node execution.
+   * Sets the DataStructure and clears the Executing flag.
+   * If there is a parent node, sets the Executed flag.
+   */
+  virtual void endExecution(DataStructure& dataStructure);
 
   /**
    * @brief Returns a Pipeline containing the parent pipeline up to the current

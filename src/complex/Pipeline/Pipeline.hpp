@@ -518,6 +518,12 @@ protected:
    */
   void onNotify(AbstractPipelineNode* node, const std::shared_ptr<AbstractPipelineMessage>& msg) override;
 
+  /**
+   * @brief Sets or clears the Executed flag.
+   * @param value = true
+   */
+  void setHasBeenExecuted(bool value = true) override;
+
 private:
   /**
    * @brief Returns a pointer to the active FilterList that should be used for
@@ -547,12 +553,6 @@ private:
    * @return bool
    */
   bool hasErrorsBeforeIndex(index_type index) const;
-
-  /**
-   * @brief Called when ending pipeline execution.
-   * Sets the DataStructure and clears the Executing flag.
-   */
-  void endExecution(DataStructure& dataStructure);
 
   ////////////
   // Variables

@@ -27,24 +27,34 @@ void AbstractPipelineNode::setParentPipeline(Pipeline* parent)
   m_Parent = parent;
 }
 
+bool AbstractPipelineNode::hasParentPipeline() const
+{
+  return m_Parent != nullptr;
+}
+
 bool AbstractPipelineNode::isExecuting() const
 {
-  return (m_Status & Status::Executing);
+  return static_cast<bool>(m_Status & Status::Executing);
+}
+
+bool AbstractPipelineNode::hasBeenExecuted() const
+{
+  return static_cast<bool>(m_Status & Status::Executed);
 }
 
 bool AbstractPipelineNode::hasErrors() const
 {
-  return (m_Status & Status::Error);
+  return static_cast<bool>(m_Status & Status::Error);
 }
 
 bool AbstractPipelineNode::hasWarnings() const
 {
-  return (m_Status & Status::Warning);
+  return static_cast<bool>(m_Status & Status::Warning);
 }
 
 bool AbstractPipelineNode::isDisabled() const
 {
-  return (m_Status & Status::Disabled);
+  return static_cast<bool>(m_Status & Status::Disabled);
 }
 
 bool AbstractPipelineNode::isEnabled() const
@@ -83,6 +93,12 @@ AbstractPipelineNode::Status AbstractPipelineNode::getStatus() const
 
 void AbstractPipelineNode::setStatus(Status status)
 {
+  // If Status has not changed, do nothing
+  if(m_Status == status)
+  {
+    return;
+  }
+
   m_Status = status;
   notify(std::make_shared<NodeStatusMessage>(this, status));
 }
@@ -102,8 +118,7 @@ void AbstractPipelineNode::setHasWarnings(bool value)
     statusBits &= mask;
   }
 
-  m_Status = static_cast<Status>(statusBits.to_ulong());
-  notify(std::make_shared<NodeStatusMessage>(this, m_Status));
+  setStatus(static_cast<Status>(statusBits.to_ulong()));
 }
 
 void AbstractPipelineNode::setHasErrors(bool value)
@@ -121,8 +136,7 @@ void AbstractPipelineNode::setHasErrors(bool value)
     statusBits &= mask;
   }
 
-  m_Status = static_cast<Status>(statusBits.to_ulong());
-  notify(std::make_shared<NodeStatusMessage>(this, m_Status));
+  setStatus(static_cast<Status>(statusBits.to_ulong()));
 }
 
 void AbstractPipelineNode::setIsExecuting(bool value)
@@ -140,8 +154,25 @@ void AbstractPipelineNode::setIsExecuting(bool value)
     statusBits &= mask;
   }
 
-  m_Status = static_cast<Status>(statusBits.to_ulong());
-  notify(std::make_shared<NodeStatusMessage>(this, m_Status));
+  setStatus(static_cast<Status>(statusBits.to_ulong()));
+}
+
+void AbstractPipelineNode::setHasBeenExecuted(bool value)
+{
+  std::bitset<8> statusBits(m_Status);
+
+  if(value)
+  {
+    statusBits |= Status::Executed;
+  }
+  else
+  {
+    std::bitset<8> mask(Status::Executed);
+    mask.flip();
+    statusBits &= mask;
+  }
+
+  setStatus(static_cast<Status>(statusBits.to_ulong()));
 }
 
 const DataStructure& AbstractPipelineNode::getDataStructure() const
@@ -182,6 +213,13 @@ void AbstractPipelineNode::clearPreflightStructure()
 bool AbstractPipelineNode::isPreflighted() const
 {
   return m_IsPreflighted;
+}
+
+void AbstractPipelineNode::endExecution(DataStructure& dataStructure)
+{
+  setDataStructure(dataStructure);
+  setIsExecuting(false);
+  setHasBeenExecuted(hasParentPipeline());
 }
 
 void AbstractPipelineNode::notify(const std::shared_ptr<AbstractPipelineMessage>& msg)
