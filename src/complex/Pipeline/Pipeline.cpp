@@ -272,7 +272,7 @@ bool Pipeline::executeFrom(index_type index)
 void Pipeline::setHasBeenExecuted(bool value)
 {
   AbstractPipelineNode::setHasBeenExecuted(value);
-  
+
   // Set flag for all child nodes
   for(const auto& node : m_Collection)
   {
