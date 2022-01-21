@@ -23,6 +23,9 @@
     },
     {
       "name": "span-lite"
+    },
+    {
+      "name": "boost-mp11"
     }
   ],
   "features": {
