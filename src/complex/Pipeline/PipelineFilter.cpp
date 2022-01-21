@@ -70,7 +70,6 @@ Arguments PipelineFilter::getArguments() const
 void PipelineFilter::setArguments(const Arguments& args)
 {
   m_Arguments = args;
-  markDirty();
 }
 
 bool PipelineFilter::preflight(DataStructure& data)
@@ -115,27 +114,27 @@ bool PipelineFilter::preflight(DataStructure& data)
 
 bool PipelineFilter::execute(DataStructure& data)
 {
+  m_Warnings.clear();
+  m_Errors.clear();
+
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
+  setIsExecuting();
   IFilter::ExecuteResult result = m_Filter->execute(data, getArguments(), this, messageHandler);
   m_PreflightValues = std::move(result.outputValues);
+
+  m_Warnings = result.result.warnings();
+
   if(result.result.invalid())
   {
-    m_Warnings = result.result.warnings();
     m_Errors = result.result.errors();
-
-    setDataStructure(data, false);
-    return false;
   }
-  else
-  {
-    m_Warnings = result.result.warnings();
-    m_Errors.clear();
 
-    setDataStructure(data);
-    setStatus(Status::Completed);
-    return true;
-  }
+  setHasWarnings(m_Warnings.size() > 0);
+  setHasErrors(m_Errors.size() > 0);
+  endExecution(data);
+
+  return result.result.valid();
 }
 
 std::vector<complex::Warning> PipelineFilter::getWarnings() const

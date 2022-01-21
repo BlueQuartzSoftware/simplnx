@@ -127,12 +127,14 @@ void Pipeline::setName(const std::string& name)
 bool Pipeline::preflight()
 {
   DataStructure ds;
+  setStatus(Status::None);
   return preflight(ds);
 }
 
 bool Pipeline::execute()
 {
   DataStructure ds;
+  setStatus(Status::None);
   return execute(ds);
 }
 
@@ -146,7 +148,7 @@ bool Pipeline::execute(DataStructure& ds)
   return executeFrom(0, ds);
 }
 
-bool Pipeline::canPreflightFrom(const index_type& index) const
+bool Pipeline::canPreflightFrom(index_type index) const
 {
   if(index == 0)
   {
@@ -156,30 +158,40 @@ bool Pipeline::canPreflightFrom(const index_type& index) const
   {
     return false;
   }
-  return at(index - 1)->isPreflighted();
+  return at(index - 1)->isPreflighted() && hasErrorsBeforeIndex(index);
 }
 
-bool Pipeline::preflightFrom(const index_type& index, DataStructure& ds)
+bool Pipeline::preflightFrom(index_type index, DataStructure& ds)
 {
-  if(index >= size() && index != 0)
+  if(!canPreflightFrom(index))
   {
     return false;
   }
 
+  setHasWarnings(hasWarningsBeforeIndex(index));
+  setHasErrors(false);
+
   for(auto iter = begin() + index; iter != end(); iter++)
   {
     startObservingNode(iter->get());
-    if(!iter->get()->preflight(ds))
+    bool succeeded = iter->get()->preflight(ds);
+    stopObservingNode();
+
+    if(iter->get()->hasWarnings())
     {
-      stopObservingNode();
+      setHasWarnings(true);
+    }
+
+    if(!succeeded)
+    {
+      setHasErrors(true);
       return false;
     }
-    stopObservingNode();
   }
   return true;
 }
 
-bool Pipeline::preflightFrom(const index_type& index)
+bool Pipeline::preflightFrom(index_type index)
 {
   if(index == 0)
   {
@@ -195,7 +207,7 @@ bool Pipeline::preflightFrom(const index_type& index)
   return preflightFrom(index, ds);
 }
 
-bool Pipeline::canExecuteFrom(const index_type& index) const
+bool Pipeline::canExecuteFrom(index_type index) const
 {
   if(index == 0)
   {
@@ -205,33 +217,43 @@ bool Pipeline::canExecuteFrom(const index_type& index) const
   {
     return false;
   }
-  return at(index - 1)->getStatus() == Status::Completed;
+  return !hasErrorsBeforeIndex(index);
 }
 
-bool Pipeline::executeFrom(const index_type& index, DataStructure& ds)
+bool Pipeline::executeFrom(index_type index, DataStructure& ds)
 {
-  if(index >= size() && index != 0)
+  if(!canExecuteFrom(index))
   {
     return false;
   }
+
+  setHasWarnings(hasWarningsBeforeIndex(index));
+  setHasErrors(false);
+  setIsExecuting();
+
   for(auto iter = begin() + index; iter != end(); iter++)
   {
     startObservingNode(iter->get());
     bool success = iter->get()->execute(ds);
     stopObservingNode();
+
+    if(iter->get()->hasWarnings())
+    {
+      setHasWarnings(true);
+    }
+
     if(!success)
     {
-      setDataStructure(ds);
-      setStatus(Status::Dirty);
+      setHasErrors();
+      endExecution(ds);
       return false;
     }
   }
-  setDataStructure(ds);
-  setStatus(Status::Completed);
+  endExecution(ds);
   return true;
 }
 
-bool Pipeline::executeFrom(const index_type& index)
+bool Pipeline::executeFrom(index_type index)
 {
   if(index == 0)
   {
@@ -245,6 +267,41 @@ bool Pipeline::executeFrom(const index_type& index)
   auto node = at(index - 1);
   DataStructure ds = node->getDataStructure();
   return executeFrom(index, ds);
+}
+
+void Pipeline::setHasBeenExecuted(bool value)
+{
+  AbstractPipelineNode::setHasBeenExecuted(value);
+
+  // Set flag for all child nodes
+  for(const auto& node : m_Collection)
+  {
+    node->setHasBeenExecuted(value);
+  }
+}
+
+bool Pipeline::hasWarningsBeforeIndex(index_type index) const
+{
+  for(usize i = 0; i < index; i++)
+  {
+    if(m_Collection[i]->hasWarnings())
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool Pipeline::hasErrorsBeforeIndex(index_type index) const
+{
+  for(usize i = 0; i < index; i++)
+  {
+    if(m_Collection[i]->hasErrors())
+    {
+      return true;
+    }
+  }
+  return false;
 }
 
 usize Pipeline::size() const
@@ -587,7 +644,7 @@ Result<Pipeline> Pipeline::FromJson(const nlohmann::json& json, FilterList* filt
 
   Pipeline pipeline(name, filterList);
 
-  std::vector<Warning> warnings;
+  std::vector<complex::Warning> warnings;
 
   for(const auto& item : json[k_PipelineItemsKey])
   {
