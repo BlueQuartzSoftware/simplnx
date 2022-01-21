@@ -33,6 +33,7 @@ set(FilterList
   RawBinaryReaderFilter
   RemoveFlaggedVertices
   RemoveMinimumSizeFeaturesFilter
+  RenameAttributeArray
   RenameDataGroup
   RobustAutomaticThreshold
   ScalarSegmentFeaturesFilter
