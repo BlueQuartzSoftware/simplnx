@@ -8,7 +8,7 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
-//#include "complex/Parameters/DynamicTableParameter.hpp"
+#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
@@ -77,6 +77,10 @@ Parameters ExampleFilter2::parameters() const
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_Param11, "GeometrySelectionParameter", "", DataPath{}, std::set<DataObject::Type>{}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_Param12, "MultiArraySelectionParameter", "", MultiArraySelectionParameter::ValueType{}));
+  DynamicTableParameter::ValueType dynamicTable{{{10, 20}, {30, 40}}, {"Col 1", "Col 2"}, {"Row 1", "Row2"}};
+  dynamicTable.setMinCols(2);
+  dynamicTable.setDynamicCols(true);
+  params.insert(std::make_unique<DynamicTableParameter>(k_Param13, "DynamicTableParameter", "", dynamicTable));
 
   return params;
 }
