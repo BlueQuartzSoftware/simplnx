@@ -42,7 +42,7 @@ find_package(expected-lite CONFIG REQUIRED)
 find_package(span-lite CONFIG REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(HDF5 REQUIRED)
-find_package(boost_mp11 CONFIG REQUIRED)
+# find_package(boost_mp11 CONFIG REQUIRED)
 
 if(COMPLEX_ENABLE_MULTICORE)
   find_package(TBB CONFIG REQUIRED)
@@ -98,7 +98,7 @@ target_link_libraries(complex
     nonstd::span-lite
     Eigen3::Eigen
     HDF5::HDF5
-    Boost::mp11
+    # Boost::mp11
 )
 
 if(UNIX)
