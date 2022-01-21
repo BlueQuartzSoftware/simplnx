@@ -205,10 +205,10 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
 
     herr_t err = dataGraph.writeHdf5(fileWriter);
     REQUIRE(err >= 0);
-//    for(size_t i = 0; i < 6; i++)
-//    {
-//      printf("%0.8f    %0.8f\n", minMaxTriVerts[i], minMaxVerts[i]);
-//    }
+    //    for(size_t i = 0; i < 6; i++)
+    //    {
+    //      printf("%0.8f    %0.8f\n", minMaxTriVerts[i], minMaxVerts[i]);
+    //    }
 
     // We are just going to make sure that the min value is more positive than a specific
     // value for this data set and that the max value is less positive than a specific
@@ -228,6 +228,5 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
 
     REQUIRE(minMaxVerts[4] >= -0.5f);
     REQUIRE(minMaxVerts[5] <= 3.7f);
-
   }
 }
