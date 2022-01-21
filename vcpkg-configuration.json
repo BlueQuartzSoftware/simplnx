@@ -7,9 +7,11 @@
       "packages": [
         "boost-mp11",
         "catch2",
+        "ebsdlib",
         "eigen3",
         "expected-lite",
         "fmt",
+        "h5support",
         "hdf5",
         "nlohmann-json",
         "pybind11",
@@ -18,7 +20,7 @@
         "vcpkg-cmake",
         "vcpkg-cmake-config"
       ],
-      "baseline": "c622282fe9cafbf56ee91efe92a77881ac6155f4"
+      "baseline": "c7c8823f961290ef2ca14d486eba61f93997a8a7"
     }
   ]
 }
