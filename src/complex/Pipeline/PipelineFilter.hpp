@@ -118,14 +118,14 @@ public:
    * This collection is cleared when the node is preflighted or executed.
    * @return std::vector<complex::Warning>
    */
-  std::vector<Warning> getWarnings() const;
+  std::vector<complex::Warning> getWarnings() const;
 
   /**
    * @brief Returns a collection of errors emitted by the target filter.
    * This collection is cleared when the node is preflighted or executed.
    * @return std::vector<complex::Error>
    */
-  std::vector<Error> getErrors() const;
+  std::vector<complex::Error> getErrors() const;
 
   /**
    * @brief Returns a collection of preflight values emitted by the target filter.
@@ -157,8 +157,8 @@ protected:
 private:
   IFilter::UniquePointer m_Filter;
   Arguments m_Arguments;
-  std::vector<Warning> m_Warnings;
-  std::vector<Error> m_Errors;
+  std::vector<complex::Warning> m_Warnings;
+  std::vector<complex::Error> m_Errors;
   std::vector<IFilter::PreflightValue> m_PreflightValues;
   WarningsChangedSignal m_WarningsSignal;
   ErrorsChangedSignal m_ErrorsSignal;

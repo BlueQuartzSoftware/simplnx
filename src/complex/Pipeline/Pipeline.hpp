@@ -145,7 +145,7 @@ public:
    * @param ds
    * @return bool
    */
-  bool preflightFrom(const index_type& index, DataStructure& ds);
+  bool preflightFrom(index_type index, DataStructure& ds);
 
   /**
    * @brief Preflights the pipeline segment from a target position using the
@@ -156,7 +156,7 @@ public:
    * @param index
    * @return
    */
-  bool preflightFrom(const index_type& index);
+  bool preflightFrom(index_type index);
 
   /**
    * @brief Checks if the pipeline can be preflighted at the target index.
@@ -166,7 +166,7 @@ public:
    * @param index
    * @return bool
    */
-  bool canPreflightFrom(const index_type& index) const;
+  bool canPreflightFrom(index_type index) const;
 
   /**
    * @brief Checks if the pipeline can be executed at the target index.
@@ -176,7 +176,7 @@ public:
    * @param index
    * @return bool
    */
-  bool canExecuteFrom(const index_type& index) const;
+  bool canExecuteFrom(index_type index) const;
 
   /**
    * @brief Executes the pipeline segment from a target position using the
@@ -188,7 +188,7 @@ public:
    * @param ds
    * @return bool
    */
-  bool executeFrom(const index_type& index, DataStructure& ds);
+  bool executeFrom(index_type index, DataStructure& ds);
 
   /**
    * @brief Executes the pipeline segment from the target position using the
@@ -200,7 +200,7 @@ public:
    * @param index
    * @return
    */
-  bool executeFrom(const index_type& index);
+  bool executeFrom(index_type index);
 
   /**
    * @brief Returns the getSize of the pipeline segment.
@@ -518,6 +518,12 @@ protected:
    */
   void onNotify(AbstractPipelineNode* node, const std::shared_ptr<AbstractPipelineMessage>& msg) override;
 
+  /**
+   * @brief Sets or clears the Executed flag.
+   * @param value = true
+   */
+  void setHasBeenExecuted(bool value = true) override;
+
 private:
   /**
    * @brief Returns a pointer to the active FilterList that should be used for
@@ -531,6 +537,22 @@ private:
    * @brief Resets all collection nodes' parent pipeline.
    */
   void resetCollectionParent();
+
+  /**
+   * @brief Returns true if the pipeline has encountered warnings before the
+   * specified index. Returns false otherwise.
+   * @param index
+   * @return bool
+   */
+  bool hasWarningsBeforeIndex(index_type index) const;
+
+  /**
+   * @brief Returns true if the pipeline has encountered errors before the
+   * specified index. Returns false otherwise.
+   * @param index
+   * @return bool
+   */
+  bool hasErrorsBeforeIndex(index_type index) const;
 
   ////////////
   // Variables

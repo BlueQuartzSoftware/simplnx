@@ -24,6 +24,10 @@ class Pipeline;
 class COMPLEX_EXPORT AbstractPipelineNode
 {
 public:
+  // Making Pipeline a friend class allows Pipelines to set flags of the nodes
+  // they contain.
+  friend class Pipeline;
+
   using SignalType = nod::signal<void(AbstractPipelineNode*, const std::shared_ptr<AbstractPipelineMessage>&)>;
 
   /**
@@ -38,11 +42,14 @@ public:
   /**
    * @brief Specific states of pipeline and filter execution.
    */
-  enum class Status
+  enum Status : uint8
   {
-    Dirty = 0,
-    Executing,
-    Completed
+    None = 0,
+    Executing = 1,
+    Executed = 2,
+    Error = 4,
+    Warning = 8,
+    Disabled = 16
   };
 
   virtual ~AbstractPipelineNode();
@@ -73,6 +80,12 @@ public:
   void setParentPipeline(Pipeline* parent);
 
   /**
+   * @brief Returns true if the node has a parent pipeline. Returns false otherwise.
+   * @return bool
+   */
+  bool hasParentPipeline() const;
+
+  /**
    * @brief Attempts to preflight the node using the provided DataStructure.
    * Returns true if preflighting succeeded. Otherwise, this returns false.
    * @param data
@@ -95,15 +108,58 @@ public:
   virtual std::unique_ptr<AbstractPipelineNode> deepCopy() const = 0;
 
   /**
-   * @brief Marks the node and all of its dependents as dirty.
-   */
-  void markDirty();
-
-  /**
-   * @brief Returns true if node is dirty. Returns false otherwise.
+   * @brief Returns true if the node is currently being executed. Otherwise,
+   * this method returns false.
    * @return bool
    */
-  bool isDirty() const;
+  bool isExecuting() const;
+
+  /**
+   * @brief Returns true if the node is has been executed. Otherwise,
+   * this method returns false.
+   * @return bool
+   */
+  bool hasBeenExecuted() const;
+
+  /**
+   * @brief Returns true if the node has errors. Otherwise, this method returns
+   * false.
+   * @return bool
+   */
+  bool hasErrors() const;
+
+  /**
+   * @brief Returns true if the node has warnings. Otherwise, this method
+   * returns false.
+   * @return bool
+   */
+  bool hasWarnings() const;
+
+  /**
+   * @brief Returns true if the node is disabled. Otherwise, this method
+   * returns false.
+   * @return bool
+   */
+  bool isDisabled() const;
+
+  /**
+   * @brief Returns true if the node is enabled. Otherwise, this method
+   * returns false.
+   * @return bool
+   */
+  bool isEnabled() const;
+
+  /**
+   * @brief Sets whether the node is disabled.
+   * @param disabled = true
+   */
+  void setDisabled(bool disabled = true);
+
+  /**
+   * @brief Sets whether the node is disabled.
+   * @param enabled = true
+   */
+  void setEnabled(bool enabled = true);
 
   /**
    * @brief Returns the pipeline node status.
@@ -169,6 +225,30 @@ protected:
   void setStatus(Status status);
 
   /**
+   * @brief Sets or clears the Warning flag.
+   * @param value = true
+   */
+  void setHasWarnings(bool value = true);
+
+  /**
+   * @brief Sets or clears the Error flag.
+   * @param value = true
+   */
+  void setHasErrors(bool value = true);
+
+  /**
+   * @brief Sets or clears the Executing flag.
+   * @param value = true
+   */
+  void setIsExecuting(bool value = true);
+
+  /**
+   * @brief Sets or clears the Executed flag.
+   * @param value = true
+   */
+  virtual void setHasBeenExecuted(bool value = true);
+
+  /**
    * @brief Notifies known observers of the provided message.
    * @param msg
    */
@@ -185,9 +265,8 @@ protected:
    * @brief Updates the stored DataStructure. This should only be called from
    * within the execute(DataStructure&) method.
    * @param ds
-   * @param success = true
    */
-  void setDataStructure(const DataStructure& ds, bool success = true);
+  void setDataStructure(const DataStructure& ds);
 
   /**
    * @brief Updates the stored DataStructure from preflighting the node. This
@@ -198,6 +277,13 @@ protected:
   void setPreflightStructure(const DataStructure& ds, bool success = true);
 
   /**
+   * @brief Called when ending pipeline node execution.
+   * Sets the DataStructure and clears the Executing flag.
+   * If there is a parent node, sets the Executed flag.
+   */
+  virtual void endExecution(DataStructure& dataStructure);
+
+  /**
    * @brief Returns a Pipeline containing the parent pipeline up to the current
    * node. This will expand DREAM3D files as their own Pipeline.
    * @return std::unique_ptr<Pipeline>
@@ -205,7 +291,7 @@ protected:
   std::unique_ptr<Pipeline> getPrecedingPipelineSegment() const;
 
 private:
-  Status m_Status = Status::Dirty;
+  Status m_Status = Status::None;
   Pipeline* m_Parent = nullptr;
   DataStructure m_DataStructure;
   DataStructure m_PreflightStructure;

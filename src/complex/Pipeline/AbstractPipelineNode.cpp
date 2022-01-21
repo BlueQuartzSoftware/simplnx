@@ -1,6 +1,7 @@
 #include "AbstractPipelineNode.hpp"
 
 #include <algorithm>
+#include <bitset>
 #include <cstdlib>
 
 #include "complex/Pipeline/Messaging/NodeStatusMessage.hpp"
@@ -26,14 +27,63 @@ void AbstractPipelineNode::setParentPipeline(Pipeline* parent)
   m_Parent = parent;
 }
 
-void AbstractPipelineNode::markDirty()
+bool AbstractPipelineNode::hasParentPipeline() const
 {
-  m_Status = Status::Dirty;
+  return m_Parent != nullptr;
 }
 
-bool AbstractPipelineNode::isDirty() const
+bool AbstractPipelineNode::isExecuting() const
 {
-  return m_Status == Status::Dirty;
+  return static_cast<bool>(m_Status & Status::Executing);
+}
+
+bool AbstractPipelineNode::hasBeenExecuted() const
+{
+  return static_cast<bool>(m_Status & Status::Executed);
+}
+
+bool AbstractPipelineNode::hasErrors() const
+{
+  return static_cast<bool>(m_Status & Status::Error);
+}
+
+bool AbstractPipelineNode::hasWarnings() const
+{
+  return static_cast<bool>(m_Status & Status::Warning);
+}
+
+bool AbstractPipelineNode::isDisabled() const
+{
+  return static_cast<bool>(m_Status & Status::Disabled);
+}
+
+bool AbstractPipelineNode::isEnabled() const
+{
+  return !isDisabled();
+}
+
+void AbstractPipelineNode::setDisabled(bool disabled)
+{
+  std::bitset<8> statusBits(m_Status);
+
+  if(disabled)
+  {
+    statusBits |= Status::Disabled;
+  }
+  else
+  {
+    std::bitset<8> mask(Status::Disabled);
+    mask.flip();
+    statusBits &= mask;
+  }
+
+  m_Status = static_cast<Status>(statusBits.to_ulong());
+  notify(std::make_shared<NodeStatusMessage>(this, m_Status));
+}
+
+void AbstractPipelineNode::setEnabled(bool enabled)
+{
+  return setDisabled(!enabled);
 }
 
 AbstractPipelineNode::Status AbstractPipelineNode::getStatus() const
@@ -43,8 +93,86 @@ AbstractPipelineNode::Status AbstractPipelineNode::getStatus() const
 
 void AbstractPipelineNode::setStatus(Status status)
 {
+  // If Status has not changed, do nothing
+  if(m_Status == status)
+  {
+    return;
+  }
+
   m_Status = status;
   notify(std::make_shared<NodeStatusMessage>(this, status));
+}
+
+void AbstractPipelineNode::setHasWarnings(bool value)
+{
+  std::bitset<8> statusBits(m_Status);
+
+  if(value)
+  {
+    statusBits |= Status::Warning;
+  }
+  else
+  {
+    std::bitset<8> mask(Status::Warning);
+    mask.flip();
+    statusBits &= mask;
+  }
+
+  setStatus(static_cast<Status>(statusBits.to_ulong()));
+}
+
+void AbstractPipelineNode::setHasErrors(bool value)
+{
+  std::bitset<8> statusBits(m_Status);
+
+  if(value)
+  {
+    statusBits |= Status::Error;
+  }
+  else
+  {
+    std::bitset<8> mask(Status::Error);
+    mask.flip();
+    statusBits &= mask;
+  }
+
+  setStatus(static_cast<Status>(statusBits.to_ulong()));
+}
+
+void AbstractPipelineNode::setIsExecuting(bool value)
+{
+  std::bitset<8> statusBits(m_Status);
+
+  if(value)
+  {
+    statusBits |= Status::Executing;
+  }
+  else
+  {
+    std::bitset<8> mask(Status::Executing);
+    mask.flip();
+    statusBits &= mask;
+  }
+
+  setStatus(static_cast<Status>(statusBits.to_ulong()));
+}
+
+void AbstractPipelineNode::setHasBeenExecuted(bool value)
+{
+  std::bitset<8> statusBits(m_Status);
+
+  if(value)
+  {
+    statusBits |= Status::Executed;
+  }
+  else
+  {
+    std::bitset<8> mask(Status::Executed);
+    mask.flip();
+    statusBits &= mask;
+  }
+
+  setStatus(static_cast<Status>(statusBits.to_ulong()));
 }
 
 const DataStructure& AbstractPipelineNode::getDataStructure() const
@@ -52,18 +180,9 @@ const DataStructure& AbstractPipelineNode::getDataStructure() const
   return m_DataStructure;
 }
 
-void AbstractPipelineNode::setDataStructure(const DataStructure& ds, bool success)
+void AbstractPipelineNode::setDataStructure(const DataStructure& ds)
 {
   m_DataStructure = ds;
-
-  if(success)
-  {
-    setStatus(Status::Completed);
-  }
-  else
-  {
-    markDirty();
-  }
 }
 
 const DataStructure& AbstractPipelineNode::getPreflightStructure() const
@@ -75,30 +194,32 @@ void AbstractPipelineNode::setPreflightStructure(const DataStructure& ds, bool s
 {
   m_PreflightStructure = ds;
   m_IsPreflighted = success;
-
-  if(!success)
-  {
-    m_Status = Status::Dirty;
-  }
 }
 
 void AbstractPipelineNode::clearDataStructure()
 {
   m_DataStructure = DataStructure();
-  m_Status = Status::Dirty;
+  m_Status = Status::None;
 }
 
 void AbstractPipelineNode::clearPreflightStructure()
 {
   m_DataStructure = DataStructure();
   m_PreflightStructure = DataStructure();
-  m_Status = Status::Dirty;
+  m_Status = Status::None;
   m_IsPreflighted = false;
 }
 
 bool AbstractPipelineNode::isPreflighted() const
 {
   return m_IsPreflighted;
+}
+
+void AbstractPipelineNode::endExecution(DataStructure& dataStructure)
+{
+  setDataStructure(dataStructure);
+  setIsExecuting(false);
+  setHasBeenExecuted(hasParentPipeline());
 }
 
 void AbstractPipelineNode::notify(const std::shared_ptr<AbstractPipelineMessage>& msg)
