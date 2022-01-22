@@ -39,7 +39,7 @@ Result<std::any> ArraySelectionParameter::fromJson(const nlohmann::json& json) c
   static constexpr StringLiteral prefix = "FilterParameter 'ArraySelectionParameter' JSON Error: ";
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a jsonStrValue", prefix.view(), name()));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), name()));
   }
   auto jsonStrValue = json.get<std::string>();
   if(jsonStrValue.empty())
