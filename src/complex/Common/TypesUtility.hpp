@@ -96,6 +96,7 @@ inline constexpr usize GetNumericTypeSize(NumericType numericType)
     throw std::runtime_error("complex::GetNumericTypeSize: Unsupported type");
   }
 }
+
 /**
  * @brief Returns a string representation of the passed in NumericType
  * @param numericType
@@ -137,6 +138,56 @@ inline constexpr StringLiteral NumericTypeToString(NumericType numericType)
   }
   default:
     throw std::runtime_error("complex::NumericTypeToString: Unknown NumericType");
+  }
+}
+
+/**
+ * @brief Returns a string representation of the passed in DataType
+ * @param dataType
+ * @return
+ */
+inline constexpr StringLiteral DataTypeToString(DataType dataType)
+{
+  switch(dataType)
+  {
+  case DataType::int8: {
+    return "int8";
+  }
+  case DataType::uint8: {
+    return "uint8";
+  }
+  case DataType::int16: {
+    return "int16";
+  }
+  case DataType::uint16: {
+    return "uint16";
+  }
+  case DataType::int32: {
+    return "int32";
+  }
+  case DataType::uint32: {
+    return "uint32";
+  }
+  case DataType::int64: {
+    return "int64";
+  }
+  case DataType::uint64: {
+    return "uint64";
+  }
+  case DataType::float32: {
+    return "float32";
+  }
+  case DataType::float64: {
+    return "float64";
+  }
+  case DataType::boolean: {
+    return "boolean";
+  }
+  case DataType::error: {
+    return "error";
+  }
+  default:
+    throw std::runtime_error("complex::DataTypeToString: Unknown DataType");
   }
 }
 } // namespace complex
