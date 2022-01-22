@@ -16,7 +16,7 @@
 
 namespace fs = std::filesystem;
 
-#define CDA_CREATE_CONVERTOR(TYPE, FUNCTION)                                                                                                                                                           \
+#define COMPLEX_DEF_STRING_CONVERTOR(TYPE, FUNCTION)                                                                                                                                                   \
   template <>                                                                                                                                                                                          \
   struct ConvertTo<TYPE>                                                                                                                                                                               \
   {                                                                                                                                                                                                    \
@@ -26,10 +26,10 @@ namespace fs = std::filesystem;
       try                                                                                                                                                                                              \
       {                                                                                                                                                                                                \
         value = static_cast<TYPE>(FUNCTION(input));                                                                                                                                                    \
-      } catch(std::invalid_argument const& e)                                                                                                                                                          \
+      } catch(const std::invalid_argument& e)                                                                                                                                                          \
       {                                                                                                                                                                                                \
         return complex::MakeErrorResult<TYPE>(-100, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                            \
-      } catch(std::out_of_range const& e)                                                                                                                                                              \
+      } catch(const std::out_of_range& e)                                                                                                                                                              \
       {                                                                                                                                                                                                \
         return complex::MakeErrorResult<TYPE>(-101, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                   \
       }                                                                                                                                                                                                \
@@ -48,19 +48,19 @@ struct ConvertTo
  * These macros will create convertor objects that convert from a string to a numeric type
  */
 
-CDA_CREATE_CONVERTOR(uint8, std::stoull)
-CDA_CREATE_CONVERTOR(int8, std::stoll)
-CDA_CREATE_CONVERTOR(uint16, std::stoull)
-CDA_CREATE_CONVERTOR(int16, std::stoll)
-CDA_CREATE_CONVERTOR(uint32, std::stoull)
-CDA_CREATE_CONVERTOR(int32, std::stoll)
-CDA_CREATE_CONVERTOR(uint64, std::stoull)
-CDA_CREATE_CONVERTOR(int64, std::stoll)
+COMPLEX_DEF_STRING_CONVERTOR(uint8, std::stoull)
+COMPLEX_DEF_STRING_CONVERTOR(int8, std::stoll)
+COMPLEX_DEF_STRING_CONVERTOR(uint16, std::stoull)
+COMPLEX_DEF_STRING_CONVERTOR(int16, std::stoll)
+COMPLEX_DEF_STRING_CONVERTOR(uint32, std::stoull)
+COMPLEX_DEF_STRING_CONVERTOR(int32, std::stoll)
+COMPLEX_DEF_STRING_CONVERTOR(uint64, std::stoull)
+COMPLEX_DEF_STRING_CONVERTOR(int64, std::stoll)
 #ifdef __APPLE__
-CDA_CREATE_CONVERTOR(usize, std::stoull)
+COMPLEX_DEF_STRING_CONVERTOR(usize, std::stoull)
 #endif
-CDA_CREATE_CONVERTOR(float32, std::stof)
-CDA_CREATE_CONVERTOR(float64, std::stod)
+COMPLEX_DEF_STRING_CONVERTOR(float32, std::stof)
+COMPLEX_DEF_STRING_CONVERTOR(float64, std::stod)
 
 /**
  * @brief Checks if the given string can be correctly converted into the given type
@@ -443,23 +443,23 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
  * @param mode The mode: Preflight or Execute
  * @return
  */
-COMPLEX_EXPORT Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath& dataPath, std::vector<usize>& tupleShape, complex::IDataAction::Mode mode);
+COMPLEX_EXPORT Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath& dataPath, std::vector<usize>& tupleShape, IDataAction::Mode mode);
 
 /**
  * @brief This function will ensure that a user entered numeric value can correctly be parsed into the selected NumericType
  *
  * @param value The string value that is to be parsed
  * @param numericType The NumericType to parse the value into.
- * @return COMPLEX_EXPORT
+ * @return
  */
-COMPLEX_EXPORT Result<> CheckInitValueConverts(const std::string& value, complex::NumericType numericType);
+COMPLEX_EXPORT Result<> CheckValueConverts(const std::string& value, NumericType numericType);
 
 /**
  * @brief This function will ensure that a user entered numeric value can correctly be parsed into the selected DataArray
  *
  * @param value The string value that is to be parsed
  * @param inputDataArray The DataArray that the value would be inserted into.
- * @return COMPLEX_EXPORT
+ * @return
  */
 COMPLEX_EXPORT Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObject& inputDataArray);
 
