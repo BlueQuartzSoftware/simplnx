@@ -79,16 +79,10 @@ endif()
 # Force HDF5 1.10 API
 target_compile_definitions(complex PUBLIC "H5_USE_110_API")
 
-# For Including TBB
 if(COMPLEX_ENABLE_MULTICORE)
   target_compile_definitions(complex PUBLIC "COMPLEX_ENABLE_MULTICORE")
   target_link_libraries(complex PUBLIC TBB::tbb)
 endif()
-
-target_include_directories(complex
-  PRIVATE
-    ${HDF5_INCLUDE_DIRS}
-)
 
 target_link_libraries(complex
   PUBLIC
@@ -508,7 +502,6 @@ target_include_directories(complex
     $<INSTALL_INTERFACE:include>
 )
 
-
 get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
 if("${ComplexPluginTargets}" STREQUAL "")
   set_property(GLOBAL PROPERTY ComplexPluginTargets "")
@@ -529,7 +522,6 @@ set_property(GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT 1)
 foreach(plugin ${COMPLEX_EXTRA_PLUGINS})
   complex_add_plugin(PLUGIN_NAME ${plugin})
 endforeach()
-
 
 set(COMPLEX_PACKAGE_NAMESPACE "complex::")
 
