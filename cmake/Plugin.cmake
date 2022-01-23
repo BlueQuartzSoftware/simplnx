@@ -222,6 +222,9 @@ function(create_complex_plugin)
 
   target_link_libraries(${ARGS_NAME} PUBLIC complex)
 
+  include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
+  complex_enable_warnings(TARGET ${ARGS_NAME})
+
   if(MSVC)
     target_compile_options(${ARGS_NAME}
       PRIVATE
@@ -318,6 +321,9 @@ function(create_complex_plugin_unit_test)
       Catch2::Catch2
       complex::UnitTestCommon
   )
+
+  include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
+  complex_enable_warnings(TARGET ${UNIT_TEST_TARGET})
 
   #------------------------------------------------------------------------------
   # Require that the test plugins are built before tests because some tests
