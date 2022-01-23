@@ -325,6 +325,7 @@ function(create_complex_plugin_unit_test)
   set_target_properties(${ARGS_PLUGIN_NAME}UnitTest
     PROPERTIES
       RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
+      FOLDER "Plugins/${ARGS_PLUGIN_NAME}"
   )
 
   target_compile_definitions(${ARGS_PLUGIN_NAME}UnitTest
