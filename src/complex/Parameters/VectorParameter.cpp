@@ -50,9 +50,11 @@ nlohmann::json VectorParameter<T>::toJson(const std::any& value) const
 template <class T>
 Result<std::any> VectorParameter<T>::fromJson(const nlohmann::json& json) const
 {
+  static constexpr StringLiteral prefix = "FilterParameter 'VectorParameter' JSON Error: ";
+
   if(!json.is_array())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not an array", name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an array", prefix, name()));
   }
   ValueType vec;
   for(usize i = 0; i < json.size(); i++)
@@ -62,12 +64,12 @@ Result<std::any> VectorParameter<T>::fromJson(const nlohmann::json& json) const
     {
       if(!element.is_number())
       {
-        return MakeErrorResult<std::any>(-3, fmt::format("JSON value for array index '{}' is not a number", i));
+        return MakeErrorResult<std::any>(-3, fmt::format("{}JSON value for array index '{}' is not a number", prefix, i));
       }
     }
     else
     {
-      static_assert(dependent_false<T>, "JSON conversion not implemented for this type");
+      static_assert(dependent_false<T>, "Attempting to convert value for which std::is_arithmetic_v<T>==false. Please check the JSON to ensure the value is numeric.");
     }
     vec.push_back(element.get<T>());
   }

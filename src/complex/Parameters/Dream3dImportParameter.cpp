@@ -72,24 +72,24 @@ Result<std::any> Dream3dImportParameter::fromJson(const nlohmann::json& json) co
   static constexpr StringLiteral prefix = "FilterParameter 'Dream3dImportParameter' JSON Error: ";
   if(!json.is_object())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not an object", name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an object", prefix, name()));
   }
 
   if(!json.contains(k_FilePathKey.view()))
   {
-    return MakeErrorResult<std::any>(-3, fmt::format("JSON does not contain key \"{} / {}\"", name(), k_FilePathKey.view()));
+    return MakeErrorResult<std::any>(-3, fmt::format("{}JSON does not contain key '{} / {}'", prefix, name(), k_FilePathKey.view()));
   }
 
   if(!json.contains(k_DataPathsKey.view()))
   {
-    return MakeErrorResult<std::any>(-4, fmt::format("JSON does not contain key \"{} / {}\"", name(), k_DataPathsKey.view()));
+    return MakeErrorResult<std::any>(-4, fmt::format("{}JSON does not contain key '{} / {}'", prefix, name(), k_DataPathsKey.view()));
   }
 
   ImportData importData;
   const auto& jsonFilePath = json[k_FilePathKey];
   if(!jsonFilePath.is_string())
   {
-    return MakeErrorResult<std::any>(-5, fmt::format("JSON value for key \"{} / {}\" is not an string", name(), k_FilePathKey));
+    return MakeErrorResult<std::any>(-5, fmt::format("{}JSON value for key '{} / {}' is not an string", prefix, name(), k_FilePathKey));
   }
   importData.FilePath = jsonFilePath.get<std::string>();
 
@@ -102,7 +102,7 @@ Result<std::any> Dream3dImportParameter::fromJson(const nlohmann::json& json) co
   {
     if(!jsonDataPaths.is_array())
     {
-      return MakeErrorResult<std::any>(-6, fmt::format("JSON value for key \"{} / {}\" is not an array", name()));
+      return MakeErrorResult<std::any>(-6, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name()));
     }
     auto dataPathStrings = jsonDataPaths.get<std::vector<std::string>>();
     std::vector<DataPath> dataPaths;
