@@ -149,6 +149,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Common/ComplexConstants.hpp
   ${COMPLEX_SOURCE_DIR}/Common/BoundingBox.hpp
   ${COMPLEX_SOURCE_DIR}/Common/EulerAngle.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Numbers.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Point2D.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Point3D.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Ray.hpp

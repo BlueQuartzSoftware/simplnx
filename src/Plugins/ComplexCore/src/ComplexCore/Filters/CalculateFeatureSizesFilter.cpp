@@ -1,8 +1,6 @@
 #include "CalculateFeatureSizesFilter.hpp"
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
+#include "complex/Common/Numbers.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
@@ -19,7 +17,7 @@ namespace
 constexpr complex::int32 k_MissingGeometry = -73225;
 constexpr complex::int32 k_MissingFeatureIds = -74789;
 constexpr complex::int32 k_BadFeatureCount = -78231;
-constexpr complex::float32 k_PI = M_PI;
+constexpr complex::float32 k_PI = numbers::pi_v<complex::float32>;
 } // namespace
 
 std::string CalculateFeatureSizesFilter::name() const
