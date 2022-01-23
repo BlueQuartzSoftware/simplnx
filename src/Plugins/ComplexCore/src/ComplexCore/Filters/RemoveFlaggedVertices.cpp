@@ -65,7 +65,7 @@ Uuid RemoveFlaggedVertices::uuid() const
 
 std::string RemoveFlaggedVertices::humanName() const
 {
-  return "Create Data Array";
+  return "Remove Flagged Vertices";
 }
 
 std::vector<std::string> RemoveFlaggedVertices::defaultTags() const
