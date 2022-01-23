@@ -284,6 +284,8 @@ function(create_complex_plugin_unit_test)
   set(multiValueArgs FILTER_LIST)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+  set(UNIT_TEST_TARGET ${ARGS_PLUGIN_NAME}UnitTest)
+
   #------------------------------------------------------------------------------
   # Find the Catch2 unit testing package
   find_package(Catch2 CONFIG REQUIRED)
@@ -303,13 +305,13 @@ function(create_complex_plugin_unit_test)
 
   #------------------------------------------------------------------------------
   # Create the unit test executable
-  add_executable(${ARGS_PLUGIN_NAME}UnitTest
+  add_executable(${UNIT_TEST_TARGET}
     ${COMPLEX_TEST_DIRS_HEADER}
     ${ARGS_PLUGIN_NAME}_test_main.cpp
     ${${ARGS_PLUGIN_NAME}UnitTest_SRCS}
   )
 
-  target_link_libraries(${ARGS_PLUGIN_NAME}UnitTest
+  target_link_libraries(${UNIT_TEST_TARGET}
     PRIVATE
       complex
       ${ARGS_PLUGIN_NAME}
@@ -320,28 +322,28 @@ function(create_complex_plugin_unit_test)
   #------------------------------------------------------------------------------
   # Require that the test plugins are built before tests because some tests
   # require loading from those plugins but don't want to link to them.
-  add_dependencies(${ARGS_PLUGIN_NAME}UnitTest ${ARGS_PLUGIN_NAME})
+  add_dependencies(${UNIT_TEST_TARGET} ${ARGS_PLUGIN_NAME})
 
-  set_target_properties(${ARGS_PLUGIN_NAME}UnitTest
+  set_target_properties(${UNIT_TEST_TARGET}
     PROPERTIES
       RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
       FOLDER "Plugins/${ARGS_PLUGIN_NAME}"
   )
 
-  target_compile_definitions(${ARGS_PLUGIN_NAME}UnitTest
+  target_compile_definitions(${UNIT_TEST_TARGET}
     PRIVATE
       COMPLEX_BUILD_DIR="$<TARGET_FILE_DIR:complex_test>"
   )
 
-  target_compile_options(${ARGS_PLUGIN_NAME}UnitTest
+  target_compile_options(${UNIT_TEST_TARGET}
     PRIVATE
       $<$<CXX_COMPILER_ID:MSVC>:/MP>
   )
 
-  target_include_directories(${ARGS_PLUGIN_NAME}UnitTest
+  target_include_directories(${UNIT_TEST_TARGET}
     PRIVATE
       ${${ARGS_PLUGIN_NAME}_GENERATED_DIR}
   )
 
-  catch_discover_tests(${ARGS_PLUGIN_NAME}UnitTest)
+  catch_discover_tests(${UNIT_TEST_TARGET})
 endfunction()
