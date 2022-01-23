@@ -100,9 +100,11 @@ nlohmann::json FileSystemPathParameter::toJson(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<std::any> FileSystemPathParameter::fromJson(const nlohmann::json& json) const
 {
+  static constexpr StringLiteral prefix = "FilterParameter 'FileSystemPathParameter' JSON Error: ";
+
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a string", name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", prefix, name()));
   }
   auto pathString = json.get<std::string>();
   std::filesystem::path path = pathString;

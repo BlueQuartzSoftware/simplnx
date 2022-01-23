@@ -42,7 +42,7 @@ Result<std::any> GeometrySelectionParameter::fromJson(const nlohmann::json& json
   static constexpr StringLiteral prefix = "FilterParameter 'GeometrySelectionParameter' JSON Error: ";
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a string", name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", prefix, name()));
   }
   auto string = json.get<std::string>();
   std::optional<DataPath> path = DataPath::FromString(string);

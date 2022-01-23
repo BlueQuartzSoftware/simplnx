@@ -40,7 +40,7 @@ Result<std::any> MultiArraySelectionParameter::fromJson(const nlohmann::json& js
   static constexpr StringLiteral prefix = "FilterParameter 'MultiArraySelectionParameter' JSON Error: ";
   if(!json.is_array())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not an array", name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an array", prefix, name()));
   }
 
   ValueType paths;
@@ -51,7 +51,7 @@ Result<std::any> MultiArraySelectionParameter::fromJson(const nlohmann::json& js
   {
     if(!item.is_string())
     {
-      return MakeErrorResult<std::any>(-3, fmt::format("JSON value in array is not a string"));
+      return MakeErrorResult<std::any>(-3, fmt::format("{}JSON value in array is not a string", prefix));
     }
     auto string = item.get<std::string>();
     auto path = DataPath::FromString(string);

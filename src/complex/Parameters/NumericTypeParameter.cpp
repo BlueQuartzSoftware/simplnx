@@ -82,9 +82,10 @@ nlohmann::json NumericTypeParameter::toJson(const std::any& value) const
 
 Result<std::any> NumericTypeParameter::fromJson(const nlohmann::json& json) const
 {
+  static constexpr StringLiteral prefix = "FilterParameter 'NumericTypeParameter' JSON Error: ";
   if(!json.is_number())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("JSON value for key '{}' is not a number", name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a number", prefix, name()));
   }
   auto type = json.get<ValueType>();
   return {{type}};
