@@ -26,3 +26,28 @@ function(install_with_directory)
       )
   endforeach()
 endfunction()
+
+function(complex_enable_warnings)
+  set(optionsArgs)
+  set(oneValueArgs TARGET)
+  set(multiValueArgs)
+  cmake_parse_arguments(ARG "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  if(NOT TARGET ${ARG_TARGET})
+    message(FATAL_ERROR "complex_enable_warnings must be called with the argument TARGET set to a valid target")
+  endif()
+
+  if(MSVC)
+    target_compile_options(${ARG_TARGET}
+      PRIVATE
+        # C4706: assignment within conditional expression
+        /we4706
+    )
+  else()
+    target_compile_options(${ARG_TARGET}
+      PRIVATE
+        # Wparentheses: Warn if parentheses are omitted in certain contexts, such as when there is an assignment in a context where a truth value is expected, or when operators are nested whose precedence people often get confused about
+        -Werror=parentheses
+    )
+  endif()
+endfunction()
