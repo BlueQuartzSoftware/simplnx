@@ -40,14 +40,20 @@ function(complex_enable_warnings)
   if(MSVC)
     target_compile_options(${ARG_TARGET}
       PRIVATE
-        # C4706: assignment within conditional expression
-        /we4706
+        # Suppressed warnings
+        /wd4275 # C4275: An exported class was derived from a class that wasn't exported.
+        /wd4251 # C4251: 'type' : class 'type1' needs to have dll-interface to be used by clients of class 'type2'
+
+        # Warning to error
+        /we4706 # C4706: assignment within conditional expression
+        /we4715 # C4715: The specified function can potentially not return a value.
     )
   else()
     target_compile_options(${ARG_TARGET}
       PRIVATE
-        # Wparentheses: Warn if parentheses are omitted in certain contexts, such as when there is an assignment in a context where a truth value is expected, or when operators are nested whose precedence people often get confused about
-        -Werror=parentheses
+        # Warning to error
+        -Werror=parentheses # Wparentheses: Warn if parentheses are omitted in certain contexts, such as when there is an assignment in a context where a truth value is expected, or when operators are nested whose precedence people often get confused about
+        -Werror=return-type # Wreturn-type: Warn about any "return" statement with no return value in a function whose return type is not "void"
     )
   endif()
 endfunction()
