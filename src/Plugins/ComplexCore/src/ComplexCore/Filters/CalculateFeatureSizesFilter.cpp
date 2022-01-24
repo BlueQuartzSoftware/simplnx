@@ -10,6 +10,8 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 
+#include <cmath>
+
 namespace complex
 {
 namespace
