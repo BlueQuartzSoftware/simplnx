@@ -1,8 +1,7 @@
 #include "NodeStatusMessage.hpp"
 
-#include "complex/Pipeline/PipelineFilter.hpp"
 #include "complex/Pipeline/AbstractPipelineNode.hpp"
-
+#include "complex/Pipeline/PipelineFilter.hpp"
 
 
 #include "fmt/format.h"
@@ -26,7 +25,7 @@ std::string NodeStatusMessage::toString() const
 {
   auto output = fmt::format("Node {}: ", getNode()->getName());
 
-  switch (getNode()->getStatus())
+  switch(getNode()->getStatus())
   {
     case complex::AbstractPipelineNode::Executing:
       output += " is Executing";
