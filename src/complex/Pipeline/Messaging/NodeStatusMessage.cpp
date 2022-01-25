@@ -26,24 +26,24 @@ std::string NodeStatusMessage::toString() const
 
   switch(getNode()->getStatus())
   {
-    case complex::AbstractPipelineNode::Executing:
-      output += " is Executing";
-      break;
-    case complex::AbstractPipelineNode::Error:
-      output += " has Errors";
-      break;
-    case complex::AbstractPipelineNode::Warning:
-      output += " has Warnings";
-      break;
-    case complex::AbstractPipelineNode::Executed:
-      output += " Executed Successfully";
-      break;
-    case complex::AbstractPipelineNode::Disabled:
-      output += " is Disabled";
-      break;
-    default:
-      output.clear();
-      break;
+  case complex::AbstractPipelineNode::Executing:
+    output += " is Executing";
+    break;
+  case complex::AbstractPipelineNode::Error:
+    output += " has Errors";
+    break;
+  case complex::AbstractPipelineNode::Warning:
+    output += " has Warnings";
+    break;
+  case complex::AbstractPipelineNode::Executed:
+    output += " Executed Successfully";
+    break;
+  case complex::AbstractPipelineNode::Disabled:
+    output += " is Disabled";
+    break;
+  default:
+    output.clear();
+    break;
   }
 
   return output;
