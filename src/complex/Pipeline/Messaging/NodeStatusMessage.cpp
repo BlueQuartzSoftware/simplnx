@@ -1,6 +1,9 @@
 #include "NodeStatusMessage.hpp"
 
 #include "complex/Pipeline/PipelineFilter.hpp"
+#include "complex/Pipeline/AbstractPipelineNode.hpp"
+
+
 
 #include "fmt/format.h"
 
@@ -23,21 +26,25 @@ std::string NodeStatusMessage::toString() const
 {
   auto output = fmt::format("Node {}: ", getNode()->getName());
 
-  if(getNode()->isExecuting())
+  switch (getNode()->getStatus())
   {
-    output += " is Executing;";
-  }
-  if(getNode()->hasErrors())
-  {
-    output += " has Errors;";
-  }
-  if(getNode()->hasWarnings())
-  {
-    output += " has Warnings;";
-  }
-  if(getNode()->isDisabled())
-  {
-    output += " is Disabled;";
+    case complex::AbstractPipelineNode::Executing:
+      output += " is Executing";
+      break;
+      case complex::AbstractPipelineNode::Error:
+        output += " has Errors";
+        break;
+      case complex::AbstractPipelineNode::Warning:
+        output += " has Warnings";
+        break;
+      case complex::AbstractPipelineNode::Executed:
+        output += " Executed Successfully";
+        break;
+      case complex::AbstractPipelineNode::Disabled:
+        output += " is Disabled";
+        break;
+      default:
+        output.clear();
   }
 
   return output;
