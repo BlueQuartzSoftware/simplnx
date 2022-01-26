@@ -158,7 +158,7 @@ bool Pipeline::canPreflightFrom(index_type index) const
   {
     return false;
   }
-  return at(index - 1)->isPreflighted() && hasErrorsBeforeIndex(index);
+  return at(index - 1)->isPreflighted() && !hasErrorsBeforeIndex(index);
 }
 
 bool Pipeline::preflightFrom(index_type index, DataStructure& ds)
