@@ -9,7 +9,33 @@ namespace complex
 {
 /**
  * @class ITKLaplacianSharpeningImage
- * @brief This filter will ....
+ * @brief This filter sharpens an image using a Laplacian. LaplacianSharpening highlights regions of rapid intensity change and therefore highlights or enhances the edges. The result is an image that
+ * appears more in focus.
+ *
+ * \par The LaplacianSharpening at each pixel location is computed by
+ * convolution with the itk::LaplacianOperator .
+ *
+ *
+ * \par Inputs and Outputs
+ * The input to this filter is a scalar-valued itk::Image of arbitrary dimension. The output is a scalar-valued itk::Image .
+ *
+ *
+ * @see Image
+ *
+ *
+ * @see Neighborhood
+ *
+ *
+ * @see NeighborhoodOperator
+ *
+ *
+ * @see NeighborhoodIterator
+ *
+ *
+ * @see LaplacianOperator
+ *
+ * ITK Module: ITKImageFeature
+ * ITK Group: ImageFeature
  */
 class ITKIMAGEPROCESSING_EXPORT ITKLaplacianSharpeningImage : public IFilter
 {
@@ -24,10 +50,10 @@ public:
   ITKLaplacianSharpeningImage& operator=(ITKLaplacianSharpeningImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_UseImageSpacing_Key = "UseImageSpacing";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_UseImageSpacing_Key = "UseImageSpacing";
 
   /**
    * @brief Returns the name of the filter.

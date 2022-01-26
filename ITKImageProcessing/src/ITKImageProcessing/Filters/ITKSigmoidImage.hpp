@@ -9,7 +9,16 @@ namespace complex
 {
 /**
  * @class ITKSigmoidImage
- * @brief This filter will ....
+ * @brief Computes the sigmoid function pixel-wise.
+ *
+ * A linear transformation is applied first on the argument of the sigmoid function. The resulting total transform is given by
+ *
+ *  \f[ f(x) = (Max-Min) \cdot \frac{1}{\left(1+e^{- \frac{ x - \beta }{\alpha}}\right)} + Min \f]
+ *
+ * Every output pixel is equal to f(x). Where x is the intensity of the homologous input pixel, and alpha and beta are user-provided constants.
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
 class ITKIMAGEPROCESSING_EXPORT ITKSigmoidImage : public IFilter
 {
@@ -24,13 +33,13 @@ public:
   ITKSigmoidImage& operator=(ITKSigmoidImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_Alpha_Key = "Alpha";
   static inline constexpr StringLiteral k_Beta_Key = "Beta";
   static inline constexpr StringLiteral k_OutputMaximum_Key = "OutputMaximum";
   static inline constexpr StringLiteral k_OutputMinimum_Key = "OutputMinimum";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

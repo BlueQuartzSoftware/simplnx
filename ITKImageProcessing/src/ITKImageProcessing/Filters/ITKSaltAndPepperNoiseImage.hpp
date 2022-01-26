@@ -9,7 +9,31 @@ namespace complex
 {
 /**
  * @class ITKSaltAndPepperNoiseImage
- * @brief This filter will ....
+ * @brief Alter an image with fixed value impulse noise, often called salt and pepper noise.
+ *
+ * Salt (sensor saturation) and pepper (dead pixels) noise is a special kind of impulse noise where the value of the noise is either the maximum possible value in the image or its minimum. This is not
+ * necessarily the maximal/minimal possible intensity value based on the pixel type. For example, the native pixel type for CT is a signed 16 bit integer, but only 12 bits used, so we would like to
+ * set the salt and pepper values to match this smaller intensity range and not the range the pixel type represents. It can be modeled as:
+ *
+ * \par
+ * \f$ I = \begin{cases} M, & \quad \text{if } U < p/2 \\ m, & \quad \text{if } U > 1 - p/2 \\ I_0, & \quad \text{if } p/2 \geq U \leq 1 - p/2 \end{cases} \f$
+ *
+ *
+ * \par
+ * where \f$ p \f$ is the probability of the noise event, \f$ U \f$ is a uniformly distributed random variable in the \f$ [0,1] \f$ range, \f$ M \f$ is the greatest possible pixel value, and \f$ m \f$
+ * the smallest possible pixel value.
+ *
+ *
+ * Pixel alteration occurs at a user defined probability. Salt and pepper pixels are equally distributed.
+ *
+ * @author Gaetan Lehmann
+ *
+ *
+ * This code was contributed in the Insight Journal paper "Noise
+ *  Simulation". https://hdl.handle.net/10380/3158
+ *
+ * ITK Module: ITKImageNoise
+ * ITK Group: ImageNoise
  */
 class ITKIMAGEPROCESSING_EXPORT ITKSaltAndPepperNoiseImage : public IFilter
 {
@@ -24,11 +48,11 @@ public:
   ITKSaltAndPepperNoiseImage& operator=(ITKSaltAndPepperNoiseImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_Probability_Key = "Probability";
   static inline constexpr StringLiteral k_Seed_Key = "Seed";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

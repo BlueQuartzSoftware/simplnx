@@ -1,85 +1,48 @@
 #include "ITKFFTNormalizedCorrelationImage.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
+/**
+ * This filter only works with certain kinds of data. We
+ * enable the types that the filter will compile against. The
+ * Allowed PixelTypes as defined in SimpleITK are:
+ *   BasicPixelIDTypeList
+ * The filter defines the following output pixel types:
+ *   typename itk::NumericTraits<typename InputImageType::PixelType>::RealType
+ */
+#define ITK_BASIC_PIXEL_ID_TYPE_LIST 1
+#define COMPLEX_ITK_ARRAY_HELPER_USE_Scalar 1
+#define ITK_ARRAY_HELPER_NAMESPACE FFTNormalizedCorrelationImage
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
 
-using namespace complex;
+#include "complex/DataStructure/DataPath.hpp"
+#include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/Parameters/NumberParameter.hpp"
 
 #include <itkFFTNormalizedCorrelationImageFilter.h>
 
+using namespace complex;
+
 namespace
 {
-struct ITKFFTNormalizedCorrelationImageFilterCreationFunctor
+/**
+ * This filter uses a fixed output type.
+ */
+using FilterOutputType = float64;
+
+struct ITKFFTNormalizedCorrelationImageCreationFunctor
 {
-  float64 m_RequiredNumberOfOverlappingPixels;
-  float64 m_RequiredFractionOfOverlappingPixels;
-  DataPath m_SelectedCellArrayPath;
-  DataPath m_MovingCellArrayPath;
-  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
-  auto operator()() const
+  uint64_t pRequiredNumberOfOverlappingPixels = 0u;
+
+  template <class InputImageType, class OutputImageType, uint32 Dimension>
+  auto createFilter() const
   {
-    typedef itk::Image<OutputPixelType, Dimension> IntermediateImageType;
-
-    typedef itk::FFTNormalizedCorrelationImageFilter<InputImageType, IntermediateImageType> FilterType;
+    using FilterType = itk::FFTNormalizedCorrelationImageFilter<InputImageType, OutputImageType>;
     typename FilterType::Pointer filter = FilterType::New();
-
-    filter->SetRequiredNumberOfOverlappingPixels(static_cast<itk::SizeValueType>(m_RequiredNumberOfOverlappingPixels));
-    filter->SetRequiredFractionOfOverlappingPixels(static_cast<double>(m_RequiredFractionOfOverlappingPixels));
-
-    typedef itk::InPlaceDream3DDataToImageFilter<InputPixelType, Dimension> toITKType;
-    DataArrayPath dapMoving = getMovingCellArrayPath();
-    DataContainer::Pointer dcMoving = getDataContainerArray()->getDataContainer(dapMoving.getDataContainerName());
-    typename toITKType::Pointer toITKMoving = toITKType::New();
-    toITKMoving->SetInput(dcMoving);
-    toITKMoving->SetInPlace(true);
-    toITKMoving->SetAttributeMatrixArrayName(getMovingCellArrayPath().getAttributeMatrixName().toStdString());
-    toITKMoving->SetDataArrayName(getMovingCellArrayPath().getDataArrayName().toStdString());
-    filter->SetMovingImage(toITKMoving->GetOutput());
-
-    try
-    {
-      DataArrayPath dap = getSelectedCellArrayPath();
-      DataContainer::Pointer dc = getDataContainerArray()->getDataContainer(dap.getDataContainerName());
-
-      typename toITKType::Pointer toITK = toITKType::New();
-      toITK->SetInput(dc);
-      toITK->SetInPlace(true);
-      toITK->SetAttributeMatrixArrayName(getSelectedCellArrayPath().getAttributeMatrixName().toStdString());
-      toITK->SetDataArrayName(getSelectedCellArrayPath().getDataArrayName().toStdString());
-
-      itk::Dream3DFilterInterruption::Pointer interruption = itk::Dream3DFilterInterruption::New();
-      interruption->SetFilter(this);
-
-      filter->SetFixedImage(toITK->GetOutput());
-      filter->AddObserver(itk::ProgressEvent(), interruption);
-
-      typedef itk::CastImageFilter<IntermediateImageType, OutputImageType> CasterType;
-      typename CasterType::Pointer caster = CasterType::New();
-      caster->SetInput(filter->GetOutput());
-      caster->Update();
-
-      typename OutputImageType::Pointer image = OutputImageType::New();
-      image = caster->GetOutput();
-      image->DisconnectPipeline();
-      std::string outputArrayName(getNewCellArrayName().toStdString());
-
-      typedef itk::InPlaceImageToDream3DDataFilter<OutputPixelType, Dimension> toDream3DType;
-      typename toDream3DType::Pointer toDream3DFilter = toDream3DType::New();
-      toDream3DFilter->SetInput(image);
-      toDream3DFilter->SetInPlace(true);
-      toDream3DFilter->SetAttributeMatrixArrayName(getSelectedCellArrayPath().getAttributeMatrixName().toStdString());
-      toDream3DFilter->SetDataArrayName(outputArrayName);
-      toDream3DFilter->SetDataContainer(dc);
-      toDream3DFilter->Update();
-    } catch(itk::ExceptionObject& err)
-    {
-      QString errorMessage = "ITK exception was thrown while filtering input image: %1";
-      break;
-    }
+    filter->SetRequiredNumberOfOverlappingPixels(pRequiredNumberOfOverlappingPixels);
+    return filter;
   }
 };
 } // namespace
@@ -107,13 +70,13 @@ Uuid ITKFFTNormalizedCorrelationImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKFFTNormalizedCorrelationImage::humanName() const
 {
-  return "ITK::FFT Normalized Correlation Image";
+  return "ITK::FFTNormalizedCorrelationImageFilter";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKFFTNormalizedCorrelationImage::defaultTags() const
 {
-  return {"#ITK Image Processing", "#ITK Registration"};
+  return {"ITKImageProcessing", "ITKFFTNormalizedCorrelationImage", "ITKConvolution", "Convolution"};
 }
 
 //------------------------------------------------------------------------------
@@ -121,11 +84,10 @@ Parameters ITKFFTNormalizedCorrelationImage::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<Float64Parameter>(k_RequiredNumberOfOverlappingPixels_Key, "RequiredNumberOfOverlappingPixels", "", 2.3456789));
-  params.insert(std::make_unique<Float64Parameter>(k_RequiredFractionOfOverlappingPixels_Key, "RequiredFractionOfOverlappingPixels", "", 2.3456789));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Fixed Attribute Array to filter", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MovingCellArrayPath_Key, "Moving Attribute Array to filter", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NewCellArrayName_Key, "Filtered Array", "", DataPath{}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{DataObject::Type::ImageGeom}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image", "", DataPath{}));
+  params.insert(std::make_unique<UInt64Parameter>(k_RequiredNumberOfOverlappingPixels_Key, "RequiredNumberOfOverlappingPixels", "", 0u));
 
   return params;
 }
@@ -148,11 +110,10 @@ IFilter::PreflightResult ITKFFTNormalizedCorrelationImage::preflightImpl(const D
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pRequiredNumberOfOverlappingPixels = filterArgs.value<float64>(k_RequiredNumberOfOverlappingPixels_Key);
-  auto pRequiredFractionOfOverlappingPixels = filterArgs.value<float64>(k_RequiredFractionOfOverlappingPixels_Key);
-  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pMovingCellArrayPath = filterArgs.value<DataPath>(k_MovingCellArrayPath_Key);
-  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
+  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
+  auto pSelectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
+  auto pRequiredNumberOfOverlappingPixels = filterArgs.value<uint64_t>(k_RequiredNumberOfOverlappingPixels_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -168,13 +129,10 @@ IFilter::PreflightResult ITKFFTNormalizedCorrelationImage::preflightImpl(const D
   // If your filter is making structural changes to the DataStructure then the filter
   // is going to create OutputActions subclasses that need to be returned. This will
   // store those actions.
-  complex::Result<OutputActions> resultOutputActions;
-
-  resultOutputActions = ITK::DataCheck(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath);
+  complex::Result<OutputActions> resultOutputActions = ITK::DataCheck<FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath);
 
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
-  // None found in this filter based on the filter parameters
 
   // If this filter makes changes to the DataStructure in the form of
   // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
@@ -191,7 +149,6 @@ IFilter::PreflightResult ITKFFTNormalizedCorrelationImage::preflightImpl(const D
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
   // the appropriate methods.
-  // None found based on the filter parameters
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -203,24 +160,26 @@ Result<> ITKFFTNormalizedCorrelationImage::executeImpl(DataStructure& dataStruct
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pRequiredNumberOfOverlappingPixels = filterArgs.value<float64>(k_RequiredNumberOfOverlappingPixels_Key);
-  auto pRequiredFractionOfOverlappingPixels = filterArgs.value<float64>(k_RequiredFractionOfOverlappingPixels_Key);
-  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pMovingCellArrayPath = filterArgs.value<DataPath>(k_MovingCellArrayPath_Key);
-  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
+  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
+  auto pSelectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
+  auto pRequiredNumberOfOverlappingPixels = filterArgs.value<uint64_t>(k_RequiredNumberOfOverlappingPixels_Key);
+
+  /****************************************************************************
+   * Create the functor object that will instantiate the correct itk filter
+   ***************************************************************************/
+  ::ITKFFTNormalizedCorrelationImageCreationFunctor itkFunctor = {pRequiredNumberOfOverlappingPixels};
+
+  /****************************************************************************
+   * Associate the output image with the Image Geometry for Visualization
+   ***************************************************************************/
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
 
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
-  ::ITKFFTNormalizedCorrelationImageFilterCreationFunctor itkFunctor;
-  itkFunctor.m_RequiredNumberOfOverlappingPixels = pRequiredNumberOfOverlappingPixels;
-  itkFunctor.m_RequiredFractionOfOverlappingPixels = pRequiredFractionOfOverlappingPixels;
-  itkFunctor.m_SelectedCellArrayPath = pSelectedCellArrayPath;
-  itkFunctor.m_MovingCellArrayPath = pMovingCellArrayPath;
-
-  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
-
-  return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
+  return ITK::Execute<ITKFFTNormalizedCorrelationImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath,
+                                                                                                                        itkFunctor);
 }
 } // namespace complex

@@ -9,7 +9,35 @@ namespace complex
 {
 /**
  * @class ITKMaskImage
- * @brief This filter will ....
+ * @brief Mask an image with a mask.
+ *
+ * This class is templated over the types of the input image type, the mask image type and the type of the output image. Numeric conversions (castings) are done by the C++ defaults.
+ *
+ * The pixel type of the input 2 image must have a valid definition of the operator != with zero. This condition is required because internally this filter will perform the operation
+ *
+ * \code
+ * if pixel_from_mask_image != masking_value
+ *
+ *  pixel_output_image = pixel_input_image
+ *
+ * else
+ *
+ *  pixel_output_image = outside_value
+ *
+ * \endcode
+ *
+ *
+ * The pixel from the input 1 is cast to the pixel type of the output image.
+ *
+ * Note that the input and the mask images must be of the same size.
+ *
+ * \warning Any pixel value other than masking value (0 by default) will not be masked out.
+ *
+ *
+ * @see MaskNegatedImageFilter
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
 class ITKIMAGEPROCESSING_EXPORT ITKMaskImage : public IFilter
 {
@@ -24,11 +52,11 @@ public:
   ITKMaskImage& operator=(ITKMaskImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutsideValue_Key = "OutsideValue";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_MaskCellArrayPath_Key = "MaskCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_OutsideValue_Key = "OutsideValue";
+  static inline constexpr StringLiteral k_MaskImageDataPath_Key = "MaskImageDataPath";
 
   /**
    * @brief Returns the name of the filter.

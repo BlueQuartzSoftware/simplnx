@@ -1,36 +1,54 @@
 #include "ITKRegionalMaximaImage.hpp"
 
+/**
+ * This filter only works with certain kinds of data. We
+ * enable the types that the filter will compile against. The
+ * Allowed PixelTypes as defined in SimpleITK are:
+ *   ScalarPixelIDTypeList
+ * The filter defines the following output pixel types:
+ *   uint32_t
+ */
+#define ITK_SCALAR_PIXEL_ID_TYPE_LIST 1
+#define COMPLEX_ITK_ARRAY_HELPER_USE_Scalar 1
+#define ITK_ARRAY_HELPER_NAMESPACE RegionalMaximaImage
+
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
-#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include <itkRegionalMaximaImageFilter.h>
 
 using namespace complex;
 
-#include <itkRegionalMaximaImageFilter.h>
-
 namespace
 {
-struct ITKRegionalMaximaImageFilterCreationFunctor
+/**
+ * This filter uses a fixed output type.
+ */
+using FilterOutputType = uint32_t;
+
+struct ITKRegionalMaximaImageCreationFunctor
 {
-  float64 m_BackgroundValue;
-  float64 m_ForegroundValue;
-  bool m_FullyConnected;
-  bool m_FlatIsMaxima;
-  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
-  auto operator()() const
+  float64 pBackgroundValue = 0.0;
+  float64 pForegroundValue = 1.0;
+  bool pFullyConnected = false;
+  bool pFlatIsMaxima = true;
+
+  template <class InputImageType, class OutputImageType, uint32 Dimension>
+  auto createFilter() const
   {
-    typedef itk::RegionalMaximaImageFilter<InputImageType, OutputImageType> FilterType;
+    using FilterType = itk::RegionalMaximaImageFilter<InputImageType, OutputImageType>;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetBackgroundValue(static_cast<double>(m_BackgroundValue));
-    filter->SetForegroundValue(static_cast<double>(m_ForegroundValue));
-    filter->SetFullyConnected(static_cast<bool>(m_FullyConnected));
-    filter->SetFlatIsMaxima(static_cast<bool>(m_FlatIsMaxima));
+    filter->SetBackgroundValue(pBackgroundValue);
+    filter->SetForegroundValue(pForegroundValue);
+    filter->SetFullyConnected(pFullyConnected);
+    filter->SetFlatIsMaxima(pFlatIsMaxima);
     return filter;
   }
 };
@@ -59,13 +77,13 @@ Uuid ITKRegionalMaximaImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKRegionalMaximaImage::humanName() const
 {
-  return "ITK::Regional Maxima Image Filter";
+  return "ITK::RegionalMaximaImageFilter";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKRegionalMaximaImage::defaultTags() const
 {
-  return {"#ITK Image Processing", "#ITK BiasCorrection"};
+  return {"ITKImageProcessing", "ITKRegionalMaximaImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------
@@ -73,13 +91,13 @@ Parameters ITKRegionalMaximaImage::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "BackgroundValue", "", 2.3456789));
-  params.insert(std::make_unique<Float64Parameter>(k_ForegroundValue_Key, "ForegroundValue", "", 2.3456789));
-  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "FullyConnected", "", false));
-  params.insert(std::make_unique<BoolParameter>(k_FlatIsMaxima_Key, "FlatIsMaxima", "", false));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{DataObject::Type::ImageGeom}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to filter", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NewCellArrayName_Key, "Filtered Array", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image", "", DataPath{}));
+  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "BackgroundValue", "", 0.0));
+  params.insert(std::make_unique<Float64Parameter>(k_ForegroundValue_Key, "ForegroundValue", "", 1.0));
+  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "FullyConnected", "", false));
+  params.insert(std::make_unique<BoolParameter>(k_FlatIsMaxima_Key, "FlatIsMaxima", "", true));
 
   return params;
 }
@@ -102,13 +120,13 @@ IFilter::PreflightResult ITKRegionalMaximaImage::preflightImpl(const DataStructu
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
+  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
+  auto pSelectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
   auto pBackgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   auto pForegroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
   auto pFullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
   auto pFlatIsMaxima = filterArgs.value<bool>(k_FlatIsMaxima_Key);
-  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
-  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -124,13 +142,10 @@ IFilter::PreflightResult ITKRegionalMaximaImage::preflightImpl(const DataStructu
   // If your filter is making structural changes to the DataStructure then the filter
   // is going to create OutputActions subclasses that need to be returned. This will
   // store those actions.
-  complex::Result<OutputActions> resultOutputActions;
-
-  resultOutputActions = ITK::DataCheck(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath);
+  complex::Result<OutputActions> resultOutputActions = ITK::DataCheck<FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath);
 
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
-  // None found in this filter based on the filter parameters
 
   // If this filter makes changes to the DataStructure in the form of
   // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
@@ -147,7 +162,6 @@ IFilter::PreflightResult ITKRegionalMaximaImage::preflightImpl(const DataStructu
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
   // the appropriate methods.
-  // None found based on the filter parameters
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -159,26 +173,28 @@ Result<> ITKRegionalMaximaImage::executeImpl(DataStructure& dataStructure, const
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
+  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
+  auto pSelectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
   auto pBackgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   auto pForegroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
   auto pFullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
   auto pFlatIsMaxima = filterArgs.value<bool>(k_FlatIsMaxima_Key);
-  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
-  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
+
+  /****************************************************************************
+   * Create the functor object that will instantiate the correct itk filter
+   ***************************************************************************/
+  ::ITKRegionalMaximaImageCreationFunctor itkFunctor = {pBackgroundValue, pForegroundValue, pFullyConnected, pFlatIsMaxima};
+
+  /****************************************************************************
+   * Associate the output image with the Image Geometry for Visualization
+   ***************************************************************************/
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
 
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
-  ::ITKRegionalMaximaImageFilterCreationFunctor itkFunctor;
-  itkFunctor.m_BackgroundValue = pBackgroundValue;
-  itkFunctor.m_ForegroundValue = pForegroundValue;
-  itkFunctor.m_FullyConnected = pFullyConnected;
-  itkFunctor.m_FlatIsMaxima = pFlatIsMaxima;
-
-  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
-
-  return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
+  return ITK::Execute<ITKRegionalMaximaImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

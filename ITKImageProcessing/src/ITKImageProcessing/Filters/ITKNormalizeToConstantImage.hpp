@@ -9,7 +9,28 @@ namespace complex
 {
 /**
  * @class ITKNormalizeToConstantImage
- * @brief This filter will ....
+ * @brief Scales image pixel intensities to make the sum of all pixels equal a user-defined constant.
+ *
+ * The default value of the constant is 1. It can be changed with SetConstant() .
+ *
+ * This transform is especially useful for normalizing a convolution kernel.
+ *
+ * This code was contributed in the Insight Journal paper: "FFT based
+ * convolution" by Lehmann G. https://hdl.handle.net/10380/3154
+ *
+ * @author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+ *
+ *
+ * @see NormalizeImageFilter
+ *
+ *
+ * @see StatisticsImageFilter
+ *
+ *
+ * @see DivideImageFilter
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
 class ITKIMAGEPROCESSING_EXPORT ITKNormalizeToConstantImage : public IFilter
 {
@@ -24,10 +45,10 @@ public:
   ITKNormalizeToConstantImage& operator=(ITKNormalizeToConstantImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Constant_Key = "Constant";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_Constant_Key = "Constant";
 
   /**
    * @brief Returns the name of the filter.

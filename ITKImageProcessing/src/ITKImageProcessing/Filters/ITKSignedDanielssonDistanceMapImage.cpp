@@ -1,33 +1,65 @@
 #include "ITKSignedDanielssonDistanceMapImage.hpp"
 
+/**
+ * This filter can report a number of measurements:
+ * @name VoronoiMap
+ * @type Image
+ * @description Get Voronoi Map This map shows for each pixel what object is closest to it. Each object should be labeled by a number (larger than 0), so the map has a value for each pixel
+ * corresponding to the label of the closest object.
+ *
+ * @name VectorDistanceMap
+ * @type Image
+ * @description Get Distance map image.  The distance map is shown as a gray value image depending on the pixel type of the output image. Regarding the source image, background should be dark (gray
+ * value = 0) and object should have a gray value larger than 0.  The minimal distance is calculated on the object frontier, and the output image gives for each pixel its minimal distance from the
+ * object (if there is more than one object the closest object is considered).
+ *
+ */
+/**
+ * This filter only works with certain kinds of data. We
+ * enable the types that the filter will compile against. The
+ * Allowed PixelTypes as defined in SimpleITK are:
+ *   IntegerPixelIDTypeList
+ * The filter defines the following output pixel types:
+ *   float
+ */
+#define ITK_INTEGER_PIXEL_ID_TYPE_LIST 1
+#define COMPLEX_ITK_ARRAY_HELPER_USE_Scalar 1
+#define ITK_ARRAY_HELPER_NAMESPACE SignedDanielssonDistanceMapImage
+
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
-#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include <itkSignedDanielssonDistanceMapImageFilter.h>
 
 using namespace complex;
 
-#include <itkSignedDanielssonDistanceMapImageFilter.h>
-
 namespace
 {
-struct ITKSignedDanielssonDistanceMapImageFilterCreationFunctor
+/**
+ * This filter uses a fixed output type.
+ */
+using FilterOutputType = float32;
+
+struct ITKSignedDanielssonDistanceMapImageCreationFunctor
 {
-  bool m_InsideIsPositive;
-  bool m_SquaredDistance;
-  bool m_UseImageSpacing;
-  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
-  auto operator()() const
+  bool pInsideIsPositive = false;
+  bool pSquaredDistance = false;
+  bool pUseImageSpacing = false;
+
+  template <class InputImageType, class OutputImageType, uint32 Dimension>
+  auto createFilter() const
   {
-    typedef itk::SignedDanielssonDistanceMapImageFilter<InputImageType, OutputImageType> FilterType;
+    using FilterType = itk::SignedDanielssonDistanceMapImageFilter<InputImageType, OutputImageType>;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetInsideIsPositive(static_cast<bool>(m_InsideIsPositive));
-    filter->SetSquaredDistance(static_cast<bool>(m_SquaredDistance));
-    filter->SetUseImageSpacing(static_cast<bool>(m_UseImageSpacing));
+    filter->SetInsideIsPositive(pInsideIsPositive);
+    filter->SetSquaredDistance(pSquaredDistance);
+    filter->SetUseImageSpacing(pUseImageSpacing);
     return filter;
   }
 };
@@ -56,13 +88,13 @@ Uuid ITKSignedDanielssonDistanceMapImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKSignedDanielssonDistanceMapImage::humanName() const
 {
-  return "ITK::Signed Danielsson Distance Map Image Filter";
+  return "ITK::SignedDanielssonDistanceMapImageFilter";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKSignedDanielssonDistanceMapImage::defaultTags() const
 {
-  return {"#ITK Image Processing", "#ITK DistanceMap"};
+  return {"ITKImageProcessing", "ITKSignedDanielssonDistanceMapImage", "ITKDistanceMap", "DistanceMap"};
 }
 
 //------------------------------------------------------------------------------
@@ -70,12 +102,12 @@ Parameters ITKSignedDanielssonDistanceMapImage::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{DataObject::Type::ImageGeom}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image", "", DataPath{}));
   params.insert(std::make_unique<BoolParameter>(k_InsideIsPositive_Key, "InsideIsPositive", "", false));
   params.insert(std::make_unique<BoolParameter>(k_SquaredDistance_Key, "SquaredDistance", "", false));
   params.insert(std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "UseImageSpacing", "", false));
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{DataObject::Type::ImageGeom}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to filter", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NewCellArrayName_Key, "Filtered Array", "", DataPath{}));
 
   return params;
 }
@@ -98,12 +130,12 @@ IFilter::PreflightResult ITKSignedDanielssonDistanceMapImage::preflightImpl(cons
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
+  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
+  auto pSelectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
   auto pInsideIsPositive = filterArgs.value<bool>(k_InsideIsPositive_Key);
   auto pSquaredDistance = filterArgs.value<bool>(k_SquaredDistance_Key);
   auto pUseImageSpacing = filterArgs.value<bool>(k_UseImageSpacing_Key);
-  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
-  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -119,13 +151,10 @@ IFilter::PreflightResult ITKSignedDanielssonDistanceMapImage::preflightImpl(cons
   // If your filter is making structural changes to the DataStructure then the filter
   // is going to create OutputActions subclasses that need to be returned. This will
   // store those actions.
-  complex::Result<OutputActions> resultOutputActions;
-
-  resultOutputActions = ITK::DataCheck(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath);
+  complex::Result<OutputActions> resultOutputActions = ITK::DataCheck<FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath);
 
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
-  // None found in this filter based on the filter parameters
 
   // If this filter makes changes to the DataStructure in the form of
   // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
@@ -142,7 +171,6 @@ IFilter::PreflightResult ITKSignedDanielssonDistanceMapImage::preflightImpl(cons
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
   // the appropriate methods.
-  // None found based on the filter parameters
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -154,24 +182,28 @@ Result<> ITKSignedDanielssonDistanceMapImage::executeImpl(DataStructure& dataStr
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
+  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
+  auto pSelectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
   auto pInsideIsPositive = filterArgs.value<bool>(k_InsideIsPositive_Key);
   auto pSquaredDistance = filterArgs.value<bool>(k_SquaredDistance_Key);
   auto pUseImageSpacing = filterArgs.value<bool>(k_UseImageSpacing_Key);
-  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
-  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
+
+  /****************************************************************************
+   * Create the functor object that will instantiate the correct itk filter
+   ***************************************************************************/
+  ::ITKSignedDanielssonDistanceMapImageCreationFunctor itkFunctor = {pInsideIsPositive, pSquaredDistance, pUseImageSpacing};
+
+  /****************************************************************************
+   * Associate the output image with the Image Geometry for Visualization
+   ***************************************************************************/
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
 
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
-  ::ITKSignedDanielssonDistanceMapImageFilterCreationFunctor itkFunctor;
-  itkFunctor.m_InsideIsPositive = pInsideIsPositive;
-  itkFunctor.m_SquaredDistance = pSquaredDistance;
-  itkFunctor.m_UseImageSpacing = pUseImageSpacing;
-
-  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
-
-  return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
+  return ITK::Execute<ITKSignedDanielssonDistanceMapImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath,
+                                                                                                                              itkFunctor);
 }
 } // namespace complex

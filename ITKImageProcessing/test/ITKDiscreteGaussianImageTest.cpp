@@ -1,17 +1,11 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
 #include "ITKImageProcessing/Filters/ITKDiscreteGaussianImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include <filesystem>
 
@@ -20,7 +14,7 @@ namespace fs = std::filesystem;
 using namespace complex;
 
 // Simply run with default settings
-TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImage: float", "[ITKImageProcessing][ITKDiscreteGaussianImage]")
+TEST_CASE("ITKDiscreteGaussianImageFilter(float)", "[ITKImageProcessing][ITKDiscreteGaussianImage][float]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKDiscreteGaussianImage filter;
@@ -41,37 +35,25 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImage: float", "[ITKImageProce
     DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
     DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
     DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    auto pVariance = std::vector<double>(3, 1.0);
-    auto pMaximumKernelWidth = 32u;
-    auto pMaximumError = std::vector<double>(3, 0.01);
-    auto pUseImageSpacing = true;
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_Variance_Key, std::make_any<VectorFloat32Parameter::ValueType>(pVariance));
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_MaximumKernelWidth_Key, std::make_any<int32>(pMaximumKernelWidth));
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_MaximumError_Key, std::make_any<VectorFloat32Parameter::ValueType>(pMaximumError));
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_UseImageSpacing_Key, std::make_any<bool>(pUseImageSpacing));
     args.insertOrAssign(ITKDiscreteGaussianImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(inputDataPath));
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_NewCellArrayName_Key, std::make_any<DataPath>(outputDataPath));
-
+    args.insertOrAssign(ITKDiscreteGaussianImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+    args.insertOrAssign(ITKDiscreteGaussianImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     // Execute the filter and check the result
     auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
   } // End Scope Section
 
-  // Write the output data to a file, read and compare to baseline image
+  // Compare to baseline image
   {
-    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_DiscreteGaussianImageFilter_float.nrrd";
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
-    REQUIRE(error == 0);
     fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters/Baseline/BasicFilters_DiscreteGaussianImageFilter_float.nrrd";
     DataPath baselineGeometryPath({complex::ITKTestBase::k_BaselineGeometryPath});
     DataPath baselineDataPath = baselineGeometryPath.createChildPath(complex::ITKTestBase::k_BaselineDataPath);
-    error = complex::ITKTestBase::ReadImage(ds, baselineFilePath, baselineGeometryPath, baselineDataPath);
+    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
+    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
+    int32_t error = complex::ITKTestBase::ReadImage(ds, baselineFilePath, baselineGeometryPath, baselineDataPath);
     REQUIRE(error == 0);
     Result<> result = complex::ITKTestBase::CompareImages(ds, baselineGeometryPath, baselineDataPath, inputGeometryPath, outputDataPath, 0.0001);
     if(result.invalid())
@@ -83,6 +65,17 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImage: float", "[ITKImageProce
     }
     REQUIRE(result.valid() == true);
   }
+
+  // Write the output data to a file
+  {
+    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_DiscreteGaussianImageFilter_float.nrrd";
+    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
+    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
+    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
+    // Remove *all* files generated by this test
+    fs::path testDir = fs::path(unit_test::k_BinaryDir.view()) / "test";
+    ITKTestBase::RemoveFiles(testDir, "BasicFilters_DiscreteGaussianImageFilter_float");
+  } // End Scope Section
 #if 0
   {
     fs::path filePath =fs::path( unit_test::k_BinaryDir.view()) / "test" / "DiscreteGaussianImageFilter_float.h5";
@@ -95,7 +88,7 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImage: float", "[ITKImageProce
 #endif
 }
 // Simply run with a short image with default settings
-TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImage: short", "[ITKImageProcessing][ITKDiscreteGaussianImage]")
+TEST_CASE("ITKDiscreteGaussianImageFilter(short)", "[ITKImageProcessing][ITKDiscreteGaussianImage][short]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKDiscreteGaussianImage filter;
@@ -116,39 +109,27 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImage: short", "[ITKImageProce
     DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
     DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
     DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    auto pVariance = std::vector<double>(3, 1.0);
-    auto pMaximumKernelWidth = 32u;
-    auto pMaximumError = std::vector<double>(3, 0.01);
-    auto pUseImageSpacing = true;
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_Variance_Key, std::make_any<VectorFloat32Parameter::ValueType>(pVariance));
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_MaximumKernelWidth_Key, std::make_any<int32>(pMaximumKernelWidth));
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_MaximumError_Key, std::make_any<VectorFloat32Parameter::ValueType>(pMaximumError));
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_UseImageSpacing_Key, std::make_any<bool>(pUseImageSpacing));
     args.insertOrAssign(ITKDiscreteGaussianImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(inputDataPath));
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_NewCellArrayName_Key, std::make_any<DataPath>(outputDataPath));
-
+    args.insertOrAssign(ITKDiscreteGaussianImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+    args.insertOrAssign(ITKDiscreteGaussianImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     // Execute the filter and check the result
     auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
   } // End Scope Section
 
-  // Write the output data to a file, read and compare to baseline image
+  // Compare to baseline image
   {
-    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_DiscreteGaussianImageFilter_short.nrrd";
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
-    REQUIRE(error == 0);
     fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters/Baseline/BasicFilters_DiscreteGaussianImageFilter_short.nrrd";
     DataPath baselineGeometryPath({complex::ITKTestBase::k_BaselineGeometryPath});
     DataPath baselineDataPath = baselineGeometryPath.createChildPath(complex::ITKTestBase::k_BaselineDataPath);
-    error = complex::ITKTestBase::ReadImage(ds, baselineFilePath, baselineGeometryPath, baselineDataPath);
+    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
+    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
+    int32_t error = complex::ITKTestBase::ReadImage(ds, baselineFilePath, baselineGeometryPath, baselineDataPath);
     REQUIRE(error == 0);
-    Result<> result = complex::ITKTestBase::CompareImages(ds, baselineGeometryPath, baselineDataPath, inputGeometryPath, outputDataPath, 0);
+    Result<> result = complex::ITKTestBase::CompareImages(ds, baselineGeometryPath, baselineDataPath, inputGeometryPath, outputDataPath, 0.6);
     if(result.invalid())
     {
       for(const auto& err : result.errors())
@@ -158,6 +139,17 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImage: short", "[ITKImageProce
     }
     REQUIRE(result.valid() == true);
   }
+
+  // Write the output data to a file
+  {
+    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_DiscreteGaussianImageFilter_short.nrrd";
+    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
+    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
+    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
+    // Remove *all* files generated by this test
+    fs::path testDir = fs::path(unit_test::k_BinaryDir.view()) / "test";
+    ITKTestBase::RemoveFiles(testDir, "BasicFilters_DiscreteGaussianImageFilter_short");
+  } // End Scope Section
 #if 0
   {
     fs::path filePath =fs::path( unit_test::k_BinaryDir.view()) / "test" / "DiscreteGaussianImageFilter_short.h5";
@@ -170,7 +162,7 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImage: short", "[ITKImageProce
 #endif
 }
 // use a big gaussian
-TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImage: bigG", "[ITKImageProcessing][ITKDiscreteGaussianImage]")
+TEST_CASE("ITKDiscreteGaussianImageFilter(bigG)", "[ITKImageProcessing][ITKDiscreteGaussianImage][bigG]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKDiscreteGaussianImage filter;
@@ -191,40 +183,39 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImage: bigG", "[ITKImageProces
     DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
     DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
     DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    auto pVariance = 0;
-    auto pMaximumKernelWidth = 64;
-    auto pMaximumError = std::vector<double>(3, 0.01);
-    auto pUseImageSpacing = true;
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_Variance_Key, std::make_any<VectorFloat32Parameter::ValueType>(pVariance));
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_MaximumKernelWidth_Key, std::make_any<int32>(pMaximumKernelWidth));
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_MaximumError_Key, std::make_any<VectorFloat32Parameter::ValueType>(pMaximumError));
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_UseImageSpacing_Key, std::make_any<bool>(pUseImageSpacing));
     args.insertOrAssign(ITKDiscreteGaussianImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(inputDataPath));
-    args.insertOrAssign(ITKDiscreteGaussianImage::k_NewCellArrayName_Key, std::make_any<DataPath>(outputDataPath));
-
+    args.insertOrAssign(ITKDiscreteGaussianImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+    args.insertOrAssign(ITKDiscreteGaussianImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
+    auto pVariance = std::vector<float64>{100, 100, 100};
+    args.insertOrAssign(ITKDiscreteGaussianImage::k_Variance_Key, std::make_any<std::vector<float64>>(pVariance));
+    args.insertOrAssign(ITKDiscreteGaussianImage::k_MaximumKernelWidth_Key, std::make_any<unsigned int>(64));
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     // Execute the filter and check the result
     auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
   } // End Scope Section
 
-  // Write the output data to a file, read and compare to baseline image
+  // Compare to baseline image
+  {
+    // Compare md5 hash of final image
+    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
+    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
+    std::string md5Hash = complex::ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+    REQUIRE(md5Hash == "f2f002ec76313284a4cff24c3e5eb577");
+  }
+
+  // Write the output data to a file
   {
     fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_DiscreteGaussianImageFilter_bigG.nrrd";
     DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
     DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
     int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
-    REQUIRE(error == 0);
-    fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters/Baseline/BasicFilters_DiscreteGaussianImageFilter_bigG.nrrd";
-    DataPath baselineGeometryPath({complex::ITKTestBase::k_BaselineGeometryPath});
-    DataPath baselineDataPath = baselineGeometryPath.createChildPath(complex::ITKTestBase::k_BaselineDataPath);
-    // Compare md5 hash of final image
-    std::string md5Hash = complex::ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
-    REQUIRE(md5Hash == "f2f002ec76313284a4cff24c3e5eb577");
-  }
+    // Remove *all* files generated by this test
+    fs::path testDir = fs::path(unit_test::k_BinaryDir.view()) / "test";
+    ITKTestBase::RemoveFiles(testDir, "BasicFilters_DiscreteGaussianImageFilter_bigG");
+  } // End Scope Section
 #if 0
   {
     fs::path filePath =fs::path( unit_test::k_BinaryDir.view()) / "test" / "DiscreteGaussianImageFilter_bigG.h5";

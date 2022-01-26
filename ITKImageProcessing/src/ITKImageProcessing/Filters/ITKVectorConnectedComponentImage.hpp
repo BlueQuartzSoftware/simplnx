@@ -9,7 +9,13 @@ namespace complex
 {
 /**
  * @class ITKVectorConnectedComponentImage
- * @brief This filter will ....
+ * @brief A connected components filter that labels the objects in a vector image. Two vectors are pointing similar directions if one minus their dot product is less than a threshold. Vectors that are
+ * 180 degrees out of phase are similar. Assumes that vectors are normalized.
+ *
+ *
+ *
+ * ITK Module: ITKConnectedComponents
+ * ITK Group: ConnectedComponents
  */
 class ITKIMAGEPROCESSING_EXPORT ITKVectorConnectedComponentImage : public IFilter
 {
@@ -24,11 +30,11 @@ public:
   ITKVectorConnectedComponentImage& operator=(ITKVectorConnectedComponentImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_DistanceThreshold_Key = "DistanceThreshold";
   static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

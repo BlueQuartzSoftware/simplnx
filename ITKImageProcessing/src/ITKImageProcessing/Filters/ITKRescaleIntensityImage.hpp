@@ -9,7 +9,26 @@ namespace complex
 {
 /**
  * @class ITKRescaleIntensityImage
- * @brief This filter will ....
+ * @brief Applies a linear transformation to the intensity levels of the input Image .
+ *
+ * RescaleIntensityImageFilter applies pixel-wise a linear transformation to the intensity values of input image pixels. The linear transformation is defined by the user in terms of the minimum and
+ * maximum values that the output image should have.
+ *
+ * The following equation gives the mapping of the intensity values
+ *
+ * \par
+ *  \f[ outputPixel = ( inputPixel - inputMin) \cdot \frac{(outputMax - outputMin )}{(inputMax - inputMin)} + outputMin \f]
+ *
+ * All computations are performed in the precision of the input pixel's RealType. Before assigning the computed value to the output pixel.
+ *
+ * NOTE: In this filter the minimum and maximum values of the input image are computed internally using the MinimumMaximumImageCalculator . Users are not supposed to set those values in this filter.
+ * If you need a filter where you can set the minimum and maximum values of the input, please use the IntensityWindowingImageFilter . If you want a filter that can use a user-defined linear
+ * transformation for the intensity, then please use the ShiftScaleImageFilter .
+ *
+ * @see IntensityWindowingImageFilter
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
 class ITKIMAGEPROCESSING_EXPORT ITKRescaleIntensityImage : public IFilter
 {
@@ -24,12 +43,11 @@ public:
   ITKRescaleIntensityImage& operator=(ITKRescaleIntensityImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputType_Key = "OutputType";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_OutputMinimum_Key = "OutputMinimum";
   static inline constexpr StringLiteral k_OutputMaximum_Key = "OutputMaximum";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

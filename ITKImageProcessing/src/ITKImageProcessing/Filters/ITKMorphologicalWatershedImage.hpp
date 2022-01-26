@@ -9,7 +9,24 @@ namespace complex
 {
 /**
  * @class ITKMorphologicalWatershedImage
- * @brief This filter will ....
+ * @brief Watershed segmentation implementation with morphological operators.
+ *
+ * Watershed pixel are labeled 0. TOutputImage should be an integer type. Labels of output image are in no particular order. You can reorder the labels such that object labels are consecutive and
+ * sorted based on object size by passing the output of this filter to a RelabelComponentImageFilter .
+ *
+ * The morphological watershed transform algorithm is described in Chapter 9.2 of Pierre Soille's book "Morphological Image Analysis:
+ * Principles and Applications", Second Edition, Springer, 2003.
+ *
+ * This code was contributed in the Insight Journal paper: "The watershed transform in ITK - discussion and new developments" by Beare R., Lehmann G. https://hdl.handle.net/1926/202
+ * http://www.insight-journal.org/browse/publication/92
+ *
+ * @author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+ *
+ *
+ * @see WatershedImageFilter , MorphologicalWatershedFromMarkersImageFilter
+ *
+ * ITK Module: ITKWatersheds
+ * ITK Group: Watersheds
  */
 class ITKIMAGEPROCESSING_EXPORT ITKMorphologicalWatershedImage : public IFilter
 {
@@ -24,12 +41,12 @@ public:
   ITKMorphologicalWatershedImage& operator=(ITKMorphologicalWatershedImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_Level_Key = "Level";
   static inline constexpr StringLiteral k_MarkWatershedLine_Key = "MarkWatershedLine";
   static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

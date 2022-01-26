@@ -65,13 +65,14 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 #------------------------------------------------------------------------------
 # If there are additional library packages that need to be found, this is where
 # to do that using the usual find_package(....) call
-# find_package(....)
+find_package(H5Support REQUIRED)
+find_package(EbsdLib REQUIRED)
 
 
 #------------------------------------------------------------------------------
 # If there are additional libraries that this plugin needs to link against you
 # can use the target_link_libraries() cmake call
-# target_link_libraries(${PLUGIN_NAME} PUBLIC [name of library])
+target_link_libraries(${PLUGIN_NAME} PUBLIC EbsdLib::EbsdLib)
 
 #------------------------------------------------------------------------------
 # If there are additional source files that need to be compiled for this plugin

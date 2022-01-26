@@ -1,16 +1,16 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-
 #include "ITKImageProcessing/Filters/ITKBinaryContourImage.hpp"
+
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
+
+#include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/NumberParameter.hpp"
+
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
+
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 
@@ -18,133 +18,61 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-// Simply run with default settings
-TEST_CASE("ITKImageProcessing::ITKBinaryContourImage: default", "[ITKImageProcessing][ITKBinaryContourImage]")
+TEST_CASE("ITKBinaryContourImageFilter(default)", "[ITKImageProcessing][ITKBinaryContourImage][default]")
 {
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  ITKBinaryContourImage filter;
   DataStructure ds;
-  // Read the input image: Input/WhiteDots.png
-  {
-    Arguments args;
-    fs::path filePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters" / "Input/WhiteDots.png";
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
-    int32_t result = complex::ITKTestBase::ReadImage(ds, filePath, inputGeometryPath, inputDataPath);
-    REQUIRE(result == 0);
-  } // End Scope Section
+  ITKBinaryContourImage filter;
 
-  // Test the filter itself
-  {
-    Arguments args;
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
-    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    auto pForegroundValue = 255.0;
-    auto pFullyConnected = false;
-    auto pBackgroundValue = 0.0;
-    args.insertOrAssign(ITKBinaryContourImage::k_FullyConnected_Key, std::make_any<bool>(pFullyConnected));
-    args.insertOrAssign(ITKBinaryContourImage::k_BackgroundValue_Key, std::make_any<float64>(pBackgroundValue));
-    args.insertOrAssign(ITKBinaryContourImage::k_ForegroundValue_Key, std::make_any<float64>(pForegroundValue));
-    args.insertOrAssign(ITKBinaryContourImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ITKBinaryContourImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(inputDataPath));
-    args.insertOrAssign(ITKBinaryContourImage::k_NewCellArrayName_Key, std::make_any<DataPath>(outputDataPath));
+  DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
+  DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
+  DataPath outputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_OutputDataPath);
 
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
-    REQUIRE(preflightResult.outputActions.valid());
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
-  } // End Scope Section
+  fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/WhiteDots.png";
+  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, inputDataPath);
+  COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
 
-  // Write the output data to a file, read and compare to baseline image
-  {
-    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_BinaryContourImageFilter_default.nrrd";
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
-    REQUIRE(error == 0);
-    fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters/Baseline/BasicFilters_BinaryContourImageFilter_default.nrrd";
-    DataPath baselineGeometryPath({complex::ITKTestBase::k_BaselineGeometryPath});
-    DataPath baselineDataPath = baselineGeometryPath.createChildPath(complex::ITKTestBase::k_BaselineDataPath);
-    // Compare md5 hash of final image
-    std::string md5Hash = complex::ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
-    REQUIRE(md5Hash == "3921141f21fcb41e6d4af197e48ffbb5");
-  }
-#if 0
-  {
-    fs::path filePath =fs::path( unit_test::k_BinaryDir.view()) / "test" / "BinaryContourImageFilter_default.h5";
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePath);
-    REQUIRE(result.valid() == true);
-    H5::FileWriter fileWriter = std::move(result.value());
-    herr_t err = ds.writeHdf5(fileWriter);
-    REQUIRE(err == 0);
-  }
-#endif
+  Arguments args;
+  args.insertOrAssign(ITKBinaryContourImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKBinaryContourImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKBinaryContourImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
+  args.insertOrAssign(ITKBinaryContourImage::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(255.0));
+
+  auto preflightResult = filter.preflight(ds, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto executeResult = filter.execute(ds, args);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  REQUIRE(md5Hash == "3921141f21fcb41e6d4af197e48ffbb5");
 }
-// Run binary mask on a single label
-TEST_CASE("ITKImageProcessing::ITKBinaryContourImage: custom", "[ITKImageProcessing][ITKBinaryContourImage]")
+
+TEST_CASE("ITKBinaryContourImageFilter(custom)", "[ITKImageProcessing][ITKBinaryContourImage][custom]")
 {
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  ITKBinaryContourImage filter;
   DataStructure ds;
-  // Read the input image: Input/2th_cthead1.png
-  {
-    Arguments args;
-    fs::path filePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters" / "Input/2th_cthead1.png";
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
-    int32_t result = complex::ITKTestBase::ReadImage(ds, filePath, inputGeometryPath, inputDataPath);
-    REQUIRE(result == 0);
-  } // End Scope Section
+  ITKBinaryContourImage filter;
 
-  // Test the filter itself
-  {
-    Arguments args;
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
-    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    auto pForegroundValue = 100;
-    auto pFullyConnected = true;
-    auto pBackgroundValue = 0.0;
-    args.insertOrAssign(ITKBinaryContourImage::k_FullyConnected_Key, std::make_any<bool>(pFullyConnected));
-    args.insertOrAssign(ITKBinaryContourImage::k_BackgroundValue_Key, std::make_any<float64>(pBackgroundValue));
-    args.insertOrAssign(ITKBinaryContourImage::k_ForegroundValue_Key, std::make_any<float64>(pForegroundValue));
-    args.insertOrAssign(ITKBinaryContourImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ITKBinaryContourImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(inputDataPath));
-    args.insertOrAssign(ITKBinaryContourImage::k_NewCellArrayName_Key, std::make_any<DataPath>(outputDataPath));
+  DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
+  DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
+  DataPath outputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_OutputDataPath);
 
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
-    REQUIRE(preflightResult.outputActions.valid());
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
-  } // End Scope Section
+  fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/2th_cthead1.png";
+  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, inputDataPath);
+  COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
 
-  // Write the output data to a file, read and compare to baseline image
-  {
-    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_BinaryContourImageFilter_custom.nrrd";
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
-    REQUIRE(error == 0);
-    fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters/Baseline/BasicFilters_BinaryContourImageFilter_custom.nrrd";
-    DataPath baselineGeometryPath({complex::ITKTestBase::k_BaselineGeometryPath});
-    DataPath baselineDataPath = baselineGeometryPath.createChildPath(complex::ITKTestBase::k_BaselineDataPath);
-    // Compare md5 hash of final image
-    std::string md5Hash = complex::ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
-    REQUIRE(md5Hash == "09212e4d204a0ed90a445dc832047b22");
-  }
-#if 0
-  {
-    fs::path filePath =fs::path( unit_test::k_BinaryDir.view()) / "test" / "BinaryContourImageFilter_custom.h5";
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePath);
-    REQUIRE(result.valid() == true);
-    H5::FileWriter fileWriter = std::move(result.value());
-    herr_t err = ds.writeHdf5(fileWriter);
-    REQUIRE(err == 0);
-  }
-#endif
+  Arguments args;
+  args.insertOrAssign(ITKBinaryContourImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKBinaryContourImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKBinaryContourImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
+  args.insertOrAssign(ITKBinaryContourImage::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(100));
+  args.insertOrAssign(ITKBinaryContourImage::k_FullyConnected_Key, std::make_any<BoolParameter::ValueType>(true));
+
+  auto preflightResult = filter.preflight(ds, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto executeResult = filter.execute(ds, args);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  REQUIRE(md5Hash == "09212e4d204a0ed90a445dc832047b22");
 }

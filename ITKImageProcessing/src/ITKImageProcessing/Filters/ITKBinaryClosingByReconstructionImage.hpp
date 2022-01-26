@@ -9,7 +9,21 @@ namespace complex
 {
 /**
  * @class ITKBinaryClosingByReconstructionImage
- * @brief This filter will ....
+ * @brief binary closing by reconstruction of an image.
+ *
+ * This filter removes small (i.e., smaller than the structuring element) holes in the image. It is defined as: Closing(f) = ReconstructionByErosion(Dilation(f)).
+ *
+ * The structuring element is assumed to be composed of binary values (zero or one). Only elements of the structuring element having values > 0 are candidates for affecting the center pixel.
+ *
+ * @author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+ *
+ *
+ * This implementation was taken from the Insight Journal paper: https://hdl.handle.net/1926/584 or http://www.insight-journal.org/browse/publication/176
+ *
+ * @see MorphologyImageFilter , ClosingByReconstructionImageFilter , BinaryOpeningByReconstructionImageFilter
+ *
+ * ITK Module: ITKBinaryMathematicalMorphology
+ * ITK Group: BinaryMathematicalMorphology
  */
 class ITKIMAGEPROCESSING_EXPORT ITKBinaryClosingByReconstructionImage : public IFilter
 {
@@ -24,13 +38,13 @@ public:
   ITKBinaryClosingByReconstructionImage& operator=(ITKBinaryClosingByReconstructionImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_KernelRadius_Key = "KernelRadius";
   static inline constexpr StringLiteral k_KernelType_Key = "KernelType";
   static inline constexpr StringLiteral k_ForegroundValue_Key = "ForegroundValue";
   static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
-  static inline constexpr StringLiteral k_KernelRadius_Key = "KernelRadius";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

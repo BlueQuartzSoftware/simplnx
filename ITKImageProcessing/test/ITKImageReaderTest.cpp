@@ -4,8 +4,6 @@
 #include "ITKImageProcessing/ITKImageProcessingPlugin.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 
-#include "ITKImageProcessing/Filters/ITKImageWriter.hpp"
-
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"

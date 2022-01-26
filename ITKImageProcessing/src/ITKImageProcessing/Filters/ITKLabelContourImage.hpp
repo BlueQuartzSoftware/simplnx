@@ -9,7 +9,22 @@ namespace complex
 {
 /**
  * @class ITKLabelContourImage
- * @brief This filter will ....
+ * @brief Labels the pixels on the border of the objects in a labeled image.
+ *
+ * LabelContourImageFilter takes a labeled image as input, where the pixels in the objects are the pixels with a value different of the BackgroundValue. Only the pixels on the contours of the objects
+ * are kept. The pixels not on the border are changed to BackgroundValue. The labels of the object are the same in the input and in the output image.
+ *
+ * The connectivity can be changed to minimum or maximum connectivity with SetFullyConnected() . Full connectivity produces thicker contours.
+ *
+ * https://hdl.handle.net/1926/1352
+ *
+ * @author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+ *
+ *
+ * @see BinaryContourImageFilter
+ *
+ * ITK Module: ITKImageLabel
+ * ITK Group: ImageLabel
  */
 class ITKIMAGEPROCESSING_EXPORT ITKLabelContourImage : public IFilter
 {
@@ -24,11 +39,11 @@ public:
   ITKLabelContourImage& operator=(ITKLabelContourImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
   static inline constexpr StringLiteral k_BackgroundValue_Key = "BackgroundValue";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

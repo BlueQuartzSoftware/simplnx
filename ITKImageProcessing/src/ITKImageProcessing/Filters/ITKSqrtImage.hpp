@@ -9,7 +9,12 @@ namespace complex
 {
 /**
  * @class ITKSqrtImage
- * @brief This filter will ....
+ * @brief Computes the square root of each pixel.
+ *
+ * The computations are performed using std::sqrt(x).
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
 class ITKIMAGEPROCESSING_EXPORT ITKSqrtImage : public IFilter
 {
@@ -24,9 +29,9 @@ public:
   ITKSqrtImage& operator=(ITKSqrtImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
 
   /**
    * @brief Returns the name of the filter.

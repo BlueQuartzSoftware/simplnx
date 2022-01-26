@@ -1,36 +1,50 @@
 #include "ITKCurvatureFlowImage.hpp"
 
+/**
+ * This filter only works with certain kinds of data. We
+ * enable the types that the filter will compile against. The
+ * Allowed PixelTypes as defined in SimpleITK are:
+ *   BasicPixelIDTypeList
+ * The filter defines the following output pixel types:
+ *   typename itk::NumericTraits<typename InputImageType::PixelType>::RealType
+ */
+#define ITK_BASIC_PIXEL_ID_TYPE_LIST 1
+#define COMPLEX_ITK_ARRAY_HELPER_USE_Scalar 1
+#define ITK_ARRAY_HELPER_NAMESPACE CurvatureFlowImage
+
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
-#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include <itkCurvatureFlowImageFilter.h>
 
 using namespace complex;
 
-#include <itkCurvatureFlowImageFilter.h>
-
 namespace
 {
-struct ITKCurvatureFlowImageFilterCreationFunctor
-{
-  float64 m_TimeStep;
-  float64 m_NumberOfIterations;
-  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
-  auto operator()() const
-  {
-    using InputPixelType = typename InputImageType::PixelType;
-    typedef typename itk::NumericTraits<InputPixelType>::RealType FloatPixelType;
-    typedef itk::Image<FloatPixelType, Dimension> FloatImageType;
-    typedef itk::CurvatureFlowImageFilter<FloatImageType, FloatImageType> FilterType;
+/**
+ * This filter uses a fixed output type.
+ */
+using FilterOutputType = float64;
 
+struct ITKCurvatureFlowImageCreationFunctor
+{
+  float64 pTimeStep = 0.05;
+  uint32_t pNumberOfIterations = 5u;
+
+  template <class InputImageType, class OutputImageType, uint32 Dimension>
+  auto createFilter() const
+  {
+    using FilterType = itk::CurvatureFlowImageFilter<InputImageType, OutputImageType>;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetTimeStep(static_cast<double>(m_TimeStep));
-    filter->SetNumberOfIterations(static_cast<uint32_t>(m_NumberOfIterations));
-    return filter; /*   this->ITKImageProcessingBase::filterCastToFloat<InputPixelType, InputPixelType, Dimension, FilterType, FloatImageType>(filter); */
+    filter->SetTimeStep(pTimeStep);
+    filter->SetNumberOfIterations(pNumberOfIterations);
+    return filter;
   }
 };
 } // namespace
@@ -58,13 +72,13 @@ Uuid ITKCurvatureFlowImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKCurvatureFlowImage::humanName() const
 {
-  return "ITK::Curvature Flow Image Filter";
+  return "ITK::CurvatureFlowImageFilter";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKCurvatureFlowImage::defaultTags() const
 {
-  return {"#ITK Image Processing", "#ITK CurvatureFlow"};
+  return {"ITKImageProcessing", "ITKCurvatureFlowImage", "ITKCurvatureFlow", "CurvatureFlow"};
 }
 
 //------------------------------------------------------------------------------
@@ -72,11 +86,11 @@ Parameters ITKCurvatureFlowImage::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<Float64Parameter>(k_TimeStep_Key, "TimeStep", "", 2.3456789));
-  params.insert(std::make_unique<Float64Parameter>(k_NumberOfIterations_Key, "NumberOfIterations", "", 2.3456789));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{DataObject::Type::ImageGeom}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to filter", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NewCellArrayName_Key, "Filtered Array", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image", "", DataPath{}));
+  params.insert(std::make_unique<Float64Parameter>(k_TimeStep_Key, "TimeStep", "", 0.05));
+  params.insert(std::make_unique<UInt32Parameter>(k_NumberOfIterations_Key, "NumberOfIterations", "", 5u));
 
   return params;
 }
@@ -99,11 +113,11 @@ IFilter::PreflightResult ITKCurvatureFlowImage::preflightImpl(const DataStructur
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pTimeStep = filterArgs.value<float64>(k_TimeStep_Key);
-  auto pNumberOfIterations = filterArgs.value<float64>(k_NumberOfIterations_Key);
   auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
-  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
+  auto pSelectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
+  auto pTimeStep = filterArgs.value<float64>(k_TimeStep_Key);
+  auto pNumberOfIterations = filterArgs.value<uint32_t>(k_NumberOfIterations_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -119,13 +133,10 @@ IFilter::PreflightResult ITKCurvatureFlowImage::preflightImpl(const DataStructur
   // If your filter is making structural changes to the DataStructure then the filter
   // is going to create OutputActions subclasses that need to be returned. This will
   // store those actions.
-  complex::Result<OutputActions> resultOutputActions;
-
-  resultOutputActions = ITK::DataCheck(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath);
+  complex::Result<OutputActions> resultOutputActions = ITK::DataCheck<FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath);
 
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
-  // None found in this filter based on the filter parameters
 
   // If this filter makes changes to the DataStructure in the form of
   // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
@@ -142,7 +153,6 @@ IFilter::PreflightResult ITKCurvatureFlowImage::preflightImpl(const DataStructur
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
   // the appropriate methods.
-  // None found based on the filter parameters
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -154,22 +164,26 @@ Result<> ITKCurvatureFlowImage::executeImpl(DataStructure& dataStructure, const 
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pTimeStep = filterArgs.value<float64>(k_TimeStep_Key);
-  auto pNumberOfIterations = filterArgs.value<float64>(k_NumberOfIterations_Key);
   auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
-  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
+  auto pSelectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
+  auto pTimeStep = filterArgs.value<float64>(k_TimeStep_Key);
+  auto pNumberOfIterations = filterArgs.value<uint32_t>(k_NumberOfIterations_Key);
+
+  /****************************************************************************
+   * Create the functor object that will instantiate the correct itk filter
+   ***************************************************************************/
+  ::ITKCurvatureFlowImageCreationFunctor itkFunctor = {pTimeStep, pNumberOfIterations};
+
+  /****************************************************************************
+   * Associate the output image with the Image Geometry for Visualization
+   ***************************************************************************/
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
 
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
-  ::ITKCurvatureFlowImageFilterCreationFunctor itkFunctor;
-  itkFunctor.m_TimeStep = pTimeStep;
-  itkFunctor.m_NumberOfIterations = pNumberOfIterations;
-
-  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
-
-  return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
+  return ITK::Execute<ITKCurvatureFlowImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

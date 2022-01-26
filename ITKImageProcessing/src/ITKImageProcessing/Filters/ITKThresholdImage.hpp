@@ -9,7 +9,24 @@ namespace complex
 {
 /**
  * @class ITKThresholdImage
- * @brief This filter will ....
+ * @brief Set image values to a user-specified value if they are below, above, or between simple threshold values.
+ *
+ * ThresholdImageFilter sets image values to a user-specified "outside" value (by default, "black") if the image values are below, above, or between simple threshold values.
+ *
+ * The available methods are:
+ *
+ * ThresholdAbove() : The values greater than the threshold value are set to OutsideValue
+ *
+ * ThresholdBelow() : The values less than the threshold value are set to OutsideValue
+ *
+ * ThresholdOutside() : The values outside the threshold range (less than lower or greater than upper) are set to OutsideValue
+ *
+ * Note that these definitions indicate that pixels equal to the threshold value are not set to OutsideValue in any of these methods
+ *
+ * The pixels must support the operators >= and <=.
+ *
+ * ITK Module: ITKThresholding
+ * ITK Group: Thresholding
  */
 class ITKIMAGEPROCESSING_EXPORT ITKThresholdImage : public IFilter
 {
@@ -24,12 +41,12 @@ public:
   ITKThresholdImage& operator=(ITKThresholdImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_Lower_Key = "Lower";
   static inline constexpr StringLiteral k_Upper_Key = "Upper";
   static inline constexpr StringLiteral k_OutsideValue_Key = "OutsideValue";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

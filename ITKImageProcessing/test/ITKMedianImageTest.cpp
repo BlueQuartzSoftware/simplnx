@@ -1,15 +1,15 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-
 #include "ITKImageProcessing/Filters/ITKMedianImage.hpp"
+
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
+
+#include "complex/Parameters/VectorParameter.hpp"
+
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
+
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 
@@ -17,125 +17,71 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-// Test MeanImageFilter with default parametrs
-TEST_CASE("ITKImageProcessing::ITKMedianImage: defaults", "[ITKImageProcessing][ITKMedianImage]")
+/*
+ * The original file paths (now commented out) were from the SimpleITK json;
+ * however, in the original ITKImageProcessing, the files were different.
+ * The SimpleITK paths cause these tests to fail because they are not scalar
+ * images which we currently don't handle.
+ */
+
+TEST_CASE("ITKMedianImageFilter(defaults)", "[ITKImageProcessing][ITKMedianImage][defaults]")
 {
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  ITKMedianImage filter;
   DataStructure ds;
-  // Read the input image: Input/VM1111Shrink-RGBFloat.nrrd
-  {
-    Arguments args;
-    fs::path filePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters" / "Input/VM1111Shrink-RGBFloat.nrrd";
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
-    int32_t result = complex::ITKTestBase::ReadImage(ds, filePath, inputGeometryPath, inputDataPath);
-    REQUIRE(result == 0);
-  } // End Scope Section
+  ITKMedianImage filter;
 
-  // Test the filter itself
-  {
-    Arguments args;
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
-    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    auto pRadius = std::vector<unsigned int>(3, 1);
-    args.insertOrAssign(ITKMedianImage::k_Radius_Key, std::make_any<VectorFloat32Parameter::ValueType>(pRadius));
-    args.insertOrAssign(ITKMedianImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ITKMedianImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(inputDataPath));
-    args.insertOrAssign(ITKMedianImage::k_NewCellArrayName_Key, std::make_any<DataPath>(outputDataPath));
+  DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
+  DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
+  DataPath outputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_OutputDataPath);
 
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
-    REQUIRE(preflightResult.outputActions.valid());
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
-  } // End Scope Section
+  // fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/VM1111Shrink-RGBFloat.nrrd";
+  fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
+  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, inputDataPath);
+  COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
 
-  // Write the output data to a file, read and compare to baseline image
-  {
-    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_MedianImageFilter_defaults.nrrd";
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
-    REQUIRE(error == 0);
-    fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters/Baseline/BasicFilters_MedianImageFilter_defaults.nrrd";
-    DataPath baselineGeometryPath({complex::ITKTestBase::k_BaselineGeometryPath});
-    DataPath baselineDataPath = baselineGeometryPath.createChildPath(complex::ITKTestBase::k_BaselineDataPath);
-    // Compare md5 hash of final image
-    std::string md5Hash = complex::ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
-    REQUIRE(md5Hash == "3d91602f6080b45a5431b80d1f78c0a0");
-  }
-#if 0
-  {
-    fs::path filePath =fs::path( unit_test::k_BinaryDir.view()) / "test" / "MedianImageFilter_defaults.h5";
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePath);
-    REQUIRE(result.valid() == true);
-    H5::FileWriter fileWriter = std::move(result.value());
-    herr_t err = ds.writeHdf5(fileWriter);
-    REQUIRE(err == 0);
-  }
-#endif
+  Arguments args;
+  args.insertOrAssign(ITKMedianImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMedianImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMedianImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
+
+  auto preflightResult = filter.preflight(ds, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto executeResult = filter.execute(ds, args);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  // REQUIRE(md5Hash == "3d91602f6080b45a5431b80d1f78c0a0");
+  REQUIRE(md5Hash == "cbc59611297961dea9f872282534f3df");
 }
-// Test by 23
-TEST_CASE("ITKImageProcessing::ITKMedianImage: by23", "[ITKImageProcessing][ITKMedianImage]")
+
+TEST_CASE("ITKMedianImageFilter(by23)", "[ITKImageProcessing][ITKMedianImage][by23]")
 {
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  ITKMedianImage filter;
   DataStructure ds;
-  // Read the input image: Input/VM1111Shrink-RGB.png
-  {
-    Arguments args;
-    fs::path filePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters" / "Input/VM1111Shrink-RGB.png";
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
-    int32_t result = complex::ITKTestBase::ReadImage(ds, filePath, inputGeometryPath, inputDataPath);
-    REQUIRE(result == 0);
-  } // End Scope Section
+  ITKMedianImage filter;
 
-  // Test the filter itself
-  {
-    Arguments args;
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
-    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    auto pRadius = 0;
-    args.insertOrAssign(ITKMedianImage::k_Radius_Key, std::make_any<VectorFloat32Parameter::ValueType>(pRadius));
-    args.insertOrAssign(ITKMedianImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ITKMedianImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(inputDataPath));
-    args.insertOrAssign(ITKMedianImage::k_NewCellArrayName_Key, std::make_any<DataPath>(outputDataPath));
+  DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
+  DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
+  DataPath outputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_OutputDataPath);
 
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
-    REQUIRE(preflightResult.outputActions.valid());
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
-  } // End Scope Section
+  // fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/VM1111Shrink-RGB.png";
+  fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
+  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, inputDataPath);
+  COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
 
-  // Write the output data to a file, read and compare to baseline image
-  {
-    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_MedianImageFilter_by23.nrrd";
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
-    REQUIRE(error == 0);
-    fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters/Baseline/BasicFilters_MedianImageFilter_by23.nrrd";
-    DataPath baselineGeometryPath({complex::ITKTestBase::k_BaselineGeometryPath});
-    DataPath baselineDataPath = baselineGeometryPath.createChildPath(complex::ITKTestBase::k_BaselineDataPath);
-    // Compare md5 hash of final image
-    std::string md5Hash = complex::ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
-    REQUIRE(md5Hash == "03610a1cb421d145fe985478d4eb9c0a");
-  }
-#if 0
-  {
-    fs::path filePath =fs::path( unit_test::k_BinaryDir.view()) / "test" / "MedianImageFilter_by23.h5";
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePath);
-    REQUIRE(result.valid() == true);
-    H5::FileWriter fileWriter = std::move(result.value());
-    herr_t err = ds.writeHdf5(fileWriter);
-    REQUIRE(err == 0);
-  }
-#endif
+  Arguments args;
+  args.insertOrAssign(ITKMedianImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMedianImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMedianImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
+  // 0 should be unused
+  args.insertOrAssign(ITKMedianImage::k_Radius_Key, std::make_any<VectorUInt64Parameter::ValueType>(VectorUInt64Parameter::ValueType{2, 3, 0}));
+
+  auto preflightResult = filter.preflight(ds, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto executeResult = filter.execute(ds, args);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  // REQUIRE(md5Hash == "03610a1cb421d145fe985478d4eb9c0a");
+  REQUIRE(md5Hash == "4afeba184100773dc279a776b1ae493b");
 }

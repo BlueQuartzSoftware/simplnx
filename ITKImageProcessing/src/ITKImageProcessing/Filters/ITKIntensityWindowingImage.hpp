@@ -9,7 +9,19 @@ namespace complex
 {
 /**
  * @class ITKIntensityWindowingImage
- * @brief This filter will ....
+ * @brief Applies a linear transformation to the intensity levels of the input Image that are inside a user-defined interval. Values below this interval are mapped to a constant. Values over the
+ * interval are mapped to another constant.
+ *
+ * IntensityWindowingImageFilter applies pixel-wise a linear transformation to the intensity values of input image pixels. The linear transformation is defined by the user in terms of the minimum and
+ * maximum values that the output image should have and the lower and upper limits of the intensity window of the input image. This operation is very common in visualization, and can also be applied
+ * as a convenient preprocessing operation for image segmentation.
+ *
+ * All computations are performed in the precision of the input pixel's RealType. Before assigning the computed value to the output pixel.
+ *
+ * @see RescaleIntensityImageFilter
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
 class ITKIMAGEPROCESSING_EXPORT ITKIntensityWindowingImage : public IFilter
 {
@@ -24,13 +36,13 @@ public:
   ITKIntensityWindowingImage& operator=(ITKIntensityWindowingImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_WindowMinimum_Key = "WindowMinimum";
   static inline constexpr StringLiteral k_WindowMaximum_Key = "WindowMaximum";
   static inline constexpr StringLiteral k_OutputMinimum_Key = "OutputMinimum";
   static inline constexpr StringLiteral k_OutputMaximum_Key = "OutputMaximum";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

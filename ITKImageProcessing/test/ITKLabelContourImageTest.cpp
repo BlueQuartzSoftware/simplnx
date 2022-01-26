@@ -1,16 +1,16 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-
 #include "ITKImageProcessing/Filters/ITKLabelContourImage.hpp"
+
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
+
+#include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/NumberParameter.hpp"
+
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
+
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 
@@ -18,66 +18,30 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-// Simply run with default settings
-TEST_CASE("ITKImageProcessing::ITKLabelContourImage: default", "[ITKImageProcessing][ITKLabelContourImage]")
+TEST_CASE("ITKLabelContourImageFilter(default)", "[ITKImageProcessing][ITKLabelContourImage][default]")
 {
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  ITKLabelContourImage filter;
   DataStructure ds;
-  // Read the input image: Input/2th_cthead1.png
-  {
-    Arguments args;
-    fs::path filePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters" / "Input/2th_cthead1.png";
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
-    int32_t result = complex::ITKTestBase::ReadImage(ds, filePath, inputGeometryPath, inputDataPath);
-    REQUIRE(result == 0);
-  } // End Scope Section
+  ITKLabelContourImage filter;
 
-  // Test the filter itself
-  {
-    Arguments args;
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
-    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    auto pFullyConnected = false;
-    auto pBackgroundValue = 0;
-    args.insertOrAssign(ITKLabelContourImage::k_FullyConnected_Key, std::make_any<bool>(pFullyConnected));
-    args.insertOrAssign(ITKLabelContourImage::k_BackgroundValue_Key, std::make_any<float64>(pBackgroundValue));
-    args.insertOrAssign(ITKLabelContourImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ITKLabelContourImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(inputDataPath));
-    args.insertOrAssign(ITKLabelContourImage::k_NewCellArrayName_Key, std::make_any<DataPath>(outputDataPath));
+  DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
+  DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
+  DataPath outputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_OutputDataPath);
 
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
-    REQUIRE(preflightResult.outputActions.valid());
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
-  } // End Scope Section
+  fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/2th_cthead1.png";
+  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, inputDataPath);
+  COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
 
-  // Write the output data to a file, read and compare to baseline image
-  {
-    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_LabelContourImageFilter_default.nrrd";
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
-    REQUIRE(error == 0);
-    fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters/Baseline/BasicFilters_LabelContourImageFilter_default.nrrd";
-    DataPath baselineGeometryPath({complex::ITKTestBase::k_BaselineGeometryPath});
-    DataPath baselineDataPath = baselineGeometryPath.createChildPath(complex::ITKTestBase::k_BaselineDataPath);
-    // Compare md5 hash of final image
-    std::string md5Hash = complex::ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
-    REQUIRE(md5Hash == "d742c05a8d8aa9b41f58b8d2aad6b5d0");
-  }
-#if 0
-  {
-    fs::path filePath =fs::path( unit_test::k_BinaryDir.view()) / "test" / "LabelContourImageFilter_default.h5";
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePath);
-    REQUIRE(result.valid() == true);
-    H5::FileWriter fileWriter = std::move(result.value());
-    herr_t err = ds.writeHdf5(fileWriter);
-    REQUIRE(err == 0);
-  }
-#endif
+  Arguments args;
+  args.insertOrAssign(ITKLabelContourImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKLabelContourImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKLabelContourImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
+
+  auto preflightResult = filter.preflight(ds, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto executeResult = filter.execute(ds, args);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  REQUIRE(md5Hash == "d742c05a8d8aa9b41f58b8d2aad6b5d0");
 }

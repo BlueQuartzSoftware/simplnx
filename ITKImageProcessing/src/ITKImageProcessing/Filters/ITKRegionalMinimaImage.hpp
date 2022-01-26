@@ -9,7 +9,25 @@ namespace complex
 {
 /**
  * @class ITKRegionalMinimaImage
- * @brief This filter will ....
+ * @brief Produce a binary image where foreground is the regional minima of the input image.
+ *
+ * Regional minima are flat zones surrounded by pixels of greater value.
+ *
+ * If the input image is constant, the entire image can be considered as a minima or not. The SetFlatIsMinima() method let the user choose which behavior to use.
+ *
+ * This class was contributed to the Insight Journal by @author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France. https://hdl.handle.net/1926/153
+ *
+ *
+ * @see RegionalMaximaImageFilter
+ *
+ *
+ * @see ValuedRegionalMinimaImageFilter
+ *
+ *
+ * @see HConcaveImageFilter
+ *
+ * ITK Module: ITKMathematicalMorphology
+ * ITK Group: MathematicalMorphology
  */
 class ITKIMAGEPROCESSING_EXPORT ITKRegionalMinimaImage : public IFilter
 {
@@ -24,13 +42,13 @@ public:
   ITKRegionalMinimaImage& operator=(ITKRegionalMinimaImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_BackgroundValue_Key = "BackgroundValue";
   static inline constexpr StringLiteral k_ForegroundValue_Key = "ForegroundValue";
   static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
   static inline constexpr StringLiteral k_FlatIsMinima_Key = "FlatIsMinima";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

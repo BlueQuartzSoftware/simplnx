@@ -1,25 +1,45 @@
 #include "ITKBoundedReciprocalImage.hpp"
 
+/**
+ * This filter only works with certain kinds of data. We
+ * enable the types that the filter will compile against. The
+ * Allowed PixelTypes as defined in SimpleITK are:
+ *   BasicPixelIDTypeList
+ * In addition the following VectorPixelTypes are allowed:
+ *   VectorPixelIDTypeList
+ * The filter defines the following output pixel types:
+ *   typename itk::NumericTraits<typename InputImageType::PixelType>::RealType
+ */
+#define ITK_BASIC_PIXEL_ID_TYPE_LIST 1
+#define COMPLEX_ITK_ARRAY_HELPER_USE_Scalar 1
+#define ITK_ARRAY_HELPER_NAMESPACE BoundedReciprocalImage
+
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
-#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include <itkBoundedReciprocalImageFilter.h>
 
 using namespace complex;
 
-#include <itkBoundedReciprocalImageFilter.h>
-
 namespace
 {
-struct ITKBoundedReciprocalImageFilterCreationFunctor
+/**
+ * This filter uses a fixed output type.
+ */
+using FilterOutputType = float64;
+
+struct ITKBoundedReciprocalImageCreationFunctor
 {
-  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
-  auto operator()() const
+
+  template <class InputImageType, class OutputImageType, uint32 Dimension>
+  auto createFilter() const
   {
-    typedef itk::BoundedReciprocalImageFilter<InputImageType, OutputImageType> FilterType;
+    using FilterType = itk::BoundedReciprocalImageFilter<InputImageType, OutputImageType>;
     typename FilterType::Pointer filter = FilterType::New();
     return filter;
   }
@@ -49,13 +69,13 @@ Uuid ITKBoundedReciprocalImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKBoundedReciprocalImage::humanName() const
 {
-  return "ITK::Bounded Reciprocal Image Filter";
+  return "ITK::BoundedReciprocalImageFilter";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKBoundedReciprocalImage::defaultTags() const
 {
-  return {"#ITK Image Processing", "#ITK IntensityTransformation"};
+  return {"ITKImageProcessing", "ITKBoundedReciprocalImage", "ITKImageIntensity", "ImageIntensity"};
 }
 
 //------------------------------------------------------------------------------
@@ -64,8 +84,8 @@ Parameters ITKBoundedReciprocalImage::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{DataObject::Type::ImageGeom}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to filter", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NewCellArrayName_Key, "Filtered Array", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image", "", DataPath{}));
 
   return params;
 }
@@ -89,8 +109,8 @@ IFilter::PreflightResult ITKBoundedReciprocalImage::preflightImpl(const DataStru
    * do not need some of them remove them.
    */
   auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
-  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
+  auto pSelectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -106,13 +126,10 @@ IFilter::PreflightResult ITKBoundedReciprocalImage::preflightImpl(const DataStru
   // If your filter is making structural changes to the DataStructure then the filter
   // is going to create OutputActions subclasses that need to be returned. This will
   // store those actions.
-  complex::Result<OutputActions> resultOutputActions;
-
-  resultOutputActions = ITK::DataCheck(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath);
+  complex::Result<OutputActions> resultOutputActions = ITK::DataCheck<FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath);
 
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
-  // None found in this filter based on the filter parameters
 
   // If this filter makes changes to the DataStructure in the form of
   // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
@@ -129,7 +146,6 @@ IFilter::PreflightResult ITKBoundedReciprocalImage::preflightImpl(const DataStru
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
   // the appropriate methods.
-  // None found based on the filter parameters
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -142,17 +158,23 @@ Result<> ITKBoundedReciprocalImage::executeImpl(DataStructure& dataStructure, co
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
   auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
-  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
+  auto pSelectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
+
+  /****************************************************************************
+   * Create the functor object that will instantiate the correct itk filter
+   ***************************************************************************/
+  ::ITKBoundedReciprocalImageCreationFunctor itkFunctor = {};
+
+  /****************************************************************************
+   * Associate the output image with the Image Geometry for Visualization
+   ***************************************************************************/
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
 
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
-  ::ITKBoundedReciprocalImageFilterCreationFunctor itkFunctor;
-
-  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
-
-  return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
+  return ITK::Execute<ITKBoundedReciprocalImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

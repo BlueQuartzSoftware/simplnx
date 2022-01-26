@@ -1,5 +1,8 @@
 #include "ITKMultiScaleHessianBasedObjectnessImage.hpp"
 
+#define ITK_BASIC_PIXEL_ID_TYPE_LIST 1
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
@@ -7,8 +10,6 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-
-#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
 using namespace complex;
 
@@ -30,7 +31,7 @@ struct ITKMultiScaleHessianBasedObjectnessImageFilterCreationFunctor
   float64 m_NumberOfSigmaSteps;
 
   template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
-  auto operator()() const
+  auto createFilter() const
   {
 
     using InputPixelType = typename InputImageType::PixelType;
@@ -210,7 +211,7 @@ Result<> ITKMultiScaleHessianBasedObjectnessImage::executeImpl(DataStructure& da
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
-  ::ITKMultiScaleHessianBasedObjectnessImageFilterCreationFunctor itkFunctor;
+  ::ITKMultiScaleHessianBasedObjectnessImageFilterCreationFunctor itkFunctor{};
   itkFunctor.m_ObjectDimension = pObjectDimension;
   itkFunctor.m_Alpha = pAlpha;
   itkFunctor.m_Beta = pBeta;

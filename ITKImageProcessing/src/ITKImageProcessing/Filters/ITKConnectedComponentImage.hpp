@@ -9,7 +9,20 @@ namespace complex
 {
 /**
  * @class ITKConnectedComponentImage
- * @brief This filter will ....
+ * @brief Label the objects in a binary image.
+ *
+ * ConnectedComponentImageFilter labels the objects in a binary image (non-zero pixels are considered to be objects, zero-valued pixels are considered to be background). Each distinct object is
+ * assigned a unique label. The filter experiments with some improvements to the existing implementation, and is based on run length encoding along raster lines. If the output background value is set
+ * to zero (the default), the final object labels start with 1 and are consecutive. If the output background is set to a non-zero value (by calling the SetBackgroundValue() routine of the filter), the
+ * final labels start at 0, and remain consecutive except for skipping the background value as needed. Objects that are reached earlier by a raster order scan have a lower label. This is different to
+ * the behaviour of the original connected component image filter which did not produce consecutive labels or impose any particular ordering.
+ *
+ * After the filter is executed, ObjectCount holds the number of connected components.
+ *
+ * @see ImageToImageFilter
+ *
+ * ITK Module: ITKConnectedComponents
+ * ITK Group: ConnectedComponents
  */
 class ITKIMAGEPROCESSING_EXPORT ITKConnectedComponentImage : public IFilter
 {
@@ -24,10 +37,11 @@ public:
   ITKConnectedComponentImage& operator=(ITKConnectedComponentImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
+  static inline constexpr StringLiteral k_MaskImageDataPath_Key = "MaskImageDataPath";
 
   /**
    * @brief Returns the name of the filter.

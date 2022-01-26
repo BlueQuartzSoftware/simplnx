@@ -9,7 +9,13 @@ namespace complex
 {
 /**
  * @class ITKShiftScaleImage
- * @brief This filter will ....
+ * @brief Shift and scale the pixels in an image.
+ *
+ * ShiftScaleImageFilter shifts the input pixel by Shift (default 0.0) and then scales the pixel by Scale (default 1.0). All computations are performed in the precision of the input pixel's RealType.
+ * Before assigning the computed value to the output pixel, the value is clamped at the NonpositiveMin and max of the pixel type.
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
 class ITKIMAGEPROCESSING_EXPORT ITKShiftScaleImage : public IFilter
 {
@@ -24,11 +30,11 @@ public:
   ITKShiftScaleImage& operator=(ITKShiftScaleImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_Shift_Key = "Shift";
   static inline constexpr StringLiteral k_Scale_Key = "Scale";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

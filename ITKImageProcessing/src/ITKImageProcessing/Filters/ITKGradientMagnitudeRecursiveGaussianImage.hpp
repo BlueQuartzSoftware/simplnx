@@ -9,7 +9,12 @@ namespace complex
 {
 /**
  * @class ITKGradientMagnitudeRecursiveGaussianImage
- * @brief This filter will ....
+ * @brief Computes the Magnitude of the Gradient of an image by convolution with the first derivative of a Gaussian.
+ *
+ * This filter is implemented using the recursive gaussian filters
+ *
+ * ITK Module: ITKImageGradient
+ * ITK Group: ImageGradient
  */
 class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImage : public IFilter
 {
@@ -24,11 +29,11 @@ public:
   ITKGradientMagnitudeRecursiveGaussianImage& operator=(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_Sigma_Key = "Sigma";
   static inline constexpr StringLiteral k_NormalizeAcrossScale_Key = "NormalizeAcrossScale";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

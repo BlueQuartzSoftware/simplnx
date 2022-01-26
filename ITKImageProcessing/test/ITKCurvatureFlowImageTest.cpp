@@ -1,15 +1,11 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
 #include "ITKImageProcessing/Filters/ITKCurvatureFlowImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include <filesystem>
 
@@ -18,7 +14,7 @@ namespace fs = std::filesystem;
 using namespace complex;
 
 // Simply run with default settings
-TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImage: defaults", "[ITKImageProcessing][ITKCurvatureFlowImage]")
+TEST_CASE("ITKCurvatureFlowImageFilter(defaults)", "[ITKImageProcessing][ITKCurvatureFlowImage][defaults]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKCurvatureFlowImage filter;
@@ -39,35 +35,27 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImage: defaults", "[ITKImageProce
     DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
     DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
     DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    auto pTimeStep = 0.05;
-    auto pNumberOfIterations = 5u;
-    args.insertOrAssign(ITKCurvatureFlowImage::k_TimeStep_Key, std::make_any<float64>(pTimeStep));
-    args.insertOrAssign(ITKCurvatureFlowImage::k_NumberOfIterations_Key, std::make_any<float64>(pNumberOfIterations));
     args.insertOrAssign(ITKCurvatureFlowImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ITKCurvatureFlowImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(inputDataPath));
-    args.insertOrAssign(ITKCurvatureFlowImage::k_NewCellArrayName_Key, std::make_any<DataPath>(outputDataPath));
-
+    args.insertOrAssign(ITKCurvatureFlowImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+    args.insertOrAssign(ITKCurvatureFlowImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     // Execute the filter and check the result
     auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
   } // End Scope Section
 
-  // Write the output data to a file, read and compare to baseline image
+  // Compare to baseline image
   {
-    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_CurvatureFlowImageFilter_defaults.nrrd";
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
-    REQUIRE(error == 0);
     fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters/Baseline/BasicFilters_CurvatureFlowImageFilter_defaults.nrrd";
     DataPath baselineGeometryPath({complex::ITKTestBase::k_BaselineGeometryPath});
     DataPath baselineDataPath = baselineGeometryPath.createChildPath(complex::ITKTestBase::k_BaselineDataPath);
-    error = complex::ITKTestBase::ReadImage(ds, baselineFilePath, baselineGeometryPath, baselineDataPath);
+    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
+    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
+    int32_t error = complex::ITKTestBase::ReadImage(ds, baselineFilePath, baselineGeometryPath, baselineDataPath);
     REQUIRE(error == 0);
-    Result<> result = complex::ITKTestBase::CompareImages(ds, baselineGeometryPath, baselineDataPath, inputGeometryPath, outputDataPath, 0);
+    Result<> result = complex::ITKTestBase::CompareImages(ds, baselineGeometryPath, baselineDataPath, inputGeometryPath, outputDataPath, 0.0001);
     if(result.invalid())
     {
       for(const auto& err : result.errors())
@@ -77,6 +65,17 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImage: defaults", "[ITKImageProce
     }
     REQUIRE(result.valid() == true);
   }
+
+  // Write the output data to a file
+  {
+    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_CurvatureFlowImageFilter_defaults.nrrd";
+    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
+    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
+    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
+    // Remove *all* files generated by this test
+    fs::path testDir = fs::path(unit_test::k_BinaryDir.view()) / "test";
+    ITKTestBase::RemoveFiles(testDir, "BasicFilters_CurvatureFlowImageFilter_defaults");
+  } // End Scope Section
 #if 0
   {
     fs::path filePath =fs::path( unit_test::k_BinaryDir.view()) / "test" / "CurvatureFlowImageFilter_defaults.h5";
@@ -89,7 +88,7 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImage: defaults", "[ITKImageProce
 #endif
 }
 // Change number of iterations and timestep
-TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImage: longer", "[ITKImageProcessing][ITKCurvatureFlowImage]")
+TEST_CASE("ITKCurvatureFlowImageFilter(longer)", "[ITKImageProcessing][ITKCurvatureFlowImage][longer]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKCurvatureFlowImage filter;
@@ -110,35 +109,29 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImage: longer", "[ITKImageProcess
     DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
     DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
     DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    auto pTimeStep = 0.1;
-    auto pNumberOfIterations = 10;
-    args.insertOrAssign(ITKCurvatureFlowImage::k_TimeStep_Key, std::make_any<float64>(pTimeStep));
-    args.insertOrAssign(ITKCurvatureFlowImage::k_NumberOfIterations_Key, std::make_any<float64>(pNumberOfIterations));
     args.insertOrAssign(ITKCurvatureFlowImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ITKCurvatureFlowImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(inputDataPath));
-    args.insertOrAssign(ITKCurvatureFlowImage::k_NewCellArrayName_Key, std::make_any<DataPath>(outputDataPath));
-
+    args.insertOrAssign(ITKCurvatureFlowImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+    args.insertOrAssign(ITKCurvatureFlowImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
+    args.insertOrAssign(ITKCurvatureFlowImage::k_TimeStep_Key, std::make_any<float64>(0.1));
+    args.insertOrAssign(ITKCurvatureFlowImage::k_NumberOfIterations_Key, std::make_any<uint32_t>(10));
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     // Execute the filter and check the result
     auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
   } // End Scope Section
 
-  // Write the output data to a file, read and compare to baseline image
+  // Compare to baseline image
   {
-    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_CurvatureFlowImageFilter_longer.nrrd";
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
-    REQUIRE(error == 0);
     fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters/Baseline/BasicFilters_CurvatureFlowImageFilter_longer.nrrd";
     DataPath baselineGeometryPath({complex::ITKTestBase::k_BaselineGeometryPath});
     DataPath baselineDataPath = baselineGeometryPath.createChildPath(complex::ITKTestBase::k_BaselineDataPath);
-    error = complex::ITKTestBase::ReadImage(ds, baselineFilePath, baselineGeometryPath, baselineDataPath);
+    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
+    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
+    int32_t error = complex::ITKTestBase::ReadImage(ds, baselineFilePath, baselineGeometryPath, baselineDataPath);
     REQUIRE(error == 0);
-    Result<> result = complex::ITKTestBase::CompareImages(ds, baselineGeometryPath, baselineDataPath, inputGeometryPath, outputDataPath, 0);
+    Result<> result = complex::ITKTestBase::CompareImages(ds, baselineGeometryPath, baselineDataPath, inputGeometryPath, outputDataPath, 0.0001);
     if(result.invalid())
     {
       for(const auto& err : result.errors())
@@ -148,6 +141,17 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImage: longer", "[ITKImageProcess
     }
     REQUIRE(result.valid() == true);
   }
+
+  // Write the output data to a file
+  {
+    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_CurvatureFlowImageFilter_longer.nrrd";
+    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
+    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
+    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
+    // Remove *all* files generated by this test
+    fs::path testDir = fs::path(unit_test::k_BinaryDir.view()) / "test";
+    ITKTestBase::RemoveFiles(testDir, "BasicFilters_CurvatureFlowImageFilter_longer");
+  } // End Scope Section
 #if 0
   {
     fs::path filePath =fs::path( unit_test::k_BinaryDir.view()) / "test" / "CurvatureFlowImageFilter_longer.h5";

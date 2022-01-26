@@ -9,7 +9,28 @@ namespace complex
 {
 /**
  * @class ITKHistogramMatchingImage
- * @brief This filter will ....
+ * @brief Normalize the grayscale values for a source image by matching the shape of the source image histogram to a reference histogram.
+ *
+ * HistogramMatchingImageFilter normalizes the grayscale values of a source image based on the grayscale values of either a reference image or a reference histogram. This filter uses a histogram
+ * matching technique where the histograms of the are matched only at a specified number of quantile values.
+ *
+ * This filter was originally designed to normalize MR images of the same MR protocol and same body part. The algorithm works best if background pixels are excluded from both the source and reference
+ * histograms. A simple background exclusion method is to exclude all pixels whose grayscale values are smaller than the mean grayscale value. ThresholdAtMeanIntensityOn() switches on this simple
+ * background exclusion method. With ThresholdAtMeanIntensityOn() , The reference histogram returned from this filter will expand the first and last bin bounds to include the minimum and maximum
+ * intensity values of the entire reference image, but only intensity values greater than the mean will be used to populate the histogram.
+ *
+ * The source image can be set via either SetInput() or SetSourceImage() . The reference object used is selected with can be set via SetReferenceImage() or SetReferenceHistogram() .
+ *
+ * SetNumberOfHistogramLevels() sets the number of bins used when creating histograms of the source and reference images. SetNumberOfMatchPoints() governs the number of quantile values to be matched.
+ *
+ * This filter assumes that both the source and reference are of the same type and that the input and output image type have the same number of dimension and have scalar pixel types.
+ *
+ * \par REFERENCE
+ * Laszlo G. Nyul, Jayaram K. Udupa, and Xuan Zhang, "New Variants of a Method
+ * of MRI Scale Standardization", IEEE Transactions on Medical Imaging, 19(2):143-150, 2000.
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
 class ITKIMAGEPROCESSING_EXPORT ITKHistogramMatchingImage : public IFilter
 {
@@ -24,13 +45,13 @@ public:
   ITKHistogramMatchingImage& operator=(ITKHistogramMatchingImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_NumberOfHistogramLevels_Key = "NumberOfHistogramLevels";
   static inline constexpr StringLiteral k_NumberOfMatchPoints_Key = "NumberOfMatchPoints";
   static inline constexpr StringLiteral k_ThresholdAtMeanIntensity_Key = "ThresholdAtMeanIntensity";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_ReferenceCellArrayPath_Key = "ReferenceCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_ReferenceImageDataPath_Key = "ReferenceImageDataPath";
 
   /**
    * @brief Returns the name of the filter.

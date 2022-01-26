@@ -91,33 +91,15 @@ std::string ComputeMd5Hash(DataStructure& ds, const DataPath& outputDataPath)
   return {};
 }
 
-int32_t ReadImage(DataStructure& ds, const fs::path& filePath, const DataPath& geometryPath, const DataPath& imagePath)
+Result<> ReadImage(DataStructure& ds, const fs::path& filePath, const DataPath& geometryPath, const DataPath& imagePath)
 {
   ITKImageReader filter;
   Arguments args;
   args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
   args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, geometryPath);
   args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, imagePath);
-  auto preflightResult = filter.preflight(ds, args);
-  if(preflightResult.outputActions.invalid())
-  {
-    for(const auto& error : preflightResult.outputActions.errors())
-    {
-      std::cout << error.code << ": " << error.message << std::endl;
-    }
-    return -1;
-  }
   auto executeResult = filter.execute(ds, args);
-  if(executeResult.result.invalid())
-  {
-    for(const auto& error : executeResult.result.errors())
-    {
-      std::cout << error.code << ": " << error.message << std::endl;
-    }
-    return -2;
-  }
-
-  return 0;
+  return executeResult.result;
 }
 
 int32_t WriteImage(DataStructure& ds, const fs::path& filePath, const DataPath& geometryPath, const DataPath& imagePath)
@@ -304,19 +286,19 @@ Result<> CompareImages(DataStructure& ds, const DataPath& baselineGeometryPath, 
   // Make sure the data types are the same
   if(baseLineDataType != outputDataType)
   {
-    return MakeErrorResult(-14, fmt::format("DataTypes do not match. Output:{} Baseline:{}", outputDataType, baseLineDataType));
+    return MakeErrorResult(-14, fmt::format("DataTypes do not match. Output: {} Baseline: {}", outputDataType, baseLineDataType));
   }
   // Make sure the geometry dimensions are the same
   if(baselineDims != outputDims)
   {
-    return MakeErrorResult(-15, fmt::format("Image Dimensions do not match. Output:{} Baseline:{}", fmt::join(outputDims, ", "), fmt::join(baselineDims, ", ")));
+    return MakeErrorResult(-15, fmt::format("Image Dimensions do not match. Output: {} Baseline: {}", fmt::join(outputDims, ", "), fmt::join(baselineDims, ", ")));
   }
   // Make sure the tuple shape is the same
   ShapeType baselineTupleShape = baselineDataArray->getIDataStore()->getTupleShape();
   ShapeType outputTupleShape = outputDataArray->getIDataStore()->getTupleShape();
   if(baselineTupleShape != outputTupleShape)
   {
-    return MakeErrorResult(-16, fmt::format("Tuple Shape does not Match. Output:{} Baseline:{}", fmt::join(outputTupleShape, ", "), fmt::join(baselineTupleShape, ", ")));
+    return MakeErrorResult(-16, fmt::format("Tuple Shape does not Match. Output: {} Baseline: {}", fmt::join(outputTupleShape, ", "), fmt::join(baselineTupleShape, ", ")));
   }
 
   // Make sure the component shape is the same
@@ -324,7 +306,7 @@ Result<> CompareImages(DataStructure& ds, const DataPath& baselineGeometryPath, 
   ShapeType outputComponentShape = outputDataArray->getIDataStore()->getComponentShape();
   if(baselineComponentShape != outputComponentShape)
   {
-    return MakeErrorResult(-18, fmt::format("Component Shape does not Match. Output:{} Baseline:{}", fmt::join(outputComponentShape, ", "), fmt::join(baselineComponentShape, ", ")));
+    return MakeErrorResult(-18, fmt::format("Component Shape does not Match. Output: {} Baseline: {}", fmt::join(outputComponentShape, ", "), fmt::join(baselineComponentShape, ", ")));
   }
 
   switch(outputDataType)
@@ -359,10 +341,28 @@ Result<> CompareImages(DataStructure& ds, const DataPath& baselineGeometryPath, 
   case complex::DataType::uint64: {
     return CompareImages<uint64_t>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
   }
-  case complex::DataType::boolean:
+  case complex::DataType::boolean: {
+    [[fallthrough]];
+  }
   case complex::DataType::error: {
+    [[fallthrough]];
+  }
+  default: {
     return MakeErrorResult(-100, fmt::format(""));
   }
+  }
+}
+
+void RemoveFiles(fs::path& dirPath, const std::string& filePattern)
+{
+  for(auto& p : fs::directory_iterator(dirPath))
+  {
+    std::string file_name = p.path().filename().string();
+    if(file_name.find(filePattern) == 0)
+    {
+      // std::cout << "Removing: " << file_name  <<std::endl;
+      fs::remove(p.path());
+    }
   }
 }
 

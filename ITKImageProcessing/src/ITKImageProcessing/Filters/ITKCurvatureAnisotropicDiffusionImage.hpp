@@ -9,7 +9,33 @@ namespace complex
 {
 /**
  * @class ITKCurvatureAnisotropicDiffusionImage
- * @brief This filter will ....
+ * @brief
+ *
+ * This filter performs anisotropic diffusion on a scalar itk::Image using the modified curvature diffusion equation (MCDE) implemented in itkCurvatureNDAnisotropicDiffusionFunction. For detailed
+ * information on anisotropic diffusion and the MCDE see itkAnisotropicDiffusionFunction and itkCurvatureNDAnisotropicDiffusionFunction.
+ *
+ * \par Inputs and Outputs
+ * The input and output to this filter must be a scalar itk::Image with numerical pixel types (float or double). A user defined type which correctly defines arithmetic operations with floating point
+ * accuracy should also give correct results.
+ *
+ *
+ * \par Parameters
+ * Please first read all the documentation found in AnisotropicDiffusionImageFilter and AnisotropicDiffusionFunction . Also see CurvatureNDAnisotropicDiffusionFunction .
+ *
+ *
+ * The default time step for this filter is set to the maximum theoretically stable value: 0.5 / 2^N, where N is the dimensionality of the image. For a 2D image, this means valid time steps are below
+ * 0.1250. For a 3D image, valid time steps are below 0.0625.
+ *
+ * @see AnisotropicDiffusionImageFilter
+ *
+ *
+ * @see AnisotropicDiffusionFunction
+ *
+ *
+ * @see CurvatureNDAnisotropicDiffusionFunction
+ *
+ * ITK Module: ITKAnisotropicSmoothing
+ * ITK Group: AnisotropicSmoothing
  */
 class ITKIMAGEPROCESSING_EXPORT ITKCurvatureAnisotropicDiffusionImage : public IFilter
 {
@@ -24,13 +50,13 @@ public:
   ITKCurvatureAnisotropicDiffusionImage& operator=(ITKCurvatureAnisotropicDiffusionImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_TimeStep_Key = "TimeStep";
   static inline constexpr StringLiteral k_ConductanceParameter_Key = "ConductanceParameter";
   static inline constexpr StringLiteral k_ConductanceScalingUpdateInterval_Key = "ConductanceScalingUpdateInterval";
   static inline constexpr StringLiteral k_NumberOfIterations_Key = "NumberOfIterations";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

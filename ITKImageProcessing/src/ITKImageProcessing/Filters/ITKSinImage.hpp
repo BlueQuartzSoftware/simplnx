@@ -9,7 +9,12 @@ namespace complex
 {
 /**
  * @class ITKSinImage
- * @brief This filter will ....
+ * @brief Computes the sine of each pixel.
+ *
+ * The computations are performed using std::sin(x).
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
 class ITKIMAGEPROCESSING_EXPORT ITKSinImage : public IFilter
 {
@@ -24,9 +29,9 @@ public:
   ITKSinImage& operator=(ITKSinImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
 
   /**
    * @brief Returns the name of the filter.

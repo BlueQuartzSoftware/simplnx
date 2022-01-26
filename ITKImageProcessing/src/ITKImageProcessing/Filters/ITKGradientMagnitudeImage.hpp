@@ -9,7 +9,18 @@ namespace complex
 {
 /**
  * @class ITKGradientMagnitudeImage
- * @brief This filter will ....
+ * @brief Computes the gradient magnitude of an image region at each pixel.
+ *
+ * @see Image
+ *
+ * @see Neighborhood
+ *
+ * @see NeighborhoodOperator
+ *
+ * @see NeighborhoodIterator
+ *
+ * ITK Module: ITKImageGradient
+ * ITK Group: ImageGradient
  */
 class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeImage : public IFilter
 {
@@ -24,10 +35,10 @@ public:
   ITKGradientMagnitudeImage& operator=(ITKGradientMagnitudeImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_UseImageSpacing_Key = "UseImageSpacing";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_UseImageSpacing_Key = "UseImageSpacing";
 
   /**
    * @brief Returns the name of the filter.

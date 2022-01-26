@@ -9,7 +9,29 @@ namespace complex
 {
 /**
  * @class ITKGradientAnisotropicDiffusionImage
- * @brief This filter will ....
+ * @brief
+ *
+ * This filter performs anisotropic diffusion on a scalar itk::Image using the classic Perona-Malik, gradient magnitude based equation implemented in itkGradientNDAnisotropicDiffusionFunction. For
+ * detailed information on anisotropic diffusion, see itkAnisotropicDiffusionFunction and itkGradientNDAnisotropicDiffusionFunction.
+ *
+ * \par Inputs and Outputs
+ * The input to this filter should be a scalar itk::Image of any dimensionality. The output image will be a diffused copy of the input.
+ *
+ *
+ * \par Parameters
+ * Please see the description of parameters given in itkAnisotropicDiffusionImageFilter.
+ *
+ *
+ * @see AnisotropicDiffusionImageFilter
+ *
+ *
+ * @see AnisotropicDiffusionFunction
+ *
+ *
+ * @see GradientAnisotropicDiffusionFunction
+ *
+ * ITK Module: ITKAnisotropicSmoothing
+ * ITK Group: AnisotropicSmoothing
  */
 class ITKIMAGEPROCESSING_EXPORT ITKGradientAnisotropicDiffusionImage : public IFilter
 {
@@ -24,13 +46,13 @@ public:
   ITKGradientAnisotropicDiffusionImage& operator=(ITKGradientAnisotropicDiffusionImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_TimeStep_Key = "TimeStep";
   static inline constexpr StringLiteral k_ConductanceParameter_Key = "ConductanceParameter";
   static inline constexpr StringLiteral k_ConductanceScalingUpdateInterval_Key = "ConductanceScalingUpdateInterval";
   static inline constexpr StringLiteral k_NumberOfIterations_Key = "NumberOfIterations";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.
