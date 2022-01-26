@@ -9,80 +9,111 @@ set(PLUGIN_NAME "ITKImageProcessing")
 set(FilterList
   ITKImageReader
   ITKImageWriter
-  ITKAbsImage
-  ITKAcosImage
-  ITKAsinImage
-  ITKAtanImage
-  ITKBilateralImage
-  ITKBinaryClosingByReconstructionImage
-  ITKBinaryContourImage
-  ITKBinaryDilateImage
-  ITKBinaryErodeImage
-  ITKBinaryMorphologicalClosingImage
-  ITKBinaryMorphologicalOpeningImage
-  ITKBinaryOpeningByReconstructionImage
-  ITKBinaryProjectionImage
-  ITKBinaryThinningImage
-  ITKBinomialBlurImage
-  ITKBlackTopHatImage
-  ITKClosingByReconstructionImage
-  ITKCosImage
-  ITKDilateObjectMorphologyImage
-  ITKErodeObjectMorphologyImage
-  ITKExpImage
-  ITKExpNegativeImage
-  ITKGrayscaleDilateImage
-  ITKGrayscaleErodeImage
+
+  # ITKAbsImage
+  # ITKAcosImage
+  # ITKAsinImage
+  # ITKAtanImage
+  # ITKBilateralImage
+  # ITKBinaryClosingByReconstructionImage
+  # ITKBinaryContourImage
+  # ITKBinaryDilateImage
+  # ITKBinaryErodeImage
+  # ITKBinaryMorphologicalClosingImage
+  # ITKBinaryMorphologicalOpeningImage
+  # ITKBinaryOpeningByReconstructionImage
+  # ITKBinaryProjectionImage
+  # ITKBinaryThinningImage
+  # ITKBinomialBlurImage
+  # ITKBlackTopHatImage
+  # ITKClosingByReconstructionImage
+  # ITKCosImage
+  # ITKDilateObjectMorphologyImage
+  # ITKErodeObjectMorphologyImage
+  # ITKExpImage
+  # ITKExpNegativeImage
+  # ITKGrayscaleDilateImage
+  # ITKGrayscaleErodeImage
   ITKGrayscaleFillholeImage
-  ITKGrayscaleGrindPeakImage
-  ITKGrayscaleMorphologicalClosingImage
-  ITKGrayscaleMorphologicalOpeningImage
-  ITKHConvexImage
-  ITKHMaximaImage
-  ITKHMinimaImage
-  ITKIntensityWindowingImage
-  ITKInvertIntensityImage
-  ITKLabelContourImage
-  ITKLaplacianSharpeningImage
-  ITKLog10Image
-  ITKLogImage
-  ITKMaximumProjectionImage
-  ITKMedianProjectionImage
-  ITKMinimumProjectionImage
-  ITKMorphologicalGradientImage
-  ITKMultiScaleHessianBasedObjectnessImage
-  ITKNotImage
-  ITKOpeningByReconstructionImage
-  ITKRelabelComponentImage
-  ITKSaltAndPepperNoiseImage
-  ITKShiftScaleImage
-  ITKShotNoiseImage
-  ITKSigmoidImage
-  ITKSinImage
-  ITKSpeckleNoiseImage
-  ITKSqrtImage
-  ITKSquareImage
-  ITKTanImage
-  ITKThresholdImage
-  ITKValuedRegionalMaximaImage
-  ITKValuedRegionalMinimaImage
-  ITKWhiteTopHatImage
-  )
+  # ITKGrayscaleGrindPeakImage
+  # ITKGrayscaleMorphologicalClosingImage
+  # ITKGrayscaleMorphologicalOpeningImage
+  # ITKHConvexImage
+  # ITKHMaximaImage
+  # ITKHMinimaImage
+  # ITKIntensityWindowingImage
+  # ITKInvertIntensityImage
+  # ITKLabelContourImage
+  # ITKLaplacianSharpeningImage
+  # ITKLog10Image
+  # ITKLogImage
+  # ITKMaximumProjectionImage
+  # ITKMedianProjectionImage
+  # ITKMinimumProjectionImage
+  # ITKMorphologicalGradientImage
+  # ITKMultiScaleHessianBasedObjectnessImage
+  # ITKNotImage
+  # ITKOpeningByReconstructionImage
+  # ITKRelabelComponentImage
+  # ITKSaltAndPepperNoiseImage
+  # ITKShiftScaleImage
+  # ITKShotNoiseImage
+  # ITKSigmoidImage
+  # ITKSinImage
+  # ITKSpeckleNoiseImage
+  # ITKSqrtImage
+  # ITKSquareImage
+  # ITKTanImage
+  # ITKThresholdImage
+  # ITKValuedRegionalMaximaImage
+  # ITKValuedRegionalMinimaImage
+  # ITKWhiteTopHatImage
 
-set(FilterList_Bak
+  #-----------------------------------------------------------------------------
+  # These filters have a fixed output type
+  #-----------------------------------------------------------------------------
+  # ITKApproximateSignedDistanceMapImage
+  # ITKMinMaxCurvatureFlowImage
+  # ITKGradientAnisotropicDiffusionImage
+  # ITKCurvatureAnisotropicDiffusionImage
+  ITKBinaryThresholdImage
+  # ITKBoundedReciprocalImage
+  # ITKConnectedComponentImage
+  # ITKCurvatureFlowImage
+  # ITKDanielssonDistanceMapImage
+  # ITKDoubleThresholdImage
+  ITKGradientMagnitudeImage
+  # ITKGradientMagnitudeRecursiveGaussianImage
+  # ITKIsoContourDistanceImage
+  # ITKLaplacianRecursiveGaussianImage
+  # ITKMeanProjectionImage
+  ITKNormalizeImage
+  # ITKNormalizeToConstantImage
+  ITKOtsuMultipleThresholdsImage
+  # ITKRegionalMaximaImage
+  # ITKRegionalMinimaImage
+  # ITKStandardDeviationProjectionImage
+  # ITKSumProjectionImage
+  # ITKThresholdMaximumConnectedComponentsImage
+  # ITKZeroCrossingImage
+  # ITKMorphologicalWatershedFromMarkersImage
+  # ITKSignedDanielssonDistanceMapImage
+  # ITKSignedMaurerDistanceMapImage
+  # ITKSmoothingRecursiveGaussianImage
 
-  )
+  #-----------------------------------------------------------------------------
+  # There are parameters from the old version that do not appear in the JSON when generating.
+  #-----------------------------------------------------------------------------
+  # ITKRescaleIntensityImage
+  # ITKBoxMeanImage
+  # ITKAdaptiveHistogramEqualizationImage
+  ITKMedianImage
+  # ITKDiscreteGaussianImage
+
+  ITKMaskImage
+)
 
 set(Filters_Disabled
-  #-----------------------------------------------------------------------------
-  # These filters have issues with the generated unit test
-  #-----------------------------------------------------------------------------
-  ITKRescaleIntensityImage
-  ITKBoxMeanImage
-  ITKAdaptiveHistogramEqualizationImage
-  ITKMedianImage
-  ITKDiscreteGaussianImage
-
   #-----------------------------------------------------------------------------
   # These filters are custom written filters by BQ and do not conform to the
   # standard ITK filter wrapping
@@ -101,47 +132,18 @@ set(Filters_Disabled
   ITKPCMTileRegistration
   ITKProxTVImage
   ITKStitchMontage # MISSING 1 or more Parameter Implementations
+  ITKRGBToLuminanceImage # Multiple Different Return types so auto has issues with that
 
   #-----------------------------------------------------------------------------
-  # These filters have a fixed output type of 'double'
+  # These filters have a fixed output type
   #-----------------------------------------------------------------------------
-  ITKRGBToLuminanceImage # Multiple Different Return types so auto has issues with that
-  ITKMinMaxCurvatureFlowImage
-  ITKGradientAnisotropicDiffusionImage
-  ITKCurvatureAnisotropicDiffusionImage
-  ITKApproximateSignedDistanceMapImage
-  ITKBinaryThresholdImage
-  ITKBoundedReciprocalImage
-  ITKConnectedComponentImage
-  ITKCurvatureFlowImage
-  ITKDanielssonDistanceMapImage
-  ITKDoubleThresholdImage
-  ITKGradientMagnitudeImage
-  ITKGradientMagnitudeRecursiveGaussianImage
-  ITKIsoContourDistanceImage
-  ITKLaplacianRecursiveGaussianImage # Link error due to missing enums (?)
-  ITKMeanProjectionImage
-  ITKMorphologicalWatershedFromMarkersImage
-  ITKNormalizeImage
-  ITKNormalizeToConstantImage
-  ITKOtsuMultipleThresholdsImage
-  ITKRegionalMaximaImage
-  ITKRegionalMinimaImage
-  ITKSignedDanielssonDistanceMapImage
-  ITKSignedMaurerDistanceMapImage
-  ITKSmoothingRecursiveGaussianImage
-  ITKStandardDeviationProjectionImage
-  ITKSumProjectionImage
-  ITKThresholdMaximumConnectedComponentsImage
-  ITKVectorConnectedComponentImage
-  ITKZeroCrossingImage
+  ITKVectorConnectedComponentImage # Vector Input, uint32_t output
 
   #-----------------------------------------------------------------------------
   # These filters use the itk::InPlaceDream3DDataToImageFilter filter
   #-----------------------------------------------------------------------------
   ITKPatchBasedDenoisingImage # itk::InPlaceDream3DDataToImageFilter
   ITKMorphologicalWatershedImage # itk::InPlaceDream3DDataToImageFilter
-  ITKMaskImage # itk::InPlaceDream3DDataToImageFilter
   ITKFFTNormalizedCorrelationImage # itk::InPlaceDream3DDataToImageFilter
   ITKHistogramMatchingImage # itk::InPlaceDream3DDataToImageFilter
 
@@ -150,7 +152,7 @@ set(Filters_Disabled
   #-----------------------------------------------------------------------------
   ITKCastImage # Dream3DArraySwitchOutputComponentMacro
   ITKVectorRescaleIntensityImage # Dream3DArraySwitchOutputComponentMacro
-  )
+)
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
   FILTER_LIST ${FilterList}
@@ -160,8 +162,7 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 
 find_package(ITK REQUIRED)
 
-target_link_libraries(${PLUGIN_NAME}
-  PUBLIC
+set(ItkComponents 
   ITKCommon
   ITKIOImageBase
   ITKIOBMP
@@ -183,10 +184,14 @@ target_link_libraries(${PLUGIN_NAME}
   ITKTransform
 )
 
-target_compile_options(${PLUGIN_NAME}
-  PUBLIC
-    ${ITK_REQUIRED_CXX_FLAGS}
-)
+target_link_libraries(${PLUGIN_NAME} PUBLIC ${ItkComponents})
+
+if(MSVC)
+  target_compile_options(${PLUGIN_NAME}
+    PUBLIC
+      /bigobj
+  )
+endif()
 
 target_sources(${PLUGIN_NAME}
   PRIVATE
@@ -196,7 +201,22 @@ target_sources(${PLUGIN_NAME}
 
 target_include_directories(${PLUGIN_NAME} PUBLIC  ${ITK_INCLUDE_DIRS})
 
+if(WIN32)
+  # This removes some C++17 Deprecation Warnings inside of ITK 5.1
+  target_compile_definitions(${PLUGIN_NAME} PUBLIC "_SILENCE_CXX17_RESULT_OF_DEPRECATION_WARNING")
+  set_target_properties(${PLUGIN_NAME} PROPERTIES LINK_FLAGS_DEBUG "/INCREMENTAL:NO" )
+endif()
+
 #------------------------------------------------------------------------------
 # Add in the unit tests for the filters included in this plugin
 enable_testing()
 add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
+
+#------------------------------------------------------------------------------
+# Add in the install rules for ITK Libraries
+#------------------------------------------------------------------------------
+get_filename_component(ITKImageProcessing_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR} DIRECTORY CACHE)
+get_filename_component(COMPLEX_PLUGINS_SOURCE_DIR ${ITKImageProcessing_SOURCE_DIR} DIRECTORY CACHE)
+# message(STATUS "ITKImageProcessing_SOURCE_DIR: ${ITKImageProcessing_SOURCE_DIR}")
+include(${COMPLEX_PLUGINS_SOURCE_DIR}/cmake/ITKInstall.cmake)
+AddItkCopyInstallRules(LIBS ${ItkComponents})

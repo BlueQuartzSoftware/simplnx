@@ -9,7 +9,17 @@ namespace complex
 {
 /**
  * @class ITKBlackTopHatImage
- * @brief This filter will ....
+ * @brief Black top hat extracts local minima that are smaller than the structuring element.
+ *
+ * Black top hat extracts local minima that are smaller than the structuring element. It subtracts the background from the input image. The output of the filter transforms the black valleys into white
+ * peaks.
+ *
+ * Top-hats are described in Chapter 4.5 of Pierre Soille's book "Morphological Image Analysis: Principles and Applications", Second Edition, Springer, 2003.
+ *
+ * @author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+ *
+ * ITK Module: ITKMathematicalMorphology
+ * ITK Group: MathematicalMorphology
  */
 class ITKIMAGEPROCESSING_EXPORT ITKBlackTopHatImage : public IFilter
 {
@@ -24,12 +34,12 @@ public:
   ITKBlackTopHatImage& operator=(ITKBlackTopHatImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_KernelRadius_Key = "KernelRadius";
   static inline constexpr StringLiteral k_KernelType_Key = "KernelType";
   static inline constexpr StringLiteral k_SafeBorder_Key = "SafeBorder";
-  static inline constexpr StringLiteral k_KernelRadius_Key = "KernelRadius";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

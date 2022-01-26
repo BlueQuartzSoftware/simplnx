@@ -9,7 +9,27 @@ namespace complex
 {
 /**
  * @class ITKMedianImage
- * @brief This filter will ....
+ * @brief Applies a median filter to an image.
+ *
+ * Computes an image where a given pixel is the median value of the the pixels in a neighborhood about the corresponding input pixel.
+ *
+ * A median filter is one of the family of nonlinear filters. It is used to smooth an image without being biased by outliers or shot noise.
+ *
+ * This filter requires that the input pixel type provides an operator<() (LessThan Comparable).
+ *
+ * @see Image
+ *
+ *
+ * @see Neighborhood
+ *
+ *
+ * @see NeighborhoodOperator
+ *
+ *
+ * @see NeighborhoodIterator
+ *
+ * ITK Module: ITKSmoothing
+ * ITK Group: Smoothing
  */
 class ITKIMAGEPROCESSING_EXPORT ITKMedianImage : public IFilter
 {
@@ -24,10 +44,10 @@ public:
   ITKMedianImage& operator=(ITKMedianImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Radius_Key = "Radius";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_Radius_Key = "Radius";
 
   /**
    * @brief Returns the name of the filter.

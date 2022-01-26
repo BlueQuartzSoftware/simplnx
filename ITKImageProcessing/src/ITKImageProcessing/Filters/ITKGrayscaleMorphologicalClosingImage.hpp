@@ -9,7 +9,16 @@ namespace complex
 {
 /**
  * @class ITKGrayscaleMorphologicalClosingImage
- * @brief This filter will ....
+ * @brief gray scale dilation of an image
+ *
+ * Erode an image using grayscale morphology. Dilation takes the maximum of all the pixels identified by the structuring element.
+ *
+ * The structuring element is assumed to be composed of binary values (zero or one). Only elements of the structuring element having values > 0 are candidates for affecting the center pixel.
+ *
+ * @see MorphologyImageFilter , GrayscaleFunctionErodeImageFilter , BinaryErodeImageFilter
+ *
+ * ITK Module: ITKMathematicalMorphology
+ * ITK Group: MathematicalMorphology
  */
 class ITKIMAGEPROCESSING_EXPORT ITKGrayscaleMorphologicalClosingImage : public IFilter
 {
@@ -24,12 +33,12 @@ public:
   ITKGrayscaleMorphologicalClosingImage& operator=(ITKGrayscaleMorphologicalClosingImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_KernelRadius_Key = "KernelRadius";
   static inline constexpr StringLiteral k_KernelType_Key = "KernelType";
   static inline constexpr StringLiteral k_SafeBorder_Key = "SafeBorder";
-  static inline constexpr StringLiteral k_KernelRadius_Key = "KernelRadius";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

@@ -9,7 +9,22 @@ namespace complex
 {
 /**
  * @class ITKBinaryThresholdImage
- * @brief This filter will ....
+ * @brief Binarize an input image by thresholding.
+ *
+ * This filter produces an output image whose pixels are either one of two values ( OutsideValue or InsideValue ), depending on whether the corresponding input image pixels lie between the two
+ * thresholds ( LowerThreshold and UpperThreshold ). Values equal to either threshold is considered to be between the thresholds.
+ *
+ * More precisely \f[ Output(x_i) = \begin{cases} InsideValue & \text{if \f$LowerThreshold \leq x_i \leq UpperThreshold\f$} \\ OutsideValue & \text{otherwise} \end{cases} \f]
+ *
+ * This filter is templated over the input image type and the output image type.
+ *
+ * The filter expect both images to have the same number of dimensions.
+ *
+ * The default values for LowerThreshold and UpperThreshold are: LowerThreshold = NumericTraits<TInput>::NonpositiveMin() ; UpperThreshold = NumericTraits<TInput>::max() ; Therefore, generally only
+ * one of these needs to be set, depending on whether the user wants to threshold above or below the desired threshold.
+ *
+ * ITK Module: ITKThresholding
+ * ITK Group: Thresholding
  */
 class ITKIMAGEPROCESSING_EXPORT ITKBinaryThresholdImage : public IFilter
 {
@@ -24,13 +39,13 @@ public:
   ITKBinaryThresholdImage& operator=(ITKBinaryThresholdImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_LowerThreshold_Key = "LowerThreshold";
   static inline constexpr StringLiteral k_UpperThreshold_Key = "UpperThreshold";
   static inline constexpr StringLiteral k_InsideValue_Key = "InsideValue";
   static inline constexpr StringLiteral k_OutsideValue_Key = "OutsideValue";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

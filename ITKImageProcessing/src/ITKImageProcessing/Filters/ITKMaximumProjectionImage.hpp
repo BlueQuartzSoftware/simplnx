@@ -9,7 +9,35 @@ namespace complex
 {
 /**
  * @class ITKMaximumProjectionImage
- * @brief This filter will ....
+ * @brief Maximum projection.
+ *
+ * This class was contributed to the insight journal by Gaetan Lehmann. The original paper can be found at https://hdl.handle.net/1926/164
+ *
+ * @author Gaetan Lehmann. Biologie du Developpement et de la reproduction, inra de jouy-en-josas, France.
+ *
+ *
+ * @see ProjectionImageFilter
+ *
+ *
+ * @see MedianProjectionImageFilter
+ *
+ *
+ * @see MeanProjectionImageFilter
+ *
+ *
+ * @see MinimumProjectionImageFilter
+ *
+ *
+ * @see StandardDeviationProjectionImageFilter
+ *
+ *
+ * @see SumProjectionImageFilter
+ *
+ *
+ * @see BinaryProjectionImageFilter
+ *
+ * ITK Module: ITKImageStatistics
+ * ITK Group: ImageStatistics
  */
 class ITKIMAGEPROCESSING_EXPORT ITKMaximumProjectionImage : public IFilter
 {
@@ -24,10 +52,10 @@ public:
   ITKMaximumProjectionImage& operator=(ITKMaximumProjectionImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ProjectionDimension_Key = "ProjectionDimension";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_ProjectionDimension_Key = "ProjectionDimension";
 
   /**
    * @brief Returns the name of the filter.

@@ -9,7 +9,18 @@ namespace complex
 {
 /**
  * @class ITKInvertIntensityImage
- * @brief This filter will ....
+ * @brief Invert the intensity of an image.
+ *
+ * InvertIntensityImageFilter inverts intensity of pixels by subtracting pixel value to a maximum value. The maximum value can be set with SetMaximum and defaults the maximum of input pixel type. This
+ * filter can be used to invert, for example, a binary image, a distance map, etc.
+ *
+ * @author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+ *
+ *
+ * @see IntensityWindowingImageFilter ShiftScaleImageFilter
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
 class ITKIMAGEPROCESSING_EXPORT ITKInvertIntensityImage : public IFilter
 {
@@ -24,10 +35,10 @@ public:
   ITKInvertIntensityImage& operator=(ITKInvertIntensityImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Maximum_Key = "Maximum";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_Maximum_Key = "Maximum";
 
   /**
    * @brief Returns the name of the filter.

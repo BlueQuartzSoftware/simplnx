@@ -22,77 +22,18 @@
 #include <type_traits>
 #include <vector>
 
-#ifndef COMPLEX_ITK_ARRAY_HELPER_USE_int8
-#define COMPLEX_ITK_ARRAY_HELPER_USE_int8 1
-#endif
-
-#ifndef COMPLEX_ITK_ARRAY_HELPER_USE_uint8
-#define COMPLEX_ITK_ARRAY_HELPER_USE_uint8 1
-#endif
-
-#ifndef COMPLEX_ITK_ARRAY_HELPER_USE_int16
-#define COMPLEX_ITK_ARRAY_HELPER_USE_int16 1
-#endif
-
-#ifndef COMPLEX_ITK_ARRAY_HELPER_USE_uint16
-#define COMPLEX_ITK_ARRAY_HELPER_USE_uint16 1
-#endif
-
-#ifndef COMPLEX_ITK_ARRAY_HELPER_USE_int32
-#define COMPLEX_ITK_ARRAY_HELPER_USE_int32 1
-#endif
-
-#ifndef COMPLEX_ITK_ARRAY_HELPER_USE_uint32
-#define COMPLEX_ITK_ARRAY_HELPER_USE_uint32 1
-#endif
-
-#ifndef COMPLEX_ITK_ARRAY_HELPER_USE_int64
-#define COMPLEX_ITK_ARRAY_HELPER_USE_int64 1
-#endif
-
-#ifndef COMPLEX_ITK_ARRAY_HELPER_USE_uint64
-#define COMPLEX_ITK_ARRAY_HELPER_USE_uint64 1
-#endif
-
-#ifndef COMPLEX_ITK_ARRAY_HELPER_USE_float32
-#define COMPLEX_ITK_ARRAY_HELPER_USE_float32 1
-#endif
-
-#ifndef COMPLEX_ITK_ARRAY_HELPER_USE_float64
-#define COMPLEX_ITK_ARRAY_HELPER_USE_float64 1
-#endif
-
-#ifndef COMPLEX_ITK_ARRAY_HELPER_USE_Scalar
-#define COMPLEX_ITK_ARRAY_HELPER_USE_Scalar 1
-#endif
-
-#ifndef COMPLEX_ITK_ARRAY_HELPER_USE_Vector
-#define COMPLEX_ITK_ARRAY_HELPER_USE_Vector 0
-#endif
-
-#ifndef COMPLEX_ITK_ARRAY_HELPER_USE_RGB_RGBA
-#define COMPLEX_ITK_ARRAY_HELPER_USE_RGB_RGBA 0
-#endif
-
-#include <itkFlatStructuringElement.h>
-
-
-/*
- * The original implementation seemed to short circuit to vector if both were activate, but it's
- * unknown if that was the intended behavior.
- */
-static_assert(!(COMPLEX_ITK_ARRAY_HELPER_USE_Vector == 1 && COMPLEX_ITK_ARRAY_HELPER_USE_RGB_RGBA == 1), "ITKArrayHelper: Vector and RGB/RGBA support cannot both be enabled at the same time");
-
 namespace complex
 {
 namespace ITK
 {
+bool DoDimensionsMatch(const IDataStore& dataStore, const ImageGeom& imageGeom);
+
 /**
  * @brief CastVec3ToITK Input type should be FloatVec3Type or IntVec3Type, Output
    type should be some kind of ITK "array" (itk::Size, itk::Index,...)
  */
-template <typename InputType, typename OutputType, typename ComponentType>
-OutputType CastVec3ToITK(const InputType& inputVec3, unsigned int dimension)
+template <class OutputType, class ComponentType, class InputType>
+OutputType CastVec3ToITK(const InputType& inputVec3, uint32 dimension)
 {
   OutputType output;
   if(dimension > 0)
@@ -111,13 +52,20 @@ OutputType CastVec3ToITK(const InputType& inputVec3, unsigned int dimension)
 }
 
 /**
+ * @brief Checks that the data array at the given path belongs to one of the given types.
+ * @param types
+ * @param dataStructure
+ * @param path
+ * @return
+ */
+Result<> CheckImageType(const std::vector<DataType>& types, const DataStructure& dataStructure, const DataPath& path);
+
+/**
  * @brief
  * @tparam T
  */
 template <class T>
 using UnderlyingType_t = typename itk::NumericTraits<T>::ValueType;
-
-bool DoDimensionsMatch(const IDataStore& dataStore, const ImageGeom& imageGeom);
 
 template <class PixelT>
 std::vector<usize> GetComponentDimensions()
@@ -131,7 +79,7 @@ typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(DataStore<
   using T = ITK::UnderlyingType_t<PixelT>;
 
   static_assert(std::is_standard_layout_v<PixelT>, "complex::ITK::WrapDataStoreInImage: PixelT must be standard layout");
-  static_assert(std::is_trivial_v<PixelT>, "complex::ITK::WrapDataStoreInImage: PixelT must be trivial");
+  // static_assert(std::is_trivial_v<PixelT>, "complex::ITK::WrapDataStoreInImage: PixelT must be trivial");
   static_assert(std::is_arithmetic_v<T>, "complex::ITK::WrapDataStoreInImage: The underlying type T of PixelT must be arithmetic");
   static_assert(sizeof(PixelT) % sizeof(T) == 0, "complex::ITK::WrapDataStoreInImage: The size of PixelT must be evenly divisible by T");
 
@@ -180,72 +128,142 @@ DataStore<UnderlyingType_t<PixelT>> ConvertImageToDataStore(itk::Image<PixelT, D
   typename ImageType::SizeType imageSize = image.GetLargestPossibleRegion().GetSize();
   std::vector<usize> tDims(imageSize.rbegin(), imageSize.rend());
   std::vector<usize> cDims = GetComponentDimensions<PixelT>();
+  if constexpr(Dimension == 2)
+  {
+    tDims.insert(tDims.begin(), 1);
+  }
   typename ImageType::PixelContainer* pixelContainer = image.GetPixelContainer();
   // ITK use the global new allocator
-  auto* bufferPtr = pixelContainer->GetBufferPointer();
+  auto* bufferPtr = reinterpret_cast<T*>(pixelContainer->GetBufferPointer());
   pixelContainer->ContainerManageMemoryOff();
   std::unique_ptr<T[]> newData(bufferPtr);
   DataStore<T> dataStore(std::move(newData), std::move(tDims), std::move(cDims));
   return dataStore;
 }
 
+// Could replace with class type non-type template parameters in C++20
+
+template <bool UseScalarV, bool UseVectorV, bool UseRgbRgbaV>
+struct ArrayComponentOptions
+{
+  static inline constexpr bool UsingScalar = UseScalarV;
+  static inline constexpr bool UsingVector = UseVectorV;
+  static inline constexpr bool UsingRgbRgba = UseRgbRgbaV;
+
+  /*
+   * The original implementation seemed to short circuit to vector if both were activated, but it's
+   * unknown if that was the intended behavior.
+   */
+  static_assert(!(UsingVector && UsingRgbRgba), "ITKArrayHelper: Vector and RGB/RGBA support cannot both be enabled at the same time");
+};
+
+template <bool UseInt8V, bool UseUInt8V, bool UseInt16V, bool UseUInt16V, bool UseInt32V, bool UseUInt32V, bool UseInt64V, bool UseUInt64V, bool UseFloat32V, bool UseFloat64V>
+struct ArrayTypeOptions
+{
+  static inline constexpr bool UsingInt8 = UseInt8V;
+  static inline constexpr bool UsingUInt8 = UseUInt8V;
+  static inline constexpr bool UsingInt16 = UseInt16V;
+  static inline constexpr bool UsingUInt16 = UseUInt16V;
+  static inline constexpr bool UsingInt32 = UseInt32V;
+  static inline constexpr bool UsingUInt32 = UseUInt32V;
+  static inline constexpr bool UsingInt64 = UseInt64V;
+  static inline constexpr bool UsingUInt64 = UseUInt64V;
+  static inline constexpr bool UsingFloat32 = UseFloat32V;
+  static inline constexpr bool UsingFloat64 = UseFloat64V;
+};
+
+template <class ComponentOptionsT, class TypeOptionsT>
+struct ArrayOptions
+{
+  using ComponentOptions = ComponentOptionsT;
+  using TypeOptions = TypeOptionsT;
+};
+
+using ArrayUseAllTypes = ArrayTypeOptions<true, true, true, true, true, true, true, true, true, true>;
+using ArrayUseIntegerTypes = ArrayTypeOptions<true, true, true, true, true, true, true, true, false, false>;
+using ArrayUseFloatingTypes = ArrayTypeOptions<false, false, false, false, false, false, false, false, true, true>;
+using ArrayUseSignedTypes = ArrayTypeOptions<true, false, true, false, true, false, true, false, true, true>;
+using ArrayUseUnsignedTypes = ArrayTypeOptions<false, true, false, true, false, true, false, true, false, false>;
+
+using ArrayUseScalarOnly = ArrayComponentOptions<true, false, false>;
+using ArrayUseVectorOnly = ArrayComponentOptions<false, true, false>;
+using ArrayUseRgbRgbaOnly = ArrayComponentOptions<false, false, true>;
+using ArrayUseScalarVector = ArrayComponentOptions<true, true, false>;
+
+using ScalarPixelIdTypeList = ArrayOptions<ArrayUseScalarOnly, ArrayUseAllTypes>;
+using VectorPixelIdTypeList = ArrayOptions<ArrayUseVectorOnly, ArrayUseAllTypes>;
+using ScalarVectorPixelIdTypeList = ArrayOptions<ArrayUseScalarVector, ArrayUseAllTypes>;
+
+using IntegerScalarPixelIdTypeList = ArrayOptions<ArrayUseScalarOnly, ArrayUseIntegerTypes>;
+using FloatingScalarPixelIdTypeList = ArrayOptions<ArrayUseScalarOnly, ArrayUseFloatingTypes>;
+
+using IntegerVectorPixelIdTypeList = ArrayOptions<ArrayUseVectorOnly, ArrayUseIntegerTypes>;
+using FloatingVectorPixelIdTypeList = ArrayOptions<ArrayUseVectorOnly, ArrayUseFloatingTypes>;
+
+using SignedIntegerScalarPixelIdTypeList = ArrayOptions<ArrayUseScalarOnly, ArrayUseSignedTypes>;
+
 namespace detail
 {
-template <class InputT, class OutputT, usize Dimensions, class ResultT, template <class, class, uint32> class FunctorT, class... ArgsT>
+template <class InputT, class OutputT, usize Dimensions, class ComponentOptionsT, class ResultT, template <class, class, uint32> class FunctorT, class... ArgsT>
 Result<ResultT> ArraySwitchFuncComponentImpl(usize nComp, int32 errorCode, ArgsT&&... args)
 {
-#if COMPLEX_ITK_ARRAY_HELPER_USE_Scalar == 1
-  if(nComp == 1)
+  if constexpr(ComponentOptionsT::UsingScalar)
   {
-    return FunctorT<InputT, OutputT, Dimensions>()(std::forward<ArgsT>(args)...);
+    if(nComp == 1)
+    {
+      return FunctorT<InputT, OutputT, Dimensions>()(std::forward<ArgsT>(args)...);
+    }
   }
-#endif
-#if COMPLEX_ITK_ARRAY_HELPER_USE_Vector == 1
-  if(nComp == 2)
+
+  if constexpr(ComponentOptionsT::UsingVector)
   {
-    using InputPixelType = itk::Vector<InputT, 2>;
-    using OutputPixelType = itk::Vector<OutputT, 2>;
-    return FunctorT<InputPixelType, OutputPixelType, Dimensions>()(std::forward<ArgsT>(args)...);
+    if(nComp == 2)
+    {
+      using InputPixelType = itk::Vector<InputT, 2>;
+      using OutputPixelType = itk::Vector<OutputT, 2>;
+      return FunctorT<InputPixelType, OutputPixelType, Dimensions>()(std::forward<ArgsT>(args)...);
+    }
+    if(nComp == 3)
+    {
+      using InputPixelType = itk::Vector<InputT, 3>;
+      using OutputPixelType = itk::Vector<OutputT, 3>;
+      return FunctorT<InputPixelType, OutputPixelType, Dimensions>()(std::forward<ArgsT>(args)...);
+    }
+    if(nComp == 10)
+    {
+      using InputPixelType = itk::Vector<InputT, 10>;
+      using OutputPixelType = itk::Vector<OutputT, 10>;
+      return FunctorT<InputPixelType, OutputPixelType, Dimensions>()(std::forward<ArgsT>(args)...);
+    }
+    if(nComp == 11)
+    {
+      using InputPixelType = itk::Vector<InputT, 11>;
+      using OutputPixelType = itk::Vector<OutputT, 11>;
+      return FunctorT<InputPixelType, OutputPixelType, Dimensions>()(std::forward<ArgsT>(args)...);
+    }
+    if(nComp == 36)
+    {
+      using InputPixelType = itk::Vector<InputT, 36>;
+      using OutputPixelType = itk::Vector<OutputT, 36>;
+      return FunctorT<InputPixelType, OutputPixelType, Dimensions>()(std::forward<ArgsT>(args)...);
+    }
   }
-  if(nComp == 3)
+
+  if constexpr(ComponentOptionsT::UsingRgbRgba)
   {
-    using InputPixelType = itk::Vector<InputT, 3>;
-    using OutputPixelType = itk::Vector<OutputT, 3>;
-    return FunctorT<InputPixelType, OutputPixelType, Dimensions>()(std::forward<ArgsT>(args)...);
+    if(nComp == 3)
+    {
+      using InputPixelType = itk::RGBPixel<InputT>;
+      using OutputPixelType = itk::RGBPixel<OutputT>;
+      return FunctorT<InputPixelType, OutputPixelType, Dimensions>()(std::forward<ArgsT>(args)...);
+    }
+    if(nComp == 4)
+    {
+      using InputPixelType = itk::RGBAPixel<InputT>;
+      using OutputPixelType = itk::RGBAPixel<OutputT>;
+      return FunctorT<InputPixelType, OutputPixelType, Dimensions>()(std::forward<ArgsT>(args)...);
+    }
   }
-  if(nComp == 10)
-  {
-    using InputPixelType = itk::Vector<InputT, 10>;
-    using OutputPixelType = itk::Vector<OutputT, 10>;
-    return FunctorT<InputPixelType, OutputPixelType, Dimensions>()(std::forward<ArgsT>(args)...);
-  }
-  if(nComp == 11)
-  {
-    using InputPixelType = itk::Vector<InputT, 11>;
-    using OutputPixelType = itk::Vector<OutputT, 11>;
-    return FunctorT<InputPixelType, OutputPixelType, Dimensions>()(std::forward<ArgsT>(args)...);
-  }
-  if(nComp == 36)
-  {
-    using InputPixelType = itk::Vector<InputT, 36>;
-    using OutputPixelType = itk::Vector<OutputT, 36>;
-    return FunctorT<InputPixelType, OutputPixelType, Dimensions>()(std::forward<ArgsT>(args)...);
-  }
-#endif
-#if COMPLEX_ITK_ARRAY_HELPER_USE_RGB_RGBA == 1
-  if(nComp == 3)
-  {
-    using InputPixelType = itk::RGBPixel<InputT>;
-    using OutputPixelType = itk::RGBPixel<OutputT>;
-    return FunctorT<InputPixelType, OutputPixelType, Dimensions>()(std::forward<ArgsT>(args)...);
-  }
-  if(nComp == 4)
-  {
-    using InputPixelType = itk::RGBAPixel<InputT>;
-    using OutputPixelType = itk::RGBAPixel<OutputT>;
-    return FunctorT<InputPixelType, OutputPixelType, Dimensions>()(std::forward<ArgsT>(args)...);
-  }
-#endif
 
   return MakeErrorResult<ResultT>(errorCode,
                                   fmt::format("Vector dimension not supported. cDims[0] = {} Try converting the selected input image to an image with scalar components using 'ITK::RGB to Luminance "
@@ -253,7 +271,7 @@ Result<ResultT> ArraySwitchFuncComponentImpl(usize nComp, int32 errorCode, ArgsT
                                               nComp));
 }
 
-template <class InputT, class OutputT, class ResultT, template <class, class, uint32> class FunctorT, class... ArgsT>
+template <class InputT, class OutputT, class ComponentOptionsT, class ResultT, template <class, class, uint32> class FunctorT, class... ArgsT>
 Result<ResultT> ArraySwitchFuncDimsImpl(const IDataStore& dataStore, const ImageGeom& imageGeom, int32 errorCode, ArgsT&&... args)
 {
   auto tDims = imageGeom.getDimensions();
@@ -264,11 +282,11 @@ Result<ResultT> ArraySwitchFuncDimsImpl(const IDataStore& dataStore, const Image
   // If the image dimensions are X Y 1 i.e. 2D
   if(tDims.getZ() == 1)
   {
-    return ArraySwitchFuncComponentImpl<InputT, OutputT, 2, ResultT, FunctorT>(nComp, errorCode, args...);
+    return ArraySwitchFuncComponentImpl<InputT, OutputT, 2, ComponentOptionsT, ResultT, FunctorT>(nComp, errorCode, args...);
   }
   else
   {
-    return ArraySwitchFuncComponentImpl<InputT, OutputT, 3, ResultT, FunctorT>(nComp, errorCode, args...);
+    return ArraySwitchFuncComponentImpl<InputT, OutputT, 3, ComponentOptionsT, ResultT, FunctorT>(nComp, errorCode, args...);
   }
 }
 
@@ -284,7 +302,7 @@ Result<OutputActions> DataCheckImpl(const DataStructure& dataStructure, const Da
 
   const IDataStore& dataStore = dataArray.getIDataStoreRef();
 
-  if(!ITK::DoDimensionsMatch(dataStore, imageGeom))
+  if(!complex::ITK::DoDimensionsMatch(dataStore, imageGeom))
   {
     return MakeErrorResult<OutputActions>(-1, "DataArray dimensions don't match ImageGeom");
   }
@@ -318,223 +336,178 @@ struct DataCheckImplFunctor
   }
 };
 
+// Could be replaced with concepts in c++20
+template <class T, class = void>
+struct ITKFilterFunctorResult
+{
+  using type = void;
+};
+
+template <class T>
+using Measurements_t = typename T::Measurements;
+
+template <class T>
+struct ITKFilterFunctorResult<T, std::void_t<Measurements_t<T>>>
+{
+  static_assert(!std::is_same_v<Measurements_t<T>, void>);
+  using type = Measurements_t<T>;
+};
+
+template <class T>
+using ITKFilterFunctorResult_t = typename ITKFilterFunctorResult<T>::type;
+
+template <class T>
+inline constexpr bool HasMeasurements_v = !std::is_same_v<ITKFilterFunctorResult_t<T>, void>;
+
 template <class InputT, class OutputT, uint32 Dimension>
 struct ITKFilterFunctor
 {
   template <class FilterCreationFunctorT>
-  Result<> operator()(IDataStore& inputDataStore, const ImageGeom& imageGeom, IDataStore& outputDataStore, const FilterCreationFunctorT& filterCreationFunctor) const
+  Result<ITKFilterFunctorResult_t<FilterCreationFunctorT>> operator()(IDataStore& inputDataStore, const ImageGeom& imageGeom, IDataStore& outputDataStore,
+                                                                      const FilterCreationFunctorT& filterCreationFunctor) const
   {
     using InputImageType = itk::Image<InputT, Dimension>;
     using OutputImageType = itk::Image<OutputT, Dimension>;
+
     auto& typedInputDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<InputT>>&>(inputDataStore);
     typename InputImageType::Pointer inputImage = ITK::WrapDataStoreInImage<InputT, Dimension>(typedInputDataStore, imageGeom);
-    auto filter = filterCreationFunctor.template operator()<InputImageType, OutputImageType, Dimension>();
+    auto filter = filterCreationFunctor.template createFilter<InputImageType, OutputImageType, Dimension>();
     filter->SetInput(inputImage);
     filter->Update();
 
     typename OutputImageType::Pointer outputImage = filter->GetOutput();
     outputImage->DisconnectPipeline();
-#if 0
-    using ImageType = itk::Image<OutputT, Dimension>;
-    using FileWriterType = itk::ImageFileWriter<ImageType>;
-    auto writer = FileWriterType::New();
-    writer->SetInput(outputImage);
-    writer->SetFileName("/tmp/output_image.tiff");
-    writer->UseCompressionOff();
-    writer->Update();
-    writer->SetInput(inputImage);
-    writer->SetFileName("/tmp/input_image.tiff");
-    writer->Update();
-#endif
-    auto& typedOutputDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<OutputT>>&>(inputDataStore);
+
+    auto& typedOutputDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<OutputT>>&>(outputDataStore);
     auto imageDataStore = ITK::ConvertImageToDataStore(*outputImage);
     typedOutputDataStore = std::move(imageDataStore);
 
-    return {};
+    if constexpr(HasMeasurements_v<FilterCreationFunctorT>)
+    {
+      return {filterCreationFunctor.template getMeasurements<InputImageType, OutputImageType, Dimension>(*filter)};
+    }
+    else
+    {
+      return {};
+    }
   }
 };
+
+template <class OutputT, class DefaultOutputT>
+using TrueOutputT = std::conditional_t<std::is_same_v<OutputT, void>, DefaultOutputT, OutputT>;
 } // namespace detail
 
-template <template <class, class, uint32> class FunctorT, class ResultT = void, class... ArgsT>
+template <template <class, class, uint32> class FunctorT, class ArrayOptionsT, class ResultT = void, template <class> class OutputT = std::void_t, class... ArgsT>
 Result<ResultT> ArraySwitchFunc(const IDataStore& dataStore, const ImageGeom& imageGeom, int32 errorCode, ArgsT&&... args)
 {
   DataType type = dataStore.getDataType();
 
-  switch(type)
+  using TypeOptionsT = typename ArrayOptionsT::TypeOptions;
+  using ComponentOptionsT = typename ArrayOptionsT::ComponentOptions;
+
+  if constexpr(TypeOptionsT::UsingInt8)
   {
-#if COMPLEX_ITK_ARRAY_HELPER_USE_int8 == 1
-  case DataType::int8: {
-    return detail::ArraySwitchFuncDimsImpl<int8, int8, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+    if(type == DataType::int8)
+    {
+      return detail::ArraySwitchFuncDimsImpl<int8, detail::TrueOutputT<OutputT<int8>, int8>, ComponentOptionsT, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+    }
   }
-#endif
-#if COMPLEX_ITK_ARRAY_HELPER_USE_uint8 == 1
-  case DataType::uint8: {
-    return detail::ArraySwitchFuncDimsImpl<uint8, uint8, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+  if constexpr(TypeOptionsT::UsingUInt8)
+  {
+    if(type == DataType::uint8)
+    {
+      return detail::ArraySwitchFuncDimsImpl<uint8, detail::TrueOutputT<OutputT<uint8>, uint8>, ComponentOptionsT, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+    }
   }
-#endif
-#if COMPLEX_ITK_ARRAY_HELPER_USE_int16 == 1
-  case DataType::int16: {
-    return detail::ArraySwitchFuncDimsImpl<int16, int16, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+  if constexpr(TypeOptionsT::UsingInt16)
+  {
+    if(type == DataType::int16)
+    {
+      return detail::ArraySwitchFuncDimsImpl<int16, detail::TrueOutputT<OutputT<int16>, int16>, ComponentOptionsT, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+    }
   }
-#endif
-#if COMPLEX_ITK_ARRAY_HELPER_USE_uint16 == 1
-  case DataType::uint16: {
-    return detail::ArraySwitchFuncDimsImpl<uint16, uint16, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+  if constexpr(TypeOptionsT::UsingUInt16)
+  {
+    if(type == DataType::uint16)
+    {
+      return detail::ArraySwitchFuncDimsImpl<uint16, detail::TrueOutputT<OutputT<uint16>, uint16>, ComponentOptionsT, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+    }
   }
-#endif
-#if COMPLEX_ITK_ARRAY_HELPER_USE_int32 == 1
-  case DataType::int32: {
-    return detail::ArraySwitchFuncDimsImpl<int32, int32, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+  if constexpr(TypeOptionsT::UsingInt32)
+  {
+    if(type == DataType::int32)
+    {
+      return detail::ArraySwitchFuncDimsImpl<int32, detail::TrueOutputT<OutputT<int32>, int32>, ComponentOptionsT, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+    }
   }
-#endif
-#if COMPLEX_ITK_ARRAY_HELPER_USE_uint32 == 1
-  case DataType::uint32: {
-    return detail::ArraySwitchFuncDimsImpl<uint32, uint32, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+  if constexpr(TypeOptionsT::UsingUInt32)
+  {
+    if(type == DataType::uint32)
+    {
+      return detail::ArraySwitchFuncDimsImpl<uint32, detail::TrueOutputT<OutputT<uint32>, uint32>, ComponentOptionsT, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+    }
   }
-#endif
-#if COMPLEX_ITK_ARRAY_HELPER_USE_int64 == 1
-  case DataType::int64: {
-    return detail::ArraySwitchFuncDimsImpl<int64, int64, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+  if constexpr(TypeOptionsT::UsingInt64)
+  {
+    if(type == DataType::int64)
+    {
+      return detail::ArraySwitchFuncDimsImpl<int64, detail::TrueOutputT<OutputT<int64>, int64>, ComponentOptionsT, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+    }
   }
-#endif
-#if COMPLEX_ITK_ARRAY_HELPER_USE_uint64 == 1
-  case DataType::uint64: {
-    return detail::ArraySwitchFuncDimsImpl<uint64, uint64, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+  if constexpr(TypeOptionsT::UsingUInt64)
+  {
+    if(type == DataType::uint64)
+    {
+      return detail::ArraySwitchFuncDimsImpl<uint64, detail::TrueOutputT<OutputT<uint64>, uint64>, ComponentOptionsT, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+    }
   }
-#endif
-#if COMPLEX_ITK_ARRAY_HELPER_USE_float32 == 1
-  case DataType::float32: {
-    return detail::ArraySwitchFuncDimsImpl<float32, float32, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+  if constexpr(TypeOptionsT::UsingFloat32)
+  {
+    if(type == DataType::float32)
+    {
+      return detail::ArraySwitchFuncDimsImpl<float32, detail::TrueOutputT<OutputT<float32>, float32>, ComponentOptionsT, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+    }
   }
-#endif
-#if COMPLEX_ITK_ARRAY_HELPER_USE_float64 == 1
-  case DataType::float64: {
-    return detail::ArraySwitchFuncDimsImpl<float64, float64, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+  if constexpr(TypeOptionsT::UsingFloat64)
+  {
+    if(type == DataType::float64)
+    {
+      return detail::ArraySwitchFuncDimsImpl<float64, detail::TrueOutputT<OutputT<float64>, float64>, ComponentOptionsT, ResultT, FunctorT>(dataStore, imageGeom, errorCode, args...);
+    }
   }
-#endif
-  default: {
-    return MakeErrorResult<ResultT>(-1000, "Invalid DataType while attempting to execute");
-  }
-  }
+
+  return MakeErrorResult<ResultT>(-1000, "Invalid DataType while attempting to execute");
 }
 
-inline Result<OutputActions> DataCheck(const DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& imageGeomPath, const DataPath& outputArrayPath)
+template <class ArrayOptionsT, template <class> class OutputT = std::void_t>
+Result<OutputActions> DataCheck(const DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& imageGeomPath, const DataPath& outputArrayPath)
 {
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
-  const auto& dataStore = dataArray.getIDataStoreRef();
+  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
+  const auto& inputDataStore = inputArray.getIDataStoreRef();
 
-  return ArraySwitchFunc<detail::DataCheckImplFunctor, OutputActions>(dataStore, imageGeom, -1, dataStructure, inputArrayPath, imageGeomPath, outputArrayPath);
+  return ArraySwitchFunc<detail::DataCheckImplFunctor, ArrayOptionsT, OutputActions, OutputT>(inputDataStore, imageGeom, -1, dataStructure, inputArrayPath, imageGeomPath, outputArrayPath);
 }
 
-template <class FilterCreationFunctorT>
-Result<> Execute(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& imageGeomPath, const DataPath& outputArrayPath, FilterCreationFunctorT filterCreationFunctor)
+template <class ArrayOptionsT, template <class> class OutputT = std::void_t, class FilterCreationFunctorT>
+Result<detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>> Execute(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& imageGeomPath, const DataPath& outputArrayPath,
+                                                                         FilterCreationFunctorT&& filterCreationFunctor)
 {
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
-  auto& outputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
+  auto& outputArray = dataStructure.getDataRefAs<IDataArray>(outputArrayPath);
   auto& inputDataStore = inputArray.getIDataStoreRef();
   auto& outputDataStore = outputArray.getIDataStoreRef();
 
+  using ResultT = detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>;
+
   try
   {
-    return ArraySwitchFunc<detail::ITKFilterFunctor>(inputDataStore, imageGeom, -1, inputDataStore, imageGeom, outputDataStore, filterCreationFunctor);
+    return ArraySwitchFunc<detail::ITKFilterFunctor, ArrayOptionsT, ResultT, OutputT>(inputDataStore, imageGeom, -1, inputDataStore, imageGeom, outputDataStore, filterCreationFunctor);
   } catch(const itk::ExceptionObject& exception)
   {
-    return MakeErrorResult(-222, exception.GetDescription());
+    return MakeErrorResult<ResultT>(-222, exception.GetDescription());
   }
 }
 } // namespace ITK
 } // namespace complex
-
-
-// Copied from sitkKernel.h (SimpleITK)
-// Copied from sitkCreateKernel.h (SimpleITK)
-namespace itk
-{
-namespace simple
-{
-enum PixelIDValueEnum
-{
-  sitkUnknown = -1,
-  sitkInt8 = -2,
-  sitkUInt8 = -3
-};
-enum KernelEnum
-{
-  sitkAnnulus = 0,
-  sitkBall = 1,
-  sitkBox = 2,
-  sitkCross = 3
-};
-
-enum SeedEnum
-{
-  /// A sentinel value used for "seed" parameters to indicate it
-  /// should be initialized by the wall clock for pseudo-random behavior.
-  sitkWallClock = 0
-};
-
-template< unsigned int Dimension >
-itk::FlatStructuringElement< Dimension >
-CreateKernel( KernelEnum kernelType, const std::vector<uint32_t> &size )
-{
-  typedef itk::FlatStructuringElement<Dimension> StructuringElementType;
-  typedef typename StructuringElementType::RadiusType RadiusType;
-  RadiusType elementRadius = complex::ITK::CastVec3ToITK<complex::FloatVec3, RadiusType, typename RadiusType::SizeValueType>(kernelType, RadiusType::Dimension);
-  StructuringElementType structuringElement;
-  switch(kernelType)
-  {
-  case KernelEnum::sitkAnnulus:
-    structuringElement = StructuringElementType::Annulus(elementRadius, false);
-    break;
-  case KernelEnum::sitkBall:
-    structuringElement = StructuringElementType::Ball(elementRadius, false);
-    break;
-  case KernelEnum::sitkBox:
-    structuringElement = StructuringElementType::Box(elementRadius);
-    break;
-  case KernelEnum::sitkCross:
-    structuringElement = StructuringElementType::Cross(elementRadius);
-    break;
-  default:
-    break;
-  }
-  return structuringElement;
-}
-template< unsigned int Dimension >
-itk::FlatStructuringElement< Dimension >
-CreateKernel( KernelEnum kernelType, const std::vector<float> &sizef )
-{
-  std::vector<uint32_t> size;
-  for(const auto& f : sizef)
-  {
-    size.push_back(static_cast<uint32_t>(f));
-  }
-  typedef itk::FlatStructuringElement<Dimension> StructuringElementType;
-  typedef typename StructuringElementType::RadiusType RadiusType;
-  RadiusType elementRadius = complex::ITK::CastVec3ToITK<complex::UIntVec3, RadiusType, typename RadiusType::SizeValueType>(size, RadiusType::Dimension);
-  StructuringElementType structuringElement;
-  switch(kernelType)
-  {
-  case 0:
-    structuringElement = StructuringElementType::Annulus(elementRadius, false);
-    break;
-  case 1:
-    structuringElement = StructuringElementType::Ball(elementRadius, false);
-    break;
-  case 2:
-    structuringElement = StructuringElementType::Box(elementRadius);
-    break;
-  case 3:
-    structuringElement = StructuringElementType::Cross(elementRadius);
-    break;
-  default:
-    break;
-  }
-  return structuringElement;
-}
-
-} // end namespace simple
-} // end namespace itk
-

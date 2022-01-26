@@ -9,7 +9,31 @@ namespace complex
 {
 /**
  * @class ITKAsinImage
- * @brief This filter will ....
+ * @brief Computes the sine of each pixel.
+ *
+ * This filter is templated over the pixel type of the input image and the pixel type of the output image.
+ *
+ * The filter walks over all the pixels in the input image, and for each pixel does the following:
+ *
+ *
+ *
+ * @li cast the pixel value to double ,
+ *
+ *
+ * @li apply the std::asin() function to the double value,
+ *
+ *
+ * @li cast the double value resulting from std::asin() to the pixel type of the output image,
+ *
+ *
+ * @li store the casted value into the output image.
+ *
+ *
+ *
+ * The filter expects both images to have the same dimension (e.g. both 2D, or both 3D, or both ND)
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
 class ITKIMAGEPROCESSING_EXPORT ITKAsinImage : public IFilter
 {
@@ -24,9 +48,9 @@ public:
   ITKAsinImage& operator=(ITKAsinImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
 
   /**
    * @brief Returns the name of the filter.

@@ -1,14 +1,11 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
 #include "ITKImageProcessing/Filters/ITKHistogramMatchingImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include <filesystem>
 
@@ -17,7 +14,7 @@ namespace fs = std::filesystem;
 using namespace complex;
 
 // Simply run with default settings
-TEST_CASE("ITKImageProcessing::ITKHistogramMatchingImage: defaults", "[ITKImageProcessing][ITKHistogramMatchingImage]")
+TEST_CASE("ITKHistogramMatchingImageFilter(defaults)", "[ITKImageProcessing][ITKHistogramMatchingImage][defaults]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKHistogramMatchingImage filter;
@@ -48,37 +45,27 @@ TEST_CASE("ITKImageProcessing::ITKHistogramMatchingImage: defaults", "[ITKImageP
     DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
     DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
     DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    auto pNumberOfHistogramLevels = 256u;
-    auto pNumberOfMatchPoints = 1u;
-    auto pThresholdAtMeanIntensity = true;
-    args.insertOrAssign(ITKHistogramMatchingImage::k_NumberOfHistogramLevels_Key, std::make_any<float64>(pNumberOfHistogramLevels));
-    args.insertOrAssign(ITKHistogramMatchingImage::k_NumberOfMatchPoints_Key, std::make_any<float64>(pNumberOfMatchPoints));
-    args.insertOrAssign(ITKHistogramMatchingImage::k_ThresholdAtMeanIntensity_Key, std::make_any<bool>(pThresholdAtMeanIntensity));
-    args.insertOrAssign(ITKHistogramMatchingImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(pSelectedCellArrayPath));
-    args.insertOrAssign(ITKHistogramMatchingImage::k_ReferenceCellArrayPath_Key, std::make_any<DataPath>(pReferenceCellArrayPath));
-    args.insertOrAssign(ITKHistogramMatchingImage::k_NewCellArrayName_Key, std::make_any<DataPath>(outputDataPath));
-
+    args.insertOrAssign(ITKHistogramMatchingImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ITKHistogramMatchingImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+    args.insertOrAssign(ITKHistogramMatchingImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     // Execute the filter and check the result
     auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
   } // End Scope Section
 
-  // Write the output data to a file, read and compare to baseline image
+  // Compare to baseline image
   {
-    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_HistogramMatchingImageFilter_defaults.nrrd";
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
-    REQUIRE(error == 0);
     fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters/Baseline/BasicFilters_HistogramMatchingImageFilter_defaults.nrrd";
     DataPath baselineGeometryPath({complex::ITKTestBase::k_BaselineGeometryPath});
     DataPath baselineDataPath = baselineGeometryPath.createChildPath(complex::ITKTestBase::k_BaselineDataPath);
-    error = complex::ITKTestBase::ReadImage(ds, baselineFilePath, baselineGeometryPath, baselineDataPath);
+    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
+    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
+    int32_t error = complex::ITKTestBase::ReadImage(ds, baselineFilePath, baselineGeometryPath, baselineDataPath);
     REQUIRE(error == 0);
-    Result<> result = complex::ITKTestBase::CompareImages(ds, baselineGeometryPath, baselineDataPath, inputGeometryPath, outputDataPath, 0);
+    Result<> result = complex::ITKTestBase::CompareImages(ds, baselineGeometryPath, baselineDataPath, inputGeometryPath, outputDataPath, 0.0001);
     if(result.invalid())
     {
       for(const auto& err : result.errors())
@@ -88,6 +75,17 @@ TEST_CASE("ITKImageProcessing::ITKHistogramMatchingImage: defaults", "[ITKImageP
     }
     REQUIRE(result.valid() == true);
   }
+
+  // Write the output data to a file
+  {
+    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_HistogramMatchingImageFilter_defaults.nrrd";
+    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
+    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
+    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
+    // Remove *all* files generated by this test
+    fs::path testDir = fs::path(unit_test::k_BinaryDir.view()) / "test";
+    ITKTestBase::RemoveFiles(testDir, "BasicFilters_HistogramMatchingImageFilter_defaults");
+  } // End Scope Section
 #if 0
   {
     fs::path filePath =fs::path( unit_test::k_BinaryDir.view()) / "test" / "HistogramMatchingImageFilter_defaults.h5";
@@ -100,7 +98,7 @@ TEST_CASE("ITKImageProcessing::ITKHistogramMatchingImage: defaults", "[ITKImageP
 #endif
 }
 // same image in input and match should be same output
-TEST_CASE("ITKImageProcessing::ITKHistogramMatchingImage: near_identity", "[ITKImageProcessing][ITKHistogramMatchingImage]")
+TEST_CASE("ITKHistogramMatchingImageFilter(near_identity)", "[ITKImageProcessing][ITKHistogramMatchingImage][near_identity]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKHistogramMatchingImage filter;
@@ -131,38 +129,38 @@ TEST_CASE("ITKImageProcessing::ITKHistogramMatchingImage: near_identity", "[ITKI
     DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
     DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
     DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    auto pNumberOfHistogramLevels = 65536;
-    auto pThresholdAtMeanIntensity = false;
-    auto pNumberOfMatchPoints = 1u;
-    args.insertOrAssign(ITKHistogramMatchingImage::k_NumberOfHistogramLevels_Key, std::make_any<float64>(pNumberOfHistogramLevels));
-    args.insertOrAssign(ITKHistogramMatchingImage::k_NumberOfMatchPoints_Key, std::make_any<float64>(pNumberOfMatchPoints));
-    args.insertOrAssign(ITKHistogramMatchingImage::k_ThresholdAtMeanIntensity_Key, std::make_any<bool>(pThresholdAtMeanIntensity));
-    args.insertOrAssign(ITKHistogramMatchingImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(pSelectedCellArrayPath));
-    args.insertOrAssign(ITKHistogramMatchingImage::k_ReferenceCellArrayPath_Key, std::make_any<DataPath>(pReferenceCellArrayPath));
-    args.insertOrAssign(ITKHistogramMatchingImage::k_NewCellArrayName_Key, std::make_any<DataPath>(outputDataPath));
-
+    args.insertOrAssign(ITKHistogramMatchingImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ITKHistogramMatchingImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+    args.insertOrAssign(ITKHistogramMatchingImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
+    args.insertOrAssign(ITKHistogramMatchingImage::k_NumberOfHistogramLevels_Key, std::make_any<uint32_t>(65536));
+    args.insertOrAssign(ITKHistogramMatchingImage::k_ThresholdAtMeanIntensity_Key, std::make_any<bool>(false));
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     // Execute the filter and check the result
     auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
   } // End Scope Section
 
-  // Write the output data to a file, read and compare to baseline image
+  // Compare to baseline image
+  {
+    // Compare md5 hash of final image
+    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
+    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
+    std::string md5Hash = complex::ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+    REQUIRE(md5Hash == "a963bd6a755b853103a2d195e01a50d3");
+  }
+
+  // Write the output data to a file
   {
     fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_HistogramMatchingImageFilter_near_identity.nrrd";
     DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
     DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
     int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
-    REQUIRE(error == 0);
-    fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters/Baseline/BasicFilters_HistogramMatchingImageFilter_near_identity.nrrd";
-    DataPath baselineGeometryPath({complex::ITKTestBase::k_BaselineGeometryPath});
-    DataPath baselineDataPath = baselineGeometryPath.createChildPath(complex::ITKTestBase::k_BaselineDataPath);
-    // Compare md5 hash of final image
-    std::string md5Hash = complex::ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
-    REQUIRE(md5Hash == "a963bd6a755b853103a2d195e01a50d3");
-  }
+    // Remove *all* files generated by this test
+    fs::path testDir = fs::path(unit_test::k_BinaryDir.view()) / "test";
+    ITKTestBase::RemoveFiles(testDir, "BasicFilters_HistogramMatchingImageFilter_near_identity");
+  } // End Scope Section
 #if 0
   {
     fs::path filePath =fs::path( unit_test::k_BinaryDir.view()) / "test" / "HistogramMatchingImageFilter_near_identity.h5";

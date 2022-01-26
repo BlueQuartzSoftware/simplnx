@@ -1,126 +1,129 @@
-# ITKImageProcessing #
+# ITKImageProcessing Porting Notes #
 
-|  Filter Name | All Parameters Working | DataCheck Implemented | Execute Implemented | Documentation Implemented |
-|--------------|------------------------|-----------------------|---------------------|---------------------------|
-| ApplyDewarpParameters | FALSE  | | | |
-| AxioVisionV4ToTileConfiguration | TRUE  | | | |
-| CalcDewarpParameters | FALSE  | | | |
-| ITKAbsImage | TRUE  | | | |
-| ITKAcosImage | TRUE  | | | |
-| ITKAdaptiveHistogramEqualizationImage | TRUE  | | | |
-| ITKApproximateSignedDistanceMapImage | TRUE  | | | |
-| ITKAsinImage | TRUE  | | | |
-| ITKAtanImage | TRUE  | | | |
-| ITKBilateralImage | TRUE  | | | |
-| ITKBinaryClosingByReconstructionImage | TRUE  | | | |
-| ITKBinaryContourImage | TRUE  | | | |
-| ITKBinaryDilateImage | TRUE  | | | |
-| ITKBinaryErodeImage | TRUE  | | | |
-| ITKBinaryMorphologicalClosingImage | TRUE  | | | |
-| ITKBinaryMorphologicalOpeningImage | TRUE  | | | |
-| ITKBinaryOpeningByReconstructionImage | TRUE  | | | |
-| ITKBinaryProjectionImage | TRUE  | | | |
-| ITKBinaryThinningImage | TRUE  | | | |
-| ITKBinaryThresholdImage | TRUE  | | | |
-| ITKBinomialBlurImage | TRUE  | | | |
-| ITKBlackTopHatImage | TRUE  | | | |
-| ITKBoundedReciprocalImage | TRUE  | | | |
-| ITKBoxMeanImage | TRUE  | | | |
-| ITKCastImage | TRUE  | | | |
-| ITKClosingByReconstructionImage | TRUE  | | | |
-| ITKConnectedComponentImage | TRUE  | | | |
-| ITKCosImage | TRUE  | | | |
-| ITKCurvatureAnisotropicDiffusionImage | TRUE  | | | |
-| ITKCurvatureFlowImage | TRUE  | | | |
-| ITKDanielssonDistanceMapImage | TRUE  | | | |
-| ITKDilateObjectMorphologyImage | TRUE  | | | |
-| ITKDiscreteGaussianImage | TRUE  | | | |
-| ITKDoubleThresholdImage | TRUE  | | | |
-| ITKErodeObjectMorphologyImage | TRUE  | | | |
-| ITKExpImage | TRUE  | | | |
-| ITKExpNegativeImage | TRUE  | | | |
-| ITKFFTNormalizedCorrelationImage | TRUE  | | | |
-| ITKGradientAnisotropicDiffusionImage | TRUE  | | | |
-| ITKGradientMagnitudeImage | TRUE  | | | |
-| ITKGradientMagnitudeRecursiveGaussianImage | TRUE  | | | |
-| ITKGrayscaleDilateImage | TRUE  | | | |
-| ITKGrayscaleErodeImage | TRUE  | | | |
-| ITKGrayscaleFillholeImage | TRUE  | | | |
-| ITKGrayscaleGrindPeakImage | TRUE  | | | |
-| ITKGrayscaleMorphologicalClosingImage | TRUE  | | | |
-| ITKGrayscaleMorphologicalOpeningImage | TRUE  | | | |
-| ITKHConvexImage | TRUE  | | | |
-| ITKHMaximaImage | TRUE  | | | |
-| ITKHMinimaImage | TRUE  | | | |
-| ITKHistogramMatchingImage | TRUE  | | | |
-| ITKImageReader | TRUE  | | | |
-| ITKImageWriter | TRUE  | | | |
-| ITKImportFijiMontage | TRUE  | | | |
-| ITKImportImageStack | TRUE  | | | |
-| ITKImportRoboMetMontage | TRUE  | | | |
-| ITKIntensityWindowingImage | TRUE  | | | |
-| ITKInvertIntensityImage | TRUE  | | | |
-| ITKIsoContourDistanceImage | TRUE  | | | |
-| ITKLabelContourImage | TRUE  | | | |
-| ITKLaplacianRecursiveGaussianImage | TRUE  | | | |
-| ITKLaplacianSharpeningImage | TRUE  | | | |
-| ITKLog10Image | TRUE  | | | |
-| ITKLogImage | TRUE  | | | |
-| ITKMaskImage | TRUE  | | | |
-| ITKMaximumProjectionImage | TRUE  | | | |
-| ITKMeanProjectionImage | TRUE  | | | |
-| ITKMedianImage | TRUE  | | | |
-| ITKMedianProjectionImage | TRUE  | | | |
-| ITKMinMaxCurvatureFlowImage | TRUE  | | | |
-| ITKMinimumProjectionImage | TRUE  | | | |
-| ITKMorphologicalGradientImage | TRUE  | | | |
-| ITKMorphologicalWatershedFromMarkersImage | TRUE  | | | |
-| ITKMorphologicalWatershedImage | TRUE  | | | |
-| ITKMultiScaleHessianBasedObjectnessImage | TRUE  | | | |
-| ITKNormalizeImage | TRUE  | | | |
-| ITKNormalizeToConstantImage | TRUE  | | | |
-| ITKNotImage | TRUE  | | | |
-| ITKOpeningByReconstructionImage | TRUE  | | | |
-| ITKOtsuMultipleThresholdsImage | TRUE  | | | |
-| ITKPCMTileRegistration | TRUE  | | | |
-| ITKPatchBasedDenoisingImage | TRUE  | | | |
-| ITKProxTVImage | TRUE  | | | |
-| ITKRGBToLuminanceImage | TRUE  | | | |
-| ITKRefineTileCoordinates | FALSE  | | | |
-| ITKRegionalMaximaImage | TRUE  | | | |
-| ITKRegionalMinimaImage | TRUE  | | | |
-| ITKRelabelComponentImage | TRUE  | | | |
-| ITKRescaleIntensityImage | TRUE  | | | |
-| ITKSaltAndPepperNoiseImage | TRUE  | | | |
-| ITKShiftScaleImage | TRUE  | | | |
-| ITKShotNoiseImage | TRUE  | | | |
-| ITKSigmoidImage | TRUE  | | | |
-| ITKSignedDanielssonDistanceMapImage | TRUE  | | | |
-| ITKSignedMaurerDistanceMapImage | TRUE  | | | |
-| ITKSinImage | TRUE  | | | |
-| ITKSmoothingRecursiveGaussianImage | TRUE  | | | |
-| ITKSpeckleNoiseImage | TRUE  | | | |
-| ITKSqrtImage | TRUE  | | | |
-| ITKSquareImage | TRUE  | | | |
-| ITKStandardDeviationProjectionImage | TRUE  | | | |
-| ITKStitchMontage | FALSE  | | | |
-| ITKSumProjectionImage | TRUE  | | | |
-| ITKTanImage | TRUE  | | | |
-| ITKThresholdImage | TRUE  | | | |
-| ITKThresholdMaximumConnectedComponentsImage | TRUE  | | | |
-| ITKValuedRegionalMaximaImage | TRUE  | | | |
-| ITKValuedRegionalMinimaImage | TRUE  | | | |
-| ITKVectorConnectedComponentImage | TRUE  | | | |
-| ITKVectorRescaleIntensityImage | TRUE  | | | |
-| ITKWhiteTopHatImage | TRUE  | | | |
-| ITKZeroCrossingImage | TRUE  | | | |
-| IlluminationCorrection | FALSE  | | | |
-| ImportAxioVisionV4Montage | TRUE  | | | |
-| ImportVectorImageStack | FALSE  | | | |
-| ImportZenInfoMontage | TRUE  | | | |
+Most source was autogenerated from the SimpleITK JSON files for 'BasicFilters'.
+
+Generally none of the filters are ready for RGB/RGBA or Vector inputs. **THESE TESTS
+NEED TO BE DISABLE** but not removed as if we figure out how to add the capability in
+the future then we have the test ready to go.
+
+*Writing of the output data to files during the Unit Tests is currently not error checked.*
+
+Fair number of the filters pass the unit test. Still left to figure out are:
+
+* Vector Image Inputs will not run, this includes RGB inputs
+* Some filter's output do not compare correctly to baseline images
+* Projection filters do not pass via md5 hash compare or image read compare
+* DataTypes of OutputImage and Baseline image do not match so comparison isn't possible
+* A few filters still have 'bad cast' exceptions
+
+## Filters that need to be run as 'double' ##
+
+* ITKCurvatureAnisotropicDiffusionImage
+* ITKCurvatureFlowImage
+* ITKGradientAnisotropicDiffusionImage
+* ITKMinMaxCurvatureFlowImage
+* ITKPatchBasedDenoisingImage
+
+## ITK 'Projection' Filters ##
+
+Unit tests report that ```-1: Image Array dimensions must match ImageGeometry```. This is because
+the dimensions of the data do not match the input dimensions. So a 2D Image is reduced
+to a 1D image. This should result in a new Image geometry being created during the
+execution of the filter.
+
+## Filters with mulitple Input Images ##
+
+Some filters have optional input images. The DataArraySelectionPath Parameter needs
+to be set correctly or add a BooleanParameter that is linked to the optional input image.
+An example of this failure is 'ITKConnectedComponentImage'
+
+## ITK Filters that produce 'Measurements' ##
+
+There are some ITK filters such as "ITKSignedDanielssonDistanceMapImage" that produce
+statistics, additional images or other 'measurements' during its execution. The filter
+should offer the user a way to collect these values into additional complex::DataArray
+objects that are stored in the DataStructure.
+
+## Unit Test Failures ##
+
+### ITK Filters that work on 'Vector' or 'RGB/RGBA' Images ###
+
+There are issues when compiling aginast these filters and using these filters.
+
+Typically, the unit test will report back:
+
+```1 : Vector dimension not supported. cDims[0] = 3 Try converting the selected input image to an image with scalar components using 'ITK::RGB to Luminance ImageFilter' or 'Convert Rgb To GrayScale' filters```
+
+### MorphologicalWatershedFromMarkersImageFilter ###
+  
+This filter has multiple input images and so the auto generated functor in the 
+.cpp file is trying to instantiate the itk native file with <InputImageType, OutputImageType>
+when it should really be <InputImageType, InputImageType2>.
+
+### ITKBilateralImage ###
+
+THe filter is not designed for RGB and yet they send in an ITK for the test.
+
+### ITKRGBToLuminanceImage ###
+
+The functor was hand written but will not compile because there are multiple return
+types: RGBFilter and RGBAFilter. This needs to be rectified.
+
+### ITKCurvatureFlowImageTest ###
+
+```
+-14: DataTypes do not match. Output:9 Baseline:8
+```
+
+### ITKGradientAnisotropicDiffusionImage ###
+
+```
+-20: Comparing output image and baseline image produced too large of an error. Tolerance was: 0. Error was 0.00390625.
+```
+
+my guess is that this filter needs to run internal calculations in double precision.
+
+### ITK::ShiftScaleImageFilter ###
+
+```Invalid argument type for argument 'OutputPixelType' for filter 'ITK::ShiftScaleImageFilter'```
+
+This filter should probably have a Choices Parameter that lists all of the Output 
+types that this filter can produce. Allow the user to select one of those then 
+static_cast<> base to the itk::simple::* type to then pass into the filter.
+
+Some of the test variations still give a ```bad any cast```
+
+## Failing Tests 2021/12/30 ##
+
++ ITKBilateralImage 
++ ITKBinaryProjectionImage 
++ ITKBinomialBlurImage 
++ ITKLaplacianSharpeningImage 
++ ITKMaximumProjectionImage 
++ ITKMedianProjectionImage 
++ ITKMinimumProjectionImage 
++ ITKSaltAndPepperNoiseImage 
++ ITKShiftScaleImage 
++ ITKShotNoiseImage 
++ ITKSpeckleNoiseImage 
++ ITKGradientAnisotropicDiffusionImage 
++ ITKBoundedReciprocalImage 
++ ITKConnectedComponentImage 
++ ITKCurvatureFlowImage 
++ ITKMeanProjectionImage 
++ ITKMinMaxCurvatureFlowImage 
++ ITKMorphologicalWatershedFromMarkersImage 
++ ITKNormalizeImage 
++ ITKNormalizeToConstantImage 
++ ITKRegionalMaximaImage 
++ ITKRegionalMinimaImage 
++ ITKSmoothingRecursiveGaussianImage 
++ ITKStandardDeviationProjectionImage 
++ ITKSumProjectionImage 
++ ITKThresholdMaximumConnectedComponentsImage 
++ ITKBoxMeanImage 
++ ITKAdaptiveHistogramEqualizationImage 
++ ITKMedianImage 
++ ITKDiscreteGaussianImage 
 
 
-## Summary ##
-
-+ Filters Ready to be Ported: 110
-+ Filters Needing more Parameters Implemented: 6

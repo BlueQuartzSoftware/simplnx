@@ -9,7 +9,38 @@ namespace complex
 {
 /**
  * @class ITKSumProjectionImage
- * @brief This filter will ....
+ * @brief Sum projection.
+ *
+ * This class was contributed to the Insight Journal by Gaetan Lehmann. The original paper can be found at https://hdl.handle.net/1926/164
+ *
+ * @author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+ *
+ *
+ * @see ProjectionImageFilter
+ *
+ *
+ * @see MedianProjectionImageFilter
+ *
+ *
+ * @see MeanProjectionImageFilter
+ *
+ *
+ * @see MeanProjectionImageFilter
+ *
+ *
+ * @see MaximumProjectionImageFilter
+ *
+ *
+ * @see MinimumProjectionImageFilter
+ *
+ *
+ * @see BinaryProjectionImageFilter
+ *
+ *
+ * @see StandardDeviationProjectionImageFilter
+ *
+ * ITK Module: ITKImageStatistics
+ * ITK Group: ImageStatistics
  */
 class ITKIMAGEPROCESSING_EXPORT ITKSumProjectionImage : public IFilter
 {
@@ -24,10 +55,10 @@ public:
   ITKSumProjectionImage& operator=(ITKSumProjectionImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ProjectionDimension_Key = "ProjectionDimension";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_ProjectionDimension_Key = "ProjectionDimension";
 
   /**
    * @brief Returns the name of the filter.

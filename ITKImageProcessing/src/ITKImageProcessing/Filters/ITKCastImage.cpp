@@ -19,7 +19,7 @@ struct ITKCastImageFilterCreationFunctor
 {
   ChoicesParameter::ValueType m_CastingType;
   template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
-  auto operator()() const
+  auto createFilter() const
   {
     typedef itk::CastImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();

@@ -1,29 +1,47 @@
 #include "ITKStandardDeviationProjectionImage.hpp"
 
+/**
+ * This filter only works with certain kinds of data. We
+ * enable the types that the filter will compile against. The
+ * Allowed PixelTypes as defined in SimpleITK are:
+ *   BasicPixelIDTypeList
+ * The filter defines the following output pixel types:
+ *   typename itk::NumericTraits<typename InputImageType::PixelType>::RealType
+ */
+#define ITK_BASIC_PIXEL_ID_TYPE_LIST 1
+#define COMPLEX_ITK_ARRAY_HELPER_USE_Scalar 1
+#define ITK_ARRAY_HELPER_NAMESPACE StandardDeviationProjectionImage
+
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
-#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include <itkStandardDeviationProjectionImageFilter.h>
 
 using namespace complex;
 
-#include <itkStandardDeviationProjectionImageFilter.h>
-
 namespace
 {
-struct ITKStandardDeviationProjectionImageFilterCreationFunctor
+/**
+ * This filter uses a fixed output type.
+ */
+using FilterOutputType = float64;
+
+struct ITKStandardDeviationProjectionImageCreationFunctor
 {
-  float64 m_ProjectionDimension;
-  template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
-  auto operator()() const
+  unsigned int pProjectionDimension = 0u;
+
+  template <class InputImageType, class OutputImageType, uint32 Dimension>
+  auto createFilter() const
   {
-    typedef itk::StandardDeviationProjectionImageFilter<InputImageType, OutputImageType> FilterType;
+    using FilterType = itk::StandardDeviationProjectionImageFilter<InputImageType, OutputImageType>;
     typename FilterType::Pointer filter = FilterType::New();
-    filter->SetProjectionDimension(static_cast<unsigned int>(m_ProjectionDimension));
+    filter->SetProjectionDimension(pProjectionDimension);
     return filter;
   }
 };
@@ -52,13 +70,13 @@ Uuid ITKStandardDeviationProjectionImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKStandardDeviationProjectionImage::humanName() const
 {
-  return "ITK::Standard Deviation Projection Image Filter";
+  return "ITK::StandardDeviationProjectionImageFilter";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKStandardDeviationProjectionImage::defaultTags() const
 {
-  return {"#ITK Image Processing", "#ITK ImageStatistics"};
+  return {"ITKImageProcessing", "ITKStandardDeviationProjectionImage", "ITKImageStatistics", "ImageStatistics"};
 }
 
 //------------------------------------------------------------------------------
@@ -66,10 +84,10 @@ Parameters ITKStandardDeviationProjectionImage::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<Float64Parameter>(k_ProjectionDimension_Key, "ProjectionDimension", "", 2.3456789));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{DataObject::Type::ImageGeom}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to filter", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NewCellArrayName_Key, "Filtered Array", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image", "", DataPath{}));
+  params.insert(std::make_unique<UInt32Parameter>(k_ProjectionDimension_Key, "ProjectionDimension", "", 0u));
 
   return params;
 }
@@ -92,10 +110,10 @@ IFilter::PreflightResult ITKStandardDeviationProjectionImage::preflightImpl(cons
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pProjectionDimension = filterArgs.value<float64>(k_ProjectionDimension_Key);
   auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
-  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
+  auto pSelectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
+  auto pProjectionDimension = filterArgs.value<unsigned int>(k_ProjectionDimension_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -111,13 +129,10 @@ IFilter::PreflightResult ITKStandardDeviationProjectionImage::preflightImpl(cons
   // If your filter is making structural changes to the DataStructure then the filter
   // is going to create OutputActions subclasses that need to be returned. This will
   // store those actions.
-  complex::Result<OutputActions> resultOutputActions;
-
-  resultOutputActions = ITK::DataCheck(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath);
+  complex::Result<OutputActions> resultOutputActions = ITK::DataCheck<FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath);
 
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
-  // None found in this filter based on the filter parameters
 
   // If this filter makes changes to the DataStructure in the form of
   // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
@@ -134,7 +149,6 @@ IFilter::PreflightResult ITKStandardDeviationProjectionImage::preflightImpl(cons
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
   // the appropriate methods.
-  // None found based on the filter parameters
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -146,20 +160,20 @@ Result<> ITKStandardDeviationProjectionImage::executeImpl(DataStructure& dataStr
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pProjectionDimension = filterArgs.value<float64>(k_ProjectionDimension_Key);
   auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
-  auto pSelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pOutputArrayPath = filterArgs.value<DataPath>(k_NewCellArrayName_Key);
+  auto pSelectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto pOutputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
+  auto pProjectionDimension = filterArgs.value<unsigned int>(k_ProjectionDimension_Key);
+
+  /****************************************************************************
+   * Create the functor object that will instantiate the correct itk filter
+   ***************************************************************************/
+  ::ITKStandardDeviationProjectionImageCreationFunctor itkFunctor = {pProjectionDimension};
 
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
-  ::ITKStandardDeviationProjectionImageFilterCreationFunctor itkFunctor;
-  itkFunctor.m_ProjectionDimension = pProjectionDimension;
-
-  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
-
-  return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, itkFunctor);
+  return ITK::Execute<ITKStandardDeviationProjectionImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath,
+                                                                                                                              itkFunctor);
 }
 } // namespace complex

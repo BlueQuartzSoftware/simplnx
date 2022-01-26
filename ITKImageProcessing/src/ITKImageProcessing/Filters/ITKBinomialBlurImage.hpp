@@ -9,7 +9,12 @@ namespace complex
 {
 /**
  * @class ITKBinomialBlurImage
- * @brief This filter will ....
+ * @brief Performs a separable blur on each dimension of an image.
+ *
+ * The binomial blur consists of a nearest neighbor average along each image dimension. The net result after n-iterations approaches convolution with a gaussian.
+ *
+ * ITK Module: ITKSmoothing
+ * ITK Group: Smoothing
  */
 class ITKIMAGEPROCESSING_EXPORT ITKBinomialBlurImage : public IFilter
 {
@@ -24,10 +29,10 @@ public:
   ITKBinomialBlurImage& operator=(ITKBinomialBlurImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Repetitions_Key = "Repetitions";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_Repetitions_Key = "Repetitions";
 
   /**
    * @brief Returns the name of the filter.

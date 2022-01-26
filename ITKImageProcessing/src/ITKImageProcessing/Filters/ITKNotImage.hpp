@@ -9,7 +9,33 @@ namespace complex
 {
 /**
  * @class ITKNotImage
- * @brief This filter will ....
+ * @brief Implements the NOT logical operator pixel-wise on an image.
+ *
+ * This class is templated over the type of an input image and the type of the output image. Numeric conversions (castings) are done by the C++ defaults.
+ *
+ * Since the logical NOT operation operates only on boolean types, the input type must be implicitly convertible to bool, which is only defined in C++ for integer types, the images passed to this
+ * filter must comply with the requirement of using integer pixel type.
+ *
+ * The total operation over one pixel will be
+ *
+ * \code
+ * if( !A )
+ *
+ *  {
+ *
+ *  return this->m_ForegroundValue;
+ *
+ *  }
+ *
+ * return this->m_BackgroundValue;
+ *
+ * \endcode
+ *
+ *
+ * Where "!" is the unary Logical NOT operator in C++.
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
 class ITKIMAGEPROCESSING_EXPORT ITKNotImage : public IFilter
 {
@@ -24,9 +50,9 @@ public:
   ITKNotImage& operator=(ITKNotImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
 
   /**
    * @brief Returns the name of the filter.

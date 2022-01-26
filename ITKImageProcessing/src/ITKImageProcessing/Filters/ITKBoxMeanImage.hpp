@@ -9,7 +9,15 @@ namespace complex
 {
 /**
  * @class ITKBoxMeanImage
- * @brief This filter will ....
+ * @brief Implements a fast rectangular mean filter using the accumulator approach.
+ *
+ * This code was contributed in the Insight Journal paper: "Efficient implementation of kernel filtering" by Beare R., Lehmann G https://hdl.handle.net/1926/555
+ * http://www.insight-journal.org/browse/publication/160
+ *
+ * @author Richard Beare
+ *
+ * ITK Module: ITKSmoothing
+ * ITK Group: Smoothing
  */
 class ITKIMAGEPROCESSING_EXPORT ITKBoxMeanImage : public IFilter
 {
@@ -24,10 +32,10 @@ public:
   ITKBoxMeanImage& operator=(ITKBoxMeanImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Radius_Key = "Radius";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_Radius_Key = "Radius";
 
   /**
    * @brief Returns the name of the filter.

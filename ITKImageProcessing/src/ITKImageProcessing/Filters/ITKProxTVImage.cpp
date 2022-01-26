@@ -22,7 +22,7 @@ struct ITKProxTVImageFilterCreationFunctor
   VectorFloat32Parameter::ValueType m_Weights;
   VectorFloat32Parameter::ValueType m_Norms;
   template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
-  auto operator()() const
+  auto createFilter() const
   {
     typedef itk::ProxTVImageFilter<InputImageType, OutputImageType> FilterType;
     typename FilterType::Pointer filter = FilterType::New();

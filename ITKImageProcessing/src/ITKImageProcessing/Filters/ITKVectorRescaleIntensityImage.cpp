@@ -21,7 +21,7 @@ struct ITKVectorRescaleIntensityImageFilterCreationFunctor
   ChoicesParameter::ValueType m_OutputType;
   float64 m_OutputMaximumMagnitude;
   template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
-  auto operator()() const
+  auto createFilter() const
   {
     using OutputPixelType = typename OutputImageType::PixelType;
     using InputPixelType = typename InputImageType::PixelType;

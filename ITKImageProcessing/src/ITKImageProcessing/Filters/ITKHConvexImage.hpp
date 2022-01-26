@@ -9,7 +9,23 @@ namespace complex
 {
 /**
  * @class ITKHConvexImage
- * @brief This filter will ....
+ * @brief Identify local maxima whose height above the baseline is greater than h.
+ *
+ * HConvexImageFilter extract local maxima that are more than h intensity units above the (local) background. This has the effect of extracting objects that are brighter than background by at least h
+ * intensity units.
+ *
+ * This filter uses the HMaximaImageFilter .
+ *
+ * Geodesic morphology and the H-Convex algorithm is described in Chapter 6 of Pierre Soille's book "Morphological Image Analysis:
+ * Principles and Applications", Second Edition, Springer, 2003.
+ *
+ * @see GrayscaleGeodesicDilateImageFilter , HMinimaImageFilter
+ *
+ *
+ * @see MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
+ *
+ * ITK Module: ITKMathematicalMorphology
+ * ITK Group: MathematicalMorphology
  */
 class ITKIMAGEPROCESSING_EXPORT ITKHConvexImage : public IFilter
 {
@@ -24,11 +40,11 @@ public:
   ITKHConvexImage& operator=(ITKHConvexImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_Height_Key = "Height";
   static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

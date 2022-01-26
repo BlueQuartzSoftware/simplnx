@@ -9,7 +9,32 @@ namespace complex
 {
 /**
  * @class ITKDiscreteGaussianImage
- * @brief This filter will ....
+ * @brief Blurs an image by separable convolution with discrete gaussian kernels. This filter performs Gaussian blurring by separable convolution of an image and a discrete Gaussian operator (kernel).
+ *
+ * The Gaussian operator used here was described by Tony Lindeberg (Discrete Scale-Space Theory and the Scale-Space Primal Sketch. Dissertation. Royal Institute of Technology, Stockholm, Sweden. May
+ * 1991.) The Gaussian kernel used here was designed so that smoothing and derivative operations commute after discretization.
+ *
+ * The variance or standard deviation (sigma) will be evaluated as pixel units if SetUseImageSpacing is off (false) or as physical units if SetUseImageSpacing is on (true, default). The variance can
+ * be set independently in each dimension.
+ *
+ * When the Gaussian kernel is small, this filter tends to run faster than itk::RecursiveGaussianImageFilter .
+ *
+ * @see GaussianOperator
+ *
+ *
+ * @see Image
+ *
+ *
+ * @see Neighborhood
+ *
+ *
+ * @see NeighborhoodOperator
+ *
+ *
+ * @see RecursiveGaussianImageFilter
+ *
+ * ITK Module: ITKSmoothing
+ * ITK Group: Smoothing
  */
 class ITKIMAGEPROCESSING_EXPORT ITKDiscreteGaussianImage : public IFilter
 {
@@ -24,13 +49,13 @@ public:
   ITKDiscreteGaussianImage& operator=(ITKDiscreteGaussianImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_Variance_Key = "Variance";
   static inline constexpr StringLiteral k_MaximumKernelWidth_Key = "MaximumKernelWidth";
   static inline constexpr StringLiteral k_MaximumError_Key = "MaximumError";
   static inline constexpr StringLiteral k_UseImageSpacing_Key = "UseImageSpacing";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

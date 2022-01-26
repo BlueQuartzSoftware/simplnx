@@ -6,6 +6,8 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
+#define ITK_INTEGER_PIXEL_ID_TYPE_LIST 1
+#define COMPLEX_ITK_ARRAY_HELPER_USE_RGB_RGBA 1
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
 using namespace complex;
@@ -19,7 +21,7 @@ struct ITKRGBToLuminanceImageFilterCreationFunctor
 {
 
   template <typename InputImageType, typename OutputImageType, unsigned int Dimension>
-  auto operator()() const
+  auto createFilter() const
   {
     using InputPixelType = typename InputImageType::PixelType;
     typedef typename itk::NumericTraits<InputPixelType>::ValueType ScalarPixelType;

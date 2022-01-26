@@ -9,7 +9,28 @@ namespace complex
 {
 /**
  * @class ITKRegionalMaximaImage
- * @brief This filter will ....
+ * @brief Produce a binary image where foreground is the regional maxima of the input image.
+ *
+ * Regional maxima are flat zones surrounded by pixels of lower value.
+ *
+ * If the input image is constant, the entire image can be considered as a maxima or not. The desired behavior can be selected with the SetFlatIsMaxima() method.
+ *
+ * @author Gaetan Lehmann
+ *
+ *
+ * This class was contributed to the Insight Journal by author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France. The paper can be found at
+ * https://hdl.handle.net/1926/153
+ *
+ * @see ValuedRegionalMaximaImageFilter
+ *
+ *
+ * @see HConvexImageFilter
+ *
+ *
+ * @see RegionalMinimaImageFilter
+ *
+ * ITK Module: ITKMathematicalMorphology
+ * ITK Group: MathematicalMorphology
  */
 class ITKIMAGEPROCESSING_EXPORT ITKRegionalMaximaImage : public IFilter
 {
@@ -24,13 +45,13 @@ public:
   ITKRegionalMaximaImage& operator=(ITKRegionalMaximaImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_BackgroundValue_Key = "BackgroundValue";
   static inline constexpr StringLiteral k_ForegroundValue_Key = "ForegroundValue";
   static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
   static inline constexpr StringLiteral k_FlatIsMaxima_Key = "FlatIsMaxima";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

@@ -9,7 +9,21 @@ namespace complex
 {
 /**
  * @class ITKDilateObjectMorphologyImage
- * @brief This filter will ....
+ * @brief dilation of an object in an image
+ *
+ * Dilate an image using binary morphology. Pixel values matching the object value are considered the "foreground" and all other pixels are "background". This is useful in processing mask images
+ * containing only one object.
+ *
+ * If a pixel's value is equal to the object value and the pixel is adjacent to a non-object valued pixel, then the kernel is centered on the object-value pixel and neighboring pixels covered by the
+ * kernel are assigned the object value. The structuring element is assumed to be composed of binary values (zero or one).
+ *
+ * @see ObjectMorphologyImageFilter , ErodeObjectMorphologyImageFilter
+ *
+ *
+ * @see BinaryDilateImageFilter
+ *
+ * ITK Module: ITKBinaryMathematicalMorphology
+ * ITK Group: BinaryMathematicalMorphology
  */
 class ITKIMAGEPROCESSING_EXPORT ITKDilateObjectMorphologyImage : public IFilter
 {
@@ -24,12 +38,12 @@ public:
   ITKDilateObjectMorphologyImage& operator=(ITKDilateObjectMorphologyImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_KernelRadius_Key = "KernelRadius";
   static inline constexpr StringLiteral k_KernelType_Key = "KernelType";
   static inline constexpr StringLiteral k_ObjectValue_Key = "ObjectValue";
-  static inline constexpr StringLiteral k_KernelRadius_Key = "KernelRadius";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

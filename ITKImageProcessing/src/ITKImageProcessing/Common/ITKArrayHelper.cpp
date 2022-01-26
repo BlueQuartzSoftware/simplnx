@@ -1,5 +1,9 @@
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
+#include "complex/Common/TypesUtility.hpp"
+
+#include <fmt/ranges.h>
+
 using namespace complex;
 
 bool ITK::DoDimensionsMatch(const IDataStore& dataStore, const ImageGeom& imageGeom)
@@ -26,4 +30,25 @@ bool ITK::DoDimensionsMatch(const IDataStore& dataStore, const ImageGeom& imageG
   }
 
   return orderedArrayDims == geomDims;
+}
+
+Result<> ITK::CheckImageType(const std::vector<DataType>& types, const DataStructure& dataStructure, const DataPath& path)
+{
+  const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(path);
+
+  DataType dataType = dataArray.getDataType();
+  auto iter = std::find(types.cbegin(), types.cend(), dataType);
+
+  std::vector<std::string> names;
+  for(auto type : types)
+  {
+    names.push_back(DataTypeToString(type));
+  }
+
+  if(iter == types.cend())
+  {
+    return MakeErrorResult(-1, fmt::format("Wrong data type in {}. Expected {}, but got {}. Try CastImageFilter or RescaleImageFilter to convert input data to a supported type.", path.toString(), names, DataTypeToString(dataType)));
+  }
+
+  return {};
 }

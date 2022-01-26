@@ -9,7 +9,24 @@ namespace complex
 {
 /**
  * @class ITKDoubleThresholdImage
- * @brief This filter will ....
+ * @brief Binarize an input image using double thresholding.
+ *
+ * Double threshold addresses the difficulty in selecting a threshold that will select the objects of interest without selecting extraneous objects. Double threshold considers two threshold ranges: a
+ * narrow range and a wide range (where the wide range encompasses the narrow range). If the wide range was used for a traditional threshold (where values inside the range map to the foreground and
+ * values outside the range map to the background), many extraneous pixels may survive the threshold operation. If the narrow range was used for a traditional threshold, then too few pixels may
+ * survive the threshold.
+ *
+ * Double threshold uses the narrow threshold image as a marker image and the wide threshold image as a mask image in the geodesic dilation. Essentially, the marker image (narrow threshold) is dilated
+ * but constrained to lie within the mask image (wide threshold). Thus, only the objects of interest (those pixels that survived the narrow threshold) are extracted but the those objects appear in the
+ * final image as they would have if the wide threshold was used.
+ *
+ * @see GrayscaleGeodesicDilateImageFilter
+ *
+ *
+ * @see MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
+ *
+ * ITK Module: ITKMathematicalMorphology
+ * ITK Group: MathematicalMorphology
  */
 class ITKIMAGEPROCESSING_EXPORT ITKDoubleThresholdImage : public IFilter
 {
@@ -24,6 +41,9 @@ public:
   ITKDoubleThresholdImage& operator=(ITKDoubleThresholdImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_Threshold1_Key = "Threshold1";
   static inline constexpr StringLiteral k_Threshold2_Key = "Threshold2";
   static inline constexpr StringLiteral k_Threshold3_Key = "Threshold3";
@@ -31,9 +51,6 @@ public:
   static inline constexpr StringLiteral k_InsideValue_Key = "InsideValue";
   static inline constexpr StringLiteral k_OutsideValue_Key = "OutsideValue";
   static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

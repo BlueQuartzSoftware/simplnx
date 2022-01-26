@@ -9,7 +9,30 @@ namespace complex
 {
 /**
  * @class ITKBinaryErodeImage
- * @brief This filter will ....
+ * @brief Fast binary erosion of a single intensity value in the image.
+ *
+ * BinaryErodeImageFilter is a binary erosion morphologic operation on the foreground of an image. Only the value designated by the intensity value "SetForegroundValue()" (alias as SetErodeValue())
+ * is considered as foreground, and other intensity values are considered background.
+ *
+ * Gray scale images can be processed as binary images by selecting a "ForegroundValue" (alias "ErodeValue"). Pixel values matching the erode value are considered the "foreground" and all other pixels
+ * are "background". This is useful in processing segmented images where all pixels in segment #1 have value 1 and pixels in segment #2 have value 2, etc. A particular "segment number" can be
+ * processed. ForegroundValue defaults to the maximum possible value of the PixelType. The eroded pixels will receive the BackgroundValue (defaults to NumericTraits::NonpositiveMin() ).
+ *
+ * The structuring element is assumed to be composed of binary values (zero or one). Only elements of the structuring element having values > 0 are candidates for affecting the center pixel. A
+ * reasonable choice of structuring element is itk::BinaryBallStructuringElement .
+ *
+ * This implementation is based on the papers:
+ *
+ * L.Vincent "Morphological transformations of binary images with
+ * arbitrary structuring elements", and
+ *
+ * N.Nikopoulos et al. "An efficient algorithm for 3d binary morphological transformations with 3d structuring elements for arbitrary size and shape". IEEE Transactions on Image Processing. Vol. 9.
+ * No. 3. 2000. pp. 283-286.
+ *
+ * @see ImageToImageFilter BinaryDilateImageFilter BinaryMorphologyImageFilter
+ *
+ * ITK Module: ITKBinaryMathematicalMorphology
+ * ITK Group: BinaryMathematicalMorphology
  */
 class ITKIMAGEPROCESSING_EXPORT ITKBinaryErodeImage : public IFilter
 {
@@ -24,14 +47,14 @@ public:
   ITKBinaryErodeImage& operator=(ITKBinaryErodeImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_KernelRadius_Key = "KernelRadius";
   static inline constexpr StringLiteral k_KernelType_Key = "KernelType";
   static inline constexpr StringLiteral k_BackgroundValue_Key = "BackgroundValue";
   static inline constexpr StringLiteral k_ForegroundValue_Key = "ForegroundValue";
   static inline constexpr StringLiteral k_BoundaryToForeground_Key = "BoundaryToForeground";
-  static inline constexpr StringLiteral k_KernelRadius_Key = "KernelRadius";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

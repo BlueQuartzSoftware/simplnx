@@ -9,7 +9,26 @@ namespace complex
 {
 /**
  * @class ITKOpeningByReconstructionImage
- * @brief This filter will ....
+ * @brief Opening by reconstruction of an image.
+ *
+ * This filter preserves regions, in the foreground, that can completely contain the structuring element. At the same time, this filter eliminates all other regions of foreground pixels. Contrary to
+ * the morphological opening, the opening by reconstruction preserves the shape of the components that are not removed by erosion. The opening by reconstruction of an image "f" is defined as:
+ *
+ * OpeningByReconstruction(f) = DilationByRecontruction(f, Erosion(f)).
+ *
+ * Opening by reconstruction not only removes structures destroyed by the erosion, but also levels down the contrast of the brightest regions. If PreserveIntensities is on, a subsequent reconstruction
+ * by dilation using a marker image that is the original image for all unaffected pixels.
+ *
+ * Opening by reconstruction is described in Chapter 6.3.9 of Pierre Soille's book "Morphological Image Analysis: Principles and
+ * Applications", Second Edition, Springer, 2003.
+ *
+ * @author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+ *
+ *
+ * @see GrayscaleMorphologicalOpeningImageFilter
+ *
+ * ITK Module: ITKMathematicalMorphology
+ * ITK Group: MathematicalMorphology
  */
 class ITKIMAGEPROCESSING_EXPORT ITKOpeningByReconstructionImage : public IFilter
 {
@@ -24,13 +43,13 @@ public:
   ITKOpeningByReconstructionImage& operator=(ITKOpeningByReconstructionImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_KernelRadius_Key = "KernelRadius";
   static inline constexpr StringLiteral k_KernelType_Key = "KernelType";
   static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
   static inline constexpr StringLiteral k_PreserveIntensities_Key = "PreserveIntensities";
-  static inline constexpr StringLiteral k_KernelRadius_Key = "KernelRadius";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

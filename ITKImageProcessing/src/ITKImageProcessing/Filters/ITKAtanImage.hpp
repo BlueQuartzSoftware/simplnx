@@ -9,7 +9,27 @@ namespace complex
 {
 /**
  * @class ITKAtanImage
- * @brief This filter will ....
+ * @brief Computes the one-argument inverse tangent of each pixel.
+ *
+ * This filter is templated over the pixel type of the input image and the pixel type of the output image.
+ *
+ * The filter walks over all the pixels in the input image, and for each pixel does the following:
+ *
+ *
+ *
+ * @li cast the pixel value to double ,
+ *
+ *
+ * @li apply the std::atan() function to the double value,
+ *
+ *
+ * @li cast the double value resulting from std::atan() to the pixel type of the output image,
+ *
+ *
+ * @li store the cast value into the output image.
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
 class ITKIMAGEPROCESSING_EXPORT ITKAtanImage : public IFilter
 {
@@ -24,9 +44,9 @@ public:
   ITKAtanImage& operator=(ITKAtanImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
 
   /**
    * @brief Returns the name of the filter.

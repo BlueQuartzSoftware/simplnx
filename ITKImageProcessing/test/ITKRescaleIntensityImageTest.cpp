@@ -1,16 +1,11 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
 #include "ITKImageProcessing/Filters/ITKRescaleIntensityImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include <filesystem>
 
@@ -19,7 +14,7 @@ namespace fs = std::filesystem;
 using namespace complex;
 
 // 3D
-TEST_CASE("ITKImageProcessing::ITKRescaleIntensityImage: 3d", "[ITKImageProcessing][ITKRescaleIntensityImage]")
+TEST_CASE("ITKRescaleIntensityImageFilter(3d)", "[ITKImageProcessing][ITKRescaleIntensityImage][3d]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKRescaleIntensityImage filter;
@@ -40,36 +35,27 @@ TEST_CASE("ITKImageProcessing::ITKRescaleIntensityImage: 3d", "[ITKImageProcessi
     DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
     DataPath inputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_InputDataPath);
     DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    auto pOutputMinimum = 0;
-    auto pOutputMaximum = 255;
-    args.insertOrAssign(ITKRescaleIntensityImage::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(pOutputType));
-    args.insertOrAssign(ITKRescaleIntensityImage::k_OutputMinimum_Key, std::make_any<float64>(pOutputMinimum));
-    args.insertOrAssign(ITKRescaleIntensityImage::k_OutputMaximum_Key, std::make_any<float64>(pOutputMaximum));
     args.insertOrAssign(ITKRescaleIntensityImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ITKRescaleIntensityImage::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(inputDataPath));
-    args.insertOrAssign(ITKRescaleIntensityImage::k_NewCellArrayName_Key, std::make_any<DataPath>(outputDataPath));
-
+    args.insertOrAssign(ITKRescaleIntensityImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+    args.insertOrAssign(ITKRescaleIntensityImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     // Execute the filter and check the result
     auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
   } // End Scope Section
 
-  // Write the output data to a file, read and compare to baseline image
+  // Compare to baseline image
   {
-    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_RescaleIntensityImageFilter_3d.nrrd";
-    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
-    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
-    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
-    REQUIRE(error == 0);
     fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.str() / "JSONFilters/Baseline/BasicFilters_RescaleIntensityImageFilter_3d.nrrd";
     DataPath baselineGeometryPath({complex::ITKTestBase::k_BaselineGeometryPath});
     DataPath baselineDataPath = baselineGeometryPath.createChildPath(complex::ITKTestBase::k_BaselineDataPath);
-    error = complex::ITKTestBase::ReadImage(ds, baselineFilePath, baselineGeometryPath, baselineDataPath);
+    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
+    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
+    int32_t error = complex::ITKTestBase::ReadImage(ds, baselineFilePath, baselineGeometryPath, baselineDataPath);
     REQUIRE(error == 0);
-    Result<> result = complex::ITKTestBase::CompareImages(ds, baselineGeometryPath, baselineDataPath, inputGeometryPath, outputDataPath, 0);
+    Result<> result = complex::ITKTestBase::CompareImages(ds, baselineGeometryPath, baselineDataPath, inputGeometryPath, outputDataPath, 1e-8);
     if(result.invalid())
     {
       for(const auto& err : result.errors())
@@ -79,6 +65,17 @@ TEST_CASE("ITKImageProcessing::ITKRescaleIntensityImage: 3d", "[ITKImageProcessi
     }
     REQUIRE(result.valid() == true);
   }
+
+  // Write the output data to a file
+  {
+    fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "test/BasicFilters_RescaleIntensityImageFilter_3d.nrrd";
+    DataPath inputGeometryPath({complex::ITKTestBase::k_ImageGeometryPath});
+    DataPath outputDataPath = inputGeometryPath.createChildPath(complex::ITKTestBase::k_OutputDataPath);
+    int32_t error = complex::ITKTestBase::WriteImage(ds, filePath, inputGeometryPath, outputDataPath);
+    // Remove *all* files generated by this test
+    fs::path testDir = fs::path(unit_test::k_BinaryDir.view()) / "test";
+    ITKTestBase::RemoveFiles(testDir, "BasicFilters_RescaleIntensityImageFilter_3d");
+  } // End Scope Section
 #if 0
   {
     fs::path filePath =fs::path( unit_test::k_BinaryDir.view()) / "test" / "RescaleIntensityImageFilter_3d.h5";

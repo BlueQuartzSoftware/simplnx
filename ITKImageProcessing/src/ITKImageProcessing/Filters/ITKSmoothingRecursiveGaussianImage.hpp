@@ -9,7 +9,14 @@ namespace complex
 {
 /**
  * @class ITKSmoothingRecursiveGaussianImage
- * @brief This filter will ....
+ * @brief Computes the smoothing of an image by convolution with the Gaussian kernels implemented as IIR filters.
+ *
+ * This filter is implemented using the recursive gaussian filters. For multi-component images, the filter works on each component independently.
+ *
+ * For this filter to be able to run in-place the input and output image types need to be the same and/or the same type as the RealImageType.
+ *
+ * ITK Module: ITKSmoothing
+ * ITK Group: Smoothing
  */
 class ITKIMAGEPROCESSING_EXPORT ITKSmoothingRecursiveGaussianImage : public IFilter
 {
@@ -24,11 +31,11 @@ public:
   ITKSmoothingRecursiveGaussianImage& operator=(ITKSmoothingRecursiveGaussianImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_Sigma_Key = "Sigma";
   static inline constexpr StringLiteral k_NormalizeAcrossScale_Key = "NormalizeAcrossScale";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

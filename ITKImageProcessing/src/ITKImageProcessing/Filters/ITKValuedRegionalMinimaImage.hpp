@@ -9,7 +9,23 @@ namespace complex
 {
 /**
  * @class ITKValuedRegionalMinimaImage
- * @brief This filter will ....
+ * @brief Transforms the image so that any pixel that is not a regional minima is set to the maximum value for the pixel type. Pixels that are regional minima retain their value.
+ *
+ * Regional minima are flat zones surrounded by pixels of higher value. A completely flat image will be marked as a regional minima by this filter.
+ *
+ * This code was contributed in the Insight Journal paper: "Finding regional extrema - methods and performance" by Beare R., Lehmann G. https://hdl.handle.net/1926/153 http://www.insight-
+ * journal.org/browse/publication/65
+ *
+ * @author Richard Beare. Department of Medicine, Monash University, Melbourne, Australia.
+ *
+ *
+ * @see ValuedRegionalMaximaImageFilter , ValuedRegionalExtremaImageFilter ,
+ *
+ *
+ * @see HMinimaImageFilter
+ *
+ * ITK Module: ITKMathematicalMorphology
+ * ITK Group: MathematicalMorphology
  */
 class ITKIMAGEPROCESSING_EXPORT ITKValuedRegionalMinimaImage : public IFilter
 {
@@ -24,10 +40,10 @@ public:
   ITKValuedRegionalMinimaImage& operator=(ITKValuedRegionalMinimaImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
 
   /**
    * @brief Returns the name of the filter.

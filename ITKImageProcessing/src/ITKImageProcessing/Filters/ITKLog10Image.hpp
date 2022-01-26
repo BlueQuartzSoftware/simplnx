@@ -9,7 +9,12 @@ namespace complex
 {
 /**
  * @class ITKLog10Image
- * @brief This filter will ....
+ * @brief Computes the log10 of each pixel.
+ *
+ * The computation is performed using std::log10(x).
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
 class ITKIMAGEPROCESSING_EXPORT ITKLog10Image : public IFilter
 {
@@ -24,9 +29,9 @@ public:
   ITKLog10Image& operator=(ITKLog10Image&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
 
   /**
    * @brief Returns the name of the filter.

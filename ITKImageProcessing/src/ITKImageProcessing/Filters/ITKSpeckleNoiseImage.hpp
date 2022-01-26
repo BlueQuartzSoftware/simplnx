@@ -9,7 +9,32 @@ namespace complex
 {
 /**
  * @class ITKSpeckleNoiseImage
- * @brief This filter will ....
+ * @brief Alter an image with speckle (multiplicative) noise.
+ *
+ * The speckle noise follows a gamma distribution of mean 1 and standard deviation provided by the user. The noise is proportional to the pixel intensity.
+ *
+ * It can be modeled as:
+ *
+ * \par
+ * \f$ I = I_0 \ast G \f$
+ *
+ *
+ * \par
+ * where \f$ G \f$ is a is a gamma distributed random variable of mean 1 and variance proportional to the noise level:
+ *
+ *
+ * \par
+ * \f$ G \sim \Gamma(\frac{1}{\sigma^2}, \sigma^2) \f$
+ *
+ *
+ * @author Gaetan Lehmann
+ *
+ *
+ * This code was contributed in the Insight Journal paper "Noise
+ *  Simulation". https://hdl.handle.net/10380/3158
+ *
+ * ITK Module: ITKImageNoise
+ * ITK Group: ImageNoise
  */
 class ITKIMAGEPROCESSING_EXPORT ITKSpeckleNoiseImage : public IFilter
 {
@@ -24,11 +49,11 @@ public:
   ITKSpeckleNoiseImage& operator=(ITKSpeckleNoiseImage&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_StandardDeviation_Key = "StandardDeviation";
   static inline constexpr StringLiteral k_Seed_Key = "Seed";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
 
   /**
    * @brief Returns the name of the filter.

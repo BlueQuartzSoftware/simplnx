@@ -9,7 +9,12 @@ namespace complex
 {
 /**
  * @class ITKBoundedReciprocalImage
- * @brief This filter will ....
+ * @brief Computes 1/(1+x) for each pixel in the image.
+ *
+ * The filter expect both the input and output images to have the same number of dimensions, and both of a scalar image type.
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
 class ITKIMAGEPROCESSING_EXPORT ITKBoundedReciprocalImage : public IFilter
 {
@@ -24,9 +29,9 @@ public:
   ITKBoundedReciprocalImage& operator=(ITKBoundedReciprocalImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
 
   /**
    * @brief Returns the name of the filter.
