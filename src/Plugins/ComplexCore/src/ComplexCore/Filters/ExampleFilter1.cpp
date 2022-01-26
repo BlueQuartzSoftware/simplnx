@@ -55,8 +55,8 @@ Parameters ExampleFilter1::parameters() const
   params.insertSeparator({"FileSystem Selections"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputDir_Key, "Input Directory", "", "Data", FileSystemPathParameter::PathType::InputDir));
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "", "/opt/local/bin/ninja", FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputDir_Key, "Ouptut Directory", "", "/tmp", FileSystemPathParameter::PathType::OutputDir));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "", "cmoplex_test", FileSystemPathParameter::PathType::OutputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputDir_Key, "Ouptut Directory", "", "Output Data", FileSystemPathParameter::PathType::OutputDir));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "", "Output Data/Some Really Cool File.txt", FileSystemPathParameter::PathType::OutputFile));
 
   params.insertSeparator({"Linked Parameter"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Param2, "BoolParameter", "The 2nd parameter", true));
