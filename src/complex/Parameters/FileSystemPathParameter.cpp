@@ -70,7 +70,7 @@ Result<> ValidateOutputDir(const FileSystemPathParameter::ValueType& path)
 namespace complex
 {
 //-----------------------------------------------------------------------------
-FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, PathType pathType, ExtensionsType extensionsType)
+FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, PathType pathType, const ExtensionsType extensionsType)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 , m_PathType(pathType)
