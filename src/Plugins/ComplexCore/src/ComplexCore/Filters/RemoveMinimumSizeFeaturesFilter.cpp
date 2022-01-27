@@ -267,7 +267,7 @@ Uuid RemoveMinimumSizeFeaturesFilter::uuid() const
 
 std::string RemoveMinimumSizeFeaturesFilter::humanName() const
 {
-  return "Remove Small Features";
+  return "Remove Minimum Size Features";
 }
 
 //------------------------------------------------------------------------------
