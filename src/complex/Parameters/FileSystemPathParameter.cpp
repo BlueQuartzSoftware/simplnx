@@ -70,10 +70,12 @@ Result<> ValidateOutputDir(const FileSystemPathParameter::ValueType& path)
 namespace complex
 {
 //-----------------------------------------------------------------------------
-FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, PathType pathType)
+FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const ExtensionsType extensionsType,
+                                                 PathType pathType)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 , m_PathType(pathType)
+, m_AvailableExtensions(extensionsType)
 {
 }
 
@@ -114,7 +116,7 @@ Result<std::any> FileSystemPathParameter::fromJson(const nlohmann::json& json) c
 //-----------------------------------------------------------------------------
 IParameter::UniquePointer FileSystemPathParameter::clone() const
 {
-  return std::make_unique<FileSystemPathParameter>(name(), humanName(), helpText(), m_DefaultValue, m_PathType);
+  return std::make_unique<FileSystemPathParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AvailableExtensions, m_PathType);
 }
 
 //-----------------------------------------------------------------------------
@@ -136,6 +138,12 @@ FileSystemPathParameter::PathType FileSystemPathParameter::getPathType() const
 }
 
 //-----------------------------------------------------------------------------
+FileSystemPathParameter::ExtensionsType FileSystemPathParameter::getAvailableExtensions() const
+{
+  return m_AvailableExtensions;
+}
+
+//-----------------------------------------------------------------------------
 Result<> FileSystemPathParameter::validate(const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
@@ -148,6 +156,16 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
   if(path.empty())
   {
     return {nonstd::make_unexpected(std::vector<Error>{{-1, "Path must not be empty"}})};
+  }
+
+  if(!m_AvailableExtensions.empty() && !path.has_extension())
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{{-2, "Path must include a file extension"}})};
+  }
+
+  if(path.has_extension() && !m_AvailableExtensions.empty() && m_AvailableExtensions.find(path.extension().string()) == m_AvailableExtensions.end())
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{{-3, fmt::format("File extension '{}' is not a valid file extension", path.extension().string())}})};
   }
 
   switch(m_PathType)
