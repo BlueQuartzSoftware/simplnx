@@ -146,7 +146,7 @@ IFilter::UniquePointer RobustAutomaticThreshold::clone() const
   return std::make_unique<RobustAutomaticThreshold>();
 }
 
-IFilter::PreflightResult RobustAutomaticThreshold::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult RobustAutomaticThreshold::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
 {
   auto inputArrayPath = args.value<DataPath>(k_InputArrayPath);
   auto gradientArrayPath = args.value<DataPath>(k_GradientMagnitudePath);
@@ -154,20 +154,28 @@ IFilter::PreflightResult RobustAutomaticThreshold::preflightImpl(const DataStruc
 
   std::vector<DataPath> dataPaths;
 
-  const auto& inputArray = data.getDataRefAs<IDataArray>(inputArrayPath);
+  // Validate that the input path is NOT a bool array.
+  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   if(dynamic_cast<const BoolArray*>(&inputArray) != nullptr)
   {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArrayType, "Input Attribute Array to threshold cannot be of type bool")};
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArrayType, "Input Data Array to threshold cannot be of type bool")};
   }
   dataPaths.push_back(inputArrayPath);
 
-  const auto& gradientArray = data.getDataRefAs<Float32Array>(gradientArrayPath);
+  // Validate that the Gradient Image is of the correct type
+  const DataObject* dataObject = dataStructure.getData(gradientArrayPath);
+  if(dynamic_cast<const Float32Array*>(dataObject) == nullptr)
+  {
+    dataObject->getTypeName();
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArrayType,
+                                           fmt::format("Gradient Data Array must be of type Float. The object at path '{}' is '{}'", gradientArrayPath.toString(), dataObject->getTypeName()))};
+  }
   dataPaths.push_back(gradientArrayPath);
 
   std::vector<usize> tupleDims = {inputArray.getNumberOfTuples()};
   usize numComponents = inputArray.getNumberOfComponents();
 
-  if(!data.validateNumberOfTuples(dataPaths))
+  if(!dataStructure.validateNumberOfTuples(dataPaths))
   {
     return {MakeErrorResult<OutputActions>(k_IncorrectInputArrayType, "Input array and gradient array have mismatched dimensions")};
   }
