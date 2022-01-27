@@ -162,7 +162,7 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
     return {nonstd::make_unexpected(std::vector<Error>{{-2, "Path must include a file extension"}})};
   }
 
-  if (path.has_extension() && m_AvailableExtensions.find(path.extension().string()) == m_AvailableExtensions.end())
+  if (path.has_extension() && !m_AvailableExtensions.empty() && m_AvailableExtensions.find(path.extension().string()) == m_AvailableExtensions.end())
   {
     return {nonstd::make_unexpected(std::vector<Error>{{-3, fmt::format("File extension '{}' is not a valid file extension", path.extension().string())}})};
   }
