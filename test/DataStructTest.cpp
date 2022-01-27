@@ -127,8 +127,12 @@ TEST_CASE("DataPathTest")
   fromStringTest = DataPath::FromString("/Group/").value();
   REQUIRE(fromStringTest.getLength() == 1);
 
-  REQUIRE(!DataPath::FromString("/").has_value());
-  REQUIRE(!DataPath::FromString("").has_value());
+  auto empty1 = DataPath::FromString("/");
+  REQUIRE(empty1.has_value());
+  REQUIRE(empty1.value().empty());
+  auto empty2 = DataPath::FromString("");
+  REQUIRE(empty2.has_value());
+  REQUIRE(empty2.value().empty());
 }
 
 TEST_CASE("LinkedPathTest")

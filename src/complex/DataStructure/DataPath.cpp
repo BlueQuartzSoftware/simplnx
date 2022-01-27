@@ -41,14 +41,20 @@ std::optional<DataPath> DataPath::FromString(std::string_view inputPath, char de
 {
   if(inputPath.empty())
   {
-    return {};
+    return DataPath{};
   }
   auto parts = StringUtilities::split(inputPath, delimiter);
   if(parts.empty())
   {
+    return DataPath{};
+  }
+  try
+  {
+    return DataPath(std::move(parts));
+  } catch(const std::invalid_argument& exception)
+  {
     return {};
   }
-  return DataPath(std::move(parts));
 }
 
 usize DataPath::getLength() const
