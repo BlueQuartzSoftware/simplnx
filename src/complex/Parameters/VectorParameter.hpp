@@ -37,6 +37,7 @@ public:
 
   VectorParameter() = delete;
   VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const NamesType& names);
+  VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
   ~VectorParameter() override = default;
 
   VectorParameter(const VectorParameter&) = delete;
