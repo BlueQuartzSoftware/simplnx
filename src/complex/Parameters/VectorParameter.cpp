@@ -19,6 +19,17 @@ VectorParameter<T>::VectorParameter(const std::string& name, const std::string& 
   {
     throw std::runtime_error("VectorParameter: size of names is not equal to required size");
   }
+
+  if(m_DefaultValue.empty())
+  {
+    throw std::runtime_error("VectorParameter: cannot be size 0");
+  }
+}
+
+template <class T>
+VectorParameter<T>::VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+: VectorParameter(name, humanName, helpText, defaultValue, NamesType(m_DefaultValue.size()))
+{
 }
 
 template <class T>
