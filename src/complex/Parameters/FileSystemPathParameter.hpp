@@ -5,6 +5,7 @@
 #include "complex/complex_export.hpp"
 
 #include <filesystem>
+#include <unordered_set>
 
 namespace complex
 {
@@ -25,10 +26,12 @@ public:
     OutputDir = 3
   };
 
+  using ExtensionsType = std::unordered_set<std::string>;
+
   using ValueType = std::filesystem::path;
 
   FileSystemPathParameter() = delete;
-  FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, PathType pathType);
+  FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, PathType pathType, ExtensionsType extensionsType={});
   ~FileSystemPathParameter() override = default;
 
   FileSystemPathParameter(const FileSystemPathParameter&) = delete;
@@ -86,6 +89,12 @@ public:
   PathType getPathType() const;
 
   /**
+   * @brief Returns all of the valid extension types that can be used.
+   * @return
+   */
+  ExtensionsType getAvailableExtensions() const;
+
+  /**
    * @brief
    * @param value
    * @return
@@ -102,6 +111,7 @@ public:
 private:
   ValueType m_DefaultValue;
   PathType m_PathType;
+  ExtensionsType m_AvailableExtensions;
 };
 } // namespace complex
 
