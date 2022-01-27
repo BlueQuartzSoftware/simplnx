@@ -39,13 +39,13 @@ Uuid CalculateFeatureSizesFilter::uuid() const
 
 std::string CalculateFeatureSizesFilter::humanName() const
 {
-  return "Find Sizes";
+  return "Calculate Feature Sizes (Find Feature Sizes)";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> CalculateFeatureSizesFilter::defaultTags() const
 {
-  return {"#Statistics", "#Morphological", "#Feature Calculation", "#Find Sizes"};
+  return {"#Statistics", "#Morphological", "#Feature Calculation", "#Find Feature Sizes"};
 }
 
 Parameters CalculateFeatureSizesFilter::parameters() const
