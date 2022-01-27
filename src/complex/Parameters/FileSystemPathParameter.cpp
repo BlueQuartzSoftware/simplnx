@@ -70,8 +70,8 @@ Result<> ValidateOutputDir(const FileSystemPathParameter::ValueType& path)
 namespace complex
 {
 //-----------------------------------------------------------------------------
-FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, PathType pathType,
-                                                 const ExtensionsType extensionsType)
+FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const ExtensionsType extensionsType,
+                                                 PathType pathType)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 , m_PathType(pathType)
@@ -116,7 +116,7 @@ Result<std::any> FileSystemPathParameter::fromJson(const nlohmann::json& json) c
 //-----------------------------------------------------------------------------
 IParameter::UniquePointer FileSystemPathParameter::clone() const
 {
-  return std::make_unique<FileSystemPathParameter>(name(), humanName(), helpText(), m_DefaultValue, m_PathType, m_AvailableExtensions);
+  return std::make_unique<FileSystemPathParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AvailableExtensions, m_PathType);
 }
 
 //-----------------------------------------------------------------------------
