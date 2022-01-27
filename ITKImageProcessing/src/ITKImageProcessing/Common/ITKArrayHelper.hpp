@@ -395,9 +395,12 @@ struct ITKFilterFunctor
 
 template <class OutputT, class DefaultOutputT>
 using TrueOutputT = std::conditional_t<std::is_same_v<OutputT, void>, DefaultOutputT, OutputT>;
+
+template <class T>
+using DefaultOutput_t = std::void_t<T>;
 } // namespace detail
 
-template <template <class, class, uint32> class FunctorT, class ArrayOptionsT, class ResultT = void, template <class> class OutputT = std::void_t, class... ArgsT>
+template <template <class, class, uint32> class FunctorT, class ArrayOptionsT, class ResultT = void, template <class> class OutputT = detail::DefaultOutput_t, class... ArgsT>
 Result<ResultT> ArraySwitchFunc(const IDataStore& dataStore, const ImageGeom& imageGeom, int32 errorCode, ArgsT&&... args)
 {
   DataType type = dataStore.getDataType();
@@ -479,7 +482,7 @@ Result<ResultT> ArraySwitchFunc(const IDataStore& dataStore, const ImageGeom& im
   return MakeErrorResult<ResultT>(-1000, "Invalid DataType while attempting to execute");
 }
 
-template <class ArrayOptionsT, template <class> class OutputT = std::void_t>
+template <class ArrayOptionsT, template <class> class OutputT = detail::DefaultOutput_t>
 Result<OutputActions> DataCheck(const DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& imageGeomPath, const DataPath& outputArrayPath)
 {
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
@@ -489,7 +492,7 @@ Result<OutputActions> DataCheck(const DataStructure& dataStructure, const DataPa
   return ArraySwitchFunc<detail::DataCheckImplFunctor, ArrayOptionsT, OutputActions, OutputT>(inputDataStore, imageGeom, -1, dataStructure, inputArrayPath, imageGeomPath, outputArrayPath);
 }
 
-template <class ArrayOptionsT, template <class> class OutputT = std::void_t, class FilterCreationFunctorT>
+template <class ArrayOptionsT, template <class> class OutputT = detail::DefaultOutput_t, class FilterCreationFunctorT>
 Result<detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>> Execute(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& imageGeomPath, const DataPath& outputArrayPath,
                                                                          FilterCreationFunctorT&& filterCreationFunctor)
 {
