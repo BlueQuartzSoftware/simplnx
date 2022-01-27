@@ -6,6 +6,7 @@
 #include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
@@ -20,11 +21,13 @@ using namespace complex;
 
 namespace complex
 {
-int32 k_RbrZeroComponentsError = -391;
-int32 k_RbrNumComponentsError = -392;
-int32 k_RbrWrongType = -393;
-int32 k_RbrEmptyFile = -394;
-int32 k_RbrSkippedTooMuch = -395;
+constexpr int32 k_RbrZeroComponentsError = -391;
+constexpr int32 k_RbrNumComponentsError = -392;
+constexpr int32 k_RbrWrongType = -393;
+constexpr int32 k_RbrEmptyFile = -394;
+constexpr int32 k_RbrSkippedTooMuch = -395;
+constexpr int32 k_RbrTupleDimsError = -396;
+constexpr int32 k_RbrTupleDimsInconsistent = -397;
 
 //------------------------------------------------------------------------------
 std::string RawBinaryReaderFilter::name() const
@@ -63,6 +66,13 @@ Parameters RawBinaryReaderFilter::parameters() const
 
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "", fs::path(), FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Scalar Type", "", NumericType::int8));
+
+  DynamicTableParameter::ValueType dynamicTable{{{1}, {1}}, {"Dim 0"}, {"Value"}};
+  dynamicTable.setMinCols(1);
+  dynamicTable.setDynamicCols(true);
+  dynamicTable.setDynamicRows(false);
+  params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "DynamicTableParameter", "", dynamicTable));
+
   params.insert(std::make_unique<UInt64Parameter>(k_NumberOfComponents_Key, "Number of Components", "", 0));
   params.insert(std::make_unique<ChoicesParameter>(k_Endian_Key, "Endian", "", 0, ChoicesParameter::Choices{"Little", "Big"}));
   params.insert(std::make_unique<UInt64Parameter>(k_SkipHeaderBytes_Key, "Skip Header Bytes", "", 0));
@@ -85,10 +95,23 @@ IFilter::PreflightResult RawBinaryReaderFilter::preflightImpl(const DataStructur
   auto pNumberOfComponentsValue = filterArgs.value<uint64>(k_NumberOfComponents_Key);
   auto pSkipHeaderBytesValue = filterArgs.value<uint64>(k_SkipHeaderBytes_Key);
   auto pCreatedAttributeArrayPathValue = filterArgs.value<DataPath>(k_CreatedAttributeArrayPath_Key);
+  auto pTupleDimsValue = filterArgs.value<DynamicTableData>(k_TupleDims_Key);
 
   if(pNumberOfComponentsValue < 1)
   {
     return {MakeErrorResult<OutputActions>(k_RbrZeroComponentsError, "The number of components must be positive.")};
+  }
+
+  DynamicTableData::TableDataType tableData = pTupleDimsValue.getTableData();
+  if(tableData.size() != 1)
+  {
+    return {MakeErrorResult<OutputActions>(k_RbrTupleDimsError, fmt::format("Tuple Dimensions should be a single row of data. {} Rows were passed.", tableData.size()))};
+  }
+  std::vector<DynamicTableData::DataType> rowData = tableData[0];
+  std::vector<size_t> tupleDims;
+  for(const auto& floatValue : rowData)
+  {
+    tupleDims.emplace_back(static_cast<size_t>(floatValue));
   }
 
   Result<OutputActions> resultOutputActions;
@@ -130,9 +153,15 @@ IFilter::PreflightResult RawBinaryReaderFilter::preflightImpl(const DataStructur
 
   usize numTuples = totalElements / pNumberOfComponentsValue;
 
+  size_t tupleCountFromTable = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<size_t>(1), std::multiplies<size_t>());
+  if(numTuples != tupleCountFromTable)
+  {
+    return {MakeErrorResult<OutputActions>(k_RbrTupleDimsInconsistent, fmt::format("Total Tuples based on file '{}' does not match total tuples entered. '{}' ", numTuples, tupleCountFromTable))};
+  }
+
   // Create the CreateArray action and add it to the resultOutputActions object
   {
-    auto action = std::make_unique<CreateArrayAction>(pScalarTypeValue, std::vector<usize>{numTuples}, std::vector<usize>{pNumberOfComponentsValue}, pCreatedAttributeArrayPathValue);
+    auto action = std::make_unique<CreateArrayAction>(pScalarTypeValue, tupleDims, std::vector<usize>{pNumberOfComponentsValue}, pCreatedAttributeArrayPathValue);
 
     resultOutputActions.value().actions.push_back(std::move(action));
   }
