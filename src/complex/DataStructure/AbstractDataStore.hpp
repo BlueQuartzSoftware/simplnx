@@ -351,6 +351,54 @@ public:
     return sizeof(T);
   }
 
+  /**
+   * @brief copyData This method copies the number of tuples specified by the
+   * totalSrcTuples value starting from the source tuple offset value in <b>sourceArray</b>
+   * into the current array starting at the target destination tuple offset value.
+   *
+   * For example if the DataStore has 10 tuples, the source DataArray has 10 tuples,
+   *  the destTupleOffset = 5, the srcTupleOffset = 5, and the totalSrcTuples = 3,
+   *  then tuples 5, 6, and 7 will be copied from the source into tuples 5, 6, and 7
+   * of the destination array. In psuedo code it would be the following:
+   * @code
+   *  destArray[5] = sourceArray[5];
+   *  destArray[6] = sourceArray[6];
+   *  destArray[7] = sourceArray[7];
+   *  .....
+   * @endcode
+   * @param destTupleOffset
+   * @param source
+   * @param srcTupleOffset
+   * @param totalSrcTuples
+   * @return
+   */
+  bool copyFrom(usize destTupleOffset, const AbstractDataStore& source, usize srcTupleOffset, usize totalSrcTuples)
+  {
+    if(destTupleOffset >= getNumberOfTuples())
+    {
+      return false;
+    }
+
+    usize sourceNumComponents = source.getNumberOfComponents();
+    usize numComponents = getNumberOfComponents();
+
+    if(sourceNumComponents != numComponents)
+    {
+      return false;
+    }
+
+    if((totalSrcTuples * sourceNumComponents + destTupleOffset * numComponents) > getSize())
+    {
+      return false;
+    }
+
+    auto srcBegin = source.begin() + (srcTupleOffset * sourceNumComponents);
+    auto srcEnd = srcBegin + (totalSrcTuples * sourceNumComponents);
+    auto dstBegin = begin() + (destTupleOffset * numComponents);
+    std::copy(srcBegin, srcEnd, dstBegin);
+    return true;
+  }
+
 protected:
   /**
    * @brief Default constructor
