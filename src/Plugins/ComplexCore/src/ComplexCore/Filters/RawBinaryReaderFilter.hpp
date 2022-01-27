@@ -31,6 +31,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_InputFile_Key = "InputFile";
   static inline constexpr StringLiteral k_ScalarType_Key = "ScalarType";
+  static inline constexpr StringLiteral k_TupleDims_Key = "TupleDimensions";
   static inline constexpr StringLiteral k_NumberOfComponents_Key = "NumberOfComponents";
   static inline constexpr StringLiteral k_Endian_Key = "Endian";
   static inline constexpr StringLiteral k_SkipHeaderBytes_Key = "SkipHeaderBytes";
