@@ -284,8 +284,11 @@ public:
   const DataObject& getDataRef(const DataPath& path) const;
 
   /**
-   * @brief Returns a pointer to the DataObject at the given DataPath. If no
-   * DataObject is found, this method returns nullptr.
+   * @brief Returns a pointer to the DataObject at the given DataPath.
+   *
+   * @throws std::out_of_range if path does not exist
+   * @throws std::bad_cast If the object at path cannnot be dynamic_cast<> to the input type
+   *
    * @param path
    * @return const T*
    */
@@ -297,8 +300,11 @@ public:
   }
 
   /**
-   * @brief Returns a reference to the DataObject at the given DataPath. If no
-   * DataObject is found, this method throws std::out_of_range.
+   * @brief Returns a reference to the DataObject at the given DataPath.
+   *
+   * @throws std::out_of_range if path does not exist
+   * @throws std::bad_cast If the object at path cannnot be dynamic_cast<> to the input type
+   *
    * @param path
    * @return const T&
    */

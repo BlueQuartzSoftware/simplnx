@@ -42,11 +42,15 @@ DataStructure::DataStructure(const DataStructure& ds)
   // Hold a shared_ptr copy of the DataObjects long enough for
   // m_RootGroup.setDataStructure(this) to operate.
   std::map<DataObject::IdType, std::shared_ptr<DataObject>> sharedData;
-  for(auto& [id, dataPtr] : ds.m_DataObjects)
+  for(const auto& [id, dataWkPtr] : ds.m_DataObjects)
   {
-    auto copy = std::shared_ptr<DataObject>(dataPtr.lock()->shallowCopy());
-    sharedData[id] = copy;
-    m_DataObjects[id] = copy;
+    auto dataPtr = dataWkPtr.lock();
+    if(dataPtr != nullptr)
+    {
+      auto copy = std::shared_ptr<DataObject>(dataPtr->shallowCopy());
+      sharedData[id] = copy;
+      m_DataObjects[id] = copy;
+    }
   }
   // Updates all DataMaps with the corresponding m_DataObjects pointers.
   // Updates all DataObjects with their new DataStructure
@@ -56,8 +60,8 @@ DataStructure::DataStructure(const DataStructure& ds)
 DataStructure::DataStructure(DataStructure&& ds) noexcept
 : m_DataObjects(std::move(ds.m_DataObjects))
 , m_RootGroup(std::move(ds.m_RootGroup))
-, m_IsValid(std::move(ds.m_IsValid))
-, m_NextId(std::move(ds.m_NextId))
+, m_IsValid(ds.m_IsValid)
+, m_NextId(ds.m_NextId)
 {
   m_RootGroup.setDataStructure(this);
 }
@@ -616,11 +620,15 @@ DataStructure& DataStructure::operator=(const DataStructure& rhs)
   // Hold a shared_ptr copy of the DataObjects long enough for
   // m_RootGroup.setDataStructure(this) to operate.
   std::map<DataObject::IdType, std::shared_ptr<DataObject>> sharedData;
-  for(auto& [id, dataPtr] : rhs.m_DataObjects)
+  for(auto& [id, dataWkPtr] : rhs.m_DataObjects)
   {
-    auto copy = std::shared_ptr<DataObject>(dataPtr.lock()->shallowCopy());
-    sharedData[id] = copy;
-    m_DataObjects[id] = copy;
+    auto dataPtr = dataWkPtr.lock();
+    if(dataPtr != nullptr)
+    {
+      auto copy = std::shared_ptr<DataObject>(dataPtr->shallowCopy());
+      sharedData[id] = copy;
+      m_DataObjects[id] = copy;
+    }
   }
   // Updates all DataMaps with the corresponding m_DataObjects pointers.
   // Updates all DataObjects with their new DataStructure
