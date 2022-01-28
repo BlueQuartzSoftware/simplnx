@@ -29,6 +29,53 @@ namespace ITK
 bool DoDimensionsMatch(const IDataStore& dataStore, const ImageGeom& imageGeom);
 
 /**
+ * @brief Attempts to convert itk::IOComponentEnum to complex::NumericType
+ * @param component
+ * @return
+ */
+inline constexpr std::optional<NumericType> ConvertIOComponentToNumericType(itk::ImageIOBase::IOComponentEnum component) noexcept
+{
+  using ComponentType = itk::ImageIOBase::IOComponentEnum;
+
+  switch(component)
+  {
+  case ComponentType::UCHAR: {
+    return NumericType::uint8;
+  }
+  case ComponentType::CHAR: {
+    return NumericType::int8;
+  }
+  case ComponentType::USHORT: {
+    return NumericType::uint16;
+  }
+  case ComponentType::SHORT: {
+    return NumericType::int16;
+  }
+  case ComponentType::UINT: {
+    return NumericType::uint32;
+  }
+  case ComponentType::INT: {
+    return NumericType::int32;
+  }
+  case ComponentType::ULONG: {
+    return NumericType::uint64;
+  }
+  case ComponentType::LONG: {
+    return NumericType::int64;
+  }
+  case ComponentType::FLOAT: {
+    return NumericType::float32;
+  }
+  case ComponentType::DOUBLE: {
+    return NumericType::float64;
+  }
+  default: {
+    return {};
+  }
+  }
+}
+
+/**
  * @brief CastVec3ToITK Input type should be FloatVec3Type or IntVec3Type, Output
    type should be some kind of ITK "array" (itk::Size, itk::Index,...)
  */
