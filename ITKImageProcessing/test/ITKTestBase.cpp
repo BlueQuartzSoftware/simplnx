@@ -20,70 +20,147 @@
 #include <string>
 #include <vector>
 
-namespace complex
-{
-namespace ITKTestBase
-{
+using namespace complex;
 
-using DatObjectPtr = std::shared_ptr<DataObject>;
-using ImageGeomPtr = std::shared_ptr<ImageGeom>;
-using IDataArrayPtr = std::shared_ptr<IDataArray>;
-using ShapeType = typename std::vector<size_t>;
-
-template <typename T>
-std::string ComputeMD5Hash(IDataArrayPtr& outputDataArray)
+namespace
 {
-  using DataArrayType = DataArray<T>;
-  using DataArrayPtrType = std::shared_ptr<DataArrayType>;
-  using DataStoreType = DataStore<T>;
-  DataArrayPtrType dataArray = std::dynamic_pointer_cast<DataArrayType>(outputDataArray);
-  T* dataPtr = dataArray->template getIDataStoreAs<DataStoreType>()->data();
-  size_t arraySize = dataArray->getSize();
+using ShapeType = std::vector<usize>;
+
+template <class T>
+std::string ComputeMD5HashTyped(const IDataArray& outputDataArray)
+{
+  const auto& dataArray = dynamic_cast<const DataArray<T>&>(outputDataArray);
+  const T* dataPtr = dataArray.getIDataStoreRefAs<DataStore<T>>().data();
+  usize arraySize = dataArray.getSize();
   MD5 md5;
-  md5.update(reinterpret_cast<uint8_t*>(dataPtr), arraySize * sizeof(T));
+  md5.update(reinterpret_cast<const uint8*>(dataPtr), arraySize * sizeof(T));
   md5.finalize();
   return md5.hexdigest();
 }
 
+template <class PixelType>
+float64 ComputeDiff(const itk::Vector<PixelType, 2>& p1, const itk::Vector<PixelType, 2>& p2)
+{
+  float64 diff = static_cast<float64>((p1 - p2).GetNorm());
+  return diff;
+}
+
+template <class PixelType>
+float64 ComputeDiff(const itk::Vector<PixelType, 3>& p1, const itk::Vector<PixelType, 3>& p2)
+{
+  float64 diff = static_cast<float64>((p1 - p2).GetNorm());
+  return diff;
+}
+
+template <class PixelType>
+float64 ComputeDiff(const itk::RGBAPixel<PixelType>& p1, const itk::RGBAPixel<PixelType>& p2)
+{
+  float64 diff = static_cast<float64>((p1 - p2).GetScalarValue());
+  return diff;
+}
+
+template <class PixelType>
+float64 ComputeDiff(const itk::RGBPixel<PixelType>& p1, const itk::RGBPixel<PixelType>& p2)
+{
+  float64 diff = static_cast<float64>((p1 - p2).GetScalarValue());
+  return diff;
+}
+
+template <class PixelType>
+float64 ComputeDiff(PixelType p1, PixelType p2)
+{
+  return static_cast<float64>(p1 - p2);
+}
+
+template <class PixelType, uint32 Dimensions>
+Result<> CompareImagesImpl(const ImageGeom& inputImageGeom, const IDataArray& outputDataArray, const ImageGeom& baselineImageGeom, const IDataArray& baselineDataArray, float64 tolerance)
+{
+  using DataArrayType = DataArray<PixelType>;
+
+  const auto& outputArray = dynamic_cast<const DataArrayType&>(outputDataArray);
+  const auto& baselineArray = dynamic_cast<const DataArrayType&>(baselineDataArray);
+
+  float64 largestError = 0.0;
+
+  usize numElements = outputArray.getSize();
+  for(usize idx = 0; idx < numElements; idx++)
+  {
+    PixelType outputValue = outputArray[idx];
+    PixelType baselineValue = baselineArray[idx];
+    float64 diff = ComputeDiff(outputValue, baselineValue);
+    diff = (diff > 0 ? diff : -diff);
+    largestError = std::max(diff, largestError);
+  }
+  if(largestError > tolerance)
+  {
+    return MakeErrorResult(-20, fmt::format("Comparing output image and baseline image produced too large of an error. Tolerance was: {}. Error was {}", tolerance, largestError));
+  }
+  return {};
+}
+
+template <class PixelType>
+Result<> CompareImagesTyped(const ImageGeom& inputImageGeom, const IDataArray& outputDataArray, const ImageGeom& baselineImageGeom, const IDataArray& baselineDataArray, float64 tolerance)
+{
+  SizeVec3 inputDims = inputImageGeom.getDimensions();
+  if(inputDims[2] == 1)
+  {
+    // 2D image
+    return CompareImagesImpl<PixelType, 2>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
+  }
+
+  {
+    // 3D image
+    return CompareImagesImpl<PixelType, 3>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
+  }
+}
+} // namespace
+
+namespace complex
+{
+namespace ITKTestBase
+{
+//------------------------------------------------------------------------------
 std::string ComputeMd5Hash(DataStructure& ds, const DataPath& outputDataPath)
 {
-  IDataArrayPtr outputDataArray = ds.getSharedDataAs<IDataArray>(outputDataPath);
-  complex::DataType outputDataType = outputDataArray->getIDataStore()->getDataType();
+  const auto& outputDataArray = ds.getDataRefAs<IDataArray>(outputDataPath);
+  DataType outputDataType = outputDataArray.getDataType();
 
   switch(outputDataType)
   {
-  case complex::DataType::float32: {
-    return ComputeMD5Hash<float>(outputDataArray);
+  case DataType::float32: {
+    return ComputeMD5HashTyped<float32>(outputDataArray);
   }
-  case complex::DataType::float64: {
-    return ComputeMD5Hash<double>(outputDataArray);
+  case DataType::float64: {
+    return ComputeMD5HashTyped<float64>(outputDataArray);
   }
-  case complex::DataType::int8: {
-    return ComputeMD5Hash<int8_t>(outputDataArray);
+  case DataType::int8: {
+    return ComputeMD5HashTyped<int8>(outputDataArray);
   }
-  case complex::DataType::uint8: {
-    return ComputeMD5Hash<uint8_t>(outputDataArray);
+  case DataType::uint8: {
+    return ComputeMD5HashTyped<uint8>(outputDataArray);
   }
-  case complex::DataType::int16: {
-    return ComputeMD5Hash<int16_t>(outputDataArray);
+  case DataType::int16: {
+    return ComputeMD5HashTyped<int16>(outputDataArray);
   }
-  case complex::DataType::uint16: {
-    return ComputeMD5Hash<uint16_t>(outputDataArray);
+  case DataType::uint16: {
+    return ComputeMD5HashTyped<uint16>(outputDataArray);
   }
-  case complex::DataType::int32: {
-    return ComputeMD5Hash<int32_t>(outputDataArray);
+  case DataType::int32: {
+    return ComputeMD5HashTyped<int32>(outputDataArray);
   }
-  case complex::DataType::uint32: {
-    return ComputeMD5Hash<uint32_t>(outputDataArray);
+  case DataType::uint32: {
+    return ComputeMD5HashTyped<uint32>(outputDataArray);
   }
-  case complex::DataType::int64: {
-    return ComputeMD5Hash<int64_t>(outputDataArray);
+  case DataType::int64: {
+    return ComputeMD5HashTyped<int64>(outputDataArray);
   }
-  case complex::DataType::uint64: {
-    return ComputeMD5Hash<uint64_t>(outputDataArray);
+  case DataType::uint64: {
+    return ComputeMD5HashTyped<uint64>(outputDataArray);
   }
-  case complex::DataType::boolean:
-  case complex::DataType::error: {
+  case DataType::boolean: {
+    [[fallthrough]];
+  }
+  case DataType::error: {
     return {};
   }
   }
@@ -91,6 +168,7 @@ std::string ComputeMd5Hash(DataStructure& ds, const DataPath& outputDataPath)
   return {};
 }
 
+//------------------------------------------------------------------------------
 Result<> ReadImage(DataStructure& ds, const fs::path& filePath, const DataPath& geometryPath, const DataPath& imagePath)
 {
   ITKImageReader filter;
@@ -102,7 +180,8 @@ Result<> ReadImage(DataStructure& ds, const fs::path& filePath, const DataPath& 
   return executeResult.result;
 }
 
-int32_t WriteImage(DataStructure& ds, const fs::path& filePath, const DataPath& geometryPath, const DataPath& imagePath)
+//------------------------------------------------------------------------------
+Result<> WriteImage(DataStructure& ds, const fs::path& filePath, const DataPath& geometryPath, const DataPath& imagePath)
 {
   ITKImageWriter filter;
   Arguments args;
@@ -113,176 +192,41 @@ int32_t WriteImage(DataStructure& ds, const fs::path& filePath, const DataPath& 
   args.insertOrAssign(ITKImageWriter::k_IndexOffset_Key, std::make_any<uint64>(0));
   args.insertOrAssign(ITKImageWriter::k_Plane_Key, std::make_any<uint64>(ITKImageWriter::k_XYPlane));
 
-  auto preflightResult = filter.preflight(ds, args);
-  if(preflightResult.outputActions.invalid())
-  {
-    for(const auto& error : preflightResult.outputActions.errors())
-    {
-      std::cout << error.code << ": " << error.message << std::endl;
-    }
-    return -1;
-  }
   auto executeResult = filter.execute(ds, args);
-  if(executeResult.result.invalid())
-  {
-    for(const auto& error : executeResult.result.errors())
-    {
-      std::cout << error.code << ": " << error.message << std::endl;
-    }
-    return -2;
-  }
 
-  return 0;
+  return executeResult.result;
 }
 
-template <typename PixelType>
-double ComputeDiff(itk::Vector<PixelType, 2> p1, itk::Vector<PixelType, 2> p2)
+//------------------------------------------------------------------------------
+Result<> CompareImages(DataStructure& ds, const DataPath& baselineGeometryPath, const DataPath& baselineDataPath, const DataPath& inputGeometryPath, const DataPath& outputDataPath, float64 tolerance)
 {
-  double diff = static_cast<double>((p1 - p2).GetNorm());
-  return diff;
-}
-
-template <typename PixelType>
-double ComputeDiff(itk::Vector<PixelType, 3> p1, itk::Vector<PixelType, 3> p2)
-{
-  double diff = static_cast<double>((p1 - p2).GetNorm());
-  return diff;
-}
-
-template <typename PixelType>
-double ComputeDiff(itk::RGBAPixel<PixelType> p1, itk::RGBAPixel<PixelType> p2)
-{
-  double diff = static_cast<double>((p1 - p2).GetScalarValue());
-  return diff;
-}
-
-template <typename PixelType>
-double ComputeDiff(itk::RGBPixel<PixelType> p1, itk::RGBPixel<PixelType> p2)
-{
-  double diff = static_cast<double>((p1 - p2).GetScalarValue());
-  return diff;
-}
-
-template <typename PixelType>
-double ComputeDiff(PixelType p1, PixelType p2)
-{
-  return static_cast<double>(p1 - p2);
-}
-
-template <typename PixelType, unsigned int Dimensions>
-Result<> CompareImages(ImageGeomPtr& inputImageGeom, IDataArrayPtr& outputDataArray, ImageGeomPtr& baselineImageGeom, IDataArrayPtr& baselineDataArray, double tolerance)
-{
-  using DataArrayType = DataArray<PixelType>;
-  using DataArrayTypePtr = std::shared_ptr<DataArrayType>;
-
-  DataArrayTypePtr outputArray = std::dynamic_pointer_cast<DataArrayType>(outputDataArray);
-  DataArrayTypePtr baselineArray = std::dynamic_pointer_cast<DataArrayType>(baselineDataArray);
-
-  double largest_error = 0.0;
-  double diff;
-
-  size_t numElements = outputArray->getSize();
-  for(size_t idx = 0; idx < numElements; idx++)
+  const auto* baselineImageGeom = ds.getDataAs<ImageGeom>(baselineGeometryPath);
+  if(baselineImageGeom == nullptr)
   {
-    PixelType outputValue = (*outputArray)[idx];
-    PixelType baselineValue = (*baselineArray)[idx];
-    diff = ComputeDiff(outputValue, baselineValue);
-    diff = (diff > 0 ? diff : -diff);
-    largest_error = std::max(diff, largest_error);
+    return MakeErrorResult(-10, fmt::format("Could not get ImageGeometry for Baseline"));
   }
-  if(largest_error > tolerance)
-  {
-    return MakeErrorResult(-20, fmt::format("Comparing output image and baseline image produced too large of an error. Tolerance was: {}. Error was {}", tolerance, largest_error));
-  }
-  return {};
-}
+  SizeVec3 baselineDims = baselineImageGeom->getDimensions();
 
-template <typename PixelType, unsigned int Dimensions>
-Result<> CompareOutputToBaseline(ImageGeomPtr& inputImageGeom, IDataArrayPtr& outputDataArray, ImageGeomPtr& baselineImageGeom, IDataArrayPtr& baselineDataArray, double tolerance)
-{
-  ShapeType cDims = outputDataArray->getIDataStore()->getComponentShape();
-  // Vector images
-  if(cDims.size() > 1)
+  const auto* baselineDataArray = ds.getDataAs<IDataArray>(baselineDataPath);
+  if(baselineDataArray == nullptr)
   {
-    if(cDims.size() == 2)
-    {
-      return CompareOutputToBaseline<itk::Vector<PixelType, 2>, Dimensions>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
-    }
-    if(cDims.size() == 3)
-    {
-      return CompareOutputToBaseline<itk::Vector<PixelType, 3>, Dimensions>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
-    }
-    return MakeErrorResult(-22, fmt::format("Vector Size of {} is not supported.", cDims.size()));
+    return MakeErrorResult(-11, fmt::format("Could not get DataArray for Baseline"));
   }
-  {
-    // Scalar images
-    if(cDims[0] == 1)
-    {
-      return CompareOutputToBaseline<PixelType, Dimensions>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
-    }
-    // RGB images
-    if(cDims[0] == 3)
-    {
-      return CompareOutputToBaseline<itk::RGBPixel<PixelType>, Dimensions>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
-    }
-    // RGBA images
-    if(cDims[0] == 4)
-    {
-      return CompareOutputToBaseline<itk::RGBAPixel<PixelType>, Dimensions>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
-    }
-    return MakeErrorResult(-23, fmt::format("Number of components {} not supported.", cDims[0]));
-  }
-}
+  DataType baseLineDataType = baselineDataArray->getDataType();
 
-template <typename PixelType>
-Result<> CompareImages(ImageGeomPtr& inputImageGeom, IDataArrayPtr& outputDataArray, ImageGeomPtr& baselineImageGeom, IDataArrayPtr& baselineDataArray, double tolerance)
-{
-  SizeVec3 inputDims = inputImageGeom->getDimensions();
-  if(inputDims[2] == 1)
+  const auto* inputImageGeom = ds.getDataAs<ImageGeom>(inputGeometryPath);
+  if(inputImageGeom == nullptr)
   {
-    /* 2D image */
-    return CompareImages<PixelType, 2>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
+    return MakeErrorResult(-12, fmt::format("Could not get ImageGeometry for Output"));
   }
+  SizeVec3 outputDims = inputImageGeom->getDimensions();
 
+  const auto* outputDataArray = ds.getDataAs<IDataArray>(outputDataPath);
+  if(outputDataArray == nullptr)
   {
-    /* 3D */
-    return CompareImages<PixelType, 3>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
+    return MakeErrorResult(-13, fmt::format("Could not get DataArray for Output"));
   }
-}
-
-Result<> CompareImages(DataStructure& ds, const DataPath& baselineGeometryPath, const DataPath& baselineDataPath, const DataPath& inputGeometryPath, const DataPath& outputDataPath, double tolerance)
-{
-  DatObjectPtr sharedDo = ds.getSharedData(baselineGeometryPath);
-  ImageGeomPtr baselineImageGeom = std::dynamic_pointer_cast<ImageGeom>(sharedDo);
-  if(baselineImageGeom.get() == nullptr)
-  {
-    return MakeErrorResult(-10, fmt::format("Could not cast DataObject to ImageGeometry for Baseline"));
-  }
-  complex::SizeVec3 baselineDims = baselineImageGeom->getDimensions();
-
-  sharedDo = ds.getSharedData(baselineDataPath);
-  IDataArrayPtr baselineDataArray = std::dynamic_pointer_cast<IDataArray>(sharedDo);
-  if(baselineDataArray.get() == nullptr)
-  {
-    return MakeErrorResult(-11, fmt::format("Could not cast DataObject to DataArray for Baseline"));
-  }
-  complex::DataType baseLineDataType = baselineDataArray->getIDataStore()->getDataType();
-
-  sharedDo = ds.getSharedData(inputGeometryPath);
-  ImageGeomPtr inputImageGeom = std::dynamic_pointer_cast<ImageGeom>(sharedDo);
-  if(inputImageGeom.get() == nullptr)
-  {
-    return MakeErrorResult(-12, fmt::format("Could not cast DataObject to ImageGeometry for Output"));
-  }
-  complex::SizeVec3 outputDims = inputImageGeom->getDimensions();
-
-  sharedDo = ds.getSharedData(outputDataPath);
-  IDataArrayPtr outputDataArray = std::dynamic_pointer_cast<IDataArray>(sharedDo);
-  if(outputDataArray.get() == nullptr)
-  {
-    return MakeErrorResult(-13, fmt::format("Could not cast DataObject to DataArray for Output"));
-  }
-  complex::DataType outputDataType = outputDataArray->getIDataStore()->getDataType();
+  DataType outputDataType = outputDataArray->getDataType();
   // Make sure the data types are the same
   if(baseLineDataType != outputDataType)
   {
@@ -294,16 +238,16 @@ Result<> CompareImages(DataStructure& ds, const DataPath& baselineGeometryPath, 
     return MakeErrorResult(-15, fmt::format("Image Dimensions do not match. Output: {} Baseline: {}", fmt::join(outputDims, ", "), fmt::join(baselineDims, ", ")));
   }
   // Make sure the tuple shape is the same
-  ShapeType baselineTupleShape = baselineDataArray->getIDataStore()->getTupleShape();
-  ShapeType outputTupleShape = outputDataArray->getIDataStore()->getTupleShape();
+  ShapeType baselineTupleShape = baselineDataArray->getIDataStoreRef().getTupleShape();
+  ShapeType outputTupleShape = outputDataArray->getIDataStoreRef().getTupleShape();
   if(baselineTupleShape != outputTupleShape)
   {
     return MakeErrorResult(-16, fmt::format("Tuple Shape does not Match. Output: {} Baseline: {}", fmt::join(outputTupleShape, ", "), fmt::join(baselineTupleShape, ", ")));
   }
 
   // Make sure the component shape is the same
-  ShapeType baselineComponentShape = baselineDataArray->getIDataStore()->getComponentShape();
-  ShapeType outputComponentShape = outputDataArray->getIDataStore()->getComponentShape();
+  ShapeType baselineComponentShape = baselineDataArray->getIDataStoreRef().getComponentShape();
+  ShapeType outputComponentShape = outputDataArray->getIDataStoreRef().getComponentShape();
   if(baselineComponentShape != outputComponentShape)
   {
     return MakeErrorResult(-18, fmt::format("Component Shape does not Match. Output: {} Baseline: {}", fmt::join(outputComponentShape, ", "), fmt::join(baselineComponentShape, ", ")));
@@ -311,60 +255,59 @@ Result<> CompareImages(DataStructure& ds, const DataPath& baselineGeometryPath, 
 
   switch(outputDataType)
   {
-  case complex::DataType::float32: {
-    return CompareImages<float>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
+  case DataType::float32: {
+    return CompareImagesTyped<float32>(*inputImageGeom, *outputDataArray, *baselineImageGeom, *baselineDataArray, tolerance);
   }
-  case complex::DataType::float64: {
-    return CompareImages<double>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
+  case DataType::float64: {
+    return CompareImagesTyped<float64>(*inputImageGeom, *outputDataArray, *baselineImageGeom, *baselineDataArray, tolerance);
   }
-  case complex::DataType::int8: {
-    return CompareImages<int8_t>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
+  case DataType::int8: {
+    return CompareImagesTyped<int8>(*inputImageGeom, *outputDataArray, *baselineImageGeom, *baselineDataArray, tolerance);
   }
-  case complex::DataType::uint8: {
-    return CompareImages<uint8_t>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
+  case DataType::uint8: {
+    return CompareImagesTyped<uint8>(*inputImageGeom, *outputDataArray, *baselineImageGeom, *baselineDataArray, tolerance);
   }
-  case complex::DataType::int16: {
-    return CompareImages<int16_t>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
+  case DataType::int16: {
+    return CompareImagesTyped<int16>(*inputImageGeom, *outputDataArray, *baselineImageGeom, *baselineDataArray, tolerance);
   }
-  case complex::DataType::uint16: {
-    return CompareImages<uint16_t>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
+  case DataType::uint16: {
+    return CompareImagesTyped<uint16>(*inputImageGeom, *outputDataArray, *baselineImageGeom, *baselineDataArray, tolerance);
   }
-  case complex::DataType::int32: {
-    return CompareImages<int32_t>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
+  case DataType::int32: {
+    return CompareImagesTyped<int32>(*inputImageGeom, *outputDataArray, *baselineImageGeom, *baselineDataArray, tolerance);
   }
-  case complex::DataType::uint32: {
-    return CompareImages<uint32_t>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
+  case DataType::uint32: {
+    return CompareImagesTyped<uint32>(*inputImageGeom, *outputDataArray, *baselineImageGeom, *baselineDataArray, tolerance);
   }
-  case complex::DataType::int64: {
-    return CompareImages<int64_t>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
+  case DataType::int64: {
+    return CompareImagesTyped<int64>(*inputImageGeom, *outputDataArray, *baselineImageGeom, *baselineDataArray, tolerance);
   }
-  case complex::DataType::uint64: {
-    return CompareImages<uint64_t>(inputImageGeom, outputDataArray, baselineImageGeom, baselineDataArray, tolerance);
+  case DataType::uint64: {
+    return CompareImagesTyped<uint64>(*inputImageGeom, *outputDataArray, *baselineImageGeom, *baselineDataArray, tolerance);
   }
-  case complex::DataType::boolean: {
+  case DataType::boolean: {
     [[fallthrough]];
   }
-  case complex::DataType::error: {
+  case DataType::error: {
     [[fallthrough]];
   }
   default: {
-    return MakeErrorResult(-100, fmt::format(""));
+    return MakeErrorResult(-100, "");
   }
   }
 }
 
-void RemoveFiles(fs::path& dirPath, const std::string& filePattern)
+//------------------------------------------------------------------------------
+void RemoveFiles(const fs::path& dirPath, const std::string& filePattern)
 {
-  for(auto& p : fs::directory_iterator(dirPath))
+  for(const auto& entry : fs::directory_iterator(dirPath))
   {
-    std::string file_name = p.path().filename().string();
-    if(file_name.find(filePattern) == 0)
+    std::string fileName = entry.path().filename().string();
+    if(fileName.find(filePattern) == 0)
     {
-      // std::cout << "Removing: " << file_name  <<std::endl;
-      fs::remove(p.path());
+      fs::remove(entry.path());
     }
   }
 }
-
 } // namespace ITKTestBase
 } // namespace complex
