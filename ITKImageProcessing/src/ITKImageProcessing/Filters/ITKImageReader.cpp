@@ -337,8 +337,10 @@ std::vector<std::string> ITKImageReader::defaultTags() const
 Parameters ITKImageReader::parameters() const
 {
   Parameters params;
+  using ExtensionListType = std::unordered_set<std::string>;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<FileSystemPathParameter>(k_FileName_Key, "File", "Input image file", fs::path(""), FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_FileName_Key, "File", "Input image file", fs::path(""), ExtensionListType{{".png"}, {".tiff"}, {".bmp"}, {".jpeg"}},
+                                                          FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Image Geometry", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayPath_Key, "Image Data", "", DataPath{}));
