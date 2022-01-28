@@ -70,12 +70,13 @@ Result<> ValidateOutputDir(const FileSystemPathParameter::ValueType& path)
 namespace complex
 {
 //-----------------------------------------------------------------------------
-FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const ExtensionsType& extensionsType,
-                                                 PathType pathType)
+FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
+                                                 const ExtensionsType& extensionsType, PathType pathType, bool shouldValidateExtension)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 , m_PathType(pathType)
 , m_AvailableExtensions(extensionsType)
+, m_ShouldValidateExtension(shouldValidateExtension)
 {
 }
 
@@ -158,14 +159,17 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
     return {nonstd::make_unexpected(std::vector<Error>{{-1, "Path must not be empty"}})};
   }
 
-  if(!m_AvailableExtensions.empty() && !path.has_extension())
+  if(m_ShouldValidateExtension)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-2, "Path must include a file extension"}})};
-  }
+    if(!m_AvailableExtensions.empty() && !path.has_extension())
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{{-2, "Path must include a file extension"}})};
+    }
 
-  if(path.has_extension() && !m_AvailableExtensions.empty() && m_AvailableExtensions.find(path.extension().string()) == m_AvailableExtensions.end())
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{{-3, fmt::format("File extension '{}' is not a valid file extension", path.extension().string())}})};
+    if(path.has_extension() && !m_AvailableExtensions.empty() && m_AvailableExtensions.find(path.extension().string()) == m_AvailableExtensions.end())
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{{-3, fmt::format("File extension '{}' is not a valid file extension", path.extension().string())}})};
+    }
   }
 
   switch(m_PathType)
