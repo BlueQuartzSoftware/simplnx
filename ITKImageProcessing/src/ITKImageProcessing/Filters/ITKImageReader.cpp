@@ -22,38 +22,6 @@ using namespace complex;
 
 namespace
 {
-//------------------------------------------------------------------------------
-std::optional<NumericType> ConvertComponentToNumericType(itk::ImageIOBase::IOComponentEnum component) noexcept
-{
-  using ComponentType = itk::ImageIOBase::IOComponentEnum;
-
-  switch(component)
-  {
-  case ComponentType::UCHAR:
-    return NumericType::uint8;
-  case ComponentType::CHAR:
-    return NumericType::int8;
-  case ComponentType::USHORT:
-    return NumericType::uint16;
-  case ComponentType::SHORT:
-    return NumericType::int16;
-  case ComponentType::UINT:
-    return NumericType::uint32;
-  case ComponentType::INT:
-    return NumericType::int32;
-  case ComponentType::ULONG:
-    return NumericType::uint64;
-  case ComponentType::LONG:
-    return NumericType::int64;
-  case ComponentType::FLOAT:
-    return NumericType::float32;
-  case ComponentType::DOUBLE:
-    return NumericType::float64;
-  default:
-    return {};
-  }
-}
-
 // This functor is a dummy that will return a valid Result<> if the ImageIOBase is a supported type, dimension, etc.
 struct PreflightFunctor
 {
@@ -196,7 +164,7 @@ Result<> ReadImageExecute(const std::string& fileName, ArgsT&&... args)
 
     itk::ImageIOBase::IOComponentEnum component = imageIO->GetComponentType();
 
-    std::optional<NumericType> numericType = ConvertComponentToNumericType(component);
+    std::optional<NumericType> numericType = ITK::ConvertIOComponentToNumericType(component);
     if(!numericType.has_value())
     {
       return MakeErrorResult(-4, fmt::format("Unsupported pixel component: {}", imageIO->GetComponentTypeAsString(component)));
@@ -238,7 +206,6 @@ Result<> ReadImageExecute(const std::string& fileName, ArgsT&&... args)
       throw std::runtime_error("");
     }
     }
-
   } catch(const itk::ExceptionObject& err)
   {
     return MakeErrorResult(-55557, fmt::format("ITK exception was thrown while processing input file: {}", err.what()));
@@ -263,7 +230,7 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
 
     itk::ImageIOBase::IOComponentEnum component = imageIO->GetComponentType();
 
-    std::optional<NumericType> numericType = ConvertComponentToNumericType(component);
+    std::optional<NumericType> numericType = ITK::ConvertIOComponentToNumericType(component);
     if(!numericType.has_value())
     {
       return MakeErrorResult<OutputActions>(-4, fmt::format("Unsupported pixel component: {}", imageIO->GetComponentTypeAsString(component)));
