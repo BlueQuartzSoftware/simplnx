@@ -32,25 +32,25 @@ inline constexpr StringLiteral k_BaselineDataPath = "Baseline";
 
 Result<> ReadImage(DataStructure& ds, const fs::path& filePath, const DataPath& geometryPath, const DataPath& imagePath);
 
-int32_t WriteImage(DataStructure& ds, const fs::path& filePath, const DataPath& geometryPath, const DataPath& imagePath);
+Result<> WriteImage(DataStructure& ds, const fs::path& filePath, const DataPath& geometryPath, const DataPath& imagePath);
 
-Result<> CompareImages(DataStructure& ds, const DataPath& baselineGeometryPath, const DataPath& baselineDataPath, const DataPath& inputGeometryPath, const DataPath& outputDataPath, double tolerance);
+Result<> CompareImages(DataStructure& ds, const DataPath& baselineGeometryPath, const DataPath& baselineDataPath, const DataPath& inputGeometryPath, const DataPath& outputDataPath, float64 tolerance);
 
 std::string ComputeMd5Hash(DataStructure& ds, const DataPath& outputDataPath);
 
-void RemoveFiles(fs::path& dirPath, const std::string& filePattern);
+void RemoveFiles(const fs::path& dirPath, const std::string& filePattern);
 
-template <typename T>
+template <class T>
 void WriteDataSetAsBinary(const fs::path& absolutePath, const DataStore<T>& dataStore)
 {
   std::cout << "Writing Binary File: " << absolutePath.string() << std::endl;
-  FILE* file = fopen(absolutePath.c_str(), "wb");
+  FILE* file = std::fopen(absolutePath.c_str(), "wb");
 
-  size_t numElements = dataStore.getSize();
+  usize numElements = dataStore.getSize();
 
-  size_t numWritten = fwrite(dataStore.data(), sizeof(T), numElements, file);
+  usize numWritten = std::fwrite(dataStore.data(), sizeof(T), numElements, file);
 
-  fclose(file);
+  std::fclose(file);
 }
 } // namespace ITKTestBase
 } // namespace complex
