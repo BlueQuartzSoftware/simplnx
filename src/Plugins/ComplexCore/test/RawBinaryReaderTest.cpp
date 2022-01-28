@@ -28,6 +28,7 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
+#include "complex/Parameters/util/DynamicTableData.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -49,12 +50,17 @@ constexpr int32 k_RbrWrongType = -393;
 constexpr int32 k_RbrSkippedTooMuch = -395;
 
 // -----------------------------------------------------------------------------
-Arguments CreateFilterArguments(NumericType scalarType, usize N, usize skipBytes)
+Arguments CreateFilterArguments(NumericType scalarType, usize N, usize file_size, usize skipBytes)
 {
   Arguments args;
 
   args.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_TestOutput));
   args.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, std::make_any<NumericType>(scalarType));
+
+  DynamicTableData tableData;
+  tableData.setTableData(DynamicTableData::TableDataType{{static_cast<double>(file_size)}});
+  args.insertOrAssign(RawBinaryReaderFilter::k_TupleDims_Key, std::make_any<DynamicTableData>(tableData));
+
   args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<uint64>(N));
   args.insertOrAssign(RawBinaryReaderFilter::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<uint64>(endian::little)));
   args.insertOrAssign(RawBinaryReaderFilter::k_SkipHeaderBytes_Key, std::make_any<uint64>(skipBytes));
@@ -83,7 +89,8 @@ bool CreateTestDataFile(const std::vector<T>& exemplaryData)
 template <class T, usize N>
 void TestCase1_Execute(NumericType scalarType)
 {
-  constexpr usize dataArraySize = 10000000 * N;
+  constexpr usize tupleCount = 10000000;
+  constexpr usize dataArraySize = tupleCount * N;
   constexpr usize skipHeaderBytes = 0;
 
   std::vector<T> exemplaryData(dataArraySize);
@@ -100,7 +107,7 @@ void TestCase1_Execute(NumericType scalarType)
 
   // Create the filter, passing in the skipHeaderBytes
   RawBinaryReaderFilter filter;
-  Arguments args = CreateFilterArguments(scalarType, N, skipHeaderBytes);
+  Arguments args = CreateFilterArguments(scalarType, N, tupleCount, skipHeaderBytes);
 
   DataStructure ds;
 
@@ -158,7 +165,7 @@ void TestCase2_Execute()
 
   // Create the filter, passing in the skipHeaderBytes
   RawBinaryReaderFilter filter;
-  Arguments args = CreateFilterArguments(scalarType, N, skipHeaderBytes);
+  Arguments args = CreateFilterArguments(scalarType, N, dataArraySize, skipHeaderBytes);
 
   DataStructure ds;
 
@@ -194,7 +201,7 @@ void TestCase3_Execute()
 
   // Create the filter, passing in the skipHeaderBytes
   RawBinaryReaderFilter filter;
-  Arguments args = CreateFilterArguments(scalarType, N, skipHeaderBytes);
+  Arguments args = CreateFilterArguments(scalarType, N, dataArraySize, skipHeaderBytes);
 
   DataStructure ds;
 
@@ -212,8 +219,10 @@ void TestCase3_Execute()
 template <class T, usize N>
 void TestCase4_Execute(NumericType scalarType)
 {
-  constexpr usize dataArraySize = 10000000 * N;
-  constexpr usize skipHeaderBytes = 100 * N * sizeof(T);
+  constexpr usize tupleCount = 10000000;
+  constexpr usize dataArraySize = tupleCount * N;
+  constexpr usize skipHeaderTuples = 100;
+  constexpr usize skipHeaderBytes = skipHeaderTuples * N * sizeof(T);
 
   std::vector<T> exemplaryData(dataArraySize);
   std::iota(exemplaryData.begin(), exemplaryData.end(), static_cast<T>(0));
@@ -229,7 +238,7 @@ void TestCase4_Execute(NumericType scalarType)
 
   // Create the filter, passing in the skipHeaderBytes
   RawBinaryReaderFilter filter;
-  Arguments args = CreateFilterArguments(scalarType, N, skipHeaderBytes);
+  Arguments args = CreateFilterArguments(scalarType, N, tupleCount - skipHeaderTuples, skipHeaderBytes);
 
   DataStructure ds;
 
@@ -283,7 +292,7 @@ void TestCase5_Execute(NumericType scalarType)
 
   // Create the filter, passing in the skipHeaderBytes
   RawBinaryReaderFilter filter;
-  Arguments args = CreateFilterArguments(scalarType, N, skipHeaderBytes);
+  Arguments args = CreateFilterArguments(scalarType, N, dataArraySize, skipHeaderBytes);
 
   DataStructure ds;
 
