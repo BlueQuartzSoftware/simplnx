@@ -31,7 +31,7 @@ public:
   using ValueType = std::filesystem::path;
 
   FileSystemPathParameter() = delete;
-  FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const ExtensionsType extensionsType, PathType pathType);
+  FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const ExtensionsType& extensionsType, PathType pathType);
   ~FileSystemPathParameter() override = default;
 
   FileSystemPathParameter(const FileSystemPathParameter&) = delete;
