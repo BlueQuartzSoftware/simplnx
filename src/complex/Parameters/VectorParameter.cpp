@@ -28,7 +28,7 @@ VectorParameter<T>::VectorParameter(const std::string& name, const std::string& 
 
 template <class T>
 VectorParameter<T>::VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
-: VectorParameter(name, humanName, helpText, defaultValue, NamesType(m_DefaultValue.size()))
+: VectorParameter(name, humanName, helpText, defaultValue, NamesType(defaultValue.size()))
 {
 }
 
