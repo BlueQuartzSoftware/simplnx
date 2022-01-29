@@ -1,21 +1,105 @@
 #include "ITKImportImageStack.hpp"
 
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include "ITKImageProcessing/Filters/ITKImageReader.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
+#include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/GeneratedFileListParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
+#include <itkImageFileReader.h>
+#include <itkImageIOBase.h>
+
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
 using namespace complex;
+
+namespace
+{
+template <class T>
+Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& imageDataPath, const std::vector<std::string>& files,
+                        const IFilter::MessageHandler& messageHandler)
+{
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+
+  SizeVec3 dims = imageGeom.getDimensions();
+  usize tuplesPerSlice = dims[0] * dims[1];
+
+  auto& outputData = dataStructure.getDataRefAs<DataArray<T>>(imageDataPath);
+  auto& outputDataStore = outputData.getDataStoreRef();
+
+  imageGeom.getLinkedGeometryData().addCellData(imageDataPath);
+
+  // Variables for the progress Reporting
+  usize slice = 0;
+
+  // Loop over all the files importing them one by one and copying the data into the data array
+  for(const auto& filePath : files)
+  {
+    messageHandler(IFilter::Message::Type::Info, fmt::format("Importing: {}", filePath));
+
+    DataStructure importedDataStructure;
+
+    // Create a subfilter to read each image, although for preflight we are going to read the first image in the
+    // list and hope the rest are correct.
+    ITKImageReader imageReader;
+
+    Arguments args;
+    args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(imageGeomPath));
+    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(imageDataPath));
+    args.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(filePath));
+
+    auto executeResult = imageReader.execute(importedDataStructure, args);
+    if(executeResult.result.invalid())
+    {
+      return executeResult.result;
+    }
+
+    // Check the ImageGeometry of the imported Image matches the destination
+    const auto& importedImageGeom = importedDataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+    SizeVec3 importedDims = importedImageGeom.getDimensions();
+    if(dims[0] != importedDims[0] || dims[1] != importedDims[1])
+    {
+      return MakeErrorResult(-64510, fmt::format("Slice {} image dimensions are different than the first slice.\n  First Slice Dims are:  {} x {}\n  Current Slice Dims are:{} x {}\n"));
+    }
+
+    // Compute the Tuple Index we are at:
+    usize tupleIndex = (slice * dims[0] * dims[1]);
+    // get the current Slice data...
+    const auto& tempData = importedDataStructure.getDataRefAs<DataArray<T>>(imageDataPath);
+    const auto& tempDataStore = tempData.getDataStoreRef();
+
+    // Copy that into the output array...
+    if(!outputDataStore.copyFrom(tupleIndex, tempDataStore, 0, tuplesPerSlice))
+    {
+      return MakeErrorResult(-64511, fmt::format("Error copying source image data into destination array.    Slice:{}    TupleIndex:{}    MaxTupleIndex:{}", slice, tupleIndex, outputData.getSize()));
+    }
+
+    slice++;
+
+    // Check to see if the filter got canceled.
+    // if(filter->getCancel())
+    //{
+    //  return;
+    //}
+  }
+
+  return {};
+}
+} // namespace
 
 namespace complex
 {
 //------------------------------------------------------------------------------
 std::string ITKImportImageStack::name() const
 {
-  return FilterTraits<ITKImportImageStack>::name.str();
+  return FilterTraits<ITKImportImageStack>::name;
 }
 
 //------------------------------------------------------------------------------
@@ -39,21 +123,20 @@ std::string ITKImportImageStack::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKImportImageStack::defaultTags() const
 {
-  return {"#IO", "#Input", "#Read", "#Import"};
+  return {"IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------
 Parameters ITKImportImageStack::parameters() const
 {
   Parameters params;
-  // Create the parameter descriptors that are needed for this filter
+
   params.insert(std::make_unique<GeneratedFileListParameter>(k_InputFileListInfo_Key, "Input File List", "", GeneratedFileListParameter::ValueType{}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "", std::vector<float32>(3), std::vector<std::string>(3)));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerName_Key, "Data Container", "", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Data Container", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayName_Key, "Image Data", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayPath_Key, "Image Data", "", DataPath{}));
 
   return params;
 }
@@ -67,85 +150,125 @@ IFilter::UniquePointer ITKImportImageStack::clone() const
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKImportImageStack::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
-  /****************************************************************************
-   * Write any preflight sanity checking codes in this function
-   ***************************************************************************/
+  auto inputFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
+  auto origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
+  auto spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  auto imageDataPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
 
-  /**
-   * These are the values that were gathered from the UI or the pipeline file or
-   * otherwise passed into the filter. These are here for your convenience. If you
-   * do not need some of them remove them.
-   */
-  auto pInputFileListInfoValue = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
-  auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
-  auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-  auto pDataContainerNameValue = filterArgs.value<DataPath>(k_DataContainerName_Key);
-  auto pCellAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellAttributeMatrixName_Key);
-  auto pImageDataArrayNameValue = filterArgs.value<DataPath>(k_ImageDataArrayName_Key);
+  std::vector<std::string> files = inputFileListInfo.generate().first;
 
-  // Declare the preflightResult variable that will be populated with the results
-  // of the preflight. The PreflightResult type contains the output Actions and
-  // any preflight updated values that you want to be displayed to the user, typically
-  // through a user interface (UI).
-  PreflightResult preflightResult;
-
-  // If your filter is making structural changes to the DataStructure then the filter
-  // is going to create OutputActions subclasses that need to be returned. This will
-  // store those actions.
-  complex::Result<OutputActions> resultOutputActions;
-
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
-  std::vector<PreflightValue> preflightUpdatedValues;
-
-  // If the filter needs to pass back some updated values via a key:value string:string set of values
-  // you can declare and update that string here.
-  // None found in this filter based on the filter parameters
-
-  // If this filter makes changes to the DataStructure in the form of
-  // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
-  // will need to use one of the `*Actions` classes located in complex/Filter/Actions
-  // to relay that information to the preflight and execute methods. This is done by
-  // creating an instance of the Action class and then storing it in the resultOutputActions variable.
-  // This is done through a `push_back()` method combined with a `std::move()`. For the
-  // newly initiated to `std::move` once that code is executed what was once inside the Action class
-  // instance variable is *no longer there*. The memory has been moved. If you try to access that
-  // variable after this line you will probably get a crash or have subtle bugs. To ensure that this
-  // does not happen we suggest using braces `{}` to scope each of the action's declaration and store
-  // so that the programmer is not tempted to use the action instance past where it should be used.
-  // You have to create your own Actions class if there isn't something specific for your filter's needs
-  // These are some proposed Actions based on the FilterParameters used. Please check them for correctness.
+  if(files.empty())
   {
-    auto createDataGroupAction = std::make_unique<CreateDataGroupAction>(pDataContainerNameValue);
-    resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
+    return {MakeErrorResult<OutputActions>(-1, "GeneratedFileList must not be empty")};
   }
 
-  // Store the preflight updated value(s) into the preflightUpdatedValues vector using
-  // the appropriate methods.
-  // None found based on the filter parameters
+  // Create a subfilter to read each image, although for preflight we are going to read the first image in the
+  // list and hope the rest are correct.
+  Arguments imageReaderArgs;
+  imageReaderArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(imageGeomPath));
+  imageReaderArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(imageDataPath));
+  imageReaderArgs.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(files.at(0)));
 
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  ITKImageReader imageReader;
+  PreflightResult imageReaderResult = imageReader.preflight(dataStructure, imageReaderArgs, messageHandler);
+  if(imageReaderResult.outputActions.invalid())
+  {
+    return imageReaderResult;
+  }
+
+  // The first output actions should be the geometry creation
+  // A better solution might be to extract the preflight code into a common function for both filters
+  const IDataAction* action0 = imageReaderResult.outputActions.value().actions.at(0).get();
+  const auto* createImageGeomAction = dynamic_cast<const CreateImageGeometryAction*>(action0);
+  if(createImageGeomAction == nullptr)
+  {
+    throw std::runtime_error("ITKImportImageStack: Expected CreateImageGeometryAction at index 0");
+  }
+
+  // The second action should be the array creation
+  const IDataAction* action1 = imageReaderResult.outputActions.value().actions.at(1).get();
+  const auto* createArrayAction = dynamic_cast<const CreateArrayAction*>(action1);
+  if(createArrayAction == nullptr)
+  {
+    throw std::runtime_error("ITKImportImageStack: Expected CreateArrayAction at index 1");
+  }
+
+  // X Y Z
+  auto dims = createImageGeomAction->dims();
+  dims.back() = files.size();
+
+  // Z Y X
+  std::vector<usize> arrayDims(dims.crbegin(), dims.crend());
+
+  OutputActions outputActions;
+  outputActions.actions.push_back(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), std::move(origin), std::move(spacing)));
+  outputActions.actions.push_back(std::make_unique<CreateArrayAction>(createArrayAction->type(), arrayDims, createArrayAction->componentDims(), imageDataPath));
+
+  return {std::move(outputActions)};
 }
 
 //------------------------------------------------------------------------------
 Result<> ITKImportImageStack::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
-  /****************************************************************************
-   * Extract the actual input values from the 'filterArgs' object
-   ***************************************************************************/
-  auto pInputFileListInfoValue = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
-  auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
-  auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-  auto pDataContainerNameValue = filterArgs.value<DataPath>(k_DataContainerName_Key);
-  auto pCellAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellAttributeMatrixName_Key);
-  auto pImageDataArrayNameValue = filterArgs.value<DataPath>(k_ImageDataArrayName_Key);
+  auto inputFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
+  auto origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
+  auto spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  auto imageDataPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
 
-  /****************************************************************************
-   * Write your algorithm implementation in this function
-   ***************************************************************************/
+  std::vector<std::string> files = inputFileListInfo.generate().first;
+
+  const std::string& firstFile = files.at(0);
+
+  itk::ImageIOBase::Pointer imageIO = itk::ImageIOFactory::CreateImageIO(firstFile.c_str(), itk::ImageIOFactory::IOFileModeEnum::ReadMode);
+  imageIO->SetFileName(firstFile.c_str());
+  imageIO->ReadImageInformation();
+
+  itk::ImageIOBase::IOComponentEnum component = imageIO->GetComponentType();
+
+  std::optional<NumericType> numericType = ITK::ConvertIOComponentToNumericType(component);
+  if(!numericType.has_value())
+  {
+    return MakeErrorResult(-4, fmt::format("Unsupported pixel component: {}", imageIO->GetComponentTypeAsString(component)));
+  }
+
+  switch(*numericType)
+  {
+  case NumericType::uint8: {
+    return ReadImageStack<uint8>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+  }
+  case NumericType::int8: {
+    return ReadImageStack<int8>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+  }
+  case NumericType::uint16: {
+    return ReadImageStack<uint16>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+  }
+  case NumericType::int16: {
+    return ReadImageStack<int16>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+  }
+  case NumericType::uint32: {
+    return ReadImageStack<uint32>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+  }
+  case NumericType::int32: {
+    return ReadImageStack<int32>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+  }
+  case NumericType::uint64: {
+    return ReadImageStack<uint64>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+  }
+  case NumericType::int64: {
+    return ReadImageStack<int64>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+  }
+  case NumericType::float32: {
+    return ReadImageStack<float32>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+  }
+  case NumericType::float64: {
+    return ReadImageStack<float64>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+  }
+  default: {
+    throw std::runtime_error("Unsupported array type");
+  }
+  }
 
   return {};
 }

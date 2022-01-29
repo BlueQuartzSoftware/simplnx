@@ -9,6 +9,7 @@ set(PLUGIN_NAME "ITKImageProcessing")
 set(FilterList
   ITKImageReader
   ITKImageWriter
+  ITKImportImageStack
 
   # ITKAbsImage
   # ITKAcosImage
@@ -124,7 +125,6 @@ set(Filters_Disabled
   ImportZenInfoMontage
   ApplyDewarpParameters # MISSING 1 or more Parameter Implementations
   CalcDewarpParameters # MISSING 1 or more Parameter Implementations
-  ITKImportImageStack
   ImportVectorImageStack # MISSING 1 or more Parameter Implementations
   ITKRefineTileCoordinates # MISSING 1 or more Parameter Implementations
   ITKImportFijiMontage

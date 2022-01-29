@@ -1,67 +1,164 @@
-/**
- * This file is auto generated from the original ITKImageProcessing/ITKImportImageStack
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
- *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
- *
- * 4: Add additional unit tests to actually test each code path within the filter
- *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
- *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
- *
- * When you start working on this unit test remove "[ITKImportImageStack][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
- */
-
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/GeneratedFileListParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
-
 #include "ITKImageProcessing/Filters/ITKImportImageStack.hpp"
+
+#include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/Parameters/GeneratedFileListParameter.hpp"
+
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
+
+#include "ITKTestBase.hpp"
+
+#include "complex/UnitTest/UnitTestCommon.hpp"
+
+#include <filesystem>
+
+#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 using namespace complex;
 
-TEST_CASE("ITKImageProcessing::ITKImportImageStack: Instantiation and Parameter Check", "[ITKImageProcessing][ITKImportImageStack][.][UNIMPLEMENTED][!mayfail]")
+namespace fs = std::filesystem;
+
+namespace
 {
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+const std::string k_ImageStackDir = unit_test::k_DataDir.str() + "/ImageStack";
+const DataPath k_ImageGeomPath = {{"ImageGeometry"}};
+const DataPath k_ImageDataPath = k_ImageGeomPath.createChildPath("ImageData");
+} // namespace
+
+TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoInput", "[ITKImageProcessing][ITKImportImageStack]")
+{
   ITKImportImageStack filter;
   DataStructure ds;
   Arguments args;
 
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(GeneratedFileListParameter::ValueType{}));
-  args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insertOrAssign(ITKImportImageStack::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ITKImportImageStack::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ITKImportImageStack::k_ImageDataArrayName_Key, std::make_any<DataPath>(DataPath{}));
-
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.valid());
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 }
 
-// TEST_CASE("ITKImageProcessing::ITKImportImageStack: Valid filter execution")
-//{
-//
-//}
+TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoImageGeometry", "[ITKImageProcessing][ITKImportImageStack]")
+{
+  ITKImportImageStack filter;
+  DataStructure ds;
+  Arguments args;
 
-// TEST_CASE("ITKImageProcessing::ITKImportImageStack: InValid filter execution")
-//{
-//
-//}
+  GeneratedFileListParameter::ValueType fileListInfo;
+
+  fileListInfo.inputPath = k_ImageStackDir;
+
+  args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
+
+  auto preflightResult = filter.preflight(ds, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+}
+
+TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoFiles", "[ITKImageProcessing][ITKImportImageStack]")
+{
+  ITKImportImageStack filter;
+  DataStructure ds;
+  Arguments args;
+
+  GeneratedFileListParameter::ValueType fileListInfo;
+  fileListInfo.inputPath = "doesNotExist.ghost";
+  fileListInfo.startIndex = 75;
+  fileListInfo.endIndex = 77;
+  fileListInfo.fileExtension = "dcm";
+  fileListInfo.filePrefix = "Image";
+  fileListInfo.fileSuffix = "";
+  fileListInfo.paddingDigits = 4;
+
+  args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
+  args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(3));
+  args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(3));
+  args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(ITKImportImageStack::k_ImageDataArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
+
+  auto preflightResult = filter.preflight(ds, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+}
+
+TEST_CASE("ITKImageProcessing::ITKImportImageStack: FileDoesNotExist", "[ITKImageProcessing][ITKImportImageStack]")
+{
+  ITKImportImageStack filter;
+  DataStructure ds;
+  Arguments args;
+
+  GeneratedFileListParameter::ValueType fileListInfo;
+  fileListInfo.inputPath = k_ImageStackDir;
+  fileListInfo.startIndex = 75;
+  fileListInfo.endIndex = 79;
+  fileListInfo.fileExtension = "dcm";
+  fileListInfo.filePrefix = "Image";
+  fileListInfo.fileSuffix = "";
+  fileListInfo.paddingDigits = 4;
+
+  args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
+  args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(3));
+  args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(3));
+  args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(ITKImportImageStack::k_ImageDataArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
+
+  auto preflightResult = filter.preflight(ds, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+}
+
+TEST_CASE("ITKImageProcessing::ITKImportImageStack: CompareImage", "[ITKImageProcessing][ITKImportImageStack]")
+{
+  ITKImportImageStack filter;
+  DataStructure ds;
+  Arguments args;
+
+  GeneratedFileListParameter::ValueType fileListInfo;
+  fileListInfo.inputPath = k_ImageStackDir;
+  fileListInfo.startIndex = 11;
+  fileListInfo.endIndex = 13;
+  fileListInfo.incrementIndex = 1;
+  fileListInfo.fileExtension = ".tif";
+  fileListInfo.filePrefix = "slice_";
+  fileListInfo.fileSuffix = "";
+  fileListInfo.paddingDigits = 2;
+  fileListInfo.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+
+  std::vector<float32> origin = {1.0f, 4.0f, 8.0f};
+  std::vector<float32> spacing = {0.3f, 0.2f, 0.9f};
+
+  args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
+  args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(origin));
+  args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(spacing));
+  args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(ITKImportImageStack::k_ImageDataArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
+
+  auto preflightResult = filter.preflight(ds, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto executeResult = filter.execute(ds, args);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const auto* imageGeom = ds.getDataAs<ImageGeom>(k_ImageGeomPath);
+  REQUIRE(imageGeom != nullptr);
+
+  SizeVec3 imageDims = imageGeom->getDimensions();
+  FloatVec3 imageOrigin = imageGeom->getOrigin();
+  FloatVec3 imageSpacing = imageGeom->getSpacing();
+
+  std::array<usize, 3> dims = {524, 390, 3};
+
+  REQUIRE(imageDims[0] == dims[0]);
+  REQUIRE(imageDims[1] == dims[1]);
+  REQUIRE(imageDims[2] == dims[2]);
+
+  REQUIRE(imageOrigin[0] == Approx(origin[0]));
+  REQUIRE(imageOrigin[1] == Approx(origin[1]));
+  REQUIRE(imageOrigin[2] == Approx(origin[2]));
+
+  REQUIRE(imageSpacing[0] == Approx(spacing[0]));
+  REQUIRE(imageSpacing[1] == Approx(spacing[1]));
+  REQUIRE(imageSpacing[2] == Approx(spacing[2]));
+
+  const auto* imageData = ds.getDataAs<UInt8Array>(k_ImageDataPath);
+  REQUIRE(imageData != nullptr);
+
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, k_ImageDataPath);
+  REQUIRE(md5Hash == "2620b39f0dcaa866602c2591353116a4");
+}
