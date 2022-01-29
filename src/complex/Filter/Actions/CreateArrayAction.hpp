@@ -8,7 +8,7 @@ namespace complex
 /**
  * @brief Action for creating DataArrays in a DataStructure
  */
-class COMPLEX_EXPORT CreateArrayAction : public IDataAction
+class COMPLEX_EXPORT CreateArrayAction : public IDataCreationAction
 {
 public:
   CreateArrayAction() = delete;
@@ -58,6 +58,5 @@ private:
   NumericType m_Type;
   std::vector<usize> m_Dims;
   std::vector<usize> m_CDims;
-  DataPath m_Path;
 };
 } // namespace complex

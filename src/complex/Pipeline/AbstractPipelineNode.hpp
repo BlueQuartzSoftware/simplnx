@@ -30,6 +30,9 @@ public:
   // they contain.
   friend class Pipeline;
 
+  using RenamedPath = std::pair<DataPath, DataPath>;
+  using RenamedPaths = std::vector<RenamedPath>;
+
   using SignalType = nod::signal<void(AbstractPipelineNode*, const std::shared_ptr<AbstractPipelineMessage>&)>;
 
   using PipelineRunStateSignalType = nod::signal<void(AbstractPipelineNode*, RunState)>;
@@ -121,6 +124,16 @@ public:
    * @return bool
    */
   virtual bool preflight(DataStructure& data, const std::atomic_bool& shouldCancel) = 0;
+
+  /**
+   * @brief Attempts to preflight the node using the provided DataStructure.
+   * Returns true if preflighting succeeded. Otherwise, this returns false.
+   * @param data
+   * @param RenamedPaths& renamedPaths = {} Collection of renamed output paths.
+   * Only used for PipelineFilters.
+   * @return bool
+   */
+  virtual bool preflight(DataStructure& data, RenamedPaths& renamedPaths) = 0;
 
   /**
    * @brief Attempts to execute the node using the provided DataStructure.

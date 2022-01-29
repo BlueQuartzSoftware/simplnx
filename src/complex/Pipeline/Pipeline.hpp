@@ -122,9 +122,10 @@ public:
    * Returns true if the pipeline segment completes without errors. Returns
    * false otherwise.
    * @param ds
+   * @param renamedPaths
    * @return bool
    */
-  bool preflight(DataStructure& ds, const std::atomic_bool& shouldCancel) override;
+  bool preflight(DataStructure& ds, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel) override;
 
   /**
    * @brief Executes the pipeline segment using the provided DataStructure.
@@ -149,14 +150,39 @@ public:
 
   /**
    * @brief Preflights the pipeline segment from a target position using the
+   * provided DataStructure.
+   *
+   * Returns true if the pipeline segment completes without errors. Returns
+   * false otherwise. Returns false if the starting index is out of bounds.
+   * @param index
+   * @param ds
+   * @param renamedPaths
+   * @return bool
+   */
+  bool preflightFrom(index_type index, DataStructure& ds, RenamedPaths& renamedPaths);
+
+  /**
+   * @brief Preflights the pipeline segment from a target position using the
    * DataStructure at the previous index. Uses an empty DataStructure if index is 0.
    *
    * Returns true if the pipeline segment completes without errors. Returns
    * false otherwise. Returns false if the starting index is out of bounds.
    * @param index
-   * @return
+   * @return bool
    */
   bool preflightFrom(index_type index, const std::atomic_bool& shouldCancel = false);
+
+  /**
+   * @brief Preflights the pipeline segment from a target position using the
+   * DataStructure at the previous index. Uses an empty DataStructure if index is 0.
+   *
+   * Returns true if the pipeline segment completes without errors. Returns
+   * false otherwise. Returns false if the starting index is out of bounds.
+   * @param index
+   * @param renamedPaths
+   * @return bool
+   */
+  bool preflightFrom(index_type index, RenamedPaths& renamedPaths);
 
   /**
    * @brief Checks if the pipeline can be preflighted at the target index.

@@ -44,6 +44,41 @@ protected:
 };
 
 /**
+ * @brief The IDataCreationAction class is a subclass of IDataAction used for
+ * inserting a DataObject to a target DataStructure.
+ */
+class IDataCreationAction : public IDataAction
+{
+public:
+  /**
+   * @brief Constructs an IDataCreationAction that takes a DataPath specifying the path to be created.
+   * @param createdPath
+   */
+  IDataCreationAction(const DataPath& createdPath)
+  : m_CreatedPath(createdPath)
+  {
+  }
+  virtual ~IDataCreationAction() = default;
+
+  IDataCreationAction(const IDataCreationAction&) = delete;
+  IDataCreationAction(IDataCreationAction&&) noexcept = delete;
+  IDataCreationAction& operator=(const IDataCreationAction&) = delete;
+  IDataCreationAction& operator=(IDataCreationAction&&) noexcept = delete;
+
+  /**
+   * @brief Returns the DataPath to be created.
+   * @return DataPath
+   */
+  DataPath getCreatedPath() const
+  {
+    return m_CreatedPath;
+  }
+
+private:
+  DataPath m_CreatedPath;
+};
+
+/**
  * @brief Container for IDataActions
  */
 struct OutputActions

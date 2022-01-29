@@ -7,7 +7,7 @@ namespace complex
 /**
  * @brief Action for importing DataObjects into a DataStructure.
  */
-class COMPLEX_EXPORT ImportObjectAction : public IDataAction
+class COMPLEX_EXPORT ImportObjectAction : public IDataCreationAction
 {
 public:
   ImportObjectAction() = delete;
@@ -44,6 +44,5 @@ public:
 
 private:
   std::shared_ptr<DataObject> m_ImportData;
-  DataPath m_Path;
 };
 } // namespace complex
