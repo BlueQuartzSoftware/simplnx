@@ -27,9 +27,8 @@ public:
   static inline constexpr StringLiteral k_InputFileListInfo_Key = "InputFileListInfo";
   static inline constexpr StringLiteral k_Origin_Key = "Origin";
   static inline constexpr StringLiteral k_Spacing_Key = "Spacing";
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_ImageDataArrayName_Key = "ImageDataArrayName";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "ImageGeometryPath";
+  static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "ImageDataArrayPath";
 
   /**
    * @brief Returns the name of the filter.

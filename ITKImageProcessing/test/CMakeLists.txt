@@ -105,6 +105,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   # ITKDiscreteGaussianImageTest.cpp
 
   ITKMaskImageTest.cpp
+
+  ITKImportImageStackTest.cpp
 )
 
 set(${PLUGIN_NAME}UnitTest_SRCS_Disabled
@@ -118,7 +120,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS_Disabled
   ImportZenInfoMontageTest.cpp
   ApplyDewarpParametersTest.cpp # MISSING 1 or more Parameter Implementations
   CalcDewarpParametersTest.cpp # MISSING 1 or more Parameter Implementations
-  ITKImportImageStackTest.cpp
   ImportVectorImageStackTest.cpp # MISSING 1 or more Parameter Implementations
   ITKRefineTileCoordinatesTest.cpp # MISSING 1 or more Parameter Implementations
   ITKImportFijiMontageTest.cpp
