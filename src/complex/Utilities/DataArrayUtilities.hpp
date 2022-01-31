@@ -152,15 +152,16 @@ COMPLEX_EXPORT Result<> CheckValueConvertsToArrayType(const std::string& value, 
  * @param condDataPtr The mask array as a boolean array
  * @param replaceValue The value that will be used for every place the conditional array is TRUE
  */
-template <class T>
-void ReplaceValue(DataArray<T>& inputArrayPtr, const BoolArray& condDataPtr, T replaceValue)
+template <class T, typename ConditionalType>
+void ReplaceValue(DataArray<T>& inputArrayPtr, const DataArray<ConditionalType>* condArrayPtr, T replaceValue)
 {
   T replaceVal = static_cast<T>(replaceValue);
   usize numTuples = inputArrayPtr.getNumberOfTuples();
 
+  const DataArray<ConditionalType>& conditionalArray = *condArrayPtr;
   for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
   {
-    if(condDataPtr[tupleIndex])
+    if(conditionalArray[tupleIndex])
     {
       inputArrayPtr.initializeTuple(tupleIndex, replaceValue);
     }
@@ -177,7 +178,7 @@ void ReplaceValue(DataArray<T>& inputArrayPtr, const BoolArray& condDataPtr, T r
  * return FALSE if the wrong array type is specified as the template parameter
  */
 template <class T>
-bool ConditionalReplaceValueInArrayFromString(const std::string& valueAsStr, DataObject& inputDataObject, const BoolArray& conditionalDataArray)
+bool ConditionalReplaceValueInArrayFromString(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray)
 {
   using DataArrayType = DataArray<T>;
   if(!TemplateHelpers::CanDynamicCast<DataArrayType>()(&inputDataObject))
@@ -190,7 +191,24 @@ bool ConditionalReplaceValueInArrayFromString(const std::string& valueAsStr, Dat
   {
     return false;
   }
-  ReplaceValue<T>(inputDataArray, conditionalDataArray, conversionResult.value());
+
+  if(TemplateHelpers::CanDynamicCast<UInt8Array>()(&conditionalDataArray))
+  {
+    ReplaceValue<T, uint8_t>(inputDataArray, dynamic_cast<const UInt8Array*>(&conditionalDataArray), conversionResult.value());
+  }
+  else if(TemplateHelpers::CanDynamicCast<Int8Array>()(&conditionalDataArray))
+  {
+    ReplaceValue<T, int8_t>(inputDataArray, dynamic_cast<const Int8Array*>(&conditionalDataArray), conversionResult.value());
+  }
+  else if(TemplateHelpers::CanDynamicCast<BoolArray>()(&conditionalDataArray))
+  {
+    ReplaceValue<T, bool>(inputDataArray, dynamic_cast<const BoolArray*>(&conditionalDataArray), conversionResult.value());
+  }
+  else
+  {
+    return false;
+  }
+
   return true;
 }
 
@@ -201,7 +219,7 @@ bool ConditionalReplaceValueInArrayFromString(const std::string& valueAsStr, Dat
  * @param conditionalDataArray The mask array as a boolean array
  * @return
  */
-COMPLEX_EXPORT Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const BoolArray& conditionalDataArray);
+COMPLEX_EXPORT Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray);
 
 /**
  * @brief Creates a DataStore with the given properties

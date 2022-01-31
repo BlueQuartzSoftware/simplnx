@@ -45,7 +45,7 @@ public:
    *
    * @param ds The parent DataStructure that will own the DataArray
    * @param name The name of the DataArray
-   * @param store The IDataStore instance to use. The DataArray instance WILL TAKE OWNERSHIP of that pointer.
+   * @param store The IDataStore instance to use. The CreateWithStore instance WILL TAKE OWNERSHIP of that pointer.
    * @param parentId = {}
    * @return DataArray<T>* Instance of the DataArray object that is owned and managed by the DataStructure
    */
@@ -250,6 +250,10 @@ public:
    */
   void copyTuple(usize from, usize to) override
   {
+    if(from == to)
+    {
+      return;
+    }
     const auto numComponents = getNumberOfComponents();
     for(usize i = 0; i < numComponents; i++)
     {
@@ -494,6 +498,61 @@ public:
   {
     m_DataStore = std::move(rhs.m_DataStore);
     return *this;
+  }
+
+  /**
+   * @brief getTypeName
+   * @return
+   */
+  std::string getTypeName() const override
+  {
+    std::string typeName = "UNKNOWN";
+
+    if constexpr(std::is_same_v<T, int8_t>)
+    {
+      typeName = "DataArray<int8_t>";
+    }
+    else if constexpr(std::is_same_v<T, uint8_t>)
+    {
+      typeName = "DataArray<uint8_t>";
+    }
+    else if constexpr(std::is_same_v<T, int16_t>)
+    {
+      typeName = "DataArray<int16_t>";
+    }
+    else if constexpr(std::is_same_v<T, uint16_t>)
+    {
+      typeName = "DataArray<uint16_t>";
+    }
+    else if constexpr(std::is_same_v<T, int32_t>)
+    {
+      typeName = "DataArray<int32_t>";
+    }
+    else if constexpr(std::is_same_v<T, uint32_t>)
+    {
+      typeName = "DataArray<uint32_t>";
+    }
+    else if constexpr(std::is_same_v<T, int64_t>)
+    {
+      typeName = "DataArray<int64_t>";
+    }
+    else if constexpr(std::is_same_v<T, uint64_t>)
+    {
+      typeName = "DataArray<uint64_t>";
+    }
+    else if constexpr(std::is_same_v<T, float>)
+    {
+      typeName = "DataArray<float>";
+    }
+    else if constexpr(std::is_same_v<T, double>)
+    {
+      typeName = "DataArray<double>";
+    }
+    else if constexpr(std::is_same_v<T, bool>)
+    {
+      typeName = "DataArray<bool>";
+    }
+    return typeName;
   }
 
 protected:

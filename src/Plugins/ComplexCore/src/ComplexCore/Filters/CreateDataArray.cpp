@@ -3,6 +3,7 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
@@ -15,6 +16,8 @@ using namespace complex;
 namespace
 {
 constexpr int32 k_EmptyParameterError = -123;
+constexpr int32 k_RbrTupleDimsError = -196;
+constexpr int32 k_RbrTupleDimsInconsistent = -197;
 
 template <class T>
 void CreateAndInitArray(DataStructure& data, const DataPath& path, const std::string& initValue)
@@ -54,7 +57,11 @@ Parameters CreateDataArray::parameters() const
   Parameters params;
   params.insert(std::make_unique<NumericTypeParameter>(k_NumericType_Key, "Numeric Type", "Numeric Type of data to create", NumericType::int32));
   params.insert(std::make_unique<UInt64Parameter>(k_NumComps_Key, "Number of Components", "Number of components", 1));
-  params.insert(std::make_unique<UInt64Parameter>(k_NumTuples_Key, "Number of Tuples", "Number of tuples", 0));
+  DynamicTableParameter::ValueType dynamicTable{{{1}, {1}}, {"Dim"}, {""}};
+  dynamicTable.setMinCols(1);
+  dynamicTable.setDynamicCols(true);
+  dynamicTable.setDynamicRows(false);
+  params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Data Array Dimensions", "Slowest to Fastest Dimensions", dynamicTable));
   params.insert(std::make_unique<ArrayCreationParameter>(k_DataPath_Key, "Created Array", "Array storing the data", DataPath{}));
   params.insert(std::make_unique<StringParameter>(k_InitilizationValue_Key, "Initialization Value", "This value will be used to fill the new array", "0"));
   return params;
@@ -68,10 +75,11 @@ IFilter::UniquePointer CreateDataArray::clone() const
 IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
 {
   auto numericType = filterArgs.value<NumericType>(k_NumericType_Key);
-  auto components = filterArgs.value<uint64>(k_NumComps_Key);
-  auto numTuples = filterArgs.value<uint64>(k_NumTuples_Key);
+  auto numComponents = filterArgs.value<uint64>(k_NumComps_Key);
+  // auto numTuples = filterArgs.value<uint64>(k_NumTuples_Key);
   auto dataArrayPath = filterArgs.value<DataPath>(k_DataPath_Key);
   auto initValue = filterArgs.value<std::string>(k_InitilizationValue_Key);
+  auto pTupleDimsValue = filterArgs.value<DynamicTableData>(k_TupleDims_Key);
 
   if(initValue.empty())
   {
@@ -84,8 +92,22 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
     return {ConvertResultTo<OutputActions>(std::move(result), {})};
   }
 
+  // Sanity check the values from the Dynamic Table Data
+  DynamicTableData::TableDataType tableData = pTupleDimsValue.getTableData();
+  if(tableData.size() != 1)
+  {
+    return {MakeErrorResult<OutputActions>(k_RbrTupleDimsError, fmt::format("Tuple Dimensions should be a single row of data. {} Rows were passed.", tableData.size()))};
+  }
+  std::vector<DynamicTableData::DataType> rowData = tableData[0];
+  std::vector<size_t> tupleDims;
+  tupleDims.reserve(rowData.size()); // Reserve (NOT RESIZE) the proper number of values in the vector
+  for(const auto& floatValue : rowData)
+  {
+    tupleDims.emplace_back(static_cast<size_t>(floatValue));
+  }
+
   OutputActions actions;
-  auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{numTuples}, std::vector<usize>{components}, dataArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(numericType, tupleDims, std::vector<usize>{numComponents}, dataArrayPath);
   actions.actions.push_back(std::move(action));
 
   return {std::move(actions)};

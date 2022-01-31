@@ -187,25 +187,6 @@ public:
     return IDataStore::StoreType::InMemory;
   }
 
-  //  /**
-  //   * @brief Resizes the DataStore to handle the specified number of tuples.
-  //   * @param numTuples
-  //   */
-  //  void resizeTuples(size_t numTuples) override
-  //  {
-  //    auto oldSize = this->getSize();
-  //    m_TupleShape = numTuples;
-  //    auto newSize = this->getSize();
-  //
-  //    auto data = new value_type[newSize];
-  //    for(size_t i = 0; i < newSize && i < oldSize; i++)
-  //    {
-  //      data[i] = m_Data[i];
-  //    }
-  //
-  //    m_Data.reset(data);
-  //  }
-
   /**
    * @brief
    * @param tupleShape

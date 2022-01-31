@@ -12,17 +12,20 @@ namespace complex
 {
 namespace
 {
-constexpr uint64 k_MissingInputArray = -567;
+constexpr int32 k_MissingInputArray = -567;
+constexpr int32 k_InputArrayTypeError = -90000;
+constexpr int32 k_ComponentCountMismatchError = -90003;
+constexpr int32 k_TupleCountMismatchError = -90004;
 
 IFilter::PreflightResult validateArrayTypes(const DataStructure& data, const std::vector<DataPath>& dataPaths)
 {
   DataType dataType = DataType::error;
   for(const auto& dataPath : dataPaths)
   {
-    if(data.getDataAs<BoolArray>(dataPath))
+    if(data.getDataAs<BoolArray>(dataPath) != nullptr)
     {
       std::string ss = fmt::format("Selected Attribute Arrays cannot be of type bool");
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-90000, ss}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{k_InputArrayTypeError, ss}})};
     }
     if(auto dataArray = data.getDataAs<IDataArray>(dataPath))
     {
@@ -214,27 +217,22 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
 
   std::vector<DataPath> dataArrayPaths;
 
-  auto firstInputArray = data.getDataAs<IDataArray>(firstInputArrayPath);
+  auto* firstInputArray = data.getDataAs<IDataArray>(firstInputArrayPath);
   if(firstInputArray == nullptr)
   {
     std::string ss = fmt::format("Could not find input array at path {}", firstInputArrayPath.toString());
     return {nonstd::make_unexpected(std::vector<Error>{Error{-k_MissingInputArray, ss}})};
   }
-  else
-  {
-    dataArrayPaths.push_back(firstInputArrayPath);
-  }
 
-  auto secondInputArray = data.getDataAs<IDataArray>(secondInputArrayPath);
+  dataArrayPaths.push_back(firstInputArrayPath);
+
+  auto* secondInputArray = data.getDataAs<IDataArray>(secondInputArrayPath);
   if(secondInputArray == nullptr)
   {
     std::string ss = fmt::format("Could not find input array at path {}", secondInputArrayPath.toString());
     return {nonstd::make_unexpected(std::vector<Error>{Error{-k_MissingInputArray, ss}})};
   }
-  else
-  {
-    dataArrayPaths.push_back(secondInputArrayPath);
-  }
+  dataArrayPaths.push_back(secondInputArrayPath);
 
   if(!dataArrayPaths.empty())
   {
@@ -258,21 +256,19 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
   if(firstInputArray->getNumberOfComponents() != secondInputArray->getNumberOfComponents())
   {
     std::string ss = fmt::format("Selected Attribute Arrays must have the same component dimensions");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-90003, ss}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{complex::k_ComponentCountMismatchError, ss}})};
   }
 
   if(!data.validateNumberOfTuples(dataArrayPaths))
   {
     std::string ss = fmt::format("Tuple count not consistent between input arrays.");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-90004, ss}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{complex::k_TupleCountMismatchError, ss}})};
   }
 
   // At this point we have two valid arrays of the same type and component dimensions, so we
   // are safe to make the output array with the correct type and component dimensions
-  auto cDims = firstInputArray->getNumberOfComponents();
-  auto tDims = firstInputArray->getNumberOfTuples();
   auto numericType = getNumericType(firstInputArray);
-  auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{tDims}, std::vector<usize>{cDims}, differenceMapArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(numericType, firstInputArray->getIDataStore()->getTupleShape(), firstInputArray->getIDataStore()->getComponentShape(), differenceMapArrayPath);
 
   //
   OutputActions actions;

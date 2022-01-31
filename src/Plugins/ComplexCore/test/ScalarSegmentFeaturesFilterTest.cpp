@@ -10,7 +10,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/ScalarSegmentFeatures.hpp"
+#include "ComplexCore/Filters/ScalarSegmentFeaturesFilter.hpp"
 
 using namespace complex;
 using namespace complex::UnitTest;
@@ -81,7 +81,7 @@ TEST_CASE("Reconstruction::ScalarSegmentFeatures", "[Reconstruction][ScalarSegme
 
   {
     Arguments args;
-    ScalarSegmentFeatures filter;
+    ScalarSegmentFeaturesFilter filter;
 
     DataPath smallIn100Group({k_SmallIN100});
     DataPath ebsdScanDataPath = smallIn100Group.createChildPath(k_EbsdScanData);
@@ -95,18 +95,18 @@ TEST_CASE("Reconstruction::ScalarSegmentFeatures", "[Reconstruction][ScalarSegme
     int scalarTolerance = 0;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(SegmentFeatures::k_GridGeomPath_Key, std::make_any<DataPath>(gridGeomDataPath));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_GridGeomPath_Key, std::make_any<DataPath>(gridGeomDataPath));
     // Turn off the use of a Mask Array
-    args.insertOrAssign(ScalarSegmentFeatures::k_UseGoodVoxelsKey, std::make_any<bool>(false));
-    args.insertOrAssign(ScalarSegmentFeatures::k_GoodVoxelsPathKey, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_UseGoodVoxelsKey, std::make_any<bool>(false));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_GoodVoxelsPathKey, std::make_any<DataPath>(DataPath{}));
     // Set the input array and the tolerance
-    args.insertOrAssign(ScalarSegmentFeatures::k_InputArrayPathKey, std::make_any<DataPath>(inputDataArrayPath));
-    args.insertOrAssign(ScalarSegmentFeatures::k_ScalarToleranceKey, std::make_any<int>(scalarTolerance));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_InputArrayPathKey, std::make_any<DataPath>(inputDataArrayPath));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ScalarToleranceKey, std::make_any<int>(scalarTolerance));
     // Set the paths to the created arrays
-    args.insertOrAssign(ScalarSegmentFeatures::k_FeatureIdsPathKey, std::make_any<DataPath>(outputFeatureIds));
-    args.insertOrAssign(ScalarSegmentFeatures::k_ActiveArrayPathKey, std::make_any<DataPath>(activeArrayDataPath));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_FeatureIdsPathKey, std::make_any<DataPath>(outputFeatureIds));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayPathKey, std::make_any<DataPath>(activeArrayDataPath));
     // Are we going to randomize the featureIds when completed.
-    args.insertOrAssign(ScalarSegmentFeatures::k_RandomizeFeaturesKey, std::make_any<bool>(false));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeaturesKey, std::make_any<bool>(false));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);

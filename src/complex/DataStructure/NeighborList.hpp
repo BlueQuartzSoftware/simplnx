@@ -25,6 +25,8 @@ public:
   using VectorType = std::vector<T>;
   using SharedVectorType = std::shared_ptr<VectorType>;
 
+  NeighborList() = default;
+
   /**
    * @brief
    * @param ds
@@ -69,8 +71,16 @@ public:
    */
   std::string getTypeName() const override;
 
+  /**
+   * @brief setNumNeighborsArrayName
+   * @param name
+   */
   void setNumNeighborsArrayName(const std::string& name);
 
+  /**
+   * @brief getNumNeighborsArrayName
+   * @return
+   */
   std::string getNumNeighborsArrayName();
 
   /**

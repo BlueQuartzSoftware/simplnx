@@ -88,7 +88,7 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingFeatureIds, "Could not find Feature IDs array."}})};
   }
 
-  std::vector<usize> tupleDimensions = {featureIdsArray->getNumberOfTuples()};
+  std::vector<usize> tupleDimensions = {1ULL};
   uint64 numberOfComponents = 1;
 
   auto createVolumesAction = std::make_unique<CreateArrayAction>(NumericType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, volumesPath);
@@ -117,13 +117,23 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
   auto equivalentDiametersPath = args.value<DataPath>(k_EquivalentDiametersPath_Key);
   auto numElementsPath = args.value<DataPath>(k_NumElementsPath_Key);
 
-  auto featureIdsArray = data.getDataAs<Int32Array>(featureIdsPath);
-  auto volumesArray = data.getDataAs<Float32Array>(volumesPath);
-  auto equivalentDiametersArray = data.getDataAs<Float32Array>(equivalentDiametersPath);
-  auto numElementsArray = data.getDataAs<Int32Array>(numElementsPath);
+  Int32Array* featureIdsArray = data.getDataAs<Int32Array>(featureIdsPath);
+  Float32Array* volumesArray = data.getDataAs<Float32Array>(volumesPath);
+  Float32Array* equivalentDiametersArray = data.getDataAs<Float32Array>(equivalentDiametersPath);
+  Int32Array* numElementsArray = data.getDataAs<Int32Array>(numElementsPath);
 
   usize totalPoints = featureIdsArray->getNumberOfTuples();
-  usize numfeatures = volumesArray->getNumberOfTuples();
+  std::set<int32_t> uniqueFeatureIds;
+  for(size_t i = 0; i < totalPoints; i++)
+  {
+    uniqueFeatureIds.insert((*featureIdsArray)[i]);
+  }
+
+  usize numfeatures = uniqueFeatureIds.size();
+
+  volumesArray->getDataStore()->reshapeTuples({numfeatures});
+  equivalentDiametersArray->getDataStore()->reshapeTuples({numfeatures});
+  numElementsArray->getDataStore()->reshapeTuples({numfeatures});
 
   auto featureIds = featureIdsArray->getDataStore();
   auto volumes = volumesArray->getDataStore();

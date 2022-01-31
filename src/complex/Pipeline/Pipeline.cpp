@@ -230,24 +230,30 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds)
   setHasWarnings(hasWarningsBeforeIndex(index));
   setHasErrors(false);
   setIsExecuting();
-
+  size_t currentIndex = 0;
   for(auto iter = begin() + index; iter != end(); iter++)
   {
+    std::cout << "[" << currentIndex << "] " << iter->get()->getName() << " Starting Filter Execution" << std::endl;
     startObservingNode(iter->get());
     bool success = iter->get()->execute(ds);
     stopObservingNode();
 
     if(iter->get()->hasWarnings())
     {
+      std::cout << "[" << currentIndex << "]    Execute Had Warnings..." << std::endl;
       setHasWarnings(true);
     }
 
     if(!success)
     {
+      std::cout << "[" << currentIndex << "]    Execute Had Errors..." << std::endl;
+
       setHasErrors();
       endExecution(ds);
       return false;
     }
+    std::cout << "[" << currentIndex << "] Ended Filter Execution" << std::endl;
+    currentIndex++;
   }
   endExecution(ds);
   return true;

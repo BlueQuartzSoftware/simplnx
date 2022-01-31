@@ -27,7 +27,7 @@ public:
    * @brief Returns typename of the DataObject as a std::string.
    * @return std::string
    */
-  std::string getTypeName() const override
+  virtual std::string getTypeName() const override
   {
     return "DataArray";
   }
