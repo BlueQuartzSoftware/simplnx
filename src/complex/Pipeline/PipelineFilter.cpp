@@ -96,10 +96,10 @@ bool PipelineFilter::preflight(DataStructure& data)
   for(const auto& action : result.outputActions.value().actions)
   {
     Result<> actionResult = action->apply(data, IDataAction::Mode::Preflight);
+    setHasWarnings(!actionResult.warnings().empty());
     for(auto&& warning : actionResult.warnings())
     {
       m_Warnings.push_back(std::move(warning));
-      setHasWarnings(true);
     }
     if(actionResult.invalid())
     {
