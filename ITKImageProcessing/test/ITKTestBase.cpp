@@ -30,7 +30,7 @@ template <class T>
 std::string ComputeMD5HashTyped(const IDataArray& outputDataArray)
 {
   const auto& dataArray = dynamic_cast<const DataArray<T>&>(outputDataArray);
-  const T* dataPtr = dataArray.getIDataStoreRefAs<DataStore<T>>().data();
+  const T* dataPtr = dataArray.template getIDataStoreRefAs<DataStore<T>>().data();
   usize arraySize = dataArray.getSize();
   MD5 md5;
   md5.update(reinterpret_cast<const uint8*>(dataPtr), arraySize * sizeof(T));
