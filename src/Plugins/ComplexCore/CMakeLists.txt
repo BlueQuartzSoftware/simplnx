@@ -16,6 +16,7 @@ set(FilterList
   CreateDataArray
   CreateDataGroup
   CreateImageGeometry
+  CropImageGeometry
   DeleteData
   ExportDREAM3DFilter
   FindDifferencesMap
