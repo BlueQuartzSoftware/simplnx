@@ -17,6 +17,7 @@
 #include <itkVector.h>
 
 #include <fmt/core.h>
+#include <fmt/ranges.h>
 
 #include <stdexcept>
 #include <type_traits>
@@ -26,6 +27,14 @@ namespace complex
 {
 namespace ITK
 {
+
+namespace Constants
+{
+inline constexpr int32 k_ImageGeometryDimensionMismatch = -2000;
+inline constexpr int32 k_ImageComponentDimensionMismatch = -2001;
+
+} // namespace Constants
+
 bool DoDimensionsMatch(const IDataStore& dataStore, const ImageGeom& imageGeom);
 
 /**
@@ -351,7 +360,10 @@ Result<OutputActions> DataCheckImpl(const DataStructure& dataStructure, const Da
 
   if(!complex::ITK::DoDimensionsMatch(dataStore, imageGeom))
   {
-    return MakeErrorResult<OutputActions>(-1, "DataArray dimensions don't match ImageGeom");
+
+    std::string errMessage = fmt::format("DataArray '{}' tuple dimensions '{}' do not match Image Geometry '{}' dimensions '{}'", inputArrayPath.toString(), fmt::join(dataStore.getTupleShape(), ", "),
+                                         imageGeomPath.toString(), fmt::join(imageGeom.getDimensions(), ", "));
+    return MakeErrorResult<OutputActions>(complex::ITK::Constants::k_ImageGeometryDimensionMismatch, errMessage);
   }
 
   std::vector<usize> cDims = dataStore.getComponentShape();
@@ -359,7 +371,8 @@ Result<OutputActions> DataCheckImpl(const DataStructure& dataStructure, const Da
 
   if(cDims != inputPixelDims)
   {
-    return MakeErrorResult<OutputActions>(-2, "DataArray component dimensions don't match output image components");
+    std::string errMessage = fmt::format("DataArray component dimensions of '{}' do not match output image component dimensions of '{}'", fmt::join(inputPixelDims, ", "), fmt::join(cDims, ", "));
+    return MakeErrorResult<OutputActions>(complex::ITK::Constants::k_ImageComponentDimensionMismatch, errMessage);
   }
 
   OutputActions outputActions;
