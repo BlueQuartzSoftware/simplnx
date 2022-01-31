@@ -20,6 +20,7 @@ set(FilterList
   ExportDREAM3DFilter
   FindDifferencesMap
   FindNeighborListStatistics
+  IdentifySample
   ImportDREAM3DFilter
   ImportTextFilter
   InterpolatePointCloudToRegularGridFilter
