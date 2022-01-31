@@ -74,16 +74,19 @@ void PipelineFilter::setArguments(const Arguments& args)
 
 bool PipelineFilter::preflight(DataStructure& data)
 {
+  setStatus(Status::None);
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
   IFilter::PreflightResult result = m_Filter->preflight(data, getArguments(), messageHandler);
   m_Warnings = std::move(result.outputActions.warnings());
+  setHasWarnings(!m_Warnings.empty());
   m_PreflightValues = std::move(result.outputValues);
   if(result.outputActions.invalid())
   {
     m_Errors = std::move(result.outputActions.errors());
 
     setPreflightStructure(data, false);
+    setHasErrors(true);
     notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
     return false;
   }
@@ -96,11 +99,13 @@ bool PipelineFilter::preflight(DataStructure& data)
     for(auto&& warning : actionResult.warnings())
     {
       m_Warnings.push_back(std::move(warning));
+      setHasWarnings(true);
     }
     if(actionResult.invalid())
     {
       m_Errors = std::move(actionResult.errors());
       setPreflightStructure(data, false);
+      setHasErrors(true);
       notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
       return false;
     }
