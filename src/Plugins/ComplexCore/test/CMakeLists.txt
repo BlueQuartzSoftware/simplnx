@@ -22,6 +22,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   PointSampleTriangleGeometryFilterTest.cpp
   QuickSurfaceMeshFilterTest.cpp
   RemoveFlaggedVerticesTest.cpp
+  RenameAttributeArrayTest.cpp
   RenameDataGroupTest.cpp
   RobustAutomaticThresholdTest.cpp
   RawBinaryReaderTest.cpp
