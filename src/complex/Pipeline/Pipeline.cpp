@@ -229,11 +229,16 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds)
   bool returnValue = true;
   // Send notification that the pipeline is executing
   sendPipelineRunStateMessage(RunState::Executing);
+  size_t currentIndex = 0;
+  for(auto iter = begin() + index; iter != end(); iter++)
+  {
+    sendFilterRunStateMessage(currentIndex, complex::AbstractPipelineNode::RunState::Queued);
+  }
 
   setHasWarnings(hasWarningsBeforeIndex(index));
   setHasErrors(false);
   setIsExecuting();
-  size_t currentIndex = 0;
+  currentIndex = 0;
   AbstractPipelineNode::FaultState pipelineErrors = FaultState::None;
   for(auto iter = begin() + index; iter != end(); iter++)
   {

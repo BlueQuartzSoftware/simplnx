@@ -33,8 +33,9 @@ public:
   enum class RunState
   {
     Idle = 0,
-    Preflighting = 1,
-    Executing = 2
+    Queued = 1,
+    Preflighting = 2,
+    Executing = 3
   };
   using PipelineRunStateSignalType = nod::signal<void(AbstractPipelineNode*, RunState)>;
   PipelineRunStateSignalType& getPipelineRunStateSignal();
