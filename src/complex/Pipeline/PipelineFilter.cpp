@@ -72,6 +72,12 @@ void PipelineFilter::setArguments(const Arguments& args)
   m_Arguments = args;
 }
 
+void PipelineFilter::setIndex(int32 index)
+{
+  m_Index = index;
+}
+
+// -----------------------------------------------------------------------------
 bool PipelineFilter::preflight(DataStructure& data)
 {
   setStatus(Status::None);
@@ -117,8 +123,13 @@ bool PipelineFilter::preflight(DataStructure& data)
   return true;
 }
 
+// -----------------------------------------------------------------------------
 bool PipelineFilter::execute(DataStructure& data)
 {
+
+  this->sendFilterRunStateMessage(m_Index, AbstractPipelineNode::RunState::Executing);
+  this->sendFilterUpdateMessage(m_Index, "    PipelineFilter::execute()  Starting Execution.. ");
+
   m_Warnings.clear();
   m_Errors.clear();
 
@@ -135,9 +146,16 @@ bool PipelineFilter::execute(DataStructure& data)
     m_Errors = result.result.errors();
   }
 
-  setHasWarnings(m_Warnings.size() > 0);
-  setHasErrors(m_Errors.size() > 0);
+  setHasWarnings(!m_Warnings.empty());
+  setHasErrors(!m_Errors.empty());
   endExecution(data);
+
+  if(!m_Warnings.empty() || !m_Errors.empty())
+  {
+    sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
+  }
+  this->sendFilterUpdateMessage(m_Index, "    PipelineFilter::execute()  Ending Execution.. ");
+  this->sendFilterRunStateMessage(m_Index, AbstractPipelineNode::RunState::Idle);
 
   return result.result.valid();
 }
@@ -164,7 +182,22 @@ std::unique_ptr<AbstractPipelineNode> PipelineFilter::deepCopy() const
 
 void PipelineFilter::notifyFilterMessage(const IFilter::Message& message)
 {
-  notify(std::make_shared<PipelineFilterMessage>(this, message));
+  if(message.type == IFilter::Message::Type::Info || message.type == IFilter::Message::Type::Debug)
+  {
+    sendFilterUpdateMessage(m_Index, message.message);
+  }
+  else if(message.type == IFilter::Message::Type::Progress)
+  {
+    sendFilterProgressMessage(m_Index, message.progress, message.message);
+  }
+  else if(message.type == IFilter::Message::Type::Error)
+  {
+    sendFilterFaultMessage(m_Index, AbstractPipelineNode::FaultState::Errors);
+  }
+  else if(message.type == IFilter::Message::Type::Warning)
+  {
+    sendFilterFaultMessage(m_Index, AbstractPipelineNode::FaultState::Warnings);
+  }
 }
 
 nlohmann::json PipelineFilter::toJson() const

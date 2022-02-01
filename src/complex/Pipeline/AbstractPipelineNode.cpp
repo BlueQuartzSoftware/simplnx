@@ -232,9 +232,72 @@ AbstractPipelineNode::SignalType& AbstractPipelineNode::getSignal()
   return m_Signal;
 }
 
+AbstractPipelineNode::PipelineRunStateSignalType& AbstractPipelineNode::getPipelineRunStateSignal()
+{
+  return m_PipelineRunStateSignal;
+}
+void AbstractPipelineNode::sendPipelineRunStateMessage(AbstractPipelineNode::RunState value)
+{
+  m_PipelineRunStateSignal(this, value);
+}
+
+AbstractPipelineNode::FilterRunStateSignalType& AbstractPipelineNode::getFilterRunStateSignal()
+{
+  return m_FilterRunStateSignal;
+}
+void AbstractPipelineNode::sendFilterRunStateMessage(int32_t filterIndex, AbstractPipelineNode::RunState value)
+{
+  m_FilterRunStateSignal(this, filterIndex, value);
+}
+
+AbstractPipelineNode::FilterProgressSignalType& AbstractPipelineNode::getFilterProgressSignal()
+{
+  return m_FilterProgressSignal;
+}
+void AbstractPipelineNode::sendFilterProgressMessage(int32_t filterIndex, int32_t progress, const std::string& message)
+{
+  m_FilterProgressSignal(this, filterIndex, progress, message);
+}
+
+AbstractPipelineNode::FilterUpdateSignalType& AbstractPipelineNode::getFilterUpdateSignal()
+{
+  return m_FilterUpdateSignal;
+}
+void AbstractPipelineNode::sendFilterUpdateMessage(int32_t filterIndex, const std::string& message)
+{
+  m_FilterUpdateSignal(this, filterIndex, message);
+}
+
+AbstractPipelineNode::PipelineFaultSignalType& AbstractPipelineNode::getPipelineFaultSignal()
+{
+  return m_PipelineFaultSignal;
+}
+void AbstractPipelineNode::sendPipelineFaultMessage(AbstractPipelineNode::FaultState state)
+{
+  m_PipelineFaultSignal(this, state);
+}
+
+AbstractPipelineNode::FilterFaultSignalType& AbstractPipelineNode::getFilterFaultSignal()
+{
+  return m_FilterFaultSignal;
+}
+void AbstractPipelineNode::sendFilterFaultMessage(int32_t filterIndex, AbstractPipelineNode::FaultState state)
+{
+  m_FilterFaultSignal(this, filterIndex, state);
+}
+
+AbstractPipelineNode::FilterFaultDetailSignalType& AbstractPipelineNode::getFilterFaultDetailSignal()
+{
+  return m_FilterFaultDetailSignal;
+}
+void AbstractPipelineNode::sendFilterFaultDetailMessage(int32_t filterIndex, const WarningCollection& warnings, const ErrorCollection& errors)
+{
+  m_FilterFaultDetailSignal(this, filterIndex, warnings, errors);
+}
+
 std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipeline() const
 {
-  auto currentPipeline = this;
+  const auto* currentPipeline = this;
   auto pipeline = getPrecedingPipelineSegment();
   if(pipeline == nullptr)
   {

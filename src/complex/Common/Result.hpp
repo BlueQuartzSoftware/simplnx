@@ -21,6 +21,8 @@ struct COMPLEX_EXPORT Error
   std::string message;
 };
 
+using ErrorCollection = std::vector<Error>;
+
 /**
  * @brief Warning is a simple struct of a warning code and message.
  * It is meant for general purpose warning reporting.
@@ -30,6 +32,8 @@ struct COMPLEX_EXPORT Warning
   int32 code = 0;
   std::string message;
 };
+
+using WarningCollection = std::vector<Warning>;
 
 namespace detail
 {

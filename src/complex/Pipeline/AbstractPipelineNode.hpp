@@ -30,6 +30,46 @@ public:
 
   using SignalType = nod::signal<void(AbstractPipelineNode*, const std::shared_ptr<AbstractPipelineMessage>&)>;
 
+  enum class RunState
+  {
+    Idle = 0,
+    Preflighting = 1,
+    Executing = 2
+  };
+  using PipelineRunStateSignalType = nod::signal<void(AbstractPipelineNode*, RunState)>;
+  PipelineRunStateSignalType& getPipelineRunStateSignal();
+  void sendPipelineRunStateMessage(RunState value);
+
+  using FilterRunStateSignalType = nod::signal<void(AbstractPipelineNode*, int32_t, RunState)>;
+  FilterRunStateSignalType& getFilterRunStateSignal();
+  void sendFilterRunStateMessage(int32_t filterIndex, RunState value);
+
+  using FilterProgressSignalType = nod::signal<void(AbstractPipelineNode*, int32_t, int32_t, const std::string&)>;
+  FilterProgressSignalType& getFilterProgressSignal();
+  void sendFilterProgressMessage(int32_t filterIndex, int32_t progress, const std::string& message);
+
+  using FilterUpdateSignalType = nod::signal<void(AbstractPipelineNode*, int32_t, const std::string&)>;
+  FilterUpdateSignalType& getFilterUpdateSignal();
+  void sendFilterUpdateMessage(int32_t filterIndex, const std::string& message);
+
+  enum class FaultState
+  {
+    None = 0,
+    Warnings = 1,
+    Errors = 2
+  };
+  using PipelineFaultSignalType = nod::signal<void(AbstractPipelineNode*, FaultState)>;
+  PipelineFaultSignalType& getPipelineFaultSignal();
+  void sendPipelineFaultMessage(FaultState state);
+
+  using FilterFaultSignalType = nod::signal<void(AbstractPipelineNode*, int32_t, FaultState)>;
+  FilterFaultSignalType& getFilterFaultSignal();
+  void sendFilterFaultMessage(int32_t filterIndex, FaultState state);
+
+  using FilterFaultDetailSignalType = nod::signal<void(AbstractPipelineNode*, int32_t, WarningCollection, ErrorCollection)>;
+  FilterFaultDetailSignalType& getFilterFaultDetailSignal();
+  void sendFilterFaultDetailMessage(int32_t filterIndex, const WarningCollection& warnings, const ErrorCollection& errors);
+
   /**
    * @brief Specific types of pipeline node for quick type checking.
    */
@@ -297,5 +337,16 @@ private:
   DataStructure m_PreflightStructure;
   bool m_IsPreflighted = false;
   SignalType m_Signal;
+
+  PipelineRunStateSignalType m_PipelineRunStateSignal;
+  FilterRunStateSignalType m_FilterRunStateSignal;
+
+  FilterProgressSignalType m_FilterProgressSignal;
+  FilterUpdateSignalType m_FilterUpdateSignal;
+
+  PipelineFaultSignalType m_PipelineFaultSignal;
+  FilterFaultSignalType m_FilterFaultSignal;
+
+  FilterFaultDetailSignalType m_FilterFaultDetailSignal;
 };
 } // namespace complex

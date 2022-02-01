@@ -38,6 +38,9 @@ std::string PipelineFilterMessage::toString() const
   case IFilter::Message::Type::Warning:
     typeName = "Warning";
     break;
+  case IFilter::Message::Type::Progress:
+    typeName = "Progress";
+    break;
   }
 
   return fmt::format("{}: {} Message '{}'", name, typeName, msg.message);
