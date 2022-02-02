@@ -1,13 +1,13 @@
 #pragma once
 
-#include "ComplexCore/ComplexCore_export.hpp"
-
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 
+#include "TestOne/TestOne_export.hpp"
+
 namespace complex
 {
-class COMPLEXCORE_EXPORT ExampleFilter1 : public IFilter
+class TESTONE_EXPORT ExampleFilter1 : public IFilter
 {
 public:
   ExampleFilter1() = default;

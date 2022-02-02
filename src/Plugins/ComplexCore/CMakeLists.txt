@@ -16,8 +16,6 @@ set(FilterList
   CreateDataGroup
   CreateImageGeometry
   DeleteData
-  ExampleFilter1
-  ExampleFilter2
   ExportDREAM3DFilter
   FindDifferencesMap
   FindNeighborListStatistics
