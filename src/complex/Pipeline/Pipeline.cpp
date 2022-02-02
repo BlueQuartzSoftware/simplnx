@@ -272,6 +272,7 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds)
       //    std::cout << "[" << currentIndex << "]    Execute Had Errors..." << std::endl;
       setHasErrors();
       returnValue = false;
+      filter->sendFilterFaultMessage(currentIndex, m_FaultState);
       break;
     }
 
