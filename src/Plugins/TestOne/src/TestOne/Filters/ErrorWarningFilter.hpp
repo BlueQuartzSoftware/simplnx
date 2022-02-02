@@ -22,6 +22,12 @@ public:
   ErrorWarningFilter& operator=(const ErrorWarningFilter&) = delete;
   ErrorWarningFilter& operator=(ErrorWarningFilter&&) noexcept = delete;
 
+  // Parameter Keys
+  static inline constexpr StringLiteral k_PreflightWarning_Key = "preflight_warning";
+  static inline constexpr StringLiteral k_PreflightError_Key = "preflight_error";
+  static inline constexpr StringLiteral k_ExecuteWarning_Key = "execute_warning";
+  static inline constexpr StringLiteral k_ExecuteError_Key = "execute_error";
+
   /**
    * @brief Returns the name of the filter.
    * @return std::string

@@ -35,14 +35,6 @@
 
 using namespace complex;
 
-namespace
-{
-constexpr StringLiteral k_PreflightWarning_Key = "preflight_warning";
-constexpr StringLiteral k_PreflightError_Key = "preflight_error";
-constexpr StringLiteral k_ExecuteWarning_Key = "execute_warning";
-constexpr StringLiteral k_ExecuteError_Key = "execute_error";
-} // namespace
-
 std::string ErrorWarningFilter::name() const
 {
   return FilterTraits<ErrorWarningFilter>::name;
