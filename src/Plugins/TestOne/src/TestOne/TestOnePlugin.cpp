@@ -1,5 +1,8 @@
 #include "TestOnePlugin.hpp"
 
+#include "TestOne/Filters/ErrorWarningFilter.hpp"
+#include "TestOne/Filters/ExampleFilter1.hpp"
+#include "TestOne/Filters/ExampleFilter2.hpp"
 #include "TestOne/Filters/TestFilter.hpp"
 
 using namespace complex;
@@ -13,6 +16,9 @@ TestOnePlugin::TestOnePlugin()
 : AbstractPlugin(k_ID, "TestOne", "Test Plugin", "BlueQuartz Software")
 {
   addFilter([]() -> IFilter::UniquePointer { return std::make_unique<TestFilter>(); });
+  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<ExampleFilter1>(); });
+  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<ExampleFilter2>(); });
+  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<ErrorWarningFilter>(); });
 }
 
 TestOnePlugin::~TestOnePlugin() = default;
