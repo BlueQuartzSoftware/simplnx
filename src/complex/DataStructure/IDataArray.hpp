@@ -24,15 +24,6 @@ public:
   };
 
   /**
-   * @brief Returns typename of the DataObject as a std::string.
-   * @return std::string
-   */
-  virtual std::string getTypeName() const override
-  {
-    return "DataArray";
-  }
-
-  /**
    * @brief Returns the number of elements in the DataArray.
    * @return usize
    */

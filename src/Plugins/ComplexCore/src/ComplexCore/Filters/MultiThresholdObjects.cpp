@@ -28,63 +28,63 @@ public:
   ~ThresholdFilterHelper() = default;
 
   /**
-   *
+   * @brief
    */
   template <typename T>
-  void filterDataLessThan(const DataArray<T>* m_Input)
+  void filterDataLessThan(const DataArray<T>& m_Input)
   {
-    size_t m_NumValues = m_Input->getNumberOfTuples();
+    size_t m_NumValues = m_Input.getNumberOfTuples();
     T v = static_cast<T>(m_ComparisonValue);
     for(size_t i = 0; i < m_NumValues; ++i)
     {
-      m_Output[i] = ((*m_Input)[i] < v) ? 1 : 0;
+      m_Output[i] = (m_Input[i] < v) ? 1 : 0;
     }
   }
 
   /**
-   *
+   * @brief
    */
   template <typename T>
-  void filterDataGreaterThan(const DataArray<T>* m_Input)
+  void filterDataGreaterThan(const DataArray<T>& m_Input)
   {
-    size_t m_NumValues = m_Input->getNumberOfTuples();
+    size_t m_NumValues = m_Input.getNumberOfTuples();
     T v = static_cast<T>(m_ComparisonValue);
     for(size_t i = 0; i < m_NumValues; ++i)
     {
-      m_Output[i] = ((*m_Input)[i] > v) ? 1 : 0;
+      m_Output[i] = (m_Input[i] > v) ? 1 : 0;
     }
   }
 
   /**
-   *
+   * @brief
    */
   template <typename T>
-  void filterDataEqualTo(const DataArray<T>* m_Input)
+  void filterDataEqualTo(const DataArray<T>& m_Input)
   {
-    size_t m_NumValues = m_Input->getNumberOfTuples();
+    size_t m_NumValues = m_Input.getNumberOfTuples();
     T v = static_cast<T>(m_ComparisonValue);
     for(size_t i = 0; i < m_NumValues; ++i)
     {
-      m_Output[i] = ((*m_Input)[i] == v) ? 1 : 0;
+      m_Output[i] = (m_Input[i] == v) ? 1 : 0;
     }
   }
 
   /**
-   *
+   * @brief
    */
   template <typename T>
-  void filterDataNotEqualTo(const DataArray<T>* m_Input)
+  void filterDataNotEqualTo(const DataArray<T>& m_Input)
   {
-    size_t m_NumValues = m_Input->getNumberOfTuples();
+    size_t m_NumValues = m_Input.getNumberOfTuples();
     T v = static_cast<T>(m_ComparisonValue);
     for(size_t i = 0; i < m_NumValues; ++i)
     {
-      m_Output[i] = ((*m_Input)[i] != v) ? 1 : 0;
+      m_Output[i] = (m_Input[i] != v) ? 1 : 0;
     }
   }
 
   template <typename Type>
-  void filterData(const DataArray<Type>* input)
+  void filterData(const DataArray<Type>& input)
   {
     if(m_ComparisonOperator == ArrayThreshold::ComparisonType::LessThan)
     {
@@ -94,18 +94,18 @@ public:
     {
       filterDataGreaterThan<Type>(input);
     }
-    //    else if(ops == SIMPL::Comparison::Operator_Equal)
-    //    {
-    //      filterDataEqualTo<Type>(input);
-    //    }
-    //    else if(ops == SIMPL::Comparison::Operator_NotEqual)
-    //    {
-    //      filterDataNotEqualTo<Type>(input);
-    //    }
-    // return 1;
+    else if(m_ComparisonOperator == ArrayThreshold::ComparisonType::Operator_Equal)
+    {
+      filterDataEqualTo<Type>(input);
+    }
+    else if(m_ComparisonOperator == ArrayThreshold::ComparisonType::Operator_NotEqual)
+    {
+      filterDataNotEqualTo<Type>(input);
+    }
     else
     {
-      throw std::runtime_error("MultiThresholdObjects Comparison Operator not defined.");
+      std::string errorMessage = fmt::format("MultiThresholdObjects Comparison Operator not understood: '{}'", static_cast<int>(m_ComparisonOperator));
+      throw std::runtime_error(errorMessage);
     }
   }
 
@@ -117,52 +117,51 @@ public:
    */
   void execute(DataStructure& dataStructure, DataPath& inputArrayDataPath)
   {
-
     DataObject* dataObject = dataStructure.getData(inputArrayDataPath);
 
     if(const auto* dataArray = dynamic_cast<const DataArray<int8>*>(dataObject); dataArray != nullptr)
     {
-      filterData<int8>(dataArray);
+      filterData<int8>(*dataArray);
     }
     else if(const auto* dataArray = dynamic_cast<const DataArray<int16>*>(dataObject); dataArray != nullptr)
     {
-      filterData<int16>(dataArray);
+      filterData<int16>(*dataArray);
     }
     else if(const auto* dataArray = dynamic_cast<const DataArray<int32>*>(dataObject); dataArray != nullptr)
     {
-      filterData<int32>(dataArray);
+      filterData<int32>(*dataArray);
     }
     else if(const auto* dataArray = dynamic_cast<const DataArray<int64>*>(dataObject); dataArray != nullptr)
     {
-      filterData<int64>(dataArray);
+      filterData<int64>(*dataArray);
     }
     else if(const auto* dataArray = dynamic_cast<const DataArray<uint8>*>(dataObject); dataArray != nullptr)
     {
-      filterData<uint8>(dataArray);
+      filterData<uint8>(*dataArray);
     }
     else if(const auto* dataArray = dynamic_cast<const DataArray<uint16>*>(dataObject); dataArray != nullptr)
     {
-      filterData<uint16>(dataArray);
+      filterData<uint16>(*dataArray);
     }
     else if(const auto* dataArray = dynamic_cast<const DataArray<uint32>*>(dataObject); dataArray != nullptr)
     {
-      filterData<uint32>(dataArray);
+      filterData<uint32>(*dataArray);
     }
     else if(const auto* dataArray = dynamic_cast<const DataArray<uint64>*>(dataObject); dataArray != nullptr)
     {
-      filterData<uint64>(dataArray);
+      filterData<uint64>(*dataArray);
     }
     else if(const auto* dataArray = dynamic_cast<const DataArray<float32>*>(dataObject); dataArray != nullptr)
     {
-      filterData<float32>(dataArray);
+      filterData<float32>(*dataArray);
     }
     else if(const auto* dataArray = dynamic_cast<const DataArray<float64>*>(dataObject); dataArray != nullptr)
     {
-      filterData<float64>(dataArray);
+      filterData<float64>(*dataArray);
     }
     else if(const auto* dataArray = dynamic_cast<const DataArray<bool>*>(dataObject); dataArray != nullptr)
     {
-      filterData<bool>(dataArray);
+      filterData<bool>(*dataArray);
     }
   }
 
@@ -186,10 +185,8 @@ public:
  * @param newArrayPtr
  * @param inverse
  */
-void InsertThreshold(int64_t numItems, UInt8Array* currentArrayPtr, complex::IArrayThreshold::UnionOperator unionOperator, std::vector<uint8_t>& newArrayPtr, bool inverse)
+void InsertThreshold(int64_t numItems, UInt8Array& currentArray, complex::IArrayThreshold::UnionOperator unionOperator, std::vector<uint8_t>& newArrayPtr, bool inverse)
 {
-  UInt8Array& currentArray = *currentArrayPtr;
-
   for(int64_t i = 0; i < numItems; i++)
   {
     // invert the current comparison if necessary
@@ -227,10 +224,10 @@ void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, DataStruct
   }
   // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
   // was essentially done in the preflight part.
-  UInt8Array* outputResultArray = dataStructure.getDataAs<UInt8Array>(outputResultArrayPath);
+  UInt8Array& outputResultArray = dataStructure.getDataRefAs<UInt8Array>(outputResultArrayPath);
 
   // Get the total number of tuples, create and initialize an array with ZERO to use for these results
-  size_t totalTuples = outputResultArray->getNumberOfTuples();
+  size_t totalTuples = outputResultArray.getNumberOfTuples();
   std::vector<uint8_t> tempResultVector(totalTuples, 0xFF);
 
   complex::ArrayThreshold::ComparisonType compOperator = comparisonValue->getComparisonType();
@@ -252,7 +249,7 @@ void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, DataStruct
     // copy the temp uint8 vector to the final uint8 result array
     for(size_t i = 0; i < totalTuples; i++)
     {
-      (*outputResultArray)[i] = tempResultVector[i];
+      outputResultArray[i] = tempResultVector[i];
     }
   }
   else
@@ -262,9 +259,9 @@ void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, DataStruct
   }
 }
 
-void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& comparisonSet, DataStructure& dataStructure, DataPath& outputResultArrayPath, int32_t& err, bool replaceInput, bool inverse)
+void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, DataStructure& dataStructure, DataPath& outputResultArrayPath, int32_t& err, bool replaceInput, bool inverse)
 {
-  if(nullptr == comparisonSet)
+  if(nullptr == inputComparisonSet)
   {
     return;
   }
@@ -280,15 +277,15 @@ void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& comparisonSet, DataStructu
 
   // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
   // was essentially done in the preflight part.
-  UInt8Array* outputResultArray = dataStructure.getDataAs<UInt8Array>(outputResultArrayPath);
+  UInt8Array& outputResultArray = dataStructure.getDataRefAs<UInt8Array>(outputResultArrayPath);
 
   // Get the total number of tuples, create and initialize an array with ZERO to use for these results
-  size_t totalTuples = outputResultArray->getNumberOfTuples();
+  size_t totalTuples = outputResultArray.getNumberOfTuples();
   std::vector<uint8_t> tempResultVector(totalTuples, 0xFF);
 
   bool firstValueFound = false;
 
-  ArrayThresholdSet::CollectionType thresholds = comparisonSet->getArrayThresholds();
+  ArrayThresholdSet::CollectionType thresholds = inputComparisonSet->getArrayThresholds();
   for(const std::shared_ptr<IArrayThreshold>& threshold : thresholds)
   {
     if(std::dynamic_pointer_cast<ArrayThresholdSet>(threshold))
@@ -314,13 +311,13 @@ void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& comparisonSet, DataStructu
     // copy the temp uint8 vector to the final uint8 result array
     for(size_t i = 0; i < totalTuples; i++)
     {
-      (*outputResultArray)[i] = tempResultVector[i];
+      outputResultArray[i] = tempResultVector[i];
     }
   }
   else
   {
     // insert into current threshold
-    InsertThreshold(totalTuples, outputResultArray, comparisonSet->getUnionOperator(), tempResultVector, inverse);
+    InsertThreshold(totalTuples, outputResultArray, inputComparisonSet->getUnionOperator(), tempResultVector, inverse);
   }
 }
 

@@ -5,10 +5,7 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
 
 #include <chrono>
 
@@ -40,7 +37,7 @@ public:
 
   TSpecificCompareFunctorBool(IDataArray* data, int64 length, bool tolerance, AbstractDataStore<int32>* featureIds)
   : m_Length(length)
-  , featureIdsArray(featureIds)
+  , m_FeatureIdsArray(featureIds)
   , m_Data(dynamic_cast<DataArrayType*>(data))
   {
   }
@@ -56,7 +53,7 @@ public:
 
     if((*m_Data)[neighborPoint] == (*m_Data)[referencePoint])
     {
-      featureIdsArray->setValue(neighborPoint, gnum);
+      m_FeatureIdsArray->setValue(neighborPoint, gnum);
       return true;
     }
     return false;
@@ -66,9 +63,9 @@ protected:
   TSpecificCompareFunctorBool() = default;
 
 private:
-  int64 m_Length = 0;                                  // Length of the Data Array
-  AbstractDataStore<int32>* featureIdsArray = nullptr; // The Feature Ids
-  DataArrayType* m_Data = nullptr;                     // The data that is being compared
+  int64 m_Length = 0;                                    // Length of the Data Array
+  AbstractDataStore<int32>* m_FeatureIdsArray = nullptr; // The Feature Ids
+  DataArrayType* m_Data = nullptr;                       // The data that is being compared
 };
 
 /**
@@ -84,7 +81,7 @@ public:
   TSpecificCompareFunctor(IDataArray* data, int64 length, T tolerance, AbstractDataStore<int32>* featureIds)
   : m_Length(length)
   , m_Tolerance(tolerance)
-  , featureIdsArray(featureIds)
+  , m_FeatureIdsArray(featureIds)
   , m_Data(dynamic_cast<DataArrayType*>(data))
   {
   }
@@ -102,7 +99,7 @@ public:
     {
       if(((*m_Data)[referencePoint] - (*m_Data)[neighborPoint]) <= m_Tolerance)
       {
-        featureIdsArray->setValue(neighborPoint, gnum);
+        m_FeatureIdsArray->setValue(neighborPoint, gnum);
         return true;
       }
     }
@@ -110,7 +107,7 @@ public:
     {
       if(((*m_Data)[neighborPoint] - (*m_Data)[referencePoint]) <= m_Tolerance)
       {
-        featureIdsArray->setValue(neighborPoint, gnum);
+        m_FeatureIdsArray->setValue(neighborPoint, gnum);
         return true;
       }
     }
@@ -121,10 +118,10 @@ protected:
   TSpecificCompareFunctor() = default;
 
 private:
-  int64 m_Length = 0;                                  // Length of the Data Array
-  T m_Tolerance = static_cast<T>(0);                   // The tolerance of the comparison
-  AbstractDataStore<int32>* featureIdsArray = nullptr; // The Feature Ids
-  DataArrayType* m_Data = nullptr;                     // The data that is being compared
+  int64 m_Length = 0;                                    // Length of the Data Array
+  T m_Tolerance = static_cast<T>(0);                     // The tolerance of the comparison
+  AbstractDataStore<int32>* m_FeatureIdsArray = nullptr; // The Feature Ids
+  DataArrayType* m_Data = nullptr;                       // The data that is being compared
 };
 } // namespace
 

@@ -117,33 +117,33 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
   auto equivalentDiametersPath = args.value<DataPath>(k_EquivalentDiametersPath_Key);
   auto numElementsPath = args.value<DataPath>(k_NumElementsPath_Key);
 
-  Int32Array* featureIdsArray = data.getDataAs<Int32Array>(featureIdsPath);
-  Float32Array* volumesArray = data.getDataAs<Float32Array>(volumesPath);
-  Float32Array* equivalentDiametersArray = data.getDataAs<Float32Array>(equivalentDiametersPath);
-  Int32Array* numElementsArray = data.getDataAs<Int32Array>(numElementsPath);
+  Int32Array& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
+  Float32Array& volumesArray = data.getDataRefAs<Float32Array>(volumesPath);
+  Float32Array& equivalentDiametersArray = data.getDataRefAs<Float32Array>(equivalentDiametersPath);
+  Int32Array& numElementsArray = data.getDataRefAs<Int32Array>(numElementsPath);
 
-  usize totalPoints = featureIdsArray->getNumberOfTuples();
+  usize totalPoints = featureIdsArray.getNumberOfTuples();
   std::set<int32_t> uniqueFeatureIds;
   for(size_t i = 0; i < totalPoints; i++)
   {
-    uniqueFeatureIds.insert((*featureIdsArray)[i]);
+    uniqueFeatureIds.insert((featureIdsArray)[i]);
   }
 
   usize numfeatures = uniqueFeatureIds.size();
 
-  volumesArray->getDataStore()->reshapeTuples({numfeatures});
-  equivalentDiametersArray->getDataStore()->reshapeTuples({numfeatures});
-  numElementsArray->getDataStore()->reshapeTuples({numfeatures});
+  volumesArray.getDataStoreRef().reshapeTuples({numfeatures});
+  equivalentDiametersArray.getDataStoreRef().reshapeTuples({numfeatures});
+  numElementsArray.getDataStoreRef().reshapeTuples({numfeatures});
 
-  auto featureIds = featureIdsArray->getDataStore();
-  auto volumes = volumesArray->getDataStore();
-  auto equivalentDiameters = equivalentDiametersArray->getDataStore();
-  auto numElements = numElementsArray->getDataStore();
+  auto* featureIds = featureIdsArray.getDataStore();
+  auto* volumes = volumesArray.getDataStore();
+  auto* equivalentDiameters = equivalentDiametersArray.getDataStore();
+  auto* numElements = numElementsArray.getDataStore();
 
   DataStructure tempStructure;
-  auto featureCounts = UInt64Array::CreateWithStore<DataStore<uint64>>(tempStructure, std::string("_INTERNAL_USE_ONLY_FeatureCounts"), std::vector<usize>{numfeatures}, std::vector<usize>{1});
+  auto* featureCounts = UInt64Array::CreateWithStore<DataStore<uint64>>(tempStructure, std::string("_INTERNAL_USE_ONLY_FeatureCounts"), std::vector<usize>{numfeatures}, std::vector<usize>{1});
   featureCounts->fill(0);
-  auto featurecounts = featureCounts->getDataStore();
+  auto* featureCountsStore = featureCounts->getDataStore();
 
   float rad = 0.0f;
   float diameter = 0.0f;
@@ -152,8 +152,8 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
   for(size_t j = 0; j < totalPoints; j++)
   {
     int32_t gnum = featureIds->getValue(j);
-    auto temp = featurecounts->getValue(gnum) + 1;
-    featurecounts->setValue(gnum, temp);
+    auto temp = featureCountsStore->getValue(gnum) + 1;
+    featureCountsStore->setValue(gnum, temp);
   }
 
   FloatVec3 spacing = image->getSpacing();
@@ -175,13 +175,13 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
 
     for(size_t i = 1; i < numfeatures; i++)
     {
-      numElements->setValue(i, static_cast<int32_t>(featurecounts->getValue(i)));
-      if(featurecounts->getValue(i) > 9007199254740992ULL)
+      numElements->setValue(i, static_cast<int32_t>(featureCountsStore->getValue(i)));
+      if(featureCountsStore->getValue(i) > 9007199254740992ULL)
       {
-        std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featurecounts->getValue(i));
+        std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCountsStore->getValue(i));
         return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadFeatureCount, ss}})};
       }
-      volumes->setValue(i, static_cast<double>(featurecounts->getValue(i)) * static_cast<double>(res_scalar));
+      volumes->setValue(i, static_cast<double>(featureCountsStore->getValue(i)) * static_cast<double>(res_scalar));
 
       rad = volumes->getValue(i) / k_PI;
       diameter = (2 * sqrtf(rad));
@@ -194,14 +194,14 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
     float vol_term = (4.0f / 3.0f) * k_PI;
     for(usize i = 1; i < numfeatures; i++)
     {
-      numElements->setValue(i, static_cast<int32>(featurecounts->getValue(i)));
-      if(featurecounts->getValue(i) > 9007199254740992ULL)
+      numElements->setValue(i, static_cast<int32>(featureCountsStore->getValue(i)));
+      if(featureCountsStore->getValue(i) > 9007199254740992ULL)
       {
-        std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featurecounts->getValue(i));
+        std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCountsStore->getValue(i));
         return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadFeatureCount, ss}})};
       }
 
-      volumes->setValue(i, static_cast<double>(featurecounts->getValue(i)) * static_cast<double>(res_scalar));
+      volumes->setValue(i, static_cast<double>(featureCountsStore->getValue(i)) * static_cast<double>(res_scalar));
 
       rad = volumes->getValue(i) / vol_term;
       diameter = 2.0f * powf(rad, 0.3333333333f);

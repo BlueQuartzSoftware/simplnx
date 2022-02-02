@@ -23,11 +23,6 @@ public:
   DataArrayFactory()
   : IDataFactory()
   {
-    DataStructure ds;
-    using DataArrayType = DataArray<T>;
-    using DataStoreType = DataStore<T>;
-    DataArrayType* temp = DataArrayType::template CreateWithStore<DataStoreType>(ds, "TEMP", {1ULL}, {1ULL});
-    m_TypeName = temp->getTypeName();
   }
 
   ~DataArrayFactory() override = default;
@@ -38,7 +33,7 @@ public:
    */
   std::string getDataTypeName() const override
   {
-    return m_TypeName;
+    return DataArray<T>::GetTypeName();
   }
 
   /**
@@ -133,9 +128,6 @@ public:
 
     return err;
   }
-
-private:
-  std::string m_TypeName = "";
 };
 
 // Declare aliases

@@ -436,6 +436,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/DataArrayUtilities.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/DataGroupUtilities.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.cpp

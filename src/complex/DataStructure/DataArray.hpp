@@ -501,10 +501,10 @@ public:
   }
 
   /**
-   * @brief getTypeName
+   * @brief Static function to get the typename
    * @return
    */
-  std::string getTypeName() const override
+  static std::string GetTypeName()
   {
     std::string typeName = "UNKNOWN";
 
@@ -553,6 +553,15 @@ public:
       typeName = "DataArray<bool>";
     }
     return typeName;
+  }
+
+  /**
+   * @brief getTypeName
+   * @return
+   */
+  std::string getTypeName() const override
+  {
+    return GetTypeName();
   }
 
 protected:

@@ -98,12 +98,12 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
   {
     return {MakeErrorResult<OutputActions>(k_RbrTupleDimsError, fmt::format("Tuple Dimensions should be a single row of data. {} Rows were passed.", tableData.size()))};
   }
-  std::vector<DynamicTableData::DataType> rowData = tableData[0];
+  const std::vector<DynamicTableData::DataType>& rowData = tableData[0];
   std::vector<size_t> tupleDims;
   tupleDims.reserve(rowData.size()); // Reserve (NOT RESIZE) the proper number of values in the vector
   for(const auto& floatValue : rowData)
   {
-    tupleDims.emplace_back(static_cast<size_t>(floatValue));
+    tupleDims.push_back(static_cast<size_t>(floatValue));
   }
 
   OutputActions actions;
