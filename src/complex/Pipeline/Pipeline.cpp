@@ -232,17 +232,24 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds)
   for(auto iter = begin() + index; iter != end(); iter++)
   {
     auto* filter = iter->get();
-    filter->setRunState(RunState::Queued);
-    sendFilterRunStateMessage(currentIndex++, filter->getRunState());
+    if(filter->isEnabled())
+    {
+      filter->setRunState(RunState::Queued);
+      sendFilterRunStateMessage(currentIndex++, filter->getRunState());
+    }
   }
 
   currentIndex = 0;
   clearFaultState();
   for(auto iter = begin() + index; iter != end(); iter++)
   {
+    auto* filter = iter->get();
+    if(filter->isDisabled())
+    {
+      continue;
+    }
     //  std::cout << "[" << currentIndex << "] " << iter->get()->getName() << " Starting Filter Execution" << std::endl;
     // startObservingNode(iter->get());
-    auto* filter = iter->get();
     filter->setRunState(RunState::Executing);
     sendFilterRunStateMessage(currentIndex, filter->getRunState());
     // clang-format off
