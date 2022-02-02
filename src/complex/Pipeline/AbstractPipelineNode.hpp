@@ -142,6 +142,12 @@ public:
   RunState getRunState() const;
 
   /**
+   * @brief Returns the fault state of the node.
+   * @return bool
+   */
+  FaultState getFaultState() const;
+
+  /**
    * @brief Returns true if the node has errors. Otherwise, this method returns
    * false.
    * @return bool

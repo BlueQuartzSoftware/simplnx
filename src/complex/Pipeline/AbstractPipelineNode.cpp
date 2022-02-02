@@ -214,6 +214,11 @@ complex::AbstractPipelineNode::RunState AbstractPipelineNode::getRunState() cons
   return m_RunState;
 }
 
+complex::AbstractPipelineNode::FaultState AbstractPipelineNode::getFaultState() const
+{
+  return m_FaultState;
+}
+
 bool AbstractPipelineNode::hasErrors() const
 {
   return m_FaultState == complex::AbstractPipelineNode::FaultState::Errors;
