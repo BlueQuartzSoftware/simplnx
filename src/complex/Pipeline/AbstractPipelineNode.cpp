@@ -32,147 +32,25 @@ bool AbstractPipelineNode::hasParentPipeline() const
   return m_Parent != nullptr;
 }
 
-bool AbstractPipelineNode::isExecuting() const
-{
-  return static_cast<bool>(m_Status & Status::Executing);
-}
-
-bool AbstractPipelineNode::hasBeenExecuted() const
-{
-  return static_cast<bool>(m_Status & Status::Executed);
-}
-
-bool AbstractPipelineNode::hasErrors() const
-{
-  return static_cast<bool>(m_Status & Status::Error);
-}
-
-bool AbstractPipelineNode::hasWarnings() const
-{
-  return static_cast<bool>(m_Status & Status::Warning);
-}
-
 bool AbstractPipelineNode::isDisabled() const
 {
-  return static_cast<bool>(m_Status & Status::Disabled);
+  return m_IsDisabled;
 }
 
 bool AbstractPipelineNode::isEnabled() const
 {
-  return !isDisabled();
+  return !m_IsDisabled;
 }
 
 void AbstractPipelineNode::setDisabled(bool disabled)
 {
-  std::bitset<8> statusBits(m_Status);
-
-  if(disabled)
-  {
-    statusBits |= Status::Disabled;
-  }
-  else
-  {
-    std::bitset<8> mask(Status::Disabled);
-    mask.flip();
-    statusBits &= mask;
-  }
-
-  m_Status = static_cast<Status>(statusBits.to_ulong());
-  notify(std::make_shared<NodeStatusMessage>(this, m_Status));
+  m_IsDisabled = disabled;
+  notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
 }
 
 void AbstractPipelineNode::setEnabled(bool enabled)
 {
   return setDisabled(!enabled);
-}
-
-AbstractPipelineNode::Status AbstractPipelineNode::getStatus() const
-{
-  return m_Status;
-}
-
-void AbstractPipelineNode::setStatus(Status status)
-{
-  // If Status has not changed, do nothing
-  if(m_Status == status)
-  {
-    return;
-  }
-
-  m_Status = status;
-  notify(std::make_shared<NodeStatusMessage>(this, status));
-}
-
-void AbstractPipelineNode::setHasWarnings(bool value)
-{
-  std::bitset<8> statusBits(m_Status);
-
-  if(value)
-  {
-    statusBits |= Status::Warning;
-  }
-  else
-  {
-    std::bitset<8> mask(Status::Warning);
-    mask.flip();
-    statusBits &= mask;
-  }
-
-  setStatus(static_cast<Status>(statusBits.to_ulong()));
-}
-
-void AbstractPipelineNode::setHasErrors(bool value)
-{
-  std::bitset<8> statusBits(m_Status);
-
-  if(value)
-  {
-    statusBits |= Status::Error;
-  }
-  else
-  {
-    std::bitset<8> mask(Status::Error);
-    mask.flip();
-    statusBits &= mask;
-  }
-
-  setStatus(static_cast<Status>(statusBits.to_ulong()));
-}
-
-void AbstractPipelineNode::setIsExecuting(bool value)
-{
-  std::bitset<8> statusBits(m_Status);
-
-  if(value)
-  {
-    statusBits |= Status::Executing;
-  }
-  else
-  {
-    std::bitset<8> mask(Status::Executing);
-    mask.flip();
-    statusBits &= mask;
-  }
-
-  setStatus(static_cast<Status>(statusBits.to_ulong()));
-}
-
-void AbstractPipelineNode::setHasBeenExecuted(bool value)
-{
-  std::bitset<8> statusBits(m_Status);
-
-  if(value)
-  {
-    statusBits |= Status::Executed;
-  }
-  else
-  {
-    std::bitset<8> mask(Status::Executed);
-    mask.flip();
-    statusBits &= mask;
-  }
-
-  setStatus(static_cast<Status>(statusBits.to_ulong()));
 }
 
 const DataStructure& AbstractPipelineNode::getDataStructure() const
@@ -199,14 +77,12 @@ void AbstractPipelineNode::setPreflightStructure(const DataStructure& ds, bool s
 void AbstractPipelineNode::clearDataStructure()
 {
   m_DataStructure = DataStructure();
-  m_Status = Status::None;
 }
 
 void AbstractPipelineNode::clearPreflightStructure()
 {
   m_DataStructure = DataStructure();
   m_PreflightStructure = DataStructure();
-  m_Status = Status::None;
   m_IsPreflighted = false;
 }
 
@@ -218,8 +94,6 @@ bool AbstractPipelineNode::isPreflighted() const
 void AbstractPipelineNode::endExecution(DataStructure& dataStructure)
 {
   setDataStructure(dataStructure);
-  setIsExecuting(false);
-  setHasBeenExecuted(hasParentPipeline());
 }
 
 void AbstractPipelineNode::notify(const std::shared_ptr<AbstractPipelineMessage>& msg)
@@ -236,6 +110,7 @@ AbstractPipelineNode::PipelineRunStateSignalType& AbstractPipelineNode::getPipel
 {
   return m_PipelineRunStateSignal;
 }
+
 void AbstractPipelineNode::sendPipelineRunStateMessage(AbstractPipelineNode::RunState value)
 {
   m_PipelineRunStateSignal(this, value);
@@ -332,4 +207,59 @@ std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipelineSegment() co
 
   auto iter = parentPipeline->find(this);
   return std::move(parentPipeline->copySegment(parentPipeline->begin(), iter));
+}
+
+complex::AbstractPipelineNode::RunState AbstractPipelineNode::getRunState() const
+{
+  return m_RunState;
+}
+
+bool AbstractPipelineNode::hasErrors() const
+{
+  return m_FaultState == complex::AbstractPipelineNode::FaultState::Errors;
+}
+
+bool AbstractPipelineNode::hasWarnings() const
+{
+  return m_FaultState == complex::AbstractPipelineNode::FaultState::Warnings;
+}
+
+void AbstractPipelineNode::setHasWarnings(bool value)
+{
+  if(value)
+  {
+    m_FaultState = complex::AbstractPipelineNode::FaultState::Warnings;
+    notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
+  }
+  else if(!value && m_FaultState == complex::AbstractPipelineNode::FaultState::Warnings)
+  {
+    m_FaultState = complex::AbstractPipelineNode::FaultState::None;
+    notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
+  }
+}
+
+void AbstractPipelineNode::setHasErrors(bool value)
+{
+  if(value)
+  {
+    m_FaultState = complex::AbstractPipelineNode::FaultState::Errors;
+    notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
+  }
+  else if(!value && m_FaultState == complex::AbstractPipelineNode::FaultState::Errors)
+  {
+    m_FaultState = complex::AbstractPipelineNode::FaultState::None;
+    notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
+  }
+}
+
+void AbstractPipelineNode::clearFaultState()
+{
+  m_FaultState = complex::AbstractPipelineNode::FaultState::None;
+  notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
+}
+
+void AbstractPipelineNode::setRunState(const RunState& runState)
+{
+  m_RunState = runState;
+  notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
 }

@@ -21,15 +21,21 @@ public:
    * @param node
    * @param status
    */
-  NodeStatusMessage(AbstractPipelineNode* node, AbstractPipelineNode::Status status);
+  NodeStatusMessage(AbstractPipelineNode* node, AbstractPipelineNode::FaultState faultState, AbstractPipelineNode::RunState runState);
 
   ~NodeStatusMessage() override;
 
   /**
-   * @brief Returns the updated AbstractPipelineNode::Status.
-   * @return AbstractPipelineNode::Status
+   * @brief Returns the updated AbstractPipelineNode::FaultState.
+   * @return AbstractPipelineNode::FaultState
    */
-  AbstractPipelineNode::Status getStatus() const;
+  AbstractPipelineNode::FaultState getFaultState() const;
+
+  /**
+   * @brief Returns the updated AbstractPipelineNode::RunState.
+   * @return AbstractPipelineNode::RunState
+   */
+  AbstractPipelineNode::RunState getRunState() const;
 
   /**
    * @brief Returns a string representation of the message.
@@ -38,6 +44,7 @@ public:
   std::string toString() const override;
 
 private:
-  AbstractPipelineNode::Status m_Status;
+  AbstractPipelineNode::FaultState m_FaultState;
+  AbstractPipelineNode::RunState m_RunState;
 };
 } // namespace complex

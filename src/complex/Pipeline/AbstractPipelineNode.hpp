@@ -80,19 +80,6 @@ public:
     Filter
   };
 
-  /**
-   * @brief Specific states of pipeline and filter execution.
-   */
-  enum Status : uint8
-  {
-    None = 0,
-    Executing = 1,
-    Executed = 2,
-    Error = 4,
-    Warning = 8,
-    Disabled = 16
-  };
-
   virtual ~AbstractPipelineNode();
 
   /**
@@ -149,18 +136,10 @@ public:
   virtual std::unique_ptr<AbstractPipelineNode> deepCopy() const = 0;
 
   /**
-   * @brief Returns true if the node is currently being executed. Otherwise,
-   * this method returns false.
+   * @brief Returns the run state of the node.
    * @return bool
    */
-  bool isExecuting() const;
-
-  /**
-   * @brief Returns true if the node is has been executed. Otherwise,
-   * this method returns false.
-   * @return bool
-   */
-  bool hasBeenExecuted() const;
+  RunState getRunState() const;
 
   /**
    * @brief Returns true if the node has errors. Otherwise, this method returns
@@ -201,12 +180,6 @@ public:
    * @param enabled = true
    */
   void setEnabled(bool enabled = true);
-
-  /**
-   * @brief Returns the pipeline node status.
-   * @return Status
-   */
-  Status getStatus() const;
 
   /**
    * @brief Returns a const reference to the executed DataStructure.
@@ -260,36 +233,6 @@ public:
 
 protected:
   /**
-   * @brief Sets the current node status.
-   * @param status
-   */
-  void setStatus(Status status);
-
-  /**
-   * @brief Sets or clears the Warning flag.
-   * @param value = true
-   */
-  void setHasWarnings(bool value = true);
-
-  /**
-   * @brief Sets or clears the Error flag.
-   * @param value = true
-   */
-  void setHasErrors(bool value = true);
-
-  /**
-   * @brief Sets or clears the Executing flag.
-   * @param value = true
-   */
-  void setIsExecuting(bool value = true);
-
-  /**
-   * @brief Sets or clears the Executed flag.
-   * @param value = true
-   */
-  virtual void setHasBeenExecuted(bool value = true);
-
-  /**
    * @brief Notifies known observers of the provided message.
    * @param msg
    */
@@ -331,13 +274,38 @@ protected:
    */
   std::unique_ptr<Pipeline> getPrecedingPipelineSegment() const;
 
+  /**
+   * @brief Sets the run state.
+   * @param value = true
+   */
+  void setRunState(const RunState& runState);
+
+  /**
+   * @brief Sets or clears the Warning flag.
+   * @param value = true
+   */
+  void setHasWarnings(bool value = true);
+
+  /**
+   * @brief Sets or clears the Error flag.
+   * @param value = true
+   */
+  void setHasErrors(bool value = true);
+
+  /**
+   * @brief Sets the fault state back to None
+   */
+  void clearFaultState();
+
 private:
-  Status m_Status = Status::None;
   Pipeline* m_Parent = nullptr;
   DataStructure m_DataStructure;
   DataStructure m_PreflightStructure;
   bool m_IsPreflighted = false;
   SignalType m_Signal;
+  RunState m_RunState = RunState::Idle;
+  FaultState m_FaultState = FaultState::None;
+  bool m_IsDisabled = false;
 
   PipelineRunStateSignalType m_PipelineRunStateSignal;
   FilterRunStateSignalType m_FilterRunStateSignal;

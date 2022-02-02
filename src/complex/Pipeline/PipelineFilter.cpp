@@ -132,10 +132,10 @@ bool PipelineFilter::execute(DataStructure& data)
 
   m_Warnings.clear();
   m_Errors.clear();
+  clearFaultState();
 
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
-  setIsExecuting();
   IFilter::ExecuteResult result = m_Filter->execute(data, getArguments(), this, messageHandler);
   m_PreflightValues = std::move(result.outputValues);
 
