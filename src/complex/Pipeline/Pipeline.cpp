@@ -250,8 +250,7 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds)
     }
     //  std::cout << "[" << currentIndex << "] " << iter->get()->getName() << " Starting Filter Execution" << std::endl;
     // startObservingNode(iter->get());
-    filter->setRunState(RunState::Executing);
-    filter->sendFilterRunStateMessage(currentIndex, filter->getRunState());
+
     // clang-format off
 //    nod::connection filterUpdateMessageConnection = m_FilterUpdateSignal.connect
 //        ([this](complex::AbstractPipelineNode* node, const std::string& message)
@@ -262,21 +261,16 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds)
 //                            {});
     // clang-format on
     bool success = filter->execute(ds);
-    filter->setRunState(RunState::Idle);
-    filter->sendFilterRunStateMessage(currentIndex, filter->getRunState());
 
     setHasWarnings(filter->hasWarnings());
-
     if(!success)
     {
       //    std::cout << "[" << currentIndex << "]    Execute Had Errors..." << std::endl;
       setHasErrors();
       returnValue = false;
-      filter->sendFilterFaultMessage(currentIndex, m_FaultState);
       break;
     }
 
-    filter->sendFilterFaultMessage(currentIndex, m_FaultState);
     //  std::cout << "[" << currentIndex << "] Ended Filter Execution" << std::endl;
     currentIndex++;
   }
@@ -284,7 +278,8 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds)
   setDataStructure(ds);
 
   sendPipelineFaultMessage(m_FaultState);
-  sendPipelineRunStateMessage(RunState::Idle);
+  setRunState(RunState::Idle);
+  sendPipelineRunStateMessage(m_RunState);
 
   return returnValue;
 }

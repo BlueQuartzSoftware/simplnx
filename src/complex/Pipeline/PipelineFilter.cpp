@@ -126,7 +126,7 @@ bool PipelineFilter::preflight(DataStructure& data)
 // -----------------------------------------------------------------------------
 bool PipelineFilter::execute(DataStructure& data)
 {
-
+  setRunState(RunState::Executing);
   this->sendFilterRunStateMessage(m_Index, AbstractPipelineNode::RunState::Executing);
   this->sendFilterUpdateMessage(m_Index, "    PipelineFilter::execute()  Starting Execution.. ");
 
@@ -154,8 +154,10 @@ bool PipelineFilter::execute(DataStructure& data)
   {
     sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
   }
-  this->sendFilterUpdateMessage(m_Index, "    PipelineFilter::execute()  Ending Execution.. ");
+  sendFilterFaultMessage(m_Index, getFaultState());
+  setRunState(RunState::Idle);
   this->sendFilterRunStateMessage(m_Index, AbstractPipelineNode::RunState::Idle);
+  this->sendFilterUpdateMessage(m_Index, "    PipelineFilter::execute()  Ending Execution.. ");
 
   return result.result.valid();
 }
