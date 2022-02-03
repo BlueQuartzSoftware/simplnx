@@ -1,14 +1,14 @@
 #pragma once
 
-#include <memory>
-#include <vector>
+#include "complex/DataStructure/DataStructure.hpp"
+#include "complex/complex_export.hpp"
 
 #include <nlohmann/json_fwd.hpp>
 
 #include "nod/nod.hpp"
 
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/complex_export.hpp"
+#include <memory>
+#include <vector>
 
 namespace complex
 {
@@ -38,18 +38,22 @@ public:
     Executing = 3
   };
   using PipelineRunStateSignalType = nod::signal<void(AbstractPipelineNode*, RunState)>;
+  const PipelineRunStateSignalType& getPipelineRunStateSignal() const;
   PipelineRunStateSignalType& getPipelineRunStateSignal();
   void sendPipelineRunStateMessage(RunState value);
 
   using FilterRunStateSignalType = nod::signal<void(AbstractPipelineNode*, int32_t, RunState)>;
+  const FilterRunStateSignalType& getFilterRunStateSignal() const;
   FilterRunStateSignalType& getFilterRunStateSignal();
   void sendFilterRunStateMessage(int32_t filterIndex, RunState value);
 
   using FilterProgressSignalType = nod::signal<void(AbstractPipelineNode*, int32_t, int32_t, const std::string&)>;
+  const FilterProgressSignalType& getFilterProgressSignal() const;
   FilterProgressSignalType& getFilterProgressSignal();
   void sendFilterProgressMessage(int32_t filterIndex, int32_t progress, const std::string& message);
 
   using FilterUpdateSignalType = nod::signal<void(AbstractPipelineNode*, int32_t, const std::string&)>;
+const  FilterUpdateSignalType& getFilterUpdateSignal() const;
   FilterUpdateSignalType& getFilterUpdateSignal();
   void sendFilterUpdateMessage(int32_t filterIndex, const std::string& message);
 
@@ -60,14 +64,17 @@ public:
     Errors = 2
   };
   using PipelineFaultSignalType = nod::signal<void(AbstractPipelineNode*, FaultState)>;
+  const PipelineFaultSignalType& getPipelineFaultSignal() const;
   PipelineFaultSignalType& getPipelineFaultSignal();
   void sendPipelineFaultMessage(FaultState state);
 
   using FilterFaultSignalType = nod::signal<void(AbstractPipelineNode*, int32_t, FaultState)>;
+  const FilterFaultSignalType& getFilterFaultSignal() const;
   FilterFaultSignalType& getFilterFaultSignal();
   void sendFilterFaultMessage(int32_t filterIndex, FaultState state);
 
   using FilterFaultDetailSignalType = nod::signal<void(AbstractPipelineNode*, int32_t, WarningCollection, ErrorCollection)>;
+  const FilterFaultDetailSignalType& getFilterFaultDetailSignal() const;
   FilterFaultDetailSignalType& getFilterFaultDetailSignal();
   void sendFilterFaultDetailMessage(int32_t filterIndex, const WarningCollection& warnings, const ErrorCollection& errors);
 
@@ -284,7 +291,7 @@ protected:
    * @brief Sets the run state.
    * @param value = true
    */
-  void setRunState(const RunState& runState);
+  void setRunState(RunState runState);
 
   /**
    * @brief Sets or clears the Warning flag.

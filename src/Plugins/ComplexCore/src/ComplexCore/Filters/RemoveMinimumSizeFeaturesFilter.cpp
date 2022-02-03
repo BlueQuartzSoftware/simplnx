@@ -386,11 +386,7 @@ Result<> RemoveMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructu
   auto minAllowedFeatureSize = args.value<int64>(k_MinAllowedFeaturesSize_Key);
   auto phaseNumber = args.value<int64>(k_PhaseNumber_Key);
 
-  PhasesArrayType* featurePhasesArray = nullptr;
-  if(applyToSinglePhase)
-  {
-    featurePhasesArray = dataStructure.getDataAs<PhasesArrayType>(featurePhasesPath);
-  }
+  PhasesArrayType* featurePhasesArray = applyToSinglePhase ? dataStructure.getDataAs<PhasesArrayType>(featurePhasesPath) : nullptr ;
 
   FeatureIdsArrayType& featureIdsArrayRef = dataStructure.getDataRefAs<FeatureIdsArrayType>(featureIdsPath);
   FeatureIdsArrayType::store_type& featureIdsStoreRef = featureIdsArrayRef.getDataStoreRef();

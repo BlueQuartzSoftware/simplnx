@@ -1,12 +1,10 @@
 #include "AbstractPipelineNode.hpp"
 
-#include <algorithm>
-#include <bitset>
-#include <cstdlib>
-
 #include "complex/Pipeline/Messaging/NodeStatusMessage.hpp"
-#include "complex/Pipeline/Messaging/PipelineNodeObserver.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
+
+#include <algorithm>
+#include <cstdlib>
 
 using namespace complex;
 
@@ -105,7 +103,10 @@ AbstractPipelineNode::SignalType& AbstractPipelineNode::getSignal()
 {
   return m_Signal;
 }
-
+const AbstractPipelineNode::PipelineRunStateSignalType& AbstractPipelineNode::getPipelineRunStateSignal() const
+{
+  return m_PipelineRunStateSignal;
+}
 AbstractPipelineNode::PipelineRunStateSignalType& AbstractPipelineNode::getPipelineRunStateSignal()
 {
   return m_PipelineRunStateSignal;
@@ -116,6 +117,10 @@ void AbstractPipelineNode::sendPipelineRunStateMessage(AbstractPipelineNode::Run
   m_PipelineRunStateSignal(this, value);
 }
 
+const AbstractPipelineNode::FilterRunStateSignalType& AbstractPipelineNode::getFilterRunStateSignal() const
+{
+  return m_FilterRunStateSignal;
+}
 AbstractPipelineNode::FilterRunStateSignalType& AbstractPipelineNode::getFilterRunStateSignal()
 {
   return m_FilterRunStateSignal;
@@ -125,6 +130,10 @@ void AbstractPipelineNode::sendFilterRunStateMessage(int32_t filterIndex, Abstra
   m_FilterRunStateSignal(this, filterIndex, value);
 }
 
+const AbstractPipelineNode::FilterProgressSignalType& AbstractPipelineNode::getFilterProgressSignal() const
+{
+  return m_FilterProgressSignal;
+}
 AbstractPipelineNode::FilterProgressSignalType& AbstractPipelineNode::getFilterProgressSignal()
 {
   return m_FilterProgressSignal;
@@ -134,6 +143,10 @@ void AbstractPipelineNode::sendFilterProgressMessage(int32_t filterIndex, int32_
   m_FilterProgressSignal(this, filterIndex, progress, message);
 }
 
+const AbstractPipelineNode::FilterUpdateSignalType& AbstractPipelineNode::getFilterUpdateSignal() const
+{
+  return m_FilterUpdateSignal;
+}
 AbstractPipelineNode::FilterUpdateSignalType& AbstractPipelineNode::getFilterUpdateSignal()
 {
   return m_FilterUpdateSignal;
@@ -143,6 +156,10 @@ void AbstractPipelineNode::sendFilterUpdateMessage(int32_t filterIndex, const st
   m_FilterUpdateSignal(this, filterIndex, message);
 }
 
+const AbstractPipelineNode::PipelineFaultSignalType& AbstractPipelineNode::getPipelineFaultSignal() const
+{
+  return m_PipelineFaultSignal;
+}
 AbstractPipelineNode::PipelineFaultSignalType& AbstractPipelineNode::getPipelineFaultSignal()
 {
   return m_PipelineFaultSignal;
@@ -152,6 +169,10 @@ void AbstractPipelineNode::sendPipelineFaultMessage(AbstractPipelineNode::FaultS
   m_PipelineFaultSignal(this, state);
 }
 
+const AbstractPipelineNode::FilterFaultSignalType& AbstractPipelineNode::getFilterFaultSignal() const
+{
+  return m_FilterFaultSignal;
+}
 AbstractPipelineNode::FilterFaultSignalType& AbstractPipelineNode::getFilterFaultSignal()
 {
   return m_FilterFaultSignal;
@@ -263,7 +284,7 @@ void AbstractPipelineNode::clearFaultState()
   notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
 }
 
-void AbstractPipelineNode::setRunState(const RunState& runState)
+void AbstractPipelineNode::setRunState(RunState runState)
 {
   m_RunState = runState;
   notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
