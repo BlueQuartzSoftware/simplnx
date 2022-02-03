@@ -175,6 +175,10 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& ds)
   for(auto iter = begin() + index; iter != end(); iter++)
   {
     auto* filter = iter->get();
+    if(filter->isDisabled())
+    {
+      continue;
+    }
 //    startObservingNode(filter);
     bool succeeded = filter->preflight(ds);
 //    stopObservingNode();
