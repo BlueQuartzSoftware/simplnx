@@ -79,45 +79,44 @@ void mapPointCloudDataByKernel(IDataArray* source, IDataArray* dynamic, std::vec
 
 void mapPointCloudDataByKernel(IDataArray* source, IDataArray* dynamic, std::vector<float>& kernelVals, int64 kernel[3], usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
 {
-  if(dynamic_cast<DataArray<int8>*>(source))
+  complex::DataType arrayType = source->getDataType();
+  switch(arrayType)
   {
+  case complex::DataType::int8:
     mapPointCloudDataByKernel<int8>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<int16>*>(source))
-  {
-    mapPointCloudDataByKernel<int16>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<int32>*>(source))
-  {
-    mapPointCloudDataByKernel<int32>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<int64>*>(source))
-  {
-    mapPointCloudDataByKernel<int64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<uint8>*>(source))
-  {
+    break;
+  case complex::DataType::uint8:
     mapPointCloudDataByKernel<uint8>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<uint16>*>(source))
-  {
+    break;
+  case complex::DataType::int16:
+    mapPointCloudDataByKernel<int16>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+    break;
+  case complex::DataType::uint16:
     mapPointCloudDataByKernel<uint16>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<uint32>*>(source))
-  {
+    break;
+  case complex::DataType::int32:
+    mapPointCloudDataByKernel<int32>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+    break;
+  case complex::DataType::uint32:
     mapPointCloudDataByKernel<uint32>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<uint64>*>(source))
-  {
+    break;
+  case complex::DataType::int64:
+    mapPointCloudDataByKernel<int64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+    break;
+  case complex::DataType::uint64:
     mapPointCloudDataByKernel<uint64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<float32>*>(source))
-  {
+    break;
+  case complex::DataType::float32:
     mapPointCloudDataByKernel<float32>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<float64>*>(source))
-  {
+    break;
+  case complex::DataType::float64:
     mapPointCloudDataByKernel<float64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+    break;
+  case complex::DataType::boolean:
+    mapPointCloudDataByKernel<bool>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+    break;
+  case complex::DataType::error:
+    throw std::runtime_error("InterpolatePointCloudToRegularGridFilter: Source Data Array had unknown type.");
   }
 }
 
@@ -530,7 +529,7 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
       }
     }
 
-    if(copyDataPaths.size() > 0)
+    if(!copyDataPaths.empty())
     {
       for(const auto& copyDataPath : copyDataPaths)
       {
