@@ -80,9 +80,13 @@ void PipelineFilter::setIndex(int32 index)
 // -----------------------------------------------------------------------------
 bool PipelineFilter::preflight(DataStructure& data)
 {
-  setStatus(Status::None);
+  setRunState(RunState::Preflighting);
+  sendFilterRunStateMessage(m_Index, getRunState());
+  sendFilterUpdateMessage(m_Index, "    PipelineFilter::preflight()  Starting Preflight.. ");
+
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
+  clearFaultState();
   IFilter::PreflightResult result = m_Filter->preflight(data, getArguments(), messageHandler);
   m_Warnings = std::move(result.outputActions.warnings());
   setHasWarnings(!m_Warnings.empty());
@@ -90,10 +94,10 @@ bool PipelineFilter::preflight(DataStructure& data)
   if(result.outputActions.invalid())
   {
     m_Errors = std::move(result.outputActions.errors());
-
+    setHasErrors();
     setPreflightStructure(data, false);
-    setHasErrors(true);
-    notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
+//    notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
+    sendFilterFaultMessage(m_Index, getFaultState());
     return false;
   }
 
@@ -111,15 +115,24 @@ bool PipelineFilter::preflight(DataStructure& data)
     {
       m_Errors = std::move(actionResult.errors());
       setPreflightStructure(data, false);
-      setHasErrors(true);
-      notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
+      setHasErrors();
+//      notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
+      sendFilterFaultMessage(m_Index, getFaultState());
       return false;
     }
   }
 
   setPreflightStructure(data);
+//  notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
+  sendFilterFaultMessage(m_Index, getFaultState());
+  if(!m_Warnings.empty() || !m_Errors.empty())
+  {
+    sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
+  }
 
-  notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
+  setRunState(RunState::Idle);
+  sendFilterRunStateMessage(m_Index, getRunState());
+  sendFilterUpdateMessage(m_Index, "    PipelineFilter::preflight()  Ending Preflight.. ");
   return true;
 }
 

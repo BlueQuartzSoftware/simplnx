@@ -166,27 +166,32 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& ds)
     return false;
   }
 
+  setRunState(RunState::Preflighting);
+  sendPipelineRunStateMessage(m_RunState);
   setHasWarnings(hasWarningsBeforeIndex(index));
   setHasErrors(false);
-
+  size_t currentIndex = 0;
+  bool returnValue = true;
   for(auto iter = begin() + index; iter != end(); iter++)
   {
-    startObservingNode(iter->get());
-    bool succeeded = iter->get()->preflight(ds);
-    stopObservingNode();
+    auto* filter = iter->get();
+//    startObservingNode(filter);
+    bool succeeded = filter->preflight(ds);
+//    stopObservingNode();
 
-    if(iter->get()->hasWarnings())
-    {
-      setHasWarnings(true);
-    }
-
+    setHasWarnings(filter->hasWarnings());
     if(!succeeded)
     {
       setHasErrors(true);
-      return false;
+      returnValue = false;
+      break;
     }
+    currentIndex++;
   }
-  return true;
+  sendPipelineFaultMessage(m_FaultState);
+  setRunState(RunState::Idle);
+  sendPipelineRunStateMessage(m_RunState);
+  return returnValue;
 }
 
 bool Pipeline::preflightFrom(index_type index)
