@@ -142,7 +142,7 @@ bool PipelineFilter::preflight(DataStructure& data)
 bool PipelineFilter::execute(DataStructure& data)
 {
   setRunState(RunState::Executing);
-  this->sendFilterRunStateMessage(m_Index, AbstractPipelineNode::RunState::Executing);
+  this->sendFilterRunStateMessage(m_Index, complex::RunState::Executing);
   this->sendFilterUpdateMessage(m_Index, "    PipelineFilter::execute()  Starting Execution.. ");
 
   m_Warnings.clear();
@@ -171,7 +171,7 @@ bool PipelineFilter::execute(DataStructure& data)
   }
   sendFilterFaultMessage(m_Index, getFaultState());
   setRunState(RunState::Idle);
-  this->sendFilterRunStateMessage(m_Index, AbstractPipelineNode::RunState::Idle);
+  this->sendFilterRunStateMessage(m_Index, complex::RunState::Idle);
   this->sendFilterUpdateMessage(m_Index, "    PipelineFilter::execute()  Ending Execution.. ");
 
   return result.result.valid();
@@ -209,11 +209,11 @@ void PipelineFilter::notifyFilterMessage(const IFilter::Message& message)
   }
   else if(message.type == IFilter::Message::Type::Error)
   {
-    sendFilterFaultMessage(m_Index, AbstractPipelineNode::FaultState::Errors);
+    sendFilterFaultMessage(m_Index, complex::FaultState::Errors);
   }
   else if(message.type == IFilter::Message::Type::Warning)
   {
-    sendFilterFaultMessage(m_Index, AbstractPipelineNode::FaultState::Warnings);
+    sendFilterFaultMessage(m_Index, complex::FaultState::Warnings);
   }
 }
 

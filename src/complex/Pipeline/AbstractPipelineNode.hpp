@@ -15,6 +15,23 @@ namespace complex
 class AbstractPipelineMessage;
 class Pipeline;
 
+enum class RunState
+{
+  Idle = 0,
+  Queued = 1,
+  Preflighting = 2,
+  Executing = 3
+};
+
+
+enum class FaultState
+{
+  None = 0,
+  Warnings = 1,
+  Errors = 2
+};
+
+
 /**
  * @class AbstractPipelineNode
  * @brief The AbstractPipelineNode class serves as the abstract base class for
@@ -30,13 +47,6 @@ public:
 
   using SignalType = nod::signal<void(AbstractPipelineNode*, const std::shared_ptr<AbstractPipelineMessage>&)>;
 
-  enum class RunState
-  {
-    Idle = 0,
-    Queued = 1,
-    Preflighting = 2,
-    Executing = 3
-  };
   using PipelineRunStateSignalType = nod::signal<void(AbstractPipelineNode*, RunState)>;
   const PipelineRunStateSignalType& getPipelineRunStateSignal() const;
   PipelineRunStateSignalType& getPipelineRunStateSignal();
@@ -57,12 +67,6 @@ const  FilterUpdateSignalType& getFilterUpdateSignal() const;
   FilterUpdateSignalType& getFilterUpdateSignal();
   void sendFilterUpdateMessage(int32_t filterIndex, const std::string& message);
 
-  enum class FaultState
-  {
-    None = 0,
-    Warnings = 1,
-    Errors = 2
-  };
   using PipelineFaultSignalType = nod::signal<void(AbstractPipelineNode*, FaultState)>;
   const PipelineFaultSignalType& getPipelineFaultSignal() const;
   PipelineFaultSignalType& getPipelineFaultSignal();

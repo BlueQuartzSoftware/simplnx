@@ -112,7 +112,7 @@ AbstractPipelineNode::PipelineRunStateSignalType& AbstractPipelineNode::getPipel
   return m_PipelineRunStateSignal;
 }
 
-void AbstractPipelineNode::sendPipelineRunStateMessage(AbstractPipelineNode::RunState value)
+void AbstractPipelineNode::sendPipelineRunStateMessage(complex::RunState value)
 {
   m_PipelineRunStateSignal(this, value);
 }
@@ -125,7 +125,7 @@ AbstractPipelineNode::FilterRunStateSignalType& AbstractPipelineNode::getFilterR
 {
   return m_FilterRunStateSignal;
 }
-void AbstractPipelineNode::sendFilterRunStateMessage(int32_t filterIndex, AbstractPipelineNode::RunState value)
+void AbstractPipelineNode::sendFilterRunStateMessage(int32_t filterIndex, complex::RunState value)
 {
   m_FilterRunStateSignal(this, filterIndex, value);
 }
@@ -164,7 +164,7 @@ AbstractPipelineNode::PipelineFaultSignalType& AbstractPipelineNode::getPipeline
 {
   return m_PipelineFaultSignal;
 }
-void AbstractPipelineNode::sendPipelineFaultMessage(AbstractPipelineNode::FaultState state)
+void AbstractPipelineNode::sendPipelineFaultMessage(complex::FaultState state)
 {
   m_PipelineFaultSignal(this, state);
 }
@@ -177,7 +177,7 @@ AbstractPipelineNode::FilterFaultSignalType& AbstractPipelineNode::getFilterFaul
 {
   return m_FilterFaultSignal;
 }
-void AbstractPipelineNode::sendFilterFaultMessage(int32_t filterIndex, AbstractPipelineNode::FaultState state)
+void AbstractPipelineNode::sendFilterFaultMessage(int32_t filterIndex, complex::FaultState state)
 {
   m_FilterFaultSignal(this, filterIndex, state);
 }
@@ -230,36 +230,36 @@ std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipelineSegment() co
   return std::move(parentPipeline->copySegment(parentPipeline->begin(), iter));
 }
 
-complex::AbstractPipelineNode::RunState AbstractPipelineNode::getRunState() const
+complex::RunState AbstractPipelineNode::getRunState() const
 {
   return m_RunState;
 }
 
-complex::AbstractPipelineNode::FaultState AbstractPipelineNode::getFaultState() const
+complex::FaultState AbstractPipelineNode::getFaultState() const
 {
   return m_FaultState;
 }
 
 bool AbstractPipelineNode::hasErrors() const
 {
-  return m_FaultState == complex::AbstractPipelineNode::FaultState::Errors;
+  return m_FaultState == complex::FaultState::Errors;
 }
 
 bool AbstractPipelineNode::hasWarnings() const
 {
-  return m_FaultState == complex::AbstractPipelineNode::FaultState::Warnings;
+  return m_FaultState == complex::FaultState::Warnings;
 }
 
 void AbstractPipelineNode::setHasWarnings(bool value)
 {
   if(value)
   {
-    m_FaultState = complex::AbstractPipelineNode::FaultState::Warnings;
+    m_FaultState = complex::FaultState::Warnings;
     notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
   }
-  else if(!value && m_FaultState == complex::AbstractPipelineNode::FaultState::Warnings)
+  else if(!value && m_FaultState == complex::FaultState::Warnings)
   {
-    m_FaultState = complex::AbstractPipelineNode::FaultState::None;
+    m_FaultState = complex::FaultState::None;
     notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
   }
 }
@@ -268,19 +268,19 @@ void AbstractPipelineNode::setHasErrors(bool value)
 {
   if(value)
   {
-    m_FaultState = complex::AbstractPipelineNode::FaultState::Errors;
+    m_FaultState = complex::FaultState::Errors;
     notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
   }
-  else if(!value && m_FaultState == complex::AbstractPipelineNode::FaultState::Errors)
+  else if(!value && m_FaultState == complex::FaultState::Errors)
   {
-    m_FaultState = complex::AbstractPipelineNode::FaultState::None;
+    m_FaultState = complex::FaultState::None;
     notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
   }
 }
 
 void AbstractPipelineNode::clearFaultState()
 {
-  m_FaultState = complex::AbstractPipelineNode::FaultState::None;
+  m_FaultState = complex::FaultState::None;
   notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
 }
 

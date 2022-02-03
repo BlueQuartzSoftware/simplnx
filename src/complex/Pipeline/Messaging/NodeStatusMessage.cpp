@@ -6,7 +6,7 @@
 
 using namespace complex;
 
-NodeStatusMessage::NodeStatusMessage(AbstractPipelineNode* node, AbstractPipelineNode::FaultState faultState, AbstractPipelineNode::RunState runState)
+NodeStatusMessage::NodeStatusMessage(AbstractPipelineNode* node, complex::FaultState faultState, complex::RunState runState)
 : AbstractPipelineMessage(node)
 , m_FaultState(faultState)
 , m_RunState(runState)
@@ -15,12 +15,12 @@ NodeStatusMessage::NodeStatusMessage(AbstractPipelineNode* node, AbstractPipelin
 
 NodeStatusMessage::~NodeStatusMessage() = default;
 
-AbstractPipelineNode::FaultState NodeStatusMessage::getFaultState() const
+complex::FaultState NodeStatusMessage::getFaultState() const
 {
   return m_FaultState;
 }
 
-AbstractPipelineNode::RunState NodeStatusMessage::getRunState() const
+complex::RunState NodeStatusMessage::getRunState() const
 {
   return m_RunState;
 }
@@ -29,19 +29,19 @@ std::string NodeStatusMessage::toString() const
 {
   auto output = fmt::format("Node {}: ", getNode()->getName());
 
-  if(m_RunState == AbstractPipelineNode::RunState::Idle)
+  if(m_RunState == complex::RunState::Idle)
   {
     output += " is Idle;";
   }
-  if(m_RunState == AbstractPipelineNode::RunState::Queued)
+  if(m_RunState == complex::RunState::Queued)
   {
     output += " is Queued;";
   }
-  if(m_RunState == AbstractPipelineNode::RunState::Preflighting)
+  if(m_RunState == complex::RunState::Preflighting)
   {
     output += " is Preflighting;";
   }
-  if(m_RunState == AbstractPipelineNode::RunState::Executing)
+  if(m_RunState == complex::RunState::Executing)
   {
     output += " is Executing;";
   }
