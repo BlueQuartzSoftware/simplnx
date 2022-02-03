@@ -69,9 +69,9 @@ IFilter::PreflightResult ConditionalSetValue::preflightImpl(const DataStructure&
   }
 
   // Validate that the Conditional Array is of the correct type
-  const DataObject* dataObject = dataStructure.getData(pConditionalPath);
+  const IDataArray* dataObject = dataStructure.getDataAs<IDataArray>(pConditionalPath);
 
-  if(dataObject->getTypeName() == BoolArray::GetTypeName() || dataObject->getTypeName() == UInt8Array::GetTypeName() || dataObject->getTypeName() == Int8Array::GetTypeName())
+  if(dataObject->getDataType() == complex::DataType::boolean || dataObject->getDataType() == complex::DataType::uint8 || dataObject->getDataType() == complex::DataType::int8)
   {
     return {MakeErrorResult<OutputActions>(
         ::k_IncorrectInputArrayType, fmt::format("Conditional Array must be of type [Bool|UInt8|Int8]. The object at path '{}' is '{}'", pConditionalPath.toString(), dataObject->getTypeName()))};

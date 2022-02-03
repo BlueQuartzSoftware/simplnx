@@ -179,9 +179,9 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& ds)
     {
       continue;
     }
-//    startObservingNode(filter);
+    //    startObservingNode(filter);
     bool succeeded = filter->preflight(ds);
-//    stopObservingNode();
+    //    stopObservingNode();
 
     setHasWarnings(filter->hasWarnings());
     if(!succeeded)
