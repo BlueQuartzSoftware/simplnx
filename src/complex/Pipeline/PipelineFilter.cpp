@@ -98,6 +98,7 @@ bool PipelineFilter::preflight(DataStructure& data)
     setPreflightStructure(data, false);
 //    notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
     sendFilterFaultMessage(m_Index, getFaultState());
+    sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
     return false;
   }
 
@@ -118,6 +119,7 @@ bool PipelineFilter::preflight(DataStructure& data)
       setHasErrors();
 //      notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
       sendFilterFaultMessage(m_Index, getFaultState());
+      sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
       return false;
     }
   }
