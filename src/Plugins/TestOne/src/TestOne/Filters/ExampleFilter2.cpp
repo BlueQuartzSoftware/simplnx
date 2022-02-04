@@ -65,11 +65,11 @@ Parameters ExampleFilter2::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_Param3, "ChoicesParameter", "", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
 
   params.insertSeparator({"2nd Group of Parameters"});
-  DynamicTableParameter::ValueType dynamicTable{{{10, 20}, {30, 40}}, {"Col 1", "Col 2"}, {"Row 1", "Row2"}};
+  DynamicTableParameter::ValueType dynamicTable{{{10, 20}, {30, 40}}, {"Row 1", "Row2"}, {"Col 1", "Col 2"}};
   dynamicTable.setMinCols(2);
   dynamicTable.setDynamicCols(true);
   dynamicTable.setDynamicRows(true);
-  params.insert(std::make_unique<DynamicTableParameter>(k_Param13, "DynamicTableParameter", "", dynamicTable));
+  params.insert(std::make_unique<DynamicTableParameter>(k_Param13, "DynamicTableParameter", "DynamicTableParameter Example Help Text", dynamicTable));
 
   // These should show up under the "Required Objects" Section in the GUI
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_Param9, "DataGroupSelectionParameter", "", DataPath{}));
