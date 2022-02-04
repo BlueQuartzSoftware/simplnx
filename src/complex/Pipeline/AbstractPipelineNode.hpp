@@ -23,14 +23,12 @@ enum class RunState
   Executing = 3
 };
 
-
 enum class FaultState
 {
   None = 0,
   Warnings = 1,
   Errors = 2
 };
-
 
 /**
  * @class AbstractPipelineNode
@@ -63,7 +61,7 @@ public:
   void sendFilterProgressMessage(int32_t filterIndex, int32_t progress, const std::string& message);
 
   using FilterUpdateSignalType = nod::signal<void(AbstractPipelineNode*, int32_t, const std::string&)>;
-const  FilterUpdateSignalType& getFilterUpdateSignal() const;
+  const FilterUpdateSignalType& getFilterUpdateSignal() const;
   FilterUpdateSignalType& getFilterUpdateSignal();
   void sendFilterUpdateMessage(int32_t filterIndex, const std::string& message);
 

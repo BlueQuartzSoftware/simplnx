@@ -113,7 +113,6 @@ Result<> SegmentFeatures::execute(AbstractGeometryGrid* gridGeom)
       if(gnum % 100 == 0)
       {
         std::string ss = fmt::format("Current Feature Count: {}", gnum);
-        std::cout << ss << std::endl;
         m_MessageHandler({IFilter::Message::Type::Info, ss});
       }
     }
