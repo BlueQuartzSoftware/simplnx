@@ -1,19 +1,46 @@
 #include "ArraySelectionParameter.hpp"
 
 #include "complex/Common/Any.hpp"
+#include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
 
 #include <fmt/core.h>
+#include <fmt/ranges.h>
 
 #include <nlohmann/json.hpp>
 
+using namespace complex;
+
+template <>
+struct fmt::formatter<complex::DataType>
+{
+  template <typename ParseContext>
+  constexpr auto parse(ParseContext& ctx)
+  {
+    return ctx.begin();
+  }
+
+  template <typename FormatContext>
+  auto format(const complex::DataType& value, FormatContext& ctx)
+  {
+    return fmt::format_to(ctx.out(), "{}", complex::DataTypeToString(value));
+  }
+};
+
+namespace
+{
+constexpr int32 k_Validate_AllowedType_Error = -206;
+} // namespace
+
 namespace complex
 {
-ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty)
+ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty,
+                                                 const AllowedTypes& allowedTypes)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
 , m_AllowEmpty(allowEmpty)
+, m_AllowedTypes(allowedTypes)
 {
 }
 
@@ -69,6 +96,11 @@ typename ArraySelectionParameter::ValueType ArraySelectionParameter::defaultPath
   return m_DefaultValue;
 }
 
+ArraySelectionParameter::AllowedTypes ArraySelectionParameter::allowedTypes() const
+{
+  return m_AllowedTypes;
+}
+
 Result<> ArraySelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
@@ -99,6 +131,16 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
   if(dataArray == nullptr)
   {
     return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, value.toString()));
+  }
+
+  if(!m_AllowedTypes.empty())
+  {
+    DataType dataType = dataArray->getDataType();
+    if(m_AllowedTypes.count(dataType) == 0)
+    {
+      return complex::MakeErrorResult(k_Validate_AllowedType_Error,
+                                      fmt::format("{}DataArray at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), dataType, m_AllowedTypes));
+    }
   }
 
   return {};
