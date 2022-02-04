@@ -90,7 +90,7 @@ Uuid ITKPatchBasedDenoisingImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKPatchBasedDenoisingImage::humanName() const
 {
-  return "ITK::PatchBasedDenoisingImageFilter";
+  return "ITK Patch Based Denoising Image Filter";
 }
 
 //------------------------------------------------------------------------------

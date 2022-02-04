@@ -62,7 +62,7 @@ Uuid ITKClosingByReconstructionImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKClosingByReconstructionImage::humanName() const
 {
-  return "ITK::ClosingByReconstructionImageFilter";
+  return "ITK Closing By Reconstruction Image Filter";
 }
 
 //------------------------------------------------------------------------------

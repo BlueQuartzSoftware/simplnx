@@ -54,7 +54,7 @@ Uuid ITKGrayscaleFillholeImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKGrayscaleFillholeImage::humanName() const
 {
-  return "ITK::GrayscaleFillholeImageFilter";
+  return "ITK Grayscale Fillhole Image Filter";
 }
 
 //------------------------------------------------------------------------------

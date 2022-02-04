@@ -58,7 +58,7 @@ Uuid ITKBilateralImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKBilateralImage::humanName() const
 {
-  return "ITK::BilateralImageFilter";
+  return "ITK Bilateral Image Filter";
 }
 
 //------------------------------------------------------------------------------

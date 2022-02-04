@@ -127,7 +127,7 @@ Uuid ITKMaskImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKMaskImage::humanName() const
 {
-  return "ITK::MaskImageFilter";
+  return "ITK Mask Image Filter";
 }
 
 //------------------------------------------------------------------------------

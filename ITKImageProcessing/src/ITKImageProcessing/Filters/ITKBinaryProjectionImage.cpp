@@ -58,7 +58,7 @@ Uuid ITKBinaryProjectionImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKBinaryProjectionImage::humanName() const
 {
-  return "ITK::BinaryProjectionImageFilter";
+  return "ITK Binary Projection Image Filter";
 }
 
 //------------------------------------------------------------------------------

@@ -58,7 +58,7 @@ Uuid ITKThresholdImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKThresholdImage::humanName() const
 {
-  return "ITK::ThresholdImageFilter";
+  return "ITK Threshold Image Filter";
 }
 
 //------------------------------------------------------------------------------

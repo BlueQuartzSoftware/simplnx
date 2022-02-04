@@ -62,7 +62,7 @@ Uuid ITKBinaryMorphologicalOpeningImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKBinaryMorphologicalOpeningImage::humanName() const
 {
-  return "ITK::BinaryMorphologicalOpeningImageFilter";
+  return "ITK Binary Morphological Opening Image Filter";
 }
 
 //------------------------------------------------------------------------------

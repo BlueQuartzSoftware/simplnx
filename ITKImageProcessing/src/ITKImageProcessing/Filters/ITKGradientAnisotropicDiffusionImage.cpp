@@ -69,7 +69,7 @@ Uuid ITKGradientAnisotropicDiffusionImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKGradientAnisotropicDiffusionImage::humanName() const
 {
-  return "ITK::GradientAnisotropicDiffusionImageFilter";
+  return "ITK Gradient Anisotropic Diffusion Image Filter";
 }
 
 //------------------------------------------------------------------------------

@@ -57,7 +57,7 @@ Uuid ITKHConvexImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKHConvexImage::humanName() const
 {
-  return "ITK::HConvexImageFilter";
+  return "ITK H Convex Image Filter";
 }
 
 //------------------------------------------------------------------------------

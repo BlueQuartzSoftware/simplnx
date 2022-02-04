@@ -50,7 +50,7 @@ Uuid ITKAbsImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKAbsImage::humanName() const
 {
-  return "ITK::AbsImageFilter";
+  return "ITK Abs Image Filter";
 }
 
 //------------------------------------------------------------------------------

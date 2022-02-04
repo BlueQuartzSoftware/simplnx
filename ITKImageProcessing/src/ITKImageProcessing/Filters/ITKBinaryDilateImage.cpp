@@ -65,7 +65,7 @@ Uuid ITKBinaryDilateImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKBinaryDilateImage::humanName() const
 {
-  return "ITK::BinaryDilateImageFilter";
+  return "ITK Binary Dilate Image Filter";
 }
 
 //------------------------------------------------------------------------------

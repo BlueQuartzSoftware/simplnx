@@ -62,7 +62,7 @@ Uuid ITKOpeningByReconstructionImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKOpeningByReconstructionImage::humanName() const
 {
-  return "ITK::OpeningByReconstructionImageFilter";
+  return "ITK Opening By Reconstruction Image Filter";
 }
 
 //------------------------------------------------------------------------------

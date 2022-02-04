@@ -88,7 +88,7 @@ Uuid ITKDanielssonDistanceMapImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKDanielssonDistanceMapImage::humanName() const
 {
-  return "ITK::DanielssonDistanceMapImageFilter";
+  return "ITK Danielsson Distance Map Image Filter";
 }
 
 //------------------------------------------------------------------------------

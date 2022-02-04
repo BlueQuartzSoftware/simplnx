@@ -70,7 +70,7 @@ Uuid ITKMorphologicalWatershedFromMarkersImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKMorphologicalWatershedFromMarkersImage::humanName() const
 {
-  return "ITK::MorphologicalWatershedFromMarkersImageFilter";
+  return "ITK Morphological Watershed From Markers Image Filter";
 }
 
 //------------------------------------------------------------------------------

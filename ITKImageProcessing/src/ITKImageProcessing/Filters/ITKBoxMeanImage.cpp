@@ -66,7 +66,7 @@ Uuid ITKBoxMeanImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKBoxMeanImage::humanName() const
 {
-  return "ITK::BoxMeanImageFilter";
+  return "ITK Box Mean Image Filter";
 }
 
 //------------------------------------------------------------------------------

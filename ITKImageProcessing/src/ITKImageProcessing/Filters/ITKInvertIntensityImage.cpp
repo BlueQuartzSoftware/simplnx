@@ -54,7 +54,7 @@ Uuid ITKInvertIntensityImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKInvertIntensityImage::humanName() const
 {
-  return "ITK::InvertIntensityImageFilter";
+  return "ITK Invert Intensity Image Filter";
 }
 
 //------------------------------------------------------------------------------

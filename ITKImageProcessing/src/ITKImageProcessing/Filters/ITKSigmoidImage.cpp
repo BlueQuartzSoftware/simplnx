@@ -60,7 +60,7 @@ Uuid ITKSigmoidImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKSigmoidImage::humanName() const
 {
-  return "ITK::SigmoidImageFilter";
+  return "ITK Sigmoid Image Filter";
 }
 
 //------------------------------------------------------------------------------

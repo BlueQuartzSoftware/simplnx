@@ -57,7 +57,7 @@ Uuid ITKGrayscaleDilateImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKGrayscaleDilateImage::humanName() const
 {
-  return "ITK::GrayscaleDilateImageFilter";
+  return "ITK Grayscale Dilate Image Filter";
 }
 
 //------------------------------------------------------------------------------

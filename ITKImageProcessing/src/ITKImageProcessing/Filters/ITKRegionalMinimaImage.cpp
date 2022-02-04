@@ -77,7 +77,7 @@ Uuid ITKRegionalMinimaImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKRegionalMinimaImage::humanName() const
 {
-  return "ITK::RegionalMinimaImageFilter";
+  return "ITK Regional Minima Image Filter";
 }
 
 //------------------------------------------------------------------------------

@@ -72,7 +72,7 @@ Uuid ITKSumProjectionImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKSumProjectionImage::humanName() const
 {
-  return "ITK::SumProjectionImageFilter";
+  return "ITK Sum Projection Image Filter";
 }
 
 //------------------------------------------------------------------------------

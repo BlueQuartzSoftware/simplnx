@@ -57,7 +57,7 @@ Uuid ITKLabelContourImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKLabelContourImage::humanName() const
 {
-  return "ITK::LabelContourImageFilter";
+  return "ITK Label Contour Image Filter";
 }
 
 //------------------------------------------------------------------------------

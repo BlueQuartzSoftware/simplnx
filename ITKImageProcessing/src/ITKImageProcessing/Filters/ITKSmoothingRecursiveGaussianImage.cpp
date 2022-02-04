@@ -68,7 +68,7 @@ Uuid ITKSmoothingRecursiveGaussianImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKSmoothingRecursiveGaussianImage::humanName() const
 {
-  return "ITK::SmoothingRecursiveGaussianImageFilter";
+  return "ITK Smoothing Recursive Gaussian Image Filter";
 }
 
 //------------------------------------------------------------------------------

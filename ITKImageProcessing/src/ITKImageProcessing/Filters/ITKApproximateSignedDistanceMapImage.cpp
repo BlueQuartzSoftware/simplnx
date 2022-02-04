@@ -57,7 +57,7 @@ Uuid ITKApproximateSignedDistanceMapImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKApproximateSignedDistanceMapImage::humanName() const
 {
-  return "ITK::ApproximateSignedDistanceMapImageFilter";
+  return "ITK Approximate SignedDistanceMap Image Filter";
 }
 
 //------------------------------------------------------------------------------

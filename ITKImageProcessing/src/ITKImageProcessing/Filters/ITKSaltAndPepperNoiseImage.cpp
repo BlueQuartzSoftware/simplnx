@@ -56,7 +56,7 @@ Uuid ITKSaltAndPepperNoiseImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKSaltAndPepperNoiseImage::humanName() const
 {
-  return "ITK::SaltAndPepperNoiseImageFilter";
+  return "ITK Salt AndPepperNoise Image Filter";
 }
 
 //------------------------------------------------------------------------------

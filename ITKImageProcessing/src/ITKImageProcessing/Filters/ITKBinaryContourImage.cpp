@@ -59,7 +59,7 @@ Uuid ITKBinaryContourImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKBinaryContourImage::humanName() const
 {
-  return "ITK::BinaryContourImageFilter";
+  return "ITK Binary Contour Image Filter";
 }
 
 //------------------------------------------------------------------------------

@@ -60,7 +60,7 @@ Uuid ITKIntensityWindowingImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKIntensityWindowingImage::humanName() const
 {
-  return "ITK::IntensityWindowingImageFilter";
+  return "ITK Intensity Windowing Image Filter";
 }
 
 //------------------------------------------------------------------------------

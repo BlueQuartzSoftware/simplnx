@@ -57,7 +57,7 @@ Uuid ITKGradientMagnitudeImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKGradientMagnitudeImage::humanName() const
 {
-  return "ITK::GradientMagnitudeImageFilter";
+  return "ITK Gradient Magnitude Image Filter";
 }
 
 //------------------------------------------------------------------------------

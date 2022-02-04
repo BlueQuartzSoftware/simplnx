@@ -73,7 +73,7 @@ Uuid ITKValuedRegionalMaximaImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKValuedRegionalMaximaImage::humanName() const
 {
-  return "ITK::ValuedRegionalMaximaImageFilter";
+  return "ITK Valued Regional Maxima Image Filter";
 }
 
 //------------------------------------------------------------------------------

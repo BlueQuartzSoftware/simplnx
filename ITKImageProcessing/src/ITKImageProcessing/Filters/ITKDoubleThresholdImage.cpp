@@ -83,7 +83,7 @@ Uuid ITKDoubleThresholdImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKDoubleThresholdImage::humanName() const
 {
-  return "ITK::DoubleThresholdImageFilter";
+  return "ITK Double Threshold Image Filter";
 }
 
 //------------------------------------------------------------------------------

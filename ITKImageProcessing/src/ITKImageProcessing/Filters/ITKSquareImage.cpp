@@ -50,7 +50,7 @@ Uuid ITKSquareImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKSquareImage::humanName() const
 {
-  return "ITK::SquareImageFilter";
+  return "ITK Square Image Filter";
 }
 
 //------------------------------------------------------------------------------

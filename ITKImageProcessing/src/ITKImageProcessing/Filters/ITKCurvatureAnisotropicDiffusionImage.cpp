@@ -69,7 +69,7 @@ Uuid ITKCurvatureAnisotropicDiffusionImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKCurvatureAnisotropicDiffusionImage::humanName() const
 {
-  return "ITK::CurvatureAnisotropicDiffusionImageFilter";
+  return "ITK Curvature Anisotropic Diffusion Image Filter";
 }
 
 //------------------------------------------------------------------------------

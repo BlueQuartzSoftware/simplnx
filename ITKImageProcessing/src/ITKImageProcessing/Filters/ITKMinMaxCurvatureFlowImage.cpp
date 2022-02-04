@@ -67,7 +67,7 @@ Uuid ITKMinMaxCurvatureFlowImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKMinMaxCurvatureFlowImage::humanName() const
 {
-  return "ITK::MinMaxCurvatureFlowImageFilter";
+  return "ITK Min Max Curvature Flow Image Filter";
 }
 
 //------------------------------------------------------------------------------

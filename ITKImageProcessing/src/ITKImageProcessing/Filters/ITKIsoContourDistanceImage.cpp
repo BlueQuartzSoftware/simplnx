@@ -72,7 +72,7 @@ Uuid ITKIsoContourDistanceImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKIsoContourDistanceImage::humanName() const
 {
-  return "ITK::IsoContourDistanceImageFilter";
+  return "ITK Iso Contour Distance Image Filter";
 }
 
 //------------------------------------------------------------------------------

@@ -54,7 +54,7 @@ Uuid ITKLaplacianSharpeningImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKLaplacianSharpeningImage::humanName() const
 {
-  return "ITK::LaplacianSharpeningImageFilter";
+  return "ITK Laplacian Sharpening Image Filter";
 }
 
 //------------------------------------------------------------------------------

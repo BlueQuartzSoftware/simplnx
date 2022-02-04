@@ -85,7 +85,7 @@ Uuid ITKShiftScaleImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKShiftScaleImage::humanName() const
 {
-  return "ITK::ShiftScaleImageFilter";
+  return "ITK Shift Scale Image Filter";
 }
 
 //------------------------------------------------------------------------------
