@@ -65,7 +65,7 @@ Uuid ITKBinaryOpeningByReconstructionImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKBinaryOpeningByReconstructionImage::humanName() const
 {
-  return "ITK::BinaryOpeningByReconstructionImageFilter";
+  return "ITK Binary Opening By Reconstruction Image Filter";
 }
 
 //------------------------------------------------------------------------------

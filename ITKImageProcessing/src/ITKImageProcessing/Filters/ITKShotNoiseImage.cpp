@@ -56,7 +56,7 @@ Uuid ITKShotNoiseImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKShotNoiseImage::humanName() const
 {
-  return "ITK::ShotNoiseImageFilter";
+  return "ITK Shot Noise Image Filter";
 }
 
 //------------------------------------------------------------------------------

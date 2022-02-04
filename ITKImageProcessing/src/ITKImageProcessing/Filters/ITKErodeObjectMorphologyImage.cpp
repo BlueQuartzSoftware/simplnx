@@ -62,7 +62,7 @@ Uuid ITKErodeObjectMorphologyImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKErodeObjectMorphologyImage::humanName() const
 {
-  return "ITK::ErodeObjectMorphologyImageFilter";
+  return "ITK Erode Object Morphology Image Filter";
 }
 
 //------------------------------------------------------------------------------

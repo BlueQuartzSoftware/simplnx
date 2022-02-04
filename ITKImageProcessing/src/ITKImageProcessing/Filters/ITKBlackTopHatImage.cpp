@@ -60,7 +60,7 @@ Uuid ITKBlackTopHatImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKBlackTopHatImage::humanName() const
 {
-  return "ITK::BlackTopHatImageFilter";
+  return "ITK Black Top Hat Image Filter";
 }
 
 //------------------------------------------------------------------------------

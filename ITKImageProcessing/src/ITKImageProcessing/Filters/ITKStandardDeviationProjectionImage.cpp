@@ -70,7 +70,7 @@ Uuid ITKStandardDeviationProjectionImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKStandardDeviationProjectionImage::humanName() const
 {
-  return "ITK::StandardDeviationProjectionImageFilter";
+  return "ITK Standard Deviation Projection Image Filter";
 }
 
 //------------------------------------------------------------------------------
@@ -173,7 +173,6 @@ Result<> ITKStandardDeviationProjectionImage::executeImpl(DataStructure& dataStr
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
-  return ITK::Execute<ITKStandardDeviationProjectionImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath,
-                                                                                                                              itkFunctor);
+  return ITK::Execute<ITKStandardDeviationProjectionImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

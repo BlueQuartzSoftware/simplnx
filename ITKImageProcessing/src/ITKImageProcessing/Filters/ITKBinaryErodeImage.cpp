@@ -65,7 +65,7 @@ Uuid ITKBinaryErodeImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKBinaryErodeImage::humanName() const
 {
-  return "ITK::BinaryErodeImageFilter";
+  return "ITK Binary Erode Image Filter";
 }
 
 //------------------------------------------------------------------------------

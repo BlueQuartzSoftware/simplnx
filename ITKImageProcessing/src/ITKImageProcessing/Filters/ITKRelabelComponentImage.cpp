@@ -102,7 +102,7 @@ Uuid ITKRelabelComponentImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKRelabelComponentImage::humanName() const
 {
-  return "ITK::RelabelComponentImageFilter";
+  return "ITK Relabel Component Image Filter";
 }
 
 //------------------------------------------------------------------------------

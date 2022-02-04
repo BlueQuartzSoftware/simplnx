@@ -72,7 +72,7 @@ Uuid ITKNormalizeToConstantImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKNormalizeToConstantImage::humanName() const
 {
-  return "ITK::NormalizeToConstantImageFilter";
+  return "ITK Normalize To Constant Image Filter";
 }
 
 //------------------------------------------------------------------------------

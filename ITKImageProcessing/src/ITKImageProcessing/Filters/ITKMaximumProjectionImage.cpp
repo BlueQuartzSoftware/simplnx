@@ -54,7 +54,7 @@ Uuid ITKMaximumProjectionImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKMaximumProjectionImage::humanName() const
 {
-  return "ITK::MaximumProjectionImageFilter";
+  return "ITK Maximum Projection Image Filter";
 }
 
 //------------------------------------------------------------------------------

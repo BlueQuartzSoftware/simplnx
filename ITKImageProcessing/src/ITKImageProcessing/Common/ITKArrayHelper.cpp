@@ -47,7 +47,8 @@ Result<> ITK::CheckImageType(const std::vector<DataType>& types, const DataStruc
 
   if(iter == types.cend())
   {
-    return MakeErrorResult(-1, fmt::format("Wrong data type in {}. Expected {}, but got {}. Try CastImageFilter or RescaleImageFilter to convert input data to a supported type.", path.toString(), names, DataTypeToString(dataType)));
+    return MakeErrorResult(-1, fmt::format("Wrong data type in {}. Expected {}, but got {}. Try CastImageFilter or RescaleImageFilter to convert input data to a supported type.", path.toString(),
+                                           names, DataTypeToString(dataType)));
   }
 
   return {};

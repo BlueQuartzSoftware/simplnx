@@ -60,7 +60,7 @@ Uuid ITKGrayscaleMorphologicalClosingImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKGrayscaleMorphologicalClosingImage::humanName() const
 {
-  return "ITK::GrayscaleMorphologicalClosingImageFilter";
+  return "ITK Grayscale Morphological Closing Image Filter";
 }
 
 //------------------------------------------------------------------------------

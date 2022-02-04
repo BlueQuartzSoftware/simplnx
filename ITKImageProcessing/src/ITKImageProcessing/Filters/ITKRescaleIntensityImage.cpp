@@ -67,7 +67,7 @@ Uuid ITKRescaleIntensityImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKRescaleIntensityImage::humanName() const
 {
-  return "ITK::RescaleIntensityImageFilter";
+  return "ITK Rescale Intensity Image Filter";
 }
 
 //------------------------------------------------------------------------------

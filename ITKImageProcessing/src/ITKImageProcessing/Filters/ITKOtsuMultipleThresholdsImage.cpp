@@ -66,7 +66,7 @@ Uuid ITKOtsuMultipleThresholdsImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKOtsuMultipleThresholdsImage::humanName() const
 {
-  return "ITK::OtsuMultipleThresholdsImageFilter";
+  return "ITK Otsu Multiple Thresholds Image Filter";
 }
 
 //------------------------------------------------------------------------------

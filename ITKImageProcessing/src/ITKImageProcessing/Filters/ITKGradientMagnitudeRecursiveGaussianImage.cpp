@@ -73,7 +73,7 @@ Uuid ITKGradientMagnitudeRecursiveGaussianImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKGradientMagnitudeRecursiveGaussianImage::humanName() const
 {
-  return "ITK::GradientMagnitudeRecursiveGaussianImageFilter";
+  return "ITK Gradient MagnitudeRecursiveGaussian Image Filter";
 }
 
 //------------------------------------------------------------------------------
@@ -186,7 +186,6 @@ Result<> ITKGradientMagnitudeRecursiveGaussianImage::executeImpl(DataStructure& 
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
-  return ITK::Execute<ITKGradientMagnitudeRecursiveGaussianImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath,
-                                                                                                                                            pOutputArrayPath, itkFunctor);
+  return ITK::Execute<ITKGradientMagnitudeRecursiveGaussianImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

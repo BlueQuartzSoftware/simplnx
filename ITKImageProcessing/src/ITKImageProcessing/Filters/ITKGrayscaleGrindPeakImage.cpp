@@ -54,7 +54,7 @@ Uuid ITKGrayscaleGrindPeakImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKGrayscaleGrindPeakImage::humanName() const
 {
-  return "ITK::GrayscaleGrindPeakImageFilter";
+  return "ITK Grayscale Grind Peak Image Filter";
 }
 
 //------------------------------------------------------------------------------

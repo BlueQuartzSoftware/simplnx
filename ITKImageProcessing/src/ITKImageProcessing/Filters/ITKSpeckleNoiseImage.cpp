@@ -56,7 +56,7 @@ Uuid ITKSpeckleNoiseImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKSpeckleNoiseImage::humanName() const
 {
-  return "ITK::SpeckleNoiseImageFilter";
+  return "ITK Speckle Noise Image Filter";
 }
 
 //------------------------------------------------------------------------------

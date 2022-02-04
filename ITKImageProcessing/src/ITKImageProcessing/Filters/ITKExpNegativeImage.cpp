@@ -50,7 +50,7 @@ Uuid ITKExpNegativeImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKExpNegativeImage::humanName() const
 {
-  return "ITK::ExpNegativeImageFilter";
+  return "ITK Exp Negative Image Filter";
 }
 
 //------------------------------------------------------------------------------

@@ -72,7 +72,7 @@ Uuid ITKCurvatureFlowImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKCurvatureFlowImage::humanName() const
 {
-  return "ITK::CurvatureFlowImageFilter";
+  return "ITK Curvature Flow Image Filter";
 }
 
 //------------------------------------------------------------------------------

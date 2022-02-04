@@ -82,7 +82,7 @@ Uuid ITKConnectedComponentImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKConnectedComponentImage::humanName() const
 {
-  return "ITK::ConnectedComponentImageFilter";
+  return "ITK Connected Component Image Filter";
 }
 
 //------------------------------------------------------------------------------

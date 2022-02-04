@@ -77,7 +77,7 @@ Uuid ITKSignedMaurerDistanceMapImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKSignedMaurerDistanceMapImage::humanName() const
 {
-  return "ITK::SignedMaurerDistanceMapImageFilter";
+  return "ITK Signed Maurer Distance Map Image Filter";
 }
 
 //------------------------------------------------------------------------------

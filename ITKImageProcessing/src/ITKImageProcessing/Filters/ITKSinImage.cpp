@@ -50,7 +50,7 @@ Uuid ITKSinImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKSinImage::humanName() const
 {
-  return "ITK::SinImageFilter";
+  return "ITK Sin Image Filter";
 }
 
 //------------------------------------------------------------------------------

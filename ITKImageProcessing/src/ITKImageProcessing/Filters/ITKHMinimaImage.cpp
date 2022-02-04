@@ -57,7 +57,7 @@ Uuid ITKHMinimaImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKHMinimaImage::humanName() const
 {
-  return "ITK::HMinimaImageFilter";
+  return "ITK H Minima Image Filter";
 }
 
 //------------------------------------------------------------------------------

@@ -73,7 +73,7 @@ Uuid ITKVectorConnectedComponentImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKVectorConnectedComponentImage::humanName() const
 {
-  return "ITK::VectorConnectedComponentImageFilter";
+  return "ITK Vector Connected Component Image Filter";
 }
 
 //------------------------------------------------------------------------------
@@ -185,7 +185,6 @@ Result<> ITKVectorConnectedComponentImage::executeImpl(DataStructure& dataStruct
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
-  return ITK::Execute<ITKVectorConnectedComponentImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath,
-                                                                                                                        itkFunctor);
+  return ITK::Execute<ITKVectorConnectedComponentImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

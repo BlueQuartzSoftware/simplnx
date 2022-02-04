@@ -73,7 +73,7 @@ Uuid ITKHistogramMatchingImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKHistogramMatchingImage::humanName() const
 {
-  return "ITK::HistogramMatchingImageFilter";
+  return "ITK Histogram Matching Image Filter";
 }
 
 //------------------------------------------------------------------------------

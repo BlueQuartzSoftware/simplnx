@@ -69,7 +69,7 @@ Uuid ITKBoundedReciprocalImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKBoundedReciprocalImage::humanName() const
 {
-  return "ITK::BoundedReciprocalImageFilter";
+  return "ITK Bounded Reciprocal Image Filter";
 }
 
 //------------------------------------------------------------------------------

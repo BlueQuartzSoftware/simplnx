@@ -63,7 +63,7 @@ Uuid ITKBinaryMorphologicalClosingImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKBinaryMorphologicalClosingImage::humanName() const
 {
-  return "ITK::BinaryMorphologicalClosingImageFilter";
+  return "ITK Binary Morphological Closing Image Filter";
 }
 
 //------------------------------------------------------------------------------

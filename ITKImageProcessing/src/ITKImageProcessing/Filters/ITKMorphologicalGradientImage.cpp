@@ -57,7 +57,7 @@ Uuid ITKMorphologicalGradientImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKMorphologicalGradientImage::humanName() const
 {
-  return "ITK::MorphologicalGradientImageFilter";
+  return "ITK Morphological Gradient Image Filter";
 }
 
 //------------------------------------------------------------------------------

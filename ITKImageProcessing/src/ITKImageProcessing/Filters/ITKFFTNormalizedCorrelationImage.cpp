@@ -70,7 +70,7 @@ Uuid ITKFFTNormalizedCorrelationImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKFFTNormalizedCorrelationImage::humanName() const
 {
-  return "ITK::FFTNormalizedCorrelationImageFilter";
+  return "ITK FFT Normalized Correlation Image Filter";
 }
 
 //------------------------------------------------------------------------------
@@ -179,7 +179,6 @@ Result<> ITKFFTNormalizedCorrelationImage::executeImpl(DataStructure& dataStruct
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
-  return ITK::Execute<ITKFFTNormalizedCorrelationImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath,
-                                                                                                                        itkFunctor);
+  return ITK::Execute<ITKFFTNormalizedCorrelationImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

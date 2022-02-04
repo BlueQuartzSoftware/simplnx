@@ -88,7 +88,7 @@ Uuid ITKSignedDanielssonDistanceMapImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKSignedDanielssonDistanceMapImage::humanName() const
 {
-  return "ITK::SignedDanielssonDistanceMapImageFilter";
+  return "ITK Signed Danielsson Distance Map Image Filter";
 }
 
 //------------------------------------------------------------------------------
@@ -203,7 +203,6 @@ Result<> ITKSignedDanielssonDistanceMapImage::executeImpl(DataStructure& dataStr
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
-  return ITK::Execute<ITKSignedDanielssonDistanceMapImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath,
-                                                                                                                              itkFunctor);
+  return ITK::Execute<ITKSignedDanielssonDistanceMapImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

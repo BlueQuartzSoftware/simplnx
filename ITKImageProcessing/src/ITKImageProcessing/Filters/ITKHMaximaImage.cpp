@@ -54,7 +54,7 @@ Uuid ITKHMaximaImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKHMaximaImage::humanName() const
 {
-  return "ITK::HMaximaImageFilter";
+  return "ITK H Maxima Image Filter";
 }
 
 //------------------------------------------------------------------------------

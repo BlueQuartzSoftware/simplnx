@@ -71,7 +71,7 @@ Uuid ITKDiscreteGaussianImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKDiscreteGaussianImage::humanName() const
 {
-  return "ITK::DiscreteGaussianImageFilter";
+  return "ITK Discrete Gaussian Image Filter";
 }
 
 //------------------------------------------------------------------------------

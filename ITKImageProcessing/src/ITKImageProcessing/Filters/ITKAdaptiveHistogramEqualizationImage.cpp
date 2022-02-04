@@ -68,7 +68,7 @@ Uuid ITKAdaptiveHistogramEqualizationImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKAdaptiveHistogramEqualizationImage::humanName() const
 {
-  return "ITK::AdaptiveHistogramEqualizationImageFilter";
+  return "ITK Adaptive Histogram Equalization Image Filter";
 }
 
 //------------------------------------------------------------------------------

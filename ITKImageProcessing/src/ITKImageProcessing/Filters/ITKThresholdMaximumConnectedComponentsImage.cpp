@@ -76,7 +76,7 @@ Uuid ITKThresholdMaximumConnectedComponentsImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKThresholdMaximumConnectedComponentsImage::humanName() const
 {
-  return "ITK::ThresholdMaximumConnectedComponentsImageFilter";
+  return "ITK Threshold Maximum Connected Components Image Filter";
 }
 
 //------------------------------------------------------------------------------
@@ -195,7 +195,6 @@ Result<> ITKThresholdMaximumConnectedComponentsImage::executeImpl(DataStructure&
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
-  return ITK::Execute<ITKThresholdMaximumConnectedComponentsImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath,
-                                                                                                                                              pOutputArrayPath, itkFunctor);
+  return ITK::Execute<ITKThresholdMaximumConnectedComponentsImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

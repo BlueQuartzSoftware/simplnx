@@ -50,7 +50,7 @@ Uuid ITKCosImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKCosImage::humanName() const
 {
-  return "ITK::CosImageFilter";
+  return "ITK Cos Image Filter";
 }
 
 //------------------------------------------------------------------------------

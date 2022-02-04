@@ -54,7 +54,7 @@ Uuid ITKMinimumProjectionImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKMinimumProjectionImage::humanName() const
 {
-  return "ITK::MinimumProjectionImageFilter";
+  return "ITK Minimum Projection Image Filter";
 }
 
 //------------------------------------------------------------------------------

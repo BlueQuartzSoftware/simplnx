@@ -50,7 +50,7 @@ Uuid ITKAtanImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKAtanImage::humanName() const
 {
-  return "ITK::AtanImageFilter";
+  return "ITK Atan Image Filter";
 }
 
 //------------------------------------------------------------------------------

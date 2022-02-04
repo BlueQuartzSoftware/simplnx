@@ -72,7 +72,7 @@ Uuid ITKMeanProjectionImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKMeanProjectionImage::humanName() const
 {
-  return "ITK::MeanProjectionImageFilter";
+  return "ITK Mean Projection Image Filter";
 }
 
 //------------------------------------------------------------------------------

@@ -50,7 +50,7 @@ Uuid ITKBinaryThinningImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKBinaryThinningImage::humanName() const
 {
-  return "ITK::BinaryThinningImageFilter";
+  return "ITK Binary Thinning Image Filter";
 }
 
 //------------------------------------------------------------------------------

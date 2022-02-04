@@ -72,7 +72,7 @@ Uuid ITKZeroCrossingImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKZeroCrossingImage::humanName() const
 {
-  return "ITK::ZeroCrossingImageFilter";
+  return "ITK Zero Crossing Image Filter";
 }
 
 //------------------------------------------------------------------------------

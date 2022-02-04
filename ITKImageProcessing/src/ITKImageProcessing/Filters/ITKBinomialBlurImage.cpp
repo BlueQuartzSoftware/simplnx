@@ -54,7 +54,7 @@ Uuid ITKBinomialBlurImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKBinomialBlurImage::humanName() const
 {
-  return "ITK::BinomialBlurImageFilter";
+  return "ITK Binomial Blur Image Filter";
 }
 
 //------------------------------------------------------------------------------

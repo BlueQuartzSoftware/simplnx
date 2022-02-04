@@ -50,7 +50,7 @@ Uuid ITKLog10Image::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKLog10Image::humanName() const
 {
-  return "ITK::Log10ImageFilter";
+  return "ITK Log 10 Image Filter";
 }
 
 //------------------------------------------------------------------------------

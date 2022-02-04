@@ -50,7 +50,7 @@ Uuid ITKAcosImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKAcosImage::humanName() const
 {
-  return "ITK::AcosImageFilter";
+  return "ITK Acos Image Filter";
 }
 
 //------------------------------------------------------------------------------

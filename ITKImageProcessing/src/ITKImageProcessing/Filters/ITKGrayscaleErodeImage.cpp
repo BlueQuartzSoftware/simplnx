@@ -57,7 +57,7 @@ Uuid ITKGrayscaleErodeImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKGrayscaleErodeImage::humanName() const
 {
-  return "ITK::GrayscaleErodeImageFilter";
+  return "ITK Grayscale Erode Image Filter";
 }
 
 //------------------------------------------------------------------------------

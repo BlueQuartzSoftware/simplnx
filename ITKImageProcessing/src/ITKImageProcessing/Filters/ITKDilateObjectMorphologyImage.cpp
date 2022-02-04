@@ -60,7 +60,7 @@ Uuid ITKDilateObjectMorphologyImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKDilateObjectMorphologyImage::humanName() const
 {
-  return "ITK::DilateObjectMorphologyImageFilter";
+  return "ITK Dilate Object Morphology Image Filter";
 }
 
 //------------------------------------------------------------------------------

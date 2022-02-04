@@ -73,7 +73,7 @@ Uuid ITKLaplacianRecursiveGaussianImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKLaplacianRecursiveGaussianImage::humanName() const
 {
-  return "ITK::LaplacianRecursiveGaussianImageFilter";
+  return "ITK Laplacian Recursive Gaussian Image Filter";
 }
 
 //------------------------------------------------------------------------------
@@ -185,7 +185,6 @@ Result<> ITKLaplacianRecursiveGaussianImage::executeImpl(DataStructure& dataStru
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
-  return ITK::Execute<ITKLaplacianRecursiveGaussianImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath,
-                                                                                                                            itkFunctor);
+  return ITK::Execute<ITKLaplacianRecursiveGaussianImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
 } // namespace complex

@@ -56,7 +56,7 @@ Uuid ITKMedianImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKMedianImage::humanName() const
 {
-  return "ITK::MedianImageFilter";
+  return "ITK Median Image Filter";
 }
 
 //------------------------------------------------------------------------------

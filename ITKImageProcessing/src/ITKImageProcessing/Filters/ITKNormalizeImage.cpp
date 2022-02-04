@@ -53,7 +53,7 @@ Uuid ITKNormalizeImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKNormalizeImage::humanName() const
 {
-  return "ITK::NormalizeImageFilter";
+  return "ITK Normalize Image Filter";
 }
 
 //------------------------------------------------------------------------------
