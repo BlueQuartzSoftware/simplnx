@@ -387,6 +387,12 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
   auto maskArrayPath = args.value<DataPath>(k_CreatedDataPath_Key);
 
   auto thresholdPaths = thresholdsObject.getRequiredPaths();
+  // If the paths are empty just return now.
+  if(thresholdPaths.empty())
+  {
+    return {};
+  }
+
   for(const auto& path : thresholdPaths)
   {
     if(data.getData(path) == nullptr)
@@ -400,7 +406,7 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
   for(const auto& dataPath : thresholdPaths)
   {
     const IDataArray* currentDataArray = data.getDataAs<IDataArray>(dataPath);
-    if(currentDataArray->getNumberOfComponents() != 1)
+    if(currentDataArray != nullptr && currentDataArray->getNumberOfComponents() != 1)
     {
       auto errorMessage = fmt::format("Data Array is not a Scalar Data Array. Data Arrays must only have a single component. '{}:{}'", dataPath.toString(), currentDataArray->getNumberOfComponents());
       return {nonstd::make_unexpected(std::vector<Error>{Error{-4000, errorMessage}})};
