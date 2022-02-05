@@ -67,7 +67,7 @@ Parameters RawBinaryReaderFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "", fs::path(), FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Scalar Type", "", NumericType::int8));
 
-  DynamicTableParameter::ValueType dynamicTable{{{1}, {1}}, {"Dim 0"}, {"Value"}};
+  DynamicTableParameter::ValueType dynamicTable{{{1}}, {"Dim 0"}, {"Value"}};
   dynamicTable.setMinCols(1);
   dynamicTable.setDynamicCols(true);
   dynamicTable.setDynamicRows(false);
