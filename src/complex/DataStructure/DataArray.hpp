@@ -45,7 +45,7 @@ public:
    *
    * @param ds The parent DataStructure that will own the DataArray
    * @param name The name of the DataArray
-   * @param store The IDataStore instance to use. The CreateWithStore instance WILL TAKE OWNERSHIP of that pointer.
+   * @param store The IDataStore instance to use. The DataArray instance WILL TAKE OWNERSHIP of the DataStore Pointer.
    * @param parentId = {}
    * @return DataArray<T>* Instance of the DataArray object that is owned and managed by the DataStructure
    */
