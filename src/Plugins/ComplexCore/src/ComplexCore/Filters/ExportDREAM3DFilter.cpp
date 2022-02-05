@@ -58,11 +58,6 @@ IFilter::PreflightResult ExportDREAM3DFilter::preflightImpl(const DataStructure&
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_NoExportPathError, "Export file path not provided."}})};
   }
-  auto exportDirectoryPath = exportFilePath.parent_path();
-  if(!std::filesystem::exists(exportDirectoryPath))
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_NoParentPathError, "Export parent directory does not exist."}})};
-  }
   return {};
 }
 
