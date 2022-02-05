@@ -213,7 +213,6 @@ std::shared_ptr<ArrayThreshold> ArrayThreshold::FromJson(const nlohmann::json& j
 
 ArrayThresholdSet::ArrayThresholdSet()
 : IArrayThreshold()
-, m_Thresholds()
 {
 }
 ArrayThresholdSet::ArrayThresholdSet(const ArrayThresholdSet& other)
