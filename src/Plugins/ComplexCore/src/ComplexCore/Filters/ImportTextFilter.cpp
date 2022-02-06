@@ -87,8 +87,6 @@ IFilter::PreflightResult ImportTextFilter::preflightImpl(const DataStructure& da
 
 Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
-  messageHandler.operator()({IFilter::Message::Type::Progress, "Read ASCII Progress", 50});
-
   auto inputFilePath = args.value<fs::path>(k_InputFileKey);
   auto numericType = args.value<NumericType>(k_ScalarTypeKey);
 
