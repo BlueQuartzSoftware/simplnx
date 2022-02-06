@@ -506,53 +506,51 @@ public:
    */
   static std::string GetTypeName()
   {
-    std::string typeName = "UNKNOWN";
-
-    if constexpr(std::is_same_v<T, int8_t>)
+    if constexpr(std::is_same_v<T, int8>)
     {
-      typeName = "DataArray<int8_t>";
+      return "DataArray<int8>";
     }
-    else if constexpr(std::is_same_v<T, uint8_t>)
+    else if constexpr(std::is_same_v<T, uint8>)
     {
-      typeName = "DataArray<uint8_t>";
+      return "DataArray<uint8>";
     }
-    else if constexpr(std::is_same_v<T, int16_t>)
+    else if constexpr(std::is_same_v<T, int16>)
     {
-      typeName = "DataArray<int16_t>";
+      return "DataArray<int16>";
     }
-    else if constexpr(std::is_same_v<T, uint16_t>)
+    else if constexpr(std::is_same_v<T, uint16>)
     {
-      typeName = "DataArray<uint16_t>";
+      return "DataArray<uint16>";
     }
-    else if constexpr(std::is_same_v<T, int32_t>)
+    else if constexpr(std::is_same_v<T, int32>)
     {
-      typeName = "DataArray<int32_t>";
+      return "DataArray<int32>";
     }
-    else if constexpr(std::is_same_v<T, uint32_t>)
+    else if constexpr(std::is_same_v<T, uint32>)
     {
-      typeName = "DataArray<uint32_t>";
+      return "DataArray<uint32>";
     }
-    else if constexpr(std::is_same_v<T, int64_t>)
+    else if constexpr(std::is_same_v<T, int64>)
     {
-      typeName = "DataArray<int64_t>";
+      return "DataArray<int64>";
     }
-    else if constexpr(std::is_same_v<T, uint64_t>)
+    else if constexpr(std::is_same_v<T, uint64>)
     {
-      typeName = "DataArray<uint64_t>";
+      return "DataArray<uint64>";
     }
-    else if constexpr(std::is_same_v<T, float>)
+    else if constexpr(std::is_same_v<T, float32>)
     {
-      typeName = "DataArray<float>";
+      return "DataArray<float32>";
     }
-    else if constexpr(std::is_same_v<T, double>)
+    else if constexpr(std::is_same_v<T, float64>)
     {
-      typeName = "DataArray<double>";
+      return "DataArray<float64>";
     }
     else if constexpr(std::is_same_v<T, bool>)
     {
-      typeName = "DataArray<bool>";
+      return "DataArray<bool>";
     }
-    return typeName;
+    return "DataArray: UNKNOWN TYPE";
   }
 
   /**
