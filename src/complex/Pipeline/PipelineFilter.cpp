@@ -82,7 +82,7 @@ bool PipelineFilter::preflight(DataStructure& data)
 {
   setRunState(RunState::Preflighting);
   sendFilterRunStateMessage(m_Index, getRunState());
-  sendFilterUpdateMessage(m_Index, "    PipelineFilter::preflight()  Starting Preflight.. ");
+  // sendFilterUpdateMessage(m_Index, "    PipelineFilter::preflight()  Starting Preflight.. ");
 
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
@@ -134,7 +134,7 @@ bool PipelineFilter::preflight(DataStructure& data)
 
   setRunState(RunState::Idle);
   sendFilterRunStateMessage(m_Index, getRunState());
-  sendFilterUpdateMessage(m_Index, "    PipelineFilter::preflight()  Ending Preflight.. ");
+  // sendFilterUpdateMessage(m_Index, "    PipelineFilter::preflight()  Ending Preflight.. ");
   return true;
 }
 
@@ -205,7 +205,8 @@ void PipelineFilter::notifyFilterMessage(const IFilter::Message& message)
   }
   else if(message.type == IFilter::Message::Type::Progress)
   {
-    sendFilterProgressMessage(m_Index, message.progress, message.message);
+    const IFilter::ProgressMessage& progMessage = static_cast<const IFilter::ProgressMessage&>(message);
+    sendFilterProgressMessage(m_Index, progMessage.progress, message.message);
   }
   else if(message.type == IFilter::Message::Type::Error)
   {

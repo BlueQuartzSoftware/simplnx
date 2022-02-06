@@ -248,7 +248,6 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds)
     }
   }
 
-  currentIndex = 0;
   clearFaultState();
   for(auto iter = begin() + index; iter != end(); iter++)
   {
@@ -257,31 +256,16 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds)
     {
       continue;
     }
-    //  std::cout << "[" << currentIndex << "] " << iter->get()->getName() << " Starting Filter Execution" << std::endl;
-    // startObservingNode(iter->get());
 
-    // clang-format off
-//    nod::connection filterUpdateMessageConnection = m_FilterUpdateSignal.connect
-//        ([this](complex::AbstractPipelineNode* node, const std::string& message)
-//            {});
-
-//    nod::connection filterProgressMessageConnection = m_FilterProgressSignal.connect
-//                        ([this](complex::AbstractPipelineNode* node, int32_t progress, const std::string& message)
-//                            {});
-    // clang-format on
     bool success = filter->execute(ds);
 
     setHasWarnings(filter->hasWarnings());
     if(!success)
     {
-      //    std::cout << "[" << currentIndex << "]    Execute Had Errors..." << std::endl;
       setHasErrors();
       returnValue = false;
       break;
     }
-
-    //  std::cout << "[" << currentIndex << "] Ended Filter Execution" << std::endl;
-    currentIndex++;
   }
 
   setDataStructure(ds);
