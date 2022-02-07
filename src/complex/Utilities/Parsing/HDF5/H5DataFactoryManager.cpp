@@ -27,7 +27,19 @@ H5::DataFactoryManager::~DataFactoryManager() = default;
 
 void H5::DataFactoryManager::addCoreFactories()
 {
-  addFactory(new DataArrayFactory());
+  addFactory(new UInt8ArrayFactory());
+  addFactory(new UInt16ArrayFactory());
+  addFactory(new UInt32ArrayFactory());
+  addFactory(new UInt64ArrayFactory());
+  addFactory(new Int8ArrayFactory());
+  addFactory(new Int16ArrayFactory());
+  addFactory(new Int32ArrayFactory());
+  addFactory(new Int64ArrayFactory());
+  addFactory(new USizeArrayFactory());
+  addFactory(new Float32ArrayFactory());
+  addFactory(new Float64ArrayFactory());
+  addFactory(new BoolArrayFactory());
+
   addFactory(new DataGroupFactory());
   addFactory(new EdgeGeomFactory());
   addFactory(new GridMontageFactory());

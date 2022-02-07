@@ -35,8 +35,8 @@ set(FilterList
   RemoveMinimumSizeFeaturesFilter
   RenameDataGroup
   RobustAutomaticThreshold
-  ScalarSegmentFeatures
-  SegmentFeatures
+  ScalarSegmentFeaturesFilter
+  SegmentFeaturesFilter
   StlFileReaderFilter
 )
 
@@ -50,6 +50,8 @@ set(AlgorithmList
   PointSampleTriangleGeometry
   TupleTransfer
   RawBinaryReader
+  SegmentFeatures
+  ScalarSegmentFeatures
   )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}

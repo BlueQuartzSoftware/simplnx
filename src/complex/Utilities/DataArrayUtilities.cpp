@@ -109,7 +109,7 @@ Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObjec
 }
 
 //-----------------------------------------------------------------------------
-Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const BoolArray& conditionalDataArray)
+Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray)
 {
   if(ConditionalReplaceValueInArrayFromString<float32>(valueAsStr, inputDataObject, conditionalDataArray))
   {

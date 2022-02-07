@@ -64,18 +64,18 @@ Result<> ArrayThresholdsParameter::validate(const DataStructure& dataStructure, 
   return validatePaths(dataStructure, threshold);
 }
 
-Result<> ArrayThresholdsParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
+Result<> ArrayThresholdsParameter::validatePath(const DataStructure& dataStructure, const DataPath& dataPath) const
 {
   const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
 
-  if(value.empty())
+  if(dataPath.empty())
   {
     return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
-  const DataObject* object = dataStructure.getData(value);
-  if(object != nullptr)
+  const DataObject* object = dataStructure.getData(dataPath);
+  if(object == nullptr)
   {
-    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_ExistingValue, fmt::format("{}Object exists at path '{}'", prefix, value.toString()));
+    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_ExistingValue, fmt::format("{}Object does not exist at path '{}'", prefix, dataPath.toString()));
   }
 
   return {};
@@ -86,10 +86,10 @@ Result<> ArrayThresholdsParameter::validatePaths(const DataStructure& dataStruct
   auto paths = value.getRequiredPaths();
   for(const auto& path : paths)
   {
-    auto validation = validatePath(dataStructure, path);
-    if(validation.invalid())
+    Result<> validationResult = validatePath(dataStructure, path);
+    if(validationResult.invalid())
     {
-      return validation;
+      return validationResult;
     }
   }
 

@@ -20,10 +20,10 @@ namespace complex
 {
 namespace
 {
-constexpr int64 k_MissingMovingVertex = -4500;
-constexpr int64 k_MissingTargetVertex = -4501;
-constexpr int64 k_BadNumIterations = -4502;
-constexpr int64 k_MissingVertices = -4503;
+constexpr int32 k_MissingMovingVertex = -4500;
+constexpr int32 k_MissingTargetVertex = -4501;
+constexpr int32 k_BadNumIterations = -4502;
+constexpr int32 k_MissingVertices = -4503;
 
 template <typename Derived>
 struct VertexGeomAdaptor

@@ -1,65 +1,62 @@
 #include "RemoveMinimumSizeFeaturesFilter.hpp"
 
 #include <algorithm>
-#include <set>
 #include <vector>
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/DeleteDataAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
 
 namespace complex
 {
+
+using FeatureIdsArrayType = Int32Array;
+using NumCellsArrayType = Int32Array;
+using PhasesArrayType = Int32Array;
+
 namespace
 {
 constexpr int32 k_BadMinAllowedFeatureSize = -5555;
 constexpr int32 k_BadNumCellsPath = -5556;
 constexpr int32 k_ParentlessPathError = -5557;
+constexpr int32 k_NeighborListRemoval = -5558;
 
-void assign_badpoints(DataStructure& data, const DataPath& featureIdsPath, SizeVec3 dimensions, const Int32Array* numCellsPtr)
+void assign_badpoints(DataStructure& dataStructure, const DataPath& featureIdsPath, SizeVec3 dimensions, const NumCellsArrayType& numCellsArrayRef)
 {
-  auto featureIdsPtr = data.getDataAs<Int64Array>(featureIdsPath);
+  FeatureIdsArrayType* featureIdsPtr = dataStructure.getDataAs<FeatureIdsArrayType>(featureIdsPath);
 
   usize totalPoints = featureIdsPtr->getNumberOfTuples();
-  auto featureIds = featureIdsPtr->getDataStore();
+  FeatureIdsArrayType::store_type* featureIds = featureIdsPtr->getDataStore();
 
-  int64 dims[3] = {
+  std::array<int64_t, 3> dims = {
       static_cast<int64>(dimensions[0]),
       static_cast<int64>(dimensions[1]),
       static_cast<int64>(dimensions[2]),
   };
 
-  DataStructure tmpDs;
-  auto tupleShape = std::vector<usize>{totalPoints};
-  auto componentShape = std::vector<usize>{featureIdsPtr->getNumberOfComponents()};
-  std::shared_ptr<Int32Array> neighborsPtr(Int32Array::CreateWithStore<DataStore<int32>>(tmpDs, std::string("_INTERNAL_USE_ONLY_Neighbors"), tupleShape, componentShape, {}));
-  auto neighbors = neighborsPtr->getDataStore();
-  neighbors->fill(-1);
+  std::vector<int32_t> neighbors(totalPoints * featureIdsPtr->getNumberOfComponents(), -1);
 
   int32 good = 1;
   int32 current = 0;
   int32 most = 0;
   int64 neighpoint = 0;
 
-  int64 neighpoints[6] = {0, 0, 0, 0, 0, 0};
-  neighpoints[0] = -dims[0] * dims[1];
-  neighpoints[1] = -dims[0];
-  neighpoints[2] = -1;
-  neighpoints[3] = 1;
-  neighpoints[4] = dims[0];
-  neighpoints[5] = dims[0] * dims[1];
+  std::array<int64_t, 6> neighpoints = {-dims[0] * dims[1], -dims[0], -1, 1, dims[0], dims[0] * dims[1]};
 
   usize counter = 1;
   int64 count = 0;
-  int64 kstride = 0, jstride = 0;
-  int32 featurename = 0, feature = 0;
+  int64 kstride = 0;
+  int64 jstride = 0;
+  int32 featurename = 0;
+  int32 feature = 0;
   int32 neighbor = 0;
-  std::vector<int32> n(numCellsPtr->getNumberOfTuples(), 0);
+  std::vector<int32> n(numCellsArrayRef.getNumberOfTuples(), 0);
+
   while(counter != 0)
   {
     counter = 0;
@@ -77,7 +74,7 @@ void assign_badpoints(DataStructure& data, const DataPath& featureIdsPath, SizeV
           {
             counter++;
             most = 0;
-            for(int32 l = 0; l < 6; l++)
+            for(size_t l = 0; l < neighpoints.size(); l++)
             {
               good = 1;
               neighpoint = count + neighpoints[l];
@@ -115,12 +112,12 @@ void assign_badpoints(DataStructure& data, const DataPath& featureIdsPath, SizeV
                   if(current > most)
                   {
                     most = current;
-                    neighbors->setValue(count, neighpoint);
+                    neighbors[count] = neighpoint;
                   }
                 }
               }
             }
-            for(int32 l = 0; l < 6; l++)
+            for(int32 l = 0; l < neighpoints.size(); l++)
             {
               good = 1;
               neighpoint = count + neighpoints[l];
@@ -161,8 +158,8 @@ void assign_badpoints(DataStructure& data, const DataPath& featureIdsPath, SizeV
         }
       }
     }
-    auto attrMatPath = featureIdsPath.getParent();
-    auto parentGroup = data.getDataAs<BaseGroup>(attrMatPath);
+    DataPath attrMatPath = featureIdsPath.getParent();
+    BaseGroup* parentGroup = dataStructure.getDataAs<BaseGroup>(attrMatPath);
     std::vector<std::string> voxelArrayNames;
     for(const auto& [id, sharedChild] : *parentGroup)
     {
@@ -171,11 +168,12 @@ void assign_badpoints(DataStructure& data, const DataPath& featureIdsPath, SizeV
         voxelArrayNames.push_back(sharedChild->getName());
       }
     }
+
     // TODO: This loop could be parallelized. Look at NeighborOrientationCorrelation filter
     for(size_t j = 0; j < totalPoints; j++)
     {
       featurename = featureIds->getValue(j);
-      neighbor = neighbors->getValue(j);
+      neighbor = neighbors[j];
       if(neighbor >= 0)
       {
         if(featurename < 0 && featureIds->getValue(neighbor) >= 0)
@@ -183,7 +181,7 @@ void assign_badpoints(DataStructure& data, const DataPath& featureIdsPath, SizeV
           for(auto& voxelArrayName : voxelArrayNames)
           {
             auto arrayPath = attrMatPath.createChildPath(voxelArrayName);
-            auto arr = data.getDataAs<IDataArray>(arrayPath);
+            IDataArray* arr = dataStructure.getDataAs<IDataArray>(arrayPath);
             arr->copyTuple(neighbor, j);
           }
         }
@@ -192,19 +190,24 @@ void assign_badpoints(DataStructure& data, const DataPath& featureIdsPath, SizeV
   }
 }
 
-std::vector<bool> remove_smallfeatures(DataArray<int64>* featureIdsPtr, const DataArray<int32>* numCellsPtr, const DataArray<int32>* featurePhasesPtr, int32 phaseNumber, bool applyToSinglePhase,
-                                       int64 minAllowedFeatureSize, Error& errorReturn)
+// -----------------------------------------------------------------------------
+std::vector<bool> remove_smallfeatures(FeatureIdsArrayType& featureIdsArrayRef, const NumCellsArrayType& numCellsArrayRef, const PhasesArrayType* featurePhaseArrayPtr, int32_t phaseNumber,
+                                       bool applyToSinglePhase, int64 minAllowedFeatureSize, Error& errorReturn)
 {
-  size_t totalPoints = featureIdsPtr->getNumberOfTuples();
-  auto featureIds = featureIdsPtr->getDataStore();
+  size_t totalPoints = featureIdsArrayRef.getNumberOfTuples();
+  FeatureIdsArrayType::store_type& featureIdsStoreRef = featureIdsArrayRef.getDataStoreRef();
 
   bool good = false;
   int32 gnum;
 
-  size_t totalFeatures = numCellsPtr->getNumberOfTuples();
-  auto numCells = numCellsPtr->getDataStore();
+  size_t totalFeatures = numCellsArrayRef.getNumberOfTuples();
+  const NumCellsArrayType::store_type& numCells = numCellsArrayRef.getDataStoreRef();
 
-  auto featurePhases = featurePhasesPtr->getDataStore();
+  const PhasesArrayType::store_type* featurePhases = nullptr;
+  if(applyToSinglePhase)
+  {
+    featurePhases = featurePhaseArrayPtr->getDataStore();
+  }
 
   std::vector<bool> activeObjects(totalFeatures, true);
 
@@ -212,7 +215,7 @@ std::vector<bool> remove_smallfeatures(DataArray<int64>* featureIdsPtr, const Da
   {
     if(!applyToSinglePhase)
     {
-      if(numCells->getValue(i) >= minAllowedFeatureSize)
+      if(numCells.getValue(i) >= minAllowedFeatureSize)
       {
         good = true;
       }
@@ -223,7 +226,7 @@ std::vector<bool> remove_smallfeatures(DataArray<int64>* featureIdsPtr, const Da
     }
     else
     {
-      if(numCells->getValue(i) >= minAllowedFeatureSize || featurePhases->getValue(i) != phaseNumber)
+      if(numCells.getValue(i) >= minAllowedFeatureSize || featurePhases->getValue(i) != phaseNumber)
       {
         good = true;
       }
@@ -240,10 +243,10 @@ std::vector<bool> remove_smallfeatures(DataArray<int64>* featureIdsPtr, const Da
   }
   for(size_t i = 0; i < totalPoints; i++)
   {
-    gnum = featureIds->getValue(i);
+    gnum = featureIdsStoreRef.getValue(i);
     if(!activeObjects[gnum])
     {
-      featureIds->setValue(i, -1);
+      featureIdsStoreRef.setValue(i, -1);
     }
   }
   return activeObjects;
@@ -279,14 +282,16 @@ std::vector<std::string> RemoveMinimumSizeFeaturesFilter::defaultTags() const
 Parameters RemoveMinimumSizeFeaturesFilter::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Feature Phases Array", "DataPath to Feature Phases DataArray", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_NumCellsPath_Key, "NumCells Array", "DataPath to NumCells DataArray", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "FeatureIds Array", "DataPath to FeatureIds DataArray", DataPath{}));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "DataPath to Image Geometry", DataPath{}));
 
   params.insert(std::make_unique<BoolParameter>(k_ApplySinglePhase_Key, "Apply to Single Phase", "Apply to Single Phase", true));
   params.insert(std::make_unique<NumberParameter<int64>>(k_MinAllowedFeaturesSize_Key, "Minimum Allowed Features Size", "Minimum allowed features size", 0));
   params.insert(std::make_unique<NumberParameter<int64>>(k_PhaseNumber_Key, "Phase Number", "Target Phase", 0));
+
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "[Feature] Phases Array", "DataPath to Feature Phases DataArray", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_NumCellsPath_Key, "[Feature] Num Cells Array", "DataPath to NumCells DataArray", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "[Cell] FeatureIds Array", "DataPath to FeatureIds DataArray", DataPath{}));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "DataPath to Image Geometry", DataPath{}));
+
   return params;
 }
 
@@ -312,15 +317,13 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
     return {nonstd::make_unexpected(std::vector<Error>{Error{-k_BadMinAllowedFeatureSize, ss}})};
   }
 
-  auto imageGeom = data.getDataAs<ImageGeom>(imageGeomPath);
-
   std::vector<size_t> cDims(1, 1);
-  auto featureIdsPtr = data.getDataAs<Int64Array>(featureIdsPath);
-  auto featureIds = featureIdsPtr->getDataStore();
-
-  auto numCellsPtr = data.getDataAs<Int32Array>(numCellsPath);
-  auto numCells = numCellsPtr->getDataStore();
-
+  const FeatureIdsArrayType* featureIdsPtr = data.getDataAs<FeatureIdsArrayType>(featureIdsPath);
+  if(featureIdsPtr == nullptr)
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadNumCellsPath, "FeatureIds not provided as an Int32 Array."}})};
+  }
+  const NumCellsArrayType* numCellsPtr = data.getDataAs<NumCellsArrayType>(numCellsPath);
   if(numCellsPtr == nullptr)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadNumCellsPath, "Num Cells not provided as an Int32 Array."}})};
@@ -329,8 +332,8 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
 
   if(applyToSinglePhase)
   {
-    auto featurePhasesPtr = data.getDataAs<Int32Array>(featurePhasesPath);
-    const AbstractDataStore<int32>* featurePhases = nullptr;
+    const PhasesArrayType* featurePhasesPtr = data.getDataAs<PhasesArrayType>(featurePhasesPath);
+    const PhasesArrayType::store_type* featurePhases = nullptr;
     if(featurePhasesPtr != nullptr)
     {
       dataArrayPaths.push_back(featurePhasesPath);
@@ -340,30 +343,40 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
 
   data.validateNumberOfTuples(dataArrayPaths);
 
-  // Throw a warning to inform the user that the neighbor list arrays could be deleted by this filter
-  DataPath parentPath = numCellsPath.getParent();
-  auto featureAM = data.getDataAs<BaseGroup>(parentPath);
-  if(nullptr == featureAM)
+  DataPath featureGroupDataPath = numCellsPath.getParent();
+  const BaseGroup* featureDataGroup = data.getDataAs<BaseGroup>(featureGroupDataPath);
+  if(nullptr == featureDataGroup)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_ParentlessPathError, "The provided NumCells DataPath does not have a parent."}})};
   }
 
-  std::string ss = fmt::format("If this filter modifies the Cell Level Array '{}', all arrays of type NeighborList will be deleted.  These arrays are:\n", featureIdsPath.toString());
-  // std::vector<std::string> featureArrayNames = featureAM->getAttributeArrays();
-  for(auto& [id, sharedChild] : (*featureAM))
+  // Create the preflightResult object
+  IFilter::PreflightResult preflightResult;
+
+  // Create our OutputActions Object
+  OutputActions outputActions;
+
+  // Throw a warning to inform the user that the neighbor list arrays could be deleted by this filter
+  std::string ss = fmt::format("If this filter modifies the Cell Level Array '{}', all arrays of type NeighborList will be deleted from the parent group '{}'.  These arrays are:\n",
+                               featureIdsPath.toString(), featureGroupDataPath.toString());
+  for(const auto& [id, sharedChild] : (*featureDataGroup))
   {
     if(sharedChild->getTypeName() != "NeighborList<T>")
     {
-      continue;
+      DataPath removedPath = featureGroupDataPath.createChildPath(sharedChild->getName());
+      ss.append("\n" + removedPath.toString());
+      auto action = std::make_unique<DeleteDataAction>(removedPath);
+      outputActions.actions.push_back(std::move(action));
     }
-    DataPath childPath = parentPath.createChildPath(sharedChild->getName());
-    ss.append("\n" + childPath.toString());
   }
 
-  return {};
+  preflightResult.outputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
+
+  return preflightResult;
 }
 
-Result<> RemoveMinimumSizeFeaturesFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+// -----------------------------------------------------------------------------
+Result<> RemoveMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
 {
   auto featurePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
   auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
@@ -373,18 +386,19 @@ Result<> RemoveMinimumSizeFeaturesFilter::executeImpl(DataStructure& data, const
   auto minAllowedFeatureSize = args.value<int64>(k_MinAllowedFeaturesSize_Key);
   auto phaseNumber = args.value<int64>(k_PhaseNumber_Key);
 
-  auto featurePhasesArray = data.getDataAs<Int32Array>(featurePhasesPath);
-  auto featurePhases = featurePhasesArray->getDataStore();
+  PhasesArrayType* featurePhasesArray = applyToSinglePhase ? dataStructure.getDataAs<PhasesArrayType>(featurePhasesPath) : nullptr;
 
-  auto featureIdsPtr = data.getDataAs<Int64Array>(featureIdsPath);
-  auto featureIds = featureIdsPtr->getDataStore();
+  FeatureIdsArrayType& featureIdsArrayRef = dataStructure.getDataRefAs<FeatureIdsArrayType>(featureIdsPath);
+  FeatureIdsArrayType::store_type& featureIdsStoreRef = featureIdsArrayRef.getDataStoreRef();
 
-  auto numCellsPtr = data.getDataAs<Int32Array>(numCellsPath);
-  auto numCells = numCellsPtr->getDataStore();
+  NumCellsArrayType& numCellsArrayRef = dataStructure.getDataRefAs<NumCellsArrayType>(numCellsPath);
+  NumCellsArrayType::store_type& numCellsStoreRef = numCellsArrayRef.getDataStoreRef();
 
   if(applyToSinglePhase)
   {
     usize numFeatures = featurePhasesArray->getNumberOfTuples();
+    auto featurePhases = featurePhasesArray->getDataStore();
+
     bool unavailablePhase = true;
     for(size_t i = 0; i < numFeatures; i++)
     {
@@ -403,18 +417,18 @@ Result<> RemoveMinimumSizeFeaturesFilter::executeImpl(DataStructure& data, const
   }
 
   Error errorReturn;
-  std::vector<bool> activeObjects = remove_smallfeatures(featureIdsPtr, numCellsPtr, featurePhasesArray, phaseNumber, applyToSinglePhase, minAllowedFeatureSize, errorReturn);
+  std::vector<bool> activeObjects = remove_smallfeatures(featureIdsArrayRef, numCellsArrayRef, featurePhasesArray, phaseNumber, applyToSinglePhase, minAllowedFeatureSize, errorReturn);
   if(errorReturn.code < 0)
   {
     return {nonstd::make_unexpected(std::vector<Error>{errorReturn})};
   }
 
-  auto imageGeom = data.getDataAs<ImageGeom>(imageGeomPath);
-  assign_badpoints(data, featureIdsPath, imageGeom->getDimensions(), numCellsPtr);
+  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  assign_badpoints(dataStructure, featureIdsPath, imageGeom.getDimensions(), numCellsArrayRef);
 
-  // auto cellFeatureGroupPath = numCellsPath.getParent();
-  // auto cellFeatureAttrMat = data.getDataAs<BaseGroup>(cellFeatureGroupPath);
-  // cellFeatureAttrMat->removeInactiveObjects(activeObjects, featureIdsArray);
+  DataPath cellFeatureGroupPath = numCellsPath.getParent();
+  size_t currentFeatureCount = numCellsStoreRef.getNumberOfTuples();
+  complex::RemoveInactiveObjects(dataStructure, cellFeatureGroupPath, activeObjects, featureIdsArrayRef, currentFeatureCount);
 
   return {};
 }

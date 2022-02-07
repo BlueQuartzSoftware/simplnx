@@ -72,11 +72,21 @@ void PipelineFilter::setArguments(const Arguments& args)
   m_Arguments = args;
 }
 
+void PipelineFilter::setIndex(int32 index)
+{
+  m_Index = index;
+}
+
+// -----------------------------------------------------------------------------
 bool PipelineFilter::preflight(DataStructure& data)
 {
-  setStatus(Status::None);
+  setRunState(RunState::Preflighting);
+  sendFilterRunStateMessage(m_Index, getRunState());
+  // sendFilterUpdateMessage(m_Index, "    PipelineFilter::preflight()  Starting Preflight.. ");
+
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
+  clearFaultState();
   IFilter::PreflightResult result = m_Filter->preflight(data, getArguments(), messageHandler);
   m_Warnings = std::move(result.outputActions.warnings());
   setHasWarnings(!m_Warnings.empty());
@@ -84,10 +94,11 @@ bool PipelineFilter::preflight(DataStructure& data)
   if(result.outputActions.invalid())
   {
     m_Errors = std::move(result.outputActions.errors());
-
+    setHasErrors();
     setPreflightStructure(data, false);
-    setHasErrors(true);
-    notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
+    //    notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
+    sendFilterFaultMessage(m_Index, getFaultState());
+    sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
     return false;
   }
 
@@ -105,26 +116,41 @@ bool PipelineFilter::preflight(DataStructure& data)
     {
       m_Errors = std::move(actionResult.errors());
       setPreflightStructure(data, false);
-      setHasErrors(true);
-      notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
+      setHasErrors();
+      //      notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
+      sendFilterFaultMessage(m_Index, getFaultState());
+      sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
       return false;
     }
   }
 
   setPreflightStructure(data);
+  //  notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
+  sendFilterFaultMessage(m_Index, getFaultState());
+  if(!m_Warnings.empty() || !m_Errors.empty())
+  {
+    sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
+  }
 
-  notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
+  setRunState(RunState::Idle);
+  sendFilterRunStateMessage(m_Index, getRunState());
+  // sendFilterUpdateMessage(m_Index, "    PipelineFilter::preflight()  Ending Preflight.. ");
   return true;
 }
 
+// -----------------------------------------------------------------------------
 bool PipelineFilter::execute(DataStructure& data)
 {
+  setRunState(RunState::Executing);
+  this->sendFilterRunStateMessage(m_Index, complex::RunState::Executing);
+  this->sendFilterUpdateMessage(m_Index, "    PipelineFilter::execute()  Starting Execution.. ");
+
   m_Warnings.clear();
   m_Errors.clear();
+  clearFaultState();
 
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
-  setIsExecuting();
   IFilter::ExecuteResult result = m_Filter->execute(data, getArguments(), this, messageHandler);
   m_PreflightValues = std::move(result.outputValues);
 
@@ -135,9 +161,18 @@ bool PipelineFilter::execute(DataStructure& data)
     m_Errors = result.result.errors();
   }
 
-  setHasWarnings(m_Warnings.size() > 0);
-  setHasErrors(m_Errors.size() > 0);
+  setHasWarnings(!m_Warnings.empty());
+  setHasErrors(!m_Errors.empty());
   endExecution(data);
+
+  if(!m_Warnings.empty() || !m_Errors.empty())
+  {
+    sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
+  }
+  sendFilterFaultMessage(m_Index, getFaultState());
+  setRunState(RunState::Idle);
+  this->sendFilterRunStateMessage(m_Index, complex::RunState::Idle);
+  this->sendFilterUpdateMessage(m_Index, "    PipelineFilter::execute()  Ending Execution.. ");
 
   return result.result.valid();
 }
@@ -164,7 +199,23 @@ std::unique_ptr<AbstractPipelineNode> PipelineFilter::deepCopy() const
 
 void PipelineFilter::notifyFilterMessage(const IFilter::Message& message)
 {
-  notify(std::make_shared<PipelineFilterMessage>(this, message));
+  if(message.type == IFilter::Message::Type::Info || message.type == IFilter::Message::Type::Debug)
+  {
+    sendFilterUpdateMessage(m_Index, message.message);
+  }
+  else if(message.type == IFilter::Message::Type::Progress)
+  {
+    const IFilter::ProgressMessage& progMessage = static_cast<const IFilter::ProgressMessage&>(message);
+    sendFilterProgressMessage(m_Index, progMessage.progress, message.message);
+  }
+  else if(message.type == IFilter::Message::Type::Error)
+  {
+    sendFilterFaultMessage(m_Index, complex::FaultState::Errors);
+  }
+  else if(message.type == IFilter::Message::Type::Warning)
+  {
+    sendFilterFaultMessage(m_Index, complex::FaultState::Warnings);
+  }
 }
 
 nlohmann::json PipelineFilter::toJson() const

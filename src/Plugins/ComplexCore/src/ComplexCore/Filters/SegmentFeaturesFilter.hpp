@@ -9,20 +9,20 @@
 namespace complex
 {
 /**
- * @class SegmentFeatures
+ * @class SegmentFeaturesFilter
  * @brief The base class for various segment feature classes.
  */
-class COMPLEXCORE_EXPORT SegmentFeatures : public IFilter
+class COMPLEXCORE_EXPORT SegmentFeaturesFilter : public IFilter
 {
 public:
-  SegmentFeatures() = default;
-  ~SegmentFeatures() noexcept override = default;
+  SegmentFeaturesFilter() = default;
+  ~SegmentFeaturesFilter() noexcept override = default;
 
-  SegmentFeatures(const SegmentFeatures&) = delete;
-  SegmentFeatures(SegmentFeatures&&) noexcept = delete;
+  SegmentFeaturesFilter(const SegmentFeaturesFilter&) = delete;
+  SegmentFeaturesFilter(SegmentFeaturesFilter&&) noexcept = delete;
 
-  SegmentFeatures& operator=(const SegmentFeatures&) = delete;
-  SegmentFeatures& operator=(SegmentFeatures&&) noexcept = delete;
+  SegmentFeaturesFilter& operator=(const SegmentFeaturesFilter&) = delete;
+  SegmentFeaturesFilter& operator=(SegmentFeaturesFilter&&) noexcept = delete;
 
   static inline constexpr StringLiteral k_GridGeomPath_Key = "grid_geometry_path";
 
@@ -62,22 +62,6 @@ public:
    */
   UniquePointer clone() const override;
 
-  /* from http://www.newty.de/fpt/functor.html */
-  /**
-   * @brief The CompareFunctor class serves as a functor superclass for specific implementations
-   * of performing scalar comparisons
-   */
-  class CompareFunctor
-  {
-  public:
-    virtual ~CompareFunctor() = default;
-
-    virtual bool operator()(int64 index, int64 neighIndex, int32 gnum) // call using () operator
-    {
-      return false;
-    }
-  };
-
 protected:
   /**
    * @brief
@@ -97,28 +81,7 @@ protected:
    * @return Result<>
    */
   Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const override;
-
-  /**
-   * @brief Returns the seed for the specified values.
-   * @param data
-   * @param args
-   * @param gnum
-   * @param nextSeed
-   * @return int64
-   */
-  virtual int64 getSeed(DataStructure& data, const Arguments& args, int32 gnum, int64 nextSeed) const;
-
-  /**
-   * @brief Determines the grouping for the specified values.
-   * @param data
-   * @param args
-   * @param referencePoint
-   * @param neighborPoint
-   * @param gnum
-   * @return bool
-   */
-  virtual bool determineGrouping(const DataStructure& data, const Arguments& args, int64 referencePoint, int64 neighborPoint, int32 gnum) const;
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, SegmentFeatures, "ae132e6d-bdc3-46fe-9e95-494a485b218f");
+COMPLEX_DEF_FILTER_TRAITS(complex, SegmentFeaturesFilter, "ae132e6d-bdc3-46fe-9e95-494a485b218f");
