@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/complex_export.hpp"
 
@@ -14,21 +15,6 @@ namespace complex
 {
 class AbstractPipelineMessage;
 class Pipeline;
-
-enum class RunState
-{
-  Idle = 0,
-  Queued = 1,
-  Preflighting = 2,
-  Executing = 3
-};
-
-enum class FaultState
-{
-  None = 0,
-  Warnings = 1,
-  Errors = 2
-};
 
 /**
  * @class AbstractPipelineNode

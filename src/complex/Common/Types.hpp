@@ -52,4 +52,20 @@ enum class DataType : uint8
   boolean,
   error = 255
 };
+
+enum class RunState
+{
+  Idle = 0,
+  Queued = 1,
+  Preflighting = 2,
+  Executing = 3
+};
+
+enum class FaultState
+{
+  None = 0,
+  Warnings = 1,
+  Errors = 2
+};
+
 } // namespace complex
