@@ -127,14 +127,12 @@ void Pipeline::setName(const std::string& name)
 bool Pipeline::preflight()
 {
   DataStructure ds;
-  setStatus(Status::None);
   return preflight(ds);
 }
 
 bool Pipeline::execute()
 {
   DataStructure ds;
-  setStatus(Status::None);
   return execute(ds);
 }
 
@@ -168,27 +166,36 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& ds)
     return false;
   }
 
+  setRunState(RunState::Preflighting);
+  sendPipelineRunStateMessage(m_RunState);
   setHasWarnings(hasWarningsBeforeIndex(index));
   setHasErrors(false);
-
+  size_t currentIndex = 0;
+  bool returnValue = true;
   for(auto iter = begin() + index; iter != end(); iter++)
   {
-    startObservingNode(iter->get());
-    bool succeeded = iter->get()->preflight(ds);
-    stopObservingNode();
-
-    if(iter->get()->hasWarnings())
+    auto* filter = iter->get();
+    if(filter->isDisabled())
     {
-      setHasWarnings(true);
+      continue;
     }
+    //    startObservingNode(filter);
+    bool succeeded = filter->preflight(ds);
+    //    stopObservingNode();
 
+    setHasWarnings(filter->hasWarnings());
     if(!succeeded)
     {
       setHasErrors(true);
-      return false;
+      returnValue = false;
+      break;
     }
+    currentIndex++;
   }
-  return true;
+  sendPipelineFaultMessage(m_FaultState);
+  setRunState(RunState::Idle);
+  sendPipelineRunStateMessage(m_RunState);
+  return returnValue;
 }
 
 bool Pipeline::preflightFrom(index_type index)
@@ -226,31 +233,48 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds)
   {
     return false;
   }
-
-  setHasWarnings(hasWarningsBeforeIndex(index));
-  setHasErrors(false);
-  setIsExecuting();
-
+  bool returnValue = true;
+  // Send notification that the pipeline is executing
+  setRunState(RunState::Executing);
+  sendPipelineRunStateMessage(m_RunState);
+  size_t currentIndex = 0;
   for(auto iter = begin() + index; iter != end(); iter++)
   {
-    startObservingNode(iter->get());
-    bool success = iter->get()->execute(ds);
-    stopObservingNode();
-
-    if(iter->get()->hasWarnings())
+    auto* filter = iter->get();
+    if(filter->isEnabled())
     {
-      setHasWarnings(true);
+      filter->setRunState(RunState::Queued);
+      filter->sendFilterRunStateMessage(currentIndex++, filter->getRunState());
+    }
+  }
+
+  clearFaultState();
+  for(auto iter = begin() + index; iter != end(); iter++)
+  {
+    auto* filter = iter->get();
+    if(filter->isDisabled())
+    {
+      continue;
     }
 
+    bool success = filter->execute(ds);
+
+    setHasWarnings(filter->hasWarnings());
     if(!success)
     {
       setHasErrors();
-      endExecution(ds);
-      return false;
+      returnValue = false;
+      break;
     }
   }
-  endExecution(ds);
-  return true;
+
+  setDataStructure(ds);
+
+  sendPipelineFaultMessage(m_FaultState);
+  setRunState(RunState::Idle);
+  sendPipelineRunStateMessage(m_RunState);
+
+  return returnValue;
 }
 
 bool Pipeline::executeFrom(index_type index)
@@ -259,25 +283,14 @@ bool Pipeline::executeFrom(index_type index)
   {
     return execute();
   }
-  else if(!canExecuteFrom(index))
+  if(!canExecuteFrom(index))
   {
     return false;
   }
 
-  auto node = at(index - 1);
+  auto* node = at(index - 1);
   DataStructure ds = node->getDataStructure();
   return executeFrom(index, ds);
-}
-
-void Pipeline::setHasBeenExecuted(bool value)
-{
-  AbstractPipelineNode::setHasBeenExecuted(value);
-
-  // Set flag for all child nodes
-  for(const auto& node : m_Collection)
-  {
-    node->setHasBeenExecuted(value);
-  }
 }
 
 bool Pipeline::hasWarningsBeforeIndex(index_type index) const

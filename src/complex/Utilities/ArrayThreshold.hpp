@@ -13,11 +13,14 @@
 
 namespace complex
 {
+
+/**
+ * @brief
+ */
 class COMPLEX_EXPORT IArrayThreshold
 {
 public:
   using MaskValue = bool;
-  using ComparisonValue = float64;
   enum class UnionOperator : uint8
   {
     And,
@@ -37,8 +40,6 @@ public:
 
   virtual std::set<DataPath> getRequiredPaths() const = 0;
 
-  virtual MaskValue getTupleValue(DataStructure& dataStruct, usize tupleId) const = 0;
-
   virtual nlohmann::json toJson() const;
 
 private:
@@ -46,6 +47,9 @@ private:
   UnionOperator m_UnionType;
 };
 
+/**
+ * @brief
+ */
 class COMPLEX_EXPORT ArrayThreshold : public IArrayThreshold
 {
 public:
@@ -53,7 +57,9 @@ public:
   enum class ComparisonType
   {
     GreaterThan,
-    LessThan
+    LessThan,
+    Operator_Equal,
+    Operator_NotEqual
   };
 
   ArrayThreshold();
@@ -75,8 +81,6 @@ public:
 
   std::set<DataPath> getRequiredPaths() const override;
 
-  MaskValue getTupleValue(DataStructure& dataStruct, usize tupleId) const override;
-
   nlohmann::json toJson() const override;
   static std::shared_ptr<ArrayThreshold> FromJson(const nlohmann::json& json);
 
@@ -86,6 +90,9 @@ private:
   ComparisonType m_Comparison;
 };
 
+/**
+ * @brief
+ */
 class COMPLEX_EXPORT ArrayThresholdSet : public IArrayThreshold
 {
 public:
@@ -103,10 +110,6 @@ public:
   void setArrayThresholds(const CollectionType& thresholds);
 
   std::set<DataPath> getRequiredPaths() const override;
-
-  void applyMaskValues(DataStructure& dataStruct, const DataPath& maskArray);
-
-  MaskValue getTupleValue(DataStructure& dataStruct, usize tupleId) const override;
 
   nlohmann::json toJson() const override;
   static std::shared_ptr<ArrayThresholdSet> FromJson(const nlohmann::json& json);

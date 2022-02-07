@@ -35,12 +35,18 @@ public:
     {
       Info = 0,
       Debug,
+      Progress,
       Warning,
       Error
     };
 
     Type type = Type::Info;
     std::string message;
+  };
+
+  struct ProgressMessage : public Message
+  {
+    int32 progress;
   };
 
   struct MessageHandler
@@ -62,7 +68,10 @@ public:
     {
       operator()(Message{type, message});
     }
-
+    void operator()(Message::Type type, const std::string& message, int32 progress) const
+    {
+      operator()(ProgressMessage{type, message, progress});
+    }
     Callback m_Callback;
   };
 

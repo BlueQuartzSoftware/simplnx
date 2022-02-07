@@ -98,6 +98,12 @@ public:
   void setArguments(const Arguments& args);
 
   /**
+   * @brief Sets the index of this filter in an executing pipeline
+   * @param index
+   */
+  void setIndex(int32 index);
+
+  /**
    * @brief Attempts to preflight the node using the provided DataStructure.
    * Returns true if preflighting succeeded. Otherwise, this returns false.
    * @param data
@@ -157,10 +163,10 @@ protected:
 private:
   IFilter::UniquePointer m_Filter;
   Arguments m_Arguments;
+  int32 m_Index = 0;
+
   std::vector<complex::Warning> m_Warnings;
   std::vector<complex::Error> m_Errors;
   std::vector<IFilter::PreflightValue> m_PreflightValues;
-  WarningsChangedSignal m_WarningsSignal;
-  ErrorsChangedSignal m_ErrorsSignal;
 };
 } // namespace complex

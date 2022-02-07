@@ -45,7 +45,7 @@ public:
    *
    * @param ds The parent DataStructure that will own the DataArray
    * @param name The name of the DataArray
-   * @param store The IDataStore instance to use. The DataArray instance WILL TAKE OWNERSHIP of that pointer.
+   * @param store The IDataStore instance to use. The DataArray instance WILL TAKE OWNERSHIP of the DataStore Pointer.
    * @param parentId = {}
    * @return DataArray<T>* Instance of the DataArray object that is owned and managed by the DataStructure
    */
@@ -250,6 +250,10 @@ public:
    */
   void copyTuple(usize from, usize to) override
   {
+    if(from == to)
+    {
+      return;
+    }
     const auto numComponents = getNumberOfComponents();
     for(usize i = 0; i < numComponents; i++)
     {
@@ -494,6 +498,68 @@ public:
   {
     m_DataStore = std::move(rhs.m_DataStore);
     return *this;
+  }
+
+  /**
+   * @brief Static function to get the typename
+   * @return
+   */
+  static std::string GetTypeName()
+  {
+    if constexpr(std::is_same_v<T, int8>)
+    {
+      return "DataArray<int8>";
+    }
+    else if constexpr(std::is_same_v<T, uint8>)
+    {
+      return "DataArray<uint8>";
+    }
+    else if constexpr(std::is_same_v<T, int16>)
+    {
+      return "DataArray<int16>";
+    }
+    else if constexpr(std::is_same_v<T, uint16>)
+    {
+      return "DataArray<uint16>";
+    }
+    else if constexpr(std::is_same_v<T, int32>)
+    {
+      return "DataArray<int32>";
+    }
+    else if constexpr(std::is_same_v<T, uint32>)
+    {
+      return "DataArray<uint32>";
+    }
+    else if constexpr(std::is_same_v<T, int64>)
+    {
+      return "DataArray<int64>";
+    }
+    else if constexpr(std::is_same_v<T, uint64>)
+    {
+      return "DataArray<uint64>";
+    }
+    else if constexpr(std::is_same_v<T, float32>)
+    {
+      return "DataArray<float32>";
+    }
+    else if constexpr(std::is_same_v<T, float64>)
+    {
+      return "DataArray<float64>";
+    }
+    else if constexpr(std::is_same_v<T, bool>)
+    {
+      return "DataArray<bool>";
+    }
+    return "DataArray: UNKNOWN TYPE";
+  }
+
+  /**
+   * @brief getTypeName
+   * @return
+   */
+  std::string getTypeName() const override
+  {
+    return GetTypeName();
   }
 
 protected:

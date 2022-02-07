@@ -1,65 +1,24 @@
 #include "SegmentFeatures.hpp"
 
 #include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
-#include "complex/Parameters/DataPathSelectionParameter.hpp"
 
-namespace complex
+using namespace complex;
+
+// -----------------------------------------------------------------------------
+SegmentFeatures::SegmentFeatures(DataStructure& data, const IFilter* filter, const IFilter::MessageHandler& mesgHandler)
+: m_DataStructure(data)
+, m_Filter(filter)
+, m_MessageHandler(mesgHandler)
 {
-namespace
-{
-inline constexpr int32 k_MissingGeomError = -440;
 }
 
-std::string SegmentFeatures::name() const
+// -----------------------------------------------------------------------------
+SegmentFeatures::~SegmentFeatures() = default;
+
+// -----------------------------------------------------------------------------
+Result<> SegmentFeatures::execute(AbstractGeometryGrid* gridGeom)
 {
-  return FilterTraits<SegmentFeatures>::name;
-}
 
-std::string SegmentFeatures::className() const
-{
-  return FilterTraits<SegmentFeatures>::className;
-}
-
-Uuid SegmentFeatures::uuid() const
-{
-  return FilterTraits<SegmentFeatures>::uuid;
-}
-
-std::string SegmentFeatures::humanName() const
-{
-  return "Segment Features";
-}
-
-Parameters SegmentFeatures::parameters() const
-{
-  Parameters params;
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_GridGeomPath_Key, "Grid Geometry", "DataPath to target Grid Geometry", DataPath{}));
-  return params;
-}
-
-IFilter::UniquePointer SegmentFeatures::clone() const
-{
-  return std::make_unique<SegmentFeatures>();
-}
-
-IFilter::PreflightResult SegmentFeatures::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
-{
-  auto gridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
-
-  if(data.getDataAs<AbstractGeometryGrid>(gridGeomPath) == nullptr)
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingGeomError, "A Grid Geometry is required for SegmentFeatures"}})};
-  }
-
-  OutputActions actions;
-  return {std::move(actions)};
-}
-
-Result<> SegmentFeatures::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
-{
-  auto gridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
-
-  auto gridGeom = data.getDataAs<AbstractGeometryGrid>(gridGeomPath);
   SizeVec3 udims = gridGeom->getDimensions();
 
   int64 dims[3] = {static_cast<int64_t>(udims[0]), static_cast<int64_t>(udims[1]), static_cast<int64_t>(udims[2])};
@@ -83,7 +42,7 @@ Result<> SegmentFeatures::executeImpl(DataStructure& data, const Arguments& args
 
   while(seed >= 0)
   {
-    seed = getSeed(data, args, gnum, nextSeed);
+    seed = getSeed(gnum, nextSeed);
     nextSeed = seed + 1;
     if(seed >= 0)
     {
@@ -127,7 +86,7 @@ Result<> SegmentFeatures::executeImpl(DataStructure& data, const Arguments& args
           }
           if(good)
           {
-            if(determineGrouping(data, args, currentpoint, neighbor, gnum))
+            if(determineGrouping(currentpoint, neighbor, gnum))
             {
               voxelslist[size] = neighbor;
               size++;
@@ -154,22 +113,21 @@ Result<> SegmentFeatures::executeImpl(DataStructure& data, const Arguments& args
       if(gnum % 100 == 0)
       {
         std::string ss = fmt::format("Current Feature Count: {}", gnum);
-        messageHandler({Message::Type::Info, ss});
+        m_MessageHandler({IFilter::Message::Type::Info, ss});
       }
     }
   }
-  messageHandler({Message::Type::Info, fmt::format("Total Features Found: {}", gnum)});
+  m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Total Features Found: {}", gnum)});
 
   return {};
 }
 
-int64 SegmentFeatures::getSeed(DataStructure& data, const Arguments& args, int32 gnum, int64 nextSeed) const
+int64 SegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 {
   return -1;
 }
 
-bool SegmentFeatures::determineGrouping(const DataStructure& data, const Arguments& args, int64 referencePoint, int64 neighborPoint, int32 gnum) const
+bool SegmentFeatures::determineGrouping(int64 referencePoint, int64 neighborPoint, int32 gnum) const
 {
   return false;
 }
-} // namespace complex

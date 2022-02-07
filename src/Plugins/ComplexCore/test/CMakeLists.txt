@@ -25,7 +25,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   RenameDataGroupTest.cpp
   RobustAutomaticThresholdTest.cpp
   RawBinaryReaderTest.cpp
-  ScalarSegmentFeaturesTest.cpp
+  ScalarSegmentFeaturesFilterTest.cpp
   StlFileReaderTest.cpp
 )
 

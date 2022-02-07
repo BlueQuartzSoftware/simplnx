@@ -1,37 +1,34 @@
 #pragma once
 
-#include <random>
-
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/FilterTraits.hpp"
+#include "complex/Filter/IFilter.hpp"
 
-#include "ComplexCore/Filters/SegmentFeatures.hpp"
+#include "ComplexCore/Filters/SegmentFeaturesFilter.hpp"
 
 namespace complex
 {
+
 /**
- * @class ScalarSegmentFeatures
+ * @class ScalarSegmentFeaturesFilter
  * @brief
  */
-class COMPLEXCORE_EXPORT ScalarSegmentFeatures : public SegmentFeatures
+class COMPLEXCORE_EXPORT ScalarSegmentFeaturesFilter : public IFilter
 {
 public:
-  using SeedGenerator = std::mt19937_64;
-  using Int64Distribution = std::uniform_int_distribution<int64>;
+  ScalarSegmentFeaturesFilter() = default;
+  ~ScalarSegmentFeaturesFilter() noexcept override = default;
 
-  ScalarSegmentFeatures() = default;
-  ~ScalarSegmentFeatures() noexcept override = default;
+  ScalarSegmentFeaturesFilter(const ScalarSegmentFeaturesFilter&) = delete;
+  ScalarSegmentFeaturesFilter(ScalarSegmentFeaturesFilter&&) noexcept = delete;
 
-  ScalarSegmentFeatures(const ScalarSegmentFeatures&) = delete;
-  ScalarSegmentFeatures(ScalarSegmentFeatures&&) noexcept = delete;
-
-  ScalarSegmentFeatures& operator=(const ScalarSegmentFeatures&) = delete;
-  ScalarSegmentFeatures& operator=(ScalarSegmentFeatures&&) noexcept = delete;
+  ScalarSegmentFeaturesFilter& operator=(const ScalarSegmentFeaturesFilter&) = delete;
+  ScalarSegmentFeaturesFilter& operator=(ScalarSegmentFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  // static inline constexpr StringLiteral k_DataPath_Key = "scalar_segment_path";
+  static inline constexpr StringLiteral k_GridGeomPath_Key = "grid_geometry_path";
   static inline constexpr StringLiteral k_ScalarToleranceKey = "scalar tolerance";
   static inline constexpr StringLiteral k_InputArrayPathKey = "input array path";
   static inline constexpr StringLiteral k_UseGoodVoxelsKey = "use mask";
@@ -86,46 +83,6 @@ public:
 protected:
   /**
    * @brief
-   * @param featureIds
-   * @param totalPoints
-   * @param totalFeatures
-   * @param distribution
-   * @param generator
-   */
-  void randomizeFeatureIds(Int32Array* featureIdsArray, uint64 totalPoints, uint64 totalFeatures, Int64Distribution& distribution) const;
-
-  /**
-   * @brief
-   * @param data
-   * @param args
-   * @param gnum
-   * @param nextSeed
-   * @return int64
-   */
-  int64 getSeed(DataStructure& data, const Arguments& args, int32 gnum, int64 nextSeed) const override;
-
-  /**
-   * @brief
-   * @param data
-   * @param args
-   * @param referencepoint
-   * @param neighborpoint
-   * @param gnum
-   * @return bool
-   */
-  bool determineGrouping(const DataStructure& data, const Arguments& args, int64 referencePoint, int64 neighborPoint, int32 gnum) const override;
-
-  /**
-   * @brief
-   * @param distribution
-   * @param rangeMin
-   * @param rangeMax
-   * @return SeedGenerator
-   */
-  SeedGenerator initializeVoxelSeedGenerator(Int64Distribution& distribution, const int64 rangeMin, const int64 rangeMax) const;
-
-  /**
-   * @brief
    * @param data
    * @param args
    * @param messageHandler
@@ -145,4 +102,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ScalarSegmentFeatures, "2c5edebf-95d8-511f-b787-90ee2adf485c");
+COMPLEX_DEF_FILTER_TRAITS(complex, ScalarSegmentFeaturesFilter, "2c5edebf-95d8-511f-b787-90ee2adf485c");

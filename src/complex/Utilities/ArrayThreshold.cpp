@@ -1,7 +1,6 @@
 #include "ArrayThreshold.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataStore.hpp"
 
 using namespace complex;
 
@@ -173,60 +172,6 @@ bool checkArrayThreshold(const DataArray<T>* dataArray, ArrayThreshold::Comparis
   return threshold;
 }
 
-IArrayThreshold::MaskValue ArrayThreshold::getTupleValue(DataStructure& dataStruct, usize tupleId) const
-{
-  auto dataObject = dataStruct.getData(getArrayPath());
-
-  bool threshold = false;
-  if(auto dataArray = dynamic_cast<const DataArray<int8>*>(dataObject))
-  {
-    threshold = checkArrayThreshold(dataArray, getComparisonValue(), getComparisonType(), tupleId);
-  }
-  else if(auto dataArray = dynamic_cast<const DataArray<int16>*>(dataObject))
-  {
-    threshold = checkArrayThreshold(dataArray, getComparisonValue(), getComparisonType(), tupleId);
-  }
-  else if(auto dataArray = dynamic_cast<const DataArray<int32>*>(dataObject))
-  {
-    threshold = checkArrayThreshold(dataArray, getComparisonValue(), getComparisonType(), tupleId);
-  }
-  else if(auto dataArray = dynamic_cast<const DataArray<int64>*>(dataObject))
-  {
-    threshold = checkArrayThreshold(dataArray, getComparisonValue(), getComparisonType(), tupleId);
-  }
-  else if(auto dataArray = dynamic_cast<const DataArray<uint8>*>(dataObject))
-  {
-    threshold = checkArrayThreshold(dataArray, getComparisonValue(), getComparisonType(), tupleId);
-  }
-  else if(auto dataArray = dynamic_cast<const DataArray<uint16>*>(dataObject))
-  {
-    threshold = checkArrayThreshold(dataArray, getComparisonValue(), getComparisonType(), tupleId);
-  }
-  else if(auto dataArray = dynamic_cast<const DataArray<uint32>*>(dataObject))
-  {
-    threshold = checkArrayThreshold(dataArray, getComparisonValue(), getComparisonType(), tupleId);
-  }
-  else if(auto dataArray = dynamic_cast<const DataArray<uint64>*>(dataObject))
-  {
-    threshold = checkArrayThreshold(dataArray, getComparisonValue(), getComparisonType(), tupleId);
-  }
-  else if(auto dataArray = dynamic_cast<const DataArray<float32>*>(dataObject))
-  {
-    threshold = checkArrayThreshold(dataArray, getComparisonValue(), getComparisonType(), tupleId);
-  }
-  else if(auto dataArray = dynamic_cast<const DataArray<float64>*>(dataObject))
-  {
-    threshold = checkArrayThreshold(dataArray, getComparisonValue(), getComparisonType(), tupleId);
-  }
-
-  if(isInverted())
-  {
-    threshold = !threshold;
-  }
-
-  return threshold;
-}
-
 nlohmann::json ArrayThreshold::toJson() const
 {
   auto json = IArrayThreshold::toJson();
@@ -268,7 +213,6 @@ std::shared_ptr<ArrayThreshold> ArrayThreshold::FromJson(const nlohmann::json& j
 
 ArrayThresholdSet::ArrayThresholdSet()
 : IArrayThreshold()
-, m_Thresholds()
 {
 }
 ArrayThresholdSet::ArrayThresholdSet(const ArrayThresholdSet& other)
@@ -318,45 +262,6 @@ std::set<DataPath> ArrayThresholdSet::getRequiredPaths() const
     requiredPaths.merge(threshold->getRequiredPaths());
   }
   return requiredPaths;
-}
-
-void ArrayThresholdSet::applyMaskValues(DataStructure& dataStruct, const DataPath& maskArrayPath)
-{
-  auto maskArray = dataStruct.getDataAs<DataArray<uint8>>(maskArrayPath);
-  auto mask = maskArray->getDataStore();
-
-  auto tupleCount = maskArray->getNumberOfTuples();
-  for(usize i = 0; i < tupleCount; i++)
-  {
-    auto tupleValue = getTupleValue(dataStruct, i);
-    uint8 thresholdValue = tupleValue ? 1 : 0;
-    mask->setValue(i, thresholdValue);
-  }
-}
-
-IArrayThreshold::MaskValue ArrayThresholdSet::getTupleValue(DataStructure& dataStruct, usize tupleId) const
-{
-  MaskValue mask = true;
-
-  for(const auto& threshold : getArrayThresholds())
-  {
-    auto threshValue = threshold->getTupleValue(dataStruct, tupleId);
-    if(threshold->getUnionOperator() == UnionOperator::And)
-    {
-      mask &= threshValue;
-    }
-    else if(threshold->getUnionOperator() == UnionOperator::Or)
-    {
-      mask |= threshValue;
-    }
-  }
-
-  if(isInverted())
-  {
-    mask = !mask;
-  }
-
-  return mask;
 }
 
 nlohmann::json ArrayThresholdSet::toJson() const

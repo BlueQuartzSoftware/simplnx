@@ -518,12 +518,6 @@ protected:
    */
   void onNotify(AbstractPipelineNode* node, const std::shared_ptr<AbstractPipelineMessage>& msg) override;
 
-  /**
-   * @brief Sets or clears the Executed flag.
-   * @param value = true
-   */
-  void setHasBeenExecuted(bool value = true) override;
-
 private:
   /**
    * @brief Returns a pointer to the active FilterList that should be used for

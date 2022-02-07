@@ -7,11 +7,13 @@
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
+using namespace complex;
+
 namespace
 {
-constexpr complex::int32 k_EMPTY_PARAMETER = -123;
-
-}
+constexpr int32 k_EmptyParameterValue = -123;
+constexpr int32 k_IncorrectInputArrayType = -124;
+} // namespace
 
 namespace complex
 {
@@ -59,10 +61,20 @@ IFilter::PreflightResult ConditionalSetValue::preflightImpl(const DataStructure&
 {
   auto replaceValueString = filterArgs.value<std::string>(k_ReplaceValue_Key);
   auto selectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
+  auto pConditionalPath = filterArgs.value<DataPath>(k_ConditionalArrayPath_Key);
 
   if(replaceValueString.empty())
   {
-    return {MakeErrorResult<OutputActions>(::k_EMPTY_PARAMETER, fmt::format("{}: Replacement parameter cannot be empty.{}({})", humanName(), __FILE__, __LINE__)), {}};
+    return {MakeErrorResult<OutputActions>(::k_EmptyParameterValue, fmt::format("{}: Replacement parameter cannot be empty.{}({})", humanName(), __FILE__, __LINE__)), {}};
+  }
+
+  // Validate that the Conditional Array is of the correct type
+  const IDataArray* dataObject = dataStructure.getDataAs<IDataArray>(pConditionalPath);
+
+  if(dataObject->getDataType() != complex::DataType::boolean && dataObject->getDataType() != complex::DataType::uint8 && dataObject->getDataType() != complex::DataType::int8)
+  {
+    return {MakeErrorResult<OutputActions>(
+        ::k_IncorrectInputArrayType, fmt::format("Conditional Array must be of type [Bool|UInt8|Int8]. The object at path '{}' is '{}'", pConditionalPath.toString(), dataObject->getTypeName()))};
   }
 
   const DataObject& inputDataObject = dataStructure.getDataRef(selectedArrayPath);
@@ -87,7 +99,7 @@ Result<> ConditionalSetValue::executeImpl(DataStructure& dataStructure, const Ar
 
   DataObject& inputDataObject = dataStructure.getDataRef(selectedArrayPath);
 
-  const BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(conditionalArrayPath);
+  const IDataArray& conditionalArray = dataStructure.getDataRefAs<IDataArray>(conditionalArrayPath);
 
   Result<> result = ConditionalReplaceValueInArray(replaceValueString, inputDataObject, conditionalArray);
 

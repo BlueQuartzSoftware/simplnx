@@ -1,12 +1,10 @@
 #include "AbstractPipelineNode.hpp"
 
-#include <algorithm>
-#include <bitset>
-#include <cstdlib>
-
 #include "complex/Pipeline/Messaging/NodeStatusMessage.hpp"
-#include "complex/Pipeline/Messaging/PipelineNodeObserver.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
+
+#include <algorithm>
+#include <cstdlib>
 
 using namespace complex;
 
@@ -32,147 +30,25 @@ bool AbstractPipelineNode::hasParentPipeline() const
   return m_Parent != nullptr;
 }
 
-bool AbstractPipelineNode::isExecuting() const
-{
-  return static_cast<bool>(m_Status & Status::Executing);
-}
-
-bool AbstractPipelineNode::hasBeenExecuted() const
-{
-  return static_cast<bool>(m_Status & Status::Executed);
-}
-
-bool AbstractPipelineNode::hasErrors() const
-{
-  return static_cast<bool>(m_Status & Status::Error);
-}
-
-bool AbstractPipelineNode::hasWarnings() const
-{
-  return static_cast<bool>(m_Status & Status::Warning);
-}
-
 bool AbstractPipelineNode::isDisabled() const
 {
-  return static_cast<bool>(m_Status & Status::Disabled);
+  return m_IsDisabled;
 }
 
 bool AbstractPipelineNode::isEnabled() const
 {
-  return !isDisabled();
+  return !m_IsDisabled;
 }
 
 void AbstractPipelineNode::setDisabled(bool disabled)
 {
-  std::bitset<8> statusBits(m_Status);
-
-  if(disabled)
-  {
-    statusBits |= Status::Disabled;
-  }
-  else
-  {
-    std::bitset<8> mask(Status::Disabled);
-    mask.flip();
-    statusBits &= mask;
-  }
-
-  m_Status = static_cast<Status>(statusBits.to_ulong());
-  notify(std::make_shared<NodeStatusMessage>(this, m_Status));
+  m_IsDisabled = disabled;
+  notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
 }
 
 void AbstractPipelineNode::setEnabled(bool enabled)
 {
   return setDisabled(!enabled);
-}
-
-AbstractPipelineNode::Status AbstractPipelineNode::getStatus() const
-{
-  return m_Status;
-}
-
-void AbstractPipelineNode::setStatus(Status status)
-{
-  // If Status has not changed, do nothing
-  if(m_Status == status)
-  {
-    return;
-  }
-
-  m_Status = status;
-  notify(std::make_shared<NodeStatusMessage>(this, status));
-}
-
-void AbstractPipelineNode::setHasWarnings(bool value)
-{
-  std::bitset<8> statusBits(m_Status);
-
-  if(value)
-  {
-    statusBits |= Status::Warning;
-  }
-  else
-  {
-    std::bitset<8> mask(Status::Warning);
-    mask.flip();
-    statusBits &= mask;
-  }
-
-  setStatus(static_cast<Status>(statusBits.to_ulong()));
-}
-
-void AbstractPipelineNode::setHasErrors(bool value)
-{
-  std::bitset<8> statusBits(m_Status);
-
-  if(value)
-  {
-    statusBits |= Status::Error;
-  }
-  else
-  {
-    std::bitset<8> mask(Status::Error);
-    mask.flip();
-    statusBits &= mask;
-  }
-
-  setStatus(static_cast<Status>(statusBits.to_ulong()));
-}
-
-void AbstractPipelineNode::setIsExecuting(bool value)
-{
-  std::bitset<8> statusBits(m_Status);
-
-  if(value)
-  {
-    statusBits |= Status::Executing;
-  }
-  else
-  {
-    std::bitset<8> mask(Status::Executing);
-    mask.flip();
-    statusBits &= mask;
-  }
-
-  setStatus(static_cast<Status>(statusBits.to_ulong()));
-}
-
-void AbstractPipelineNode::setHasBeenExecuted(bool value)
-{
-  std::bitset<8> statusBits(m_Status);
-
-  if(value)
-  {
-    statusBits |= Status::Executed;
-  }
-  else
-  {
-    std::bitset<8> mask(Status::Executed);
-    mask.flip();
-    statusBits &= mask;
-  }
-
-  setStatus(static_cast<Status>(statusBits.to_ulong()));
 }
 
 const DataStructure& AbstractPipelineNode::getDataStructure() const
@@ -199,14 +75,12 @@ void AbstractPipelineNode::setPreflightStructure(const DataStructure& ds, bool s
 void AbstractPipelineNode::clearDataStructure()
 {
   m_DataStructure = DataStructure();
-  m_Status = Status::None;
 }
 
 void AbstractPipelineNode::clearPreflightStructure()
 {
   m_DataStructure = DataStructure();
   m_PreflightStructure = DataStructure();
-  m_Status = Status::None;
   m_IsPreflighted = false;
 }
 
@@ -218,8 +92,6 @@ bool AbstractPipelineNode::isPreflighted() const
 void AbstractPipelineNode::endExecution(DataStructure& dataStructure)
 {
   setDataStructure(dataStructure);
-  setIsExecuting(false);
-  setHasBeenExecuted(hasParentPipeline());
 }
 
 void AbstractPipelineNode::notify(const std::shared_ptr<AbstractPipelineMessage>& msg)
@@ -231,10 +103,97 @@ AbstractPipelineNode::SignalType& AbstractPipelineNode::getSignal()
 {
   return m_Signal;
 }
+const AbstractPipelineNode::PipelineRunStateSignalType& AbstractPipelineNode::getPipelineRunStateSignal() const
+{
+  return m_PipelineRunStateSignal;
+}
+AbstractPipelineNode::PipelineRunStateSignalType& AbstractPipelineNode::getPipelineRunStateSignal()
+{
+  return m_PipelineRunStateSignal;
+}
+
+void AbstractPipelineNode::sendPipelineRunStateMessage(complex::RunState value)
+{
+  m_PipelineRunStateSignal(this, value);
+}
+
+const AbstractPipelineNode::FilterRunStateSignalType& AbstractPipelineNode::getFilterRunStateSignal() const
+{
+  return m_FilterRunStateSignal;
+}
+AbstractPipelineNode::FilterRunStateSignalType& AbstractPipelineNode::getFilterRunStateSignal()
+{
+  return m_FilterRunStateSignal;
+}
+void AbstractPipelineNode::sendFilterRunStateMessage(int32_t filterIndex, complex::RunState value)
+{
+  m_FilterRunStateSignal(this, filterIndex, value);
+}
+
+const AbstractPipelineNode::FilterProgressSignalType& AbstractPipelineNode::getFilterProgressSignal() const
+{
+  return m_FilterProgressSignal;
+}
+AbstractPipelineNode::FilterProgressSignalType& AbstractPipelineNode::getFilterProgressSignal()
+{
+  return m_FilterProgressSignal;
+}
+void AbstractPipelineNode::sendFilterProgressMessage(int32_t filterIndex, int32_t progress, const std::string& message)
+{
+  m_FilterProgressSignal(this, filterIndex, progress, message);
+}
+
+const AbstractPipelineNode::FilterUpdateSignalType& AbstractPipelineNode::getFilterUpdateSignal() const
+{
+  return m_FilterUpdateSignal;
+}
+AbstractPipelineNode::FilterUpdateSignalType& AbstractPipelineNode::getFilterUpdateSignal()
+{
+  return m_FilterUpdateSignal;
+}
+void AbstractPipelineNode::sendFilterUpdateMessage(int32_t filterIndex, const std::string& message)
+{
+  m_FilterUpdateSignal(this, filterIndex, message);
+}
+
+const AbstractPipelineNode::PipelineFaultSignalType& AbstractPipelineNode::getPipelineFaultSignal() const
+{
+  return m_PipelineFaultSignal;
+}
+AbstractPipelineNode::PipelineFaultSignalType& AbstractPipelineNode::getPipelineFaultSignal()
+{
+  return m_PipelineFaultSignal;
+}
+void AbstractPipelineNode::sendPipelineFaultMessage(complex::FaultState state)
+{
+  m_PipelineFaultSignal(this, state);
+}
+
+const AbstractPipelineNode::FilterFaultSignalType& AbstractPipelineNode::getFilterFaultSignal() const
+{
+  return m_FilterFaultSignal;
+}
+AbstractPipelineNode::FilterFaultSignalType& AbstractPipelineNode::getFilterFaultSignal()
+{
+  return m_FilterFaultSignal;
+}
+void AbstractPipelineNode::sendFilterFaultMessage(int32_t filterIndex, complex::FaultState state)
+{
+  m_FilterFaultSignal(this, filterIndex, state);
+}
+
+AbstractPipelineNode::FilterFaultDetailSignalType& AbstractPipelineNode::getFilterFaultDetailSignal()
+{
+  return m_FilterFaultDetailSignal;
+}
+void AbstractPipelineNode::sendFilterFaultDetailMessage(int32_t filterIndex, const WarningCollection& warnings, const ErrorCollection& errors)
+{
+  m_FilterFaultDetailSignal(this, filterIndex, warnings, errors);
+}
 
 std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipeline() const
 {
-  auto currentPipeline = this;
+  const auto* currentPipeline = this;
   auto pipeline = getPrecedingPipelineSegment();
   if(pipeline == nullptr)
   {
@@ -269,4 +228,64 @@ std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipelineSegment() co
 
   auto iter = parentPipeline->find(this);
   return std::move(parentPipeline->copySegment(parentPipeline->begin(), iter));
+}
+
+complex::RunState AbstractPipelineNode::getRunState() const
+{
+  return m_RunState;
+}
+
+complex::FaultState AbstractPipelineNode::getFaultState() const
+{
+  return m_FaultState;
+}
+
+bool AbstractPipelineNode::hasErrors() const
+{
+  return m_FaultState == complex::FaultState::Errors;
+}
+
+bool AbstractPipelineNode::hasWarnings() const
+{
+  return m_FaultState == complex::FaultState::Warnings;
+}
+
+void AbstractPipelineNode::setHasWarnings(bool value)
+{
+  if(value)
+  {
+    m_FaultState = complex::FaultState::Warnings;
+    notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
+  }
+  else if(!value && m_FaultState == complex::FaultState::Warnings)
+  {
+    m_FaultState = complex::FaultState::None;
+    notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
+  }
+}
+
+void AbstractPipelineNode::setHasErrors(bool value)
+{
+  if(value)
+  {
+    m_FaultState = complex::FaultState::Errors;
+    notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
+  }
+  else if(!value && m_FaultState == complex::FaultState::Errors)
+  {
+    m_FaultState = complex::FaultState::None;
+    notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
+  }
+}
+
+void AbstractPipelineNode::clearFaultState()
+{
+  m_FaultState = complex::FaultState::None;
+  notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
+}
+
+void AbstractPipelineNode::setRunState(RunState runState)
+{
+  m_RunState = runState;
+  notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
 }

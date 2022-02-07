@@ -290,6 +290,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/DataArrayUtilities.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/DataGroupUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.hpp
@@ -337,7 +338,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/FilterHandle.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/FilterList.cpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.cpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/EdgeGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/GridMontageFactory.cpp
@@ -435,6 +436,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/DataArrayUtilities.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/DataGroupUtilities.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.cpp
