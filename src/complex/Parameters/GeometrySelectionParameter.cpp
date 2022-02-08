@@ -101,12 +101,12 @@ Result<> GeometrySelectionParameter::validatePath(const DataStructure& dataStruc
 
   // First look for DataObject::Type::Any, if that is in the allowed types then it doesn't
   // matter what else is in the set
-  if(m_AllowedTypes.count(DataObject::Type::Any) > 0)
+  if(m_AllowedTypes.count(AbstractGeometry::Type::Any) > 0)
   {
     return {};
   }
   // Look for the actual geometry type that the user selected in the allowed set
-  if(m_AllowedTypes.count(object->getDataObjectType()) > 0)
+  if(m_AllowedTypes.count(abstractGeometry->getGeomType()) > 0)
   {
     return {};
   }

@@ -271,8 +271,8 @@ Parameters IdentifySample::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<BoolParameter>(k_FillHoles_Key, "Fill Holes", "Fill Holes in Largest Feature", true));
-  params.insert(
-      std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "DataPath to the target ImageGeom", DataPath(), std::set<DataObject::Type>{DataObject::Type::ImageGeom}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "DataPath to the target ImageGeom", DataPath(),
+                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxels_Key, "Mask", "DataPath to the target Good Voxels array", DataPath()));
   return params;
 }
