@@ -52,6 +52,12 @@ TriangleGeom::TriangleGeom(TriangleGeom&& other) noexcept
 }
 
 TriangleGeom::~TriangleGeom() = default;
+
+AbstractGeometry::Type TriangleGeom::getGeomType() const
+{
+  return AbstractGeometry::Type::Triangle;
+}
+
 DataObject::Type TriangleGeom::getDataObjectType() const
 {
   return DataObject::Type::TriangleGeom;

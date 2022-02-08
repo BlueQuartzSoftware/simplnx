@@ -66,6 +66,11 @@ EdgeGeom* EdgeGeom::Import(DataStructure& ds, std::string name, IdType importId,
   return data.get();
 }
 
+AbstractGeometry::Type EdgeGeom::getGeomType() const
+{
+  return AbstractGeometry::Type::Edge;
+}
+
 std::string EdgeGeom::getTypeName() const
 {
   return "EdgeGeom";

@@ -51,6 +51,12 @@ QuadGeom::QuadGeom(QuadGeom&& other) noexcept
 }
 
 QuadGeom::~QuadGeom() = default;
+
+AbstractGeometry::Type QuadGeom::getGeomType() const
+{
+  return AbstractGeometry::Type::Quad;
+}
+
 DataObject::Type QuadGeom::getDataObjectType() const
 {
   return DataObject::Type::QuadGeom;

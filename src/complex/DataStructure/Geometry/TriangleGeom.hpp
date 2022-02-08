@@ -55,6 +55,12 @@ public:
   TriangleGeom& operator=(TriangleGeom&&) noexcept = delete;
 
   /**
+   * @brief Returns the type of geometry.
+   * @return
+   */
+  AbstractGeometry::Type getGeomType() const override;
+
+  /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */
