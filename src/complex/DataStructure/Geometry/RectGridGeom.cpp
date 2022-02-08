@@ -42,6 +42,12 @@ RectGridGeom::RectGridGeom(RectGridGeom&& other) noexcept
 }
 
 RectGridGeom::~RectGridGeom() = default;
+
+AbstractGeometry::Type RectGridGeom::getGeomType() const
+{
+  return AbstractGeometry::Type::RectGrid;
+}
+
 DataObject::Type RectGridGeom::getDataObjectType() const
 {
   return DataObject::Type::RectGridGeom;

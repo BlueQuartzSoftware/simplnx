@@ -76,6 +76,11 @@ HexahedralGeom* HexahedralGeom::Import(DataStructure& ds, std::string name, IdTy
   return data.get();
 }
 
+AbstractGeometry::Type HexahedralGeom::getGeomType() const
+{
+  return AbstractGeometry::Type::Hexahedral;
+}
+
 std::string HexahedralGeom::getTypeName() const
 {
   return "HexahedralGeom";

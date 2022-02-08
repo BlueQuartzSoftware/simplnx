@@ -75,7 +75,7 @@ Parameters ExampleFilter2::parameters() const
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_Param9, "DataGroupSelectionParameter", "", DataPath{}));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_Param10, "DataPathSelectionParameter", "", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_Param6, "Array Selection", "", ArraySelectionParameter::ValueType{}));
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_Param11, "GeometrySelectionParameter", "", DataPath{}, std::set<DataObject::Type>{}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_Param11, "GeometrySelectionParameter", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_Param12, "MultiArraySelectionParameter", "", MultiArraySelectionParameter::ValueType{}));
 
   // These should show up under the "Created Objects" section in the GUI
