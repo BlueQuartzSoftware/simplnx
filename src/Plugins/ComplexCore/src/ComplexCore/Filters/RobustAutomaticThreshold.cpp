@@ -134,8 +134,11 @@ std::vector<std::string> RobustAutomaticThreshold::defaultTags() const
 Parameters RobustAutomaticThreshold::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPath, "Input Array", "DataArray to Threshold", DataPath()));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GradientMagnitudePath, "Gradient Magnitude Data", "", DataPath()));
+  // Input cannot be bool array
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPath, "Input Array", "DataArray to Threshold", DataPath(), false,
+                                                          ArraySelectionParameter::AllowedTypes{DataType::uint8, DataType::uint16, DataType::uint32, DataType::uint64, DataType::int8, DataType::int16,
+                                                                                                DataType::int32, DataType::int64, DataType::float32, DataType::float64}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_GradientMagnitudePath, "Gradient Magnitude Data", "", DataPath(), false, ArraySelectionParameter::AllowedTypes{DataType::float32}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_ArrayCreationPath, "Mask", "Created mask based on Input Array and Gradient Magnitude", DataPath()));
 
   return params;
