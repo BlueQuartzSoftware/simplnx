@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_set>
 
 #include "complex/Filter/MutableDataParameter.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
@@ -16,9 +17,11 @@ class COMPLEX_EXPORT ArraySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
+  using AllowedTypes = std::unordered_set<DataType>;
 
   ArraySelectionParameter() = delete;
-  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty = false);
+  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty = false,
+                          const AllowedTypes& allowedTypes = {});
   ~ArraySelectionParameter() override = default;
 
   ArraySelectionParameter(const ArraySelectionParameter&) = delete;
@@ -72,6 +75,12 @@ public:
   ValueType defaultPath() const;
 
   /**
+   * @brief Returns the set of allowed DataArray types. An empty set means all are allowed.
+   * @return
+   */
+  AllowedTypes allowedTypes() const;
+
+  /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
    * @param dataStructure The active DataStructure to use during validation
    * @param value The value to validate
@@ -99,6 +108,7 @@ public:
 private:
   ValueType m_DefaultValue = {};
   bool m_AllowEmpty = false;
+  AllowedTypes m_AllowedTypes = {};
 };
 } // namespace complex
 

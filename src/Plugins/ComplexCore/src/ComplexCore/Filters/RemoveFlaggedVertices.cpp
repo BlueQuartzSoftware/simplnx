@@ -79,7 +79,7 @@ Parameters RemoveFlaggedVertices::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_VertexGeomPath_Key, "Vertex Geometry", "Path to the target Vertex Geometry", DataPath(),
                                                              std::set<DataObject::Type>{DataObject::Type::VertexGeom}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraySelection_Key, "Target Arrays", "Paths to the target DataArrays", std::vector<DataPath>()));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask", "Path to create the mask array at", DataPath()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask", "Path to create the mask array at", DataPath(), false, ArraySelectionParameter::AllowedTypes{DataType::boolean}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ReducedVertexPath_Key, "Reduced Vertex Geometry", "Path to create the reduced geometry at", DataPath()));
   return params;
 }

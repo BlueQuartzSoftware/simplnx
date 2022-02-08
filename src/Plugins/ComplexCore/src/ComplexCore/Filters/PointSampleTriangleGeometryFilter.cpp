@@ -62,9 +62,9 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
   // params.insert(std::make_unique<DataPathSelectionParameter>(k_ParentGeometry_Key, "Source Geometry for Number of Sample Points", "", DataPath{}, true));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "", false));
   params.insertSeparator(Parameters::Separator{"Face Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleAreasArrayPath_Key, "Face Areas", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleAreasArrayPath_Key, "Face Areas", "", DataPath{}, false, ArraySelectionParameter::AllowedTypes{DataType::float64}));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}, true));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}, true, ArraySelectionParameter::AllowedTypes{DataType::boolean}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Face Attribute Arrays to Transfer", "", MultiArraySelectionParameter::ValueType{}));
 
   params.insertSeparator(Parameters::Separator{"Created Objects"});
