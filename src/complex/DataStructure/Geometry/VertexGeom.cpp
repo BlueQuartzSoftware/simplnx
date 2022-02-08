@@ -72,6 +72,11 @@ VertexGeom* VertexGeom::Import(DataStructure& ds, std::string name, IdType impor
   return data.get();
 }
 
+AbstractGeometry::Type VertexGeom::getGeomType() const
+{
+  return AbstractGeometry::Type::Vertex;
+}
+
 std::string VertexGeom::getTypeName() const
 {
   return getGeometryTypeAsString();

@@ -151,6 +151,12 @@ public:
   ~AbstractGeometry() override;
 
   /**
+   * @brief Returns the type of geometry.
+   * @return
+   */
+  virtual AbstractGeometry::Type getGeomType() const = 0;
+
+  /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */

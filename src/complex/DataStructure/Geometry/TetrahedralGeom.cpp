@@ -55,6 +55,12 @@ TetrahedralGeom::TetrahedralGeom(TetrahedralGeom&& other) noexcept
 }
 
 TetrahedralGeom::~TetrahedralGeom() = default;
+
+AbstractGeometry::Type TetrahedralGeom::getGeomType() const
+{
+  return AbstractGeometry::Type::Tetrahedral;
+}
+
 DataObject::Type TetrahedralGeom::getDataObjectType() const
 {
   return DataObject::Type::TetrahedralGeom;

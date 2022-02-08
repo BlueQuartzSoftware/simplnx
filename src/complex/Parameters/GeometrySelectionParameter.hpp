@@ -3,6 +3,7 @@
 #include <set>
 #include <string>
 
+#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "complex/Filter/MutableDataParameter.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/complex_export.hpp"
@@ -17,7 +18,7 @@ class COMPLEX_EXPORT GeometrySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
-  using AllowedType = DataObject::Type;
+  using AllowedType = AbstractGeometry::Type;
   using AllowedTypes = std::set<AllowedType>;
 
   GeometrySelectionParameter() = delete;
@@ -107,7 +108,7 @@ public:
 
 private:
   ValueType m_DefaultValue = {};
-  AllowedTypes m_AllowedTypes = {DataObject::Type::Any};
+  AllowedTypes m_AllowedTypes = {AbstractGeometry::Type::Any};
 };
 } // namespace complex
 
