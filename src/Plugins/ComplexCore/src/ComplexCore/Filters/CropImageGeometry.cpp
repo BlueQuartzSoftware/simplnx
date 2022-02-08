@@ -228,7 +228,8 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     return {MakeErrorResult<OutputActions>(-5550, ss)};
   }
 
-  // Validate the incoming DataContainer, Geometry, and AttributeMatrix ; bail if any do not exist since we plan on using them later on in the dataCheck
+  // Validate the incoming DataContainer, Geometry, and AttributeMatrix.
+  // Provides {0, 0, 0} or {1, 1, 1} respectfully if the geometry could not be found.
   auto oldDimensions = getCurrentVolumeDataContainerDimensions(data, srcImagePath);
   auto oldResolution = getCurrentVolumeDataContainerResolutions(data, srcImagePath);
 
@@ -301,7 +302,6 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       actions.actions.push_back(std::move(action));
     }
 
-    auto* srcImageGeom = data.getDataAs<ImageGeom>(srcImagePath);
     for(const auto& srcArrayPath : voxelArrayPaths)
     {
       auto* srcArray = data.getDataAs<IDataArray>(srcArrayPath);
@@ -331,6 +331,11 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       std::string ss = fmt::format("The DataArray '{}' which defines the Feature Ids to renumber is invalid. Does it exist? Is it the correct type?", featureIdsArrayPath.toString());
       return {MakeErrorResult<OutputActions>(-55500, ss)};
     }
+    if(featureIdsPtr->getNumberOfComponents() != 1)
+    {
+      std::string ss = fmt::format("The Feature IDs array does not have the correct component dimensions. 1 component required. Array has {}", featureIdsPtr->getNumberOfComponents());
+      return {MakeErrorResult<OutputActions>(-55501, ss)};
+    }
   }
 
   // auto action = std::make_unique<CropImageGeometryAction>(DataPath);
@@ -355,31 +360,31 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   auto voxelArrayPaths = args.value<std::vector<DataPath>>(k_VoxelArrays_Key);
   auto featureIdsArrayPath = args.value<DataPath>(k_FeatureIds_Key);
 
-  auto* srcImageGeom = data.getDataAs<ImageGeom>(srcImagePath);
-  auto* destImageGeom = data.getDataAs<ImageGeom>(destImagePath);
+  auto& srcImageGeom = data.getDataRefAs<ImageGeom>(srcImagePath);
+  auto& destImageGeom = data.getDataRefAs<ImageGeom>(destImagePath);
 
-  if(xMax > (static_cast<int64>(destImageGeom->getNumXPoints()) - 1))
+  if(xMax > (static_cast<int64>(destImageGeom.getNumXPoints()) - 1))
   {
-    std::string ss = fmt::format("The X Max ({}) is greater than the Image Geometry X extent ({})", xMax, static_cast<int64>(destImageGeom->getNumXPoints()) - 1);
+    std::string ss = fmt::format("The X Max ({}) is greater than the Image Geometry X extent ({})", xMax, static_cast<int64>(destImageGeom.getNumXPoints()) - 1);
     return MakeErrorResult(-5550, ss);
   }
 
-  if(yMax > (static_cast<int64>(destImageGeom->getNumYPoints()) - 1))
+  if(yMax > (static_cast<int64>(destImageGeom.getNumYPoints()) - 1))
   {
-    std::string ss = fmt::format("The Y Max ({}) is greater than the Image Geometry Y extent ({})", yMax, static_cast<int64>(destImageGeom->getNumYPoints()) - 1);
+    std::string ss = fmt::format("The Y Max ({}) is greater than the Image Geometry Y extent ({})", yMax, static_cast<int64>(destImageGeom.getNumYPoints()) - 1);
     return MakeErrorResult(-5550, ss);
   }
 
-  if(zMax > (static_cast<int64>(destImageGeom->getNumZPoints()) - 1))
+  if(zMax > (static_cast<int64>(destImageGeom.getNumZPoints()) - 1))
   {
-    std::string ss = fmt::format("The Z Max ({}) is greater than the Image Geometry Z extent ({})", zMax, static_cast<int64>(destImageGeom->getNumZPoints()) - 1);
+    std::string ss = fmt::format("The Z Max ({}) is greater than the Image Geometry Z extent ({})", zMax, static_cast<int64>(destImageGeom.getNumZPoints()) - 1);
     return MakeErrorResult(-5550, ss);
   }
 
   // No matter where the AM is (same DC or new DC), we have the correct DC and AM pointers...now it's time to crop
-  int64 totalPoints = srcImageGeom->getNumberOfElements();
+  int64 totalPoints = srcImageGeom.getNumberOfElements();
 
-  SizeVec3 udims = srcImageGeom->getDimensions();
+  SizeVec3 udims = srcImageGeom.getDimensions();
 
   int64 dims[3] = {
       static_cast<int64>(udims[0]),
@@ -394,7 +399,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   }
 
   // Get current origin
-  FloatVec3 oldOrigin = destImageGeom->getOrigin();
+  FloatVec3 oldOrigin = destImageGeom.getOrigin();
 
   // Check to make sure the new dimensions are not "out of bounds" and warn the user if they are
   if(dims[0] <= xMax)
@@ -435,11 +440,11 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
     //}
     // std::string ss = fmt::format("Cropping Volume || Slice {} of {} Complete", i, ZP);
     // notifyStatusMessage(ss);
-    planeold = (i + zMin) * (srcImageGeom->getNumXPoints() * srcImageGeom->getNumYPoints());
+    planeold = (i + zMin) * (srcImageGeom.getNumXPoints() * srcImageGeom.getNumYPoints());
     plane = (i * XP * YP);
     for(int64 j = 0; j < YP; j++)
     {
-      rowold = (j + yMin) * srcImageGeom->getNumXPoints();
+      rowold = (j + yMin) * srcImageGeom.getNumXPoints();
       row = (j * XP);
       for(int64 k = 0; k < XP; k++)
       {
@@ -459,7 +464,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   //{
   //  return;
   //}
-  totalPoints = destImageGeom->getNumberOfElements();
+  totalPoints = destImageGeom.getNumberOfElements();
   std::vector<usize> tDims(3, 0);
   tDims[0] = XP;
   tDims[1] = YP;
@@ -477,14 +482,14 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
 
   if(shouldUpdateOrigin)
   {
-    FloatVec3 resolution = destImageGeom->getSpacing();
-    FloatVec3 origin = destImageGeom->getOrigin();
+    FloatVec3 resolution = destImageGeom.getSpacing();
+    FloatVec3 origin = destImageGeom.getOrigin();
 
     origin[0] = xMin * resolution[0] + oldOrigin[0];
     origin[1] = yMin * resolution[1] + oldOrigin[1];
     origin[2] = zMin * resolution[2] + oldOrigin[2];
 
-    destImageGeom->setOrigin(origin);
+    destImageGeom.setOrigin(origin);
   }
 
   return {};

@@ -9,7 +9,7 @@ namespace complex
 {
 namespace Sampling
 {
-static Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& newGeomPath, const DataPath& destCellFeatureGroupPath, const DataPath& featureIdsArrayPath)
+inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& newGeomPath, const DataPath& destCellFeatureGroupPath, const DataPath& featureIdsArrayPath)
 {
   // Get the resampled data container, by default it would have been inserted into the Data Container Array
   auto* destImageGeom = dataStructure.getDataAs<ImageGeom>(newGeomPath);
@@ -33,7 +33,7 @@ static Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& n
 
   // std::vector<usize> cDims(1, 1);
   auto destFeatureIdsPath = destCellFeatureGroupPath.createChildPath(featureIdsArrayPath.getTargetName());
-  auto destFeatureIdsPtr = dataStructure.getDataAs<Int32Array>(destFeatureIdsPath);
+  auto* destFeatureIdsPtr = dataStructure.getDataAs<Int32Array>(destFeatureIdsPath);
   if(nullptr == destFeatureIdsPtr)
   {
     std::string ss = fmt::format("The FeatureIds array with name '{}' was not found in the destination DataContainer. The expected path was '{}'", featureIdsArrayPath.getTargetName(),
