@@ -74,7 +74,8 @@ Parameters ITKProxTVImage::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_MaximumNumberOfIterations_Key, "MaximumNumberOfIterations", "", 2.3456789));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Weights_Key, "Weights", "", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Norms_Key, "Norms", "", std::vector<float32>(3), std::vector<std::string>(3)));
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{DataObject::Type::ImageGeom}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to filter", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_NewCellArrayName_Key, "Filtered Array", "", DataPath{}));
 
