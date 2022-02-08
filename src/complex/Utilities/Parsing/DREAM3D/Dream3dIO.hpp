@@ -48,9 +48,10 @@ COMPLEX_EXPORT PipelineVersionType GetPipelineVersion(const H5::FileReader& file
  * an empty Pipeline when given a legacy file.
  * @param fileReader
  * @param errorType
+ * @param preflight = false
  * @return FileData
  */
-COMPLEX_EXPORT FileData ReadFile(const H5::FileReader& fileReader, H5::ErrorType& errorType);
+COMPLEX_EXPORT FileData ReadFile(const H5::FileReader& fileReader, H5::ErrorType& errorType, bool preflight = false);
 
 /**
  * @brief Imports and returns the Pipeline / DataStructure pair from the target
@@ -96,9 +97,10 @@ COMPLEX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataS
  * This method imports both current and legacy DataStructures.
  * @param fileReader
  * @param errorCode
+ * @param preflight = false
  * @return complex::DataStructure
  */
-COMPLEX_EXPORT complex::DataStructure ImportDataStructureFromFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode);
+COMPLEX_EXPORT complex::DataStructure ImportDataStructureFromFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode, bool preflight = false);
 
 /**
  * @brief Imports and returns the DataStructure from the target .dream3d file.

@@ -27,6 +27,9 @@ template <typename T>
 class AbstractDataStore : public IDataStore
 {
 public:
+  static constexpr const char k_TupleShape[] = "TupleShape";
+  static constexpr const char k_ComponentShape[] = "ComponentShape";
+
   using value_type = T;
   using reference = T&;
   using const_reference = const T&;

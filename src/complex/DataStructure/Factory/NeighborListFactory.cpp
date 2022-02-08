@@ -26,14 +26,14 @@ std::string NeighborListFactory::getDataTypeName() const
 }
 
 H5::ErrorType NeighborListFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::GroupReader& groupReader,
-                                               const std::optional<DataObject::IdType>& parentId)
+                                               const std::optional<DataObject::IdType>& parentId, bool preflight)
 {
   return -1;
 }
 
 template <typename T>
 inline void importNeighborList(DataStructure& dataStructure, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader, const std::string& dataArrayName, DataObject::IdType importId,
-                               const std::optional<DataObject::IdType>& parentId)
+                               const std::optional<DataObject::IdType>& parentId, bool preflight)
 {
   using NeighborListType = NeighborList<T>;
   auto dataVector = NeighborListType::ReadHdf5Data(parentReader, datasetReader);

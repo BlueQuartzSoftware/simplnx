@@ -32,8 +32,6 @@ public:
   using ShapeType = typename IDataStore::ShapeType;
 
   static constexpr const char k_DataStore[] = "DataStore";
-  static constexpr const char k_TupleShape[] = "TupleShape";
-  static constexpr const char k_ComponentShape[] = "ComponentShape";
   static constexpr const char k_DataObjectId[] = "DataObjectId";
   static constexpr const char k_DataArrayTypeName[] = "DataArray";
 

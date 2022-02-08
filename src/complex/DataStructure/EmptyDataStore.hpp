@@ -1,6 +1,7 @@
 #pragma once
 
 #include "complex/DataStructure/AbstractDataStore.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
 
 #include <numeric>
 #include <stdexcept>
@@ -200,6 +201,34 @@ public:
   H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const override
   {
     throw std::runtime_error("");
+  }
+
+  /**
+   * @brief Creates and returns an EmptyDataStore from the provided DatasetReader
+   * @param datasetReader
+   * @return std::unique_ptr<EmptyDataStore>
+   */
+  static std::unique_ptr<EmptyDataStore> readHdf5(const H5::DatasetReader& datasetReader)
+  {
+    // tupleShape
+    H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(k_TupleShape);
+    if(!tupleShapeAttribute.isValid())
+    {
+      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+    }
+    typename AbstractDataStore<T>::ShapeType tupleShape = tupleShapeAttribute.readAsVector<size_t>();
+
+    // componentShape
+    H5::AttributeReader componentShapeAttribute = datasetReader.getAttribute(k_ComponentShape);
+    if(!componentShapeAttribute.isValid())
+    {
+      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+    }
+    typename AbstractDataStore<T>::ShapeType componentShape = componentShapeAttribute.readAsVector<size_t>();
+
+    // Create DataStore
+    auto dataStore = std::make_unique<EmptyDataStore<T>>(tupleShape, componentShape);
+    return dataStore;
   }
 
 private:

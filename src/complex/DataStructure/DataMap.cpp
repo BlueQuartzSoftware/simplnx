@@ -302,12 +302,12 @@ DataMap& DataMap::operator=(DataMap&& rhs) noexcept
   return *this;
 }
 
-H5::ErrorType DataMap::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& h5Group, const std::optional<DataObject::IdType>& dsParentId)
+H5::ErrorType DataMap::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& h5Group, const std::optional<DataObject::IdType>& dsParentId, bool preflight)
 {
   auto childrenNames = h5Group.getChildNames();
   for(const auto& childName : childrenNames)
   {
-    auto errorCode = dataStructureReader.readObjectFromGroup(h5Group, childName, dsParentId);
+    auto errorCode = dataStructureReader.readObjectFromGroup(h5Group, childName, dsParentId, preflight);
   }
   return 0;
 }
