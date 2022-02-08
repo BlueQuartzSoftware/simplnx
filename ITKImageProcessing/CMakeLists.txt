@@ -1,3 +1,38 @@
+
+set(ItkComponents
+  ITKTestKernel
+  ITKCommon
+  ITKIOImageBase
+  ITKIOBMP
+  ITKIOBioRad
+  ITKIOGE
+  ITKIOGIPL
+  ITKIOJPEG
+  ITKIOMRC
+  ITKIOMeta
+  ITKIONIFTI
+  ITKIONRRD
+  ITKIOPNG
+  ITKIOStimulate
+  ITKIOTIFF
+  ITKIOVTK
+  ITKStatistics
+  ITKMathematicalMorphology
+  ITKImageFeature
+  ITKTransform
+)
+
+find_package(ITK REQUIRED ${ItkComponents})
+
+string(TOUPPER ${CMAKE_BUILD_TYPE} TYPE_UPPER)
+get_target_property(ITKCOMMON_PATH ITKCommon IMPORTED_LOCATION_${TYPE_UPPER})
+get_filename_component(ITK_LIB_DIR ${ITKCOMMON_PATH} DIRECTORY CACHE)
+message(STATUS "ITK_LIB_DIR: ${ITK_LIB_DIR}")
+
+get_property(COMPLEX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS)
+set_property(GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS ${COMPLEX_EXTRA_LIBRARY_DIRS} ${ITK_LIB_DIR})
+
+
 include("${complex_SOURCE_DIR}/cmake/Plugin.cmake")
 
 set(PLUGIN_NAME "ITKImageProcessing")
@@ -158,30 +193,6 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
   FILTER_LIST ${FilterList}
   DESCRIPTION "Plugin for ${PLUGIN_NAME}"
   VERSION "0.1.0"
-)
-
-find_package(ITK REQUIRED)
-
-set(ItkComponents 
-  ITKCommon
-  ITKIOImageBase
-  ITKIOBMP
-  ITKIOBioRad
-  ITKIOGE
-  ITKIOGIPL
-  ITKIOJPEG
-  ITKIOMRC
-  ITKIOMeta
-  ITKIONIFTI
-  ITKIONRRD
-  ITKIOPNG
-  ITKIOStimulate
-  ITKIOTIFF
-  ITKIOVTK
-  ITKStatistics
-  ITKMathematicalMorphology
-  ITKImageFeature
-  ITKTransform
 )
 
 target_link_libraries(${PLUGIN_NAME} PUBLIC ${ItkComponents})
