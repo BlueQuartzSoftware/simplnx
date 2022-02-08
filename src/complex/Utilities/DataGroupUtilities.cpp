@@ -4,7 +4,6 @@ namespace complex
 {
 bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds, size_t currentFeatureCount)
 {
-  std::cout << "RemoveInactiveObjects() Starting for featureDataGroupPath = " << featureDataGroupPath.toString() << std::endl;
   bool acceptableMatrix = false;
   // Only valid for feature or ensemble type matrices
   //  if(m_Type == AttributeMatrix::Type::VertexFeature || m_Type == AttributeMatrix::Type::VertexEnsemble || m_Type == AttributeMatrix::Type::EdgeFeature ||
@@ -19,11 +18,9 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
 
   if(nullptr == featureLevelBaseGroup)
   {
-    std::cout << "    featureLeveGroup was null" << std::endl;
     return false;
   }
   const DataMap& featureDataMap = featureLevelBaseGroup->getDataMap();
-  std::cout << "    featureDataMap.getSize() = " << featureDataMap.getSize() << std::endl;
 
   // Loop over all of the paths from the feature group and remove the data arrays that do NOT have the
   // same number of Tuples as the 'activeObjects' vector
@@ -35,16 +32,12 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
     std::shared_ptr<IDataArray> dataArray = std::dynamic_pointer_cast<IDataArray>(dataObject);
     if(nullptr != dataArray)
     {
-      std::cout << "        " << dataArray->getName() << "  dataArray->getNumberOfTuples() = " << dataArray->getNumberOfTuples() << std::endl;
       if(dataArray->getNumberOfTuples() == activeObjects.size())
       {
         matchingDataArrayPtrs.push_back(dataArray);
       }
     }
   }
-  std::cout << "    matchingDataArrayPtrs.size() = " << matchingDataArrayPtrs.size() << std::endl;
-  std::cout << "    activeObjects.size() = " << activeObjects.size() << std::endl;
-
   size_t totalTuples = currentFeatureCount;
   if(activeObjects.size() == totalTuples && acceptableMatrix)
   {
@@ -53,8 +46,6 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
     std::vector<size_t> removeList;
     std::vector<size_t> keepList;
     keepList.reserve(activeObjects.size());
-
-    std::cout << "   Finding the keep/reject index list" << std::endl;
 
     for(int32_t i = 1; i < activeObjects.size(); i++)
     {
@@ -71,18 +62,12 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
       }
     }
 
-    std::cout << "    removeList.size: " << removeList.size() << std::endl;
-    std::cout << "    keepList.size: " << keepList.size() << std::endl;
-
     if(!removeList.empty())
     {
 
       for(const auto& dataArray : matchingDataArrayPtrs)
       {
-        std::cout << "    Removing Inactive Objects from " << dataArray->getName() << std::endl;
-
         // IDataArray* p = dataStructure.getDataAs<IDataArray>(header);
-
         std::string typeName = dataArray->getTypeName();
         if(typeName == "NeighborList<T>")
         {
@@ -90,7 +75,6 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
         }
         else
         {
-          std::cout << "    Removing Tuples through copy/modify algorithm.." << std::endl;
           DataObject* dataObjectCopy = dataArray->deepCopy();
           auto dataObjectCopyId = dataObjectCopy->getId();
           std::shared_ptr<IDataArray> copy = dataStructure.getSharedDataAs<IDataArray>(dataObjectCopyId);
@@ -103,21 +87,16 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
             destIdx++;
           }
           // Remove the original array from the DataStructure
-          std::cout << "    Removing original DataArray: " << dataArray->getNumberOfTuples() << std::endl;
           dataStructure.removeData(dataArray->getId());
           // Add in the modified DataArray to the "Feature Data Group"
           // Now chop off the end of the copy and modified array
           copy->getIDataStore()->reshapeTuples({keepList.size()});
-          std::cout << "    Add resized original DataArray: " << copy->getNumberOfTuples() << std::endl;
           if(!dataStructure.insert(copy, featureDataGroupPath))
           {
             DataPath copyDataPath = featureDataGroupPath.createChildPath(copy->getName());
-            std::cout << "    ! Unable to insert DataArray at " << copyDataPath.toString() << std::endl;
           }
         }
       }
-      //      std::vector<size_t> tDims = {totalTuples - removeList.size()};
-      //      setTupleDimensions(tDims);
 
       // Loop over all the points and correct all the feature names
       size_t totalPoints = cellFeatureIds.getNumberOfTuples();
