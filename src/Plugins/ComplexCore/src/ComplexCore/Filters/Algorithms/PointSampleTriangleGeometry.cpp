@@ -43,11 +43,11 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-PointSampleTriangleGeometry::PointSampleTriangleGeometry(DataStructure& dataStructure, PointSampleTriangleGeometryInputs* inputValues, const IFilter* filter,
+PointSampleTriangleGeometry::PointSampleTriangleGeometry(DataStructure& dataStructure, PointSampleTriangleGeometryInputs* inputValues, const std::atomic_bool& shouldCancel,
                                                          const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_Inputs(inputValues)
-, m_Filter(filter)
+, m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
 {
 }
@@ -120,7 +120,7 @@ Result<> PointSampleTriangleGeometry::operator()()
 
   for(int64_t curVertex = 0; curVertex < m_Inputs->pNumberOfSamples; curVertex++)
   {
-    if(m_Filter->isCanceled())
+    if(m_ShouldCancel)
     {
       return {};
     }

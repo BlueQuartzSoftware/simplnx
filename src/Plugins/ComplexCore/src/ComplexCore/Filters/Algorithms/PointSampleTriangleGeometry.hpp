@@ -78,7 +78,7 @@ class COMPLEXCORE_EXPORT PointSampleTriangleGeometry
 {
 
 public:
-  PointSampleTriangleGeometry(DataStructure& dataStructure, PointSampleTriangleGeometryInputs* inputValues, const IFilter* filter, const IFilter::MessageHandler& mesgHandler);
+  PointSampleTriangleGeometry(DataStructure& dataStructure, PointSampleTriangleGeometryInputs* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
   ~PointSampleTriangleGeometry() noexcept;
 
   PointSampleTriangleGeometry(const PointSampleTriangleGeometry&) = delete;
@@ -114,7 +114,7 @@ private:
 
   DataStructure& m_DataStructure;
   const PointSampleTriangleGeometryInputs* m_Inputs = nullptr;
-  const IFilter* m_Filter = nullptr;
+  const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };
 

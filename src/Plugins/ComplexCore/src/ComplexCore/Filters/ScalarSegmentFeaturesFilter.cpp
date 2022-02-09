@@ -89,7 +89,7 @@ IFilter::UniquePointer ScalarSegmentFeaturesFilter::clone() const
   return std::make_unique<ScalarSegmentFeaturesFilter>();
 }
 
-IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto inputDataPath = args.value<DataPath>(k_InputArrayPathKey);
   int scalarTolerance = args.value<int>(k_ScalarToleranceKey);
@@ -163,7 +163,8 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
 }
 
 // -----------------------------------------------------------------------------
-Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel) const
 {
 
   ScalarSegmentFeaturesInputValues inputValues;
@@ -177,7 +178,7 @@ Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& data, const Arg
   inputValues.pGoodVoxelsPath = args.value<DataPath>(k_GoodVoxelsPathKey);
   inputValues.pGridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
 
-  complex::ScalarSegmentFeatures scalarSegmentFeatures(data, &inputValues, this, messageHandler);
+  complex::ScalarSegmentFeatures scalarSegmentFeatures(data, &inputValues, shouldCancel, messageHandler);
   Result<> result = scalarSegmentFeatures();
   return result;
 }

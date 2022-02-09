@@ -56,7 +56,7 @@ protected:
    * @param messageHandler
    * @return Result<OutputActions>
    */
-  PreflightResult preflightImpl(const complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler) const override;
+  PreflightResult preflightImpl(const complex::DataStructure& data, const complex::Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief Filter-specifics for performing execute.
@@ -66,7 +66,8 @@ protected:
    * @param messageHandler
    * @return Result<>
    */
-  complex::Result<> executeImpl(complex::DataStructure& data, const complex::Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const override;
+  complex::Result<> executeImpl(complex::DataStructure& data, const complex::Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 

@@ -51,7 +51,7 @@ IFilter::UniquePointer ExportDREAM3DFilter::clone() const
   return std::make_unique<ExportDREAM3DFilter>();
 }
 
-IFilter::PreflightResult ExportDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ExportDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
   if(exportFilePath.empty())
@@ -61,7 +61,8 @@ IFilter::PreflightResult ExportDREAM3DFilter::preflightImpl(const DataStructure&
   return {};
 }
 
-Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel) const
 {
   auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
 

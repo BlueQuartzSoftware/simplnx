@@ -51,7 +51,8 @@ IFilter::UniquePointer RenameDataGroup::clone() const
   return std::make_unique<RenameDataGroup>();
 }
 
-IFilter::PreflightResult RenameDataGroup::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult RenameDataGroup::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                        const std::atomic_bool& shouldCancel) const
 {
   auto dataGroupPath = filterArgs.value<DataPath>(k_DataGroup_Key);
   auto newName = filterArgs.value<std::string>(k_NewName_Key);
@@ -70,7 +71,7 @@ IFilter::PreflightResult RenameDataGroup::preflightImpl(const DataStructure& dat
   return {std::move(actions)};
 }
 
-Result<> RenameDataGroup::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> RenameDataGroup::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};
 }

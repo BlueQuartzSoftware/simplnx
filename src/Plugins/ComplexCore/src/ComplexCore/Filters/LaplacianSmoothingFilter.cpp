@@ -77,7 +77,8 @@ IFilter::UniquePointer LaplacianSmoothingFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult LaplacianSmoothingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult LaplacianSmoothingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                 const std::atomic_bool& shouldCancel) const
 {
   /**
    * These are the values that were gathered from the UI or the pipeline file or
@@ -111,7 +112,8 @@ IFilter::PreflightResult LaplacianSmoothingFilter::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> LaplacianSmoothingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> LaplacianSmoothingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel) const
 {
   complex::LaplacianSmoothingInputValues inputValues;
 
@@ -128,6 +130,6 @@ Result<> LaplacianSmoothingFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.pSurfaceMeshNodeTypeArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshNodeTypeArrayPath_Key);
 
   // Let the Algorithm instance do the work
-  return LaplacianSmoothing(dataStructure, &inputValues, this, messageHandler)();
+  return LaplacianSmoothing(dataStructure, &inputValues, shouldCancel, messageHandler)();
 }
 } // namespace complex

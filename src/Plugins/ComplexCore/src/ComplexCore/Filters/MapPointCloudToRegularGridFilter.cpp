@@ -234,7 +234,8 @@ IFilter::UniquePointer MapPointCloudToRegularGridFilter::clone() const
   return std::make_unique<MapPointCloudToRegularGridFilter>();
 }
 
-IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler,
+                                                                         const std::atomic_bool& shouldCancel) const
 {
   auto samplingGridType = args.value<uint64>(k_SamplingGridType_Key);
   auto gridDimensions = args.value<std::vector<int32>>(k_GridDimensions_Key);
@@ -319,7 +320,8 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
   return {std::move(actions)};
 }
 
-Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel) const
 {
   auto samplingGridType = args.value<uint64>(k_SamplingGridType_Key);
   auto gridDimensions = args.value<std::vector<int32>>(k_GridDimensions_Key);

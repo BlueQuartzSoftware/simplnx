@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <functional>
 #include <optional>
 #include <string>
@@ -150,9 +151,10 @@ public:
    * @param data
    * @param args
    * @param messageHandler
+   * @param shouldCancel
    * @return PreflightResult
    */
-  PreflightResult preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}) const;
+  PreflightResult preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}, const std::atomic_bool& shouldCancel = false) const;
 
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
@@ -161,9 +163,11 @@ public:
    * @param args
    * @param pipelineNode = nullptr
    * @param messageHandler = {}
+   * @param shouldCancel
    * @return ExecuteResult
    */
-  ExecuteResult execute(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode = nullptr, const MessageHandler& messageHandler = {}) const;
+  ExecuteResult execute(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode = nullptr, const MessageHandler& messageHandler = {},
+                        const std::atomic_bool& shouldCancel = false) const;
 
   /**
    * @brief Converts the given arguments to a JSON representation using the filter's parameters.
@@ -179,20 +183,6 @@ public:
    */
   Result<Arguments> fromJson(const nlohmann::json& json) const;
 
-  /**
-   * @brief Signals to the filter to stop execution. It is up to the filter to check
-   * this variable during its execution and act upon it.
-   * @param cancel
-   */
-  void setCanceled(bool cancel);
-
-  /**
-   * @brief Returns if this filter has been canceled. Note that the filter may still be running until the filter checks
-   * this value
-   * @return
-   */
-  bool isCanceled() const;
-
 protected:
   IFilter() = default;
 
@@ -202,9 +192,10 @@ protected:
    * @param data
    * @param args
    * @param messageHandler
+   * @param shouldCancel
    * @return PreflightResult
    */
-  virtual PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const = 0;
+  virtual PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const = 0;
 
   /**
    * @brief Classes that implement IFilter must provide this function for execute.
@@ -213,12 +204,10 @@ protected:
    * @param args
    * @param pipelineNode
    * @param messageHandler
+   * @param shouldCancel
    * @return Result<>
    */
-  virtual Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const = 0;
-
-private:
-  bool m_Cancel = {false};
+  virtual Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const = 0;
 };
 
 using FilterCreationFunc = IFilter::UniquePointer (*)();

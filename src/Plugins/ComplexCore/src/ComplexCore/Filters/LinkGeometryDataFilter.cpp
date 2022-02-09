@@ -71,7 +71,8 @@ IFilter::UniquePointer LinkGeometryDataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult LinkGeometryDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult LinkGeometryDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                               const std::atomic_bool& shouldCancel) const
 {
   auto pGeomDataPath = filterArgs.value<DataPath>(k_GeometryDataPath_Key);
   auto pSelectedVertexDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedVertexDataArrayPaths_Key);
@@ -159,7 +160,8 @@ IFilter::PreflightResult LinkGeometryDataFilter::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> LinkGeometryDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> LinkGeometryDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel) const
 {
   auto pGeomDataPath = filterArgs.value<DataPath>(k_GeometryDataPath_Key);
   auto pSelectedVertexDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedVertexDataArrayPaths_Key);

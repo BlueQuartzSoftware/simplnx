@@ -89,7 +89,8 @@ IFilter::UniquePointer RemoveFlaggedVertices::clone() const
   return std::make_unique<RemoveFlaggedVertices>();
 }
 
-IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                              const std::atomic_bool& shouldCancel) const
 {
   auto vertexGeomPath = filterArgs.value<DataPath>(k_VertexGeomPath_Key);
   auto maskArrayPath = filterArgs.value<DataPath>(k_MaskPath_Key);
@@ -151,7 +152,8 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
   return {std::move(actions)};
 }
 
-Result<> RemoveFlaggedVertices::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> RemoveFlaggedVertices::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel) const
 {
   auto vertexGeomPath = args.value<DataPath>(k_VertexGeomPath_Key);
   auto maskArrayPath = args.value<DataPath>(k_MaskPath_Key);

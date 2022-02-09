@@ -59,10 +59,10 @@ using EdgeMap = std::unordered_map<Edge, AbstractGeometry::MeshIndexType, EdgeHa
 } // namespace
 
 // -----------------------------------------------------------------------------
-QuickSurfaceMesh::QuickSurfaceMesh(DataStructure& dataStructure, QuickSurfaceMeshInputValues* inputValues, const IFilter* filter, const IFilter::MessageHandler& mesgHandler)
+QuickSurfaceMesh::QuickSurfaceMesh(DataStructure& dataStructure, QuickSurfaceMeshInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_Inputs(inputValues)
-, m_Filter(filter)
+, m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
 {
 }
