@@ -60,7 +60,7 @@ IFilter::UniquePointer CreateAttributeMatrix::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CreateAttributeMatrix::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult CreateAttributeMatrix::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -123,7 +123,7 @@ IFilter::PreflightResult CreateAttributeMatrix::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateAttributeMatrix::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> CreateAttributeMatrix::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

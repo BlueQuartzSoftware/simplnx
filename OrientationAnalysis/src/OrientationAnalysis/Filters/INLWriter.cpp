@@ -67,7 +67,7 @@ IFilter::UniquePointer INLWriter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult INLWriter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult INLWriter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -129,7 +129,7 @@ IFilter::PreflightResult INLWriter::preflightImpl(const DataStructure& dataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> INLWriter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> INLWriter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

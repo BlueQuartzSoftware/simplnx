@@ -99,7 +99,7 @@ IFilter::UniquePointer ITKSmoothingRecursiveGaussianImage::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ITKSmoothingRecursiveGaussianImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ITKSmoothingRecursiveGaussianImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -156,7 +156,7 @@ IFilter::PreflightResult ITKSmoothingRecursiveGaussianImage::preflightImpl(const
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKSmoothingRecursiveGaussianImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKSmoothingRecursiveGaussianImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

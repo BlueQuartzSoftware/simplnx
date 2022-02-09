@@ -113,7 +113,7 @@ IFilter::UniquePointer Export3dSolidMesh::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult Export3dSolidMesh::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult Export3dSolidMesh::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -190,7 +190,7 @@ IFilter::PreflightResult Export3dSolidMesh::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> Export3dSolidMesh::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> Export3dSolidMesh::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

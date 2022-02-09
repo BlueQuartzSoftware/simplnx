@@ -321,7 +321,7 @@ IFilter::UniquePointer ITKImageReader::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ITKImageReader::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ITKImageReader::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto fileName = filterArgs.value<fs::path>(k_FileName_Key);
   auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
@@ -339,7 +339,7 @@ IFilter::PreflightResult ITKImageReader::preflightImpl(const DataStructure& data
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKImageReader::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ITKImageReader::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto fileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_FileName_Key);
   auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);

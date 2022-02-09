@@ -57,7 +57,7 @@ IFilter::UniquePointer ImportHDF5Dataset::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -114,7 +114,7 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

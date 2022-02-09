@@ -74,7 +74,7 @@ IFilter::UniquePointer WriteASCIIData::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteASCIIData::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult WriteASCIIData::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -136,7 +136,7 @@ IFilter::PreflightResult WriteASCIIData::preflightImpl(const DataStructure& data
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteASCIIData::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> WriteASCIIData::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

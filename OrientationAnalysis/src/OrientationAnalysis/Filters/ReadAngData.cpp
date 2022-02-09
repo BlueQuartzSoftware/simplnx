@@ -66,7 +66,7 @@ IFilter::UniquePointer ReadAngData::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadAngData::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ReadAngData::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -130,7 +130,7 @@ IFilter::PreflightResult ReadAngData::preflightImpl(const DataStructure& dataStr
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadAngData::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ReadAngData::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

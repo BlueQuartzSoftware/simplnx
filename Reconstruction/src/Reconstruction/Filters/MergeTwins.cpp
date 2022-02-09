@@ -77,7 +77,7 @@ IFilter::UniquePointer MergeTwins::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult MergeTwins::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult MergeTwins::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -145,7 +145,7 @@ IFilter::PreflightResult MergeTwins::preflightImpl(const DataStructure& dataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> MergeTwins::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> MergeTwins::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

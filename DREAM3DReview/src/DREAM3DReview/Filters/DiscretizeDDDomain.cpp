@@ -63,7 +63,7 @@ IFilter::UniquePointer DiscretizeDDDomain::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult DiscretizeDDDomain::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult DiscretizeDDDomain::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -128,7 +128,7 @@ IFilter::PreflightResult DiscretizeDDDomain::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> DiscretizeDDDomain::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> DiscretizeDDDomain::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

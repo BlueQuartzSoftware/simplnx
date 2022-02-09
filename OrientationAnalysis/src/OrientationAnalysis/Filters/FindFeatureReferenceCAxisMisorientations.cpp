@@ -66,7 +66,7 @@ IFilter::UniquePointer FindFeatureReferenceCAxisMisorientations::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindFeatureReferenceCAxisMisorientations::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindFeatureReferenceCAxisMisorientations::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

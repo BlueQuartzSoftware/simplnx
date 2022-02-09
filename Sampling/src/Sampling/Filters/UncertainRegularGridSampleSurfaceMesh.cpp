@@ -71,7 +71,7 @@ IFilter::UniquePointer UncertainRegularGridSampleSurfaceMesh::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult UncertainRegularGridSampleSurfaceMesh::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult UncertainRegularGridSampleSurfaceMesh::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -141,7 +141,7 @@ IFilter::PreflightResult UncertainRegularGridSampleSurfaceMesh::preflightImpl(co
 }
 
 //------------------------------------------------------------------------------
-Result<> UncertainRegularGridSampleSurfaceMesh::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> UncertainRegularGridSampleSurfaceMesh::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -57,7 +57,7 @@ IFilter::UniquePointer ChangeAngleRepresentation::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ChangeAngleRepresentation::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ChangeAngleRepresentation::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -114,7 +114,7 @@ IFilter::PreflightResult ChangeAngleRepresentation::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> ChangeAngleRepresentation::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ChangeAngleRepresentation::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

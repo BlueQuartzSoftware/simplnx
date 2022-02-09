@@ -66,7 +66,7 @@ IFilter::UniquePointer ItkAutoThreshold::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ItkAutoThreshold::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ItkAutoThreshold::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -126,7 +126,7 @@ IFilter::PreflightResult ItkAutoThreshold::preflightImpl(const DataStructure& da
 }
 
 //------------------------------------------------------------------------------
-Result<> ItkAutoThreshold::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ItkAutoThreshold::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

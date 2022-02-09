@@ -69,7 +69,7 @@ IFilter::UniquePointer GenerateIPFColors::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult GenerateIPFColors::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult GenerateIPFColors::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -131,7 +131,7 @@ IFilter::PreflightResult GenerateIPFColors::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> GenerateIPFColors::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> GenerateIPFColors::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

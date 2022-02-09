@@ -62,7 +62,7 @@ IFilter::UniquePointer CreateEnsembleInfo::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CreateEnsembleInfo::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult CreateEnsembleInfo::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -123,7 +123,7 @@ IFilter::PreflightResult CreateEnsembleInfo::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateEnsembleInfo::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> CreateEnsembleInfo::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

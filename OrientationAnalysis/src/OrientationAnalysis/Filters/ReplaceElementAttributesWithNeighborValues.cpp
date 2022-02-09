@@ -62,7 +62,7 @@ IFilter::UniquePointer ReplaceElementAttributesWithNeighborValues::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReplaceElementAttributesWithNeighborValues::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ReplaceElementAttributesWithNeighborValues::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

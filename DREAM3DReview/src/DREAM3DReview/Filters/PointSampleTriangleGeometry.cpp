@@ -77,7 +77,7 @@ IFilter::UniquePointer PointSampleTriangleGeometry::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult PointSampleTriangleGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult PointSampleTriangleGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -142,7 +142,7 @@ IFilter::PreflightResult PointSampleTriangleGeometry::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> PointSampleTriangleGeometry::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> PointSampleTriangleGeometry::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

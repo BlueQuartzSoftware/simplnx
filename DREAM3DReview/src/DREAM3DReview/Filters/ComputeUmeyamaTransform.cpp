@@ -62,7 +62,7 @@ IFilter::UniquePointer ComputeUmeyamaTransform::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeUmeyamaTransform::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ComputeUmeyamaTransform::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -122,7 +122,7 @@ IFilter::PreflightResult ComputeUmeyamaTransform::preflightImpl(const DataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeUmeyamaTransform::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ComputeUmeyamaTransform::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
