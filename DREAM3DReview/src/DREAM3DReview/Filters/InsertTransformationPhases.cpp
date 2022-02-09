@@ -95,7 +95,7 @@ IFilter::UniquePointer InsertTransformationPhases::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult InsertTransformationPhases::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult InsertTransformationPhases::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -182,7 +182,7 @@ IFilter::PreflightResult InsertTransformationPhases::preflightImpl(const DataStr
 }
 
 //------------------------------------------------------------------------------
-Result<> InsertTransformationPhases::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> InsertTransformationPhases::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

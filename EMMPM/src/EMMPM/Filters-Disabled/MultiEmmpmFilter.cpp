@@ -77,7 +77,7 @@ IFilter::UniquePointer MultiEmmpmFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult MultiEmmpmFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult MultiEmmpmFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -144,7 +144,7 @@ IFilter::PreflightResult MultiEmmpmFilter::preflightImpl(const DataStructure& da
 }
 
 //------------------------------------------------------------------------------
-Result<> MultiEmmpmFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> MultiEmmpmFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

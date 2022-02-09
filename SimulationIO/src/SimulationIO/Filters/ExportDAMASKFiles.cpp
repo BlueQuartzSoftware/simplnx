@@ -73,7 +73,7 @@ IFilter::UniquePointer ExportDAMASKFiles::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExportDAMASKFiles::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ExportDAMASKFiles::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -136,7 +136,7 @@ IFilter::PreflightResult ExportDAMASKFiles::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> ExportDAMASKFiles::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ExportDAMASKFiles::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

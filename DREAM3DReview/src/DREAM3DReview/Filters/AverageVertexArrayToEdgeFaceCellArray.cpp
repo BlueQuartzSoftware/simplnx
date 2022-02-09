@@ -62,7 +62,7 @@ IFilter::UniquePointer AverageVertexArrayToEdgeFaceCellArray::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AverageVertexArrayToEdgeFaceCellArray::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult AverageVertexArrayToEdgeFaceCellArray::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -126,7 +126,7 @@ IFilter::PreflightResult AverageVertexArrayToEdgeFaceCellArray::preflightImpl(co
 }
 
 //------------------------------------------------------------------------------
-Result<> AverageVertexArrayToEdgeFaceCellArray::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> AverageVertexArrayToEdgeFaceCellArray::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

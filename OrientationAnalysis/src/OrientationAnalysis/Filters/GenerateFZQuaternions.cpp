@@ -68,7 +68,7 @@ IFilter::UniquePointer GenerateFZQuaternions::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult GenerateFZQuaternions::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult GenerateFZQuaternions::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -135,7 +135,7 @@ IFilter::PreflightResult GenerateFZQuaternions::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> GenerateFZQuaternions::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> GenerateFZQuaternions::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

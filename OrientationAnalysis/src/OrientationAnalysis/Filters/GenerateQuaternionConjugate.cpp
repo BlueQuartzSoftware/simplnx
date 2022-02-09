@@ -60,7 +60,7 @@ IFilter::UniquePointer GenerateQuaternionConjugate::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult GenerateQuaternionConjugate::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult GenerateQuaternionConjugate::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -124,7 +124,7 @@ IFilter::PreflightResult GenerateQuaternionConjugate::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> GenerateQuaternionConjugate::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> GenerateQuaternionConjugate::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

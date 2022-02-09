@@ -57,7 +57,7 @@ IFilter::UniquePointer RenameAttributeMatrix::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RenameAttributeMatrix::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult RenameAttributeMatrix::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -114,7 +114,7 @@ IFilter::PreflightResult RenameAttributeMatrix::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> RenameAttributeMatrix::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> RenameAttributeMatrix::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

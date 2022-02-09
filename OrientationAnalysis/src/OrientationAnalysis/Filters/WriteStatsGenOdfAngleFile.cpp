@@ -73,7 +73,7 @@ IFilter::UniquePointer WriteStatsGenOdfAngleFile::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteStatsGenOdfAngleFile::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult WriteStatsGenOdfAngleFile::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -137,7 +137,7 @@ IFilter::PreflightResult WriteStatsGenOdfAngleFile::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteStatsGenOdfAngleFile::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> WriteStatsGenOdfAngleFile::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

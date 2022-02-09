@@ -82,7 +82,7 @@ IFilter::UniquePointer InitializeSyntheticVolume::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult InitializeSyntheticVolume::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult InitializeSyntheticVolume::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -159,7 +159,7 @@ IFilter::PreflightResult InitializeSyntheticVolume::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> InitializeSyntheticVolume::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> InitializeSyntheticVolume::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

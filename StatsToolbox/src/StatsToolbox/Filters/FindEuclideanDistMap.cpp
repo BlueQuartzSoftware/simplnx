@@ -73,7 +73,7 @@ IFilter::UniquePointer FindEuclideanDistMap::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindEuclideanDistMap::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindEuclideanDistMap::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -138,7 +138,7 @@ IFilter::PreflightResult FindEuclideanDistMap::preflightImpl(const DataStructure
 }
 
 //------------------------------------------------------------------------------
-Result<> FindEuclideanDistMap::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> FindEuclideanDistMap::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

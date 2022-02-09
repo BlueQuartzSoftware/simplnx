@@ -80,7 +80,7 @@ IFilter::UniquePointer WarpRegularGrid::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WarpRegularGrid::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult WarpRegularGrid::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -150,7 +150,7 @@ IFilter::PreflightResult WarpRegularGrid::preflightImpl(const DataStructure& dat
 }
 
 //------------------------------------------------------------------------------
-Result<> WarpRegularGrid::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> WarpRegularGrid::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

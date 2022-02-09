@@ -62,7 +62,7 @@ IFilter::UniquePointer Lesson3::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult Lesson3::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult Lesson3::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -127,7 +127,7 @@ IFilter::PreflightResult Lesson3::preflightImpl(const DataStructure& dataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> Lesson3::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> Lesson3::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

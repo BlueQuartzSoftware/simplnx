@@ -71,7 +71,7 @@ IFilter::UniquePointer VMFindDistanceFieldFromTriangleGeometry::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult VMFindDistanceFieldFromTriangleGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult VMFindDistanceFieldFromTriangleGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -139,7 +139,7 @@ IFilter::PreflightResult VMFindDistanceFieldFromTriangleGeometry::preflightImpl(
 }
 
 //------------------------------------------------------------------------------
-Result<> VMFindDistanceFieldFromTriangleGeometry::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> VMFindDistanceFieldFromTriangleGeometry::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

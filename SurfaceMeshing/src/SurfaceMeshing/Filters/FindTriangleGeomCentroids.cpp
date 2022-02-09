@@ -62,7 +62,7 @@ IFilter::UniquePointer FindTriangleGeomCentroids::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindTriangleGeomCentroids::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindTriangleGeomCentroids::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -120,7 +120,7 @@ IFilter::PreflightResult FindTriangleGeomCentroids::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> FindTriangleGeomCentroids::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> FindTriangleGeomCentroids::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

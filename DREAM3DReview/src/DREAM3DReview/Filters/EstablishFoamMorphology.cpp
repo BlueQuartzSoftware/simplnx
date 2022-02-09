@@ -97,7 +97,7 @@ IFilter::UniquePointer EstablishFoamMorphology::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult EstablishFoamMorphology::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult EstablishFoamMorphology::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -174,7 +174,7 @@ IFilter::PreflightResult EstablishFoamMorphology::preflightImpl(const DataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> EstablishFoamMorphology::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> EstablishFoamMorphology::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

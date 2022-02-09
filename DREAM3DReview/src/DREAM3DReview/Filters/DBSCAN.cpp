@@ -68,7 +68,7 @@ IFilter::UniquePointer DBSCAN::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult DBSCAN::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult DBSCAN::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -131,7 +131,7 @@ IFilter::PreflightResult DBSCAN::preflightImpl(const DataStructure& dataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> DBSCAN::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> DBSCAN::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

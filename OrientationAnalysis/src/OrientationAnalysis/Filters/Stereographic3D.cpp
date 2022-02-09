@@ -59,7 +59,7 @@ IFilter::UniquePointer Stereographic3D::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult Stereographic3D::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult Stereographic3D::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -116,7 +116,7 @@ IFilter::PreflightResult Stereographic3D::preflightImpl(const DataStructure& dat
 }
 
 //------------------------------------------------------------------------------
-Result<> Stereographic3D::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> Stereographic3D::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

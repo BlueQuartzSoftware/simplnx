@@ -57,7 +57,7 @@ IFilter::UniquePointer SplitAttributeArray::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult SplitAttributeArray::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult SplitAttributeArray::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -114,7 +114,7 @@ IFilter::PreflightResult SplitAttributeArray::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> SplitAttributeArray::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> SplitAttributeArray::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

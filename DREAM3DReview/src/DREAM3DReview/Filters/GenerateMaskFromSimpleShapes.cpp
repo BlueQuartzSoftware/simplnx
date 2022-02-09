@@ -69,7 +69,7 @@ IFilter::UniquePointer GenerateMaskFromSimpleShapes::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult GenerateMaskFromSimpleShapes::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult GenerateMaskFromSimpleShapes::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -137,7 +137,7 @@ IFilter::PreflightResult GenerateMaskFromSimpleShapes::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-Result<> GenerateMaskFromSimpleShapes::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> GenerateMaskFromSimpleShapes::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
