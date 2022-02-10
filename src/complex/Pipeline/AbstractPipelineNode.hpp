@@ -131,12 +131,6 @@ public:
   virtual std::unique_ptr<AbstractPipelineNode> deepCopy() const = 0;
 
   /**
-   * @brief Returns the run state of the node.
-   * @return bool
-   */
-  RunState getRunState() const;
-
-  /**
    * @brief Returns the fault state of the node.
    * @return bool
    */
@@ -276,12 +270,6 @@ protected:
   std::unique_ptr<Pipeline> getPrecedingPipelineSegment() const;
 
   /**
-   * @brief Sets the run state.
-   * @param value = true
-   */
-  void setRunState(RunState runState);
-
-  /**
    * @brief Sets or clears the Warning flag.
    * @param value = true
    */
@@ -304,7 +292,6 @@ private:
   DataStructure m_PreflightStructure;
   bool m_IsPreflighted = false;
   SignalType m_Signal;
-  RunState m_RunState = RunState::Idle;
   FaultState m_FaultState = FaultState::None;
   bool m_IsDisabled = false;
 

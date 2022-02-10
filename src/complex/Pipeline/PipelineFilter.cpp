@@ -80,9 +80,7 @@ void PipelineFilter::setIndex(int32 index)
 // -----------------------------------------------------------------------------
 bool PipelineFilter::preflight(DataStructure& data)
 {
-  setRunState(RunState::Preflighting);
-  sendFilterRunStateMessage(m_Index, getRunState());
-  // sendFilterUpdateMessage(m_Index, "    PipelineFilter::preflight()  Starting Preflight.. ");
+  sendFilterRunStateMessage(m_Index, RunState::Preflighting);
 
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
@@ -96,7 +94,6 @@ bool PipelineFilter::preflight(DataStructure& data)
     m_Errors = std::move(result.outputActions.errors());
     setHasErrors();
     setPreflightStructure(data, false);
-    //    notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
     sendFilterFaultMessage(m_Index, getFaultState());
     sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
     return false;
@@ -117,7 +114,6 @@ bool PipelineFilter::preflight(DataStructure& data)
       m_Errors = std::move(actionResult.errors());
       setPreflightStructure(data, false);
       setHasErrors();
-      //      notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
       sendFilterFaultMessage(m_Index, getFaultState());
       sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
       return false;
@@ -125,23 +121,19 @@ bool PipelineFilter::preflight(DataStructure& data)
   }
 
   setPreflightStructure(data);
-  //  notify(std::make_shared<FilterPreflightMessage>(this, m_Warnings, m_Errors));
   sendFilterFaultMessage(m_Index, getFaultState());
   if(!m_Warnings.empty() || !m_Errors.empty())
   {
     sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
   }
 
-  setRunState(RunState::Idle);
-  sendFilterRunStateMessage(m_Index, getRunState());
-  // sendFilterUpdateMessage(m_Index, "    PipelineFilter::preflight()  Ending Preflight.. ");
+  sendFilterRunStateMessage(m_Index, RunState::Idle);
   return true;
 }
 
 // -----------------------------------------------------------------------------
 bool PipelineFilter::execute(DataStructure& data)
 {
-  setRunState(RunState::Executing);
   this->sendFilterRunStateMessage(m_Index, complex::RunState::Executing);
   this->sendFilterUpdateMessage(m_Index, "    PipelineFilter::execute()  Starting Execution.. ");
 
@@ -170,7 +162,6 @@ bool PipelineFilter::execute(DataStructure& data)
     sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
   }
   sendFilterFaultMessage(m_Index, getFaultState());
-  setRunState(RunState::Idle);
   this->sendFilterRunStateMessage(m_Index, complex::RunState::Idle);
   this->sendFilterUpdateMessage(m_Index, "    PipelineFilter::execute()  Ending Execution.. ");
 
