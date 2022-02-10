@@ -148,14 +148,11 @@ inline DataStructure CreateDataStructure()
   Int32Array* phases_data = CreateTestDataArray<int32>(dataGraph, "Phases", tupleShape, {numComponents}, scanData->getId());
   USizeArray* voxelIndices = CreateTestDataArray<usize>(dataGraph, "Voxel Indices", tupleShape, {numComponents}, scanData->getId());
 
-  BoolArray* conditionalArray = CreateTestDataArray<bool>(dataGraph, "ConditionalArray", tupleShape, {1}, scanData->getId());
-  conditionalArray->fill(true);
+  BoolArray* conditionalArray = CreateTestDataArray<bool>(dataGraph, Constants::k_ConditionalArray, tupleShape, {1}, scanData->getId());
 
   numComponents = 3;
   UInt8Array* ipf_color_data = CreateTestDataArray<uint8>(dataGraph, "IPF Colors", tupleShape, {numComponents}, scanData->getId());
   Float32Array* euler_data = CreateTestDataArray<float>(dataGraph, "Euler", tupleShape, {numComponents}, scanData->getId());
-
-  // Create an Vertex Geometry grid for the Scan Data
 
   // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
   DataGroup* ensembleGroup = DataGroup::Create(dataGraph, "Phase Data", topLevelGroup->getId());
@@ -163,7 +160,7 @@ inline DataStructure CreateDataStructure()
   usize numTuples = 2;
   Int32Array* laue_data = CreateTestDataArray<int32>(dataGraph, "Laue Class", {numTuples}, {numComponents}, ensembleGroup->getId());
 
-  // Create an Vertex Geometry grid for the Scan Data
+  // Create a Vertex Geometry grid for the Scan Data
   VertexGeom* vertexGeom = VertexGeom::Create(dataGraph, Constants::k_VertexGeometry, scanData->getId());
   vertexGeom->setVertices(euler_data);
 

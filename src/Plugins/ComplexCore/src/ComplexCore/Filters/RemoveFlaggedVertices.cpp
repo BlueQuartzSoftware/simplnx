@@ -79,8 +79,8 @@ Parameters RemoveFlaggedVertices::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_VertexGeomPath_Key, "Vertex Geometry", "Path to the target Vertex Geometry", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Vertex}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraySelection_Key, "Target Arrays", "Paths to the target DataArrays", std::vector<DataPath>()));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask", "Path to create the mask array at", DataPath(), false, ArraySelectionParameter::AllowedTypes{DataType::boolean}));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_ReducedVertexPath_Key, "Reduced Vertex Geometry", "Path to create the reduced geometry at", DataPath()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask Array", "DataPath to the conditional array that will be used to decide which vertices are removed.", DataPath(), false, ArraySelectionParameter::AllowedTypes{DataType::boolean}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_ReducedVertexPath_Key, "Reduced Vertex Geometry", "Created Vertex Geometry DataPath. This will be created during the filter.", DataPath()));
   return params;
 }
 
@@ -115,7 +115,7 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
 
   std::vector<size_t> cDims(1, 1);
 
-  auto maskArray = dataStructure.getDataAs<DataArray<bool>>(maskArrayPath);
+  auto* maskArray = dataStructure.getDataAs<DataArray<bool>>(maskArrayPath);
   if(maskArray != nullptr)
   {
     dataArrayPaths.push_back(maskArrayPath);
