@@ -3,9 +3,8 @@
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
-
-#include "ComplexCore/Filters/RemoveFlaggedVertices.hpp"
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/RemoveFlaggedVertices.hpp"
 
 using namespace complex;
 

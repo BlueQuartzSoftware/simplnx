@@ -117,37 +117,37 @@ Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObjec
   switch(arrayType)
   {
   case complex::DataType::int8:
-    resultFromConversion =ConditionalReplaceValueInArrayFromString<int8>(valueAsStr, inputDataObject, conditionalDataArray);
+    resultFromConversion = ConditionalReplaceValueInArrayFromString<int8>(valueAsStr, inputDataObject, conditionalDataArray);
     break;
   case complex::DataType::uint8:
-    resultFromConversion =ConditionalReplaceValueInArrayFromString<uint8>(valueAsStr, inputDataObject, conditionalDataArray);
+    resultFromConversion = ConditionalReplaceValueInArrayFromString<uint8>(valueAsStr, inputDataObject, conditionalDataArray);
     break;
   case complex::DataType::int16:
-    resultFromConversion =ConditionalReplaceValueInArrayFromString<int16>(valueAsStr, inputDataObject, conditionalDataArray);
+    resultFromConversion = ConditionalReplaceValueInArrayFromString<int16>(valueAsStr, inputDataObject, conditionalDataArray);
     break;
   case complex::DataType::uint16:
-    resultFromConversion =ConditionalReplaceValueInArrayFromString<uint16>(valueAsStr, inputDataObject, conditionalDataArray);
+    resultFromConversion = ConditionalReplaceValueInArrayFromString<uint16>(valueAsStr, inputDataObject, conditionalDataArray);
     break;
   case complex::DataType::int32:
     resultFromConversion = ConditionalReplaceValueInArrayFromString<int32>(valueAsStr, inputDataObject, conditionalDataArray);
     break;
   case complex::DataType::uint32:
-    resultFromConversion =ConditionalReplaceValueInArrayFromString<uint32>(valueAsStr, inputDataObject, conditionalDataArray);
+    resultFromConversion = ConditionalReplaceValueInArrayFromString<uint32>(valueAsStr, inputDataObject, conditionalDataArray);
     break;
   case complex::DataType::int64:
-    resultFromConversion =ConditionalReplaceValueInArrayFromString<int64>(valueAsStr, inputDataObject, conditionalDataArray);
+    resultFromConversion = ConditionalReplaceValueInArrayFromString<int64>(valueAsStr, inputDataObject, conditionalDataArray);
     break;
   case complex::DataType::uint64:
-    resultFromConversion =ConditionalReplaceValueInArrayFromString<uint64>(valueAsStr, inputDataObject, conditionalDataArray);
+    resultFromConversion = ConditionalReplaceValueInArrayFromString<uint64>(valueAsStr, inputDataObject, conditionalDataArray);
     break;
   case complex::DataType::float32:
-    resultFromConversion =ConditionalReplaceValueInArrayFromString<float32>(valueAsStr, inputDataObject, conditionalDataArray);
+    resultFromConversion = ConditionalReplaceValueInArrayFromString<float32>(valueAsStr, inputDataObject, conditionalDataArray);
     break;
   case complex::DataType::float64:
-    resultFromConversion =ConditionalReplaceValueInArrayFromString<float64>(valueAsStr, inputDataObject, conditionalDataArray);
+    resultFromConversion = ConditionalReplaceValueInArrayFromString<float64>(valueAsStr, inputDataObject, conditionalDataArray);
     break;
   case complex::DataType::boolean:
-    resultFromConversion =ConditionalReplaceValueInArrayFromString<bool>(valueAsStr, inputDataObject, conditionalDataArray);
+    resultFromConversion = ConditionalReplaceValueInArrayFromString<bool>(valueAsStr, inputDataObject, conditionalDataArray);
     break;
   case complex::DataType::error:
     return {MakeErrorResult(-260, fmt::format("Input DataObject could not be cast to any primitive type."))};
