@@ -87,7 +87,7 @@ bool BaseGroup::canInsert(const DataObject* obj) const
   {
     return false;
   }
-  if(contains(obj))
+  if(contains(obj) || contains(obj->getName()))
   {
     return false;
   }
