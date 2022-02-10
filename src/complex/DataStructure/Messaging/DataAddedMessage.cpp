@@ -41,5 +41,5 @@ const DataObject* DataAddedMessage::getData() const
 
 std::vector<DataPath> DataAddedMessage::getDataPaths() const
 {
-  return getData()->getDataPaths();
+  return getData()->getParentDataPaths();
 }

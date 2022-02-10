@@ -51,6 +51,11 @@ usize BaseGroup::getSize() const
   return m_DataMap.getSize();
 }
 
+bool BaseGroup::empty() const
+{
+  return m_DataMap.getSize() == 0;
+}
+
 DataMap& BaseGroup::getDataMap()
 {
   return m_DataMap;
