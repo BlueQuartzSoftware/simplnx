@@ -50,6 +50,8 @@ Result<> CreateTriangleGeomAction::apply(DataStructure& dataStructure, Mode mode
       return triangleResult;
     }
   }
+
+  return {};
 }
 
 const DataPath& CreateTriangleGeomAction::path() const
@@ -105,14 +107,14 @@ Result<> CreateTriangleGeomAction::createGeometry(DataStructure& dataStructure, 
 Result<> CreateTriangleGeomAction::createVertexArray(DataStructure& dataStructure, Mode mode) const
 {
   DataPath arrayPath = path().createChildPath("Vertex Array");
-  IDataStore::ShapeType compShape(3);
+  IDataStore::ShapeType compShape{3};
   return CreateArray<float32>(dataStructure, m_TupleSize, compShape, arrayPath, mode);
 }
 
 Result<> CreateTriangleGeomAction::createTriangleArray(DataStructure& dataStructure, Mode mode) const
 {
   DataPath arrayPath = path().createChildPath("Triangle Array");
-  IDataStore::ShapeType compShape(3);
+  IDataStore::ShapeType compShape{3};
   return CreateArray<usize>(dataStructure, m_TupleSize, compShape, arrayPath, mode);
 }
 

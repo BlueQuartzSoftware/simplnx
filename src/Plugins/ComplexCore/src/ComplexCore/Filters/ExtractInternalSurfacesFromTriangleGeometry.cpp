@@ -9,7 +9,7 @@
 #include "complex/Filter/Actions/CreateTriangleGeomAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
@@ -21,9 +21,11 @@ namespace
 constexpr complex::int32 k_EMPTY_PARAMETER = -350;
 constexpr complex::int32 k_MissingTriangleGeometry = -351;
 constexpr complex::int32 k_NoNodeTypesArray = -352;
+constexpr complex::int32 k_MissingVertexArray = -353;
+constexpr complex::int32 k_MissingTriangleArray = -354;
 
 template <class T>
-inline void hashCombine(size_t& seed, const T& obj)
+inline void hashCombine(usize& seed, const T& obj)
 {
   std::hash<T> hasher;
   seed ^= hasher(obj) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
@@ -32,15 +34,15 @@ inline void hashCombine(size_t& seed, const T& obj)
 struct CopyDataFunctor
 {
   template <typename T>
-  void operator()(IDataArray* inDataPtr, IDataArray* outDataPtr, std::unordered_map<int64, int64>& elementMap) const
+  void operator()(IDataArray& inDataPtr, IDataArray& outDataPtr, std::unordered_map<int64, int64>& elementMap) const
   {
-    auto inputDataPtr = dynamic_cast<DataArray<T>*>(inDataPtr);
-    AbstractDataStore<T>* inputData = inputDataPtr->getDataStore();
-    auto croppedDataPtr = dynamic_cast<DataArray<T>*>(outDataPtr);
-    AbstractDataStore<T>* outputData = croppedDataPtr->getDataStore();
+    auto& inputDataPtr = dynamic_cast<DataArray<T>&>(inDataPtr);
+    AbstractDataStore<T>& inputData = inputDataPtr.getDataStoreRef();
+    auto croppedDataPtr = dynamic_cast<DataArray<T>&>(outDataPtr);
+    AbstractDataStore<T>& outputData = croppedDataPtr.getDataStoreRef();
 
-    usize nTuples = outDataPtr->getNumberOfTuples();
-    usize nComps = inDataPtr->getNumberOfComponents();
+    usize nTuples = outDataPtr.getNumberOfTuples();
+    usize nComps = inDataPtr.getNumberOfComponents();
     usize tmpIndex = 0;
     usize ptrIndex = 0;
 
@@ -50,7 +52,7 @@ struct CopyDataFunctor
       {
         tmpIndex = nComps * i + d;
         ptrIndex = nComps * elementMap[i] + d;
-        outputData->setValue(tmpIndex, inputData->getValue(ptrIndex));
+        outputData.setValue(tmpIndex, inputData.getValue(ptrIndex));
       }
     }
   }
@@ -83,7 +85,8 @@ std::string ExtractInternalSurfacesFromTriangleGeometry::humanName() const
 Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_TriangleGeom_Key, "Triangle Geometry", "Path to the existing Triangle Geometry", DataPath()));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeom_Key, "Triangle Geometry", "Path to the existing Triangle Geometry", DataPath(),
+                                                             GeometrySelectionParameter::AllowedTypes{DataObject::Type::TriangleGeom}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_InternalTriangleGeom_Key, "Interior Triangle Geometry", "Path to create the new Triangle Geometry", DataPath()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath()));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays", "Paths to vertex-related DataArrays that should be copied to the new geometry",
@@ -114,40 +117,46 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
   if(triangleGeom == nullptr)
   {
     std::string ss = fmt::format("Triangle Geometry not found at path '{}'", triangleGeomPath.toString());
-    return {{nonstd::make_unexpected(std::vector<Error>{{k_MissingTriangleGeometry, ss}})}};
+    return {MakeErrorResult<OutputActions>(k_MissingTriangleGeometry, ss)};
   }
   if(triangleGeom->getVertices() == nullptr)
   {
     std::string ss = fmt::format("Triangle Geometry does not have an assigned vertices array");
-    return {{nonstd::make_unexpected(std::vector<Error>{{k_MissingTriangleGeometry, ss}})}};
+    return {MakeErrorResult<OutputActions>(k_MissingTriangleGeometry, ss)};
   }
 
   arrays.push_back(triangleGeom->getVertices()->getDataPaths().front());
 
-  std::vector<size_t> cDims(1, 1);
+  std::vector<usize> cDims(1, 1);
 
   auto* nodeTypesPtr = dataStructure.getDataAs<Int8Array>(nodeTypesArrayPath);
   if(!nodeTypesPtr)
   {
     std::string ss("Node Types array not found at path '{}'. Array must be of type Int8");
-    return {{nonstd::make_unexpected(std::vector<Error>{{k_NoNodeTypesArray, ss}})}};
+    return {MakeErrorResult<OutputActions>(k_NoNodeTypesArray, ss)};
   }
   arrays.push_back(nodeTypesArrayPath);
 
   dataStructure.validateNumberOfTuples(arrays);
 
   // Create Geometry
-  IDataStore::ShapeType geomShape = {0};
+  IDataStore::ShapeType geomShape = {1};
   auto createInternalTrianglesAction = std::make_unique<CreateTriangleGeomAction>(internalTrianglesGeomPath, geomShape, CreateTriangleGeomAction::AdditionalData::VerticesTriangles);
   actions.actions.push_back(std::move(createInternalTrianglesAction));
 
-  std::vector<size_t> tDims(1, 0);
+  std::vector<usize> tDims(1, 0);
   std::list<std::string> tempDataArrayList;
 
   // Create arrays
   for(const auto& data_array : copyVertexPaths)
   {
     auto targetDataArray = dataStructure.getDataAs<IDataArray>(data_array);
+    if(targetDataArray == nullptr)
+    {
+      std::string ss = fmt::format("Could not find DataArray at path '{}'", data_array.toString());
+      return {MakeErrorResult<OutputActions>(k_MissingVertexArray, ss)};
+    }
+
     NumericType type = static_cast<NumericType>(targetDataArray->getDataType());
     DataPath copyPath = internalTrianglesGeomPath.createChildPath(data_array.getTargetName());
     auto numTuples = targetDataArray->getNumberOfTuples();
@@ -159,6 +168,12 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
   for(const auto& data_array : copyTrianglePaths)
   {
     auto targetDataArray = dataStructure.getDataAs<IDataArray>(data_array);
+    if(targetDataArray == nullptr)
+    {
+      std::string ss = fmt::format("Could not find DataArray at path '{}'", data_array.toString());
+      return {MakeErrorResult<OutputActions>(k_MissingTriangleArray, ss)};
+    }
+
     NumericType type = static_cast<NumericType>(targetDataArray->getDataType());
     DataPath copyPath = internalTrianglesGeomPath.createChildPath(data_array.getTargetName());
     auto numTuples = targetDataArray->getNumberOfTuples();
@@ -186,48 +201,42 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
   auto numVerts = triangleGeom->getNumberOfVertices();
   auto numTris = triangleGeom->getNumberOfFaces();
 
-  auto nodeTypesPtr = data.getDataAs<Int8Array>(nodeTypesArrayPath);
-  if(nullptr == nodeTypesPtr)
-  {
-    std::string ss = fmt::format("Could not find a valid NodeTypes array at path '{}'. Array must be an Int8 Array", nodeTypesArrayPath.toString());
-    return {{nonstd::make_unexpected(std::vector<Error>{{k_NoNodeTypesArray, std::move(ss)}})}};
-  }
-  Int8Array& nodeTypes = *nodeTypesPtr;
+  auto& nodeTypes = data.getDataRefAs<Int8Array>(nodeTypesArrayPath);
 
-  typedef std::array<float, 3> Vertex;
+  typedef std::array<float32, 3> Vertex;
 
   struct ArrayHasher
   {
-    size_t operator()(const Vertex& vert) const
+    usize operator()(const Vertex& vert) const
     {
-      size_t hash = std::hash<float>()(vert[0]);
+      usize hash = std::hash<float32>()(vert[0]);
       hashCombine(hash, vert[1]);
       hashCombine(hash, vert[2]);
       return hash;
     }
   };
 
-  typedef std::array<int64_t, 3> Triangle;
-  typedef std::unordered_map<Vertex, int64_t, ArrayHasher> VertexMap;
+  typedef std::array<int64, 3> Triangle;
+  typedef std::unordered_map<Vertex, int64, ArrayHasher> VertexMap;
   VertexMap vertexMap;
-  std::unordered_map<int64_t, int64_t> internalVertexMap;
-  std::unordered_map<int64_t, int64_t> internalTriMap;
+  std::unordered_map<int64, int64> internalVertexMap;
+  std::unordered_map<int64, int64> internalTriMap;
   std::vector<Vertex> tmpVerts;
   tmpVerts.reserve(numVerts);
   std::vector<Triangle> tmpTris;
   tmpTris.reserve(numTris);
-  std::vector<int8_t> tmpNodeTypes;
+  std::vector<int8> tmpNodeTypes;
   tmpNodeTypes.reserve(numVerts);
-  int64_t vertCounter = 0;
-  int64_t triCounter = 0;
-  int64_t tmpVert0 = 0;
-  int64_t tmpVert1 = 0;
-  int64_t tmpVert2 = 0;
+  int64 vertCounter = 0;
+  int64 triCounter = 0;
+  int64 tmpVert0 = 0;
+  int64 tmpVert1 = 0;
+  int64 tmpVert2 = 0;
 
-  int64_t progIncrement = numTris / 100;
-  int64_t prog = 1;
-  int64_t progressInt = 0;
-  int64_t counter = 0;
+  int64 progIncrement = numTris / 100;
+  int64 prog = 1;
+  int64 progressInt = 0;
+  int64 counter = 0;
 
   for(usize i = 0; i < numTris; i++)
   {
@@ -296,7 +305,7 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
 
     if(counter > prog)
     {
-      progressInt = static_cast<int64_t>((static_cast<float>(counter) / numTris) * 100.0f);
+      progressInt = static_cast<int64>((static_cast<float>(counter) / numTris) * 100.0f);
       // std::string ss = fmt::format("Checking Triangle {} of {} || {}% Completed", counter, numTris, progressInt);
       // notifyStatusMessage(ss);
       prog = prog + progIncrement;
@@ -310,56 +319,52 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
   tmpVerts.shrink_to_fit();
   tmpTris.shrink_to_fit();
 
-  std::vector<size_t> vertDims(1, tmpVerts.size());
-  std::vector<size_t> triDims(1, tmpTris.size());
+  std::vector<usize> vertDims(1, tmpVerts.size());
+  std::vector<usize> triDims(1, tmpTris.size());
 
   for(const auto& copyPath : copyVertexPaths)
   {
     auto destinationPath = internalTrianglesPath.createChildPath(copyPath.getTargetName());
 
-    auto* src = data.getDataAs<IDataArray>(copyPath);
-    auto* dest = data.getDataAs<IDataArray>(destinationPath);
+    auto& src = data.getDataRefAs<IDataArray>(copyPath);
+    auto& dest = data.getDataRefAs<IDataArray>(destinationPath);
 
-    assert(src);
-    assert(dest);
-    assert(src->getNumberOfComponents() == dest->getNumberOfComponents());
+    assert(src.getNumberOfComponents() == dest.getNumberOfComponents());
 
-    ExecuteDataFunction(CopyDataFunctor{}, src->getDataType(), src, dest, internalVertexMap);
+    ExecuteDataFunction(CopyDataFunctor{}, src.getDataType(), src, dest, internalVertexMap);
   }
   for(const auto& trianglePath : copyTrianglePaths)
   {
     auto destinationPath = internalTrianglesPath.createChildPath(trianglePath.getTargetName());
 
-    auto* src = data.getDataAs<IDataArray>(trianglePath);
-    auto* dest = data.getDataAs<IDataArray>(destinationPath);
+    auto& src = data.getDataRefAs<IDataArray>(trianglePath);
+    auto& dest = data.getDataRefAs<IDataArray>(destinationPath);
 
-    assert(src);
-    assert(dest);
-    assert(src->getNumberOfComponents() == dest->getNumberOfComponents());
+    assert(src.getNumberOfComponents() == dest.getNumberOfComponents());
 
-    ExecuteDataFunction(CopyDataFunctor{}, src->getDataType(), src, dest, internalTriMap);
+    ExecuteDataFunction(CopyDataFunctor{}, src.getDataType(), src, dest, internalTriMap);
   }
 
-  auto* internalTris = data.getDataAs<TriangleGeom>(internalTrianglesPath);
-  internalTris->resizeVertexList(tmpVerts.size());
-  internalTris->resizeFaceList(tmpTris.size());
-  auto* internalVertices = internalTris->getVertices();
-  auto* internalTriangles = internalTris->getFaces();
-  auto numInternalTris = internalTris->getNumberOfFaces();
-  auto numInternalVerts = internalTris->getNumberOfVertices();
+  auto& internalTris = data.getDataRefAs<TriangleGeom>(internalTrianglesPath);
+  internalTris.resizeVertexList(tmpVerts.size());
+  internalTris.resizeFaceList(tmpTris.size());
+  auto& internalVertices = *internalTris.getVertices();
+  auto& internalTriangles = *internalTris.getFaces();
+  auto numInternalTris = internalTris.getNumberOfFaces();
+  auto numInternalVerts = internalTris.getNumberOfVertices();
 
   for(usize i = 0; i < numInternalVerts; i++)
   {
-    (*internalVertices)[3 * i + 0] = tmpVerts[i][0];
-    (*internalVertices)[3 * i + 1] = tmpVerts[i][1];
-    (*internalVertices)[3 * i + 2] = tmpVerts[i][2];
+    internalVertices[3 * i + 0] = tmpVerts[i][0];
+    internalVertices[3 * i + 1] = tmpVerts[i][1];
+    internalVertices[3 * i + 2] = tmpVerts[i][2];
   }
 
   for(usize i = 0; i < numInternalTris; i++)
   {
-    (*internalTriangles)[3 * i + 0] = tmpTris[i][0];
-    (*internalTriangles)[3 * i + 1] = tmpTris[i][1];
-    (*internalTriangles)[3 * i + 2] = tmpTris[i][2];
+    internalTriangles[3 * i + 0] = tmpTris[i][0];
+    internalTriangles[3 * i + 1] = tmpTris[i][1];
+    internalTriangles[3 * i + 2] = tmpTris[i][2];
   }
 
   return {};
