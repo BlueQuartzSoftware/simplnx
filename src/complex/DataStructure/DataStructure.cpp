@@ -453,6 +453,11 @@ bool DataStructure::insertTopLevel(const std::shared_ptr<DataObject>& obj)
     return false;
   }
 
+  if(m_RootGroup.contains(obj.get()) || m_RootGroup.contains(obj->getName()))
+  {
+    return false;
+  }
+
   return m_RootGroup.insert(obj);
 }
 
