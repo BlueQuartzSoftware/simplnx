@@ -116,8 +116,9 @@ TEST_CASE("ConditionalSetValue: Test Algorithm Bool", "[ConditionalSetValue]")
 
   // Create a bool array where every value is TRUE
   std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
-  BoolArray* conditionalArray = UnitTest::CreateTestDataArray<bool>(dataGraph, k_ConditionalArray, tupleShape, {1}, dataGraph.getId(ebsdScanPath).value());
-  conditionalArray->fill(true);
+
+  BoolArray& conditionalArray = dataGraph.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
+  conditionalArray.fill(true);
 
   ConditionalSetValue filter;
   Arguments args;
@@ -163,8 +164,8 @@ TEST_CASE("ConditionalSetValue: Test Algorithm UInt8", "[ConditionalSetValue]")
 
   // Create a bool array where every value is TRUE
   std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
-  UInt8Array* conditionalArray = UnitTest::CreateTestDataArray<uint8>(dataGraph, k_ConditionalArray, tupleShape, {1}, dataGraph.getId(ebsdScanPath).value());
-  conditionalArray->fill(1);
+  BoolArray& conditionalArray = dataGraph.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
+  conditionalArray.fill(true);
 
   ConditionalSetValue filter;
   Arguments args;
@@ -199,8 +200,8 @@ TEST_CASE("ConditionalSetValue: Test Algorithm Int8", "[ConditionalSetValue]")
 
   // Create a bool array where every value is TRUE
   std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
-  Int8Array* conditionalArray = UnitTest::CreateTestDataArray<int8>(dataGraph, k_ConditionalArray, tupleShape, {1}, dataGraph.getId(ebsdScanPath).value());
-  conditionalArray->fill(1);
+  BoolArray& conditionalArray = dataGraph.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
+  conditionalArray.fill(true);
 
   ConditionalSetValue filter;
   Arguments args;
