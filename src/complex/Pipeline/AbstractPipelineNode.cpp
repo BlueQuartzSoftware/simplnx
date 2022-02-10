@@ -43,7 +43,6 @@ bool AbstractPipelineNode::isEnabled() const
 void AbstractPipelineNode::setDisabled(bool disabled)
 {
   m_IsDisabled = disabled;
-  notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
 }
 
 void AbstractPipelineNode::setEnabled(bool enabled)
@@ -230,11 +229,6 @@ std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipelineSegment() co
   return std::move(parentPipeline->copySegment(parentPipeline->begin(), iter));
 }
 
-complex::RunState AbstractPipelineNode::getRunState() const
-{
-  return m_RunState;
-}
-
 complex::FaultState AbstractPipelineNode::getFaultState() const
 {
   return m_FaultState;
@@ -255,12 +249,10 @@ void AbstractPipelineNode::setHasWarnings(bool value)
   if(value)
   {
     m_FaultState = complex::FaultState::Warnings;
-    notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
   }
   else if(!value && m_FaultState == complex::FaultState::Warnings)
   {
     m_FaultState = complex::FaultState::None;
-    notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
   }
 }
 
@@ -269,23 +261,14 @@ void AbstractPipelineNode::setHasErrors(bool value)
   if(value)
   {
     m_FaultState = complex::FaultState::Errors;
-    notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
   }
   else if(!value && m_FaultState == complex::FaultState::Errors)
   {
     m_FaultState = complex::FaultState::None;
-    notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
   }
 }
 
 void AbstractPipelineNode::clearFaultState()
 {
   m_FaultState = complex::FaultState::None;
-  notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
-}
-
-void AbstractPipelineNode::setRunState(RunState runState)
-{
-  m_RunState = runState;
-  notify(std::make_shared<NodeStatusMessage>(this, m_FaultState, m_RunState));
 }

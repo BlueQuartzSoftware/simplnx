@@ -166,8 +166,7 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& ds)
     return false;
   }
 
-  setRunState(RunState::Preflighting);
-  sendPipelineRunStateMessage(m_RunState);
+  sendPipelineRunStateMessage(RunState::Preflighting);
   setHasWarnings(hasWarningsBeforeIndex(index));
   setHasErrors(false);
   size_t currentIndex = 0;
@@ -179,9 +178,7 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& ds)
     {
       continue;
     }
-    //    startObservingNode(filter);
     bool succeeded = filter->preflight(ds);
-    //    stopObservingNode();
 
     setHasWarnings(filter->hasWarnings());
     if(!succeeded)
@@ -193,8 +190,7 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& ds)
     currentIndex++;
   }
   sendPipelineFaultMessage(m_FaultState);
-  setRunState(RunState::Idle);
-  sendPipelineRunStateMessage(m_RunState);
+  sendPipelineRunStateMessage(RunState::Idle);
   return returnValue;
 }
 
@@ -235,16 +231,14 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds)
   }
   bool returnValue = true;
   // Send notification that the pipeline is executing
-  setRunState(RunState::Executing);
-  sendPipelineRunStateMessage(m_RunState);
+  sendPipelineRunStateMessage(RunState::Executing);
   size_t currentIndex = 0;
   for(auto iter = begin() + index; iter != end(); iter++)
   {
     auto* filter = iter->get();
     if(filter->isEnabled())
     {
-      filter->setRunState(RunState::Queued);
-      filter->sendFilterRunStateMessage(currentIndex++, filter->getRunState());
+      filter->sendFilterRunStateMessage(currentIndex++, RunState::Queued);
     }
   }
 
@@ -271,8 +265,7 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds)
   setDataStructure(ds);
 
   sendPipelineFaultMessage(m_FaultState);
-  setRunState(RunState::Idle);
-  sendPipelineRunStateMessage(m_RunState);
+  sendPipelineRunStateMessage(RunState::Idle);
 
   return returnValue;
 }
