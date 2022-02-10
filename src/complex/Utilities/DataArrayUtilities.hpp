@@ -62,9 +62,22 @@ COMPLEX_DEF_STRING_CONVERTOR(usize, std::stoull)
 COMPLEX_DEF_STRING_CONVERTOR(float32, std::stof)
 COMPLEX_DEF_STRING_CONVERTOR(float64, std::stod)
 
+template <>
+struct ConvertTo<bool>
+{
+  static Result<bool> convert(const std::string& input)
+  {
+    if(input == "TRUE" || input == "true" || input == "1" || input == "True")
+    {
+      return {true};
+    }
+    return {false};
+  }
+};
+
 /**
  * @brief Checks if the given string can be correctly converted into the given type
- * @tparam T The primitive type to conver the string into
+ * @tparam T The primitive type to convert the string into
  * @param valueAsStr The value to convert
  * @param strType The primitive type. The valid values can be found in a constants file
  * @return Result<> object that is either valid or has an error message/code
@@ -178,38 +191,36 @@ void ReplaceValue(DataArray<T>& inputArrayPtr, const DataArray<ConditionalType>*
  * return FALSE if the wrong array type is specified as the template parameter
  */
 template <class T>
-bool ConditionalReplaceValueInArrayFromString(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray)
+std::pair<std::string, int32> ConditionalReplaceValueInArrayFromString(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray)
 {
   using DataArrayType = DataArray<T>;
-  if(!TemplateHelpers::CanDynamicCast<DataArrayType>()(&inputDataObject))
-  {
-    return false;
-  }
+
   DataArrayType& inputDataArray = dynamic_cast<DataArrayType&>(inputDataObject);
   Result<T> conversionResult = ConvertTo<T>::convert(valueAsStr);
   if(conversionResult.invalid())
   {
-    return false;
+    return {"Input String Value could not be converted to the appropriate numeric type.", -4000};
   }
 
-  if(TemplateHelpers::CanDynamicCast<UInt8Array>()(&conditionalDataArray))
+  complex::DataType arrayType = conditionalDataArray.getDataType();
+
+  if(complex::DataType::uint8 == arrayType)
   {
     ReplaceValue<T, uint8_t>(inputDataArray, dynamic_cast<const UInt8Array*>(&conditionalDataArray), conversionResult.value());
   }
-  else if(TemplateHelpers::CanDynamicCast<Int8Array>()(&conditionalDataArray))
+  else if(complex::DataType::int8 == arrayType)
   {
     ReplaceValue<T, int8_t>(inputDataArray, dynamic_cast<const Int8Array*>(&conditionalDataArray), conversionResult.value());
   }
-  else if(TemplateHelpers::CanDynamicCast<BoolArray>()(&conditionalDataArray))
+  else if(complex::DataType::boolean == arrayType)
   {
     ReplaceValue<T, bool>(inputDataArray, dynamic_cast<const BoolArray*>(&conditionalDataArray), conversionResult.value());
   }
   else
   {
-    return false;
+    return {"Mask array was not of type [BOOL | UINT8 | INT8].", -4001};
   }
-
-  return true;
+  return {"NO ERROR", 0};
 }
 
 /**

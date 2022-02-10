@@ -164,7 +164,7 @@ inline DataStructure CreateDataStructure()
   VertexGeom* vertexGeom = VertexGeom::Create(dataGraph, Constants::k_VertexGeometry, scanData->getId());
   vertexGeom->setVertices(euler_data);
 
-  NeighborList<float32>* neighborList = CreateTestNeighborList<float32>(dataGraph, "Neighbor List", numTuples, scanData->getId());
+  //NeighborList<float32>* neighborList = CreateTestNeighborList<float32>(dataGraph, "Neighbor List", numTuples, scanData->getId());
 
   return dataGraph;
 }

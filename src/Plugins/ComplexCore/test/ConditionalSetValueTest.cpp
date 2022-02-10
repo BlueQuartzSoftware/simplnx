@@ -4,6 +4,7 @@
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/ConditionalSetValue.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include <string>
 
@@ -132,6 +133,17 @@ TEST_CASE("ConditionalSetValue: Test Algorithm Bool", "[ConditionalSetValue]")
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataGraph, args);
   REQUIRE(executeResult.result.valid());
+
+#if 1
+  // Write out the DataStructure for later viewing/debugging
+  std::string filePath = fmt::format("{}/ConditionalSetValueTest.dream3d", unit_test::k_BinaryDir);
+  // std::cout << "Writing file to: " << filePath << std::endl;
+  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePath);
+  H5::FileWriter fileWriter = std::move(result.value());
+
+  herr_t err = dataGraph.writeHdf5(fileWriter);
+  REQUIRE(err >= 0);
+#endif
 
   REQUIRE(RequireDataArrayEqualZero(*ciDataArray));
 }
