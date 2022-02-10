@@ -142,12 +142,12 @@ TEST_CASE("ConditionalSetValue: Test Algorithm UInt8", "[ConditionalSetValue]")
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
   DataPath geomPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ImageGeometry});
   const ImageGeom& imageGeometry = dataGraph.getDataRefAs<ImageGeom>(geomPath);
-  complex::SizeVec3 imageGeomDims = imageGeometry->getDimensions();
+  complex::SizeVec3 imageGeomDims = imageGeometry.getDimensions();
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
-  auto& ciDataObject = dataGraph.getDataRefAs<Float32Array>(ciDataPath);
+  auto& float32DataArray = dataGraph.getDataRefAs<Float32Array>(ciDataPath);
   // Fill every value with 10.0 into the ciArray
-  ciDataArray->fill(10.0);
+  float32DataArray.fill(10.0);
 
   // Create a bool array where every value is TRUE
   std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
@@ -169,7 +169,7 @@ TEST_CASE("ConditionalSetValue: Test Algorithm UInt8", "[ConditionalSetValue]")
   auto executeResult = filter.execute(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE(RequireDataArrayEqualZero(*ciDataArray));
+  REQUIRE(RequireDataArrayEqualZero(float32DataArray));
 }
 
 TEST_CASE("ConditionalSetValue: Test Algorithm Int8", "[ConditionalSetValue]")
@@ -178,12 +178,12 @@ TEST_CASE("ConditionalSetValue: Test Algorithm Int8", "[ConditionalSetValue]")
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
   DataPath geomPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ImageGeometry});
   const ImageGeom& imageGeometry = dataGraph.getDataRefAs<ImageGeom>(geomPath);
-  complex::SizeVec3 imageGeomDims = imageGeometry->getDimensions();
+  complex::SizeVec3 imageGeomDims = imageGeometry.getDimensions();
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
-  auto& ciDataObject = dataGraph.getDataRefAs<Float32Array>(ciDataPath);
+  auto& float32DataArray = dataGraph.getDataRefAs<Float32Array>(ciDataPath);
   // Fill every value with 10.0 into the ciArray
-  ciDataArray->fill(10.0);
+  float32DataArray.fill(10.0);
 
   // Create a bool array where every value is TRUE
   std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
@@ -205,7 +205,7 @@ TEST_CASE("ConditionalSetValue: Test Algorithm Int8", "[ConditionalSetValue]")
   auto executeResult = filter.execute(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE(RequireDataArrayEqualZero(*ciDataArray));
+  REQUIRE(RequireDataArrayEqualZero(float32DataArray));
 }
 
 TEST_CASE("ConditionalSetValue: Overflow/Underflow", "[ConditionalSetValue]")
