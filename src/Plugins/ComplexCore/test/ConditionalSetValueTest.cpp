@@ -52,7 +52,7 @@ TEST_CASE("ConditionalSetValue: Instantiate Filter", "[ConditionalSetValue]")
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
 
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
-  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, "ConditionalArray"})));
+  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
   // Preflight the filter and check result
@@ -88,7 +88,7 @@ TEST_CASE("ConditionalSetValue: Missing/Empty DataPaths", "[ConditionalSetValue]
   REQUIRE(!preflightResult.outputActions.valid());
 
   // Set the mask array but should still fail
-  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, "ConditionalArray"})));
+  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   preflightResult = filter.preflight(dataGraph, args);
   REQUIRE(!preflightResult.outputActions.valid());
 
@@ -115,14 +115,14 @@ TEST_CASE("ConditionalSetValue: Test Algorithm Bool", "[ConditionalSetValue]")
 
   // Create a bool array where every value is TRUE
   std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
-  BoolArray* conditionalArray = UnitTest::CreateTestDataArray<bool>(dataGraph, "ConditionalArray", tupleShape, {1}, dataGraph.getId(ebsdScanPath).value());
+  BoolArray* conditionalArray = UnitTest::CreateTestDataArray<bool>(dataGraph, k_ConditionalArray, tupleShape, {1}, dataGraph.getId(ebsdScanPath).value());
   conditionalArray->fill(true);
 
   ConditionalSetValue filter;
   Arguments args;
   // Replace every value with a zero
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
-  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, "ConditionalArray"})));
+  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
   // Preflight the filter and check result
@@ -151,14 +151,14 @@ TEST_CASE("ConditionalSetValue: Test Algorithm UInt8", "[ConditionalSetValue]")
 
   // Create a bool array where every value is TRUE
   std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
-  UInt8Array* conditionalArray = UnitTest::CreateTestDataArray<uint8>(dataGraph, "ConditionalArray", tupleShape, {1}, dataGraph.getId(ebsdScanPath).value());
+  UInt8Array* conditionalArray = UnitTest::CreateTestDataArray<uint8>(dataGraph, k_ConditionalArray, tupleShape, {1}, dataGraph.getId(ebsdScanPath).value());
   conditionalArray->fill(1);
 
   ConditionalSetValue filter;
   Arguments args;
   // Replace every value with a zero
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
-  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, "ConditionalArray"})));
+  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
   // Preflight the filter and check result
@@ -187,14 +187,14 @@ TEST_CASE("ConditionalSetValue: Test Algorithm Int8", "[ConditionalSetValue]")
 
   // Create a bool array where every value is TRUE
   std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
-  Int8Array* conditionalArray = UnitTest::CreateTestDataArray<int8>(dataGraph, "ConditionalArray", tupleShape, {1}, dataGraph.getId(ebsdScanPath).value());
+  Int8Array* conditionalArray = UnitTest::CreateTestDataArray<int8>(dataGraph, k_ConditionalArray, tupleShape, {1}, dataGraph.getId(ebsdScanPath).value());
   conditionalArray->fill(1);
 
   ConditionalSetValue filter;
   Arguments args;
   // Replace every value with a zero
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
-  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, "ConditionalArray"})));
+  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
   // Preflight the filter and check result
