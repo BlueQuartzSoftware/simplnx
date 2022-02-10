@@ -5,6 +5,7 @@
 
 #include "DataStructObserver.hpp"
 
+#include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataStore.hpp"
@@ -346,4 +347,27 @@ TEST_CASE("ScalarDataTest")
   const int32 newValue2 = 14;
   (*scalar) = newValue2;
   REQUIRE(scalar->getValue() == newValue2);
+}
+
+TEST_CASE("DataStructureDuplicateNames")
+{
+  static constexpr StringLiteral name = "foo";
+
+  DataStructure ds;
+
+  // Top level test
+
+  DataGroup* group1 = DataGroup::Create(ds, name);
+  REQUIRE(group1 != nullptr);
+
+  DataGroup* group2 = DataGroup::Create(ds, name);
+  REQUIRE(group2 == nullptr);
+
+  // Nested test
+
+  DataGroup* childGroup1 = DataGroup::Create(ds, name, group1->getId());
+  REQUIRE(group1 != nullptr);
+
+  DataGroup* childGroup2 = DataGroup::Create(ds, name, group1->getId());
+  REQUIRE(group2 == nullptr);
 }
