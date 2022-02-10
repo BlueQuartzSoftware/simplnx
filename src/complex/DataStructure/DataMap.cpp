@@ -44,6 +44,11 @@ usize DataMap::getSize() const
   return m_Map.size();
 }
 
+bool DataMap::empty() const
+{
+  return m_Map.empty();
+}
+
 bool DataMap::insert(const std::shared_ptr<DataObject>& obj)
 {
   if(obj == nullptr)
