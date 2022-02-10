@@ -141,13 +141,11 @@ TEST_CASE("ConditionalSetValue: Test Algorithm UInt8", "[ConditionalSetValue]")
   DataStructure dataGraph = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
   DataPath geomPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ImageGeometry});
-  std::shared_ptr<ImageGeom> imageGeometry = dataGraph.getSharedDataAs<ImageGeom>(geomPath);
+  const ImageGeom& imageGeometry = dataGraph.getDataRefAs<ImageGeom>(geomPath);
   complex::SizeVec3 imageGeomDims = imageGeometry->getDimensions();
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
-  DataObject* ciDataObject = dataGraph.getData(ciDataPath);
-
-  DataArray<float32>* ciDataArray = dynamic_cast<Float32Array*>(ciDataObject);
+  auto& ciDataObject = dataGraph.getDataRefAs<Float32Array>(ciDataPath);
   // Fill every value with 10.0 into the ciArray
   ciDataArray->fill(10.0);
 
@@ -165,11 +163,11 @@ TEST_CASE("ConditionalSetValue: Test Algorithm UInt8", "[ConditionalSetValue]")
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataGraph, args);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE(RequireDataArrayEqualZero(*ciDataArray));
 }
@@ -179,13 +177,11 @@ TEST_CASE("ConditionalSetValue: Test Algorithm Int8", "[ConditionalSetValue]")
   DataStructure dataGraph = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
   DataPath geomPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ImageGeometry});
-  std::shared_ptr<ImageGeom> imageGeometry = dataGraph.getSharedDataAs<ImageGeom>(geomPath);
+  const ImageGeom& imageGeometry = dataGraph.getDataRefAs<ImageGeom>(geomPath);
   complex::SizeVec3 imageGeomDims = imageGeometry->getDimensions();
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
-  DataObject* ciDataObject = dataGraph.getData(ciDataPath);
-
-  DataArray<float32>* ciDataArray = dynamic_cast<Float32Array*>(ciDataObject);
+  auto& ciDataObject = dataGraph.getDataRefAs<Float32Array>(ciDataPath);
   // Fill every value with 10.0 into the ciArray
   ciDataArray->fill(10.0);
 
@@ -203,11 +199,11 @@ TEST_CASE("ConditionalSetValue: Test Algorithm Int8", "[ConditionalSetValue]")
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataGraph, args);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE(RequireDataArrayEqualZero(*ciDataArray));
 }
