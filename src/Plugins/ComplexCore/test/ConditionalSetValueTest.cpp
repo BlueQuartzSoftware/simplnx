@@ -135,7 +135,7 @@ TEST_CASE("ConditionalSetValue: Test Algorithm Bool", "[ConditionalSetValue]")
   auto executeResult = filter.execute(dataGraph, args);
   REQUIRE(executeResult.result.valid());
 
-#if 1
+#if 0
   // Write out the DataStructure for later viewing/debugging
   std::string filePath = fmt::format("{}/ConditionalSetValueTest.dream3d", unit_test::k_BinaryDir);
   // std::cout << "Writing file to: " << filePath << std::endl;

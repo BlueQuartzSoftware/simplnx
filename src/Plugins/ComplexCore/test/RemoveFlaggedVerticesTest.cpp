@@ -70,7 +70,7 @@ TEST_CASE("RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][RemoveFlaggedV
   size_t reducedTupleCount = reducedVertexGeom->getNumberOfVertices();
   REQUIRE(reducedTupleCount == 96000);
 
-#if 1
+#if 0
   // Write out the DataStructure for later viewing/debugging
   std::string filePath = fmt::format("{}/RemoveFlaggedVertices.dream3d", unit_test::k_BinaryDir);
   // std::cout << "Writing file to: " << filePath << std::endl;
