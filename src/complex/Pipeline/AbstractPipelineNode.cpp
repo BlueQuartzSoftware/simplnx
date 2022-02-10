@@ -272,3 +272,18 @@ void AbstractPipelineNode::clearFaultState()
 {
   m_FaultState = complex::FaultState::None;
 }
+
+const AbstractPipelineNode::CancelledSignalType& AbstractPipelineNode::getCancelledSignal() const
+{
+  return m_CancelledSignal;
+}
+
+AbstractPipelineNode::CancelledSignalType& AbstractPipelineNode::getCancelledSignal()
+{
+  return m_CancelledSignal;
+}
+
+void AbstractPipelineNode::sendCancelledMessage()
+{
+  m_CancelledSignal();
+}

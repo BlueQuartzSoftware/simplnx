@@ -104,6 +104,10 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
   }
 
   PreflightResult implResult = preflightImpl(data, resolvedArgs, messageHandler, shouldCancel);
+  if(shouldCancel)
+  {
+    return {MakeErrorResult<OutputActions>(-1, "Filter cancelled")};
+  }
 
   for(auto&& warning : warnings)
   {
@@ -151,6 +155,10 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& ar
   }
 
   Result<> executeImplResult = executeImpl(data, resolvedArgs, pipelineFilter, messageHandler, shouldCancel);
+  if(shouldCancel)
+  {
+    return {MakeErrorResult(-1, "Filter cancelled")};
+  }
 
   return ExecuteResult{std::move(executeImplResult), std::move(preflightResult.outputValues)};
 }

@@ -124,26 +124,26 @@ void Pipeline::setName(const std::string& name)
   m_Name = name;
 }
 
-bool Pipeline::preflight()
+bool Pipeline::preflight(const std::atomic_bool& shouldCancel)
 {
   DataStructure ds;
-  return preflight(ds);
+  return preflight(ds, shouldCancel);
 }
 
-bool Pipeline::execute()
+bool Pipeline::execute(const std::atomic_bool& shouldCancel)
 {
   DataStructure ds;
-  return execute(ds);
+  return execute(ds, shouldCancel);
 }
 
-bool Pipeline::preflight(DataStructure& ds)
+bool Pipeline::preflight(DataStructure& ds, const std::atomic_bool& shouldCancel)
 {
-  return preflightFrom(0, ds);
+  return preflightFrom(0, ds, shouldCancel);
 }
 
-bool Pipeline::execute(DataStructure& ds)
+bool Pipeline::execute(DataStructure& ds, const std::atomic_bool& shouldCancel)
 {
-  return executeFrom(0, ds);
+  return executeFrom(0, ds, shouldCancel);
 }
 
 bool Pipeline::canPreflightFrom(index_type index) const
@@ -159,7 +159,7 @@ bool Pipeline::canPreflightFrom(index_type index) const
   return at(index - 1)->isPreflighted() && !hasErrorsBeforeIndex(index);
 }
 
-bool Pipeline::preflightFrom(index_type index, DataStructure& ds)
+bool Pipeline::preflightFrom(index_type index, DataStructure& ds, const std::atomic_bool& shouldCancel)
 {
   if(!canPreflightFrom(index))
   {
@@ -178,7 +178,12 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& ds)
     {
       continue;
     }
-    bool succeeded = filter->preflight(ds);
+    if(shouldCancel)
+    {
+      sendCancelledMessage();
+      break;
+    }
+    bool succeeded = filter->preflight(ds, shouldCancel);
 
     setHasWarnings(filter->hasWarnings());
     if(!succeeded)
@@ -194,11 +199,11 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& ds)
   return returnValue;
 }
 
-bool Pipeline::preflightFrom(index_type index)
+bool Pipeline::preflightFrom(index_type index, const std::atomic_bool& shouldCancel)
 {
   if(index == 0)
   {
-    return preflight();
+    return preflight(shouldCancel);
   }
   else if(index >= size())
   {
@@ -207,7 +212,7 @@ bool Pipeline::preflightFrom(index_type index)
 
   auto node = at(index - 1);
   DataStructure ds = node->getPreflightStructure();
-  return preflightFrom(index, ds);
+  return preflightFrom(index, ds, shouldCancel);
 }
 
 bool Pipeline::canExecuteFrom(index_type index) const
@@ -223,7 +228,7 @@ bool Pipeline::canExecuteFrom(index_type index) const
   return !hasErrorsBeforeIndex(index);
 }
 
-bool Pipeline::executeFrom(index_type index, DataStructure& ds)
+bool Pipeline::executeFrom(index_type index, DataStructure& ds, const std::atomic_bool& shouldCancel)
 {
   if(!canExecuteFrom(index))
   {
@@ -251,7 +256,12 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds)
       continue;
     }
 
-    bool success = filter->execute(ds);
+    if(shouldCancel)
+    {
+      sendCancelledMessage();
+      break;
+    }
+    bool success = filter->execute(ds, shouldCancel);
 
     setHasWarnings(filter->hasWarnings());
     if(!success)
@@ -270,11 +280,11 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds)
   return returnValue;
 }
 
-bool Pipeline::executeFrom(index_type index)
+bool Pipeline::executeFrom(index_type index, const std::atomic_bool& shouldCancel)
 {
   if(index == 0)
   {
-    return execute();
+    return execute(shouldCancel);
   }
   if(!canExecuteFrom(index))
   {
@@ -283,7 +293,7 @@ bool Pipeline::executeFrom(index_type index)
 
   auto* node = at(index - 1);
   DataStructure ds = node->getDataStructure();
-  return executeFrom(index, ds);
+  return executeFrom(index, ds, shouldCancel);
 }
 
 bool Pipeline::hasWarningsBeforeIndex(index_type index) const

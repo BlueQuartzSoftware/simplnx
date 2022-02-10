@@ -78,14 +78,14 @@ void PipelineFilter::setIndex(int32 index)
 }
 
 // -----------------------------------------------------------------------------
-bool PipelineFilter::preflight(DataStructure& data)
+bool PipelineFilter::preflight(DataStructure& data, const std::atomic_bool& shouldCancel)
 {
   sendFilterRunStateMessage(m_Index, RunState::Preflighting);
 
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
   clearFaultState();
-  IFilter::PreflightResult result = m_Filter->preflight(data, getArguments(), messageHandler);
+  IFilter::PreflightResult result = m_Filter->preflight(data, getArguments(), messageHandler, shouldCancel);
   m_Warnings = std::move(result.outputActions.warnings());
   setHasWarnings(!m_Warnings.empty());
   m_PreflightValues = std::move(result.outputValues);
@@ -132,7 +132,7 @@ bool PipelineFilter::preflight(DataStructure& data)
 }
 
 // -----------------------------------------------------------------------------
-bool PipelineFilter::execute(DataStructure& data)
+bool PipelineFilter::execute(DataStructure& data, const std::atomic_bool& shouldCancel)
 {
   this->sendFilterRunStateMessage(m_Index, complex::RunState::Executing);
   this->sendFilterUpdateMessage(m_Index, "    PipelineFilter::execute()  Starting Execution.. ");
@@ -143,7 +143,7 @@ bool PipelineFilter::execute(DataStructure& data)
 
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
-  IFilter::ExecuteResult result = m_Filter->execute(data, getArguments(), this, messageHandler);
+  IFilter::ExecuteResult result = m_Filter->execute(data, getArguments(), this, messageHandler, shouldCancel);
   m_PreflightValues = std::move(result.outputValues);
 
   m_Warnings = result.result.warnings();
