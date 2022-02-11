@@ -111,55 +111,48 @@ Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObjec
 //-----------------------------------------------------------------------------
 Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray)
 {
-  if(ConditionalReplaceValueInArrayFromString<float32>(valueAsStr, inputDataObject, conditionalDataArray))
+  IDataArray& iDataArray = dynamic_cast<IDataArray&>(inputDataObject);
+  complex::DataType arrayType = iDataArray.getDataType();
+  Result<> resultFromConversion;
+  switch(arrayType)
   {
-    return {};
+  case complex::DataType::int8:
+    return ConditionalReplaceValueInArrayFromString<int8>(valueAsStr, inputDataObject, conditionalDataArray);
+    break;
+  case complex::DataType::uint8:
+    return ConditionalReplaceValueInArrayFromString<uint8>(valueAsStr, inputDataObject, conditionalDataArray);
+    break;
+  case complex::DataType::int16:
+    return ConditionalReplaceValueInArrayFromString<int16>(valueAsStr, inputDataObject, conditionalDataArray);
+    break;
+  case complex::DataType::uint16:
+    return ConditionalReplaceValueInArrayFromString<uint16>(valueAsStr, inputDataObject, conditionalDataArray);
+    break;
+  case complex::DataType::int32:
+    return ConditionalReplaceValueInArrayFromString<int32>(valueAsStr, inputDataObject, conditionalDataArray);
+    break;
+  case complex::DataType::uint32:
+    return ConditionalReplaceValueInArrayFromString<uint32>(valueAsStr, inputDataObject, conditionalDataArray);
+    break;
+  case complex::DataType::int64:
+    return ConditionalReplaceValueInArrayFromString<int64>(valueAsStr, inputDataObject, conditionalDataArray);
+    break;
+  case complex::DataType::uint64:
+    return ConditionalReplaceValueInArrayFromString<uint64>(valueAsStr, inputDataObject, conditionalDataArray);
+    break;
+  case complex::DataType::float32:
+    return ConditionalReplaceValueInArrayFromString<float32>(valueAsStr, inputDataObject, conditionalDataArray);
+    break;
+  case complex::DataType::float64:
+    return ConditionalReplaceValueInArrayFromString<float64>(valueAsStr, inputDataObject, conditionalDataArray);
+    break;
+  case complex::DataType::boolean:
+    return ConditionalReplaceValueInArrayFromString<bool>(valueAsStr, inputDataObject, conditionalDataArray);
+    break;
+  case complex::DataType::error:
+    return {MakeErrorResult(-260, fmt::format("Input DataObject could not be cast to any primitive type."))};
   }
-  if(ConditionalReplaceValueInArrayFromString<float64>(valueAsStr, inputDataObject, conditionalDataArray))
-  {
-    return {};
-  }
-
-  if(ConditionalReplaceValueInArrayFromString<uint8>(valueAsStr, inputDataObject, conditionalDataArray))
-  {
-    return {};
-  }
-  if(ConditionalReplaceValueInArrayFromString<uint16>(valueAsStr, inputDataObject, conditionalDataArray))
-  {
-    return {};
-  }
-  if(ConditionalReplaceValueInArrayFromString<uint32>(valueAsStr, inputDataObject, conditionalDataArray))
-  {
-    return {};
-  }
-  if(ConditionalReplaceValueInArrayFromString<uint64>(valueAsStr, inputDataObject, conditionalDataArray))
-  {
-    return {};
-  }
-
-  if(ConditionalReplaceValueInArrayFromString<int8>(valueAsStr, inputDataObject, conditionalDataArray))
-  {
-    return {};
-  }
-  if(ConditionalReplaceValueInArrayFromString<int16>(valueAsStr, inputDataObject, conditionalDataArray))
-  {
-    return {};
-  }
-  if(ConditionalReplaceValueInArrayFromString<int32>(valueAsStr, inputDataObject, conditionalDataArray))
-  {
-    return {};
-  }
-  if(ConditionalReplaceValueInArrayFromString<int64>(valueAsStr, inputDataObject, conditionalDataArray))
-  {
-    return {};
-  }
-
-  if(ConditionalReplaceValueInArrayFromString<usize>(valueAsStr, inputDataObject, conditionalDataArray))
-  {
-    return {};
-  }
-
-  return {MakeErrorResult(-260, fmt::format("Input DataObject could not be cast to any primitive type."))};
+  return {};
 }
 
 Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath& dataPath, std::vector<usize>& tupleShape, IDataAction::Mode mode)

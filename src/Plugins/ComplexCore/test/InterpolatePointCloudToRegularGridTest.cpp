@@ -55,8 +55,8 @@ TEST_CASE("InterpolatePointCloudToRegularGridFilter: Test Algorithm 1", "[DREAM3
   DataPath vertexPath = DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_VertexGeometry});
   DataPath imagePath = DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
   DataPath voxelIndices = DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Voxel Indices"});
-  DataPath maskPath = DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "ConditionalArray"});
-  std::vector<DataPath> interpolateArrays = {DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "ConditionalArray"})};
+  DataPath maskPath = DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, k_ConditionalArray});
+  std::vector<DataPath> interpolateArrays = {DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, k_ConditionalArray})};
   std::vector<DataPath> copyArrays = {DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases"})};
   DataPath interpolatedGroupPath = DataPath({Constants::k_EbsdScanData, "Interpolated Group"});
   DataPath kernelDistancesGroupPath = DataPath({Constants::k_EbsdScanData, "Kernel Distances"});
@@ -98,8 +98,8 @@ TEST_CASE("InterpolatePointCloudToRegularGridFilter: Test Algorithm 2", "[DREAM3
   DataPath vertexPath = DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_VertexGeometry});
   DataPath imagePath = DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
   DataPath voxelIndices = DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Voxel Indices"});
-  DataPath maskPath = DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "ConditionalArray"});
-  std::vector<DataPath> interpolateArrays = {DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "ConditionalArray"})};
+  DataPath maskPath = DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, k_ConditionalArray});
+  std::vector<DataPath> interpolateArrays = {DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, k_ConditionalArray})};
   std::vector<DataPath> copyArrays = {DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases"})};
   DataPath interpolatedGroupPath = DataPath({Constants::k_EbsdScanData, "Interpolated Group"});
   DataPath kernelDistancesGroupPath = DataPath({Constants::k_EbsdScanData, "Kernel Distances"});
