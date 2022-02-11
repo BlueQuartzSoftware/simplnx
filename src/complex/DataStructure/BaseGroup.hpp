@@ -73,6 +73,12 @@ public:
   usize getSize() const;
 
   /**
+   * @brief Returns if there are any DataObjects in the group
+   * @return bool
+   */
+  bool empty() const;
+
+  /**
    * @brief Returns the underlying DataMap by value.
    * @return const DataMap&
    */

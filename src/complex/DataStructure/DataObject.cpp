@@ -152,7 +152,7 @@ void DataObject::replaceParent(BaseGroup* oldParent, BaseGroup* newParent)
   std::replace(m_ParentList.begin(), m_ParentList.end(), oldParent->getId(), newParent->getId());
 }
 
-std::vector<DataPath> DataObject::getDataPaths() const
+std::vector<DataPath> DataObject::getParentDataPaths() const
 {
   if(getDataStructure() == nullptr)
   {
@@ -173,7 +173,7 @@ std::vector<DataPath> DataObject::getDataPaths() const
       continue;
     }
 
-    auto parentPaths = parent->getDataPaths();
+    auto parentPaths = parent->getParentDataPaths();
     for(auto& dataPath : parentPaths)
     {
       paths.push_back(dataPath.createChildPath(m_Name));
