@@ -11,7 +11,10 @@
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 
+#include <fmt/format.h>
+
 #include <string>
+
 
 using namespace complex;
 
@@ -19,6 +22,7 @@ namespace
 {
 constexpr int32 k_VertexGeomNotFound = -277;
 constexpr int32 k_ArrayNotFound = -278;
+constexpr int32 k_TupleShapeNotOneDim = -279;
 
 struct RemoveFlaggedVerticesFunctor
 {
@@ -139,6 +143,12 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
     {
       std::string errorMsg = fmt::format("Array not found at path: '{}'", targetArrayPath.toString());
       return {MakeErrorResult<OutputActions>(::k_ArrayNotFound, errorMsg)};
+    }
+    // Make sure selected arrays are 1D Arrays (number of components does not matter)
+    if(targetArray->getIDataStore()->getTupleShape().size() != 1)
+    {
+      std::string errorMsg = fmt::format("Tuple Dimensions at path: '{}' are not 1D: '{}'", targetArrayPath.toString(), fmt::join(targetArray->getIDataStore()->getTupleShape(), ", "));
+      return {MakeErrorResult<OutputActions>(::k_TupleShapeNotOneDim, errorMsg)};
     }
     // Create array copy
     auto numericType = static_cast<NumericType>(targetArray->getDataType());
