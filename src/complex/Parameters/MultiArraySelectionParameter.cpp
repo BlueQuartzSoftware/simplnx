@@ -96,17 +96,33 @@ Result<> MultiArraySelectionParameter::validate(const DataStructure& dataStructu
 Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataStructure, const ValueType& value) const
 {
   const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
-  for(const auto& path : value)
+
+  std::vector<Error> errors;
+  for(usize i = 0; i < value.size(); i++)
   {
+    const auto& path = value.at(i);
+
     if(value.empty())
     {
-      return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
+      errors.push_back(Error{FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty at index {}", prefix, i)});
+      continue;
     }
     const DataObject* object = dataStructure.getData(path);
     if(object == nullptr)
     {
-      return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, path.toString()));
+      errors.push_back(Error{FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, path.toString())});
+      continue;
     }
+    if(object->getDataObjectType() != DataObject::Type::DataArray)
+    {
+      errors.push_back(Error{FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' is not a DataArray", prefix, path.toString())});
+      continue;
+    }
+  }
+
+  if(!errors.empty())
+  {
+    return {nonstd::make_unexpected(std::move(errors))};
   }
 
   return {};
