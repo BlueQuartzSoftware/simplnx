@@ -73,6 +73,11 @@ public:
   usize getSize() const;
 
   /**
+   * @brief Returns if the DataMap is empty (true) or has elements (false)
+   */
+  bool empty() const;
+
+  /**
    * @brief Attempts to insert the target DataObject into the map.
    * Returns true if it succeeded. Returns false otherwise.
    * @param obj

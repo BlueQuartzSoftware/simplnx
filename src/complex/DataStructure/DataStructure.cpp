@@ -190,7 +190,7 @@ std::vector<DataPath> DataStructure::getAllDataPaths() const
       continue;
     }
 
-    auto localPaths = sharedPtr->getDataPaths();
+    auto localPaths = sharedPtr->getParentDataPaths();
     dataPaths.insert(dataPaths.end(), localPaths.begin(), localPaths.end());
   }
   return dataPaths;
@@ -395,7 +395,7 @@ bool DataStructure::removeData(DataObject* data)
     return false;
   }
 
-  auto pathsToData = data->getDataPaths();
+  auto pathsToData = data->getParentDataPaths();
   auto parentIds = data->getParentIds();
   if(parentIds.size() == 0)
   {
