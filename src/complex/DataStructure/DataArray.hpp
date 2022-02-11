@@ -478,6 +478,28 @@ public:
   }
 
   /**
+   * @brief Returns a const iterator to the begining of the DataArray.
+   *
+   * This method will fail if no DataStore has been set.
+   * @return ConstIterator
+   */
+  ConstIterator cbegin() const
+  {
+    return getDataStore()->cbegin();
+  }
+
+  /**
+   * @brief Returns a const iterator to the end of the DataArray.
+   *
+   * This method will fail if no DataStore has been set.
+   * @return ConstIterator
+   */
+  ConstIterator cend() const
+  {
+    return getDataStore()->cend();
+  }
+
+  /**
    * @brief Copies the specified DataArray's std::shared_ptr<DataStore> into
    * the current DataArray.
    * @param rhs
