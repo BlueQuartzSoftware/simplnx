@@ -48,6 +48,7 @@ inline constexpr StringLiteral k_VertexGeometry("Vertex Geometry");
 inline constexpr StringLiteral k_ConfidenceIndex("Confidence Index");
 inline constexpr StringLiteral k_FeatureGroupName("Feature Data");
 inline constexpr StringLiteral k_ActiveName("Active");
+inline constexpr StringLiteral k_SlipVector("SlipVector");
 
 inline constexpr StringLiteral k_FeatureIds("FeatureIds");
 inline constexpr StringLiteral k_ImageQuality("Image Quality");
@@ -85,6 +86,7 @@ inline constexpr StringLiteral k_Float32DataSet("float32 DataSet");
 inline constexpr StringLiteral k_Float64DataSet("float64 DataSet");
 
 inline constexpr StringLiteral k_ConditionalArray("Conditional [bool]");
+inline constexpr StringLiteral k_ReducedGeometry("Reduced Geometry");
 } // namespace Constants
 
 namespace UnitTest
@@ -148,14 +150,12 @@ inline DataStructure CreateDataStructure()
   Int32Array* phases_data = CreateTestDataArray<int32>(dataGraph, "Phases", tupleShape, {numComponents}, scanData->getId());
   USizeArray* voxelIndices = CreateTestDataArray<usize>(dataGraph, "Voxel Indices", tupleShape, {numComponents}, scanData->getId());
 
-  BoolArray* conditionalArray = CreateTestDataArray<bool>(dataGraph, "ConditionalArray", tupleShape, {1}, scanData->getId());
+  BoolArray* conditionalArray = CreateTestDataArray<bool>(dataGraph, Constants::k_ConditionalArray, tupleShape, {1}, scanData->getId());
   conditionalArray->fill(true);
 
   numComponents = 3;
   UInt8Array* ipf_color_data = CreateTestDataArray<uint8>(dataGraph, "IPF Colors", tupleShape, {numComponents}, scanData->getId());
   Float32Array* euler_data = CreateTestDataArray<float>(dataGraph, "Euler", tupleShape, {numComponents}, scanData->getId());
-
-  // Create an Vertex Geometry grid for the Scan Data
 
   // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
   DataGroup* ensembleGroup = DataGroup::Create(dataGraph, "Phase Data", topLevelGroup->getId());
@@ -163,11 +163,11 @@ inline DataStructure CreateDataStructure()
   usize numTuples = 2;
   Int32Array* laue_data = CreateTestDataArray<int32>(dataGraph, "Laue Class", {numTuples}, {numComponents}, ensembleGroup->getId());
 
-  // Create an Vertex Geometry grid for the Scan Data
+  // Create a Vertex Geometry grid for the Scan Data
   VertexGeom* vertexGeom = VertexGeom::Create(dataGraph, Constants::k_VertexGeometry, scanData->getId());
   vertexGeom->setVertices(euler_data);
 
-  NeighborList<float32>* neighborList = CreateTestNeighborList<float32>(dataGraph, "Neighbor List", numTuples, scanData->getId());
+  // NeighborList<float32>* neighborList = CreateTestNeighborList<float32>(dataGraph, "Neighbor List", numTuples, scanData->getId());
 
   return dataGraph;
 }

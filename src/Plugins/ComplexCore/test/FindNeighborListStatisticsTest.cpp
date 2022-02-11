@@ -111,6 +111,10 @@ TEST_CASE("FindNeighborListStatistics: Test Algorithm", "[FindNeighborListStatis
   DataPath stdDevOutputPath = statsGroup.createChildPath("Standard Deviation");
   DataPath summationOutputPath = statsGroup.createChildPath("Summation");
 
+  DataObject::IdType scanId = dataGraph.getId(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData})).value();
+  usize numTuples = 2;
+  UnitTest::CreateTestNeighborList<float32>(dataGraph, "Neighbor List", numTuples, scanId);
+
   args.insertOrAssign(FindNeighborListStatistics::k_FindLength_Key, std::make_any<bool>(true));
   args.insertOrAssign(FindNeighborListStatistics::k_FindMinimum_Key, std::make_any<bool>(true));
   args.insertOrAssign(FindNeighborListStatistics::k_FindMaximum_Key, std::make_any<bool>(true));
