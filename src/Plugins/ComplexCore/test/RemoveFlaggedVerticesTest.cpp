@@ -27,30 +27,41 @@ TEST_CASE("RemoveFlaggedVertices: Instantiate", "[ComplexCore][RemoveFlaggedVert
 TEST_CASE("RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][RemoveFlaggedVertices]")
 {
   RemoveFlaggedVertices filter;
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataGraph;
   Arguments args;
 
-  auto* vertexArray = dataGraph.getDataAs<Float32Array>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ConfidenceIndex}));
-  auto* vertexGeom = dataGraph.getDataAs<VertexGeom>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_VertexGeometry}));
-  vertexGeom->setVertices(vertexArray);
+  DataGroup* topLevelGroup = DataGroup::Create(dataGraph, Constants::k_SmallIN100);
 
-  auto* maskArray = dataGraph.getDataAs<BoolArray>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ConditionalArray}));
-  // Fill the mask array with every other value being true
-  size_t totalElements = vertexGeom->getNumberOfVertices();
-  bool value = true;
-  for(size_t i = 0; i < totalElements; i++)
+  std::vector<usize> vertexTupleDims = {100};
+  std::vector<usize> vertexCompDims = {3};
+
+  // Create a Vertex Geometry grid for the Scan Data
+  VertexGeom* vertexGeom = VertexGeom::Create(dataGraph, Constants::k_VertexGeometry, topLevelGroup->getId());
+  Float32Array* coords = UnitTest::CreateTestDataArray<float>(dataGraph, "coords", vertexTupleDims, vertexCompDims, vertexGeom->getId());
+  vertexGeom->setVertices(coords); // Add the vertices to the VertexGeom object
+
+  Int32Array* slipVector = UnitTest::CreateTestDataArray<int32>(dataGraph, Constants::k_SlipVector, vertexTupleDims, vertexCompDims, vertexGeom->getId());
+  Int32Array* featureIds = UnitTest::CreateTestDataArray<int32>(dataGraph, Constants::k_FeatureIds, vertexTupleDims, {1}, vertexGeom->getId());
+
+  BoolArray* conditionalArray = UnitTest::CreateTestDataArray<bool>(dataGraph, Constants::k_ConditionalArray, vertexTupleDims, {1}, vertexGeom->getId());
+  conditionalArray->fill(true);
+  // initialize the coords just to have something other than 0.0
+  // Set the first 25 values of the conditional array to false, thus keeping 75 vertices
+  for(size_t i = 0; i < vertexTupleDims[0]; i++)
   {
-    (*maskArray)[i] = value;
-    value = !value;
+    coords->initializeTuple(i, static_cast<float>(i));
+    slipVector->initializeTuple(i, static_cast<int32>(i));
+    featureIds->initializeTuple(i, static_cast<int32>(i));
+    if(i < 25)
+    {
+      conditionalArray->initializeTuple(i, false);
+    }
   }
 
-  DataPath ipfColorsPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "IPF Colors"});
-  DataPath eulersPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Euler"});
-
-  DataPath vertexGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_VertexGeometry});
-  std::vector<DataPath> arraySelection{ipfColorsPath, eulersPath};
-  DataPath maskPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ConditionalArray});
-  DataPath reducedVertexPath({"Reduced Vertex Geom"});
+  DataPath vertexGeomPath({Constants::k_SmallIN100, Constants::k_VertexGeometry});
+  std::vector<DataPath> arraySelection{vertexGeomPath.createChildPath(Constants::k_SlipVector), vertexGeomPath.createChildPath(Constants::k_FeatureIds)};
+  DataPath maskPath({Constants::k_SmallIN100, Constants::k_VertexGeometry, Constants::k_ConditionalArray});
+  DataPath reducedVertexPath({Constants::k_SmallIN100, Constants::k_ReducedGeometry});
 
   args.insertOrAssign(RemoveFlaggedVertices::k_VertexGeomPath_Key, std::make_any<DataPath>(vertexGeomPath));
   args.insertOrAssign(RemoveFlaggedVertices::k_ArraySelection_Key, std::make_any<std::vector<DataPath>>(arraySelection));
@@ -62,14 +73,32 @@ TEST_CASE("RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][RemoveFlaggedV
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   auto executeResult = filter.execute(dataGraph, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
   auto* reducedVertexGeom = dataGraph.getDataAs<VertexGeom>(reducedVertexPath);
 
   size_t reducedTupleCount = reducedVertexGeom->getNumberOfVertices();
-  REQUIRE(reducedTupleCount == 96000);
+  REQUIRE(reducedTupleCount == 75);
 
-#if 0
+  Int32Array& reducedFeatureIds = dataGraph.getDataRefAs<Int32Array>(reducedVertexPath.createChildPath(Constants::k_FeatureIds));
+  REQUIRE((reducedFeatureIds.getNumberOfTuples() == 75));
+
+  Int32Array& reducedSlipVectors = dataGraph.getDataRefAs<Int32Array>(reducedVertexPath.createChildPath(Constants::k_SlipVector));
+  REQUIRE((reducedSlipVectors.getNumberOfTuples() == 75));
+
+  for(size_t i = 0; i < reducedTupleCount; i++)
+  {
+    Point3D<float> coord = reducedVertexGeom->getCoords(i);
+    float compValue = static_cast<float>(i) + 25.0F;
+    REQUIRE(((coord[0] == compValue) && (coord[1] == compValue) && (coord[2] == compValue)));
+
+    REQUIRE(reducedFeatureIds[i] == i + 25);
+    REQUIRE(reducedSlipVectors[i * 3] == i + 25);
+    REQUIRE(reducedSlipVectors[i * 3 + 1] == i + 25);
+    REQUIRE(reducedSlipVectors[i * 3 + 2] == i + 25);
+  }
+
+#if 1
   // Write out the DataStructure for later viewing/debugging
   std::string filePath = fmt::format("{}/RemoveFlaggedVertices.dream3d", unit_test::k_BinaryDir);
   // std::cout << "Writing file to: " << filePath << std::endl;
