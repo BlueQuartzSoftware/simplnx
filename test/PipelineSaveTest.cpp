@@ -31,15 +31,8 @@ TEST_CASE("Save Filters To Json")
       args.insert(name, param->defaultValue());
     }
 
-    try
-    {
-      auto json = coreFilter->toJson(args);
-    } catch(...)
-    {
-      // toJson() threw an exception
-      INFO(fmt::format("Filter '{}' did not serialize to json properly!", coreFilter->humanName()))
-      REQUIRE(true == false);
-    }
+    INFO(fmt::format("Filter '{}' did not serialize to json properly!", coreFilter->humanName()))
+    REQUIRE_NOTHROW(coreFilter->toJson(args));
   }
 }
 
@@ -69,13 +62,6 @@ TEST_CASE("Save Pipeline To Json")
     REQUIRE(pipeline.push_back(handle, args));
   }
 
-  try
-  {
-    auto json = pipeline.toJson();
-  } catch(...)
-  {
-    // toJson() threw an exception
-    INFO(fmt::format("The pipeline containing every filter did not serialize to json properly!"))
-    REQUIRE(true == false);
-  }
+  INFO(fmt::format("The pipeline containing every filter did not serialize to json properly!"))
+  REQUIRE_NOTHROW(pipeline.toJson());
 }
