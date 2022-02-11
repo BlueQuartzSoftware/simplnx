@@ -15,7 +15,6 @@
 
 #include <string>
 
-
 using namespace complex;
 
 namespace
