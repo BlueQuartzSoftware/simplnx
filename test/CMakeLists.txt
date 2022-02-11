@@ -36,6 +36,7 @@ add_executable(complex_test
   DREAM3DFileTest.cpp
   GeometryTestUtilities.hpp
   ParametersTest.cpp
+  PipelineSaveTest.cpp
 )
 
 target_link_libraries(complex_test
