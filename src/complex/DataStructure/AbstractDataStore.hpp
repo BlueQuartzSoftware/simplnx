@@ -360,6 +360,24 @@ public:
   }
 
   /**
+   * @brief Returns an ConstIterator to the begining of the DataStore.
+   * @return ConstIterator
+   */
+  ConstIterator cbegin() const
+  {
+    return begin();
+  }
+
+  /**
+   * @brief Returns an ConstIterator to the end of the DataStore.
+   * @return ConstIterator
+   */
+  ConstIterator cend() const
+  {
+    return end();
+  }
+
+  /**
    * @brief Fills the AbstractDataStore with the specified value.
    * @param value
    */
