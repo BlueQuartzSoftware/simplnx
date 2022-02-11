@@ -191,7 +191,7 @@ void ReplaceValue(DataArray<T>& inputArrayPtr, const DataArray<ConditionalType>*
  * return FALSE if the wrong array type is specified as the template parameter
  */
 template <class T>
-std::pair<std::string, int32> ConditionalReplaceValueInArrayFromString(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray)
+Result<> ConditionalReplaceValueInArrayFromString(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray)
 {
   using DataArrayType = DataArray<T>;
 
@@ -199,7 +199,7 @@ std::pair<std::string, int32> ConditionalReplaceValueInArrayFromString(const std
   Result<T> conversionResult = ConvertTo<T>::convert(valueAsStr);
   if(conversionResult.invalid())
   {
-    return {"Input String Value could not be converted to the appropriate numeric type.", -4000};
+    return MakeErrorResult<>(-4000, "Input String Value could not be converted to the appropriate numeric type.");
   }
 
   complex::DataType arrayType = conditionalDataArray.getDataType();
@@ -218,9 +218,9 @@ std::pair<std::string, int32> ConditionalReplaceValueInArrayFromString(const std
   }
   else
   {
-    return {"Mask array was not of type [BOOL | UINT8 | INT8].", -4001};
+    return MakeErrorResult<>(-4001, "Mask array was not of type [BOOL | UINT8 | INT8].");
   }
-  return {"NO ERROR", 0};
+  return {};
 }
 
 /**

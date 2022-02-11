@@ -144,9 +144,9 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
       return {MakeErrorResult<OutputActions>(::k_ArrayNotFound, errorMsg)};
     }
     // Make sure selected arrays are 1D Arrays (number of components does not matter)
-    if(targetArray->getIDataStore()->getTupleShape().size() != 1)
+    if(targetArray->getIDataStoreRef().getTupleShape().size() != 1)
     {
-      std::string errorMsg = fmt::format("Tuple Dimensions at path: '{}' are not 1D: '{}'", targetArrayPath.toString(), fmt::join(targetArray->getIDataStore()->getTupleShape(), ", "));
+      std::string errorMsg = fmt::format("Tuple Dimensions at path: '{}' are not 1D: '{}'", targetArrayPath.toString(), fmt::join(targetArray->getIDataStoreRef().getTupleShape(), ", "));
       return {MakeErrorResult<OutputActions>(::k_TupleShapeNotOneDim, errorMsg)};
     }
     // Create array copy
@@ -169,7 +169,7 @@ Result<> RemoveFlaggedVertices::executeImpl(DataStructure& data, const Arguments
   auto reducedVertexPath = args.value<DataPath>(k_ReducedVertexPath_Key);
 
   VertexGeom& vertex = data.getDataRefAs<VertexGeom>(vertexGeomPath);
-  auto mask = data.getDataRefAs<BoolArray>(maskArrayPath);
+  auto& mask = data.getDataRefAs<BoolArray>(maskArrayPath);
 
   size_t numMaskTuples = mask.getSize();
   size_t trueCount = std::count(mask.begin(), mask.end(), true);

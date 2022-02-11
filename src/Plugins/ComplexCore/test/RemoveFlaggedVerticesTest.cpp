@@ -98,14 +98,11 @@ TEST_CASE("RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][RemoveFlaggedV
     REQUIRE(reducedSlipVectors[i * 3 + 2] == i + 25);
   }
 
-#if 1
   // Write out the DataStructure for later viewing/debugging
   std::string filePath = fmt::format("{}/RemoveFlaggedVertices.dream3d", unit_test::k_BinaryDir);
   // std::cout << "Writing file to: " << filePath << std::endl;
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePath);
   H5::FileWriter fileWriter = std::move(result.value());
-
   herr_t err = dataGraph.writeHdf5(fileWriter);
   REQUIRE(err >= 0);
-#endif
 }
