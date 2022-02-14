@@ -202,9 +202,8 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& ds, RenamedPaths& 
 
     renamedPaths.insert(renamedPaths.end(), renamedPathsRef.begin(), renamedPathsRef.end());
 
-    bool succeeded = filter->preflight(ds);
-
-    setHasWarnings(filter->hasWarnings());
+    setHasWarnings(node->hasWarnings());
+    setHasWarnings(node->hasWarnings());
     if(!succeeded)
     {
       setHasErrors(true);
