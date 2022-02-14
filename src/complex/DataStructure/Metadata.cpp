@@ -18,11 +18,6 @@ Metadata& Metadata::operator=(Metadata&& rhs) noexcept = default;
 
 Metadata::~Metadata() noexcept = default;
 
-bool Metadata::contains(const KeyType& key) const
-{
-  return m_Map.find(key) != m_Map.end();
-}
-
 Metadata::ValueType Metadata::getData(const KeyType& key) const
 {
   return m_Map.at(key);

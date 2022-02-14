@@ -61,8 +61,6 @@ public:
    */
   ~Metadata() noexcept;
 
-  bool contains(const KeyType& key) const;
-
   /**
    * @brief Returns the ValueType for the target key. Returns an empty std::any
    * if the key does not exist in the Metadata.
