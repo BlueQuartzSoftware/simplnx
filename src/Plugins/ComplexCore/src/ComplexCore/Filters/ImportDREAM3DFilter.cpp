@@ -83,7 +83,7 @@ Result<OutputActions> getDataCreationResults(const DataStructure& importDataStru
   return std::move(getDataCreationResults(importDataStructure, importPaths));
 }
 
-IFilter::PreflightResult ImportDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ImportDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
   if(importData.FilePath.empty())
@@ -122,7 +122,8 @@ IFilter::PreflightResult ImportDREAM3DFilter::preflightImpl(const DataStructure&
   return {getDataCreationResults(fileData.second, importDataPaths.value())};
 }
 
-Result<> ImportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ImportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel) const
 {
   auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
   H5::FileReader fileReader(importData.FilePath);

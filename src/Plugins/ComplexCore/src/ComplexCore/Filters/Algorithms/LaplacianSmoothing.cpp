@@ -9,10 +9,10 @@
 
 using namespace complex;
 
-LaplacianSmoothing::LaplacianSmoothing(DataStructure& dataStructure, LaplacianSmoothingInputValues* inputValues, const IFilter* filter, const IFilter::MessageHandler& mesgHandler)
+LaplacianSmoothing::LaplacianSmoothing(DataStructure& dataStructure, LaplacianSmoothingInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
-, m_Filter(filter)
+, m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
 {
 }
@@ -61,7 +61,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
 
   for(int32_t q = 0; q < m_InputValues->pIterationSteps; q++)
   {
-    if(m_Filter->isCanceled())
+    if(m_ShouldCancel)
     {
       return {};
     }
@@ -109,7 +109,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     if(m_InputValues->pUseTaubinSmoothing)
     {
 
-      if(m_Filter->isCanceled())
+      if(m_ShouldCancel)
       {
         return {};
       }

@@ -90,12 +90,12 @@ IFilter::UniquePointer ExampleFilter2::clone() const
   return std::make_unique<ExampleFilter2>();
 }
 
-IFilter::PreflightResult ExampleFilter2::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ExampleFilter2::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};
 }
 
-Result<> ExampleFilter2::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler) const
+Result<> ExampleFilter2::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};
 }

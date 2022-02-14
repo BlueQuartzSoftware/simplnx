@@ -141,10 +141,10 @@ Result<> ReadBinaryFile(IDataArray& dataArrayPtr, const std::string& filename, u
 
 namespace complex
 {
-RawBinaryReader::RawBinaryReader(DataStructure& dataStructure, const RawBinaryReaderInputValues& inputValues, const IFilter& filter, const IFilter::MessageHandler& mesgHandler)
+RawBinaryReader::RawBinaryReader(DataStructure& dataStructure, const RawBinaryReaderInputValues& inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
-, m_Filter(filter)
+, m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
 {
 }

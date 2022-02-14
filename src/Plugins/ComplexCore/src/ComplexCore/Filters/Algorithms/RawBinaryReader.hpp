@@ -22,7 +22,7 @@ struct COMPLEXCORE_EXPORT RawBinaryReaderInputValues
 class COMPLEXCORE_EXPORT RawBinaryReader
 {
 public:
-  RawBinaryReader(DataStructure& data, const RawBinaryReaderInputValues& inputValues, const IFilter& filter, const IFilter::MessageHandler& mesgHandler);
+  RawBinaryReader(DataStructure& data, const RawBinaryReaderInputValues& inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
   ~RawBinaryReader() noexcept;
 
   RawBinaryReader(const RawBinaryReader&) = delete;
@@ -35,7 +35,7 @@ public:
 private:
   DataStructure& m_DataStructure;
   const RawBinaryReaderInputValues& m_InputValues;
-  const IFilter& m_Filter;
+  const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 
   Result<> execute();

@@ -88,7 +88,8 @@ IFilter::UniquePointer PointSampleTriangleGeometryFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                          const std::atomic_bool& shouldCancel) const
 {
 
   /**
@@ -165,7 +166,8 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
 }
 
 //------------------------------------------------------------------------------
-Result<> PointSampleTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> PointSampleTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                        const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
@@ -194,6 +196,6 @@ Result<> PointSampleTriangleGeometryFilter::executeImpl(DataStructure& dataStruc
    * Write your algorithm implementation in this function
    ***************************************************************************/
 
-  return PointSampleTriangleGeometry(dataStructure, &inputs, this, messageHandler)();
+  return PointSampleTriangleGeometry(dataStructure, &inputs, shouldCancel, messageHandler)();
 }
 } // namespace complex

@@ -32,7 +32,7 @@ namespace complex
 {
 IFilter::~IFilter() noexcept = default;
 
-IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   Parameters params = parameters();
 
@@ -103,7 +103,11 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
     return {nonstd::make_unexpected(std::move(errors)), std::move(warnings)};
   }
 
-  PreflightResult implResult = preflightImpl(data, resolvedArgs, messageHandler);
+  PreflightResult implResult = preflightImpl(data, resolvedArgs, messageHandler, shouldCancel);
+  if(shouldCancel)
+  {
+    return {MakeErrorResult<OutputActions>(-1, "Filter cancelled")};
+  }
 
   for(auto&& warning : warnings)
   {
@@ -113,7 +117,8 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
   return implResult;
 }
 
-IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler) const
+IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler,
+                                        const std::atomic_bool& shouldCancel) const
 {
   // determine required parameters
   Parameters params = parameters();
@@ -134,7 +139,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& ar
   }
   // resolve dependencies
 
-  PreflightResult preflightResult = preflight(data, resolvedArgs);
+  PreflightResult preflightResult = preflight(data, resolvedArgs, messageHandler, shouldCancel);
   if(!preflightResult.outputActions.valid())
   {
     return ExecuteResult{ConvertResult(std::move(preflightResult.outputActions)), std::move(preflightResult.outputValues)};
@@ -149,7 +154,11 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& ar
     }
   }
 
-  Result<> executeImplResult = executeImpl(data, resolvedArgs, pipelineFilter, messageHandler);
+  Result<> executeImplResult = executeImpl(data, resolvedArgs, pipelineFilter, messageHandler, shouldCancel);
+  if(shouldCancel)
+  {
+    return {MakeErrorResult(-1, "Filter cancelled")};
+  }
 
   return ExecuteResult{std::move(executeImplResult), std::move(preflightResult.outputValues)};
 }
@@ -201,15 +210,4 @@ std::vector<std::string> IFilter::defaultTags() const
 {
   return {};
 }
-
-void IFilter::setCanceled(bool cancel)
-{
-  m_Cancel = cancel;
-}
-
-bool IFilter::isCanceled() const
-{
-  return m_Cancel;
-}
-
 } // namespace complex

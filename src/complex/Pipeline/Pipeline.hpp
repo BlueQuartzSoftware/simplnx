@@ -107,7 +107,7 @@ public:
    * false otherwise.
    * @return bool
    */
-  bool preflight();
+  bool preflight(const std::atomic_bool& shouldCancel = false);
 
   /**
    * @brief Executes the pipeline segment using an empty DataStructure.
@@ -115,7 +115,7 @@ public:
    * false otherwise.
    * @return bool
    */
-  bool execute();
+  bool execute(const std::atomic_bool& shouldCancel = false);
 
   /**
    * @brief Preflights the pipeline segment using the provided DataStructure.
@@ -124,7 +124,7 @@ public:
    * @param ds
    * @return bool
    */
-  bool preflight(DataStructure& ds) override;
+  bool preflight(DataStructure& ds, const std::atomic_bool& shouldCancel) override;
 
   /**
    * @brief Executes the pipeline segment using the provided DataStructure.
@@ -133,7 +133,7 @@ public:
    * @param ds
    * @return bool
    */
-  bool execute(DataStructure& ds) override;
+  bool execute(DataStructure& ds, const std::atomic_bool& shouldCancel) override;
 
   /**
    * @brief Preflights the pipeline segment from a target position using the
@@ -145,7 +145,7 @@ public:
    * @param ds
    * @return bool
    */
-  bool preflightFrom(index_type index, DataStructure& ds);
+  bool preflightFrom(index_type index, DataStructure& ds, const std::atomic_bool& shouldCancel = false);
 
   /**
    * @brief Preflights the pipeline segment from a target position using the
@@ -156,7 +156,7 @@ public:
    * @param index
    * @return
    */
-  bool preflightFrom(index_type index);
+  bool preflightFrom(index_type index, const std::atomic_bool& shouldCancel = false);
 
   /**
    * @brief Checks if the pipeline can be preflighted at the target index.
@@ -188,7 +188,7 @@ public:
    * @param ds
    * @return bool
    */
-  bool executeFrom(index_type index, DataStructure& ds);
+  bool executeFrom(index_type index, DataStructure& ds, const std::atomic_bool& shouldCancel = false);
 
   /**
    * @brief Executes the pipeline segment from the target position using the
@@ -200,7 +200,7 @@ public:
    * @param index
    * @return
    */
-  bool executeFrom(index_type index);
+  bool executeFrom(index_type index, const std::atomic_bool& shouldCancel = false);
 
   /**
    * @brief Returns the getSize of the pipeline segment.

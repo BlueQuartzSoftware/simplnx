@@ -93,13 +93,14 @@ std::array<float, 6> CreateMinMaxCoords()
 
 } // End anonymous namespace
 
-StlFileReader::StlFileReader(DataStructure& data, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, const IFilter* filter)
+StlFileReader::StlFileReader(DataStructure& data, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath,
+                             const std::atomic_bool& shouldCancel)
 : m_DataStructure(data)
 , m_FilePath(std::move(stlFilePath))
 , m_GeometryDataPath(geometryPath)
 , m_FaceGroupPath(faceGroupPath)
 , m_FaceNormalsDataPath(faceNormalsDataPath)
-, m_Filter(filter)
+, m_ShouldCancel(shouldCancel)
 {
 }
 
@@ -274,7 +275,7 @@ Result<> StlFileReader::operator()()
     triangles[t * 3] = 3 * t + 0;
     triangles[t * 3 + 1] = 3 * t + 1;
     triangles[t * 3 + 2] = 3 * t + 2;
-    if(m_Filter->isCanceled())
+    if(m_ShouldCancel)
     {
       return {};
     }

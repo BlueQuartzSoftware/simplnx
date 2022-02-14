@@ -87,7 +87,8 @@ IFilter::UniquePointer RawBinaryReaderFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RawBinaryReaderFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult RawBinaryReaderFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                              const std::atomic_bool& shouldCancel) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto pScalarTypeValue = filterArgs.value<NumericType>(k_ScalarType_Key);
@@ -169,7 +170,8 @@ IFilter::PreflightResult RawBinaryReaderFilter::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> RawBinaryReaderFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> RawBinaryReaderFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel) const
 {
   RawBinaryReaderInputValues inputValues;
 
@@ -181,6 +183,6 @@ Result<> RawBinaryReaderFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.createdAttributeArrayPathValue = filterArgs.value<DataPath>(k_CreatedAttributeArrayPath_Key);
 
   // Let the Algorithm instance do the work
-  return RawBinaryReader(dataStructure, inputValues, *this, messageHandler)();
+  return RawBinaryReader(dataStructure, inputValues, shouldCancel, messageHandler)();
 }
 } // namespace complex

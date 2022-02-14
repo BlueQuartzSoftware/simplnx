@@ -282,7 +282,7 @@ IFilter::UniquePointer IdentifySample::clone() const
   return std::make_unique<IdentifySample>();
 }
 
-IFilter::PreflightResult IdentifySample::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult IdentifySample::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
   auto goodVoxelsArrayPath = args.value<DataPath>(k_GoodVoxels_Key);
@@ -314,7 +314,7 @@ IFilter::PreflightResult IdentifySample::preflightImpl(const DataStructure& data
   return {std::move(actions)};
 }
 
-Result<> IdentifySample::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> IdentifySample::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto fillHoles = args.value<bool>(k_FillHoles_Key);
   auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);

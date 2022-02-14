@@ -209,7 +209,7 @@ IFilter::UniquePointer FindDifferencesMap::clone() const
   return std::make_unique<FindDifferencesMap>();
 }
 
-IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto firstInputArrayPath = args.value<DataPath>(k_FirstInputArrayPath_Key);
   auto secondInputArrayPath = args.value<DataPath>(k_SecondInputArrayPath_Key);
@@ -277,7 +277,8 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
-Result<> FindDifferencesMap::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> FindDifferencesMap::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                         const std::atomic_bool& shouldCancel) const
 {
   auto firstInputArrayPath = args.value<DataPath>(k_FirstInputArrayPath_Key);
   auto secondInputArrayPath = args.value<DataPath>(k_SecondInputArrayPath_Key);

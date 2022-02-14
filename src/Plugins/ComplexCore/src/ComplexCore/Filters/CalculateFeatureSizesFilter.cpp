@@ -65,7 +65,7 @@ IFilter::UniquePointer CalculateFeatureSizesFilter::clone() const
   return std::make_unique<CalculateFeatureSizesFilter>();
 }
 
-IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto geometryPath = args.value<DataPath>(k_GeometryPath_Key);
 
@@ -103,7 +103,8 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
   return {std::move(actions)};
 }
 
-Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel) const
 {
   return std::move(findSizes(data, args));
 }

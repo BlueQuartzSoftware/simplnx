@@ -303,7 +303,8 @@ IFilter::UniquePointer RemoveMinimumSizeFeaturesFilter::clone() const
   return std::make_unique<RemoveMinimumSizeFeaturesFilter>();
 }
 
-IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler,
+                                                                        const std::atomic_bool& shouldCancel) const
 {
   auto featurePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
   auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
@@ -379,7 +380,8 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
 }
 
 // -----------------------------------------------------------------------------
-Result<> RemoveMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> RemoveMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                      const std::atomic_bool& shouldCancel) const
 {
   auto featurePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
   auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);

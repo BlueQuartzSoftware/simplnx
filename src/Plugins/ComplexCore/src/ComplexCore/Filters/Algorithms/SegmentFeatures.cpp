@@ -5,9 +5,9 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-SegmentFeatures::SegmentFeatures(DataStructure& data, const IFilter* filter, const IFilter::MessageHandler& mesgHandler)
+SegmentFeatures::SegmentFeatures(DataStructure& data, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(data)
-, m_Filter(filter)
+, m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
 {
 }

@@ -244,7 +244,8 @@ IFilter::UniquePointer InterpolatePointCloudToRegularGridFilter::clone() const
   return std::make_unique<InterpolatePointCloudToRegularGridFilter>();
 }
 
-IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler,
+                                                                                 const std::atomic_bool& shouldCancel) const
 {
   auto vertexGeomPath = args.value<DataPath>(k_VertexGeom_Key);
   auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
@@ -407,7 +408,8 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   return {std::move(actions)};
 }
 
-Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                               const std::atomic_bool& shouldCancel) const
 {
   auto vertexGeomPath = args.value<DataPath>(k_VertexGeom_Key);
   auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
