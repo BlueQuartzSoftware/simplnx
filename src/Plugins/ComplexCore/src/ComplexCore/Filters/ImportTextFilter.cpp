@@ -54,15 +54,15 @@ std::string ImportTextFilter::humanName() const
 Parameters ImportTextFilter::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFileKey, "Input File", "File to read from", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
-                                                          FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<NumericTypeParameter>(k_ScalarTypeKey, "Scalar Type", "Type to interpret data as", NumericType::int8));
-  params.insert(std::make_unique<UInt64Parameter>(k_NTuplesKey, "Number of Tuples", "Number of tuples in resulting array (i.e. number of lines to read)", 3));
-  params.insert(std::make_unique<UInt64Parameter>(k_NCompKey, "Number of Components", "Number of columns", 3));
-  params.insert(std::make_unique<UInt64Parameter>(k_NSkipLinesKey, "Skip Header Lines", "Number of lines to skip in the file", 7));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFileKey, "Input File", "File path that points to the imported file", fs::path("<file to import goes here>"),
+                                                          FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<NumericTypeParameter>(k_ScalarTypeKey, "Scalar Type", "Data Type to interpret and store data into.", NumericType::int8));
+  params.insert(std::make_unique<UInt64Parameter>(k_NTuplesKey, "Number of Tuples", "Number of tuples in resulting array (i.e. number of lines to read)", 0));
+  params.insert(std::make_unique<UInt64Parameter>(k_NCompKey, "Number of Components", "Number of columns", 1));
+  params.insert(std::make_unique<UInt64Parameter>(k_NSkipLinesKey, "Skip Header Lines", "Number of lines at the start of the file to skip", 0));
   params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoiceKey, "Delimiter", "Delimiter for values on a line", 0,
                                                    ChoicesParameter::Choices{", (comma)", "; (semicolon)", "  (space)", ": (colon)", "\\t (Tab)"}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_DataArrayKey, "Created Array", "Array storing the file data", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_DataArrayKey, "Created Array Path", "DataPath or Name for the underlying Data Array", DataPath{}));
   return params;
 }
 
