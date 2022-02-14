@@ -15,7 +15,7 @@ class COMPLEXCORE_EXPORT SegmentFeatures
 {
 
 public:
-  SegmentFeatures(DataStructure& data, const IFilter* filter, const IFilter::MessageHandler& mesgHandler);
+  SegmentFeatures(DataStructure& data, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
 
   virtual ~SegmentFeatures();
 
@@ -70,7 +70,7 @@ public:
 
 protected:
   DataStructure& m_DataStructure;
-  const IFilter* m_Filter = nullptr;
+  const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 
 private:

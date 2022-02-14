@@ -119,7 +119,8 @@ IFilter::UniquePointer CalculateTriangleAreasFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CalculateTriangleAreasFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult CalculateTriangleAreasFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto pCalculatedAreasDataPath = filterArgs.value<DataPath>(k_CalculatedAreasDataPath_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
@@ -148,7 +149,8 @@ IFilter::PreflightResult CalculateTriangleAreasFilter::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-Result<> CalculateTriangleAreasFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> CalculateTriangleAreasFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel) const
 {
   auto pCalculatedAreasDataPath = filterArgs.value<DataPath>(k_CalculatedAreasDataPath_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);

@@ -34,7 +34,7 @@ class COMPLEXCORE_EXPORT QuickSurfaceMesh
 {
 
 public:
-  QuickSurfaceMesh(DataStructure& dataStructure, QuickSurfaceMeshInputValues* inputValues, const IFilter* filter, const IFilter::MessageHandler& mesgHandler);
+  QuickSurfaceMesh(DataStructure& dataStructure, QuickSurfaceMeshInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
   ~QuickSurfaceMesh() noexcept;
 
   QuickSurfaceMesh(const QuickSurfaceMesh&) = delete;
@@ -115,7 +115,7 @@ public:
 private:
   DataStructure& m_DataStructure;
   const QuickSurfaceMeshInputValues* m_Inputs = nullptr;
-  const IFilter* m_Filter = nullptr;
+  const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
   bool m_GenerateTripleLines = false;
 };

@@ -58,7 +58,8 @@ IFilter::UniquePointer ConditionalSetValue::clone() const
   return std::make_unique<ConditionalSetValue>();
 }
 
-IFilter::PreflightResult ConditionalSetValue::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ConditionalSetValue::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                            const std::atomic_bool& shouldCancel) const
 {
   auto replaceValueString = filterArgs.value<std::string>(k_ReplaceValue_Key);
   auto selectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
@@ -92,7 +93,8 @@ IFilter::PreflightResult ConditionalSetValue::preflightImpl(const DataStructure&
   return {ConvertResultTo<OutputActions>(std::move(result), {})};
 }
 
-Result<> ConditionalSetValue::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ConditionalSetValue::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel) const
 {
   auto replaceValueString = filterArgs.value<std::string>(k_ReplaceValue_Key);
   auto conditionalArrayPath = filterArgs.value<DataPath>(k_ConditionalArrayPath_Key);

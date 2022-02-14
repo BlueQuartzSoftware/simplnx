@@ -8,6 +8,7 @@
 
 #include "nod/nod.hpp"
 
+#include <atomic>
 #include <memory>
 #include <vector>
 
@@ -66,6 +67,11 @@ public:
   FilterFaultDetailSignalType& getFilterFaultDetailSignal();
   void sendFilterFaultDetailMessage(int32_t filterIndex, const WarningCollection& warnings, const ErrorCollection& errors);
 
+  using CancelledSignalType = nod::signal<void()>;
+  const CancelledSignalType& getCancelledSignal() const;
+  CancelledSignalType& getCancelledSignal();
+  void sendCancelledMessage();
+
   /**
    * @brief Specific types of pipeline node for quick type checking.
    */
@@ -114,7 +120,7 @@ public:
    * @param data
    * @return bool
    */
-  virtual bool preflight(DataStructure& data) = 0;
+  virtual bool preflight(DataStructure& data, const std::atomic_bool& shouldCancel) = 0;
 
   /**
    * @brief Attempts to execute the node using the provided DataStructure.
@@ -122,7 +128,7 @@ public:
    * @param data
    * @return bool
    */
-  virtual bool execute(DataStructure& data) = 0;
+  virtual bool execute(DataStructure& data, const std::atomic_bool& shouldCancel) = 0;
 
   /**
    * @brief Creates and returns a unique pointer to a copy of the node.
@@ -305,5 +311,7 @@ private:
   FilterFaultSignalType m_FilterFaultSignal;
 
   FilterFaultDetailSignalType m_FilterFaultDetailSignal;
+
+  CancelledSignalType m_CancelledSignal;
 };
 } // namespace complex

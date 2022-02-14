@@ -302,7 +302,7 @@ IFilter::UniquePointer FindNeighborListStatistics::clone() const
   return std::make_unique<FindNeighborListStatistics>();
 }
 
-IFilter::PreflightResult FindNeighborListStatistics::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult FindNeighborListStatistics::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto findLength = args.value<bool>(k_FindLength_Key);
   auto findMin = args.value<bool>(k_FindMinimum_Key);
@@ -346,7 +346,8 @@ IFilter::PreflightResult FindNeighborListStatistics::preflightImpl(const DataStr
   return {std::move(createCompatibleArrays(data, args))};
 }
 
-Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel) const
 {
   auto findLength = args.value<bool>(k_FindLength_Key);
   auto findMin = args.value<bool>(k_FindMinimum_Key);

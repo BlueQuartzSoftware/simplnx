@@ -125,8 +125,9 @@ private:
 };
 } // namespace
 
-ScalarSegmentFeatures::ScalarSegmentFeatures(DataStructure& dataStructure, ScalarSegmentFeaturesInputValues* inputValues, const IFilter* filter, const IFilter::MessageHandler& mesgHandler)
-: SegmentFeatures(dataStructure, filter, mesgHandler)
+ScalarSegmentFeatures::ScalarSegmentFeatures(DataStructure& dataStructure, ScalarSegmentFeaturesInputValues* inputValues, const std::atomic_bool& shouldCancel,
+                                             const IFilter::MessageHandler& mesgHandler)
+: SegmentFeatures(dataStructure, shouldCancel, mesgHandler)
 , m_InputValues(inputValues)
 
 {

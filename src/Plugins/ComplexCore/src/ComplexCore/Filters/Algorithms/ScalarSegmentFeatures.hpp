@@ -38,7 +38,7 @@ public:
   using FeatureIdsArrayType = Int32Array;
   using GoodVoxelsArrayType = UInt8Array;
 
-  ScalarSegmentFeatures(DataStructure& data, ScalarSegmentFeaturesInputValues* inputValues, const IFilter* filter, const IFilter::MessageHandler& mesgHandler);
+  ScalarSegmentFeatures(DataStructure& data, ScalarSegmentFeaturesInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
   ~ScalarSegmentFeatures() noexcept;
 
   ScalarSegmentFeatures(const ScalarSegmentFeatures&) = delete;

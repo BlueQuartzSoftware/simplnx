@@ -77,7 +77,7 @@ IFilter::UniquePointer StlFileReaderFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /**
    * These are the values that were gathered from the UI or the pipeline file or
@@ -175,7 +175,8 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> StlFileReaderFilter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> StlFileReaderFilter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel) const
 {
   auto pStlFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_GeometryDataPath_Key);
@@ -183,7 +184,7 @@ Result<> StlFileReaderFilter::executeImpl(DataStructure& data, const Arguments& 
   auto pFaceNormalsPath = filterArgs.value<DataPath>(k_FaceNormalsDataPath_Key);
 
   // The actual STL File Reading is placed in a separate class `StlFileReader`
-  Result<> result = StlFileReader(data, pStlFilePathValue, pTriangleGeometryPath, pFaceDataGroupPath, pFaceNormalsPath, this)();
+  Result<> result = StlFileReader(data, pStlFilePathValue, pTriangleGeometryPath, pFaceDataGroupPath, pFaceNormalsPath, shouldCancel)();
   return result;
 }
 

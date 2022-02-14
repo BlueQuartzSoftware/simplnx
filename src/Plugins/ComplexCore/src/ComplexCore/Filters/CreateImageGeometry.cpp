@@ -68,7 +68,7 @@ IFilter::UniquePointer CreateImageGeometry::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CreateImageGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult CreateImageGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   /**
    * These are the values that were gathered from the UI or the pipeline file or
@@ -120,7 +120,8 @@ IFilter::PreflightResult CreateImageGeometry::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateImageGeometry::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> CreateImageGeometry::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

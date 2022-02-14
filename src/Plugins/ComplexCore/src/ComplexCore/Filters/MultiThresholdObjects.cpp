@@ -381,7 +381,7 @@ std::vector<usize> getDims(const DataStructure& data, const std::set<DataPath>& 
   return {0};
 }
 
-IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto thresholdsObject = args.value<ArrayThresholdSet>(k_ArrayThresholds_Key);
   auto maskArrayPath = args.value<DataPath>(k_CreatedDataPath_Key);
@@ -439,7 +439,8 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
 }
 
 // -----------------------------------------------------------------------------
-Result<> MultiThresholdObjects::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> MultiThresholdObjects::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel) const
 {
   auto thresholdsObject = args.value<ArrayThresholdSet>(k_ArrayThresholds_Key);
   auto maskArrayPath = args.value<DataPath>(k_CreatedDataPath_Key);

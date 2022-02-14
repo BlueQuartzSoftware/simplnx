@@ -76,7 +76,7 @@ protected:
    * @param messageHandler
    * @return Result<OutputActions>
    */
-  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler) const override;
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief Classes that implement IFilter must provide this function for execute.
@@ -87,7 +87,8 @@ protected:
    * @param messageHandler
    * @return Result<>
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 

@@ -35,7 +35,7 @@ struct COMPLEXCORE_EXPORT LaplacianSmoothingInputValues
 class COMPLEXCORE_EXPORT LaplacianSmoothing
 {
 public:
-  LaplacianSmoothing(DataStructure& data, LaplacianSmoothingInputValues* inputValues, const IFilter* filter, const IFilter::MessageHandler& mesgHandler);
+  LaplacianSmoothing(DataStructure& data, LaplacianSmoothingInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
   ~LaplacianSmoothing() noexcept;
 
   LaplacianSmoothing(const LaplacianSmoothing&) = delete;
@@ -48,7 +48,7 @@ public:
 private:
   DataStructure& m_DataStructure;
   const LaplacianSmoothingInputValues* m_InputValues = nullptr;
-  const IFilter* m_Filter = nullptr;
+  const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 
   std::vector<float> generateLambdaArray();

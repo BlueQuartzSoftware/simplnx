@@ -92,7 +92,7 @@ IFilter::UniquePointer ExampleFilter1::clone() const
   return std::make_unique<ExampleFilter1>();
 }
 
-IFilter::PreflightResult ExampleFilter1::preflightImpl(const DataStructure& data, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ExampleFilter1::preflightImpl(const DataStructure& data, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   //  auto inputDir = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputDir_Key);
   //  std::cout << "[ExampleFilter1::PreflightImpl] inputDir=" << inputDir << std::endl;
@@ -144,7 +144,7 @@ IFilter::PreflightResult ExampleFilter1::preflightImpl(const DataStructure& data
   return {};
 }
 
-Result<> ExampleFilter1::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ExampleFilter1::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return MakeWarningVoidResult(-100, "Example Warning from within an execute message");
 }

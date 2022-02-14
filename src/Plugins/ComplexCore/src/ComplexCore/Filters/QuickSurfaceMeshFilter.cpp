@@ -87,7 +87,8 @@ IFilter::UniquePointer QuickSurfaceMeshFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                               const std::atomic_bool& shouldCancel) const
 {
   /**
    * These are the values that were gathered from the UI or the pipeline file or
@@ -173,7 +174,8 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel) const
 {
   complex::QuickSurfaceMeshInputValues inputs;
 
@@ -200,6 +202,6 @@ Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
-  return complex::QuickSurfaceMesh(dataStructure, &inputs, this, messageHandler)();
+  return complex::QuickSurfaceMesh(dataStructure, &inputs, shouldCancel, messageHandler)();
 }
 } // namespace complex

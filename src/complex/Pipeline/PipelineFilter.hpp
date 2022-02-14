@@ -109,7 +109,7 @@ public:
    * @param data
    * @return bool
    */
-  bool preflight(DataStructure& data) override;
+  bool preflight(DataStructure& data, const std::atomic_bool& shouldCancel) override;
 
   /**
    * @brief Attempts to execute the node using the provided DataStructure.
@@ -117,7 +117,7 @@ public:
    * @param data
    * @return bool
    */
-  bool execute(DataStructure& data) override;
+  bool execute(DataStructure& data, const std::atomic_bool& shouldCancel) override;
 
   /**
    * @brief Returns a collection of warnings returned by the target filter.
