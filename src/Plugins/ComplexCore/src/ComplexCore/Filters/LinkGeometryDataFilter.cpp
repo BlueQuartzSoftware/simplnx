@@ -56,10 +56,13 @@ Parameters LinkGeometryDataFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<DataPathSelectionParameter>(k_GeometryDataPath_Key, "Grid Geometry", "", DataPath{}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedVertexDataArrayPaths_Key, "Vertex Attribute Arrays to Link", "", MultiArraySelectionParameter::ValueType{}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedEdgeDataArrayPaths_Key, "Edge Attribute Arrays to Link", "", MultiArraySelectionParameter::ValueType{}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedFaceDataArrayPaths_Key, "Face Attribute Arrays to Link", "", MultiArraySelectionParameter::ValueType{}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedVolumeDataArrayPaths_Key, "Volume Attribute Arrays to Link", "", MultiArraySelectionParameter::ValueType{}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedVertexDataArrayPaths_Key, "Vertex Data Arrays to Link", "Data associated with a vertex or point",
+                                                               MultiArraySelectionParameter::ValueType{}));
+  params.insert(
+      std::make_unique<MultiArraySelectionParameter>(k_SelectedEdgeDataArrayPaths_Key, "Edge Data Arrays to Link", "Data associated with an edge", MultiArraySelectionParameter::ValueType{}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedFaceDataArrayPaths_Key, "Face Data Arrays to Link", "Data associated with a face", MultiArraySelectionParameter::ValueType{}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedVolumeDataArrayPaths_Key, "Cell Data Arrays to Link",
+                                                               "Data associated with a cell or volume element such as a hexahedron or image geometry cell", MultiArraySelectionParameter::ValueType{}));
 
   return params;
 }
