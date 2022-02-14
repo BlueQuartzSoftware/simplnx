@@ -70,9 +70,10 @@ protected:
    * @param data
    * @param filterArgs
    * @param messageHandler
+   * @param shouldCancel
    * @return Result<OutputActions>
    */
-  PreflightResult preflightImpl(const DataStructure& data, const Arguments& filterArgs, const MessageHandler& messageHandler) const override;
+  PreflightResult preflightImpl(const DataStructure& data, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief
@@ -80,9 +81,11 @@ protected:
    * @param args
    * @param pipelineNode
    * @param messageHandler
+   * @param shouldCancel
    * @return Result<>
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 
