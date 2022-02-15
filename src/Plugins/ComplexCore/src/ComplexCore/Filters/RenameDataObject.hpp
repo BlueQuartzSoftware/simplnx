@@ -8,20 +8,24 @@
 
 namespace complex
 {
-class COMPLEXCORE_EXPORT RenameDataGroup : public IFilter
+/**
+ * @class RenameDataObject
+ * @brief RenameDataObject class is used to rename any DataObject.
+ */
+class COMPLEXCORE_EXPORT RenameDataObject : public IFilter
 {
 public:
-  RenameDataGroup() = default;
-  ~RenameDataGroup() noexcept override = default;
+  RenameDataObject() = default;
+  ~RenameDataObject() noexcept override = default;
 
-  RenameDataGroup(const RenameDataGroup&) = delete;
-  RenameDataGroup(RenameDataGroup&&) noexcept = delete;
+  RenameDataObject(const RenameDataObject&) = delete;
+  RenameDataObject(RenameDataObject&&) noexcept = delete;
 
-  RenameDataGroup& operator=(const RenameDataGroup&) = delete;
-  RenameDataGroup& operator=(RenameDataGroup&&) noexcept = delete;
+  RenameDataObject& operator=(const RenameDataObject&) = delete;
+  RenameDataObject& operator=(RenameDataObject&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DataGroup_Key = "data_group";
+  static inline constexpr StringLiteral k_DataObject_Key = "data_object";
   static inline constexpr StringLiteral k_NewName_Key = "new_name";
 
   /**
@@ -66,6 +70,7 @@ protected:
    * @param data
    * @param filterArgs
    * @param messageHandler
+   * @param shouldCancel
    * @return Result<OutputActions>
    */
   PreflightResult preflightImpl(const DataStructure& data, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
@@ -76,6 +81,7 @@ protected:
    * @param args
    * @param pipelineNode
    * @param messageHandler
+   * @param shouldCancel
    * @return Result<>
    */
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
@@ -83,4 +89,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, RenameDataGroup, "d53c808f-004d-5fac-b125-0fffc8cc78d6");
+COMPLEX_DEF_FILTER_TRAITS(complex, RenameDataObject, "d53c808f-004d-5fac-b125-0fffc8cc78d6");
