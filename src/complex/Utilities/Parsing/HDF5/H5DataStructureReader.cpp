@@ -46,6 +46,17 @@ H5::ErrorType H5::DataStructureReader::readObjectFromGroup(const H5::GroupReader
   {
     auto childObj = parentGroup.openObject(objectName);
 
+    // Return 0 if object is marked as not importable.
+    auto importAttribute = childObj.getAttribute(complex::Constants::k_ImportableTag);
+    if(importAttribute.isValid())
+    {
+      const auto importable = importAttribute.readAsValue<int32>();
+      if(importable == 0)
+      {
+        return 0;
+      }
+    }
+
     // Check if data has already been read
     auto idAttribute = childObj.getAttribute(complex::Constants::k_ObjectIdTag);
     if(!idAttribute.isValid())
@@ -57,17 +68,6 @@ H5::ErrorType H5::DataStructureReader::readObjectFromGroup(const H5::GroupReader
     {
       getDataStructure().setAdditionalParent(objectId, parentId.value());
       return 0;
-    }
-
-    // Return 0 if object is marked as not importable.
-    auto importAttribute = childObj.getAttribute(complex::Constants::k_ImportableTag);
-    if(importAttribute.isValid())
-    {
-      const auto importable = importAttribute.readAsValue<int32>();
-      if(importable == 0)
-      {
-        return 0;
-      }
     }
 
     // Get DataObject type for factory

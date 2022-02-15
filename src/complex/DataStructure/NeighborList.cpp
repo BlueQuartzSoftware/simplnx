@@ -462,7 +462,7 @@ H5::ErrorType NeighborList<T>::writeHdf5(H5::DataStructureWriter& dataStructureW
   if(err < 0)
   {
     return err;
-  }  
+  }
   auto linkedDatasetAttribute = datasetWriter.createAttribute("Linked NumNeighbors Dataset");
   err = linkedDatasetAttribute.writeString(getNumNeighborsArrayName());
   if(err < 0)
