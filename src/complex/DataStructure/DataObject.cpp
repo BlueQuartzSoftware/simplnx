@@ -202,7 +202,7 @@ H5::ErrorType DataObject::writeH5ObjectAttributes(H5::DataStructureWriter& dataS
   }
 
   auto importableAttributeWriter = objectWriter.createAttribute(complex::Constants::k_ImportableTag);
-  error = importableAttributeWriter.writeValue(importable ? 1 : 0);
+  error = importableAttributeWriter.writeValue<int32>(importable ? 1 : 0);
 
   return error;
 }

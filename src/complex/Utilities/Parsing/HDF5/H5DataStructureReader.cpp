@@ -35,7 +35,7 @@ complex::DataStructure H5::DataStructureReader::readH5Group(const H5::GroupReade
   m_CurrentStructure = DataStructure();
   m_CurrentStructure.setNextId(idAttribute.readAsValue<DataObject::IdType>());
   errorCode = m_CurrentStructure.getRootGroup().readH5Group(*this, rootGroupReader);
-  return m_CurrentStructure;
+  return std::move(m_CurrentStructure);
 }
 
 H5::ErrorType H5::DataStructureReader::readObjectFromGroup(const H5::GroupReader& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId)
@@ -61,9 +61,13 @@ H5::ErrorType H5::DataStructureReader::readObjectFromGroup(const H5::GroupReader
 
     // Return 0 if object is marked as not importable.
     auto importAttribute = childObj.getAttribute(complex::Constants::k_ImportableTag);
-    if(importAttribute.isValid() && importAttribute.readAsValue<int32>() == 0)
+    if(importAttribute.isValid())
     {
-      return 0;
+      const auto importable = importAttribute.readAsValue<int32>();
+      if(importable == 0)
+      {
+        return 0;
+      }
     }
 
     // Get DataObject type for factory

@@ -69,7 +69,7 @@ void H5::DataFactoryManager::addFactory(IDataFactory* factory)
 std::vector<H5::IDataFactory*> H5::DataFactoryManager::getFactories() const
 {
   std::vector<H5::IDataFactory*> factories;
-  for(auto iter : m_Factories)
+  for(const auto& iter : m_Factories)
   {
     factories.push_back(iter.second.get());
   }

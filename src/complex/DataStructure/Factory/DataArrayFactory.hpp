@@ -71,6 +71,13 @@ public:
     std::string dataArrayName = datasetReader.getName();
     DataObject::IdType importId = ReadObjectId(datasetReader);
 
+    // Check importablility
+    auto importableAttribute = datasetReader.getAttribute(complex::Constants::k_ImportableTag);
+    if(importableAttribute.isValid() && importableAttribute.readAsValue<int32>() == 0)
+    {
+      return 0;
+    }
+
     switch(type)
     {
     case H5::Type::float32: {
