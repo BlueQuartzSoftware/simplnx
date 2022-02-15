@@ -6,6 +6,7 @@
 #include "complex/DataStructure/Factory/GridMontageFactory.hpp"
 #include "complex/DataStructure/Factory/HexahedralGeomFactory.hpp"
 #include "complex/DataStructure/Factory/ImageGeomFactory.hpp"
+#include "complex/DataStructure/Factory/NeighborListFactory.hpp"
 #include "complex/DataStructure/Factory/QuadGeomFactory.hpp"
 #include "complex/DataStructure/Factory/RectGridGeomFactory.hpp"
 #include "complex/DataStructure/Factory/ScalarDataFactory.hpp"
@@ -39,6 +40,8 @@ void H5::DataFactoryManager::addCoreFactories()
   addFactory(new Float32ArrayFactory());
   addFactory(new Float64ArrayFactory());
   addFactory(new BoolArrayFactory());
+  
+  addFactory(new NeighborListFactory());
 
   addFactory(new DataGroupFactory());
   addFactory(new EdgeGeomFactory());

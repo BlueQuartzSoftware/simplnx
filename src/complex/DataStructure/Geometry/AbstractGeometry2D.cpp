@@ -141,10 +141,10 @@ void AbstractGeometry2D::setUnsharedEdges(const SharedEdgeList* bEdgeList)
   m_UnsharedEdgeListId = bEdgeList->getId();
 }
 
-H5::ErrorType AbstractGeometry2D::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType AbstractGeometry2D::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
   if(errorCode < 0)
   {
     return errorCode;

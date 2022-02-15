@@ -7,11 +7,6 @@
 
 using namespace complex;
 
-namespace Constants
-{
-inline const std::string TypeName = "";
-}
-
 DataGroup::DataGroup(DataStructure& ds, std::string name)
 : BaseGroup(ds, std::move(name))
 {
@@ -88,7 +83,7 @@ H5::ErrorType DataGroup::readHdf5(H5::DataStructureReader& dataStructureReader, 
   return BaseGroup::readHdf5(dataStructureReader, groupReader);
 }
 
-H5::ErrorType DataGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType DataGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
-  return BaseGroup::writeHdf5(dataStructureWriter, parentGroupWriter);
+  return BaseGroup::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
 }

@@ -269,9 +269,10 @@ protected:
   /**
    * @brief Writes the contained DataObjects to the target HDF5 group.
    * @param parentGroupWriter
+   * @param importable
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override;
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 private:
   DataMap m_DataMap;

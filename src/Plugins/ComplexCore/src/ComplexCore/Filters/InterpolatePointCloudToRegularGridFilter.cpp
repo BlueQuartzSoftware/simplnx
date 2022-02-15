@@ -28,17 +28,6 @@ namespace
 constexpr int64 k_MissingVertexGeom = -24500;
 constexpr int64 k_MissingImageGeom = -24501;
 
-#if 0
-template <typename T>
-Result<> createCompatibleNeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples, DataObject::IdType parentId, std::vector<IDataArray*>& dynamicArrays)
-{
-  NeighborList<T>::Create(dataStructure, name, numTuples, parentId);
-  auto action = std::make_unique<CreateNeighborListAction>(dataType, numTuples, path);
-  return {std::move(action)};
-  dynamicArrays.push_back(ptr);
-}
-#endif
-
 template <typename T>
 void mapPointCloudDataByKernel(IDataArray* source, IDataArray* dynamic, std::vector<float>& kernelVals, int64 kernel[3], usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
 {
@@ -352,9 +341,12 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
       return {nonstd::make_unexpected(std::vector<Error>{Error{-11002, ss}})};
     }
     auto dataType = targetArray->getDataType();
-    auto neighborPath = interpolatedGroupPath.createChildPath(targetArray->getName() + " Neighbors");
-    auto neighborAction = std::make_unique<CreateNeighborListAction>(dataType, targetArray->getNumberOfTuples(), neighborPath);
-    actions.actions.push_back(std::move(neighborAction));
+    if(dataType != DataType::boolean)
+    {
+      auto neighborPath = interpolatedGroupPath.createChildPath(targetArray->getName() + " Neighbors");
+      auto neighborAction = std::make_unique<CreateNeighborListAction>(dataType, targetArray->getNumberOfTuples(), neighborPath);
+      actions.actions.push_back(std::move(neighborAction));
+    }
   }
 
   for(const auto& copyPath : copyDataPaths)
@@ -372,9 +364,12 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
       return {nonstd::make_unexpected(std::vector<Error>{Error{-11002, ss}})};
     }
     auto dataType = targetArray->getDataType();
-    auto neighborPath = interpolatedGroupPath.createChildPath(targetArray->getName() + " Neighbors");
-    auto neighborAction = std::make_unique<CreateNeighborListAction>(dataType, targetArray->getNumberOfTuples(), neighborPath);
-    actions.actions.push_back(std::move(neighborAction));
+    if(dataType != DataType::boolean)
+    {
+      auto neighborPath = interpolatedGroupPath.createChildPath(targetArray->getName() + " Neighbors");
+      auto neighborAction = std::make_unique<CreateNeighborListAction>(dataType, targetArray->getNumberOfTuples(), neighborPath);
+      actions.actions.push_back(std::move(neighborAction));
+    }
   }
 
   auto voxelIndicesPtr = data.getDataAs<USizeArray>(voxelIndicesPath);

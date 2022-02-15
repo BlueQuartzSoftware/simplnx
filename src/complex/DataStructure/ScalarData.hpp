@@ -216,9 +216,10 @@ public:
    * @brief Writes the ScalarData to HDF5 using the provided parent ID.
    * @param parentId
    * @param dataId
+   * @param importable
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
   {
     auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
 
@@ -227,7 +228,7 @@ public:
     auto error = datasetWriter.writeSpan(dims, nonstd::span<const T>{dataVector});
     if(error == 0)
     {
-      error = writeH5ObjectAttributes(dataStructureWriter, datasetWriter);
+      error = writeH5ObjectAttributes(dataStructureWriter, datasetWriter, importable);
     }
     return error;
   }

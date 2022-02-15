@@ -507,16 +507,16 @@ H5::ErrorType QuadGeom::readHdf5(H5::DataStructureReader& dataStructureReader, c
   return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
-H5::ErrorType QuadGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType QuadGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
-  auto errorCode = AbstractGeometry2D::writeHdf5(dataStructureWriter, parentGroupWriter);
+  auto errorCode = AbstractGeometry2D::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
   if(errorCode < 0)
   {
     return errorCode;
