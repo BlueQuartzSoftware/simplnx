@@ -4,6 +4,7 @@
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 
+#include "complex/Common/StringLiteral.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 using namespace complex;

@@ -91,36 +91,6 @@ std::string getNewBoxDimensions(const DataStructure& dataStructure, const DataPa
   }
   return desc;
 }
-
-#if 0
-IFilter::PreflightResult renumberFeatures(DataStructure& dataStructure, const DataPath& featureIdsArrayPath, const DataPath& featuresGroupPath)
-{
-  std::vector<usize> cDims = {1};
-  auto* featureIdsPtr = dataStructure.getDataAs<DataArray<int32>>(featureIdsArrayPath);
-  if(nullptr == featureIdsPtr)
-  {
-    std::string ss = fmt::format("The DataArray '{}' which defines the Feature Ids to renumber is invalid. Does it exist? Is it the correct type?", featureIdsArrayPath.toString());
-    return {MakeErrorResult<OutputActions>(-55500, ss)};
-  }
-  auto featureIds = featureIdsPtr->getDataStoreRef();
-
-  auto* cellFeatureGroup = dataStructure.getDataAs<DataGroup>(featuresGroupPath);
-  if(nullptr == cellFeatureGroup)
-  {
-    std::string ss = fmt::format("The DataGroup '{}' is invalid. Does it exist? Is it the correct type?. The DataGroup defines where the segmented features are stored.", featuresGroupPath.toString());
-    return {MakeErrorResult<OutputActions>(-55501, ss)};
-  }
-  std::vector<bool> activeObjects(featureIdsPtr->getNumberOfTuples(), true);
-  cellFeatureAttrMat->removeInactiveObjects(activeObjects, featureIdsPtr.lock().get());
-
-  // If we are saving as a new Data Container, then we need a copy of the Cell Feature Data Attribute Matrix
-  if(renumberFeatures)
-  {
-    AttributeMatrix::Pointer cfAm = cellFeatureAttrMat->deepCopy(getInPreflight());
-    destCellDataContainer->addOrReplaceAttributeMatrix(cfAm);
-  }
-}
-#endif
 } // namespace
 
 std::string CropImageGeometry::name() const
@@ -152,8 +122,7 @@ std::vector<std::string> CropImageGeometry::defaultTags() const
 Parameters CropImageGeometry::parameters() const
 {
   Parameters params;
-  // k_ImageGeom_Key
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geom", "DataPath to the target ImageGeom", DataPath(), std::set{DataObject::Type::ImageGeom}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geom", "DataPath to the target ImageGeom", DataPath(), std::set{AbstractGeometry::Type::Image}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewImageGeom_Key, "New Image Geom", "DataPath to create the new ImageGeom at", DataPath()));
 
   params.insert(std::make_unique<Int32Parameter>(k_MinX_Key, "X Min Voxel (Column)", "Minimum X Voxel", 0));
@@ -179,7 +148,7 @@ IFilter::UniquePointer CropImageGeometry::clone() const
   return std::make_unique<CropImageGeometry>();
 }
 
-IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const
+IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto srcImagePath = args.value<DataPath>(k_ImageGeom_Key);
   auto destImagePath = args.value<DataPath>(k_NewImageGeom_Key);
@@ -344,7 +313,8 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   return {std::move(actions)};
 }
 
-Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                        const std::atomic_bool& shouldCancel) const
 {
   auto srcImagePath = args.value<DataPath>(k_ImageGeom_Key);
   auto destImagePath = args.value<DataPath>(k_NewImageGeom_Key);
@@ -434,10 +404,10 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   int64 index_old = 0;
   for(int64 i = 0; i < ZP; i++)
   {
-    // if(getCancel())
-    //{
-    //  break;
-    //}
+    if(shouldCancel)
+    {
+      return {};
+    }
     // std::string ss = fmt::format("Cropping Volume || Slice {} of {} Complete", i, ZP);
     // notifyStatusMessage(ss);
     planeold = (i + zMin) * (srcImageGeom.getNumXPoints() * srcImageGeom.getNumYPoints());
@@ -460,10 +430,10 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
       }
     }
   }
-  // if(getCancel())
-  //{
-  //  return;
-  //}
+  if(shouldCancel)
+  {
+    return {};
+  }
   totalPoints = destImageGeom.getNumberOfElements();
   std::vector<usize> tDims(3, 0);
   tDims[0] = XP;
