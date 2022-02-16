@@ -19,6 +19,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindSurfaceFeaturesTest.cpp
   IdentifySampleTest.cpp
   IterativeClosestPointTest.cpp
+  InitializeDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
   LaplacianSmoothingFilterTest.cpp
   MapPointCloudToRegularGridTest.cpp

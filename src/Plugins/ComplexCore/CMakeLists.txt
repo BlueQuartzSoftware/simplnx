@@ -25,6 +25,7 @@ set(FilterList
   IdentifySample
   ImportDREAM3DFilter
   ImportTextFilter
+  InitializeData
   InterpolatePointCloudToRegularGridFilter
   IterativeClosestPointFilter
   LaplacianSmoothingFilter
