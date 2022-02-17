@@ -57,21 +57,28 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   // params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SamplesNumberType_Key, "Source for Number of Samples", "", 0, ChoicesParameter::Choices{"Manual", "Other Geometry"}));
-  params.insert(std::make_unique<Int32Parameter>(k_NumberOfSamples_Key, "Number of Sample Points", "", 1000));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_TriangleGeometry_Key, "Triangle Geometry to Sample", "", DataPath{}));
+  params.insert(std::make_unique<Int32Parameter>(k_NumberOfSamples_Key, "Number of Sample Points", "The number of sample points to use", 1000));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_TriangleGeometry_Key, "Triangle Geometry to Sample", "The complete path to the triangle Geometry from which to sample", DataPath{}));
   // params.insert(std::make_unique<DataPathSelectionParameter>(k_ParentGeometry_Key, "Source Geometry for Number of Sample Points", "", DataPath{}, true));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "", false));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Whether to use a boolean mask array to ignore certain Trianlges flagged as false from the sampling algorithm", false));
   params.insertSeparator(Parameters::Separator{"Face Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleAreasArrayPath_Key, "Face Areas", "", DataPath{}, false, ArraySelectionParameter::AllowedTypes{DataType::float64}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleAreasArrayPath_Key, "Face Areas", "The complete path to the array specifying the area of each Face", DataPath{}, false,
+                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}, true, ArraySelectionParameter::AllowedTypes{DataType::boolean}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Face Attribute Arrays to Transfer", "", MultiArraySelectionParameter::ValueType{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "The complete path to the array specifying if the Face can be sampled, if Use Mask is checked", DataPath{}, true,
+                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Face Attribute Arrays to Transfer",
+                                                               "The paths to the Face Attribute Arrays to transfer to the created Vertex Geometry where the mask is false, if Use Mask is checked",
+                                                               MultiArraySelectionParameter::ValueType{}));
 
   params.insertSeparator(Parameters::Separator{"Created Objects"});
 
   // params.insert(std::make_unique<DataGroupSelectionParameter>(k_VertexParentGroup_Key, "Created Vertex Geometry Parent [Data Group]", "", DataPath{}));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_VertexGeometryPath_Key, "Vertex Geometry Name", "", DataPath({"[Vertex Geometry]"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_VertexDataGroupPath_Key, "Vertex Data", "", DataPath({"[Vertex Geometry]", "Vertex Data"})));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_VertexGeometryPath_Key, "Vertex Geometry Name",
+                                                             "The complete path to the DataGroup holding the Vertex Geometry that represents the sampling points", DataPath({"[Vertex Geometry]"})));
+  params.insert(
+      std::make_unique<ArrayCreationParameter>(k_VertexDataGroupPath_Key, "Vertex Data", "The complete path to the Array for the Vertex Geometry", DataPath({"[Vertex Geometry]", "Vertex Data"})));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   //  params.linkParameters(k_SamplesNumberType_Key, k_NumberOfSamples_Key, 0);

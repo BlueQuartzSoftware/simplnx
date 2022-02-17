@@ -61,8 +61,8 @@ Parameters ExampleFilter2::parameters() const
 {
   Parameters params;
   params.insertSeparator({"1rst Group of Parameters"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Param7, "Bool Parameter", "", true));
-  params.insert(std::make_unique<ChoicesParameter>(k_Param3, "ChoicesParameter", "", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Param7, "Bool Parameter", "Example bool help text", true));
+  params.insert(std::make_unique<ChoicesParameter>(k_Param3, "ChoicesParameter", "Example choices help text", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
 
   params.insertSeparator({"2nd Group of Parameters"});
   DynamicTableParameter::ValueType dynamicTable{{{10, 20}, {30, 40}}, {"Row 1", "Row2"}, {"Col 1", "Col 2"}};
@@ -72,15 +72,15 @@ Parameters ExampleFilter2::parameters() const
   params.insert(std::make_unique<DynamicTableParameter>(k_Param13, "DynamicTableParameter", "DynamicTableParameter Example Help Text", dynamicTable));
 
   // These should show up under the "Required Objects" Section in the GUI
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_Param9, "DataGroupSelectionParameter", "", DataPath{}));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_Param10, "DataPathSelectionParameter", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_Param6, "Array Selection", "", ArraySelectionParameter::ValueType{}));
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_Param11, "GeometrySelectionParameter", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_Param12, "MultiArraySelectionParameter", "", MultiArraySelectionParameter::ValueType{}));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_Param9, "DataGroupSelectionParameter", "Example data group selection help text", DataPath{}));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_Param10, "DataPathSelectionParameter", "Example data path selection help text", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_Param6, "Array Selection", "Example array selection help text", ArraySelectionParameter::ValueType{}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_Param11, "GeometrySelectionParameter", "Example geometry selection help text", DataPath{}, GeometrySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_Param12, "MultiArraySelectionParameter", "Example multiarray selection help text", MultiArraySelectionParameter::ValueType{}));
 
   // These should show up under the "Created Objects" section in the GUI
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_Param8, "DataGroupCreationParameter", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_Param5, "Array Creation", "", ArrayCreationParameter::ValueType{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_Param8, "DataGroupCreationParameter", "Example data group creation help text", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_Param5, "Array Creation", "Example array creation help text", ArrayCreationParameter::ValueType{}));
 
   return params;
 }

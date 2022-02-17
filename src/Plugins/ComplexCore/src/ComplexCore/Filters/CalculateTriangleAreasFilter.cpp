@@ -105,9 +105,9 @@ Parameters CalculateTriangleAreasFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(
-      std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Triangle}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CalculatedAreasDataPath_Key, "Calculated Face Areas", "", DataPath{}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the face areas", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Triangle}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_CalculatedAreasDataPath_Key, "Calculated Face Areas", "The complete path to the array storing the calculated face areas", DataPath{}));
 
   return params;
 }
