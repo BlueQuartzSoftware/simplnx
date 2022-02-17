@@ -54,12 +54,12 @@ Parameters ExampleFilter1::parameters() const
 {
   Parameters params;
   params.insertSeparator({"FileSystem Selections"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputDir_Key, "Input Directory", "", "Data", FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputDir));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputDir_Key, "Input Directory", "Example input directory help text", "Data", FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputDir));
   params.insert(
-      std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "", "/opt/local/bin/ninja", FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile));
+      std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "Example input file help text", "/opt/local/bin/ninja", FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile));
   params.insert(
-      std::make_unique<FileSystemPathParameter>(k_OutputDir_Key, "Ouptut Directory", "", "Output Data", FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "", "Output Data/Some Really Cool File.txt", FileSystemPathParameter::ExtensionsType{},
+      std::make_unique<FileSystemPathParameter>(k_OutputDir_Key, "Ouptut Directory", "Example output directory help text", "Output Data", FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "Example output file help text", "Output Data/Some Really Cool File.txt", FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputFile));
 
   params.insertSeparator({"Linked Parameter"});
@@ -69,15 +69,15 @@ Parameters ExampleFilter1::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_Param3, "Int32Parameter", "The 1st parameter", 0));
 
   params.insertSeparator({"Vector Parameters"});
-  params.insert(std::make_unique<VectorInt32Parameter>("Vec2_Key", "Vect<int,2>", "", std::vector<int32_t>{10, 20}, std::vector<std::string>{"X"s, "Y"s}));
+  params.insert(std::make_unique<VectorInt32Parameter>("Vec2_Key", "Vect<int,2>", "Example int32 vector help text", std::vector<int32_t>{10, 20}, std::vector<std::string>{"X"s, "Y"s}));
   //  params.insert(std::make_unique<VectorInt32Parameter>("Vec3_Key", "3D Dimensions", "", std::vector<int32_t>{-19, -100, 456}, std::vector<std::string>{"X"s, "Y"s, "Z"s}));
-  params.insert(std::make_unique<VectorUInt8Parameter>("Vec4_Key", "RGBA", "", std::vector<uint8_t>{0, 255, 128, 255}, std::vector<std::string>{"R"s, "G"s, "B"s, "A"s}));
+  params.insert(std::make_unique<VectorUInt8Parameter>("Vec4_Key", "RGBA", "Example uint8 vector help text", std::vector<uint8_t>{0, 255, 128, 255}, std::vector<std::string>{"R"s, "G"s, "B"s, "A"s}));
   //  params.insert(std::make_unique<VectorFloat32Parameter>("Vec4F_Key", "Quaternion", "", std::vector<float>{0.0F, 84.98F, 234.12F, 985.98F}, std::vector<std::string>{"U"s, "V"s, "W"s, "X"s}));
   //  params.insert(std::make_unique<VectorFloat32Parameter>("Vec6F_Key", "Tensor?", "", std::vector<float>(6), std::vector<std::string>{"U"s, "V"s, "W"s, "X"s, "B"s, "A"s}));
 
   params.insertSeparator({"Other Parameters"});
-  params.insert(std::make_unique<StringParameter>(k_Param5, "StringParameter", "", "test string"));
-  params.insert(std::make_unique<NumericTypeParameter>(k_Param6, "Numeric Type", "", NumericType::int32));
+  params.insert(std::make_unique<StringParameter>(k_Param5, "StringParameter", "Example string help text", "test string"));
+  params.insert(std::make_unique<NumericTypeParameter>(k_Param6, "Numeric Type", "Example numeric type help text", NumericType::int32));
 
   params.insertSeparator({"Big Parameters"});
   params.insert(std::make_unique<GeneratedFileListParameter>(k_Param4, "Input File List", "Data needed to generate the input file list", GeneratedFileListParameter::ValueType{}));
