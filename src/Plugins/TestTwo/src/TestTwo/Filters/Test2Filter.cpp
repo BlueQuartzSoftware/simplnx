@@ -1,6 +1,7 @@
 #include "Test2Filter.hpp"
 
 #include "complex/Common/StringLiteral.hpp"
+#include "complex/Parameters/CalculatorParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
@@ -12,6 +13,7 @@ namespace
 constexpr StringLiteral k_Param1 = "param1";
 constexpr StringLiteral k_Param2 = "param2";
 constexpr StringLiteral k_Param3 = "param3";
+constexpr StringLiteral k_Param4 = "param4";
 } // namespace
 
 Test2Filter::Test2Filter() = default;
@@ -44,6 +46,7 @@ complex::Parameters Test2Filter::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_Param1, "Parameter 1", "The 1st parameter", 0));
   params.insert(std::make_unique<StringParameter>(k_Param2, "Parameter 2", "The 2nd parameter", "test string"));
   params.insert(std::make_unique<ChoicesParameter>(k_Param3, "Parameter 3", "The 3rd parameter", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
+  params.insert(std::make_unique<CalculatorParameter>(k_Param4, "Parameter 4", "The 4th parameter", "3 + 4"));
   return params;
 }
 
