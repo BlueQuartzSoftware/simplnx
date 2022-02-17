@@ -55,7 +55,7 @@ Parameters LinkGeometryDataFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_GeometryDataPath_Key, "Grid Geometry", "", DataPath{}));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_GeometryDataPath_Key, "Grid Geometry", "The complete path to the Geometry with which to link the data", DataPath{}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedVertexDataArrayPaths_Key, "Vertex Data Arrays to Link", "Data associated with a vertex or point",
                                                                MultiArraySelectionParameter::ValueType{}));
   params.insert(
