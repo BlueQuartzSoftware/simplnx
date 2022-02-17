@@ -55,27 +55,35 @@ Parameters QuickSurfaceMeshFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<BoolParameter>(k_GenerateTripleLines_Key, "Generate Triple Lines", "", true));
+  params.insert(std::make_unique<BoolParameter>(k_GenerateTripleLines_Key, "Generate Triple Lines", "Experimental feature. May not work.", true));
 
-  params.insert(std::make_unique<BoolParameter>(k_FixProblemVoxels_Key, "Attempt to Fix Problem Voxels", "", false));
+  params.insert(std::make_unique<BoolParameter>(k_FixProblemVoxels_Key, "Attempt to Fix Problem Voxels", "See help page.", false));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
 
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_GridGeometryDataPath_Key, "Grid Geometry", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}, false, ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Transfer", "", MultiArraySelectionParameter::ValueType{}));
+  params.insert(
+      std::make_unique<DataPathSelectionParameter>(k_GridGeometryDataPath_Key, "Grid Geometry", "The complete path to the Grid Geometry from which to create a Triangle Geometry", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "The complete path to the Array specifying which Feature each Cell belongs to", DataPath{}, false,
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Transfer",
+                                                               "The paths to the Arrays specifying which Cell Attribute Arrays to transfer to the created Triangle Geometry",
+                                                               MultiArraySelectionParameter::ValueType{}));
 
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_ParentDataGroupPath_Key, "Parent DataGroup", "", DataPath{}));
+  params.insert(
+      std::make_unique<DataGroupSelectionParameter>(k_ParentDataGroupPath_Key, "Parent DataGroup", "The complete path to the DataGroup where the Triangle Geometry data will be created", DataPath{}));
 
   params.insertSeparator(Parameters::Separator{"Created Objects"});
-  params.insert(std::make_unique<StringParameter>(k_TriangleGeometryName_Key, "Geometry Name [Data Group]", "", std::string("[Triangle Geometry]")));
+  params.insert(std::make_unique<StringParameter>(k_TriangleGeometryName_Key, "Geometry Name [Data Group]", "The name of the created Triangle Geometry", std::string("[Triangle Geometry]")));
 
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_VertexDataGroupName_Key, "Vertex Data [DataGroup]", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NodeTypesArrayName_Key, "Node Types", "", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_VertexDataGroupName_Key, "Vertex Data [DataGroup]",
+                                                             "The complete path to the DataGroup where the Vertex Data of the Triangle Geometry will be created", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NodeTypesArrayName_Key, "Node Types", "The complete path to the Array specifying the type of node in the Triangle Geometry", DataPath{}));
 
   params.insertSeparator(Parameters::Separator{"Face Data"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_FaceDataGroupName_Key, "Face Data [DataGroup]", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FaceLabelsArrayName_Key, "Face Labels", "", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_FaceDataGroupName_Key, "Face Data [DataGroup]",
+                                                             "The complete path to the DataGroup where the Face Data of the Triangle Geometry will be created", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_FaceLabelsArrayName_Key, "Face Labels",
+                                                         "The complete path to the Array specifying which Features are on either side of each Face in the Triangle Geometry", DataPath{}));
 
   return params;
 }

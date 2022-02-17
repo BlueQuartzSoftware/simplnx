@@ -63,9 +63,12 @@ Parameters StlFileReaderFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Created Objects"});
 
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryDataPath_Key, "Geometry Name [Data Group]", "", DataPath({"[Triangle Geometry]"})));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_FaceGroupDataPath_Key, "Triangle Face Data [Data Group]", "", DataPath({"[Triangle Geometry]", "Triangle Face Data"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FaceNormalsDataPath_Key, "Face Normals [Data Array]", "", DataPath({"[Triangle Geometry]", "Triangle Face Data", "Normals"})));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryDataPath_Key, "Geometry Name [Data Group]", "The complete path to the DataGroup containing the created Geometry data",
+                                                             DataPath({"[Triangle Geometry]"})));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_FaceGroupDataPath_Key, "Triangle Face Data [Data Group]", "The complete path to the DataGroup containing the created Face Data",
+                                                             DataPath({"[Triangle Geometry]", "Triangle Face Data"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_FaceNormalsDataPath_Key, "Face Normals [Data Array]", "The complete path to the Array specifying the normal of each Face",
+                                                         DataPath({"[Triangle Geometry]", "Triangle Face Data", "Normals"})));
 
   return params;
 }
