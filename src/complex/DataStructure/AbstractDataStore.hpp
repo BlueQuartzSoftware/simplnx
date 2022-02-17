@@ -449,6 +449,17 @@ public:
     return true;
   }
 
+  /**
+   * @brief Sets all the components of tuple i to value.
+   * @param i
+   * @param value
+   */
+  void fillTuple(usize i, T value)
+  {
+    usize numComponents = getNumberOfComponents();
+    std::fill_n(begin() + (i * numComponents), numComponents, value);
+  }
+
 protected:
   /**
    * @brief Default constructor
