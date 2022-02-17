@@ -125,6 +125,7 @@ set(CoreParameters
   ArraySelectionParameter
   NeighborListSelectionParameter
   BoolParameter
+  CalculatorParameter
   ChoicesParameter
   DataGroupCreationParameter
   DataGroupSelectionParameter
