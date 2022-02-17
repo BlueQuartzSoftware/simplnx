@@ -230,8 +230,7 @@ public:
    */
   void initializeTuple(usize tupleIndex, T value)
   {
-    size_t offset = tupleIndex * getNumberOfComponents();
-    std::fill(begin() + offset, begin() + offset + getNumberOfComponents(), value);
+    m_DataStore->fillTuple(tupleIndex, value);
   }
 
   /**
