@@ -48,21 +48,28 @@ Parameters LaplacianSmoothingFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry", "", DataPath{},
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry",
+                                                             "The complete path to the surface mesh Geometry for which to apply Laplacian smoothing", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Triangle, AbstractGeometry::Type::Tetrahedral}));
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshNodeTypeArrayPath_Key, "Node Type", "", DataPath{}, false, ArraySelectionParameter::AllowedTypes{DataType::int8}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshNodeTypeArrayPath_Key, "Node Type", "The complete path to the array specifying the type of node in the Geometry", DataPath{},
+                                                          false, ArraySelectionParameter::AllowedTypes{DataType::int8}));
   params.insertSeparator(Parameters::Separator{"Smoothing Values"});
 
-  params.insert(std::make_unique<Int32Parameter>(k_IterationSteps_Key, "Iteration Steps", "", 25));
-  params.insert(std::make_unique<Float32Parameter>(k_Lambda_Key, "Default Lambda", "", 0.2F));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseTaubinSmoothing_Key, "Use Taubin Smoothing", "", false));
-  params.insert(std::make_unique<Float32Parameter>(k_MuFactor_Key, "Mu Factor", "", 0.2F));
-  params.insert(std::make_unique<Float32Parameter>(k_TripleLineLambda_Key, "Triple Line Lambda", "", 0.1f));
-  params.insert(std::make_unique<Float32Parameter>(k_QuadPointLambda_Key, "Quadruple Points Lambda", "", 0.1f));
-  params.insert(std::make_unique<Float32Parameter>(k_SurfacePointLambda_Key, "Outer Points Lambda", "", 0.0f));
-  params.insert(std::make_unique<Float32Parameter>(k_SurfaceTripleLineLambda_Key, "Outer Triple Line Lambda", "", 0.0f));
-  params.insert(std::make_unique<Float32Parameter>(k_SurfaceQuadPointLambda_Key, "Outer Quadruple Points Lambda", "", 0.0f));
+  params.insert(std::make_unique<Int32Parameter>(
+      k_IterationSteps_Key, "Iteration Steps",
+      "Number of iteration steps to perform. More steps causes more smoothing but will also cause the volume to shrink more. Inreasing this number too high may cause collapse of points!", 25));
+  params.insert(std::make_unique<Float32Parameter>(k_Lambda_Key, "Default Lambda",
+                                                   "Value of λ to apply to general internal nodes that are not triple lines, quadruple points or on the surface of the volume", 0.2F));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseTaubinSmoothing_Key, "Use Taubin Smoothing", "Use Taubin's Lambda-Mu algorithm.", false));
+  params.insert(std::make_unique<Float32Parameter>(k_MuFactor_Key, "Mu Factor",
+                                                   "A value that is multipied by Lambda the result of which is the mu in Taubin's paper. The value should be a negative value.", 0.2F));
+  params.insert(std::make_unique<Float32Parameter>(k_TripleLineLambda_Key, "Triple Line Lambda", "Value of λ to apply to nodes designated as triple line nodes.", 0.1f));
+  params.insert(std::make_unique<Float32Parameter>(k_QuadPointLambda_Key, "Quadruple Points Lambda", "Value of λ to apply to nodes designated as quadruple points.", 0.1f));
+  params.insert(std::make_unique<Float32Parameter>(k_SurfacePointLambda_Key, "Outer Points Lambda", "The value of λ to apply to nodes that lie on the outer surface of the volume", 0.0f));
+  params.insert(std::make_unique<Float32Parameter>(k_SurfaceTripleLineLambda_Key, "Outer Triple Line Lambda", "Value of λ for triple lines that lie on the outer surface of the volume", 0.0f));
+  params.insert(
+      std::make_unique<Float32Parameter>(k_SurfaceQuadPointLambda_Key, "Outer Quadruple Points Lambda", "Value of λ for the quadruple Points that lie on the outer surface of the volume.", 0.0f));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseTaubinSmoothing_Key, k_MuFactor_Key, true);
