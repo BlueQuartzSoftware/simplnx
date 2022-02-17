@@ -292,7 +292,7 @@ Parameters RemoveMinimumSizeFeaturesFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_NumCellsPath_Key, "[Feature] Num Cells Array", "DataPath to NumCells DataArray", DataPath{}, false,
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "[Cell] FeatureIds Array", "DataPath to FeatureIds DataArray", DataPath{}, false,
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int64}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "DataPath to Image Geometry", DataPath{}));
 
   return params;
