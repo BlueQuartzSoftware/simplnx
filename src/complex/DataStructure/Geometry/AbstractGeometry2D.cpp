@@ -32,7 +32,12 @@ DataObject::Type AbstractGeometry2D::getDataObjectType() const
 
 void AbstractGeometry2D::resizeVertexList(usize numVertices)
 {
-  getVertices()->getDataStore()->reshapeTuples({numVertices});
+  auto* vertices = getVertices();
+  if(vertices == nullptr)
+  {
+    return;
+  }
+  vertices->getDataStore()->reshapeTuples({numVertices});
 }
 
 void AbstractGeometry2D::setVertices(const SharedVertexList* vertices)

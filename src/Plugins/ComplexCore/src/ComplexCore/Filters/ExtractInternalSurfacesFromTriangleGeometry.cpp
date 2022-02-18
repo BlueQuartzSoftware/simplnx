@@ -86,7 +86,7 @@ Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeom_Key, "Triangle Geometry", "Path to the existing Triangle Geometry", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypes{DataObject::Type::TriangleGeom}));
+                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Triangle}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_InternalTriangleGeom_Key, "Interior Triangle Geometry", "Path to create the new Triangle Geometry", DataPath()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath()));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays", "Paths to vertex-related DataArrays that should be copied to the new geometry",
@@ -101,7 +101,8 @@ IFilter::UniquePointer ExtractInternalSurfacesFromTriangleGeometry::clone() cons
   return std::make_unique<ExtractInternalSurfacesFromTriangleGeometry>();
 }
 
-IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                                    const std::atomic_bool& shouldCancel) const
 {
   auto triangleGeomPath = filterArgs.value<DataPath>(k_TriangleGeom_Key);
   auto internalTrianglesGeomPath = filterArgs.value<DataPath>(k_InternalTriangleGeom_Key);
@@ -112,20 +113,15 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
   std::vector<DataPath> arrays;
   OutputActions actions;
 
-  auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(triangleGeomPath);
+  auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomPath);
 
-  if(triangleGeom == nullptr)
-  {
-    std::string ss = fmt::format("Triangle Geometry not found at path '{}'", triangleGeomPath.toString());
-    return {MakeErrorResult<OutputActions>(k_MissingTriangleGeometry, ss)};
-  }
-  if(triangleGeom->getVertices() == nullptr)
+  if(triangleGeom.getVertices() == nullptr)
   {
     std::string ss = fmt::format("Triangle Geometry does not have an assigned vertices array");
     return {MakeErrorResult<OutputActions>(k_MissingTriangleGeometry, ss)};
   }
 
-  arrays.push_back(triangleGeom->getVertices()->getDataPaths().front());
+  arrays.push_back(triangleGeom.getVertices()->getDataPaths().front());
 
   std::vector<usize> cDims(1, 1);
 
@@ -186,7 +182,8 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
   return {std::move(actions)};
 }
 
-Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto nodeTypesArrayPath = args.value<DataPath>(k_NodeTypesPath_Key);
   auto triangleGeomPath = args.value<DataPath>(k_TriangleGeom_Key);
@@ -194,14 +191,20 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
   auto copyVertexPaths = args.value<std::vector<DataPath>>(k_CopyVertexPaths_Key);
   auto copyTrianglePaths = args.value<std::vector<DataPath>>(k_CopyTrianglePaths_Key);
 
-  auto* triangleGeom = data.getDataAs<TriangleGeom>(triangleGeomPath);
-  auto* internalTriangleGeom = data.getDataAs<TriangleGeom>(internalTrianglesPath);
-  auto& vertices = *triangleGeom->getVertices();
-  auto& triangles = *triangleGeom->getFaces();
-  auto numVerts = triangleGeom->getNumberOfVertices();
-  auto numTris = triangleGeom->getNumberOfFaces();
+  auto& triangleGeom = data.getDataRefAs<TriangleGeom>(triangleGeomPath);
+  auto& internalTriangleGeom = data.getDataRefAs<TriangleGeom>(internalTrianglesPath);
+  auto& vertices = *triangleGeom.getVertices();
+  auto& triangles = *triangleGeom.getFaces();
+  auto numVerts = triangleGeom.getNumberOfVertices();
+  auto numTris = triangleGeom.getNumberOfFaces();
 
   auto& nodeTypes = data.getDataRefAs<Int8Array>(nodeTypesArrayPath);
+
+  auto internalVerticesPath = internalTrianglesPath.createChildPath(CreateTriangleGeomAction::k_DefaultVerticesName);
+  internalTriangleGeom.setVertices(data.getDataAs<Float32Array>(internalVerticesPath));
+
+  auto internalFacesPath = internalTrianglesPath.createChildPath(CreateTriangleGeomAction::k_DefaultFacesName);
+  internalTriangleGeom.setFaces(data.getDataAs<UInt64Array>(internalFacesPath));
 
   typedef std::array<float32, 3> Vertex;
 
@@ -240,10 +243,10 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
 
   for(usize i = 0; i < numTris; i++)
   {
-    // if(getCancel())
-    //{
-    //  return;
-    //}
+    if(shouldCancel)
+    {
+      return {};
+    }
     if((nodeTypes[triangles[3 * i + 0]] == 2 || nodeTypes[triangles[3 * i + 0]] == 3 || nodeTypes[triangles[3 * i + 0]] == 4) &&
        (nodeTypes[triangles[3 * i + 1]] == 2 || nodeTypes[triangles[3 * i + 1]] == 3 || nodeTypes[triangles[3 * i + 1]] == 4) &&
        (nodeTypes[triangles[3 * i + 2]] == 2 || nodeTypes[triangles[3 * i + 2]] == 3 || nodeTypes[triangles[3 * i + 2]] == 4))
@@ -345,13 +348,12 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
     ExecuteDataFunction(CopyDataFunctor{}, src.getDataType(), src, dest, internalTriMap);
   }
 
-  auto& internalTris = data.getDataRefAs<TriangleGeom>(internalTrianglesPath);
-  internalTris.resizeVertexList(tmpVerts.size());
-  internalTris.resizeFaceList(tmpTris.size());
-  auto& internalVertices = *internalTris.getVertices();
-  auto& internalTriangles = *internalTris.getFaces();
-  auto numInternalTris = internalTris.getNumberOfFaces();
-  auto numInternalVerts = internalTris.getNumberOfVertices();
+  internalTriangleGeom.resizeVertexList(tmpVerts.size());
+  internalTriangleGeom.resizeFaceList(tmpTris.size());
+  auto& internalVertices = *internalTriangleGeom.getVertices();
+  auto& internalTriangles = *internalTriangleGeom.getFaces();
+  auto numInternalTris = internalTriangleGeom.getNumberOfFaces();
+  auto numInternalVerts = internalTriangleGeom.getNumberOfVertices();
 
   for(usize i = 0; i < numInternalVerts; i++)
   {

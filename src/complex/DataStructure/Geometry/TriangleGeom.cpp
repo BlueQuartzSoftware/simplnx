@@ -117,7 +117,12 @@ std::string TriangleGeom::getGeometryTypeAsString() const
 
 void TriangleGeom::resizeFaceList(usize newNumTris)
 {
-  getFaces()->getDataStore()->reshapeTuples({newNumTris});
+  auto* faces = getFaces();
+  if(faces == nullptr)
+  {
+    return;
+  }
+  faces->getDataStore()->reshapeTuples({newNumTris});
 }
 
 void TriangleGeom::setFaces(const SharedTriList* triangles)

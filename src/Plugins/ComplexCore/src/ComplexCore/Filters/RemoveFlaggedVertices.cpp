@@ -115,7 +115,7 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
     std::string errorMsg = fmt::format("Vertex Geometry does not have a vertex list");
     return {MakeErrorResult<OutputActions>(::k_VertexGeomNotFound, errorMsg)};
   }
-  dataArrayPaths.push_back(vertex->getVertices()->getParentDataPaths()[0]);
+  dataArrayPaths.push_back(vertex->getVertices()->getDataPaths()[0]);
 
   std::vector<size_t> cDims(1, 1);
 

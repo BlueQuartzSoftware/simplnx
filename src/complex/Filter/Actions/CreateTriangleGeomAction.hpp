@@ -21,6 +21,9 @@ public:
     VerticesTriangles = 3
   };
 
+  static constexpr StringLiteral k_DefaultVerticesName = "Vertex Array";
+  static constexpr StringLiteral k_DefaultFacesName = "Triangle Array";
+
   CreateTriangleGeomAction() = delete;
 
   CreateTriangleGeomAction(const DataPath& path, AdditionalData additional = AdditionalData::None);
