@@ -40,7 +40,7 @@ void H5::DataFactoryManager::addCoreFactories()
   addFactory(new Float32ArrayFactory());
   addFactory(new Float64ArrayFactory());
   addFactory(new BoolArrayFactory());
-  
+
   addFactory(new NeighborListFactory());
 
   addFactory(new DataGroupFactory());
