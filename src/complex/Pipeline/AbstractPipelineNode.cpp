@@ -93,10 +93,10 @@ void AbstractPipelineNode::endExecution(DataStructure& dataStructure)
   setDataStructure(dataStructure);
 }
 
-bool AbstractPipelineNode::preflight(DataStructure& data)
+bool AbstractPipelineNode::preflight(DataStructure& data, const std::atomic_bool& shouldCancel)
 {
   RenamedPaths renamedPaths;
-  return preflight(data, renamedPaths);
+  return preflight(data, renamedPaths, shouldCancel);
 }
 
 void AbstractPipelineNode::notify(const std::shared_ptr<AbstractPipelineMessage>& msg)

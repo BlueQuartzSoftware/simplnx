@@ -110,6 +110,16 @@ public:
   bool preflight(const std::atomic_bool& shouldCancel = false);
 
   /**
+   * @brief Preflights the pipeline segment using the provided DataStructure.
+   * Returns true if the pipeline segment completes without errors. Returns
+   * false otherwise.
+   * @param ds
+   * @param renamedPaths
+   * @return bool
+   */
+  bool preflight(DataStructure& ds, const std::atomic_bool& shouldCancel) override;
+
+  /**
    * @brief Executes the pipeline segment using an empty DataStructure.
    * Returns true if the pipeline segment completes without errors. Returns
    * false otherwise.
@@ -159,7 +169,7 @@ public:
    * @param renamedPaths
    * @return bool
    */
-  bool preflightFrom(index_type index, DataStructure& ds, RenamedPaths& renamedPaths);
+  bool preflightFrom(index_type index, DataStructure& ds, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel = false);
 
   /**
    * @brief Preflights the pipeline segment from a target position using the
@@ -170,7 +180,7 @@ public:
    * @param index
    * @return bool
    */
-  bool preflightFrom(index_type index, const std::atomic_bool& shouldCancel = false);
+  bool preflightFrom(index_type index, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel = false);
 
   /**
    * @brief Preflights the pipeline segment from a target position using the
@@ -182,7 +192,7 @@ public:
    * @param renamedPaths
    * @return bool
    */
-  bool preflightFrom(index_type index, RenamedPaths& renamedPaths);
+  bool preflightFrom(index_type index, const std::atomic_bool& shouldCancel = false);
 
   /**
    * @brief Checks if the pipeline can be preflighted at the target index.

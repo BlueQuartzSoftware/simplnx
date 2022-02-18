@@ -133,7 +133,7 @@ public:
    * Only used for PipelineFilters.
    * @return bool
    */
-  virtual bool preflight(DataStructure& data, RenamedPaths& renamedPaths) = 0;
+  virtual bool preflight(DataStructure& data, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel) = 0;
 
   /**
    * @brief Attempts to execute the node using the provided DataStructure.

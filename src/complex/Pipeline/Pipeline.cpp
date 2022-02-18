@@ -127,6 +127,11 @@ void Pipeline::setName(const std::string& name)
 bool Pipeline::preflight(const std::atomic_bool& shouldCancel)
 {
   DataStructure ds;
+  return preflight(ds, shouldCancel);
+}
+
+bool Pipeline::preflight(DataStructure& ds, const std::atomic_bool& shouldCancel)
+{
   RenamedPaths renamedPaths;
   return preflight(ds, renamedPaths, shouldCancel);
 }
@@ -166,7 +171,7 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& ds, const std::ato
   return preflightFrom(index, ds, renamedPaths);
 }
 
-bool Pipeline::preflightFrom(index_type index, DataStructure& ds, RenamedPaths& renamedPaths)
+bool Pipeline::preflightFrom(index_type index, DataStructure& ds, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel)
 {
   if(!canPreflightFrom(index))
   {
@@ -197,7 +202,7 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& ds, RenamedPaths& 
     }
     startObservingNode(iter->get());
     PipelineFilter::RenamedPaths renamedPathsRef;
-    bool succeeded = node->preflight(ds, renamedPathsRef);
+    bool succeeded = node->preflight(ds, renamedPathsRef, shouldCancel);
     stopObservingNode();
 
     renamedPaths.insert(renamedPaths.end(), renamedPathsRef.begin(), renamedPathsRef.end());
@@ -223,7 +228,7 @@ bool Pipeline::preflightFrom(index_type index, const std::atomic_bool& shouldCan
   return preflightFrom(index, renamedPaths);
 }
 
-bool Pipeline::preflightFrom(index_type index, RenamedPaths& renamedPaths)
+bool Pipeline::preflightFrom(index_type index, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel)
 {
   if(index == 0)
   {

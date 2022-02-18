@@ -81,6 +81,71 @@ void PipelineFilter::setIndex(int32 index)
 }
 
 // -----------------------------------------------------------------------------
+bool PipelineFilter::preflight(DataStructure& data, const std::atomic_bool& shouldCancel)
+{
+  sendFilterRunStateMessage(m_Index, RunState::Preflighting);
+
+  std::vector<DataPath> oldCreatedPaths = m_CreatedPaths;
+
+  IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
+
+  clearFaultState();
+  IFilter::PreflightResult result = m_Filter->preflight(data, getArguments(), messageHandler, shouldCancel);
+  m_Warnings = std::move(result.outputActions.warnings());
+  setHasWarnings(!m_Warnings.empty());
+  m_PreflightValues = std::move(result.outputValues);
+  if(result.outputActions.invalid())
+  {
+    m_Errors = std::move(result.outputActions.errors());
+    setHasErrors();
+    setPreflightStructure(data, false);
+    sendFilterFaultMessage(m_Index, getFaultState());
+    sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
+    return false;
+  }
+
+  m_Errors.clear();
+
+  std::vector<DataPath> newCreatedPaths;
+  for(const auto& action : result.outputActions.value().actions)
+  {
+    Result<> actionResult = action->apply(data, IDataAction::Mode::Preflight);
+    for(auto&& warning : actionResult.warnings())
+    {
+      m_Warnings.push_back(std::move(warning));
+    }
+    setHasWarnings(!m_Warnings.empty());
+    if(actionResult.invalid())
+    {
+      m_Errors = std::move(actionResult.errors());
+      setPreflightStructure(data, false);
+      setHasErrors();
+      sendFilterFaultMessage(m_Index, getFaultState());
+      sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
+      return false;
+    }
+    if(auto* creationAction = dynamic_cast<IDataCreationAction*>(action.get()))
+    {
+      newCreatedPaths.push_back(creationAction->getCreatedPath());
+    }
+  }
+
+  // Do not clear the created paths unless the preflight succeeded
+  m_CreatedPaths = newCreatedPaths;
+
+  setPreflightStructure(data);
+  sendFilterFaultMessage(m_Index, getFaultState());
+  if(!m_Warnings.empty() || !m_Errors.empty())
+  {
+    sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
+  }
+  auto renamedPaths = checkForRenamedPaths(oldCreatedPaths);
+
+  notifyRenamedPaths(renamedPaths);
+  sendFilterRunStateMessage(m_Index, RunState::Idle);
+  return true;
+}
+
 bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel)
 {
   sendFilterRunStateMessage(m_Index, RunState::Preflighting);
