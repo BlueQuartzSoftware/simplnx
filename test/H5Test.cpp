@@ -504,7 +504,6 @@ TEST_CASE("Node Based Geometry IO")
   }
 }
 
-#if 1
 TEST_CASE("NeighborList IO")
 {
   Application app;
@@ -549,7 +548,7 @@ TEST_CASE("NeighborList IO")
     auto ds = DataStructure::readFromHdf5(fileReader, err);
     REQUIRE(err >= 0);
 
-    //auto neighborList = ds.getDataAs<NeighborList<int64>>(DataPath({k_NeighborGroupName, "NeighborList"}));
+    // auto neighborList = ds.getDataAs<NeighborList<int64>>(DataPath({k_NeighborGroupName, "NeighborList"}));
     auto neighborList = ds.getData(DataPath({k_NeighborGroupName, "NeighborList"}));
     REQUIRE(neighborList != nullptr);
   } catch(const std::exception& e)
@@ -557,4 +556,3 @@ TEST_CASE("NeighborList IO")
     FAIL(e.what());
   }
 }
-#endif
