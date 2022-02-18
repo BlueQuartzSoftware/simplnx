@@ -16,6 +16,8 @@ namespace
 const DataPath k_CellPhasesPath({"Cell Phases"});
 const DataPath k_FeatureIDsPath({"Feature IDs"});
 const DataPath k_FeaturePhasesPath({"Feature Phases"});
+const std::string k_PhasesFileName = "Phases.raw";
+const std::string k_FeatureIdsFileName = "FeatureIds.raw";
 } // namespace
 
 DataStructure createDataStructure()
@@ -24,7 +26,7 @@ DataStructure createDataStructure()
   Arguments args;
 
   RawBinaryReaderFilter rbrFilter;
-  args.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, fs::path(unit_test::k_TestDataSourceDir).append("Phases.raw"));
+  args.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, fs::path(unit_test::k_TestDataSourceDir).append(k_PhasesFileName));
   args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<uint64>(1));
   args.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, NumericType::int32);
   args.insertOrAssign(RawBinaryReaderFilter::k_TupleDims_Key, DynamicTableParameter::ValueType({{{1000000}}, {}, {}}));
@@ -33,10 +35,7 @@ DataStructure createDataStructure()
   auto result = rbrFilter.execute(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 
-  args.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, fs::path(unit_test::k_TestDataSourceDir).append("FeatureIds.raw"));
-  args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<uint64>(1));
-  args.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, NumericType::int32);
-  args.insertOrAssign(RawBinaryReaderFilter::k_TupleDims_Key, DynamicTableParameter::ValueType({{{1000000}}, {}, {}}));
+  args.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, fs::path(unit_test::k_TestDataSourceDir).append(k_FeatureIdsFileName));
   args.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(k_FeatureIDsPath));
 
   result = rbrFilter.execute(ds, args);
