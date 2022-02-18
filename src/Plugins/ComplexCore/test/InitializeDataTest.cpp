@@ -10,6 +10,8 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 
+#include <stdexcept>
+
 using namespace complex;
 
 namespace
@@ -196,6 +198,9 @@ TEST_CASE("InitializeData(Manual)", "[ComplexCore][InitializeData]")
       REQUIRE(DoesRangeEqualValue<float64>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
       break;
     }
+    default: {
+      throw std::runtime_error("Unhandled DataType");
+    }
     }
   }
 }
@@ -283,6 +288,9 @@ TEST_CASE("InitializeData(Random)", "[ComplexCore][InitializeData]")
       REQUIRE(DoesRangeEqualValue<float64>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
       REQUIRE(DoesRangeEqualValue<float64>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
       break;
+    }
+    default: {
+      throw std::runtime_error("Unhandled DataType");
     }
     }
   }
@@ -381,6 +389,9 @@ TEST_CASE("InitializeData(RandomWithRange)", "[ComplexCore][InitializeData]")
       REQUIRE(IsDataWithinInclusiveRange<float64>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
       REQUIRE(DoesRangeEqualValue<float64>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
       break;
+    }
+    default: {
+      throw std::runtime_error("Unhandled DataType");
     }
     }
   }
