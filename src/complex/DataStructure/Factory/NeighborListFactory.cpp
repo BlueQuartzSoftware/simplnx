@@ -31,9 +31,9 @@ H5::ErrorType NeighborListFactory::readH5Group(H5::DataStructureReader& dataStru
   return -1;
 }
 
-template<typename T>
-inline void importNeighborList(DataStructure& dataStructure, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader, const std::string& dataArrayName,
-                        DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId)
+template <typename T>
+inline void importNeighborList(DataStructure& dataStructure, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader, const std::string& dataArrayName, DataObject::IdType importId,
+                               const std::optional<DataObject::IdType>& parentId)
 {
   using NeighborListType = NeighborList<T>;
   auto dataVector = NeighborListType::ReadHdf5Data(parentReader, datasetReader);
