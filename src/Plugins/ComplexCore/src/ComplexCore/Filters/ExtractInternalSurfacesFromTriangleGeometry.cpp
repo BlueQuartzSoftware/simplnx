@@ -1,6 +1,7 @@
 #include "ExtractInternalSurfacesFromTriangleGeometry.hpp"
 
 #include <string>
+#include <unordered_map>
 
 #include "fmt/format.h"
 
