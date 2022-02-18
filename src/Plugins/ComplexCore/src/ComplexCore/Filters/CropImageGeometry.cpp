@@ -424,8 +424,8 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
         index = plane + row + col;
         for(const auto& voxelPath : voxelArrayPaths)
         {
-          auto* da = data.getDataAs<IDataArray>(voxelPath);
-          da->copyTuple(index_old, index);
+          auto& dataArray = data.getDataRefAs<IDataArray>(voxelPath);
+          dataArray.copyTuple(index_old, index);
         }
       }
     }
@@ -443,7 +443,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   if(shouldRenumberFeatures)
   {
     DataPath destCellFeaturesPath = destImagePath.createChildPath(newFeaturesName);
-    auto result = Sampling::RenumberFeatures(data, destImagePath, destCellFeaturesPath, featureIdsArrayPath);
+    auto result = Sampling::RenumberFeatures(data, destImagePath, destCellFeaturesPath, featureIdsArrayPath, shouldCancel);
     if(result.invalid())
     {
       return result;

@@ -9,46 +9,34 @@ namespace complex
 {
 namespace Sampling
 {
-inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& newGeomPath, const DataPath& destCellFeatureGroupPath, const DataPath& featureIdsArrayPath)
+inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& newGeomPath, const DataPath& destCellFeatureGroupPath, const DataPath& featureIdsArrayPath,
+                                 const std::atomic_bool& shouldCancel = false)
 {
-  // Get the resampled data container, by default it would have been inserted into the Data Container Array
-  auto* destImageGeom = dataStructure.getDataAs<ImageGeom>(newGeomPath);
+  auto& destImageGeom = dataStructure.getDataRefAs<ImageGeom>(newGeomPath);
   // This just sanity checks to make sure there were existing features before the cropping
-  auto* destCellFeatureGroup = dataStructure.getDataAs<DataGroup>(destCellFeatureGroupPath);
+  auto& destCellFeatureGroup = dataStructure.getDataRefAs<DataGroup>(destCellFeatureGroupPath);
 
-  if(nullptr == destCellFeatureGroup)
-  {
-    return MakeErrorResult(-610, fmt::format("The Cell Feature Attribute Matrix '{}' was not found.", destCellFeatureGroupPath.toString()));
-  }
+  usize totalPoints = destImageGeom.getNumberOfElements();
 
-  usize totalPoints = destImageGeom->getNumberOfElements();
-
-  auto* featureIdsArray = dataStructure.getDataAs<IDataArray>(featureIdsArrayPath);
-  usize totalFeatures = featureIdsArray->getNumberOfTuples();
+  auto& featureIdsArray = dataStructure.getDataRefAs<IDataArray>(featureIdsArrayPath);
+  usize totalFeatures = featureIdsArray.getNumberOfTuples();
   std::vector<bool> activeObjects(totalFeatures, false);
   if(0 == totalFeatures)
   {
     return MakeErrorResult(-600, "The number of Features is 0 and should be greater than 0");
   }
 
-  // std::vector<usize> cDims(1, 1);
   auto destFeatureIdsPath = destCellFeatureGroupPath.createChildPath(featureIdsArrayPath.getTargetName());
-  auto* destFeatureIdsPtr = dataStructure.getDataAs<Int32Array>(destFeatureIdsPath);
-  if(nullptr == destFeatureIdsPtr)
-  {
-    std::string ss = fmt::format("The FeatureIds array with name '{}' was not found in the destination DataContainer. The expected path was '{}'", featureIdsArrayPath.getTargetName(),
-                                 destFeatureIdsPath.toString());
-    return MakeErrorResult(-601, ss);
-  }
+  auto& destFeatureIdsRef = dataStructure.getDataRefAs<Int32Array>(destFeatureIdsPath);
 
-  auto& featureIds = destFeatureIdsPtr->getDataStoreRef();
+  auto& featureIds = destFeatureIdsRef.getDataStoreRef();
   // Find the unique set of feature ids
   for(usize i = 0; i < totalPoints; ++i)
   {
-    // if(filter->getCancel())
-    //{
-    //  break;
-    //}
+    if(shouldCancel)
+    {
+      break;
+    }
 
     int32 currentFeatureId = featureIds[i];
     if(currentFeatureId < 0)
