@@ -13,9 +13,9 @@ namespace fs = std::filesystem;
 
 namespace
 {
-static const DataPath k_CellPhasesPath({"Cell Phases"});
-static const DataPath k_FeatureIDsPath({"Feature IDs"});
-static const DataPath k_FeaturePhasesPath({"Feature Phases"});
+const DataPath k_CellPhasesPath({"Cell Phases"});
+const DataPath k_FeatureIDsPath({"Feature IDs"});
+const DataPath k_FeaturePhasesPath({"Feature Phases"});
 } // namespace
 
 DataStructure createDataStructure()
