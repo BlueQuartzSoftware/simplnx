@@ -157,13 +157,13 @@ public:
     std::set<std::shared_ptr<T>> foundItems;
     for(const auto& [key, ptr] : *this)
     {
-      if(auto typePtr = std::dynamic_pointer_cast<T>(ptr))
+      if(auto typePtr = std::dynamic_pointer_cast<T>(ptr); typePtr != nullptr)
       {
         foundItems.insert(typePtr);
       }
-      if(recursive == true)
+      if(recursive)
       {
-        if(auto groupPtr = std::dynamic_pointer_cast<BaseGroup>(ptr))
+        if(auto groupPtr = std::dynamic_pointer_cast<BaseGroup>(ptr); groupPtr != nullptr)
         {
           auto recursiveItems = groupPtr->template findAllChildrenOfType<T>(recursive);
           foundItems.merge(recursiveItems);
