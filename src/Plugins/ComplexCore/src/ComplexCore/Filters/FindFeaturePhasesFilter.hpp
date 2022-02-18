@@ -9,7 +9,11 @@ namespace complex
 {
 /**
  * @class FindFeaturePhasesFilter
- * @brief This filter will ....
+ * @brief This Filter determines the Ensemble of each Feature by querying the
+ * Ensemble of the Elements that belong to the Feature. Note that it is assumed
+ * that all Elements belonging to a Feature are of the same Feature, and thus
+ * any Element can be used to determine the Ensemble of the Feature that owns
+ * that Element.
  */
 class COMPLEXCORE_EXPORT FindFeaturePhasesFilter : public IFilter
 {
