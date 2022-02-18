@@ -165,7 +165,7 @@ public:
       {
         if(auto groupPtr = std::dynamic_pointer_cast<BaseGroup>(ptr))
         {
-          auto recursiveItems = groupPtr->findAllChildrenOfType<T>(recursive);
+          auto recursiveItems = groupPtr->template findAllChildrenOfType<T>(recursive);
           foundItems.merge(recursiveItems);
         }
       }
