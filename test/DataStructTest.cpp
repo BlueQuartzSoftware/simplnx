@@ -67,6 +67,15 @@ TEST_CASE("DataGroupGraph")
   // Multi-parent connections
   dataStr.setAdditionalParent(grandchildId, child2Id);
 
+  // Test findAllObjectsOfType
+  {
+    auto findAll = group->findAllChildrenOfType<BaseGroup>();
+    REQUIRE(findAll.size() == 2);
+
+    auto findAllRecur = group->findAllChildrenOfType<BaseGroup>(true);
+    REQUIRE(findAllRecur.size() == 3);
+  }
+
   SECTION("find data")
   {
     REQUIRE(dataStr.getData(groupId) != nullptr);

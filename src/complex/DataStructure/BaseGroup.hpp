@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -147,6 +148,36 @@ public:
    * @return ConstIterator
    */
   ConstIterator find(const std::string& name) const;
+
+  /**
+   * @brief Searches the group for all DataObjects of the templated type.
+   * If the optional parameter recursive is set to true, this will recursively
+   * search any child groups as well.
+   * @tparam T
+   * @param recursive = false
+   * @return std::vector<std::shared_ptr<T>>
+   */
+  template <class T>
+  std::set<std::shared_ptr<T>> findAllChildrenOfType(bool recursive = false) const
+  {
+    std::set<std::shared_ptr<T>> foundItems;
+    for(const auto& [key, ptr] : *this)
+    {
+      if(auto typePtr = std::dynamic_pointer_cast<T>(ptr); typePtr != nullptr)
+      {
+        foundItems.insert(typePtr);
+      }
+      if(recursive)
+      {
+        if(auto groupPtr = std::dynamic_pointer_cast<BaseGroup>(ptr); groupPtr != nullptr)
+        {
+          auto recursiveItems = groupPtr->template findAllChildrenOfType<T>(recursive);
+          foundItems.merge(recursiveItems);
+        }
+      }
+    }
+    return foundItems;
+  }
 
   /**
    * @brief Attempts to insert the specified DataObject into the container. If the
