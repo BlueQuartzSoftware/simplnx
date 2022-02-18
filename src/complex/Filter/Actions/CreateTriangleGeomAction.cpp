@@ -32,7 +32,6 @@ Result<> CreateTriangleGeomAction::apply(DataStructure& dataStructure, Mode mode
   {
     return geomResult;
   }
-  
 
   if(shouldCreateVertexArray())
   {
