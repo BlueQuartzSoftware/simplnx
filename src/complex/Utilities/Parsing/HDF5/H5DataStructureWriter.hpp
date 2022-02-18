@@ -80,6 +80,24 @@ protected:
   std::string getPathForObjectId(DataObject::IdType objectId) const;
 
   /**
+   * @brief Returns the path to the HDF5 object for the provided
+   * DataObject ID. Returns an empty string if no HDF5 writer could be found.
+   * @param objectId
+   * @return std::string
+   */
+  std::string getParentPathForObjectId(DataObject::IdType objectId) const;
+
+  /**
+   * @brief Returns the path to the HDF5 object for the specified
+   * DataObject's sibling under the same parent. Returns an empty string if
+   * no HDF5 writer could be found.
+   * @param objectId
+   * @param siblingName
+   * @return std::string
+   */
+  std::string getPathForObjectSibling(DataObject::IdType objectId, const std::string& siblingName) const;
+
+  /**
    * @brief Clears the DataObject to HDF5 ID map and resets the HDF5 parent ID.
    */
   void clearIdMap();

@@ -1,5 +1,6 @@
 #include "H5DataStructureWriter.hpp"
 
+#include "complex/DataStructure/INeighborList.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 using namespace complex;
@@ -30,6 +31,19 @@ H5::ErrorType H5::DataStructureWriter::writeDataObjectLink(const DataObject* dat
 {
   auto objectPath = getPathForObjectId(dataObject->getId());
   auto err = parentGroup.createLink(objectPath);
+
+  if(err < 0)
+  {
+    return err;
+  }
+
+  // NeighborList extra data link
+  if(const auto* neighborList = dynamic_cast<const INeighborList*>(dataObject))
+  {
+    auto numNeighborsName = neighborList->getNumNeighborsArrayName();
+    auto dataPath = getPathForObjectSibling(dataObject->getId(), numNeighborsName);
+    err = parentGroup.createLink(dataPath);
+  }
   return err;
 }
 
@@ -54,6 +68,32 @@ std::string H5::DataStructureWriter::getPathForObjectId(DataObject::IdType objec
     return "";
   }
   return m_IdMap.at(objectId);
+}
+
+std::string H5::DataStructureWriter::getParentPathForObjectId(DataObject::IdType objectId) const
+{
+  auto objectPath = getPathForObjectId(objectId);
+  if(objectPath.empty())
+  {
+    return objectPath;
+  }
+  auto lastIndex = objectPath.find_last_of('/');
+  if(lastIndex < 0)
+  {
+    return objectPath;
+  }
+  return objectPath.substr(0, lastIndex);
+}
+
+std::string H5::DataStructureWriter::getPathForObjectSibling(DataObject::IdType objectId, const std::string& siblingName) const
+{
+  auto objectPath = getParentPathForObjectId(objectId);
+  if(!objectPath.empty())
+  {
+    objectPath += "/";
+  }
+  objectPath += siblingName;
+  return objectPath;
 }
 
 void H5::DataStructureWriter::clearIdMap()

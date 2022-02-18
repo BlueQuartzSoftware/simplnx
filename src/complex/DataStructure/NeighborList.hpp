@@ -1,6 +1,6 @@
 #pragma once
 
-#include "complex/DataStructure/IDataArray.hpp"
+#include "complex/DataStructure/INeighborList.hpp"
 
 namespace complex
 {
@@ -13,7 +13,6 @@ class NeighborListFactory;
 namespace Constants
 {
 constexpr StringLiteral NumNeighborsTag = "_NumNeighbors";
-constexpr StringLiteral FlattenedDataTag = "";
 }
 } // namespace H5
 
@@ -23,7 +22,7 @@ constexpr StringLiteral FlattenedDataTag = "";
  * @tparam T
  */
 template <typename T>
-class NeighborList : public IDataArray
+class NeighborList : public INeighborList
 {
   friend class H5::NeighborListFactory;
 
@@ -73,24 +72,6 @@ public:
   DataObject* deepCopy() override;
 
   /**
-   * @brief Returns typename of the DataObject as a std::string.
-   * @return std::string
-   */
-  std::string getTypeName() const override;
-
-  /**
-   * @brief setNumNeighborsArrayName
-   * @param name
-   */
-  void setNumNeighborsArrayName(const std::string& name);
-
-  /**
-   * @brief Returns the Num Neighbors array name for use in HDF5.
-   * @return std::string
-   */
-  std::string getNumNeighborsArrayName() const;
-
-  /**
    * @brief Gives this array a human readable name
    * @param name The name of this array
    */
@@ -112,11 +93,6 @@ public:
    * @param newPos
    */
   void copyTuple(usize currentPos, usize newPos) override;
-
-  /**
-   * @brief Returns the number of elements in the internal array.
-   */
-  usize getNumberOfTuples() const override;
 
   /**
    * @brief getSize Returns the total number of data items that are being stored. This is the sum of all the sizes
@@ -184,7 +160,7 @@ public:
    * @param grainId
    * @param neighborList
    */
-  void setList(int32 grainId, SharedVectorType neighborList);
+  void setList(int32 grainId, const SharedVectorType& neighborList);
 
   /**
    * @brief getValue
@@ -218,28 +194,28 @@ public:
   /**
    * @brief getList
    * @param grainId
-   * @return
+   * @return SharedVectorType
    */
   SharedVectorType getList(int32 grainId) const;
 
   /**
    * @brief copyOfList
    * @param grainId
-   * @return
+   * @return VectorType
    */
   VectorType copyOfList(int32 grainId) const;
 
   /**
    * @brief operator []
    * @param grainId
-   * @return
+   * @return VectorType&
    */
   VectorType& operator[](int32 grainId);
 
   /**
    * @brief operator []
    * @param grainId
-   * @return
+   * @return VectorType&
    */
   VectorType& operator[](usize grainId);
 
@@ -292,9 +268,7 @@ protected:
   NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<SharedVectorType>& dataVector, IdType importId);
 
 private:
-  std::string m_NumNeighborsArrayName;
   std::vector<SharedVectorType> m_Array;
-  usize m_NumTuples;
   bool m_IsAllocated;
   value_type m_InitValue;
 };

@@ -11,8 +11,7 @@ namespace complex
 {
 template <typename T>
 NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples)
-: IDataArray(dataStructure, name)
-, m_NumTuples(numTuples)
+: INeighborList(dataStructure, name, numTuples)
 , m_IsAllocated(false)
 , m_InitValue(static_cast<T>(0.0))
 {
@@ -20,9 +19,8 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 
 template <typename T>
 NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<SharedVectorType>& dataVector, IdType importId)
-: IDataArray(dataStructure, name, importId)
+: INeighborList(dataStructure, name, dataVector.size(), importId)
 , m_Array(dataVector)
-, m_NumTuples(m_Array.size())
 , m_IsAllocated(true)
 , m_InitValue(static_cast<T>(0.0))
 {
@@ -61,32 +59,9 @@ template <typename T>
 DataObject* NeighborList<T>::deepCopy()
 {
   auto copy = new NeighborList(*this);
-  copy->m_NumNeighborsArrayName = m_NumNeighborsArrayName;
+  copy->setNumNeighborsArrayName(getNumNeighborsArrayName());
   copy->m_Array = m_Array;
   return copy;
-}
-
-template <typename T>
-std::string NeighborList<T>::getTypeName() const
-{
-  return std::string("NeighborList<T>");
-}
-
-template <typename T>
-void NeighborList<T>::setNumNeighborsArrayName(const std::string& name)
-{
-  m_NumNeighborsArrayName = name;
-}
-
-template <typename T>
-std::string NeighborList<T>::getNumNeighborsArrayName() const
-{
-  std::string arrayName = m_NumNeighborsArrayName;
-  if(arrayName.empty())
-  {
-    return "_NumNeighbors";
-  }
-  return arrayName;
 }
 
 template <typename T>
@@ -144,7 +119,7 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
     }
   }
   m_Array = replacement;
-  m_NumTuples = m_Array.size();
+  setNumberOfTuples(m_Array.size());
   return err;
 }
 
@@ -152,12 +127,6 @@ template <typename T>
 void NeighborList<T>::copyTuple(usize currentPos, usize newPos)
 {
   m_Array[newPos] = m_Array[currentPos];
-}
-
-template <typename T>
-usize NeighborList<T>::getNumberOfTuples() const
-{
-  return m_NumTuples;
 }
 
 template <typename T>
@@ -208,7 +177,7 @@ int32 NeighborList<T>::resizeTotalElements(usize size)
   // std::cout << "NeighborList::resizeTotalElements(" << size << ")" << std::endl;
   usize old = m_Array.size();
   m_Array.resize(size);
-  m_NumTuples = size;
+  setNumberOfTuples(size);
   if(size == 0)
   {
     m_IsAllocated = false;
@@ -246,7 +215,7 @@ void NeighborList<T>::addEntry(int32 grainId, value_type value)
     }
   }
   m_Array[grainId]->push_back(value);
-  m_NumTuples = m_Array.size();
+  setNumberOfTuples(m_Array.size());
 }
 
 template <typename T>
@@ -257,7 +226,7 @@ void NeighborList<T>::clearAllLists()
 }
 
 template <typename T>
-void NeighborList<T>::setList(int32 grainId, SharedVectorType neighborList)
+void NeighborList<T>::setList(int32 grainId, const SharedVectorType& neighborList)
 {
   if(grainId >= static_cast<int32>(m_Array.size()))
   {

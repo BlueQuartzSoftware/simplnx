@@ -434,11 +434,13 @@ void CreateNeighborList(DataStructure& dataStructure)
   const usize numItems = 50;
 
   auto* neighborGroup = DataGroup::Create(dataStructure, k_NeighborGroupName);
+  auto* neighborGroup2 = DataGroup::Create(dataStructure, k_NeighborGroupName + "2");
   auto* neighborList = NeighborList<int64>::Create(dataStructure, "NeighborList", numItems, neighborGroup->getId());
   for(usize i = 0; i < numItems; i++)
   {
     neighborList->addEntry(i + 1, i);
   }
+  dataStructure.setAdditionalParent(neighborList->getId(), neighborGroup2->getId());
 }
 
 //------------------------------------------------------------------------------
