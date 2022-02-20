@@ -45,7 +45,7 @@
 namespace complex
 {
 /**
- * @class ComplexRange ComplexRange.h SIMPLib/Common/ComplexRange.h
+ * @class ComplexRange ComplexRange.h complex/Common/ComplexRange.h
  * @brief The ComplexRange class defines a range between set of minimum and
  * maximum values. The purpose of this class is mainly to allow a more unified
  * control flow during parallelization between builds using TBB and those that

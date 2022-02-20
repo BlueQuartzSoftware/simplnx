@@ -10,6 +10,7 @@ set(FilterList
   ApproximatePointCloudHull
   CalculateFeatureSizesFilter
   CalculateTriangleAreasFilter
+  ChangeAngleRepresentation
   ConditionalSetValue
   CopyDataGroup
   CreateDataArray
