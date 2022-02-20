@@ -305,11 +305,11 @@ Parameters ITKImageReader::parameters() const
 {
   Parameters params;
 
-  params.insert(std::make_unique<FileSystemPathParameter>(k_FileName_Key, "File", "Input image file", fs::path(""), FileSystemPathParameter::ExtensionsType{{".png"}, {".tiff"}, {".bmp"}, {".jpeg"}},
+  params.insert(std::make_unique<FileSystemPathParameter>(k_FileName_Key, "File", "Input image file", fs::path(""), FileSystemPathParameter::ExtensionsType{{".png"}, {".tiff"}, {".tif"}, {".bmp"}, {".jpeg"}, {".jpg"},},
                                                           FileSystemPathParameter::PathType::InputFile, false));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Image Geometry", "", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry Path", "The 'DataPath' within the 'DataStructure' to store the created Image Geometry", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayPath_Key, "Image Data", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayPath_Key, "Imported Image DataPath", "The 'DataPath' within the 'DataStructure' to store the imported image", DataPath{}));
 
   return params;
 }
