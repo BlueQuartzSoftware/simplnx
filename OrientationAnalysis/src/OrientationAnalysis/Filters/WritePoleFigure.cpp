@@ -57,7 +57,8 @@ Parameters WritePoleFigure::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_NumColors_Key, "Number of Colors", "", 1234356));
   params.insert(std::make_unique<ChoicesParameter>(k_ImageFormat_Key, "Image Format", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
   params.insert(std::make_unique<ChoicesParameter>(k_ImageLayout_Key, "Image Layout", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputDir));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{".pdf"},
+                                                          FileSystemPathParameter::PathType::OutputDir));
   params.insert(std::make_unique<StringParameter>(k_ImagePrefix_Key, "Image Prefix", "", "SomeString"));
   params.insert(std::make_unique<Int32Parameter>(k_ImageSize_Key, "Image Size (Square Pixels)", "", 1234356));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseGoodVoxels_Key, "Use Mask Array", "", false));
@@ -83,7 +84,8 @@ IFilter::UniquePointer WritePoleFigure::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WritePoleFigure::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult WritePoleFigure::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                        const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -153,7 +155,8 @@ IFilter::PreflightResult WritePoleFigure::preflightImpl(const DataStructure& dat
 }
 
 //------------------------------------------------------------------------------
-Result<> WritePoleFigure::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> WritePoleFigure::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                      const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

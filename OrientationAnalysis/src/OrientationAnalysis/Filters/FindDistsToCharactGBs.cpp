@@ -69,7 +69,8 @@ IFilter::UniquePointer FindDistsToCharactGBs::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindDistsToCharactGBs::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindDistsToCharactGBs::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                              const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -151,7 +152,8 @@ IFilter::PreflightResult FindDistsToCharactGBs::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> FindDistsToCharactGBs::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> FindDistsToCharactGBs::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

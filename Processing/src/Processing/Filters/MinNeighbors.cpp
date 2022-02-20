@@ -132,7 +132,8 @@ IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& dataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> MinNeighbors::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> MinNeighbors::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                   const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

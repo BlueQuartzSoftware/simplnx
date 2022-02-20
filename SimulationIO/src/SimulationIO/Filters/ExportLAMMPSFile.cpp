@@ -60,7 +60,8 @@ IFilter::UniquePointer ExportLAMMPSFile::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExportLAMMPSFile::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ExportLAMMPSFile::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                         const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -117,7 +118,8 @@ IFilter::PreflightResult ExportLAMMPSFile::preflightImpl(const DataStructure& da
 }
 
 //------------------------------------------------------------------------------
-Result<> ExportLAMMPSFile::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ExportLAMMPSFile::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                       const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

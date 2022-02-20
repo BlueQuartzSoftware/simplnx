@@ -73,7 +73,8 @@ IFilter::UniquePointer PrincipalComponentAnalysis::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult PrincipalComponentAnalysis::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult PrincipalComponentAnalysis::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                   const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -142,7 +143,8 @@ IFilter::PreflightResult PrincipalComponentAnalysis::preflightImpl(const DataStr
 }
 
 //------------------------------------------------------------------------------
-Result<> PrincipalComponentAnalysis::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> PrincipalComponentAnalysis::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

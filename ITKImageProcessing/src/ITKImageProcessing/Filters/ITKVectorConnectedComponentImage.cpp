@@ -104,7 +104,8 @@ IFilter::UniquePointer ITKVectorConnectedComponentImage::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ITKVectorConnectedComponentImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ITKVectorConnectedComponentImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                         const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -161,7 +162,8 @@ IFilter::PreflightResult ITKVectorConnectedComponentImage::preflightImpl(const D
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKVectorConnectedComponentImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ITKVectorConnectedComponentImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

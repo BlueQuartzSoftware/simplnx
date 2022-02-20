@@ -70,7 +70,8 @@ IFilter::UniquePointer AlignSectionsFeatureCentroid::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AlignSectionsFeatureCentroid::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult AlignSectionsFeatureCentroid::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                     const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -130,7 +131,8 @@ IFilter::PreflightResult AlignSectionsFeatureCentroid::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-Result<> AlignSectionsFeatureCentroid::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> AlignSectionsFeatureCentroid::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

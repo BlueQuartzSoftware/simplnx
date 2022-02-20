@@ -64,7 +64,8 @@ IFilter::UniquePointer LaplacianSmoothPointCloud::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult LaplacianSmoothPointCloud::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult LaplacianSmoothPointCloud::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -124,7 +125,8 @@ IFilter::PreflightResult LaplacianSmoothPointCloud::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> LaplacianSmoothPointCloud::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> LaplacianSmoothPointCloud::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

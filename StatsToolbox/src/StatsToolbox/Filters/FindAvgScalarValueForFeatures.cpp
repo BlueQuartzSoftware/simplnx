@@ -61,7 +61,8 @@ IFilter::UniquePointer FindAvgScalarValueForFeatures::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindAvgScalarValueForFeatures::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindAvgScalarValueForFeatures::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                      const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -125,7 +126,8 @@ IFilter::PreflightResult FindAvgScalarValueForFeatures::preflightImpl(const Data
 }
 
 //------------------------------------------------------------------------------
-Result<> FindAvgScalarValueForFeatures::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> FindAvgScalarValueForFeatures::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                    const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

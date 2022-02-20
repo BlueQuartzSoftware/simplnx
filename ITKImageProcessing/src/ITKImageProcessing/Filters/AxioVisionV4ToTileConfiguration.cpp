@@ -59,7 +59,8 @@ IFilter::UniquePointer AxioVisionV4ToTileConfiguration::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AxioVisionV4ToTileConfiguration::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult AxioVisionV4ToTileConfiguration::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                        const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -116,7 +117,8 @@ IFilter::PreflightResult AxioVisionV4ToTileConfiguration::preflightImpl(const Da
 }
 
 //------------------------------------------------------------------------------
-Result<> AxioVisionV4ToTileConfiguration::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> AxioVisionV4ToTileConfiguration::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                      const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

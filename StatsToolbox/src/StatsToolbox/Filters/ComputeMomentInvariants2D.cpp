@@ -67,7 +67,8 @@ IFilter::UniquePointer ComputeMomentInvariants2D::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeMomentInvariants2D::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ComputeMomentInvariants2D::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -143,7 +144,8 @@ IFilter::PreflightResult ComputeMomentInvariants2D::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeMomentInvariants2D::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ComputeMomentInvariants2D::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

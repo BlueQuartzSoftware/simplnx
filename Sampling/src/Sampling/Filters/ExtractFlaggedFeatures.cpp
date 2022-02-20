@@ -58,7 +58,8 @@ IFilter::UniquePointer ExtractFlaggedFeatures::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExtractFlaggedFeatures::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ExtractFlaggedFeatures::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                               const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -115,7 +116,8 @@ IFilter::PreflightResult ExtractFlaggedFeatures::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> ExtractFlaggedFeatures::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ExtractFlaggedFeatures::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -50,7 +50,8 @@ Parameters WriteStatsGenOdfAngleFile::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{".txt"},
+                                                          FileSystemPathParameter::PathType::OutputFile));
   params.insert(std::make_unique<Float32Parameter>(k_Weight_Key, "Default Weight", "", 1.23345f));
   params.insert(std::make_unique<Int32Parameter>(k_Sigma_Key, "Default Sigma", "", 1234356));
   params.insert(std::make_unique<ChoicesParameter>(k_Delimiter_Key, "Delimiter", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
@@ -73,7 +74,8 @@ IFilter::UniquePointer WriteStatsGenOdfAngleFile::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteStatsGenOdfAngleFile::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult WriteStatsGenOdfAngleFile::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -137,7 +139,8 @@ IFilter::PreflightResult WriteStatsGenOdfAngleFile::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteStatsGenOdfAngleFile::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> WriteStatsGenOdfAngleFile::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

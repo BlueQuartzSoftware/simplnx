@@ -58,7 +58,8 @@ IFilter::UniquePointer GenerateGeometryConnectivity::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult GenerateGeometryConnectivity::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult GenerateGeometryConnectivity::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                     const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -116,7 +117,8 @@ IFilter::PreflightResult GenerateGeometryConnectivity::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-Result<> GenerateGeometryConnectivity::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> GenerateGeometryConnectivity::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

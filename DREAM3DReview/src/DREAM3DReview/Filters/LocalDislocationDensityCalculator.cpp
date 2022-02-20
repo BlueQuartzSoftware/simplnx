@@ -67,7 +67,8 @@ IFilter::UniquePointer LocalDislocationDensityCalculator::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult LocalDislocationDensityCalculator::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult LocalDislocationDensityCalculator::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                          const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -135,7 +136,8 @@ IFilter::PreflightResult LocalDislocationDensityCalculator::preflightImpl(const 
 }
 
 //------------------------------------------------------------------------------
-Result<> LocalDislocationDensityCalculator::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> LocalDislocationDensityCalculator::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                        const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

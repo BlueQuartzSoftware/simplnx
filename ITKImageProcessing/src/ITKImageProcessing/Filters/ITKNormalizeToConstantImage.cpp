@@ -102,7 +102,8 @@ IFilter::UniquePointer ITKNormalizeToConstantImage::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ITKNormalizeToConstantImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ITKNormalizeToConstantImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                    const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -158,7 +159,8 @@ IFilter::PreflightResult ITKNormalizeToConstantImage::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKNormalizeToConstantImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ITKNormalizeToConstantImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -53,7 +53,7 @@ Parameters FindTwinBoundarySchmidFactors::parameters() const
   params.insert(std::make_unique<VectorFloat32Parameter>(k_LoadingDir_Key, "Loading Direction", "", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_WriteFile_Key, "Write Twin Boundary Info File", "", false));
   params.insert(std::make_unique<FileSystemPathParameter>(k_TwinBoundarySchmidFactorsFile_Key, "Twin Boundary Info File", "", fs::path("<default file to read goes here>"),
-                                                          FileSystemPathParameter::PathType::OutputFile));
+                                                          FileSystemPathParameter::ExtensionsType{".txt"}, FileSystemPathParameter::PathType::OutputFile));
   params.insertSeparator(Parameters::Separator{"Cell Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "", DataPath{}));
@@ -78,7 +78,8 @@ IFilter::UniquePointer FindTwinBoundarySchmidFactors::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindTwinBoundarySchmidFactors::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindTwinBoundarySchmidFactors::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                      const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -143,7 +144,8 @@ IFilter::PreflightResult FindTwinBoundarySchmidFactors::preflightImpl(const Data
 }
 
 //------------------------------------------------------------------------------
-Result<> FindTwinBoundarySchmidFactors::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> FindTwinBoundarySchmidFactors::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                    const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
