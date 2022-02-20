@@ -15,7 +15,7 @@ set(PLUGIN_NAME "OrientationAnalysis")
 # OrientationAnalysis/src/OrientationAnalysis/Filters/ directory.
 set(FilterList
   BadDataNeighborOrientationCheck
-  ChangeAngleRepresentation
+
   #ConvertHexGridToSquareGrid # MISSING 1 or more Parameter Implementations
   ConvertOrientations
   ConvertQuaternion
