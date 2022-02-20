@@ -53,7 +53,8 @@ IFilter::UniquePointer MaskCountDecision::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult MaskCountDecision::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult MaskCountDecision::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                          const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -108,7 +109,8 @@ IFilter::PreflightResult MaskCountDecision::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> MaskCountDecision::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> MaskCountDecision::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                        const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

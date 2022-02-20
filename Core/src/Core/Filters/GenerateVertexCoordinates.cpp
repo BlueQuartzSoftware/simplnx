@@ -58,7 +58,8 @@ IFilter::UniquePointer GenerateVertexCoordinates::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult GenerateVertexCoordinates::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult GenerateVertexCoordinates::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -121,7 +122,8 @@ IFilter::PreflightResult GenerateVertexCoordinates::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> GenerateVertexCoordinates::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> GenerateVertexCoordinates::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

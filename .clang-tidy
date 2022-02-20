@@ -1,18 +1,35 @@
 ---
 Checks: '
+  -abseil-*,
+  bugprone-*,
+  -boost-*,
+  -cert-*,
   clang-diagnostic-*,
   clang-analyzer-*,
-  bugprone-*,
   cppcoreguidelines-*,
-  misc-*
-  modernize-*,
-  performance-*,
-  readability-*,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -darwin-*,
+  -fuchsia-*,
+  -google-*,
+  -hicpp-*,
+  -linuxkernel-*,
+  -llvm-*,
+  misc-*,
+  moderize-*,
   -modernize-use-trailing-return-type,
+  -modernize-use-nodiscard,
+  -moderize-use-auto,
+  -mpi-*,
+  -objc-*,
+  -openmp-*,
+  performance-*,
+  -portability-*,
+  readability-*,
   -readability-function-cognitive-complexity,
   -readability-function-size,
   -readability-identifier-naming,
   -readability-uppercase-literal-suffix,
+  -readability-magic-numbers
 '
 WarningsAsErrors: '*'
 HeaderFilterRegex: 'complex/.*\.hpp'

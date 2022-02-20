@@ -121,7 +121,8 @@ IFilter::PreflightResult ItkWatershed::preflightImpl(const DataStructure& dataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> ItkWatershed::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ItkWatershed::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                   const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

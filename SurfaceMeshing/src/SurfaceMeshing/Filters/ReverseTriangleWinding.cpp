@@ -55,7 +55,8 @@ IFilter::UniquePointer ReverseTriangleWinding::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReverseTriangleWinding::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ReverseTriangleWinding::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                               const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -111,7 +112,8 @@ IFilter::PreflightResult ReverseTriangleWinding::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> ReverseTriangleWinding::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ReverseTriangleWinding::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

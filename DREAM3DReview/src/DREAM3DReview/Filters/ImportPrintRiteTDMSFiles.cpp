@@ -100,7 +100,8 @@ IFilter::UniquePointer ImportPrintRiteTDMSFiles::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ImportPrintRiteTDMSFiles::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ImportPrintRiteTDMSFiles::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                 const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -174,7 +175,8 @@ IFilter::PreflightResult ImportPrintRiteTDMSFiles::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportPrintRiteTDMSFiles::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ImportPrintRiteTDMSFiles::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

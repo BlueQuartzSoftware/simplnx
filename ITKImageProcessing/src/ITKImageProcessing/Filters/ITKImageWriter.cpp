@@ -258,7 +258,8 @@ IFilter::UniquePointer ITKImageWriter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ITKImageWriter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ITKImageWriter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel) const
 {
   auto plane = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
   auto filePath = filterArgs.value<fs::path>(k_FileName_Key);
@@ -282,7 +283,8 @@ IFilter::PreflightResult ITKImageWriter::preflightImpl(const DataStructure& data
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                     const std::atomic_bool& shouldCancel) const
 {
   auto plane = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
   auto filePath = filterArgs.value<fs::path>(k_FileName_Key);

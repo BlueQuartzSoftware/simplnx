@@ -58,7 +58,8 @@ IFilter::UniquePointer AddOrientationNoise::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AddOrientationNoise::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult AddOrientationNoise::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                            const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -115,7 +116,8 @@ IFilter::PreflightResult AddOrientationNoise::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> AddOrientationNoise::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> AddOrientationNoise::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

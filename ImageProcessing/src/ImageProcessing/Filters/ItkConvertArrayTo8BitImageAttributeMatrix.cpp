@@ -56,7 +56,8 @@ IFilter::UniquePointer ItkConvertArrayTo8BitImageAttributeMatrix::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ItkConvertArrayTo8BitImageAttributeMatrix::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ItkConvertArrayTo8BitImageAttributeMatrix::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                                  const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

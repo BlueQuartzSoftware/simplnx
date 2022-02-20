@@ -1,3 +1,12 @@
+
+#------------------------------------------------------------------------------
+# Required EbsdLib and H5Support
+#------------------------------------------------------------------------------
+find_package (EbsdLib REQUIRED)
+
+#------------------------------------------------------------------------------
+# Include the standard complex plugin cmake support codes
+#------------------------------------------------------------------------------
 include("${complex_SOURCE_DIR}/cmake/Plugin.cmake")
 
 set(PLUGIN_NAME "OrientationAnalysis")
@@ -53,7 +62,6 @@ set(FilterList
   Stereographic3D
   WritePoleFigure
   WriteStatsGenOdfAngleFile
-
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}

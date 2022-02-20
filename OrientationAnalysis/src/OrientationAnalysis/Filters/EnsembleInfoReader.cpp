@@ -48,7 +48,8 @@ Parameters EnsembleInfoReader::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input Ensemble Info File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input Ensemble Info File", "Text File that contains the ensemble information", fs::path("<default file to read goes here>"),
+                                                          FileSystemPathParameter::ExtensionsType{".txt", ".csv"}, FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataContainerName_Key, "Data Container", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Ensemble Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CellEnsembleAttributeMatrixName_Key, "Ensemble Attribute Matrix", "", DataPath{}));
@@ -65,7 +66,8 @@ IFilter::UniquePointer EnsembleInfoReader::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult EnsembleInfoReader::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult EnsembleInfoReader::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                           const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -125,7 +127,8 @@ IFilter::PreflightResult EnsembleInfoReader::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> EnsembleInfoReader::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> EnsembleInfoReader::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                         const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

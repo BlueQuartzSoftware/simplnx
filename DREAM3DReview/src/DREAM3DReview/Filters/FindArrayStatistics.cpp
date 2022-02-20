@@ -104,7 +104,8 @@ IFilter::UniquePointer FindArrayStatistics::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindArrayStatistics::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindArrayStatistics::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                            const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -187,7 +188,8 @@ IFilter::PreflightResult FindArrayStatistics::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> FindArrayStatistics::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> FindArrayStatistics::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

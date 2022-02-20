@@ -58,7 +58,8 @@ IFilter::UniquePointer FindMinkowskiBouligandDimension::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindMinkowskiBouligandDimension::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindMinkowskiBouligandDimension::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                        const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -116,7 +117,8 @@ IFilter::PreflightResult FindMinkowskiBouligandDimension::preflightImpl(const Da
 }
 
 //------------------------------------------------------------------------------
-Result<> FindMinkowskiBouligandDimension::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> FindMinkowskiBouligandDimension::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                      const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

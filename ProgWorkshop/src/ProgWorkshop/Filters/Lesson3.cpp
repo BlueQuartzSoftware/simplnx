@@ -127,7 +127,8 @@ IFilter::PreflightResult Lesson3::preflightImpl(const DataStructure& dataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> Lesson3::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> Lesson3::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                              const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

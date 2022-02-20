@@ -63,7 +63,8 @@ IFilter::UniquePointer IdentifyDislocationSegments::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult IdentifyDislocationSegments::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult IdentifyDislocationSegments::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                    const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -123,7 +124,8 @@ IFilter::PreflightResult IdentifyDislocationSegments::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> IdentifyDislocationSegments::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> IdentifyDislocationSegments::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

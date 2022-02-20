@@ -122,7 +122,8 @@ IFilter::UniquePointer ITKMultiScaleHessianBasedObjectnessImage::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ITKMultiScaleHessianBasedObjectnessImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ITKMultiScaleHessianBasedObjectnessImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                                 const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function

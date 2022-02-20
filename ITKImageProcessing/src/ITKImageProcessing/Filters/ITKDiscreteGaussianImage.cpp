@@ -104,7 +104,8 @@ IFilter::UniquePointer ITKDiscreteGaussianImage::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ITKDiscreteGaussianImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ITKDiscreteGaussianImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                 const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -163,7 +164,8 @@ IFilter::PreflightResult ITKDiscreteGaussianImage::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKDiscreteGaussianImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ITKDiscreteGaussianImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

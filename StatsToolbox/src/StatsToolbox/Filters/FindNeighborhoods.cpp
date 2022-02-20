@@ -64,7 +64,8 @@ IFilter::UniquePointer FindNeighborhoods::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindNeighborhoods::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindNeighborhoods::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                          const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -125,7 +126,8 @@ IFilter::PreflightResult FindNeighborhoods::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> FindNeighborhoods::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> FindNeighborhoods::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                        const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

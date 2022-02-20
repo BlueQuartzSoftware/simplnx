@@ -61,7 +61,8 @@ IFilter::UniquePointer CombineAttributeArrays::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CombineAttributeArrays::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CombineAttributeArrays::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                               const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -120,7 +121,8 @@ IFilter::PreflightResult CombineAttributeArrays::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> CombineAttributeArrays::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> CombineAttributeArrays::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

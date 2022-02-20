@@ -67,7 +67,8 @@ IFilter::UniquePointer ExportOnScaleTableFile::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExportOnScaleTableFile::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ExportOnScaleTableFile::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                               const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -127,7 +128,8 @@ IFilter::PreflightResult ExportOnScaleTableFile::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> ExportOnScaleTableFile::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ExportOnScaleTableFile::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -83,7 +83,8 @@ IFilter::UniquePointer GeneratePrimaryStatsData::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult GeneratePrimaryStatsData::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult GeneratePrimaryStatsData::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                 const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -166,7 +167,8 @@ IFilter::PreflightResult GeneratePrimaryStatsData::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> GeneratePrimaryStatsData::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> GeneratePrimaryStatsData::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

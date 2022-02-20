@@ -84,7 +84,8 @@ IFilter::UniquePointer FeatureFaceCurvatureFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FeatureFaceCurvatureFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FeatureFaceCurvatureFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                   const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -155,7 +156,8 @@ IFilter::PreflightResult FeatureFaceCurvatureFilter::preflightImpl(const DataStr
 }
 
 //------------------------------------------------------------------------------
-Result<> FeatureFaceCurvatureFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> FeatureFaceCurvatureFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

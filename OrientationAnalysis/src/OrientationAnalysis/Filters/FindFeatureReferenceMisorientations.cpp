@@ -74,7 +74,8 @@ IFilter::UniquePointer FindFeatureReferenceMisorientations::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindFeatureReferenceMisorientations::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindFeatureReferenceMisorientations::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                            const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -138,7 +139,8 @@ IFilter::PreflightResult FindFeatureReferenceMisorientations::preflightImpl(cons
 }
 
 //------------------------------------------------------------------------------
-Result<> FindFeatureReferenceMisorientations::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> FindFeatureReferenceMisorientations::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                          const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

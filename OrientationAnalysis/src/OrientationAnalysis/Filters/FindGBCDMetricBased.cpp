@@ -56,10 +56,10 @@ Parameters FindGBCDMetricBased::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_ChosenLimitDists_Key, "Limiting Distances", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
   params.insert(std::make_unique<Int32Parameter>(k_NumSamplPts_Key, "Number of Sampling Points (on a Hemisphere)", "", 1234356));
   params.insert(std::make_unique<BoolParameter>(k_ExcludeTripleLines_Key, "Exclude Triangles Directly Neighboring Triple Lines", "", false));
-  params.insert(
-      std::make_unique<FileSystemPathParameter>(k_DistOutputFile_Key, "Output Distribution File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_DistOutputFile_Key, "Output Distribution File", "", fs::path("<default file to read goes here>"),
+                                                          FileSystemPathParameter::ExtensionsType{".txt"}, FileSystemPathParameter::PathType::OutputFile));
   params.insert(std::make_unique<FileSystemPathParameter>(k_ErrOutputFile_Key, "Output Distribution Errors File", "", fs::path("<default file to read goes here>"),
-                                                          FileSystemPathParameter::PathType::OutputFile));
+                                                          FileSystemPathParameter::ExtensionsType{".txt"}, FileSystemPathParameter::PathType::OutputFile));
   params.insert(std::make_unique<BoolParameter>(k_SaveRelativeErr_Key, "Save Relative Errors Instead of Their Absolute Values", "", false));
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesArrayPath_Key, "Node Types", "", DataPath{}));
@@ -85,7 +85,8 @@ IFilter::UniquePointer FindGBCDMetricBased::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindGBCDMetricBased::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindGBCDMetricBased::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                            const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -156,7 +157,8 @@ IFilter::PreflightResult FindGBCDMetricBased::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> FindGBCDMetricBased::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> FindGBCDMetricBased::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
