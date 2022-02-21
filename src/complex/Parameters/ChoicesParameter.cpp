@@ -84,9 +84,11 @@ Result<> ChoicesParameter::validate(const std::any& value) const
 
 Result<> ChoicesParameter::validateIndex(ValueType index) const
 {
+  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
+
   if(index >= m_Choices.size())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, fmt::format("Index '{}' must be less than {}", index, m_Choices.size())}})};
+    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_OutOfRange_Error, fmt::format("{}Value '{}' must be less than {}", prefix, index, m_Choices.size()));
   }
 
   return {};
