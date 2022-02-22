@@ -18,6 +18,7 @@ set(FilterList
   DeleteData
   ExportDREAM3DFilter
   FindDifferencesMap
+  FindFeaturePhasesFilter
   FindNeighborListStatistics
   IdentifySample
   ImportDREAM3DFilter
