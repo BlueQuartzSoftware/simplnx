@@ -13,6 +13,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CreateDataArrayTest.cpp
   CreateImageGeometryTest.cpp
   FindDifferencesMapTest.cpp
+  FindFeaturePhasesFilterTest.cpp
   FindNeighborListStatisticsTest.cpp
   IdentifySampleTest.cpp
   IterativeClosestPointTest.cpp
