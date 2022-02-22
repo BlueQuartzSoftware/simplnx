@@ -21,12 +21,12 @@ Result<> ValidateInputFile(const FileSystemPathParameter::ValueType& path)
 {
   if(!fs::exists(path))
   {
-    return MakeErrorResult(-2, fmt::format("Path '{}' does not exist", path.string()));
+    return MakeErrorResult(-2, fmt::format("File System Path '{}' does not exist", path.string()));
   }
 
   if(!fs::is_regular_file(path))
   {
-    return MakeErrorResult(-3, fmt::format("Path '{}' is not a file", path.string()));
+    return MakeErrorResult(-3, fmt::format("File System Path '{}' is not a file", path.string()));
   }
   return {};
 }
@@ -36,11 +36,11 @@ Result<> ValidateInputDir(const FileSystemPathParameter::ValueType& path)
 {
   if(!fs::exists(path))
   {
-    return MakeErrorResult(-4, fmt::format("Path '{}' does not exist", path.string()));
+    return MakeErrorResult(-4, fmt::format("File System Path '{}' does not exist", path.string()));
   }
   if(!fs::is_directory(path))
   {
-    return MakeErrorResult(-5, fmt::format("Path '{}' is not a file", path.string()));
+    return MakeErrorResult(-5, fmt::format("File System Path '{}' is not a file", path.string()));
   }
   return {};
 }
@@ -50,7 +50,7 @@ Result<> ValidateOutputFile(const FileSystemPathParameter::ValueType& path)
 {
   if(!fs::exists(path))
   {
-    return MakeWarningVoidResult(-6, fmt::format("Path '{}' does not exist. It will be created during execution.", path.string()));
+    return MakeWarningVoidResult(-6, fmt::format("File System Path '{}' does not exist. It will be created during execution.", path.string()));
   }
   return {};
 }
@@ -60,7 +60,7 @@ Result<> ValidateOutputDir(const FileSystemPathParameter::ValueType& path)
 {
   if(!fs::exists(path))
   {
-    return MakeWarningVoidResult(-7, fmt::format("Path '{}' does not exist. It will be created during execution.", path.string()));
+    return MakeWarningVoidResult(-7, fmt::format("File System Path '{}' does not exist. It will be created during execution.", path.string()));
   }
   return {};
 }
@@ -156,14 +156,14 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
 {
   if(path.empty())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, "Path must not be empty"}})};
+    return {nonstd::make_unexpected(std::vector<Error>{{-1, "File System Path must not be empty"}})};
   }
 
   if(m_ShouldValidateExtension)
   {
     if(!m_AvailableExtensions.empty() && !path.has_extension())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{{-2, "Path must include a file extension"}})};
+      return {nonstd::make_unexpected(std::vector<Error>{{-2, "File System Path must include a file extension"}})};
     }
 
     if(path.has_extension() && !m_AvailableExtensions.empty() && m_AvailableExtensions.find(path.extension().string()) == m_AvailableExtensions.end())

@@ -2,7 +2,6 @@
 
 #include "ComplexCore/Filters/ChangeAngleRepresentation.hpp"
 
-
 #include "complex/Common/Numbers.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
