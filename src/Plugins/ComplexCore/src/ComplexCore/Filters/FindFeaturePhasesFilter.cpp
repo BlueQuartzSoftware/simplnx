@@ -45,8 +45,8 @@ Parameters FindFeaturePhasesFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "", DataPath{}, false, ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}, false, ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "", DataPath{}));
 
   return params;
@@ -111,21 +111,15 @@ Result<> FindFeaturePhasesFilter::executeImpl(DataStructure& dataStructure, cons
     }
 
     int32 gnum = featureIds[i];
-    if(featureMap.find(gnum) == featureMap.end())
-    {
-      featureMap.emplace(gnum, cellPhases[i]);
-    }
+    featureMap.insert({gnum, cellPhases[i]});
 
     int32 curPhaseVal = featureMap[gnum];
     if(curPhaseVal != cellPhases[i])
     {
-      if(warningMap.find(gnum) == warningMap.end())
+      auto [iter, insertSuccess] = warningMap.insert({gnum, 1});
+      if(!insertSuccess)
       {
-        warningMap[gnum] = 1;
-      }
-      else
-      {
-        warningMap[gnum]++;
+        iter->second += 1;
       }
     }
     featurePhases[gnum] = cellPhases[i];
@@ -135,9 +129,9 @@ Result<> FindFeaturePhasesFilter::executeImpl(DataStructure& dataStructure, cons
   if(!warningMap.empty())
   {
     result.warnings().push_back(Warning{-500, "Elements from some features did not all have the same phase ID. The last phase ID copied into each feature will be used."});
-    for(std::map<int32_t, int32_t>::iterator iter = warningMap.begin(); iter != warningMap.end(); iter++)
+    for(auto&& [key, value] : warningMap)
     {
-      result.warnings().push_back(Warning{-500, fmt::format("Phase Feature {} created {} warnings.", iter->first, iter->second)});
+      result.warnings().push_back(Warning{-500, fmt::format("Phase Feature {} created {} warnings.", key, value)});
     }
   }
 
