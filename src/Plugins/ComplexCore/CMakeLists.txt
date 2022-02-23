@@ -12,6 +12,7 @@ set(FilterList
   CalculateTriangleAreasFilter
   ConditionalSetValue
   CopyDataGroup
+  CopyFeatureArrayToElementArray
   CreateDataArray
   CreateDataGroup
   CreateImageGeometry
