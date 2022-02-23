@@ -522,10 +522,10 @@ H5::ErrorType EdgeGeom::readHdf5(H5::DataStructureReader& dataStructureReader, c
   return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
-H5::ErrorType EdgeGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType EdgeGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto err = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  auto err = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
   if(err < 0)
   {
     return err;

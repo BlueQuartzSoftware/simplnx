@@ -566,10 +566,10 @@ H5::ErrorType ImageGeom::readHdf5(H5::DataStructureReader& dataStructureReader, 
   return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
-H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  herr_t errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  herr_t errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
   if(errorCode < 0)
   {
     return errorCode;

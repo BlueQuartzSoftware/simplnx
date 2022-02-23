@@ -583,16 +583,16 @@ H5::ErrorType HexahedralGeom::readHdf5(H5::DataStructureReader& dataStructureRea
   return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
-H5::ErrorType HexahedralGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType HexahedralGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
-  auto errorCode = AbstractGeometry3D::writeHdf5(dataStructureWriter, parentGroupWriter);
+  auto errorCode = AbstractGeometry3D::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto err = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  auto err = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
   if(err < 0)
   {
     return err;

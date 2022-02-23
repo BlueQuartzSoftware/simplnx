@@ -268,5 +268,8 @@ template std::vector<uint8_t> H5::DatasetReader::readAsVector<uint8_t>() const;
 template std::vector<uint16_t> H5::DatasetReader::readAsVector<uint16_t>() const;
 template std::vector<uint32_t> H5::DatasetReader::readAsVector<uint32_t>() const;
 template std::vector<uint64_t> H5::DatasetReader::readAsVector<uint64_t>() const;
+#ifdef __APPLE__
+template std::vector<size_t> H5::DatasetReader::readAsVector<size_t>() const;
+#endif
 template std::vector<float> H5::DatasetReader::readAsVector<float>() const;
 template std::vector<double> H5::DatasetReader::readAsVector<double>() const;

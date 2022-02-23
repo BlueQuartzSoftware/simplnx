@@ -283,10 +283,10 @@ H5::ErrorType GridMontage::readHdf5(H5::DataStructureReader& dataStructureReader
   return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
 }
 
-H5::ErrorType GridMontage::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType GridMontage::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
   if(errorCode < 0)
   {
     return errorCode;

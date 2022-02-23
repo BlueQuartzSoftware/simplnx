@@ -1,24 +1,28 @@
 #include "NeighborList.hpp"
 
+#include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataStore.hpp"
+#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 namespace complex
 {
 template <typename T>
 NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples)
-: IDataArray(dataStructure, name)
-, m_NumTuples(numTuples)
+: INeighborList(dataStructure, name, numTuples)
 , m_IsAllocated(false)
+, m_InitValue(static_cast<T>(0.0))
 {
 }
 
 template <typename T>
 NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<SharedVectorType>& dataVector, IdType importId)
-: IDataArray(dataStructure, name, importId)
+: INeighborList(dataStructure, name, dataVector.size(), importId)
 , m_Array(dataVector)
-, m_NumTuples(m_Array.size())
 , m_IsAllocated(true)
+, m_InitValue(static_cast<T>(0.0))
 {
 }
 
@@ -55,27 +59,9 @@ template <typename T>
 DataObject* NeighborList<T>::deepCopy()
 {
   auto copy = new NeighborList(*this);
-  copy->m_NumNeighborsArrayName = m_NumNeighborsArrayName;
+  copy->setNumNeighborsArrayName(getNumNeighborsArrayName());
   copy->m_Array = m_Array;
   return copy;
-}
-
-template <typename T>
-std::string NeighborList<T>::getTypeName() const
-{
-  return std::string("NeighborList<T>");
-}
-
-template <typename T>
-void NeighborList<T>::setNumNeighborsArrayName(const std::string& name)
-{
-  m_NumNeighborsArrayName = name;
-}
-
-template <typename T>
-std::string NeighborList<T>::getNumNeighborsArrayName()
-{
-  return m_NumNeighborsArrayName;
 }
 
 template <typename T>
@@ -133,7 +119,7 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
     }
   }
   m_Array = replacement;
-  m_NumTuples = m_Array.size();
+  setNumberOfTuples(m_Array.size());
   return err;
 }
 
@@ -141,12 +127,6 @@ template <typename T>
 void NeighborList<T>::copyTuple(usize currentPos, usize newPos)
 {
   m_Array[newPos] = m_Array[currentPos];
-}
-
-template <typename T>
-usize NeighborList<T>::getNumberOfTuples() const
-{
-  return m_NumTuples;
 }
 
 template <typename T>
@@ -197,7 +177,7 @@ int32 NeighborList<T>::resizeTotalElements(usize size)
   // std::cout << "NeighborList::resizeTotalElements(" << size << ")" << std::endl;
   usize old = m_Array.size();
   m_Array.resize(size);
-  m_NumTuples = size;
+  setNumberOfTuples(size);
   if(size == 0)
   {
     m_IsAllocated = false;
@@ -235,7 +215,7 @@ void NeighborList<T>::addEntry(int32 grainId, value_type value)
     }
   }
   m_Array[grainId]->push_back(value);
-  m_NumTuples = m_Array.size();
+  setNumberOfTuples(m_Array.size());
 }
 
 template <typename T>
@@ -246,7 +226,7 @@ void NeighborList<T>::clearAllLists()
 }
 
 template <typename T>
-void NeighborList<T>::setList(int32 grainId, SharedVectorType neighborList)
+void NeighborList<T>::setList(int32 grainId, const SharedVectorType& neighborList)
 {
   if(grainId >= static_cast<int32>(m_Array.size()))
   {
@@ -383,12 +363,6 @@ DataType COMPLEX_EXPORT NeighborList<uint64>::getDataType() const
   return DataType::uint64;
 }
 
-template <>
-DataType COMPLEX_EXPORT NeighborList<bool>::getDataType() const
-{
-  return DataType::boolean;
-}
-
 #if defined(__APPLE__)
 template <>
 DataType COMPLEX_EXPORT NeighborList<unsigned long>::getDataType() const
@@ -410,16 +384,93 @@ DataType COMPLEX_EXPORT NeighborList<float64>::getDataType() const
 }
 
 template <typename T>
-H5::ErrorType NeighborList<T>::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType NeighborList<T>::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
+  DataStructure tmp;
+
+  // Create NumNeighbors DataStore
+  const usize arraySize = m_Array.size();
+  auto* numNeighborsArray = Int32Array::CreateWithStore<Int32DataStore>(tmp, getNumNeighborsArrayName(), {arraySize}, {1});
+  auto& numNeighborsStore = numNeighborsArray->getDataStoreRef();
+  usize totalItems = 0;
+  for(usize i = 0; i < arraySize; i++)
+  {
+    const auto numNeighbors = m_Array[i]->size();
+    numNeighborsStore[i] = static_cast<int32>(numNeighbors);
+    totalItems += numNeighbors;
+  }
+
+  // Write NumNeighbors data
+  auto error = numNeighborsArray->writeHdf5(dataStructureWriter, parentGroupWriter, false);
+  if(error < 0)
+  {
+    return error;
+  }
+
+  // Create flattened neighbor DataStore
+  DataStore<T> flattenedData(totalItems);
+  usize offset = 0;
+  for(const auto& segment : m_Array)
+  {
+    usize numElements = segment->size();
+    if(numElements == 0)
+    {
+      continue;
+    }
+    T* start = segment->data();
+    for(usize i = 0; i < numElements; i++)
+    {
+      flattenedData[offset + i] = start[i];
+    }
+    offset += numElements;
+  }
+
+  // Write flattened array to HDF5 as a separate array
   auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
-  return writeH5ObjectAttributes(dataStructureWriter, datasetWriter);
+  H5::ErrorType err = flattenedData.writeHdf5(datasetWriter);
+  if(err < 0)
+  {
+    return err;
+  }
+  auto linkedDatasetAttribute = datasetWriter.createAttribute("Linked NumNeighbors Dataset");
+  err = linkedDatasetAttribute.writeString(getNumNeighborsArrayName());
+  if(err < 0)
+  {
+    return err;
+  }
+  return writeH5ObjectAttributes(dataStructureWriter, datasetWriter, importable);
 }
 
 template <typename T>
-std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadHdf5Data(const H5::DatasetReader& dataReader)
+std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadHdf5Data(const H5::GroupReader& parentGroup, const H5::DatasetReader& dataReader)
 {
+  auto numNeighborsAttributeName = dataReader.getAttribute("Linked NumNeighbors Dataset");
+  auto numNeighborsName = numNeighborsAttributeName.readAsString();
+
+  auto numNeighborsReader = parentGroup.openDataset(numNeighborsName);
+
+  auto numNeighborsPtr = Int32DataStore::readHdf5(numNeighborsReader);
+  auto& numNeighborsStore = *numNeighborsPtr.get();
+
+  auto flatDataStorePtr = DataStore<T>::readHdf5(dataReader);
+  auto& flatDataStore = *flatDataStorePtr.get();
+
   std::vector<SharedVectorType> dataVector;
+  usize offset = 0;
+  const auto numTuples = numNeighborsStore.getNumberOfTuples();
+  for(usize i = 0; i < numTuples; i++)
+  {
+    const auto numNeighbors = numNeighborsStore[i];
+    auto sharedVector = std::make_shared<std::vector<T>>(numNeighbors);
+    std::vector<T>& vector = *sharedVector.get();
+
+    for(usize j = 0; j < numNeighbors; j++)
+    {
+      vector[j] = flatDataStore[offset + j];
+    }
+    offset += numNeighbors;
+    dataVector.push_back(sharedVector);
+  }
 
   return dataVector;
 }
@@ -428,8 +479,6 @@ std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadHdf
 #undef COMPLEX_EXPORT
 #define COMPLEX_EXPORT
 #endif
-
-template class COMPLEX_EXPORT NeighborList<char>;
 
 template class COMPLEX_EXPORT NeighborList<int8>;
 template class COMPLEX_EXPORT NeighborList<uint8>;
@@ -445,8 +494,6 @@ template class COMPLEX_EXPORT NeighborList<uint64>;
 
 template class COMPLEX_EXPORT NeighborList<float32>;
 template class COMPLEX_EXPORT NeighborList<float64>;
-
-template class COMPLEX_EXPORT NeighborList<bool>;
 
 #if defined(__APPLE__) || defined(_MSC_VER)
 template class COMPLEX_EXPORT NeighborList<usize>;

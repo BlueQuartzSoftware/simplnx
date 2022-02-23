@@ -301,10 +301,10 @@ void AbstractGeometry3D::setUnsharedFaces(const SharedFaceList* bFaceList)
   m_UnsharedFaceListId = bFaceList->getId();
 }
 
-H5::ErrorType AbstractGeometry3D::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const
+H5::ErrorType AbstractGeometry3D::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
   auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter);
+  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
   if(errorCode < 0)
   {
     return errorCode;

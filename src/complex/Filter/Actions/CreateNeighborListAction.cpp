@@ -53,9 +53,6 @@ Result<> CreateNeighborListAction::apply(DataStructure& dataStructure, Mode mode
   case DataType::float64: {
     return CreateNeighbors<float64>(dataStructure, m_TupleCount, m_Path, mode);
   }
-  case DataType::boolean: {
-    return CreateNeighbors<bool>(dataStructure, m_TupleCount, m_Path, mode);
-  }
   default:
     throw std::runtime_error(fmt::format("CreateNeighborListAction: Invalid Numeric Type '{}'", to_underlying(m_Type)));
   }

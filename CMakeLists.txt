@@ -230,6 +230,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/IDataArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/IDataStore.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/INeighborList.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/NeighborList.hpp
@@ -386,6 +387,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataObject.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataPath.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/INeighborList.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/NeighborList.cpp
