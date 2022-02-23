@@ -53,6 +53,14 @@
           "name": "tbb"
         }
       ]
+    },
+    "itk": {
+      "description": "ITK",
+      "dependencies": [
+        {
+          "name": "itk"
+        }
+      ]
     }
   }
 }
