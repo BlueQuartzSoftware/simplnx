@@ -9,7 +9,10 @@ namespace complex
 {
 /**
  * @class CopyFeatureArrayToElementArray
- * @brief This filter will ....
+ * @brief This Filter copies the values associated with a Feature to all the Elements
+ * that belong to that Feature. Xmdf visualization files write only the Element attributes,
+ * so if the user wants to display a spatial map of a Feature level attribute,
+ * this Filter will transfer that information down to the Element level.
  */
 class COMPLEXCORE_EXPORT CopyFeatureArrayToElementArray : public IFilter
 {
