@@ -2,7 +2,6 @@
 
 #include "ComplexCore/Filters/ChangeAngleRepresentation.hpp"
 
-
 #include "complex/Common/Numbers.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
@@ -24,12 +23,12 @@ TEST_CASE("OrientationAnalysis::ChangeAngleRepresentation: Instantiation and Par
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.valid() == false);
+  REQUIRE(preflightResult.outputActions.invalid());
 
   // This should fail because parameter is out of range
   args.insertOrAssign(ChangeAngleRepresentation::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(2));
   preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.valid() == false);
+  REQUIRE(preflightResult.outputActions.invalid());
 }
 
 TEST_CASE("OrientationAnalysis::ChangeAngleRepresentation: Degrees To Radians")

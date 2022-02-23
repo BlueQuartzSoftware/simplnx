@@ -13,14 +13,15 @@
 
 using namespace complex;
 
+namespace
+{
+
 namespace EulerAngleConversionType
 {
 constexpr uint64 DegreesToRadians = 0;
 constexpr uint64 RadiansToDegrees = 1;
 } // namespace EulerAngleConversionType
 
-namespace
-{
 class ChangeAngleRepresentationImpl
 {
 public:
@@ -29,7 +30,7 @@ public:
   , m_ConvFactor(factor)
   {
   }
-  virtual ~ChangeAngleRepresentationImpl() = default;
+  ~ChangeAngleRepresentationImpl() noexcept = default;
 
   void convert(size_t start, size_t end) const
   {
