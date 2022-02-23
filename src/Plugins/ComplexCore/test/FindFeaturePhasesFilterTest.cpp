@@ -18,10 +18,11 @@ const DataPath k_FeatureIDsPath({"Feature IDs"});
 const DataPath k_FeaturePhasesPath({"Feature Phases"});
 const std::string k_PhasesFileName = "Phases.raw";
 const std::string k_FeatureIdsFileName = "FeatureIds.raw";
+} // namespace
 
 DataStructure createDataStructure()
 {
-  DataStructure ds;
+  DataStructure ds = UnitTest::CreateDataStructure();
   Arguments args;
 
   RawBinaryReaderFilter rbrFilter;
@@ -42,7 +43,6 @@ DataStructure createDataStructure()
 
   return ds;
 }
-} // namespace
 
 TEST_CASE("FindFeaturePhasesFilter(Valid Parameters)", "[ComplexCore][FindFeaturePhasesFilter]")
 {
