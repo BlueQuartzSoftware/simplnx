@@ -36,6 +36,7 @@ inline constexpr int32 k_Validate_ExistingValue = -202;
 inline constexpr int32 k_Validate_DuplicateValue = -203;
 inline constexpr int32 k_Validate_Does_Not_Exist = -204;
 inline constexpr int32 k_Validate_Type_Error = -205;
+inline constexpr int32 k_Validate_OutOfRange_Error = -206;
 
 } // namespace FilterParameter::Constants
 
