@@ -7,6 +7,9 @@
 
 namespace complex
 {
+template <typename T>
+class NeighborList;
+
 /**
  * @class DataArray
  * @brief The DataArray class is a type of DataObject that exists to store and
@@ -17,6 +20,8 @@ namespace complex
 template <class T>
 class DataArray : public IDataArray
 {
+  friend class NeighborList<T>;
+
 public:
   using value_type = T;
   using reference = T&;
@@ -583,6 +588,25 @@ public:
     return GetTypeName();
   }
 
+  /**
+   * @brief Writes the DataArray to HDF5 using the provided group ID.
+   *
+   * This method will fail if no DataStore has been set.
+   * @param dataStructureWriter
+   * @param parentGroupWriter
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
+  {
+    auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
+    auto err = m_DataStore->writeHdf5(datasetWriter);
+    if(err < 0)
+    {
+      return err;
+    }
+    return writeH5ObjectAttributes(dataStructureWriter, datasetWriter, importable);
+  }
+
 protected:
   /**
    * @brief Constructs a DataArray with the specified name and DataStore.
@@ -613,25 +637,6 @@ protected:
   : IDataArray(ds, std::move(name), importId)
   {
     setDataStore(std::move(store));
-  }
-
-  /**
-   * @brief Writes the DataArray to HDF5 using the provided group ID.
-   *
-   * This method will fail if no DataStore has been set.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override
-  {
-    auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
-    auto err = m_DataStore->writeHdf5(datasetWriter);
-    if(err < 0)
-    {
-      return err;
-    }
-    return writeH5ObjectAttributes(dataStructureWriter, datasetWriter);
   }
 
 private:

@@ -182,7 +182,7 @@ std::vector<DataPath> DataObject::getParentDataPaths() const
   return paths;
 }
 
-H5::ErrorType DataObject::writeH5ObjectAttributes(H5::DataStructureWriter& dataStructureWriter, H5::ObjectWriter& objectWriter) const
+H5::ErrorType DataObject::writeH5ObjectAttributes(H5::DataStructureWriter& dataStructureWriter, H5::ObjectWriter& objectWriter, bool importable) const
 {
   // Add to DataStructureWriter for use in linking
   dataStructureWriter.addH5Writer(objectWriter, getId());
@@ -196,6 +196,13 @@ H5::ErrorType DataObject::writeH5ObjectAttributes(H5::DataStructureWriter& dataS
 
   auto idAttributeWriter = objectWriter.createAttribute(complex::Constants::k_ObjectIdTag);
   error = idAttributeWriter.writeValue(getId());
+  if(error < 0)
+  {
+    return error;
+  }
+
+  auto importableAttributeWriter = objectWriter.createAttribute(complex::Constants::k_ImportableTag);
+  error = importableAttributeWriter.writeValue<int32>(importable ? 1 : 0);
 
   return error;
 }

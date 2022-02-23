@@ -35,7 +35,7 @@ complex::DataStructure H5::DataStructureReader::readH5Group(const H5::GroupReade
   m_CurrentStructure = DataStructure();
   m_CurrentStructure.setNextId(idAttribute.readAsValue<DataObject::IdType>());
   errorCode = m_CurrentStructure.getRootGroup().readH5Group(*this, rootGroupReader);
-  return m_CurrentStructure;
+  return std::move(m_CurrentStructure);
 }
 
 H5::ErrorType H5::DataStructureReader::readObjectFromGroup(const H5::GroupReader& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId)
@@ -45,6 +45,17 @@ H5::ErrorType H5::DataStructureReader::readObjectFromGroup(const H5::GroupReader
   // Get H5::IDataFactory and check DataObject ID
   {
     auto childObj = parentGroup.openObject(objectName);
+
+    // Return 0 if object is marked as not importable.
+    auto importAttribute = childObj.getAttribute(complex::Constants::k_ImportableTag);
+    if(importAttribute.isValid())
+    {
+      const auto importable = importAttribute.readAsValue<int32>();
+      if(importable == 0)
+      {
+        return 0;
+      }
+    }
 
     // Check if data has already been read
     auto idAttribute = childObj.getAttribute(complex::Constants::k_ObjectIdTag);
@@ -80,7 +91,7 @@ H5::ErrorType H5::DataStructureReader::readObjectFromGroup(const H5::GroupReader
   if(parentGroup.isGroup(objectName))
   {
     auto childGroup = parentGroup.openGroup(objectName);
-    auto errorCode = factory->readH5Group(*this, childGroup, parentId);
+    auto errorCode = factory->readH5Group(*this, parentGroup, childGroup, parentId);
     if(errorCode < 0)
     {
       return errorCode;
@@ -89,7 +100,8 @@ H5::ErrorType H5::DataStructureReader::readObjectFromGroup(const H5::GroupReader
   else if(parentGroup.isDataset(objectName))
   {
     auto childDataset = parentGroup.openDataset(objectName);
-    auto errorCode = factory->readH5Dataset(*this, childDataset, parentId);
+    auto errorCode = factory->readH5Dataset(*this, parentGroup, childDataset, parentId);
+    if(errorCode < 0)
     {
       return errorCode;
     }

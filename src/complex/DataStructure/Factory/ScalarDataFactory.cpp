@@ -30,7 +30,8 @@ H5::ErrorType readH5Scalar(DataStructure& dataStructure, const H5::AttributeRead
   return err;
 }
 
-H5::ErrorType ScalarDataFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType ScalarDataFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::GroupReader& groupReader,
+                                             const std::optional<DataObject::IdType>& parentId)
 {
   std::string name = groupReader.getName();
   auto importId = ReadObjectId(groupReader);
@@ -64,7 +65,8 @@ H5::ErrorType ScalarDataFactory::readH5Group(H5::DataStructureReader& dataStruct
 }
 
 //------------------------------------------------------------------------------
-H5::ErrorType ScalarDataFactory::readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType ScalarDataFactory::readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader,
+                                               const std::optional<DataObject::IdType>& parentId)
 {
   return -1;
 }

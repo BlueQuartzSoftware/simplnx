@@ -6,6 +6,7 @@
 #include "complex/DataStructure/Factory/GridMontageFactory.hpp"
 #include "complex/DataStructure/Factory/HexahedralGeomFactory.hpp"
 #include "complex/DataStructure/Factory/ImageGeomFactory.hpp"
+#include "complex/DataStructure/Factory/NeighborListFactory.hpp"
 #include "complex/DataStructure/Factory/QuadGeomFactory.hpp"
 #include "complex/DataStructure/Factory/RectGridGeomFactory.hpp"
 #include "complex/DataStructure/Factory/ScalarDataFactory.hpp"
@@ -40,6 +41,8 @@ void H5::DataFactoryManager::addCoreFactories()
   addFactory(new Float64ArrayFactory());
   addFactory(new BoolArrayFactory());
 
+  addFactory(new NeighborListFactory());
+
   addFactory(new DataGroupFactory());
   addFactory(new EdgeGeomFactory());
   addFactory(new GridMontageFactory());
@@ -66,7 +69,7 @@ void H5::DataFactoryManager::addFactory(IDataFactory* factory)
 std::vector<H5::IDataFactory*> H5::DataFactoryManager::getFactories() const
 {
   std::vector<H5::IDataFactory*> factories;
-  for(auto iter : m_Factories)
+  for(const auto& iter : m_Factories)
   {
     factories.push_back(iter.second.get());
   }

@@ -193,8 +193,8 @@ DataStructure CreateDataStructure()
 
   // Create some DataArrays; The DataStructure keeps a shared_ptr<> to the DataArray so DO NOT put
   // it into another shared_ptr<>
-  size_t numComponents = 1;
-  std::vector<size_t> tupleShape = {imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]};
+  usize numComponents = 1;
+  std::vector<usize> tupleShape = {imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]};
 
   Float32Array* ci_data = CreateTestDataArray<float>("Confidence Index", dataGraph, tupleShape, {numComponents}, scanData->getId());
   Int32Array* feature_ids_data = CreateTestDataArray<int32>("FeatureIds", dataGraph, tupleShape, {numComponents}, scanData->getId());
@@ -209,8 +209,8 @@ DataStructure CreateDataStructure()
   // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
   DataGroup* phase_group = DataGroup::Create(dataGraph, "Phase Data", group->getId());
   numComponents = 1;
-  size_t numTuples = 2;
-  Int32Array* laue_data = CreateTestDataArray<int32_t>("Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId());
+  usize numTuples = 2;
+  Int32Array* laue_data = CreateTestDataArray<int32>("Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId());
 
   return dataGraph;
 }
@@ -289,6 +289,7 @@ const std::string k_QuadGroupName = "QUAD_GEOMETRY";
 const std::string k_QuadFaceName = "SharedQuadList";
 const std::string k_EdgeFaceName = "SharedEdgeList";
 const std::string k_EdgeGroupName = "EDGE_GEOMETRY";
+const std::string k_NeighborGroupName = "NEIGHBORLIST_GROUP";
 
 void CreateVertexGeometry(DataStructure& dataGraph)
 {
@@ -313,16 +314,16 @@ void CreateVertexGeometry(DataStructure& dataGraph)
   REQUIRE(vertexGeometry->getNumberOfVertices() == 144);
 
   // Now create some "Cell" data for the Vertex Geometry
-  std::vector<size_t> tupleShape = {vertexGeometry->getNumberOfVertices()};
-  size_t numComponents = 1;
+  std::vector<usize> tupleShape = {vertexGeometry->getNumberOfVertices()};
+  usize numComponents = 1;
   Int16Array* ci_data = CreateTestDataArray<int16_t>("Area", dataGraph, tupleShape, {numComponents}, geometryGroup->getId());
   Float32Array* power_data = CreateTestDataArray<float>("Power", dataGraph, tupleShape, {numComponents}, geometryGroup->getId());
-  UInt32Array* laserTTL_data = CreateTestDataArray<uint32_t>("LaserTTL", dataGraph, tupleShape, {numComponents}, geometryGroup->getId());
-  for(size_t i = 0; i < vertexGeometry->getNumberOfVertices(); i++)
+  UInt32Array* laserTTL_data = CreateTestDataArray<uint32>("LaserTTL", dataGraph, tupleShape, {numComponents}, geometryGroup->getId());
+  for(usize i = 0; i < vertexGeometry->getNumberOfVertices(); i++)
   {
     ci_data->getDataStore()->setValue(i, static_cast<int16_t>(i * 10));
     power_data->getDataStore()->setValue(i, static_cast<float>(i * 2.345f));
-    laserTTL_data->getDataStore()->setValue(i, static_cast<uint32_t>(i * 3421));
+    laserTTL_data->getDataStore()->setValue(i, static_cast<uint32>(i * 3421));
   }
 }
 
@@ -428,6 +429,20 @@ void CreateEdgeGeometry(DataStructure& dataGraph)
   geometry->setVertices(vertexArray);
 }
 
+void CreateNeighborList(DataStructure& dataStructure)
+{
+  const usize numItems = 50;
+
+  auto* neighborGroup = DataGroup::Create(dataStructure, k_NeighborGroupName);
+  auto* neighborGroup2 = DataGroup::Create(dataStructure, k_NeighborGroupName + "2");
+  auto* neighborList = NeighborList<int64>::Create(dataStructure, "NeighborList", numItems, neighborGroup->getId());
+  for(usize i = 0; i < numItems; i++)
+  {
+    neighborList->addEntry(i + 1, i);
+  }
+  dataStructure.setAdditionalParent(neighborList->getId(), neighborGroup2->getId());
+}
+
 //------------------------------------------------------------------------------
 DataStructure CreateNodeBasedGeometries()
 {
@@ -483,6 +498,59 @@ TEST_CASE("Node Based Geometry IO")
     herr_t err;
     auto ds = DataStructure::readFromHdf5(fileReader, err);
     REQUIRE(err >= 0);
+  } catch(const std::exception& e)
+  {
+    FAIL(e.what());
+  }
+}
+
+TEST_CASE("NeighborList IO")
+{
+  Application app;
+
+  fs::path dataDir = GetDataDir(app);
+
+  if(!fs::exists(dataDir))
+  {
+    REQUIRE(fs::create_directories(dataDir));
+  }
+
+  fs::path filePath = GetDataDir(app) / "NeighborListTest.dream3d";
+
+  std::string filePathString = filePath.string();
+
+  // Write HDF5 file
+  try
+  {
+    DataStructure ds;
+    CreateNeighborList(ds);
+    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePathString);
+    REQUIRE(result.valid());
+
+    H5::FileWriter fileWriter = std::move(result.value());
+    REQUIRE(fileWriter.isValid());
+
+    herr_t err;
+    err = ds.writeHdf5(fileWriter);
+    REQUIRE(err >= 0);
+  } catch(const std::exception& e)
+  {
+    FAIL(e.what());
+  }
+
+  // Read HDF5 file
+  try
+  {
+    H5::FileReader fileReader(filePathString);
+    REQUIRE(fileReader.isValid());
+
+    herr_t err;
+    auto ds = DataStructure::readFromHdf5(fileReader, err);
+    REQUIRE(err >= 0);
+
+    // auto neighborList = ds.getDataAs<NeighborList<int64>>(DataPath({k_NeighborGroupName, "NeighborList"}));
+    auto neighborList = ds.getData(DataPath({k_NeighborGroupName, "NeighborList"}));
+    REQUIRE(neighborList != nullptr);
   } catch(const std::exception& e)
   {
     FAIL(e.what());

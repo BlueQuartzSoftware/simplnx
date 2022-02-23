@@ -132,8 +132,9 @@ protected:
   /**
    * @brief Writes the DataObject to the target HDF5 group.
    * @param parentGroupWriter
+   * @param importable
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override;
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 };
 } // namespace complex

@@ -40,12 +40,14 @@ public:
    * @brief Creates and adds an HexahedralGeom to the provided DataStructure from
    * the target HDF5 ID.
    * @param dataStructureReader Active DataStructureReader
+   * @param parentReader Wrapper around the parent HDF5 group.
    * @param groupReader Wrapper around an HDF5 group.
    * @param parentId = {} Optional DataObject ID describing which parent object
    * to create the generated DataObject under.
    * @return H5::ErrorType
    */
-  H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId = {}) override
+  H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::GroupReader& groupReader,
+                            const std::optional<DataObject::IdType>& parentId = {}) override
   {
     return -1;
   }
@@ -53,11 +55,13 @@ public:
   /**
    * @brief Reads an HDF5 Dataset that makes up a DataStructure node.
    * @param dataStructureReader Active DataStructureReader
+   * @param parentReader Wrapper around the parent HDF5 group.
    * @param datasetReader Wrapper around the HDF5 Dataset.
    * @param parentId The HDF5 ID of the parent object.
    * @return H5::ErrorType
    */
-  H5::ErrorType readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId = {}) override
+  H5::ErrorType readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader,
+                              const std::optional<DataObject::IdType>& parentId = {}) override
   {
     H5::ErrorType err = 0;
     H5::Type type = datasetReader.getType();
@@ -68,6 +72,13 @@ public:
 
     std::string dataArrayName = datasetReader.getName();
     DataObject::IdType importId = ReadObjectId(datasetReader);
+
+    // Check importablility
+    auto importableAttribute = datasetReader.getAttribute(complex::Constants::k_ImportableTag);
+    if(importableAttribute.isValid() && importableAttribute.readAsValue<int32>() == 0)
+    {
+      return 0;
+    }
 
     switch(type)
     {

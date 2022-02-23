@@ -19,7 +19,8 @@ std::string QuadGeomFactory::getDataTypeName() const
   return "QuadGeom";
 }
 
-H5::ErrorType QuadGeomFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType QuadGeomFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::GroupReader& groupReader,
+                                           const std::optional<DataObject::IdType>& parentId)
 {
   auto name = groupReader.getName();
   auto importId = ReadObjectId(groupReader);
@@ -28,7 +29,8 @@ H5::ErrorType QuadGeomFactory::readH5Group(H5::DataStructureReader& dataStructur
 }
 
 //------------------------------------------------------------------------------
-H5::ErrorType QuadGeomFactory::readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::DatasetReader& datasetReader, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType QuadGeomFactory::readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader,
+                                             const std::optional<DataObject::IdType>& parentId)
 {
   return -1;
 }

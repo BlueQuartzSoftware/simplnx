@@ -306,7 +306,6 @@ DataMap& DataMap::operator=(DataMap&& rhs) noexcept
 
 H5::ErrorType DataMap::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& h5Group, const std::optional<DataObject::IdType>& dsParentId)
 {
-  auto count = h5Group.getNumChildren();
   auto childrenNames = h5Group.getChildNames();
   for(const auto& childName : childrenNames)
   {

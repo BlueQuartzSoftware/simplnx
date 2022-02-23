@@ -1,13 +1,19 @@
 #pragma once
 
-#include "complex/DataStructure/IDataArray.hpp"
+#include "complex/DataStructure/INeighborList.hpp"
 
 namespace complex
 {
 namespace H5
 {
 class DatasetReader;
+class GroupReader;
 class NeighborListFactory;
+
+namespace Constants
+{
+constexpr StringLiteral NumNeighborsTag = "_NumNeighbors";
+}
 } // namespace H5
 
 /**
@@ -16,7 +22,7 @@ class NeighborListFactory;
  * @tparam T
  */
 template <typename T>
-class NeighborList : public IDataArray
+class NeighborList : public INeighborList
 {
   friend class H5::NeighborListFactory;
 
@@ -66,24 +72,6 @@ public:
   DataObject* deepCopy() override;
 
   /**
-   * @brief Returns typename of the DataObject as a std::string.
-   * @return std::string
-   */
-  std::string getTypeName() const override;
-
-  /**
-   * @brief setNumNeighborsArrayName
-   * @param name
-   */
-  void setNumNeighborsArrayName(const std::string& name);
-
-  /**
-   * @brief getNumNeighborsArrayName
-   * @return
-   */
-  std::string getNumNeighborsArrayName();
-
-  /**
    * @brief Gives this array a human readable name
    * @param name The name of this array
    */
@@ -95,7 +83,7 @@ public:
    * indices that are larger than the size of the original (before erasing operations) then an error code (-100) is
    * returned from the program.
    * @param idxs The indices to remove
-   * @return error code.
+   * @return int32 Error code
    */
   int32 eraseTuples(const std::vector<usize>& idxs);
 
@@ -107,26 +95,21 @@ public:
   void copyTuple(usize currentPos, usize newPos) override;
 
   /**
-   * @brief Returns the number of elements in the internal array.
-   */
-  usize getNumberOfTuples() const override;
-
-  /**
    * @brief getSize Returns the total number of data items that are being stored. This is the sum of all the sizes
    * of the internal storage arrays for this class.
-   * @return
+   * @return usize
    */
   usize getSize() const override;
 
   /**
-   * @brief setNumberOfComponents
+   * @brief Set number of components.
    * @param nc
    */
   void setNumberOfComponents(int32 nc);
 
   /**
    * @brief getNumberOfComponents
-   * @return
+   * @return usize
    */
   usize getNumberOfComponents() const override;
 
@@ -138,7 +121,7 @@ public:
 
   /**
    * @brief getTypeSize
-   * @return
+   * @return usize
    */
   usize getTypeSize() const;
 
@@ -150,9 +133,9 @@ public:
   /**
    * @brief resizeTotalElements
    * @param size
-   * @return
+   * @return int32
    */
-  int32_t resizeTotalElements(usize size);
+  int32 resizeTotalElements(usize size);
 
   /**
    * @brief Resizes the internal array to accomondate numTuples
@@ -168,7 +151,7 @@ public:
   void addEntry(int32 grainId, value_type value);
 
   /**
-   * @brief clearAllLists
+   * @brief Clear All Lists
    */
   void clearAllLists();
 
@@ -177,57 +160,62 @@ public:
    * @param grainId
    * @param neighborList
    */
-  void setList(int32 grainId, SharedVectorType neighborList);
+  void setList(int32 grainId, const SharedVectorType& neighborList);
 
   /**
    * @brief getValue
    * @param grainId
    * @param index
    * @param ok
-   * @return
+   * @return T
    */
   T getValue(int32 grainId, int32 index, bool& ok) const;
 
   /**
    * @brief getNumberOfLists
-   * @return
+   * @return int32
    */
   int32 getNumberOfLists() const;
 
   /**
    * @brief getListSize
    * @param grainId
-   * @return
+   * @return int32
    */
   int32 getListSize(int32 grainId) const;
 
+  /**
+   * @brief Returns a reference to the target grain ID's data.
+   * @param grainId
+   * @return VectorType&
+   */
   VectorType& getListReference(int32 grainId) const;
 
   /**
    * @brief getList
    * @param grainId
-   * @return
+   * @return SharedVectorType
    */
   SharedVectorType getList(int32 grainId) const;
 
   /**
    * @brief copyOfList
    * @param grainId
-   * @return
+   * @return VectorType
    */
   VectorType copyOfList(int32 grainId) const;
 
   /**
    * @brief operator []
    * @param grainId
-   * @return
+   * @return VectorType&
    */
   VectorType& operator[](int32 grainId);
 
   /**
    * @brief operator []
    * @param grainId
-   * @return
+   * @return VectorType&
    */
   VectorType& operator[](usize grainId);
 
@@ -255,9 +243,18 @@ public:
    * This method will fail if no DataStore has been set.
    * @param dataStructureWriter
    * @param parentGroupWriter
+   * @param importable
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter) const override;
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
+
+  /**
+   * @brief Read the data vector from HDF5.
+   * @param parentGroup
+   * @param dataReader
+   * @return std::vector<SharedVectorType>
+   */
+  static std::vector<SharedVectorType> ReadHdf5Data(const H5::GroupReader& parentGroup, const H5::DatasetReader& dataReader);
 
 protected:
   /**
@@ -270,17 +267,8 @@ protected:
    */
   NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<SharedVectorType>& dataVector, IdType importId);
 
-  /**
-   * @brief Read the data vector from HDF5.
-   * @param dataReader
-   * @return std::vector<SharedVectorType>
-   */
-  static std::vector<SharedVectorType> ReadHdf5Data(const H5::DatasetReader& dataReader);
-
 private:
-  std::string m_NumNeighborsArrayName;
   std::vector<SharedVectorType> m_Array;
-  usize m_NumTuples;
   bool m_IsAllocated;
   value_type m_InitValue;
 };
@@ -309,9 +297,6 @@ DataType COMPLEX_EXPORT NeighborList<uint32>::getDataType() const;
 template <>
 DataType COMPLEX_EXPORT NeighborList<uint64>::getDataType() const;
 
-template <>
-DataType COMPLEX_EXPORT NeighborList<bool>::getDataType() const;
-
 #if defined(__APPLE__)
 template <>
 DataType COMPLEX_EXPORT NeighborList<unsigned long>::getDataType() const;
@@ -329,9 +314,6 @@ using FloatNeighborListType = NeighborList<float>;
 // -----------------------------------------------------------------------------
 // Declare our extern templates
 
-extern template class NeighborList<char>;
-extern template class NeighborList<unsigned char>;
-
 extern template class NeighborList<int8>;
 extern template class NeighborList<uint8>;
 extern template class NeighborList<int16>;
@@ -345,5 +327,4 @@ extern template class NeighborList<float32>;
 extern template class NeighborList<float64>;
 
 extern template class NeighborList<usize>;
-extern template class NeighborList<bool>;
 } // namespace complex
