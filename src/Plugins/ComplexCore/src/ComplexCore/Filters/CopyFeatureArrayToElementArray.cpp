@@ -8,7 +8,7 @@
 
 using namespace complex;
 
-namespace complex
+namespace
 {
 // -----------------------------------------------------------------------------
 template <typename T>
@@ -37,51 +37,50 @@ void copyData(DataStructure& dataStructure, const DataPath& selectedFeatureArray
   }
 }
 
-NumericType getNumericType(const IDataArray* inputArray)
+std::optional<NumericType> ConvertDataTypeToNumericType(DataType dataType)
 {
-  if(dynamic_cast<const Int8Array*>(inputArray) != nullptr)
+  switch(dataType)
   {
+  case DataType::int8: {
     return NumericType::int8;
   }
-  else if(dynamic_cast<const Int16Array*>(inputArray) != nullptr)
-  {
-    return NumericType::int16;
-  }
-  else if(dynamic_cast<const Int32Array*>(inputArray) != nullptr)
-  {
-    return NumericType::int32;
-  }
-  else if(dynamic_cast<const Int64Array*>(inputArray) != nullptr)
-  {
-    return NumericType::int64;
-  }
-  else if(dynamic_cast<const UInt8Array*>(inputArray) != nullptr)
-  {
+  case DataType::uint8: {
     return NumericType::uint8;
   }
-  else if(dynamic_cast<const UInt16Array*>(inputArray) != nullptr)
-  {
+  case DataType::int16: {
+    return NumericType::int16;
+  }
+  case DataType::uint16: {
     return NumericType::uint16;
   }
-  else if(dynamic_cast<const UInt32Array*>(inputArray) != nullptr)
-  {
+  case DataType::int32: {
+    return NumericType::int32;
+  }
+  case DataType::uint32: {
     return NumericType::uint32;
   }
-  else if(dynamic_cast<const UInt64Array*>(inputArray) != nullptr)
-  {
+  case DataType::int64: {
+    return NumericType::int64;
+  }
+  case DataType::uint64: {
     return NumericType::uint64;
   }
-  else if(dynamic_cast<const Float32Array*>(inputArray) != nullptr)
-  {
+  case DataType::float32: {
     return NumericType::float32;
   }
-  else if(dynamic_cast<const Float64Array*>(inputArray) != nullptr)
-  {
+  case DataType::float64: {
     return NumericType::float64;
   }
-  // Default state
-  return NumericType::int8;
+  // insert other cases here
+  default: {
+    return {};
+  }
+  }
 }
+} // namespace
+
+namespace complex
+{
 
 //------------------------------------------------------------------------------
 std::string CopyFeatureArrayToElementArray::name() const
@@ -150,7 +149,12 @@ IFilter::PreflightResult CopyFeatureArrayToElementArray::preflightImpl(const Dat
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  NumericType numericType = getNumericType(&selectedFeatureArray);
+  auto numericTypeResult = ConvertDataTypeToNumericType(selectedFeatureArray.getDataType());
+  if(!numericTypeResult.has_value())
+  {
+    return {MakeErrorResult<OutputActions>(-5000, fmt::format("The Feature data array '{}' has a data type that does not have a corresponding numeric type.", selectedFeatureArray.getName()))};
+  }
+  NumericType numericType = numericTypeResult.value();
 
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(numericType, featureIdsArrayStore.getTupleShape(), selectedFeatureArrayStore.getComponentShape(), pCreatedArrayNameValue);
