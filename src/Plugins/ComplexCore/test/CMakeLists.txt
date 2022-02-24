@@ -11,6 +11,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ConditionalSetValueTest.cpp
   CopyDataGroupTest.cpp
   CreateDataArrayTest.cpp
+  CopyFeatureArrayToElementArrayTest
   CreateImageGeometryTest.cpp
   FindDifferencesMapTest.cpp
   FindFeaturePhasesFilterTest.cpp
