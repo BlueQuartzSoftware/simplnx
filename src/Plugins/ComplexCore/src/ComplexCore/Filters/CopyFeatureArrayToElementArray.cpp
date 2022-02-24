@@ -37,6 +37,52 @@ void copyData(DataStructure& dataStructure, const DataPath& selectedFeatureArray
   }
 }
 
+NumericType getNumericType(const IDataArray* inputArray)
+{
+  if(dynamic_cast<const Int8Array*>(inputArray) != nullptr)
+  {
+    return NumericType::int8;
+  }
+  else if(dynamic_cast<const Int16Array*>(inputArray) != nullptr)
+  {
+    return NumericType::int16;
+  }
+  else if(dynamic_cast<const Int32Array*>(inputArray) != nullptr)
+  {
+    return NumericType::int32;
+  }
+  else if(dynamic_cast<const Int64Array*>(inputArray) != nullptr)
+  {
+    return NumericType::int64;
+  }
+  else if(dynamic_cast<const UInt8Array*>(inputArray) != nullptr)
+  {
+    return NumericType::uint8;
+  }
+  else if(dynamic_cast<const UInt16Array*>(inputArray) != nullptr)
+  {
+    return NumericType::uint16;
+  }
+  else if(dynamic_cast<const UInt32Array*>(inputArray) != nullptr)
+  {
+    return NumericType::uint32;
+  }
+  else if(dynamic_cast<const UInt64Array*>(inputArray) != nullptr)
+  {
+    return NumericType::uint64;
+  }
+  else if(dynamic_cast<const Float32Array*>(inputArray) != nullptr)
+  {
+    return NumericType::float32;
+  }
+  else if(dynamic_cast<const Float64Array*>(inputArray) != nullptr)
+  {
+    return NumericType::float64;
+  }
+  // Default state
+  return NumericType::int8;
+}
+
 //------------------------------------------------------------------------------
 std::string CopyFeatureArrayToElementArray::name() const
 {
@@ -97,21 +143,17 @@ IFilter::PreflightResult CopyFeatureArrayToElementArray::preflightImpl(const Dat
   auto pCreatedArrayNameValue = filterArgs.value<DataPath>(k_CreatedArrayName_Key);
 
   const IDataArray& selectedFeatureArray = dataStructure.getDataRefAs<IDataArray>(pSelectedFeatureArrayPathValue);
-  const IDataStore* selectedFeatureArrayStore = selectedFeatureArray.getIDataStore();
+  const IDataStore& selectedFeatureArrayStore = selectedFeatureArray.getIDataStoreRef();
   const IDataArray& featureIdsArray = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);
-  const IDataStore* featureIdsArrayStore = featureIdsArray.getIDataStore();
+  const IDataStore& featureIdsArrayStore = featureIdsArray.getIDataStoreRef();
 
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  DataType dataType = selectedFeatureArrayStore->getDataType();
-  NumericType numericType = static_cast<NumericType>(dataType);
-
-  auto tupleShape = selectedFeatureArrayStore->getTupleShape();
-  auto componentShape = selectedFeatureArrayStore->getComponentShape();
+  NumericType numericType = getNumericType(&selectedFeatureArray);
 
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(numericType, featureIdsArrayStore->getTupleShape(), selectedFeatureArrayStore->getComponentShape(), pCreatedArrayNameValue);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(numericType, featureIdsArrayStore.getTupleShape(), selectedFeatureArrayStore.getComponentShape(), pCreatedArrayNameValue);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
