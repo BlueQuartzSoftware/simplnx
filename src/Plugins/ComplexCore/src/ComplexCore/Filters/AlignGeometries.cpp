@@ -9,7 +9,7 @@
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
 #include <string>
@@ -359,9 +359,11 @@ std::string AlignGeometries::humanName() const
 
 Parameters AlignGeometries::parameters() const
 {
+  GeometrySelectionParameter::AllowedTypes geomTypes{AbstractGeometry::Type::Any};
+
   Parameters params;
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_MovingGeometry_Key, "Moving Geometry", "Numeric Type of data to create", DataPath()));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_TargetGeometry_Key, "Target Geometry", "Number of components", DataPath()));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_MovingGeometry_Key, "Moving Geometry", "Numeric Type of data to create", DataPath(), geomTypes));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_TargetGeometry_Key, "Target Geometry", "Number of components", DataPath(), geomTypes));
   params.insert(std::make_unique<ChoicesParameter>(k_AlignmentType_Key, "Alignment Type", "Alignment Type", 0, std::vector<std::string>{"Origin", "Centroid"}));
   return params;
 }
@@ -371,7 +373,8 @@ IFilter::UniquePointer AlignGeometries::clone() const
   return std::make_unique<AlignGeometries>();
 }
 
-IFilter::PreflightResult AlignGeometries::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult AlignGeometries::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                        const std::atomic_bool& shouldCancel) const
 {
   auto movingGeometryPath = filterArgs.value<DataPath>(k_MovingGeometry_Key);
   auto targetGeometryPath = filterArgs.value<DataPath>(k_TargetGeometry_Key);
@@ -390,7 +393,7 @@ IFilter::PreflightResult AlignGeometries::preflightImpl(const DataStructure& dat
   return {std::move(actions)};
 }
 
-Result<> AlignGeometries::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> AlignGeometries::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto movingGeometryPath = args.value<DataPath>(k_MovingGeometry_Key);
   auto targetGeometryPath = args.value<DataPath>(k_TargetGeometry_Key);
