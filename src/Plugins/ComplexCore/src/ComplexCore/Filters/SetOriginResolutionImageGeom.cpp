@@ -54,7 +54,8 @@ IFilter::UniquePointer SetOriginResolutionImageGeom::clone() const
   return std::make_unique<SetOriginResolutionImageGeom>();
 }
 
-IFilter::PreflightResult SetOriginResolutionImageGeom::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult SetOriginResolutionImageGeom::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
   auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
@@ -69,13 +70,13 @@ IFilter::PreflightResult SetOriginResolutionImageGeom::preflightImpl(const DataS
     auto result = MakeErrorResult(-300, ss);
     return {ConvertResultTo<OutputActions>(std::move(result), {})};
   }
-  //
 
   OutputActions actions;
   return {std::move(actions)};
 }
 
-Result<> SetOriginResolutionImageGeom::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> SetOriginResolutionImageGeom::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = args.value<DataPath>(k_ImageGeomPath_Key);
   auto shouldChangeOrigin = args.value<bool>(k_ChangeOrigin_Key);
