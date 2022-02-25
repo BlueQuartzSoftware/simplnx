@@ -257,6 +257,12 @@ public:
   void findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const override;
 
   /**
+   * @brief isThreeDimensional Determines whether or not the geometry is 3 dimensional.
+   * @return bool
+   */
+  bool isThreeDimensional() const;
+
+  /**
    * @brief
    * @return complex::TooltipGenerator
    */
