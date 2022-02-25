@@ -27,7 +27,7 @@ DataStructure createTestData()
 
   return dataGraph;
 }
-}
+} // namespace
 
 TEST_CASE("AlignGeometries: Instantiate Filter", "[AlignGeometries]")
 {
