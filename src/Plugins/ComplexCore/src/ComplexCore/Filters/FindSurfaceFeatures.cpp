@@ -9,13 +9,14 @@
 #include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
 using namespace complex;
 
 namespace
 {
-bool isPointASurfaceFeature(const Point2D<usize>& point, const usize& xPoints, const usize& yPoints, const Int32Array& featureIds)
+bool isPointASurfaceFeature(const Point2D<usize>& point, const usize& xPoints, const usize& yPoints, const bool& markFeature0Neighbors, const Int32Array& featureIds)
 {
   usize yStride = point.getY() * xPoints;
 
@@ -28,27 +29,30 @@ bool isPointASurfaceFeature(const Point2D<usize>& point, const usize& xPoints, c
     return true;
   }
 
-  if(featureIds[yStride + point.getX() - 1] == 0)
+  if(markFeature0Neighbors)
   {
-    return true;
-  }
-  if(featureIds[yStride + point.getX() + 1] == 0)
-  {
-    return true;
-  }
-  if(featureIds[yStride + point.getX() - xPoints] == 0)
-  {
-    return true;
-  }
-  if(featureIds[yStride + point.getX() + xPoints] == 0)
-  {
-    return true;
+    if(featureIds[yStride + point.getX() - 1] == 0)
+    {
+      return true;
+    }
+    if(featureIds[yStride + point.getX() + 1] == 0)
+    {
+      return true;
+    }
+    if(featureIds[yStride + point.getX() - xPoints] == 0)
+    {
+      return true;
+    }
+    if(featureIds[yStride + point.getX() + xPoints] == 0)
+    {
+      return true;
+    }
   }
 
   return false;
 }
 
-bool isPointASurfaceFeature(const Point3D<usize>& point, const usize& xPoints, const usize& yPoints, const usize& zPoints, const Int32Array& featureIds)
+bool isPointASurfaceFeature(const Point3D<usize>& point, const usize& xPoints, const usize& yPoints, const usize& zPoints, const bool& markFeature0Neighbors, const Int32Array& featureIds)
 {
   usize yStride = point.getY() * xPoints;
   usize zStride = point.getZ() * xPoints * yPoints;
@@ -65,36 +69,40 @@ bool isPointASurfaceFeature(const Point3D<usize>& point, const usize& xPoints, c
   {
     return true;
   }
-  if(featureIds[zStride + yStride + point.getX() - 1] == 0)
+
+  if(markFeature0Neighbors)
   {
-    return true;
-  }
-  if(featureIds[zStride + yStride + point.getX() + 1] == 0)
-  {
-    return true;
-  }
-  if(featureIds[zStride + yStride + point.getX() - xPoints] == 0)
-  {
-    return true;
-  }
-  if(featureIds[zStride + yStride + point.getX() + xPoints] == 0)
-  {
-    return true;
-  }
-  if(featureIds[zStride + yStride + point.getX() - (xPoints * yPoints)] == 0)
-  {
-    return true;
-  }
-  if(featureIds[zStride + yStride + point.getX() + (xPoints * yPoints)] == 0)
-  {
-    return true;
+    if(featureIds[zStride + yStride + point.getX() - 1] == 0)
+    {
+      return true;
+    }
+    if(featureIds[zStride + yStride + point.getX() + 1] == 0)
+    {
+      return true;
+    }
+    if(featureIds[zStride + yStride + point.getX() - xPoints] == 0)
+    {
+      return true;
+    }
+    if(featureIds[zStride + yStride + point.getX() + xPoints] == 0)
+    {
+      return true;
+    }
+    if(featureIds[zStride + yStride + point.getX() - (xPoints * yPoints)] == 0)
+    {
+      return true;
+    }
+    if(featureIds[zStride + yStride + point.getX() + (xPoints * yPoints)] == 0)
+    {
+      return true;
+    }
   }
 
   return false;
 }
 
 void findSurfaceFeatures3D(DataStructure& ds, const DataPath& featureGeometryPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& surfaceFeaturesArrayPathValue,
-                           const std::atomic_bool& shouldCancel)
+                           const bool& markFeature0Neighbors, const std::atomic_bool& shouldCancel)
 {
   const ImageGeom& featureGeometry = ds.getDataRefAs<ImageGeom>(featureGeometryPathValue);
   const Int32Array& featureIds = ds.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
@@ -120,7 +128,7 @@ void findSurfaceFeatures3D(DataStructure& ds, const DataPath& featureGeometryPat
         int32 gnum = featureIds[zStride + yStride + x];
         if(surfaceFeatures[gnum] == 0)
         {
-          if(isPointASurfaceFeature(Point3D{x, y, z}, xPoints, yPoints, zPoints, featureIds))
+          if(isPointASurfaceFeature(Point3D{x, y, z}, xPoints, yPoints, zPoints, markFeature0Neighbors, featureIds))
           {
             surfaceFeatures[gnum] = 1;
           }
@@ -131,7 +139,7 @@ void findSurfaceFeatures3D(DataStructure& ds, const DataPath& featureGeometryPat
 }
 
 void findSurfaceFeatures2D(DataStructure& ds, const DataPath& featureGeometryPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& surfaceFeaturesArrayPathValue,
-                           const std::atomic_bool& shouldCancel)
+                           const bool& markFeature0Neighbors, const std::atomic_bool& shouldCancel)
 {
   const ImageGeom& featureGeometry = ds.getDataRefAs<ImageGeom>(featureGeometryPathValue);
   const Int32Array& featureIds = ds.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
@@ -169,7 +177,7 @@ void findSurfaceFeatures2D(DataStructure& ds, const DataPath& featureGeometryPat
       int32 gnum = featureIds[yStride + x];
       if(surfaceFeatures[gnum] == 0)
       {
-        if(isPointASurfaceFeature(Point2D{x, y}, xPoints, yPoints, featureIds))
+        if(isPointASurfaceFeature(Point2D{x, y}, xPoints, yPoints, markFeature0Neighbors, featureIds))
         {
           surfaceFeatures[gnum] = 1;
         }
@@ -217,6 +225,9 @@ Parameters FindSurfaceFeatures::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Cell Data"});
+  params.insert(std::make_unique<BoolParameter>(k_MarkFeature0Neighbors, "Mark Feature 0 Neighbors",
+                                                "Marks features that are neighbors with feature 0.  If this option is off, only features that reside on the edge of the geometry will be marked.",
+                                                true));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_FeatureGeometryPath_Key, "Feature Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}, false, ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insertSeparator(Parameters::Separator{"Cell Feature Data"});
@@ -234,9 +245,7 @@ IFilter::UniquePointer FindSurfaceFeatures::clone() const
 //------------------------------------------------------------------------------
 IFilter::PreflightResult FindSurfaceFeatures::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                             const std::atomic_bool& shouldCancel) const
-{  
-  auto pFeatureGeometryPathValue = filterArgs.value<DataPath>(k_FeatureGeometryPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+{
   auto pSurfaceFeaturesArrayPathValue = filterArgs.value<DataPath>(k_SurfaceFeaturesArrayPath_Key);
 
   complex::Result<OutputActions> resultOutputActions;
@@ -257,6 +266,7 @@ Result<> FindSurfaceFeatures::executeImpl(DataStructure& dataStructure, const Ar
   auto pFeatureGeometryPathValue = filterArgs.value<DataPath>(k_FeatureGeometryPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto pSurfaceFeaturesArrayPathValue = filterArgs.value<DataPath>(k_SurfaceFeaturesArrayPath_Key);
+  auto pMarkFeature0NeighborsValue = filterArgs.value<bool>(k_MarkFeature0Neighbors);
 
   // Resize the surface features array to the proper size
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
@@ -273,11 +283,11 @@ Result<> FindSurfaceFeatures::executeImpl(DataStructure& dataStructure, const Ar
   ImageGeom& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(pFeatureGeometryPathValue);
   if(featureGeometry.isThreeDimensional())
   {
-    findSurfaceFeatures3D(dataStructure, pFeatureGeometryPathValue, pFeatureIdsArrayPathValue, pSurfaceFeaturesArrayPathValue, shouldCancel);
+    findSurfaceFeatures3D(dataStructure, pFeatureGeometryPathValue, pFeatureIdsArrayPathValue, pSurfaceFeaturesArrayPathValue, pMarkFeature0NeighborsValue, shouldCancel);
   }
   else
   {
-    findSurfaceFeatures2D(dataStructure, pFeatureGeometryPathValue, pFeatureIdsArrayPathValue, pSurfaceFeaturesArrayPathValue, shouldCancel);
+    findSurfaceFeatures2D(dataStructure, pFeatureGeometryPathValue, pFeatureIdsArrayPathValue, pSurfaceFeaturesArrayPathValue, pMarkFeature0NeighborsValue, shouldCancel);
   }
 
   return {};

@@ -39,6 +39,7 @@ public:
   FindSurfaceFeatures& operator=(FindSurfaceFeatures&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_MarkFeature0Neighbors = "MarkFeature0Neighbors";
   static inline constexpr StringLiteral k_FeatureGeometryPath_Key = "FeatureGeometryPath";
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
   static inline constexpr StringLiteral k_SurfaceFeaturesArrayPath_Key = "SurfaceFeaturesArrayPath";
