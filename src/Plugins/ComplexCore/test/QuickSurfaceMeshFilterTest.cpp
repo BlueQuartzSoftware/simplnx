@@ -100,15 +100,16 @@ TEST_CASE("SurfaceMeshing::QuickSurfaceMeshFilter", "[SurfaceMeshing][QuickSurfa
 
     args.insertOrAssign(QuickSurfaceMeshFilter::k_ParentDataGroupPath_Key, std::make_any<DataPath>(triangleParentGroup));
 
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_TriangleGeometryName_Key, std::make_any<std::string>(k_TriangleGeometryName));
+    DataPath triangleGeometryPath = triangleParentGroup.createChildPath(k_TriangleGeometryName);
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(triangleGeometryPath));
 
-    DataPath vertexGroupDataPath = triangleParentGroup.createChildPath(k_TriangleGeometryName).createChildPath(k_VertexDataGroupName);
+    DataPath vertexGroupDataPath = triangleGeometryPath.createChildPath(k_VertexDataGroupName);
     args.insertOrAssign(QuickSurfaceMeshFilter::k_VertexDataGroupName_Key, std::make_any<DataPath>(vertexGroupDataPath));
 
     DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
     args.insertOrAssign(QuickSurfaceMeshFilter::k_NodeTypesArrayName_Key, std::make_any<DataPath>(nodeTypeDataPath));
 
-    DataPath faceGroupDataPath = triangleParentGroup.createChildPath(k_TriangleGeometryName).createChildPath(k_FaceDataGroupName);
+    DataPath faceGroupDataPath = triangleGeometryPath.createChildPath(k_FaceDataGroupName);
     args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceDataGroupName_Key, std::make_any<DataPath>(faceGroupDataPath));
 
     DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_FaceLabels);
@@ -123,8 +124,7 @@ TEST_CASE("SurfaceMeshing::QuickSurfaceMeshFilter", "[SurfaceMeshing][QuickSurfa
     REQUIRE(executeResult.result.valid());
 
     // Check a few things about the generated data.
-    DataPath triangleGeometryDataPath = triangleParentGroup.createChildPath(k_TriangleGeometryName);
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(triangleGeometryDataPath);
+    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(triangleGeometryPath);
     AbstractGeometry::SharedTriList* triangle = triangleGeom.getFaces();
     AbstractGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
 
