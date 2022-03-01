@@ -78,8 +78,7 @@ Result<> QuickSurfaceMesh::operator()()
   AbstractGeometryGrid& grid = m_DataStructure.getDataRefAs<AbstractGeometryGrid>(m_Inputs->pGridGeomDataPath);
 
   // Get the Created Triangle Geometry
-  DataPath triangleDataPath = m_Inputs->pParentDataGroupPath.createChildPath(m_Inputs->pTriangleGeometryName);
-  TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(triangleDataPath);
+  TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_Inputs->pTriangleGeometryPath);
 
   SizeVec3 udims = grid.getDimensions();
 
@@ -795,7 +794,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   MeshIndexType nodeId3 = 0;
   MeshIndexType nodeId4 = 0;
 
-  TriangleGeom* triangleGeom = m_DataStructure.getDataAs<TriangleGeom>(m_Inputs->pParentDataGroupPath.createChildPath(m_Inputs->pTriangleGeometryName));
+  TriangleGeom* triangleGeom = m_DataStructure.getDataAs<TriangleGeom>(m_Inputs->pTriangleGeometryPath);
   LinkedGeometryData& linkedGeometryData = triangleGeom->getLinkedGeometryData();
 
   std::vector<size_t> tDims = {nodeCount};
