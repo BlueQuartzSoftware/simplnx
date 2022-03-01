@@ -29,11 +29,11 @@ constexpr int64 k_MissingVertexGeom = -24500;
 constexpr int64 k_MissingImageGeom = -24501;
 
 template <typename T>
-void mapPointCloudDataByKernel(IDataArray* source, IDataArray* dynamic, std::vector<float>& kernelVals, int64 kernel[3], usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
+void mapPointCloudDataByKernel(IDataArray* source, INeighborList* dynamic, std::vector<float>& kernelVals, int64 kernel[3], usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
 {
-  DataArray<T>* inputDataPtr = dynamic_cast<DataArray<T>*>(source);
-  auto& inputData = *inputDataPtr->getDataStore();
-  NeighborList<T>* interpolatedDataPtr = dynamic_cast<NeighborList<T>*>(dynamic);
+  auto* inputDataArray = dynamic_cast<DataArray<T>*>(source);
+  auto& inputData = inputDataArray->getDataStoreRef();
+  auto* interpolatedDataPtr = dynamic_cast<NeighborList<T>*>(dynamic);
 
   usize index = 0;
   int64 startKernel[3] = {0, 0, 0};
@@ -66,47 +66,40 @@ void mapPointCloudDataByKernel(IDataArray* source, IDataArray* dynamic, std::vec
   }
 }
 
-void mapPointCloudDataByKernel(IDataArray* source, IDataArray* dynamic, std::vector<float>& kernelVals, int64 kernel[3], usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
+void mapPointCloudDataByKernel(IDataArray* source, INeighborList* dynamic, std::vector<float>& kernelVals, int64 kernel[3], usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
 {
-  if(dynamic_cast<DataArray<int8>*>(source))
+  switch(source->getDataType())
   {
+  case DataType::int8:
     mapPointCloudDataByKernel<int8>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<int16>*>(source))
-  {
+    break;
+  case DataType::int16:
     mapPointCloudDataByKernel<int16>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<int32>*>(source))
-  {
+    break;
+  case DataType::int32:
     mapPointCloudDataByKernel<int32>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<int64>*>(source))
-  {
+    break;
+  case DataType::int64:
     mapPointCloudDataByKernel<int64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<uint8>*>(source))
-  {
+    break;
+  case DataType::uint8:
     mapPointCloudDataByKernel<uint8>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<uint16>*>(source))
-  {
+    break;
+  case DataType::uint16:
     mapPointCloudDataByKernel<uint16>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<uint32>*>(source))
-  {
+    break;
+  case DataType::uint32:
     mapPointCloudDataByKernel<uint32>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<uint64>*>(source))
-  {
+    break;
+  case DataType::uint64:
     mapPointCloudDataByKernel<uint64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<float32>*>(source))
-  {
+    break;
+  case DataType::float32:
     mapPointCloudDataByKernel<float32>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-  }
-  else if(dynamic_cast<DataArray<float64>*>(source))
-  {
+    break;
+  case DataType::float64:
     mapPointCloudDataByKernel<float64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+    break;
   }
 }
 
@@ -519,8 +512,8 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
       {
         auto parentPath = interpolatedDataPath.getParent();
         auto dynamicArrayPath = parentPath.createChildPath(interpolatedDataPath.getTargetName() + "Neighbors");
-        auto dynamicArrayToInterpolate = data.getDataAs<IDataArray>(dynamicArrayPath);
-        auto interpolatedArray = data.getDataAs<IDataArray>(interpolatedDataPath);
+        auto* dynamicArrayToInterpolate = data.getDataAs<INeighborList>(dynamicArrayPath);
+        auto* interpolatedArray = data.getDataAs<IDataArray>(interpolatedDataPath);
         mapPointCloudDataByKernel(interpolatedArray, dynamicArrayToInterpolate, kernel, kernelNumVoxels, dims.data(), x, y, z, i);
       }
     }
@@ -530,8 +523,8 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
       for(const auto& copyDataPath : copyDataPaths)
       {
         auto dynamicArrayPath = interpolatedDataPath.createChildPath(copyDataPath.getTargetName() + " Neighbors");
-        auto dynamicArrayToCopy = data.getDataAs<IDataArray>(dynamicArrayPath);
-        auto copyArray = data.getDataAs<IDataArray>(copyDataPath);
+        auto* dynamicArrayToCopy = data.getDataAs<INeighborList>(dynamicArrayPath);
+        auto* copyArray = data.getDataAs<IDataArray>(copyDataPath);
         mapPointCloudDataByKernel(copyArray, dynamicArrayToCopy, uniformKernel, kernelNumVoxels, dims.data(), x, y, z, i);
       }
     }

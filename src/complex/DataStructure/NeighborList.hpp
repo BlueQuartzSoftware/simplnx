@@ -108,18 +108,6 @@ public:
   void setNumberOfComponents(int32 nc);
 
   /**
-   * @brief getNumberOfComponents
-   * @return usize
-   */
-  usize getNumberOfComponents() const override;
-
-  /**
-   * @brief getComponentDimensions
-   * @return std::vector<usize>
-   */
-  std::vector<usize> getComponentDimensions() const;
-
-  /**
    * @brief getTypeSize
    * @return usize
    */
@@ -218,18 +206,6 @@ public:
    * @return VectorType&
    */
   VectorType& operator[](usize grainId);
-
-  /**
-   * @brief Returns nullptr as there is no IDataStore.
-   * @return const IDataStore*
-   */
-  IDataStore* getIDataStore() override;
-
-  /**
-   * @brief Returns nullptr as there is no IDataStore.
-   * @return const IDataStore*
-   */
-  const IDataStore* getIDataStore() const override;
 
   /**
    * @brief Returns the DataArray's value type as an enum

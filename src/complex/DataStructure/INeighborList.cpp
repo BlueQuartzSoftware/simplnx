@@ -3,13 +3,13 @@
 namespace complex
 {
 INeighborList::INeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples)
-: IDataArray(dataStructure, name)
+: DataObject(dataStructure, name)
 , m_NumTuples(numTuples)
 {
 }
 
 INeighborList::INeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples, IdType importId)
-: IDataArray(dataStructure, name, importId)
+: DataObject(dataStructure, name, importId)
 , m_NumTuples(numTuples)
 {
 }
