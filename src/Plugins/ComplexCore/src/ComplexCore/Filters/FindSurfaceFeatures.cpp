@@ -246,7 +246,15 @@ IFilter::UniquePointer FindSurfaceFeatures::clone() const
 IFilter::PreflightResult FindSurfaceFeatures::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                             const std::atomic_bool& shouldCancel) const
 {
+  auto pFeatureGeometryPathValue = filterArgs.value<DataPath>(k_FeatureGeometryPath_Key);
   auto pSurfaceFeaturesArrayPathValue = filterArgs.value<DataPath>(k_SurfaceFeaturesArrayPath_Key);
+
+  const ImageGeom& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(pFeatureGeometryPathValue);
+  usize geometryDimensionality = featureGeometry.getDimensionality();
+  if(geometryDimensionality != 3 && geometryDimensionality != 2)
+  {
+    return {MakeErrorResult<OutputActions>(-1000, fmt::format("Image Geometry at path '{}' must be either 3D or 2D", pFeatureGeometryPathValue.toString()))};
+  }
 
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -281,13 +289,18 @@ Result<> FindSurfaceFeatures::executeImpl(DataStructure& dataStructure, const Ar
 
   // Find surface features
   ImageGeom& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(pFeatureGeometryPathValue);
-  if(featureGeometry.isThreeDimensional())
+  usize geometryDimensionality = featureGeometry.getDimensionality();
+  if(geometryDimensionality == 3)
   {
     findSurfaceFeatures3D(dataStructure, pFeatureGeometryPathValue, pFeatureIdsArrayPathValue, pSurfaceFeaturesArrayPathValue, pMarkFeature0NeighborsValue, shouldCancel);
   }
-  else
+  else if(geometryDimensionality == 2)
   {
     findSurfaceFeatures2D(dataStructure, pFeatureGeometryPathValue, pFeatureIdsArrayPathValue, pSurfaceFeaturesArrayPathValue, pMarkFeature0NeighborsValue, shouldCancel);
+  }
+  else
+  {
+    MakeErrorResult(-1000, fmt::format("Image Geometry at path '{}' must be either 3D or 2D", pFeatureGeometryPathValue.toString()));
   }
 
   return {};

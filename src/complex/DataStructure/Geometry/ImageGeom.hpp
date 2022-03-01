@@ -257,10 +257,14 @@ public:
   void findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const override;
 
   /**
-   * @brief isThreeDimensional Determines whether or not the geometry is 3 dimensional.
-   * @return bool
+   * @brief getDimensionality Determines the dimensionality of the geometry and returns either 1, 2, or 3
+   * Example 1: If this image geometry has dimensions 100 x 100 x 100, this method would return a dimensionality of 3.
+   * Example 2: If this image geometry has dimensions 100 x 100 x 1, this method would return a dimensionality of 2.
+   * Example 3: If this image geometry has dimensions 1 x 1 x 100, this method would return a dimensionality of 1.
+   * Example 4: If this image geometry has dimensions 1 x 1 x 1, this method would return a dimensionality of 1.
+   * @return usize
    */
-  bool isThreeDimensional() const;
+  usize getDimensionality() const;
 
   /**
    * @brief

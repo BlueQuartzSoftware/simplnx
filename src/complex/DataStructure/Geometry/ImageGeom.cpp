@@ -280,9 +280,22 @@ void ImageGeom::findDerivatives(Float64Array* field, Float64Array* derivatives, 
   throw std::runtime_error("");
 }
 
-bool ImageGeom::isThreeDimensional() const
+usize ImageGeom::getDimensionality() const
 {
-  return (getNumXPoints() > 1 && getNumYPoints() > 1 && getNumZPoints() > 1);
+  SizeVec3 dims = getDimensions();
+  usize numberOfOnes = std::count(dims.begin(), dims.end(), 1);
+
+  if(numberOfOnes == 0)
+  {
+    return 3;
+  }
+
+  if(numberOfOnes == 1)
+  {
+    return 2;
+  }
+
+  return 1;
 }
 
 complex::TooltipGenerator ImageGeom::getTooltipGenerator() const
