@@ -429,7 +429,7 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
   const size_t numBytesToRead = dataArray->getSize() * sizeof(T);
   if(numBytesToRead != fileSize)
   {
-    std::cout << "FileSize and Allocated Size do not match" << std::endl;
+    std::cout << "FileSize '" << fileSize << "' and Allocated Size '" << numBytesToRead << "' do not match" << std::endl;
     return nullptr;
   }
 
