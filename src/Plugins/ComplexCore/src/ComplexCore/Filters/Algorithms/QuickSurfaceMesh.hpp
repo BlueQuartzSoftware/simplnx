@@ -21,7 +21,7 @@ struct COMPLEXCORE_EXPORT QuickSurfaceMeshInputValues
   DataPath pFeatureIdsArrayPath;
   MultiArraySelectionParameter::ValueType pSelectedDataArrayPaths;
   DataPath pParentDataGroupPath;
-  std::string pTriangleGeometryName;
+  DataPath pTriangleGeometryPath;
   DataPath pVertexGroupDataPath;
   DataPath pNodeTypesDataPath;
   DataPath pFaceGroupDataPath;
