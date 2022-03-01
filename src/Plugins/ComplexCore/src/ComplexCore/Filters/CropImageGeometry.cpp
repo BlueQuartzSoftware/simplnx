@@ -493,7 +493,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
         {
           auto& oldDataArray = data.getDataRefAs<IDataArray>(voxelPath);
           auto& newDataArray = data.getDataRefAs<IDataArray>(newVoxelParentPath.createChildPath(voxelPath.getTargetName()));
-          
+
           copyDataArrayTuple(oldDataArray, newDataArray, index_old, index);
         }
       }
