@@ -42,9 +42,7 @@ const DataPath k_SurfaceFeaturesExemplaryPath({"Surface Features Exemplary"});
 const DataPath k_SurfaceFeaturesArrayPath({"Surface Features"});
 const std::string k_FeatureIdsFileName = "FeatureIds.raw";
 const std::string k_FeatureIds2DFileName = "FeatureIds_2D.raw";
-const std::string k_SurfaceFeatures2DXYExemplaryFileName = "SurfaceFeatures2D_XY.raw";
-const std::string k_SurfaceFeatures2DXZExemplaryFileName = "SurfaceFeatures2D_XZ.raw";
-const std::string k_SurfaceFeatures2DYZExemplaryFileName = "SurfaceFeatures2D_YZ.raw";
+const std::string k_SurfaceFeatures2DExemplaryFileName = "SurfaceFeatures2D.raw";
 const std::string k_SurfaceFeatures3DExemplaryFileName = "SurfaceFeatures3D.raw";
 
 void test_impl(const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, usize featureIdsSize, const std::string& exemplaryFileName)
@@ -147,15 +145,15 @@ TEST_CASE("Core::FindSurfaceFeatures: Valid filter execution in 3D", "[Core][Fin
 
 TEST_CASE("Core::FindSurfaceFeatures: Valid filter execution in 2D - XY Plane", "[Core][FindSurfaceFeatures]")
 {
-  test_impl(std::vector<uint64>({100, 100, 1}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DXYExemplaryFileName);
+  test_impl(std::vector<uint64>({100, 100, 1}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }
 
 TEST_CASE("Core::FindSurfaceFeatures: Valid filter execution in 2D - XZ Plane", "[Core][FindSurfaceFeatures]")
 {
-  test_impl(std::vector<uint64>({100, 1, 100}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DXZExemplaryFileName);
+  test_impl(std::vector<uint64>({100, 1, 100}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }
 
 TEST_CASE("Core::FindSurfaceFeatures: Valid filter execution in 2D - YZ Plane", "[Core][FindSurfaceFeatures]")
 {
-  test_impl(std::vector<uint64>({1, 100, 100}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DYZExemplaryFileName);
+  test_impl(std::vector<uint64>({1, 100, 100}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }
