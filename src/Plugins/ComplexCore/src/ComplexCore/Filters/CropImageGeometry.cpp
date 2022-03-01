@@ -22,6 +22,64 @@ namespace complex
 {
 namespace
 {
+template <typename T>
+void copyDataTuple(IDataArray& oldArray, IDataArray& newArray, usize oldIndex, usize newIndex)
+{
+  auto& oldArrayCast = static_cast<DataArray<T>&>(oldArray);
+  auto& newArrayCast = static_cast<DataArray<T>&>(newArray);
+
+  auto numComponents = oldArrayCast.getNumberOfComponents();
+
+  for(usize i = 0; i < numComponents; i++)
+  {
+    usize newOffset = newIndex * numComponents;
+    usize oldOffset = oldIndex * numComponents;
+    newArrayCast[newOffset + i] = oldArrayCast[oldOffset + i];
+  }
+}
+
+void copyDataArrayTuple(IDataArray& oldArray, IDataArray& newArray, usize oldIndex, usize newIndex)
+{
+  auto dataType = oldArray.getDataType();
+  switch(dataType)
+  {
+  case DataType::boolean:
+    copyDataTuple<bool>(oldArray, newArray, oldIndex, newIndex);
+    break;
+  case DataType::float32:
+    copyDataTuple<float32>(oldArray, newArray, oldIndex, newIndex);
+    break;
+  case DataType::float64:
+    copyDataTuple<float32>(oldArray, newArray, oldIndex, newIndex);
+    break;
+  case DataType::int8:
+    copyDataTuple<int8>(oldArray, newArray, oldIndex, newIndex);
+    break;
+  case DataType::int16:
+    copyDataTuple<int64>(oldArray, newArray, oldIndex, newIndex);
+    break;
+  case DataType::int32:
+    copyDataTuple<int32>(oldArray, newArray, oldIndex, newIndex);
+    break;
+  case DataType::int64:
+    copyDataTuple<int64>(oldArray, newArray, oldIndex, newIndex);
+    break;
+  case DataType::uint8:
+    copyDataTuple<uint8>(oldArray, newArray, oldIndex, newIndex);
+    break;
+  case DataType::uint16:
+    copyDataTuple<uint64>(oldArray, newArray, oldIndex, newIndex);
+    break;
+  case DataType::uint32:
+    copyDataTuple<uint32>(oldArray, newArray, oldIndex, newIndex);
+    break;
+  case DataType::uint64:
+    copyDataTuple<uint64>(oldArray, newArray, oldIndex, newIndex);
+    break;
+  default:
+    break;
+  }
+}
 
 IntVec3 getCurrentVolumeDataContainerDimensions(const DataStructure& dataStructure, const DataPath& imageGeomPath)
 {
@@ -153,8 +211,8 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   auto srcImagePath = args.value<DataPath>(k_ImageGeom_Key);
   auto destImagePath = args.value<DataPath>(k_NewImageGeom_Key);
   auto featureIdsArrayPath = args.value<DataPath>(k_FeatureIds_Key);
-  auto xMax = args.value<int32>(k_MinX_Key);
-  auto xMin = args.value<int32>(k_MaxX_Key);
+  auto xMax = args.value<int32>(k_MaxX_Key);
+  auto xMin = args.value<int32>(k_MinX_Key);
   auto yMax = args.value<int32>(k_MaxY_Key);
   auto yMin = args.value<int32>(k_MinY_Key);
   auto zMax = args.value<int32>(k_MaxZ_Key);
@@ -204,6 +262,8 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 
   auto srcImageGeom = data.getDataAs<ImageGeom>(srcImagePath);
   auto oldOrigin = srcImageGeom->getOrigin();
+
+  const usize requiredTupleCount = oldDimensions[0] * oldDimensions[1] * oldDimensions[2];
 
   std::vector<usize> tDims(3, 0);
   if(xMax - xMin < 0)
@@ -271,6 +331,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       actions.actions.push_back(std::move(action));
     }
 
+    usize flattenedTupleCount = tDims[0] * tDims[1] * tDims[2];
     for(const auto& srcArrayPath : voxelArrayPaths)
     {
       auto* srcArray = data.getDataAs<IDataArray>(srcArrayPath);
@@ -279,12 +340,16 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
         std::string ss = fmt::format("Could not find the DataArray at path '{}'", srcArrayPath.toString());
         return {MakeErrorResult<OutputActions>(-5551, ss)};
       }
+      if(srcArray->getNumberOfTuples() != requiredTupleCount)
+      {
+        std::string ss = fmt::format("DataArray at path '{}' does not match the required tuple count of '{}'", srcArrayPath.toString(), requiredTupleCount);
+        return {MakeErrorResult<OutputActions>(-5551, ss)};
+      }
 
       auto numericType = static_cast<NumericType>(srcArray->getDataType());
-      auto numTuples = srcArray->getNumberOfTuples();
       auto components = srcArray->getNumberOfComponents();
       auto dataArrayPath = newCellFeaturesPath.createChildPath(srcArrayPath.getTargetName());
-      auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{numTuples}, std::vector<usize>{components}, dataArrayPath);
+      auto action = std::make_unique<CreateArrayAction>(numericType, tDims, std::vector<usize>{components}, dataArrayPath);
       actions.actions.push_back(std::move(action));
     }
   }
@@ -332,6 +397,8 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
 
   auto& srcImageGeom = data.getDataRefAs<ImageGeom>(srcImagePath);
   auto& destImageGeom = data.getDataRefAs<ImageGeom>(destImagePath);
+
+  DataPath newVoxelParentPath = destImagePath.createChildPath(newFeaturesName);
 
   if(xMax > (static_cast<int64>(destImageGeom.getNumXPoints()) - 1))
   {
@@ -424,8 +491,10 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
         index = plane + row + col;
         for(const auto& voxelPath : voxelArrayPaths)
         {
-          auto& dataArray = data.getDataRefAs<IDataArray>(voxelPath);
-          dataArray.copyTuple(index_old, index);
+          auto& oldDataArray = data.getDataRefAs<IDataArray>(voxelPath);
+          auto& newDataArray = data.getDataRefAs<IDataArray>(newVoxelParentPath.createChildPath(voxelPath.getTargetName()));
+          
+          copyDataArrayTuple(oldDataArray, newDataArray, index_old, index);
         }
       }
     }
