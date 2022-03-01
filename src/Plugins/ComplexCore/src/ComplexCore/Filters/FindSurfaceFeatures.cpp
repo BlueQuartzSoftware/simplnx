@@ -16,7 +16,7 @@ using namespace complex;
 
 namespace
 {
-bool isPointASurfaceFeature(const Point2D<usize>& point, const usize& xPoints, const usize& yPoints, const bool& markFeature0Neighbors, const Int32Array& featureIds)
+bool isPointASurfaceFeature(const Point2D<usize>& point, usize xPoints, usize yPoints, bool markFeature0Neighbors, const Int32Array& featureIds)
 {
   usize yStride = point.getY() * xPoints;
 
@@ -52,7 +52,7 @@ bool isPointASurfaceFeature(const Point2D<usize>& point, const usize& xPoints, c
   return false;
 }
 
-bool isPointASurfaceFeature(const Point3D<usize>& point, const usize& xPoints, const usize& yPoints, const usize& zPoints, const bool& markFeature0Neighbors, const Int32Array& featureIds)
+bool isPointASurfaceFeature(const Point3D<usize>& point, usize xPoints, usize yPoints, usize zPoints, bool markFeature0Neighbors, const Int32Array& featureIds)
 {
   usize yStride = point.getY() * xPoints;
   usize zStride = point.getZ() * xPoints * yPoints;
@@ -102,7 +102,7 @@ bool isPointASurfaceFeature(const Point3D<usize>& point, const usize& xPoints, c
 }
 
 void findSurfaceFeatures3D(DataStructure& ds, const DataPath& featureGeometryPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& surfaceFeaturesArrayPathValue,
-                           const bool& markFeature0Neighbors, const std::atomic_bool& shouldCancel)
+                           bool markFeature0Neighbors, const std::atomic_bool& shouldCancel)
 {
   const ImageGeom& featureGeometry = ds.getDataRefAs<ImageGeom>(featureGeometryPathValue);
   const Int32Array& featureIds = ds.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
@@ -139,7 +139,7 @@ void findSurfaceFeatures3D(DataStructure& ds, const DataPath& featureGeometryPat
 }
 
 void findSurfaceFeatures2D(DataStructure& ds, const DataPath& featureGeometryPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& surfaceFeaturesArrayPathValue,
-                           const bool& markFeature0Neighbors, const std::atomic_bool& shouldCancel)
+                           bool markFeature0Neighbors, const std::atomic_bool& shouldCancel)
 {
   const ImageGeom& featureGeometry = ds.getDataRefAs<ImageGeom>(featureGeometryPathValue);
   const Int32Array& featureIds = ds.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
