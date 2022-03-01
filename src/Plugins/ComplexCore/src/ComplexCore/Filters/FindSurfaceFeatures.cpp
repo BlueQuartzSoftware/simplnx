@@ -126,7 +126,7 @@ void findSurfaceFeatures3D(DataStructure& ds, const DataPath& featureGeometryPat
         }
 
         int32 gnum = featureIds[zStride + yStride + x];
-        if(surfaceFeatures[gnum] == 0)
+        if(gnum != 0 && surfaceFeatures[gnum] == 0)
         {
           if(isPointASurfaceFeature(Point3D{x, y, z}, xPoints, yPoints, zPoints, markFeature0Neighbors, featureIds))
           {
@@ -175,7 +175,7 @@ void findSurfaceFeatures2D(DataStructure& ds, const DataPath& featureGeometryPat
       }
 
       int32 gnum = featureIds[yStride + x];
-      if(surfaceFeatures[gnum] == 0)
+      if(gnum != 0 && surfaceFeatures[gnum] == 0)
       {
         if(isPointASurfaceFeature(Point2D{x, y}, xPoints, yPoints, markFeature0Neighbors, featureIds))
         {
