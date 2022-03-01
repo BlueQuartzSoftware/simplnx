@@ -6,30 +6,30 @@
 #------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
-  # ApproximatePointCloudHullTest.cpp
-  # CalculateTriangleAreasFilterTest.cpp
-  # ConditionalSetValueTest.cpp
-  # CopyDataGroupTest.cpp
-  # CreateDataArrayTest.cpp
-  # CopyFeatureArrayToElementArrayTest
-  # CreateImageGeometryTest.cpp
+  ApproximatePointCloudHullTest.cpp
+  CalculateTriangleAreasFilterTest.cpp
+  ConditionalSetValueTest.cpp
+  CopyDataGroupTest.cpp
+  CreateDataArrayTest.cpp
+  CopyFeatureArrayToElementArrayTest
+  CreateImageGeometryTest.cpp
   CropImageGeomTest.cpp
-  # FindDifferencesMapTest.cpp
-  # FindFeaturePhasesFilterTest.cpp
-  # FindNeighborListStatisticsTest.cpp
-  # IdentifySampleTest.cpp
-  # IterativeClosestPointTest.cpp
-  # InterpolatePointCloudToRegularGridTest.cpp
-  # LaplacianSmoothingFilterTest.cpp
-  # MapPointCloudToRegularGridTest.cpp
-  # PointSampleTriangleGeometryFilterTest.cpp
-  # QuickSurfaceMeshFilterTest.cpp
-  # RemoveFlaggedVerticesTest.cpp
-  # RenameDataObjectTest.cpp
-  # RobustAutomaticThresholdTest.cpp
-  # RawBinaryReaderTest.cpp
-  # ScalarSegmentFeaturesFilterTest.cpp
-  # StlFileReaderTest.cpp
+  FindDifferencesMapTest.cpp
+  FindFeaturePhasesFilterTest.cpp
+  FindNeighborListStatisticsTest.cpp
+  IdentifySampleTest.cpp
+  IterativeClosestPointTest.cpp
+  InterpolatePointCloudToRegularGridTest.cpp
+  LaplacianSmoothingFilterTest.cpp
+  MapPointCloudToRegularGridTest.cpp
+  PointSampleTriangleGeometryFilterTest.cpp
+  QuickSurfaceMeshFilterTest.cpp
+  RemoveFlaggedVerticesTest.cpp
+  RenameDataObjectTest.cpp
+  RobustAutomaticThresholdTest.cpp
+  RawBinaryReaderTest.cpp
+  ScalarSegmentFeaturesFilterTest.cpp
+  StlFileReaderTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
