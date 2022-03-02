@@ -168,12 +168,8 @@ Parameters InitializeData::parameters() const
   // TODO: restrict types
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CellArrayPaths_Key, "Cell Arrays", "", std::vector<DataPath>{}));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<UInt64Parameter>(k_XMin_Key, "X Min (Column)", "", 0));
-  params.insert(std::make_unique<UInt64Parameter>(k_YMin_Key, "Y Min (Row)", "", 0));
-  params.insert(std::make_unique<UInt64Parameter>(k_ZMin_Key, "Z Min (Plane)", "", 0));
-  params.insert(std::make_unique<UInt64Parameter>(k_XMax_Key, "X Max (Column)", "", 0));
-  params.insert(std::make_unique<UInt64Parameter>(k_YMax_Key, "Y Max (Row)", "", 0));
-  params.insert(std::make_unique<UInt64Parameter>(k_ZMax_Key, "Z Max (Plane)", "", 0));
+  params.insert(std::make_unique<VectorUInt64Parameter>(k_MinPoint_Key, "Min Point", "", std::vector<uint64>{0, 0, 0}, std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
+  params.insert(std::make_unique<VectorUInt64Parameter>(k_MaxPoint_Key, "Max Point", "", std::vector<uint64>{0, 0, 0}, std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "", 0, ChoicesParameter::Choices{"Manual", "Random", "Random With Range"}));
   params.insert(std::make_unique<Float64Parameter>(k_InitValue_Key, "Initialization Value", "", 0.0f));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_InitRange_Key, "Initialization Range", "", VectorFloat64Parameter::ValueType{0.0, 0.0}));
@@ -191,15 +187,19 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
 {
   auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
   auto imageGeomPath = args.value<DataPath>(k_ImageGeometryPath_Key);
-  auto xMin = args.value<uint64>(k_XMin_Key);
-  auto yMin = args.value<uint64>(k_YMin_Key);
-  auto zMin = args.value<uint64>(k_ZMin_Key);
-  auto xMax = args.value<uint64>(k_XMax_Key);
-  auto yMax = args.value<uint64>(k_YMax_Key);
-  auto zMax = args.value<uint64>(k_ZMax_Key);
+  auto minPoint = args.value<std::vector<uint64>>(k_MinPoint_Key);
+  auto maxPoint = args.value<std::vector<uint64>>(k_MaxPoint_Key);
   auto initTypeIndex = args.value<uint64>(k_InitType_Key);
   auto initValue = args.value<float64>(k_InitValue_Key);
   auto initRangeVec = args.value<std::vector<float64>>(k_InitRange_Key);
+
+  uint64 xMin = minPoint.at(0);
+  uint64 yMin = minPoint.at(1);
+  uint64 zMin = minPoint.at(2);
+
+  uint64 xMax = maxPoint.at(0);
+  uint64 yMax = maxPoint.at(1);
+  uint64 zMax = maxPoint.at(2);
 
   InitType initType = ConvertIndexToInitType(initTypeIndex);
   RangeType initRange = {initRangeVec.at(0), initRangeVec.at(1)};
@@ -358,15 +358,19 @@ Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args,
 {
   auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
   auto imageGeomPath = args.value<DataPath>(k_ImageGeometryPath_Key);
-  auto xMin = args.value<uint64>(k_XMin_Key);
-  auto yMin = args.value<uint64>(k_YMin_Key);
-  auto zMin = args.value<uint64>(k_ZMin_Key);
-  auto xMax = args.value<uint64>(k_XMax_Key);
-  auto yMax = args.value<uint64>(k_YMax_Key);
-  auto zMax = args.value<uint64>(k_ZMax_Key);
+  auto minPoint = args.value<std::vector<uint64>>(k_MinPoint_Key);
+  auto maxPoint = args.value<std::vector<uint64>>(k_MaxPoint_Key);
   auto initTypeIndex = args.value<uint64>(k_InitType_Key);
   auto initValue = args.value<float64>(k_InitValue_Key);
   auto initRangeVec = args.value<std::vector<float64>>(k_InitRange_Key);
+
+  uint64 xMin = minPoint.at(0);
+  uint64 yMin = minPoint.at(1);
+  uint64 zMin = minPoint.at(2);
+
+  uint64 xMax = maxPoint.at(0);
+  uint64 yMax = maxPoint.at(1);
+  uint64 zMax = maxPoint.at(2);
 
   InitType initType = ConvertIndexToInitType(initTypeIndex);
   RangeType initRange = {initRangeVec.at(0), initRangeVec.at(1)};

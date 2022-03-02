@@ -31,12 +31,8 @@ Arguments CreateArgs(std::vector<DataPath> cellArrayPaths, DataPath imageGeomPat
 
   args.insert(InitializeData::k_CellArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::move(cellArrayPaths)));
   args.insert(InitializeData::k_ImageGeometryPath_Key, std::make_any<DataPath>(std::move(imageGeomPath)));
-  args.insert(InitializeData::k_XMin_Key, std::make_any<uint64>(xMin));
-  args.insert(InitializeData::k_YMin_Key, std::make_any<uint64>(yMin));
-  args.insert(InitializeData::k_ZMin_Key, std::make_any<uint64>(zMin));
-  args.insert(InitializeData::k_XMax_Key, std::make_any<uint64>(xMax));
-  args.insert(InitializeData::k_YMax_Key, std::make_any<uint64>(yMax));
-  args.insert(InitializeData::k_ZMax_Key, std::make_any<uint64>(zMax));
+  args.insert(InitializeData::k_MinPoint_Key, std::make_any<std::vector<uint64>>({xMin, yMin, zMin}));
+  args.insert(InitializeData::k_MaxPoint_Key, std::make_any<std::vector<uint64>>({xMax, yMax, zMax}));
   args.insert(InitializeData::k_InitType_Key, std::make_any<uint64>(to_underlying(initType)));
   args.insert(InitializeData::k_InitValue_Key, std::make_any<float64>(initValue));
   args.insert(InitializeData::k_InitRange_Key, std::make_any<std::vector<float64>>({initRange.first, initRange.second}));
