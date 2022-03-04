@@ -45,22 +45,22 @@ public:
   void addVertexData(const DataPath& dataPath);
   void removeVertexData(const DataPath& dataPath);
   void clearVertexData();
-  std::set<DataPath> getVertexDataPaths();
+  const std::set<DataPath>& getVertexDataPaths() const;
 
   void addEdgeData(const DataPath& dataPath);
   void removeEdgeData(const DataPath& dataPath);
   void clearEdgeData();
-  std::set<DataPath> getEdgeDataPaths();
+  const std::set<DataPath>& getEdgeDataPaths() const;
 
   void addFaceData(const DataPath& dataPath);
   void removeFaceData(const DataPath& dataPath);
   void clearFaceData();
-  std::set<DataPath> getFaceDataPaths();
+  const std::set<DataPath>& getFaceDataPaths() const;
 
   void addCellData(const DataPath& dataPath);
   void removeCellData(const DataPath& dataPath);
   void clearCellData();
-  std::set<DataPath> getCellDataPaths();
+  const std::set<DataPath>& getCellDataPaths() const;
 
 protected:
 private:
