@@ -20,7 +20,7 @@ void LinkedGeometryData::clearVertexData()
   m_VertexData.clear();
 }
 
-std::set<DataPath> LinkedGeometryData::getVertexDataPaths()
+const std::set<DataPath>& LinkedGeometryData::getVertexDataPaths() const
 {
   return m_VertexData;
 }
@@ -38,7 +38,7 @@ void LinkedGeometryData::clearEdgeData()
   m_EdgeData.clear();
 }
 
-std::set<DataPath> LinkedGeometryData::getEdgeDataPaths()
+const std::set<DataPath>& LinkedGeometryData::getEdgeDataPaths() const
 {
   return m_EdgeData;
 }
@@ -57,7 +57,7 @@ void LinkedGeometryData::clearFaceData()
   m_FaceData.clear();
 }
 
-std::set<DataPath> LinkedGeometryData::getFaceDataPaths()
+const std::set<DataPath>& LinkedGeometryData::getFaceDataPaths() const
 {
   return m_FaceData;
 }
@@ -76,7 +76,7 @@ void LinkedGeometryData::clearCellData()
   m_CellData.clear();
 }
 
-std::set<DataPath> LinkedGeometryData::getCellDataPaths()
+const std::set<DataPath>& LinkedGeometryData::getCellDataPaths() const
 {
   return m_CellData;
 }
