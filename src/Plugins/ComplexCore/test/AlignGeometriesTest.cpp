@@ -68,11 +68,11 @@ TEST_CASE("AlignGeometries: Bad Alignment Type", "[AlignGeometries]")
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
-  REQUIRE(!preflightResult.outputActions.valid());
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataGraph, args);
-  REQUIRE(!executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
 }
 
 TEST_CASE("AlignGeometries: Valid Arguments", "[AlignGeometries]")
@@ -91,11 +91,11 @@ TEST_CASE("AlignGeometries: Valid Arguments", "[AlignGeometries]")
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataGraph, args);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
   auto& movingGeom = dataGraph.getDataRefAs<ImageGeom>(movingGeomPath);
   auto& targetGeom = dataGraph.getDataRefAs<ImageGeom>(targetGeomPath);

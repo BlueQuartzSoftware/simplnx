@@ -18,165 +18,187 @@ namespace
 {
 constexpr complex::int32 k_EMPTY_PARAMETER = -123;
 
-complex::FloatVec3 extractOrigin(const complex::AbstractGeometry* geometry)
+complex::FloatVec3 extractOrigin(const complex::AbstractGeometry& geometry)
 {
-  if(auto* image = dynamic_cast<const complex::ImageGeom*>(geometry))
+  auto geomType = geometry.getGeomType();
+  switch(geomType)
   {
-    return image->getOrigin();
+  case complex::AbstractGeometry::Type::Image: {
+    auto& image = dynamic_cast<const complex::ImageGeom&>(geometry);
+    return image.getOrigin();
   }
-  if(auto* rectGrid = dynamic_cast<const complex::RectGridGeom*>(geometry))
-  {
-    const auto* xBounds = rectGrid->getXBounds()->getDataStore();
-    const auto* yBounds = rectGrid->getYBounds()->getDataStore();
-    const auto* zBounds = rectGrid->getZBounds()->getDataStore();
+  case complex::AbstractGeometry::Type::RectGrid: {
+    auto& rectGrid = dynamic_cast<const complex::RectGridGeom&>(geometry);
+    const auto& xBounds = rectGrid.getXBounds()->getDataStoreRef();
+    const auto& yBounds = rectGrid.getYBounds()->getDataStoreRef();
+    const auto& zBounds = rectGrid.getZBounds()->getDataStoreRef();
     complex::FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
-    for(size_t i = 0; i < xBounds->getNumberOfTuples(); i++)
+    for(size_t i = 0; i < xBounds.getNumberOfTuples(); i++)
     {
-      if(xBounds->getValue(i) < origin[0])
+      if(xBounds[i] < origin[0])
       {
-        origin[0] = xBounds->getValue(i);
+        origin[0] = xBounds[i];
       }
     }
-    for(size_t i = 0; i < yBounds->getNumberOfTuples(); i++)
+    for(size_t i = 0; i < yBounds.getNumberOfTuples(); i++)
     {
-      if(yBounds->getValue(i) < origin[1])
+      if(yBounds[i] < origin[1])
       {
-        origin[1] = yBounds->getValue(i);
+        origin[1] = yBounds[i];
       }
     }
-    for(size_t i = 0; i < zBounds->getNumberOfTuples(); i++)
+    for(size_t i = 0; i < zBounds.getNumberOfTuples(); i++)
     {
-      if(zBounds->getValue(i) < origin[2])
+      if(zBounds[i] < origin[2])
       {
-        origin[2] = zBounds->getValue(i);
+        origin[2] = zBounds[i];
       }
     }
     return origin;
   }
-  if(auto* vertex = dynamic_cast<const complex::VertexGeom*>(geometry))
-  {
-    const auto* vertices = vertex->getVertices()->getDataStore();
+  break;
+  case complex::AbstractGeometry::Type::Vertex: {
+    auto& vertex = dynamic_cast<const complex::VertexGeom&>(geometry);
+    const auto& vertices = vertex.getVertices()->getDataStoreRef();
     complex::FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
-    for(size_t i = 0; i < vertex->getNumberOfVertices(); i++)
+    for(size_t i = 0; i < vertex.getNumberOfVertices(); i++)
     {
       for(size_t j = 0; j < 3; j++)
       {
-        if(vertices->getValue(3 * i + j) < origin[j])
+        if(vertices[3 * i + j] < origin[j])
         {
-          origin[j] = vertices->getValue(3 * i + j);
+          origin[j] = vertices[3 * i + j];
         }
       }
     }
     return origin;
   }
-  if(const auto* edge = dynamic_cast<const complex::EdgeGeom*>(geometry))
-  {
-    const auto* vertices = edge->getVertices()->getDataStore();
+  break;
+  case complex::AbstractGeometry::Type::Edge: {
+    const auto& edge = dynamic_cast<const complex::EdgeGeom&>(geometry);
+    const auto& vertices = edge.getVertices()->getDataStoreRef();
     complex::FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
-    for(size_t i = 0; i < edge->getNumberOfVertices(); i++)
+    for(size_t i = 0; i < edge.getNumberOfVertices(); i++)
     {
       for(size_t j = 0; j < 3; j++)
       {
-        if(vertices->getValue(3 * i + j) < origin[j])
+        if(vertices[3 * i + j] < origin[j])
         {
-          origin[j] = vertices->getValue(3 * i + j);
+          origin[j] = vertices[3 * i + j];
         }
       }
     }
     return origin;
   }
-  if(const auto* geometry2d = dynamic_cast<const complex::AbstractGeometry2D*>(geometry))
-  {
-    const auto* vertices = geometry2d->getVertices()->getDataStore();
-    complex::FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
-
-    for(size_t i = 0; i < geometry2d->getNumberOfVertices(); i++)
+  break;
+  // 2D
+  case complex::AbstractGeometry::Type::Triangle:
+    [[falthrough]] case complex::AbstractGeometry::Type::Quad:
     {
-      for(size_t j = 0; j < 3; j++)
+      const auto& geometry2d = dynamic_cast<const complex::AbstractGeometry2D&>(geometry);
+      const auto& vertices = geometry2d.getVertices()->getDataStoreRef();
+      complex::FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+
+      for(size_t i = 0; i < geometry2d.getNumberOfVertices(); i++)
       {
-        if(vertices->getValue(3 * i + j) < origin[j])
+        for(size_t j = 0; j < 3; j++)
         {
-          origin[j] = vertices->getValue(3 * i + j);
+          if(vertices[3 * i + j] < origin[j])
+          {
+            origin[j] = vertices[3 * i + j];
+          }
         }
       }
+      return origin;
     }
-    return origin;
-  }
-  if(const auto* geometry3d = dynamic_cast<const complex::AbstractGeometry3D*>(geometry))
-  {
-    const auto* vertices = geometry3d->getVertices()->getDataStore();
-    complex::FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
-
-    for(size_t i = 0; i < geometry3d->getNumberOfVertices(); i++)
+  // 3D
+  case complex::AbstractGeometry::Type::Hexahedral:
+    [[falthrough]] case complex::AbstractGeometry::Type::Tetrahedral:
     {
-      for(size_t j = 0; j < 3; j++)
+      const auto& geometry3d = dynamic_cast<const complex::AbstractGeometry3D&>(geometry);
+      const auto& vertices = geometry3d.getVertices()->getDataStoreRef();
+      complex::FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+
+      for(size_t i = 0; i < geometry3d.getNumberOfVertices(); i++)
       {
-        if(vertices->getValue(3 * i + j) < origin[j])
+        for(size_t j = 0; j < 3; j++)
         {
-          origin[j] = vertices->getValue(3 * i + j);
+          if(vertices[3 * i + j] < origin[j])
+          {
+            origin[j] = vertices[3 * i + j];
+          }
         }
       }
+      return origin;
     }
-    return origin;
+  case complex::AbstractGeometry::Type::Unknown:
+    break;
+  case complex::AbstractGeometry::Type::Any:
+    break;
+  default:
+    break;
   }
+
   complex::FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
   return origin;
 }
 
-complex::FloatVec3 extractCentroid(const complex::AbstractGeometry* geometry)
+complex::FloatVec3 extractCentroid(const complex::AbstractGeometry& geometry)
 {
   complex::FloatVec3 centroid(0.0f, 0.0f, 0.0f);
-  if(const auto* image = dynamic_cast<const complex::ImageGeom*>(geometry))
+  switch(geometry.getGeomType())
   {
-    complex::SizeVec3 dims = image->getDimensions();
-    complex::FloatVec3 origin = image->getOrigin();
-    complex::FloatVec3 res = image->getSpacing();
+  case complex::AbstractGeometry::Type::Image: {
+    const auto& image = dynamic_cast<const complex::ImageGeom&>(geometry);
+    complex::SizeVec3 dims = image.getDimensions();
+    complex::FloatVec3 origin = image.getOrigin();
+    complex::FloatVec3 res = image.getSpacing();
 
     centroid[0] = (static_cast<float>(dims[0]) * res[0] / 2.0f) + origin[0];
     centroid[1] = (static_cast<float>(dims[1]) * res[1] / 2.0f) + origin[1];
     centroid[2] = (static_cast<float>(dims[2]) * res[2] / 2.0f) + origin[2];
     return centroid;
   }
-  if(const auto* rectGrid = dynamic_cast<const complex::RectGridGeom*>(geometry))
-  {
-    const auto* xBounds = rectGrid->getXBounds()->getDataStore();
-    const auto* yBounds = rectGrid->getYBounds()->getDataStore();
-    const auto* zBounds = rectGrid->getZBounds()->getDataStore();
+  case complex::AbstractGeometry::Type::RectGrid: {
+    const auto& rectGrid = dynamic_cast<const complex::RectGridGeom&>(geometry);
+    const auto& xBounds = rectGrid.getXBounds()->getDataStoreRef();
+    const auto& yBounds = rectGrid.getYBounds()->getDataStoreRef();
+    const auto& zBounds = rectGrid.getZBounds()->getDataStoreRef();
     float min[3] = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
     float max[3] = {std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min()};
-    for(size_t i = 0; i < xBounds->getNumberOfTuples(); i++)
+    for(size_t i = 0; i < xBounds.getNumberOfTuples(); i++)
     {
-      if(xBounds->getValue(i) < min[0])
+      if(xBounds[i] < min[0])
       {
-        min[0] = xBounds->getValue(i);
+        min[0] = xBounds[i];
       }
-      if(xBounds->getValue(i) > max[0])
+      if(xBounds[i] > max[0])
       {
-        max[0] = xBounds->getValue(i);
+        max[0] = xBounds[i];
       }
     }
-    for(size_t i = 0; i < yBounds->getNumberOfTuples(); i++)
+    for(size_t i = 0; i < yBounds.getNumberOfTuples(); i++)
     {
-      if(yBounds->getValue(i) < min[1])
+      if(yBounds[i] < min[1])
       {
-        min[1] = yBounds->getValue(i);
+        min[1] = yBounds[i];
       }
-      if(yBounds->getValue(i) > max[1])
+      if(yBounds[i] > max[1])
       {
-        max[1] = yBounds->getValue(i);
+        max[1] = yBounds[i];
       }
     }
-    for(size_t i = 0; i < zBounds->getNumberOfTuples(); i++)
+    for(size_t i = 0; i < zBounds.getNumberOfTuples(); i++)
     {
-      if(zBounds->getValue(i) < min[2])
+      if(zBounds[i] < min[2])
       {
-        min[2] = zBounds->getValue(i);
+        min[2] = zBounds[i];
       }
-      if(zBounds->getValue(i) > max[2])
+      if(zBounds[i] > max[2])
       {
-        max[2] = zBounds->getValue(i);
+        max[2] = zBounds[i];
       }
     }
     centroid[0] = (max[0] - min[0]) / 2.0f;
@@ -184,112 +206,125 @@ complex::FloatVec3 extractCentroid(const complex::AbstractGeometry* geometry)
     centroid[2] = (max[2] - min[2]) / 2.0f;
     return centroid;
   }
-  if(const auto* vertex = dynamic_cast<const complex::VertexGeom*>(geometry))
-  {
-    const auto* vertices = vertex->getVertices()->getDataStore();
+  case complex::AbstractGeometry::Type::Vertex: {
+    const auto& vertex = dynamic_cast<const complex::VertexGeom&>(geometry);
+    const auto& vertices = vertex.getVertices()->getDataStoreRef();
     centroid[0] = 0.0f;
     centroid[1] = 0.0f;
     centroid[2] = 0.0f;
-    for(size_t i = 0; i < vertex->getNumberOfVertices(); i++)
-    {
-      centroid[0] += vertices->getValue(3 * i + 0);
-      centroid[1] += vertices->getValue(3 * i + 1);
-      centroid[2] += vertices->getValue(3 * i + 2);
-    }
-    centroid[0] /= static_cast<float>(vertex->getNumberOfVertices());
-    centroid[1] /= static_cast<float>(vertex->getNumberOfVertices());
-    centroid[2] /= static_cast<float>(vertex->getNumberOfVertices());
-    return centroid;
-  }
-  if(const auto* edge = dynamic_cast<const complex::EdgeGeom*>(geometry))
-  {
-    const auto& vertices = edge->getVertices()->getDataStoreRef();
-    centroid[0] = 0.0f;
-    centroid[1] = 0.0f;
-    centroid[2] = 0.0f;
-    for(size_t i = 0; i < edge->getNumberOfVertices(); i++)
+    for(size_t i = 0; i < vertex.getNumberOfVertices(); i++)
     {
       centroid[0] += vertices[3 * i + 0];
       centroid[1] += vertices[3 * i + 1];
       centroid[2] += vertices[3 * i + 2];
     }
-    centroid[0] /= static_cast<float>(edge->getNumberOfVertices());
-    centroid[1] /= static_cast<float>(edge->getNumberOfVertices());
-    centroid[2] /= static_cast<float>(edge->getNumberOfVertices());
+    centroid[0] /= static_cast<float>(vertex.getNumberOfVertices());
+    centroid[1] /= static_cast<float>(vertex.getNumberOfVertices());
+    centroid[2] /= static_cast<float>(vertex.getNumberOfVertices());
     return centroid;
   }
-  if(auto* geometry2d = dynamic_cast<const complex::AbstractGeometry2D*>(geometry))
-  {
-    const auto& vertices = geometry2d->getVertices()->getDataStoreRef();
+  case complex::AbstractGeometry::Type::Edge: {
+    const auto& edge = dynamic_cast<const complex::EdgeGeom&>(geometry);
+    const auto& vertices = edge.getVertices()->getDataStoreRef();
     centroid[0] = 0.0f;
     centroid[1] = 0.0f;
     centroid[2] = 0.0f;
-    for(size_t i = 0; i < geometry2d->getNumberOfVertices(); i++)
+    for(size_t i = 0; i < edge.getNumberOfVertices(); i++)
     {
       centroid[0] += vertices[3 * i + 0];
       centroid[1] += vertices[3 * i + 1];
       centroid[2] += vertices[3 * i + 2];
     }
-    centroid[0] /= static_cast<float>(geometry2d->getNumberOfVertices());
-    centroid[1] /= static_cast<float>(geometry2d->getNumberOfVertices());
-    centroid[2] /= static_cast<float>(geometry2d->getNumberOfVertices());
+    centroid[0] /= static_cast<float>(edge.getNumberOfVertices());
+    centroid[1] /= static_cast<float>(edge.getNumberOfVertices());
+    centroid[2] /= static_cast<float>(edge.getNumberOfVertices());
     return centroid;
   }
-  if(const auto* geometry3d = dynamic_cast<const complex::AbstractGeometry3D*>(geometry))
-  {
-    const auto& vertices = geometry3d->getVertices()->getDataStoreRef();
-    centroid[0] = 0.0f;
-    centroid[1] = 0.0f;
-    centroid[2] = 0.0f;
-    for(size_t i = 0; i < geometry3d->getNumberOfVertices(); i++)
+    // 2D Types
+  case complex::AbstractGeometry::Type::Triangle:
+    [[falthrough]] case complex::AbstractGeometry::Type::Quad:
     {
-      centroid[0] += vertices[3 * i + 0];
-      centroid[1] += vertices[3 * i + 1];
-      centroid[2] += vertices[3 * i + 2];
+      auto& geometry2d = dynamic_cast<const complex::AbstractGeometry2D&>(geometry);
+      const auto& vertices = geometry2d.getVertices()->getDataStoreRef();
+      centroid[0] = 0.0f;
+      centroid[1] = 0.0f;
+      centroid[2] = 0.0f;
+      for(size_t i = 0; i < geometry2d.getNumberOfVertices(); i++)
+      {
+        centroid[0] += vertices[3 * i + 0];
+        centroid[1] += vertices[3 * i + 1];
+        centroid[2] += vertices[3 * i + 2];
+      }
+      centroid[0] /= static_cast<float>(geometry2d.getNumberOfVertices());
+      centroid[1] /= static_cast<float>(geometry2d.getNumberOfVertices());
+      centroid[2] /= static_cast<float>(geometry2d.getNumberOfVertices());
+      return centroid;
     }
-    centroid[0] /= static_cast<float>(geometry3d->getNumberOfVertices());
-    centroid[1] /= static_cast<float>(geometry3d->getNumberOfVertices());
-    centroid[2] /= static_cast<float>(geometry3d->getNumberOfVertices());
-    return centroid;
-    ;
+    // 3D Types
+  case complex::AbstractGeometry::Type::Hexahedral:
+    [[falthrough]] case complex::AbstractGeometry::Type::Tetrahedral:
+    {
+      const auto& geometry3d = dynamic_cast<const complex::AbstractGeometry3D&>(geometry);
+      const auto& vertices = geometry3d.getVertices()->getDataStoreRef();
+      centroid[0] = 0.0f;
+      centroid[1] = 0.0f;
+      centroid[2] = 0.0f;
+      for(size_t i = 0; i < geometry3d.getNumberOfVertices(); i++)
+      {
+        centroid[0] += vertices[3 * i + 0];
+        centroid[1] += vertices[3 * i + 1];
+        centroid[2] += vertices[3 * i + 2];
+      }
+      centroid[0] /= static_cast<float>(geometry3d.getNumberOfVertices());
+      centroid[1] /= static_cast<float>(geometry3d.getNumberOfVertices());
+      centroid[2] /= static_cast<float>(geometry3d.getNumberOfVertices());
+      return centroid;
+    }
+  case complex::AbstractGeometry::Type::Unknown:
+    break;
+  case complex::AbstractGeometry::Type::Any:
+    break;
   }
+
   return centroid;
 }
 
-void translateGeometry(complex::AbstractGeometry* geometry, const complex::FloatVec3& translation)
+void translateGeometry(complex::AbstractGeometry& geometry, const complex::FloatVec3& translation)
 {
-  if(auto* image = dynamic_cast<complex::ImageGeom*>(geometry))
+  switch(geometry.getGeomType())
   {
-    complex::FloatVec3 origin = image->getOrigin();
+  case complex::AbstractGeometry::Type::Image: {
+    auto& image = dynamic_cast<complex::ImageGeom&>(geometry);
+    complex::FloatVec3 origin = image.getOrigin();
     origin[0] += translation[0];
     origin[1] += translation[1];
     origin[2] += translation[2];
-    image->setOrigin(origin);
+    image.setOrigin(origin);
     return;
   }
-  if(auto* rectGrid = dynamic_cast<complex::RectGridGeom*>(geometry))
-  {
-    auto& xBounds = rectGrid->getXBounds()->getDataStoreRef();
-    auto& yBounds = rectGrid->getYBounds()->getDataStoreRef();
-    auto& zBounds = rectGrid->getZBounds()->getDataStoreRef();
-    for(size_t i = 0; i < rectGrid->getNumXPoints(); i++)
+  case complex::AbstractGeometry::Type::RectGrid: {
+    auto& rectGrid = dynamic_cast<complex::RectGridGeom&>(geometry);
+    auto& xBounds = rectGrid.getXBounds()->getDataStoreRef();
+    auto& yBounds = rectGrid.getYBounds()->getDataStoreRef();
+    auto& zBounds = rectGrid.getZBounds()->getDataStoreRef();
+    for(size_t i = 0; i < rectGrid.getNumXPoints(); i++)
     {
       xBounds[i] += translation[0];
     }
-    for(size_t i = 0; i < rectGrid->getNumYPoints(); i++)
+    for(size_t i = 0; i < rectGrid.getNumYPoints(); i++)
     {
       yBounds[i] += translation[1];
     }
-    for(size_t i = 0; i < rectGrid->getNumZPoints(); i++)
+    for(size_t i = 0; i < rectGrid.getNumZPoints(); i++)
     {
       zBounds[i] += translation[2];
     }
     return;
   }
-  if(auto* vertex = dynamic_cast<complex::VertexGeom*>(geometry))
-  {
-    auto& vertices = vertex->getVertices()->getDataStoreRef();
-    for(size_t i = 0; i < vertex->getNumberOfVertices(); i++)
+  case complex::AbstractGeometry::Type::Vertex: {
+    auto& vertex = dynamic_cast<complex::VertexGeom&>(geometry);
+    auto& vertices = vertex.getVertices()->getDataStoreRef();
+    for(size_t i = 0; i < vertex.getNumberOfVertices(); i++)
     {
       vertices[3 * i + 0] += translation[0];
       vertices[3 * i + 1] += translation[1];
@@ -297,10 +332,10 @@ void translateGeometry(complex::AbstractGeometry* geometry, const complex::Float
     }
     return;
   }
-  if(auto* edge = dynamic_cast<complex::EdgeGeom*>(geometry))
-  {
-    auto& vertices = edge->getVertices()->getDataStoreRef();
-    for(size_t i = 0; i < edge->getNumberOfVertices(); i++)
+  case complex::AbstractGeometry::Type::Edge: {
+    auto& edge = dynamic_cast<complex::EdgeGeom&>(geometry);
+    auto& vertices = edge.getVertices()->getDataStoreRef();
+    for(size_t i = 0; i < edge.getNumberOfVertices(); i++)
     {
       vertices[3 * i + 0] += translation[0];
       vertices[3 * i + 1] += translation[1];
@@ -308,27 +343,34 @@ void translateGeometry(complex::AbstractGeometry* geometry, const complex::Float
     }
     return;
   }
-  if(auto* geometry2d = dynamic_cast<complex::AbstractGeometry2D*>(geometry))
-  {
-    auto& vertices = geometry2d->getVertices()->getDataStoreRef();
-    for(size_t i = 0; i < geometry2d->getNumberOfVertices(); i++)
+    // 2D Geometries
+  case complex::AbstractGeometry::Type::Quad:
+    [[falthrough]] case complex::AbstractGeometry::Type::Triangle:
     {
-      vertices[3 * i + 0] += translation[0];
-      vertices[3 * i + 1] += translation[1];
-      vertices[3 * i + 2] += translation[2];
+      auto& geometry2d = dynamic_cast<complex::AbstractGeometry2D&>(geometry);
+      auto& vertices = geometry2d.getVertices()->getDataStoreRef();
+      for(size_t i = 0; i < geometry2d.getNumberOfVertices(); i++)
+      {
+        vertices[3 * i + 0] += translation[0];
+        vertices[3 * i + 1] += translation[1];
+        vertices[3 * i + 2] += translation[2];
+      }
+      return;
     }
-    return;
-  }
-  if(auto* geometry3d = dynamic_cast<complex::AbstractGeometry3D*>(geometry))
-  {
-    auto& vertices = geometry3d->getVertices()->getDataStoreRef();
-    for(size_t i = 0; i < geometry3d->getNumberOfVertices(); i++)
+    // 3D Geometries
+  case complex::AbstractGeometry::Type::Hexahedral:
+    [[falthrough]] case complex::AbstractGeometry::Type::Tetrahedral:
     {
-      vertices[3 * i + 0] += translation[0];
-      vertices[3 * i + 1] += translation[1];
-      vertices[3 * i + 2] += translation[2];
+      auto& geometry3d = dynamic_cast<complex::AbstractGeometry3D&>(geometry);
+      auto& vertices = geometry3d.getVertices()->getDataStoreRef();
+      for(size_t i = 0; i < geometry3d.getNumberOfVertices(); i++)
+      {
+        vertices[3 * i + 0] += translation[0];
+        vertices[3 * i + 1] += translation[1];
+        vertices[3 * i + 2] += translation[2];
+      }
+      return;
     }
-    return;
   }
 }
 
@@ -399,8 +441,8 @@ Result<> AlignGeometries::executeImpl(DataStructure& data, const Arguments& args
   auto targetGeometryPath = args.value<DataPath>(k_TargetGeometry_Key);
   auto alignmentType = args.value<uint64>(k_AlignmentType_Key);
 
-  auto* moving = data.getDataAs<AbstractGeometry>(movingGeometryPath);
-  auto* target = data.getDataAs<AbstractGeometry>(targetGeometryPath);
+  auto& moving = data.getDataRefAs<AbstractGeometry>(movingGeometryPath);
+  auto& target = data.getDataRefAs<AbstractGeometry>(targetGeometryPath);
 
   if(alignmentType == 0)
   {
