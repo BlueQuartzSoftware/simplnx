@@ -106,50 +106,6 @@ FloatVec3 getCurrentVolumeDataContainerResolutions(const DataStructure& dataStru
   }
   return data;
 }
-
-std::string getOldBoxDimensions(const DataStructure& dataStructure, const DataPath& imageGeomPath)
-{
-  std::string desc = "Please select an Image Geometry ";
-  const auto* image = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
-  if(nullptr != image)
-  {
-    auto oldOrigin = image->getOrigin();
-    auto oldDimensions = image->getDimensions();
-    auto oldResolution = image->getSpacing();
-
-    std::stringstream ss;
-    ss << "X Range: " << oldOrigin[0] << " to " << (oldOrigin[0] + (oldDimensions[0] * oldResolution[0])) << " (Delta: " << (oldDimensions[0] * oldResolution[0]) << ") " << 0 << "-"
-       << oldDimensions[0] - 1 << " Voxels\n";
-    ss << "Y Range: " << oldOrigin[1] << " to " << (oldOrigin[1] + (oldDimensions[1] * oldResolution[1])) << " (Delta: " << (oldDimensions[1] * oldResolution[1]) << ") " << 0 << "-"
-       << oldDimensions[1] - 1 << " Voxels\n";
-    ss << "Z Range: " << oldOrigin[2] << " to " << (oldOrigin[2] + (oldDimensions[2] * oldResolution[2])) << " (Delta: " << (oldDimensions[2] * oldResolution[2]) << ") " << 0 << "-"
-       << oldDimensions[2] - 1 << " Voxels\n";
-    return ss.str();
-  }
-  return desc;
-}
-
-std::string getNewBoxDimensions(const DataStructure& dataStructure, const DataPath& imageGeomPath)
-{
-  std::string desc = std::string("Please select a Data Container that has an Image Geometry");
-  const auto* image = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
-  if(nullptr != image)
-  {
-    auto newOrigin = image->getOrigin();
-    auto newDimensions = image->getDimensions();
-    auto newResolution = image->getSpacing();
-
-    std::stringstream ss;
-    ss << "X Range: " << newOrigin[0] << " to " << (newOrigin[0] + (newDimensions[0] * newResolution[0])) << " (Delta: " << (newDimensions[0] * newResolution[0]) << ") " << 0 << "-"
-       << newDimensions[0] - 1 << " Voxels\n";
-    ss << "Y Range: " << newOrigin[1] << " to " << (newOrigin[1] + (newDimensions[1] * newResolution[1])) << " (Delta: " << (newDimensions[1] * newResolution[1]) << ") " << 0 << "-"
-       << newDimensions[1] - 1 << " Voxels\n";
-    ss << "Z Range: " << newOrigin[2] << " to " << (newOrigin[2] + (newDimensions[2] * newResolution[2])) << " (Delta: " << (newDimensions[2] * newResolution[2]) << ") " << 0 << "-"
-       << newDimensions[2] - 1 << " Voxels\n";
-    return ss.str();
-  }
-  return desc;
-}
 } // namespace
 
 std::string CropImageGeometry::name() const
