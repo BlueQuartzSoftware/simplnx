@@ -7,7 +7,7 @@ Core (Memory/Management)
 
 ## Description ##
 
-This **Filter** copies all the associated **Element** data of a selected **Element Attribute Array** to the **Feature** to which the **Elements** belong. The value stored for each **Feature** will be the value of the _last element copied_. 
+This **Filter** copies all the associated **Element** data of a selected **Element Array** to the **Feature** to which the **Elements** belong. The value stored for each **Feature** will be the value of the _last element copied_. 
 
 ## Parameters ##
 
@@ -20,18 +20,17 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| Element **Attribute Array** | None | Any | Any | **Element** data to copy to **Feature** data |
-| Element **Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Element** belongs |
+| Kind  | Type | Component Dimensions | Description |
+|------|------|----------------------|-------------|
+| Element Array DataPath | Any | Any | **Element** data to copy to **Feature** data |
+| Element Array DataPath | int32_t | (1) | Specifies to which **Feature** each **Element** belongs |
 
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Attribute Matrix** | None | **Feature**  | N/A | **Feature Attribute Matrix** in which to place the copied data |
-| Feature **Attribute Array** | None | Any  | Any | Copied **Attribute Array** name |
+| Kind | Type | Component Dimensions | Description |
+|------|------|----------------------|-------------|
+| Feature Array DataPath | Any  | Any | The copied array containing **Feature** data |
 
 ## Example Pipelines ##
 
