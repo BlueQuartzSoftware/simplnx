@@ -21,12 +21,8 @@ public:
   CropImageGeometry& operator=(CropImageGeometry&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MinX_Key = "min_x";
-  static inline constexpr StringLiteral k_MinY_Key = "min_y";
-  static inline constexpr StringLiteral k_MinZ_Key = "min_z";
-  static inline constexpr StringLiteral k_MaxX_Key = "max_x";
-  static inline constexpr StringLiteral k_MaxY_Key = "max_y";
-  static inline constexpr StringLiteral k_MaxZ_Key = "max_z";
+  static inline constexpr StringLiteral k_MinVoxel_Key = "min_voxel";
+  static inline constexpr StringLiteral k_MaxVoxel_Key = "max_voxel";
   static inline constexpr StringLiteral k_UpdateOrigin_Key = "update_origin";
   static inline constexpr StringLiteral k_ImageGeom_Key = "image_geom";
   static inline constexpr StringLiteral k_NewImageGeom_Key = "new_image_geom";

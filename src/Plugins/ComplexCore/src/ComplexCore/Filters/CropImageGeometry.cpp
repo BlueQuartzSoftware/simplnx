@@ -16,6 +16,7 @@
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
+#include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/SamplingUtils.hpp"
 
 namespace complex
@@ -183,12 +184,8 @@ Parameters CropImageGeometry::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geom", "DataPath to the target ImageGeom", DataPath(), std::set{AbstractGeometry::Type::Image}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewImageGeom_Key, "New Image Geom", "DataPath to create the new ImageGeom at", DataPath()));
 
-  params.insert(std::make_unique<Int32Parameter>(k_MinX_Key, "X Min Voxel (Column)", "Minimum X Voxel", 0));
-  params.insert(std::make_unique<Int32Parameter>(k_MinY_Key, "Y Min Voxel (Row)", "Minimum Y Voxel", 0));
-  params.insert(std::make_unique<Int32Parameter>(k_MinZ_Key, "Z Min Voxel (Plane)", "Minimum Z Voxel", 0));
-  params.insert(std::make_unique<Int32Parameter>(k_MaxX_Key, "X Max Voxel (Column) [Inclusive]", "Maximum X Voxel", 0));
-  params.insert(std::make_unique<Int32Parameter>(k_MaxY_Key, "Y Max Voxel (Row) [Inclusive]", "Maximum Y Voxel", 0));
-  params.insert(std::make_unique<Int32Parameter>(k_MaxZ_Key, "Z Max Voxel (Plane) [Inclusive]", "Maximum Z Voxel", 0));
+  params.insert(std::make_unique<VectorUInt64Parameter>(k_MinVoxel_Key, "Min Voxel", "", std::vector<uint64>{0, 0, 0}, std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
+  params.insert(std::make_unique<VectorUInt64Parameter>(k_MaxVoxel_Key, "Max Voxel [Inclusive]", "", std::vector<uint64>{0, 0, 0}, std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
 
   params.insert(std::make_unique<BoolParameter>(k_UpdateOrigin_Key, "Update Origin", "Specifies if the origin should be updated", false));
 
@@ -211,16 +208,19 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   auto srcImagePath = args.value<DataPath>(k_ImageGeom_Key);
   auto destImagePath = args.value<DataPath>(k_NewImageGeom_Key);
   auto featureIdsArrayPath = args.value<DataPath>(k_FeatureIds_Key);
-  auto xMax = args.value<int32>(k_MaxX_Key);
-  auto xMin = args.value<int32>(k_MinX_Key);
-  auto yMax = args.value<int32>(k_MaxY_Key);
-  auto yMin = args.value<int32>(k_MinY_Key);
-  auto zMax = args.value<int32>(k_MaxZ_Key);
-  auto zMin = args.value<int32>(k_MinZ_Key);
+  auto minVoxels = args.value<std::vector<uint64>>(k_MinVoxel_Key);
+  auto maxVoxels = args.value<std::vector<uint64>>(k_MaxVoxel_Key);
   auto shouldUpdateOrigin = args.value<bool>(k_UpdateOrigin_Key);
   auto shouldRenumberFeatures = args.value<bool>(k_RenumberFeatures_Key);
   auto voxelArrayPaths = args.value<std::vector<DataPath>>(k_VoxelArrays_Key);
   auto newCellFeaturesName = args.value<std::string>(k_NewFeaturesName_Key);
+
+  auto xMin = minVoxels[0];
+  auto xMax = maxVoxels[0];
+  auto yMax = maxVoxels[1];
+  auto yMin = minVoxels[1];
+  auto zMax = maxVoxels[2];
+  auto zMin = minVoxels[2];
 
   OutputActions actions;
 
@@ -383,17 +383,20 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
 {
   auto srcImagePath = args.value<DataPath>(k_ImageGeom_Key);
   auto destImagePath = args.value<DataPath>(k_NewImageGeom_Key);
-  auto xMax = args.value<int32>(k_MaxX_Key);
-  auto xMin = args.value<int32>(k_MinX_Key);
-  auto yMax = args.value<int32>(k_MaxY_Key);
-  auto yMin = args.value<int32>(k_MinY_Key);
-  auto zMax = args.value<int32>(k_MaxZ_Key);
-  auto zMin = args.value<int32>(k_MinZ_Key);
+  auto minVoxels = args.value<std::vector<uint64>>(k_MinVoxel_Key);
+  auto maxVoxels = args.value<std::vector<uint64>>(k_MaxVoxel_Key);
   auto shouldUpdateOrigin = args.value<bool>(k_UpdateOrigin_Key);
   auto shouldRenumberFeatures = args.value<bool>(k_RenumberFeatures_Key);
   auto newFeaturesName = args.value<std::string>(k_NewFeaturesName_Key);
   auto voxelArrayPaths = args.value<std::vector<DataPath>>(k_VoxelArrays_Key);
   auto featureIdsArrayPath = args.value<DataPath>(k_FeatureIds_Key);
+
+  auto xMin = minVoxels[0];
+  auto xMax = maxVoxels[0];
+  auto yMax = maxVoxels[1];
+  auto yMin = minVoxels[1];
+  auto zMax = maxVoxels[2];
+  auto zMin = minVoxels[2];
 
   auto& srcImageGeom = data.getDataRefAs<ImageGeom>(srcImagePath);
   auto& destImageGeom = data.getDataRefAs<ImageGeom>(destImagePath);

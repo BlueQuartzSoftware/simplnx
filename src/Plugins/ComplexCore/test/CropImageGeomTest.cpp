@@ -46,12 +46,8 @@ void compareDataValues(const Int32Array& oldDataArray, const Int32Array& newData
 
 TEST_CASE("CropImageGeometry(Instantiate)", "[ComplexCore][CropImageGeometry]")
 {
-  static constexpr int32 k_MinX = 0;
-  static constexpr int32 k_MinY = 0;
-  static constexpr int32 k_MinZ = 0;
-  static constexpr int32 k_MaxX = 0;
-  static constexpr int32 k_MaxY = 0;
-  static constexpr int32 k_MaxZ = 0;
+  const std::vector<uint64> k_MinVector{0, 0, 0};
+  const std::vector<uint64> k_MaxVector{0, 0, 0};
 
   static constexpr bool k_UpdateOrigin = false;
   const DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
@@ -65,12 +61,8 @@ TEST_CASE("CropImageGeometry(Instantiate)", "[ComplexCore][CropImageGeometry]")
   DataStructure ds = UnitTest::CreateDataStructure();
   Arguments args;
 
-  args.insert(CropImageGeometry::k_MinX_Key, std::make_any<int32>(k_MinX));
-  args.insert(CropImageGeometry::k_MinY_Key, std::make_any<int32>(k_MinY));
-  args.insert(CropImageGeometry::k_MinZ_Key, std::make_any<int32>(k_MinZ));
-  args.insert(CropImageGeometry::k_MaxX_Key, std::make_any<int32>(k_MaxX));
-  args.insert(CropImageGeometry::k_MaxY_Key, std::make_any<int32>(k_MaxY));
-  args.insert(CropImageGeometry::k_MaxZ_Key, std::make_any<int32>(k_MaxZ));
+  args.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
+  args.insert(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
   args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
   args.insert(CropImageGeometry::k_ImageGeom_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometry::k_NewImageGeom_Key, std::make_any<DataPath>(k_NewImageGeomPath));
@@ -85,12 +77,8 @@ TEST_CASE("CropImageGeometry(Instantiate)", "[ComplexCore][CropImageGeometry]")
 
 TEST_CASE("CropImageGeometry(Valid Parameters)", "[ComplexCore][CropImageGeometry]")
 {
-  static constexpr int32 k_MinX = 0;
-  static constexpr int32 k_MinY = 0;
-  static constexpr int32 k_MinZ = 0;
-  static constexpr int32 k_MaxX = 2;
-  static constexpr int32 k_MaxY = 3;
-  static constexpr int32 k_MaxZ = 4;
+  const std::vector<uint64> k_MinVector{0, 0, 0};
+  const std::vector<uint64> k_MaxVector{2, 3, 4};
 
   static constexpr bool k_UpdateOrigin = false;
   const DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
@@ -105,12 +93,8 @@ TEST_CASE("CropImageGeometry(Valid Parameters)", "[ComplexCore][CropImageGeometr
   DataStructure ds = UnitTest::CreateDataStructure();
   Arguments args;
 
-  args.insert(CropImageGeometry::k_MinX_Key, std::make_any<int32>(k_MinX));
-  args.insert(CropImageGeometry::k_MinY_Key, std::make_any<int32>(k_MinY));
-  args.insert(CropImageGeometry::k_MinZ_Key, std::make_any<int32>(k_MinZ));
-  args.insert(CropImageGeometry::k_MaxX_Key, std::make_any<int32>(k_MaxX));
-  args.insert(CropImageGeometry::k_MaxY_Key, std::make_any<int32>(k_MaxY));
-  args.insert(CropImageGeometry::k_MaxZ_Key, std::make_any<int32>(k_MaxZ));
+  args.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
+  args.insert(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
   args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
   args.insert(CropImageGeometry::k_ImageGeom_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometry::k_NewImageGeom_Key, std::make_any<DataPath>(k_NewImageGeomPath));
@@ -127,9 +111,10 @@ TEST_CASE("CropImageGeometry(Valid Parameters)", "[ComplexCore][CropImageGeometr
   auto& newImageGeom = ds.getDataRefAs<ImageGeom>(k_NewImageGeomPath);
   auto newDimensions = newImageGeom.getDimensions();
 
-  REQUIRE(newDimensions.getX() == (k_MaxX - k_MinX + 1));
-  REQUIRE(newDimensions.getY() == (k_MaxY - k_MinY + 1));
-  REQUIRE(newDimensions.getZ() == (k_MaxZ - k_MinZ + 1));
+  for(usize i = 0; i < 3; i++)
+  {
+    REQUIRE(newDimensions[i] == (k_MaxVector[i] - k_MinVector[i] + 1));
+  }
 
   const usize targetSize = (newDimensions[0]) * (newDimensions[1]) * (newDimensions[2]);
   const auto& oldDataArray = ds.getDataRefAs<Int32Array>(k_PhasesPath);
