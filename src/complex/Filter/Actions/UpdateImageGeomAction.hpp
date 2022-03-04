@@ -34,7 +34,7 @@ public:
   /**
    * @brief Returns true if the origin should be updated. Returns false otherwise.
    * @return bool
-  */
+   */
   bool shouldUpdateOrigin() const;
 
   /**

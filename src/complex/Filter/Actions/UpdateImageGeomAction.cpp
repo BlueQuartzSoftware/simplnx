@@ -60,7 +60,6 @@ const std::optional<FloatVec3>& UpdateImageGeomAction::spacing() const
   return m_Spacing;
 }
 
-
 const DataPath& UpdateImageGeomAction::path() const
 {
   return m_Path;

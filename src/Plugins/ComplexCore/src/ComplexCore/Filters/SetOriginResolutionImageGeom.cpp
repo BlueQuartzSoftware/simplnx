@@ -1,7 +1,7 @@
 #include "SetOriginResolutionImageGeom.hpp"
 
-#include <string>
 #include <optional>
+#include <string>
 
 #include "fmt/format.h"
 
@@ -67,7 +67,7 @@ IFilter::PreflightResult SetOriginResolutionImageGeom::preflightImpl(const DataS
 
   std::optional<FloatVec3> originVec;
   std::optional<FloatVec3> spacingVec;
-  
+
   if(shouldChangeOrigin)
   {
     originVec = FloatVec3(origin[0], origin[1], origin[2]);
@@ -76,7 +76,7 @@ IFilter::PreflightResult SetOriginResolutionImageGeom::preflightImpl(const DataS
   {
     spacingVec = FloatVec3(spacing[0], spacing[1], spacing[2]);
   }
-  
+
   auto action = std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, imageGeomPath);
 
   OutputActions actions;
