@@ -21,6 +21,9 @@ Result<> copyCellData(DataStructure& dataStructure, const DataPath& selectedCell
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
   DataArray<T>& createdArray = dataStructure.getDataRefAs<DataArray<T>>(createdArrayNameValue);
 
+  // Initialize the output array with a default value
+  createdArray.fill(0);
+
   usize totalCellArrayComponents = selectedCellArray.getNumberOfComponents();
 
   std::map<int32, usize> featureMap;
