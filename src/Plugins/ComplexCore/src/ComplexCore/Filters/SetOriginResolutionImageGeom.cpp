@@ -1,10 +1,12 @@
 #include "SetOriginResolutionImageGeom.hpp"
 
 #include <string>
+#include <optional>
 
 #include "fmt/format.h"
 
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/Filter/Actions/UpdateImageGeomAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
@@ -63,37 +65,28 @@ IFilter::PreflightResult SetOriginResolutionImageGeom::preflightImpl(const DataS
   auto origin = filterArgs.value<std::vector<float64>>(k_Origin_Key);
   auto spacing = filterArgs.value<std::vector<float64>>(k_Spacing_Key);
 
-  auto* image = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
-  if(image == nullptr)
+  std::optional<FloatVec3> originVec;
+  std::optional<FloatVec3> spacingVec;
+  
+  if(shouldChangeOrigin)
   {
-    std::string ss = fmt::format("Could not find ImageGeom at path '{}'", imageGeomPath.toString());
-    auto result = MakeErrorResult(-300, ss);
-    return {ConvertResultTo<OutputActions>(std::move(result), {})};
+    originVec = FloatVec3(origin[0], origin[1], origin[2]);
   }
+  if(shouldChangeResolution)
+  {
+    spacingVec = FloatVec3(spacing[0], spacing[1], spacing[2]);
+  }
+  
+  auto action = std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, imageGeomPath);
 
   OutputActions actions;
+  actions.actions.push_back(std::move(action));
   return {std::move(actions)};
 }
 
 Result<> SetOriginResolutionImageGeom::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                    const std::atomic_bool& shouldCancel) const
 {
-  auto imageGeomPath = args.value<DataPath>(k_ImageGeomPath_Key);
-  auto shouldChangeOrigin = args.value<bool>(k_ChangeOrigin_Key);
-  auto shouldChangeResolution = args.value<bool>(k_ChangeResolution_Key);
-  auto origin = args.value<std::vector<float64>>(k_Origin_Key);
-  auto spacing = args.value<std::vector<float64>>(k_Spacing_Key);
-
-  auto* image = data.getDataAs<ImageGeom>(imageGeomPath);
-  if(shouldChangeOrigin)
-  {
-    image->setOrigin(origin[0], origin[1], origin[2]);
-  }
-  if(shouldChangeResolution)
-  {
-    image->setSpacing(spacing[0], spacing[1], spacing[2]);
-  }
-
   return {};
 }
 } // namespace complex

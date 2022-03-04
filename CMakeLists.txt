@@ -262,6 +262,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/EmptyAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/RenameDataAction.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/UpdateImageGeomAction.hpp
 
   ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableData.hpp
 
@@ -413,6 +414,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/RenameDataAction.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/UpdateImageGeomAction.cpp
 
   ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableData.cpp
 
