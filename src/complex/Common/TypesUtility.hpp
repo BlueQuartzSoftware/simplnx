@@ -4,6 +4,7 @@
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/Common/Types.hpp"
 
+#include <optional>
 #include <stdexcept>
 #include <type_traits>
 
@@ -188,6 +189,47 @@ inline constexpr StringLiteral DataTypeToString(DataType dataType)
   }
   default:
     throw std::runtime_error("complex::DataTypeToString: Unknown DataType");
+  }
+}
+
+inline constexpr std::optional<NumericType> ConvertDataTypeToNumericType(DataType dataType)
+{
+  switch(dataType)
+  {
+  case DataType::int8: {
+    return NumericType::int8;
+  }
+  case DataType::uint8: {
+    return NumericType::uint8;
+  }
+  case DataType::int16: {
+    return NumericType::int16;
+  }
+  case DataType::uint16: {
+    return NumericType::uint16;
+  }
+  case DataType::int32: {
+    return NumericType::int32;
+  }
+  case DataType::uint32: {
+    return NumericType::uint32;
+  }
+  case DataType::int64: {
+    return NumericType::int64;
+  }
+  case DataType::uint64: {
+    return NumericType::uint64;
+  }
+  case DataType::float32: {
+    return NumericType::float32;
+  }
+  case DataType::float64: {
+    return NumericType::float64;
+  }
+  // insert other cases here
+  default: {
+    return {};
+  }
   }
 }
 } // namespace complex
