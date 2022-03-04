@@ -50,9 +50,9 @@ public:
 
   /**
    * @brief Returns the path of the DataArray to be created.
-   * @return
+   * @return DataPath
    */
-  const DataPath& path() const;
+  DataPath path() const;
 
 private:
   NumericType m_Type;

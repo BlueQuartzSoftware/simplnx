@@ -58,7 +58,7 @@ public:
   : m_CreatedPath(createdPath)
   {
   }
-  virtual ~IDataCreationAction() = default;
+  ~IDataCreationAction() noexcept override = default;
 
   IDataCreationAction(const IDataCreationAction&) = delete;
   IDataCreationAction(IDataCreationAction&&) noexcept = delete;

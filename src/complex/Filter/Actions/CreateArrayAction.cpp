@@ -75,7 +75,7 @@ const std::vector<usize>& CreateArrayAction::componentDims() const
   return m_CDims;
 }
 
-const DataPath& CreateArrayAction::path() const
+DataPath CreateArrayAction::path() const
 {
   return getCreatedPath();
 }

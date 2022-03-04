@@ -305,8 +305,8 @@ void removeOverlap(std::vector<DataPath>& group1, std::vector<DataPath>& group2)
   auto overlap = getOverlap(group1, group2);
   for(const auto& value : overlap)
   {
-    std::remove(group1.begin(), group1.end(), value);
-    std::remove(group2.begin(), group2.end(), value);
+    group1.erase(std::remove(group1.begin(), group1.end(), value), group1.end());
+    group2.erase(std::remove(group2.begin(), group2.end(), value), group2.end());
   }
 }
 

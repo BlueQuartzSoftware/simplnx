@@ -26,7 +26,7 @@ public:
    */
   OutputRenamedMessage(AbstractPipelineNode* pipeline, const PipelineFilter::RenamedPath& renamedOutput);
 
-  virtual ~OutputRenamedMessage();
+  ~OutputRenamedMessage() noexcept override;
 
   /**
    * @brief Returns the PipelineFilter::RenamedPath pair.
