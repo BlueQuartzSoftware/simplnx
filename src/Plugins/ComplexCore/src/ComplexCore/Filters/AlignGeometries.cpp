@@ -95,7 +95,8 @@ complex::FloatVec3 extractOrigin(const complex::AbstractGeometry& geometry)
   break;
   // 2D
   case complex::AbstractGeometry::Type::Triangle:
-    [[falthrough]] case complex::AbstractGeometry::Type::Quad:
+    [[fallthrough]];
+  case complex::AbstractGeometry::Type::Quad:
     {
       const auto& geometry2d = dynamic_cast<const complex::AbstractGeometry2D&>(geometry);
       const auto& vertices = geometry2d.getVertices()->getDataStoreRef();
