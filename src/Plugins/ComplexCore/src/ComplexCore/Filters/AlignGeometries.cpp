@@ -115,24 +115,24 @@ complex::FloatVec3 extractOrigin(const complex::AbstractGeometry& geometry)
   }
   // 3D
   case complex::AbstractGeometry::Type::Hexahedral:
-    [[falthrough]] case complex::AbstractGeometry::Type::Tetrahedral:
-    {
-      const auto& geometry3d = dynamic_cast<const complex::AbstractGeometry3D&>(geometry);
-      const auto& vertices = geometry3d.getVertices()->getDataStoreRef();
-      complex::FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    [[fallthrough]];
+  case complex::AbstractGeometry::Type::Tetrahedral: {
+    const auto& geometry3d = dynamic_cast<const complex::AbstractGeometry3D&>(geometry);
+    const auto& vertices = geometry3d.getVertices()->getDataStoreRef();
+    complex::FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
-      for(size_t i = 0; i < geometry3d.getNumberOfVertices(); i++)
+    for(size_t i = 0; i < geometry3d.getNumberOfVertices(); i++)
+    {
+      for(size_t j = 0; j < 3; j++)
       {
-        for(size_t j = 0; j < 3; j++)
+        if(vertices[3 * i + j] < origin[j])
         {
-          if(vertices[3 * i + j] < origin[j])
-          {
-            origin[j] = vertices[3 * i + j];
-          }
+          origin[j] = vertices[3 * i + j];
         }
       }
-      return origin;
     }
+    return origin;
+  }
   case complex::AbstractGeometry::Type::Unknown:
     break;
   case complex::AbstractGeometry::Type::Any:
@@ -242,44 +242,44 @@ complex::FloatVec3 extractCentroid(const complex::AbstractGeometry& geometry)
   }
     // 2D Types
   case complex::AbstractGeometry::Type::Triangle:
-    [[falthrough]] case complex::AbstractGeometry::Type::Quad:
+    [[fallthrough]];
+  case complex::AbstractGeometry::Type::Quad: {
+    auto& geometry2d = dynamic_cast<const complex::AbstractGeometry2D&>(geometry);
+    const auto& vertices = geometry2d.getVertices()->getDataStoreRef();
+    centroid[0] = 0.0f;
+    centroid[1] = 0.0f;
+    centroid[2] = 0.0f;
+    for(size_t i = 0; i < geometry2d.getNumberOfVertices(); i++)
     {
-      auto& geometry2d = dynamic_cast<const complex::AbstractGeometry2D&>(geometry);
-      const auto& vertices = geometry2d.getVertices()->getDataStoreRef();
-      centroid[0] = 0.0f;
-      centroid[1] = 0.0f;
-      centroid[2] = 0.0f;
-      for(size_t i = 0; i < geometry2d.getNumberOfVertices(); i++)
-      {
-        centroid[0] += vertices[3 * i + 0];
-        centroid[1] += vertices[3 * i + 1];
-        centroid[2] += vertices[3 * i + 2];
-      }
-      centroid[0] /= static_cast<float>(geometry2d.getNumberOfVertices());
-      centroid[1] /= static_cast<float>(geometry2d.getNumberOfVertices());
-      centroid[2] /= static_cast<float>(geometry2d.getNumberOfVertices());
-      return centroid;
+      centroid[0] += vertices[3 * i + 0];
+      centroid[1] += vertices[3 * i + 1];
+      centroid[2] += vertices[3 * i + 2];
     }
+    centroid[0] /= static_cast<float>(geometry2d.getNumberOfVertices());
+    centroid[1] /= static_cast<float>(geometry2d.getNumberOfVertices());
+    centroid[2] /= static_cast<float>(geometry2d.getNumberOfVertices());
+    return centroid;
+  }
     // 3D Types
   case complex::AbstractGeometry::Type::Hexahedral:
-    [[falthrough]] case complex::AbstractGeometry::Type::Tetrahedral:
+    [[fallthrough]];
+  case complex::AbstractGeometry::Type::Tetrahedral: {
+    const auto& geometry3d = dynamic_cast<const complex::AbstractGeometry3D&>(geometry);
+    const auto& vertices = geometry3d.getVertices()->getDataStoreRef();
+    centroid[0] = 0.0f;
+    centroid[1] = 0.0f;
+    centroid[2] = 0.0f;
+    for(size_t i = 0; i < geometry3d.getNumberOfVertices(); i++)
     {
-      const auto& geometry3d = dynamic_cast<const complex::AbstractGeometry3D&>(geometry);
-      const auto& vertices = geometry3d.getVertices()->getDataStoreRef();
-      centroid[0] = 0.0f;
-      centroid[1] = 0.0f;
-      centroid[2] = 0.0f;
-      for(size_t i = 0; i < geometry3d.getNumberOfVertices(); i++)
-      {
-        centroid[0] += vertices[3 * i + 0];
-        centroid[1] += vertices[3 * i + 1];
-        centroid[2] += vertices[3 * i + 2];
-      }
-      centroid[0] /= static_cast<float>(geometry3d.getNumberOfVertices());
-      centroid[1] /= static_cast<float>(geometry3d.getNumberOfVertices());
-      centroid[2] /= static_cast<float>(geometry3d.getNumberOfVertices());
-      return centroid;
+      centroid[0] += vertices[3 * i + 0];
+      centroid[1] += vertices[3 * i + 1];
+      centroid[2] += vertices[3 * i + 2];
     }
+    centroid[0] /= static_cast<float>(geometry3d.getNumberOfVertices());
+    centroid[1] /= static_cast<float>(geometry3d.getNumberOfVertices());
+    centroid[2] /= static_cast<float>(geometry3d.getNumberOfVertices());
+    return centroid;
+  }
   case complex::AbstractGeometry::Type::Unknown:
     break;
   case complex::AbstractGeometry::Type::Any:
