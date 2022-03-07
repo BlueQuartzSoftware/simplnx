@@ -20,10 +20,11 @@ using namespace complex;
 namespace
 {
 constexpr complex::int32 k_EMPTY_PARAMETER = -350;
-constexpr complex::int32 k_MissingTriangleGeometry = -351;
-constexpr complex::int32 k_NoNodeTypesArray = -352;
-constexpr complex::int32 k_MissingVertexArray = -353;
-constexpr complex::int32 k_MissingTriangleArray = -354;
+constexpr complex::int32 k_MissingTrianglVerticesArray = -351;
+constexpr complex::int32 k_MissingTriangleFacesArray = -352;
+constexpr complex::int32 k_NoNodeTypesArray = -353;
+constexpr complex::int32 k_MissingVertexArray = -354;
+constexpr complex::int32 k_MissingTriangleArray = -355;
 
 template <class T>
 inline void hashCombine(usize& seed, const T& obj)
@@ -53,7 +54,7 @@ struct CopyDataFunctor
       {
         tmpIndex = nComps * i + d;
         ptrIndex = nComps * elementMap[i] + d;
-        outputData.setValue(tmpIndex, inputData.getValue(ptrIndex));
+        outputData[tmpIndex] = inputData[ptrIndex];
       }
     }
   }
@@ -119,10 +120,16 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
   if(triangleGeom.getVertices() == nullptr)
   {
     std::string ss = fmt::format("Triangle Geometry does not have an assigned vertices array");
-    return {MakeErrorResult<OutputActions>(k_MissingTriangleGeometry, ss)};
+    return {MakeErrorResult<OutputActions>(k_MissingTrianglVerticesArray, ss)};
   }
-
   arrays.push_back(triangleGeom.getVertices()->getDataPaths().front());
+
+  if(triangleGeom.getFaces() == nullptr)
+  {
+    std::string ss = fmt::format("Triangle Geometry does not have an assigned faces array");
+    return {MakeErrorResult<OutputActions>(k_MissingTriangleFacesArray, ss)};
+  }
+  arrays.push_back(triangleGeom.getFaces()->getDataPaths().front());
 
   std::vector<usize> cDims(1, 1);
 
@@ -317,14 +324,22 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
     counter++;
   }
 
-  // std::string ss = fmt::format("Finished Checking Triangles || Updating Array Information...");
-  // notifyStatusMessage(ss);
-
   tmpVerts.shrink_to_fit();
   tmpTris.shrink_to_fit();
 
   std::vector<usize> vertDims(1, tmpVerts.size());
   std::vector<usize> triDims(1, tmpTris.size());
+
+  {
+    auto& src = *(triangleGeom.getVertices());
+    auto& dest = *(internalTriangleGeom.getVertices());
+    ExecuteDataFunction(CopyDataFunctor{}, src.getDataType(), src, dest, internalVertexMap);
+  }
+  {
+    auto& src = *(triangleGeom.getFaces());
+    auto& dest = *(internalTriangleGeom.getFaces());
+    ExecuteDataFunction(CopyDataFunctor{}, src.getDataType(), src, dest, internalTriMap);
+  }
 
   for(const auto& copyPath : copyVertexPaths)
   {
