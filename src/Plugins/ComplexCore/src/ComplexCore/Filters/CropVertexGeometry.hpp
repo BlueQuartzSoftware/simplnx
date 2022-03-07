@@ -23,12 +23,10 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_VertexGeom_Key = "vertex_geom";
   static inline constexpr StringLiteral k_CroppedGeom_Key = "cropped_geom";
-  static inline constexpr StringLiteral k_MinX_Key = "min_x";
-  static inline constexpr StringLiteral k_MinY_Key = "min_y";
-  static inline constexpr StringLiteral k_MinZ_Key = "min_z";
-  static inline constexpr StringLiteral k_MaxX_Key = "max_x";
-  static inline constexpr StringLiteral k_MaxY_Key = "max_y";
-  static inline constexpr StringLiteral k_MaxZ_Key = "max_z";
+  static inline constexpr StringLiteral k_MinPos_Key = "min_pos";
+  static inline constexpr StringLiteral k_MaxPos_Key = "max_pos";
+  static inline constexpr StringLiteral k_TargetArrayPaths_Key = "target_arrays";
+  static inline constexpr StringLiteral k_CroppedGroupName_Key = "cropped_group";
 
   /**
    * @brief
@@ -74,7 +72,7 @@ protected:
    * @param messageHandler
    * @return PreflightResult
    */
-  PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler) const override;
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief
@@ -84,7 +82,8 @@ protected:
    * @param messageHandler
    * @return Result<>
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 

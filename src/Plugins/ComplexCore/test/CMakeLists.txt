@@ -12,6 +12,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CopyDataGroupTest.cpp
   CreateDataArrayTest.cpp
   CreateFeatureArrayFromElementArrayTest.cpp
+  CropVertexGeometryTest.cpp
   CopyFeatureArrayToElementArrayTest.cpp
   CreateImageGeometryTest.cpp
   CropImageGeomTest.cpp
