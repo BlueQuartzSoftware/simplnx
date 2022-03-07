@@ -96,24 +96,23 @@ complex::FloatVec3 extractOrigin(const complex::AbstractGeometry& geometry)
   // 2D
   case complex::AbstractGeometry::Type::Triangle:
     [[fallthrough]];
-  case complex::AbstractGeometry::Type::Quad:
-    {
-      const auto& geometry2d = dynamic_cast<const complex::AbstractGeometry2D&>(geometry);
-      const auto& vertices = geometry2d.getVertices()->getDataStoreRef();
-      complex::FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+  case complex::AbstractGeometry::Type::Quad: {
+    const auto& geometry2d = dynamic_cast<const complex::AbstractGeometry2D&>(geometry);
+    const auto& vertices = geometry2d.getVertices()->getDataStoreRef();
+    complex::FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
-      for(size_t i = 0; i < geometry2d.getNumberOfVertices(); i++)
+    for(size_t i = 0; i < geometry2d.getNumberOfVertices(); i++)
+    {
+      for(size_t j = 0; j < 3; j++)
       {
-        for(size_t j = 0; j < 3; j++)
+        if(vertices[3 * i + j] < origin[j])
         {
-          if(vertices[3 * i + j] < origin[j])
-          {
-            origin[j] = vertices[3 * i + j];
-          }
+          origin[j] = vertices[3 * i + j];
         }
       }
-      return origin;
     }
+    return origin;
+  }
   // 3D
   case complex::AbstractGeometry::Type::Hexahedral:
     [[falthrough]] case complex::AbstractGeometry::Type::Tetrahedral:
