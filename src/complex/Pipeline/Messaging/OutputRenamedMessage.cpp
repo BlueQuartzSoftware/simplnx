@@ -8,7 +8,7 @@ OutputRenamedMessage::OutputRenamedMessage(AbstractPipelineNode* pipeline, const
 {
 }
 
-OutputRenamedMessage::~OutputRenamedMessage() = default;
+OutputRenamedMessage::~OutputRenamedMessage() noexcept = default;
 
 PipelineFilter::RenamedPath OutputRenamedMessage::getRenamedPath() const
 {
