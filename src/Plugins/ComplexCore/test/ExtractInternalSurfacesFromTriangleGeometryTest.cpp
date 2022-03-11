@@ -37,7 +37,7 @@ DataStructure createTestData(const std::string& triangleGeomName, const std::str
   auto* triangleGeom = TriangleGeom::Create(ds, triangleGeomName);
   triangleGeom->setVertices(ds.getDataAs<AbstractGeometry::SharedVertexList>(vertexListPath));
   triangleGeom->setFaces(triangleList);
-  
+
   auto* nodeArray = Int8Array::CreateWithStore<Int8DataStore>(ds, nodeTypesName, {triangleGeom->getNumberOfFaces()}, {1});
   auto& nodeData = nodeArray->getDataStoreRef();
   nodeData.fill(2);
@@ -45,7 +45,7 @@ DataStructure createTestData(const std::string& triangleGeomName, const std::str
 
   return ds;
 }
-}
+} // namespace
 
 TEST_CASE("ExtractInternalSurfacesFromTriangleGeometry(Instantiate)", "[ComplexCore][ExtractInternalSurfacesFromTriangleGeometry]")
 {
@@ -112,7 +112,7 @@ TEST_CASE("ExtractInternalSurfacesFromTriangleGeometry(Data)", "[ComplexCore][Ex
     REQUIRE(newVerticesArray->getSize() == 3);
   }
 
-  #if 1
+#if 1
   {
     auto* newTrianglesArray = ds.getDataAs<IDataArray>(newTrianglesGeom->getTriangleArrayId());
     auto* oldTrianglesArray = ds.getDataAs<IDataArray>(oldTrianglesGeom->getTriangleArrayId());
@@ -122,5 +122,5 @@ TEST_CASE("ExtractInternalSurfacesFromTriangleGeometry(Data)", "[ComplexCore][Ex
 
     REQUIRE(newTrianglesArray->getNumberOfTuples() == 3);
   }
-  #endif
+#endif
 }
