@@ -36,7 +36,7 @@ DataStructure createTestData()
 
   return dataStructure;
 }
-}
+} // namespace
 
 TEST_CASE("CropVertexGeometry(Instantiate)", "[ComplexCore][CropVertexGeometry]")
 {
@@ -74,8 +74,8 @@ TEST_CASE("CropVertexGeometry(Data)", "[ComplexCore][CropVertexGeometry]")
   args.insert(CropVertexGeometry::k_TargetArrayPaths_Key, std::make_any<std::vector<DataPath>>(targetDataArrays));
   args.insert(CropVertexGeometry::k_CroppedGroupName_Key, std::make_any<std::string>(k_CroppedGroupName));
 
-  //auto preflightResult = filter.execute(ds, args);
-  //COMPLEX_RESULT_REQUIRE_VALID(preflightResult.result);
+  // auto preflightResult = filter.execute(ds, args);
+  // COMPLEX_RESULT_REQUIRE_VALID(preflightResult.result);
 
   auto result = filter.execute(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
