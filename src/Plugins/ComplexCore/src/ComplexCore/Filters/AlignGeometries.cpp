@@ -345,7 +345,8 @@ void translateGeometry(complex::AbstractGeometry& geometry, const complex::Float
   }
     // 2D Geometries
   case complex::AbstractGeometry::Type::Quad:
-    [[falthrough]] case complex::AbstractGeometry::Type::Triangle:
+    [[fallthrough]];
+  case complex::AbstractGeometry::Type::Triangle:
     {
       auto& geometry2d = dynamic_cast<complex::AbstractGeometry2D&>(geometry);
       auto& vertices = geometry2d.getVertices()->getDataStoreRef();
@@ -359,7 +360,8 @@ void translateGeometry(complex::AbstractGeometry& geometry, const complex::Float
     }
     // 3D Geometries
   case complex::AbstractGeometry::Type::Hexahedral:
-    [[falthrough]] case complex::AbstractGeometry::Type::Tetrahedral:
+    [[fallthrough]];
+  case complex::AbstractGeometry::Type::Tetrahedral:
     {
       auto& geometry3d = dynamic_cast<complex::AbstractGeometry3D&>(geometry);
       auto& vertices = geometry3d.getVertices()->getDataStoreRef();
