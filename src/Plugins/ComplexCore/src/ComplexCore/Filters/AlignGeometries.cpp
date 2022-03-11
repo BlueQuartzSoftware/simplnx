@@ -346,33 +346,31 @@ void translateGeometry(complex::AbstractGeometry& geometry, const complex::Float
     // 2D Geometries
   case complex::AbstractGeometry::Type::Quad:
     [[fallthrough]];
-  case complex::AbstractGeometry::Type::Triangle:
+  case complex::AbstractGeometry::Type::Triangle: {
+    auto& geometry2d = dynamic_cast<complex::AbstractGeometry2D&>(geometry);
+    auto& vertices = geometry2d.getVertices()->getDataStoreRef();
+    for(size_t i = 0; i < geometry2d.getNumberOfVertices(); i++)
     {
-      auto& geometry2d = dynamic_cast<complex::AbstractGeometry2D&>(geometry);
-      auto& vertices = geometry2d.getVertices()->getDataStoreRef();
-      for(size_t i = 0; i < geometry2d.getNumberOfVertices(); i++)
-      {
-        vertices[3 * i + 0] += translation[0];
-        vertices[3 * i + 1] += translation[1];
-        vertices[3 * i + 2] += translation[2];
-      }
-      return;
+      vertices[3 * i + 0] += translation[0];
+      vertices[3 * i + 1] += translation[1];
+      vertices[3 * i + 2] += translation[2];
     }
+    return;
+  }
     // 3D Geometries
   case complex::AbstractGeometry::Type::Hexahedral:
     [[fallthrough]];
-  case complex::AbstractGeometry::Type::Tetrahedral:
+  case complex::AbstractGeometry::Type::Tetrahedral: {
+    auto& geometry3d = dynamic_cast<complex::AbstractGeometry3D&>(geometry);
+    auto& vertices = geometry3d.getVertices()->getDataStoreRef();
+    for(size_t i = 0; i < geometry3d.getNumberOfVertices(); i++)
     {
-      auto& geometry3d = dynamic_cast<complex::AbstractGeometry3D&>(geometry);
-      auto& vertices = geometry3d.getVertices()->getDataStoreRef();
-      for(size_t i = 0; i < geometry3d.getNumberOfVertices(); i++)
-      {
-        vertices[3 * i + 0] += translation[0];
-        vertices[3 * i + 1] += translation[1];
-        vertices[3 * i + 2] += translation[2];
-      }
-      return;
+      vertices[3 * i + 0] += translation[0];
+      vertices[3 * i + 1] += translation[1];
+      vertices[3 * i + 2] += translation[2];
     }
+    return;
+  }
   }
 }
 
