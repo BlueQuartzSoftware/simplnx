@@ -4,6 +4,7 @@
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
+#include "complex/DataStructure/INeighborList.hpp"
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
@@ -128,7 +129,8 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
   }
 
   const IDataArray* dataArray = dynamic_cast<const IDataArray*>(object);
-  if(dataArray == nullptr)
+  const INeighborList* neighborList = dynamic_cast<const INeighborList*>(object);
+  if(dataArray == nullptr && neighborList == nullptr)
   {
     return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, value.toString()));
   }

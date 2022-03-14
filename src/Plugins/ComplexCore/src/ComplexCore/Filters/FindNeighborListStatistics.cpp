@@ -23,7 +23,7 @@ class FindNeighborListStatisticsImpl
 public:
   using NeighborListType = NeighborList<T>;
 
-  FindNeighborListStatisticsImpl(const IFilter* filter, NeighborListType* source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
+  FindNeighborListStatisticsImpl(const IFilter* filter, NeighborListType& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
                                  std::vector<IDataArray*>& arrays)
   : m_Filter(filter)
   , m_Source(source)
@@ -44,7 +44,7 @@ public:
   {
     for(usize i = start; i < end; i++)
     {
-      std::vector<T>& tmpList = (*m_Source)[i];
+      std::vector<T>& tmpList = m_Source[i];
 
       if(m_Length)
       {
@@ -114,7 +114,7 @@ public:
 
 private:
   const IFilter* m_Filter = nullptr;
-  NeighborListType* m_Source;
+  NeighborListType& m_Source;
   bool m_Length = false;
   bool m_Min = false;
   bool m_Max = false;
@@ -127,10 +127,10 @@ private:
 };
 
 template <typename DataType>
-void findStatisticsImpl(const IFilter* filter, IDataArray* source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation, std::vector<IDataArray*>& arrays)
+void findStatisticsImpl(const IFilter* filter, INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation, std::vector<IDataArray*>& arrays)
 {
-  usize numTuples = source->getNumberOfTuples();
-  auto sourceList = dynamic_cast<NeighborList<DataType>*>(source);
+  usize numTuples = source.getNumberOfTuples();
+  auto sourceList = dynamic_cast<NeighborList<DataType>&>(source);
   FindNeighborListStatisticsImpl<DataType> algorithm(filter, sourceList, length, min, max, mean, median, stdDeviation, summation, arrays);
   algorithm.compute(0, numTuples - 1);
 
@@ -142,15 +142,15 @@ void findStatisticsImpl(const IFilter* filter, IDataArray* source, bool length, 
 #endif
 }
 
-void findStatistics(const IFilter* filter, IDataArray* source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation, std::vector<IDataArray*>& arrays)
+void findStatistics(const IFilter* filter, INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation, std::vector<IDataArray*>& arrays)
 {
-  usize numTuples = source->getNumberOfTuples();
+  usize numTuples = source.getNumberOfTuples();
   if(numTuples == 0)
   {
     return;
   }
 
-  auto dataType = source->getDataType();
+  auto dataType = source.getDataType();
   switch(dataType)
   {
   case DataType::int8:
@@ -201,7 +201,7 @@ OutputActions FindNeighborListStatistics::createCompatibleArrays(const DataStruc
   auto findSummation = args.value<bool>(k_FindSummation_Key);
 
   auto inputArrayPath = args.value<DataPath>(k_InputArray_Key);
-  auto inputArray = data.getDataAs<IDataArray>(inputArrayPath);
+  auto* inputArray = data.getDataAs<INeighborList>(inputArrayPath);
   std::vector<usize> tupleDims{inputArray->getNumberOfTuples()};
   auto dataType = static_cast<NumericType>(inputArray->getDataType());
 
@@ -323,7 +323,7 @@ IFilter::PreflightResult FindNeighborListStatistics::preflightImpl(const DataStr
 
   std::vector<DataPath> dataArrayPaths;
 
-  auto inputArray = data.getDataAs<IDataArray>(inputArrayPath);
+  auto inputArray = data.getDataAs<INeighborList>(inputArrayPath);
   if(inputArray == nullptr)
   {
     std::string ss = fmt::format("Missing input array");
@@ -336,12 +336,6 @@ IFilter::PreflightResult FindNeighborListStatistics::preflightImpl(const DataStr
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_WrongInputArrayType, ss}})};
   }
   dataArrayPaths.push_back(inputArrayPath);
-
-  if(inputArray->getNumberOfComponents() != 1)
-  {
-    std::string ss = fmt::format("Input Attribute Array must be a scalar array");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_NonScalarInputArray, ss}})};
-  }
 
   return {std::move(createCompatibleArrays(data, args))};
 }
@@ -363,7 +357,7 @@ Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Argu
   }
 
   auto inputArrayPath = args.value<DataPath>(k_InputArray_Key);
-  auto inputArray = data.getDataAs<IDataArray>(inputArrayPath);
+  auto* inputArray = data.getDataAs<INeighborList>(inputArrayPath);
 
   std::vector<IDataArray*> arrays(7, nullptr);
 
@@ -403,7 +397,7 @@ Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Argu
     arrays[6] = data.getDataAs<IDataArray>(summationPath);
   }
 
-  findStatistics(this, inputArray, findLength, findMin, findMax, findMean, findMedian, findStdDeviation, findSummation, arrays);
+  findStatistics(this, *inputArray, findLength, findMin, findMax, findMean, findMedian, findStdDeviation, findSummation, arrays);
 
   return {};
 }
