@@ -56,7 +56,7 @@ struct CopyDataFunctor
         ptrIndex = nComps * elementMap[i] + d;
         outputData[tmpIndex] = inputData[ptrIndex];
       }
-    }
+      }
   }
 };
 } // namespace
@@ -227,8 +227,8 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
     }
   };
 
-  typedef std::array<int64, 3> Triangle;
-  typedef std::unordered_map<Vertex, int64, ArrayHasher> VertexMap;
+  using Triangle = std::array<int64, 3>;
+  using VertexMap = std::unordered_map<Vertex, int64, ArrayHasher>;
   VertexMap vertexMap;
   std::unordered_map<int64, int64> internalVertexMap;
   std::unordered_map<int64, int64> internalTriMap;
@@ -244,12 +244,12 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
   int64 tmpVert1 = 0;
   int64 tmpVert2 = 0;
 
-  int64 progIncrement = numTris / 100;
-  int64 prog = 1;
-  int64 progressInt = 0;
-  int64 counter = 0;
+  // int64 progIncrement = numTris / 100;
+  // int64 prog = 1;
+  // int64 progressInt = 0;
+  // int64 counter = 0;
 
-  for(usize i = 0; i < numTris; i++)
+  for(int64 i = 0; i < numTris; i++)
   {
     if(shouldCancel)
     {
@@ -314,14 +314,14 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
       triCounter++;
     }
 
-    if(counter > prog)
-    {
-      progressInt = static_cast<int64>((static_cast<float>(counter) / numTris) * 100.0f);
+      // if(counter > prog)
+      //{
+      // progressInt = static_cast<int64>((static_cast<float>(counter) / numTris) * 100.0f);
       // std::string ss = fmt::format("Checking Triangle {} of {} || {}% Completed", counter, numTris, progressInt);
       // notifyStatusMessage(ss);
-      prog = prog + progIncrement;
-    }
-    counter++;
+      // prog = prog + progIncrement;
+      //}
+      // counter++;
   }
 
   tmpVerts.shrink_to_fit();
@@ -352,6 +352,7 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
 
     ExecuteDataFunction(CopyDataFunctor{}, src.getDataType(), src, dest, internalVertexMap);
   }
+
   for(const auto& trianglePath : copyTrianglePaths)
   {
     auto destinationPath = internalTrianglesPath.createChildPath(trianglePath.getTargetName());

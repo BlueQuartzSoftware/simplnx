@@ -114,7 +114,7 @@ Result<> CreateTriangleGeomAction::createTriangleArray(DataStructure& dataStruct
 {
   DataPath arrayPath = path().createChildPath("Triangle Array");
   IDataStore::ShapeType compShape{3};
-  return CreateArray<usize>(dataStructure, m_TupleSize, compShape, arrayPath, mode);
+  return CreateArray<uint64>(dataStructure, m_TupleSize, compShape, arrayPath, mode);
 }
 
 } // namespace complex

@@ -67,9 +67,6 @@ TEST_CASE("ExtractInternalSurfacesFromTriangleGeometry(Instantiate)", "[ComplexC
 
   auto preflight = filter.preflight(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflight.outputActions);
-
-  auto result = filter.execute(ds, args);
-  COMPLEX_RESULT_REQUIRE_VALID(result.result);
 }
 
 TEST_CASE("ExtractInternalSurfacesFromTriangleGeometry(Data)", "[ComplexCore][ExtractInternalSurfacesFromTriangleGeometry]")
@@ -112,7 +109,6 @@ TEST_CASE("ExtractInternalSurfacesFromTriangleGeometry(Data)", "[ComplexCore][Ex
     REQUIRE(newVerticesArray->getSize() == 3);
   }
 
-#if 1
   {
     auto* newTrianglesArray = ds.getDataAs<IDataArray>(newTrianglesGeom->getTriangleArrayId());
     auto* oldTrianglesArray = ds.getDataAs<IDataArray>(oldTrianglesGeom->getTriangleArrayId());
@@ -122,5 +118,4 @@ TEST_CASE("ExtractInternalSurfacesFromTriangleGeometry(Data)", "[ComplexCore][Ex
 
     REQUIRE(newTrianglesArray->getNumberOfTuples() == 3);
   }
-#endif
 }
