@@ -19,24 +19,22 @@ namespace
 struct CopyDataToCroppedGeometryFunctor
 {
   template <typename T>
-  void operator()(IDataArray& inDataRef, IDataArray& outDataRef, std::vector<int64>& croppedPoints)
+  void operator()(const IDataArray& inDataRef, IDataArray& outDataRef, const std::vector<int64>& croppedPoints)
   {
-    DataArray<T>& inputDataArray = dynamic_cast<DataArray<T>&>(inDataRef);
-    auto& inputData = inputDataArray.getDataStoreRef();
+    const DataArray<T>& inputDataArray = dynamic_cast<const DataArray<T>&>(inDataRef);
+    const auto& inputData = inputDataArray.getDataStoreRef();
     DataArray<T>& croppedDataArray = dynamic_cast<DataArray<T>&>(outDataRef);
     auto& croppedData = croppedDataArray.getDataStoreRef();
     croppedData.reshapeTuples({croppedPoints.size()});
 
     usize nComps = inDataRef.getNumberOfComponents();
-    usize tmpIndex = 0;
-    usize ptrIndex = 0;
 
     for(std::vector<int64>::size_type i = 0; i < croppedPoints.size(); i++)
     {
       for(usize d = 0; d < nComps; d++)
       {
-        tmpIndex = nComps * i + d;
-        ptrIndex = nComps * croppedPoints[i] + d;
+        usize tmpIndex = nComps * i + d;
+        usize ptrIndex = nComps * croppedPoints[i] + d;
         croppedData[tmpIndex] = inputData[ptrIndex];
       }
     }
@@ -100,23 +98,34 @@ IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& 
 
   const auto& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
 
-  if(xMax < xMin)
+  OutputActions actions;
+
   {
-    std::string ss = fmt::format("X Max ({}) less than X Min ({})", xMax, xMin);
-    return {MakeErrorResult<OutputActions>(-5550, ss)};
-  }
-  if(yMax < yMin)
-  {
-    std::string ss = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
-    return {MakeErrorResult<OutputActions>(-5550, ss)};
-  }
-  if(zMax < zMin)
-  {
-    std::string ss = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
-    return {MakeErrorResult<OutputActions>(-5550, ss)};
+    std::vector<Error> errors;
+    bool xDimError = (xMax < xMin);
+    bool yDimError = (yMax < yMin);
+    bool zDimError = (zMax < zMin);
+    if(xDimError)
+    {
+      std::string ss = fmt::format("X Max ({}) less than X Min ({})", xMax, xMin);
+      errors.push_back(Error{-5550, std::move(ss)});
+    }
+    if(yDimError)
+    {
+      std::string ss = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
+      errors.push_back(Error{-5550, std::move(ss)});
+    }
+    if(zDimError)
+    {
+      std::string ss = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
+      errors.push_back(Error{-5550, std::move(ss)});
+    }
+    if(xDimError || yDimError || zDimError)
+    {
+      return PreflightResult{{nonstd::make_unexpected(errors)}};
+    }
   }
 
-  OutputActions actions;
   auto action = std::make_unique<CreateVertexGeometryAction>(croppedGeomPath, 0);
   actions.actions.push_back(std::move(action));
 
@@ -126,16 +135,11 @@ IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& 
 
   for(auto&& targetArrayPath : targetArrays)
   {
-    auto* targetArray = dataStructure.getDataAs<IDataArray>(targetArrayPath);
-    if(targetArray == nullptr)
-    {
-      std::string ss = fmt::format("Could not find IDataArray at path '{}'", targetArrayPath.toString());
-      return {MakeErrorResult<OutputActions>(-5551, ss)};
-    }
+    auto& targetArray = dataStructure.getDataRefAs<IDataArray>(targetArrayPath);
 
-    auto type = static_cast<NumericType>(targetArray->getDataType());
-    auto tDims = targetArray->getNumberOfTuples();
-    auto cDims = targetArray->getNumberOfComponents();
+    auto type = static_cast<NumericType>(targetArray.getDataType());
+    auto tDims = targetArray.getNumberOfTuples();
+    auto cDims = targetArray.getNumberOfComponents();
     auto createArrayAction = std::make_unique<CreateArrayAction>(type, std::vector<usize>{tDims}, std::vector<usize>{cDims}, croppedGroupPath.createChildPath(targetArrayPath.getTargetName()));
     actions.actions.push_back(std::move(createArrayAction));
   }
@@ -183,7 +187,7 @@ Result<> CropVertexGeometry::executeImpl(DataStructure& dataStructure, const Arg
 
   auto& crop = dataStructure.getDataRefAs<VertexGeom>(croppedGeomPath);
   crop.resizeVertexList(croppedPoints.size());
-  float coords[3] = {0.0f, 0.0f, 0.0f};
+  std::array<float, 3> coords = {0.0f, 0.0f, 0.0f};
 
   DataPath croppedGroupPath = croppedGeomPath.createChildPath(croppedGroupName);
 
@@ -197,13 +201,13 @@ Result<> CropVertexGeometry::executeImpl(DataStructure& dataStructure, const Arg
     crop.setCoords(i, coords);
   }
 
-  std::vector<usize> tDims(1, croppedPoints.size());
+  std::vector<usize> tDims = {croppedPoints.size()};
 
   for(auto&& targetArrayPath : targetArrays)
   {
     DataPath destArrayPath(croppedGroupPath.createChildPath(targetArrayPath.getTargetName()));
 
-    auto& srcArray = dataStructure.getDataRefAs<IDataArray>(targetArrayPath);
+    const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(targetArrayPath);
     auto& destArray = dataStructure.getDataRefAs<IDataArray>(destArrayPath);
 
     ExecuteDataFunction(CopyDataToCroppedGeometryFunctor{}, srcArray.getDataType(), srcArray, destArray, croppedPoints);
