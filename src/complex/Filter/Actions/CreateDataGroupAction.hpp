@@ -9,7 +9,7 @@ namespace complex
 /**
  * @brief Action to create a DataGroup with the DataStructure
  */
-class COMPLEX_EXPORT CreateDataGroupAction : public IDataAction
+class COMPLEX_EXPORT CreateDataGroupAction : public IDataCreationAction
 {
 public:
   CreateDataGroupAction() = delete;
@@ -31,13 +31,6 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
-  /**
-   * @brief Returns the path of the DataGroup to be created.
-   * @return
-   */
-  [[nodiscard]] DataPath parentPath() const;
-
 private:
-  DataPath m_Path = {};
 };
 } // namespace complex

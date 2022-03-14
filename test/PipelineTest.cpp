@@ -1,7 +1,6 @@
 #include "catch2/catch.hpp"
 
 #include "complex/Core/Application.hpp"
-#include "complex/Filter//FilterHandle.hpp"
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Filter/FilterHandle.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
@@ -34,6 +33,10 @@ const FilterHandle k_Test1FilterHandle(k_Test1FilterId, k_Test1PluginId);
 constexpr Uuid k_Test2PluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f33ce1854e");
 constexpr Uuid k_Test2FilterId = *Uuid::FromString("ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04");
 const FilterHandle k_Test2FilterHandle(k_Test2FilterId, k_Test2PluginId);
+
+const Uuid k_CreateDataGroupId = *Uuid::FromString("e7d2f9b8-4131-4b28-a843-ea3c6950f101");
+const Uuid k_CorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+const FilterHandle k_CreateDataGroupHandle(k_CreateDataGroupId, k_CorePluginId);
 } // namespace
 
 TEST_CASE("Execute Pipeline")
@@ -188,4 +191,47 @@ TEST_CASE("PipelineJson")
   nlohmann::json pipeline2Json = pipeline2.toJson();
 
   REQUIRE(pipelineJson == pipeline2Json);
+}
+
+TEST_CASE("Rename Output")
+{
+  Application app;
+  app.loadPlugins(unit_test::k_BuildDir.view());
+
+  std::string group1Name = "Foo";
+  std::string group2Name = "Bar";
+
+  Arguments args1;
+  args1.insert("Data_Object_Path", std::make_any<DataPath>(DataPath({group1Name})));
+
+  Arguments args2;
+  args2.insert("Data_Object_Path", std::make_any<DataPath>(DataPath({group1Name, group2Name})));
+
+  Pipeline pipeline("Rename Test Pipeline");
+  REQUIRE(pipeline.push_back(k_CreateDataGroupHandle, args1));
+  REQUIRE(pipeline.push_back(k_CreateDataGroupHandle, args2));
+
+  REQUIRE(pipeline.preflight());
+
+  // Update arguments to test renaming
+  {
+    group1Name = "Bizz";
+    args1.insertOrAssign("Data_Object_Path", std::make_any<DataPath>(DataPath({group1Name})));
+
+    auto* filterNode = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+    REQUIRE(filterNode != nullptr);
+    filterNode->setArguments(args1);
+  }
+
+  REQUIRE(pipeline.preflight());
+
+  // Check Node 2 arguments
+  {
+    auto* filterNode2 = dynamic_cast<PipelineFilter*>(pipeline.at(1));
+    REQUIRE(filterNode2 != nullptr);
+    auto args2Alt = filterNode2->getArguments();
+    const auto& inPath = std::any_cast<DataPath>(args2Alt.at("Data_Object_Path"));
+    DataPath targetPath({group1Name, group2Name});
+    REQUIRE(inPath == targetPath);
+  }
 }

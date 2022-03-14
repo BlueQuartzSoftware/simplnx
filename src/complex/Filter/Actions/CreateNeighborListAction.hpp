@@ -9,7 +9,7 @@ namespace complex
  * @class CreateNeighborListAction
  * @brief Action for creating NeighborList arrays in a DataStructure
  */
-class COMPLEX_EXPORT CreateNeighborListAction : public IDataAction
+class COMPLEX_EXPORT CreateNeighborListAction : public IDataCreationAction
 {
 public:
   CreateNeighborListAction() = delete;
@@ -52,6 +52,5 @@ public:
 private:
   DataType m_Type;
   usize m_TupleCount;
-  DataPath m_Path;
 };
 } // namespace complex

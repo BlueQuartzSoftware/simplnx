@@ -17,8 +17,8 @@ constexpr complex::int32 k_InsertFailureError = -2;
 namespace complex
 {
 ImportObjectAction::ImportObjectAction(const std::shared_ptr<DataObject>& importObject, const DataPath& path)
-: m_ImportData(importObject)
-, m_Path(path)
+: IDataCreationAction(path)
+, m_ImportData(importObject)
 {
 }
 
@@ -33,9 +33,9 @@ Result<> ImportObjectAction::apply(DataStructure& dataStructure, Mode mode) cons
     importGroup->clear();
   }
 
-  if(!dataStructure.insert(importData, m_Path.getParent()))
+  if(!dataStructure.insert(importData, getCreatedPath().getParent()))
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{k_InsertFailureError, fmt::format("Unable to import DataObject at '{}'", m_Path.toString())}})};
+    return {nonstd::make_unexpected(std::vector<Error>{{k_InsertFailureError, fmt::format("Unable to import DataObject at '{}'", getCreatedPath().toString())}})};
   }
 
   return {};
@@ -48,6 +48,6 @@ std::shared_ptr<DataObject> ImportObjectAction::getImportObject() const
 
 DataPath ImportObjectAction::path() const
 {
-  return m_Path;
+  return getCreatedPath();
 }
 } // namespace complex

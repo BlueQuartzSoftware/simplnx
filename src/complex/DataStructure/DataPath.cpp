@@ -106,6 +106,28 @@ DataPath DataPath::replace(std::string_view symbol, std::string_view targetName)
   return DataPath(std::move(newPath));
 }
 
+bool DataPath::attemptRename(const DataPath& oldPath, const DataPath& newPath)
+{
+  if(oldPath.getLength() > getLength())
+  {
+    return false;
+  }
+
+  for(usize i = 0; i < oldPath.getLength(); i++)
+  {
+    if(oldPath.m_Path[i] != m_Path[i])
+    {
+      return false;
+    }
+  }
+
+  for(usize i = 0; i < oldPath.getLength(); i++)
+  {
+    m_Path[i] = newPath.m_Path[i];
+  }
+  return true;
+}
+
 bool DataPath::operator==(const DataPath& rhs) const
 {
   return m_Path == rhs.m_Path;

@@ -119,6 +119,16 @@ public:
   DataPath replace(std::string_view symbol, std::string_view targetName) const;
 
   /**
+   * @brief Attempts to handle renaming the DataPath. If the old path is a
+   * subset or exact match of the current path, the matching section will be
+   * replaced with the new path.
+   * @param oldPath
+   * @param newPath
+   * @return bool
+   */
+  bool attemptRename(const DataPath& oldPath, const DataPath& newPath);
+
+  /**
    * @brief Checks equality between two DataPaths.
    * @param rhs
    * @return bool

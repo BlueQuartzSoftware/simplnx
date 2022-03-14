@@ -18,8 +18,8 @@ using namespace complex;
 namespace complex
 {
 CopyArrayInstanceAction::CopyArrayInstanceAction(const DataPath& selectedDataPath, const DataPath& createdDataPath)
-: m_SelectedDataPath(selectedDataPath)
-, m_CreatedDataPath(createdDataPath)
+: IDataCreationAction(createdDataPath)
+, m_SelectedDataPath(selectedDataPath)
 {
 }
 
@@ -29,7 +29,7 @@ CopyArrayInstanceAction::~CopyArrayInstanceAction() noexcept = default;
   DataArray<type>* castInputArray = dynamic_cast<DataArray<type>*>(inputDataArray);                                                                                                                    \
   IDataStore::ShapeType tupleShape = castInputArray->getDataStore()->getTupleShape();                                                                                                                  \
   IDataStore::ShapeType componentShape = castInputArray->getDataStore()->getComponentShape();                                                                                                          \
-  return CreateArray<type>(dataStructure, tupleShape, componentShape, m_CreatedDataPath, mode);
+  return CreateArray<type>(dataStructure, tupleShape, componentShape, getCreatedPath(), mode);
 
 Result<> CopyArrayInstanceAction::apply(DataStructure& dataStructure, Mode mode) const
 {
@@ -94,7 +94,7 @@ DataPath CopyArrayInstanceAction::selectedDataPath() const
 
 DataPath CopyArrayInstanceAction::createdDataPath() const
 {
-  return m_CreatedDataPath;
+  return getCreatedPath();
 }
 
 } // namespace complex
