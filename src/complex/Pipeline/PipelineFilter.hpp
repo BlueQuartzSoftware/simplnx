@@ -107,9 +107,19 @@ public:
    * @brief Attempts to preflight the node using the provided DataStructure.
    * Returns true if preflighting succeeded. Otherwise, this returns false.
    * @param data
+   * @param renamedPaths Collection of renamed output paths.
    * @return bool
    */
   bool preflight(DataStructure& data, const std::atomic_bool& shouldCancel) override;
+
+  /**
+   * @brief Attempts to preflight the node using the provided DataStructure.
+   * Returns true if preflighting succeeded. Otherwise, this returns false.
+   * @param data
+   * @param renamedPaths Collection of renamed output paths.
+   * @return bool
+   */
+  bool preflight(DataStructure& data, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel) override;
 
   /**
    * @brief Attempts to execute the node using the provided DataStructure.
@@ -118,6 +128,12 @@ public:
    * @return bool
    */
   bool execute(DataStructure& data, const std::atomic_bool& shouldCancel) override;
+
+  /**
+   * @brief Returns a vector of DataPaths created when preflighting the node.
+   * @return std::vector<DataPath>
+   */
+  std::vector<DataPath> getCreatedPaths() const;
 
   /**
    * @brief Returns a collection of warnings returned by the target filter.
@@ -152,6 +168,12 @@ public:
    */
   nlohmann::json toJson() const override;
 
+  /**
+   * @brief Adjusts arguments for renamed DataPaths.
+   * @param renamedPaths
+   */
+  void renamePathArgs(const RenamedPaths& renamedPaths);
+
 protected:
   /**
    * @brief Notifies observers to an IFilter::Message emitted by the IFilter
@@ -159,6 +181,23 @@ protected:
    * @param message
    */
   void notifyFilterMessage(const IFilter::Message& message);
+
+  /**
+   * @brief Notifies observers to a set of renamed DataPaths.
+   * @param renamedPathPairs
+   */
+  void notifyRenamedPaths(const RenamedPaths& renamedPathPairs);
+
+  /**
+   * @brief Checks for the renaming of created DataPaths.
+   * Emits notifications when a renaming is detected.
+   *
+   * This method does nothing if the number of created paths does not match
+   * the current count.
+   * @param oldCreatedPaths
+   * @return RenamedTypes
+   */
+  RenamedPaths checkForRenamedPaths(std::vector<DataPath> oldCreatedPaths) const;
 
 private:
   IFilter::UniquePointer m_Filter;
@@ -168,5 +207,6 @@ private:
   std::vector<complex::Warning> m_Warnings;
   std::vector<complex::Error> m_Errors;
   std::vector<IFilter::PreflightValue> m_PreflightValues;
+  std::vector<DataPath> m_CreatedPaths;
 };
 } // namespace complex

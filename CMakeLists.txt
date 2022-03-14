@@ -275,6 +275,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeMovedMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeRemovedMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeStatusMessage.hpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/OutputRenamedMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelineFilterMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeMessage.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeObserver.hpp
@@ -426,6 +427,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeMovedMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeRemovedMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeStatusMessage.cpp
+  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/OutputRenamedMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelineFilterMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeMessage.cpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeObserver.cpp

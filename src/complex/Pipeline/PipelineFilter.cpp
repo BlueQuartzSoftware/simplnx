@@ -1,8 +1,11 @@
 #include "PipelineFilter.hpp"
 
+#include <algorithm>
+
 #include "complex/Core/Application.hpp"
 #include "complex/Filter/FilterList.hpp"
 #include "complex/Pipeline/Messaging/FilterPreflightMessage.hpp"
+#include "complex/Pipeline/Messaging/OutputRenamedMessage.hpp"
 #include "complex/Pipeline/Messaging/PipelineFilterMessage.hpp"
 
 #include <nlohmann/json.hpp>
@@ -82,6 +85,8 @@ bool PipelineFilter::preflight(DataStructure& data, const std::atomic_bool& shou
 {
   sendFilterRunStateMessage(m_Index, RunState::Preflighting);
 
+  std::vector<DataPath> oldCreatedPaths = m_CreatedPaths;
+
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
   clearFaultState();
@@ -101,6 +106,7 @@ bool PipelineFilter::preflight(DataStructure& data, const std::atomic_bool& shou
 
   m_Errors.clear();
 
+  std::vector<DataPath> newCreatedPaths;
   for(const auto& action : result.outputActions.value().actions)
   {
     Result<> actionResult = action->apply(data, IDataAction::Mode::Preflight);
@@ -118,7 +124,14 @@ bool PipelineFilter::preflight(DataStructure& data, const std::atomic_bool& shou
       sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
       return false;
     }
+    if(auto* creationAction = dynamic_cast<IDataCreationAction*>(action.get()))
+    {
+      newCreatedPaths.push_back(creationAction->getCreatedPath());
+    }
   }
+
+  // Do not clear the created paths unless the preflight succeeded
+  m_CreatedPaths = newCreatedPaths;
 
   setPreflightStructure(data);
   sendFilterFaultMessage(m_Index, getFaultState());
@@ -126,7 +139,74 @@ bool PipelineFilter::preflight(DataStructure& data, const std::atomic_bool& shou
   {
     sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
   }
+  auto renamedPaths = checkForRenamedPaths(oldCreatedPaths);
 
+  notifyRenamedPaths(renamedPaths);
+  sendFilterRunStateMessage(m_Index, RunState::Idle);
+  return true;
+}
+
+bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel)
+{
+  sendFilterRunStateMessage(m_Index, RunState::Preflighting);
+
+  std::vector<DataPath> oldCreatedPaths = m_CreatedPaths;
+
+  IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
+
+  clearFaultState();
+  IFilter::PreflightResult result = m_Filter->preflight(data, getArguments(), messageHandler, shouldCancel);
+  m_Warnings = std::move(result.outputActions.warnings());
+  setHasWarnings(!m_Warnings.empty());
+  m_PreflightValues = std::move(result.outputValues);
+  if(result.outputActions.invalid())
+  {
+    m_Errors = std::move(result.outputActions.errors());
+    setHasErrors();
+    setPreflightStructure(data, false);
+    sendFilterFaultMessage(m_Index, getFaultState());
+    sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
+    return false;
+  }
+
+  m_Errors.clear();
+
+  std::vector<DataPath> newCreatedPaths;
+  for(const auto& action : result.outputActions.value().actions)
+  {
+    Result<> actionResult = action->apply(data, IDataAction::Mode::Preflight);
+    for(auto&& warning : actionResult.warnings())
+    {
+      m_Warnings.push_back(std::move(warning));
+    }
+    setHasWarnings(!m_Warnings.empty());
+    if(actionResult.invalid())
+    {
+      m_Errors = std::move(actionResult.errors());
+      setPreflightStructure(data, false);
+      setHasErrors();
+      sendFilterFaultMessage(m_Index, getFaultState());
+      sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
+      return false;
+    }
+    if(auto* creationAction = dynamic_cast<IDataCreationAction*>(action.get()))
+    {
+      newCreatedPaths.push_back(creationAction->getCreatedPath());
+    }
+  }
+
+  // Do not clear the created paths unless the preflight succeeded
+  m_CreatedPaths = newCreatedPaths;
+
+  setPreflightStructure(data);
+  sendFilterFaultMessage(m_Index, getFaultState());
+  if(!m_Warnings.empty() || !m_Errors.empty())
+  {
+    sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
+  }
+  renamedPaths = checkForRenamedPaths(oldCreatedPaths);
+
+  notifyRenamedPaths(renamedPaths);
   sendFilterRunStateMessage(m_Index, RunState::Idle);
   return true;
 }
@@ -168,6 +248,162 @@ bool PipelineFilter::execute(DataStructure& data, const std::atomic_bool& should
   return result.result.valid();
 }
 
+std::vector<DataPath> PipelineFilter::getCreatedPaths() const
+{
+  return m_CreatedPaths;
+}
+
+namespace
+{
+/**
+ * @brief Checks if one path could be a rename of another path.
+ * Returns false if the lengths do not match or more than one segment has a different name.
+ * @param path1
+ * @param path2
+ * @return bool
+ */
+bool checkIfRename(const DataPath& path1, const DataPath& path2)
+{
+  if(path1.getLength() != path2.getLength())
+  {
+    return false;
+  }
+
+  usize count = path1.getLength();
+  usize numDifferences = 0;
+  for(size_t i = 0; i < count; i++)
+  {
+    if(path1[i] != path2[i])
+    {
+      numDifferences++;
+    }
+  }
+
+  return numDifferences == 1;
+}
+
+/**
+ * @brief Finds and returns the overlap between two collections of DataPaths.
+ * @param group1
+ * @param group2
+ * @return std::vector<DataPath>
+ */
+std::vector<DataPath> getOverlap(const std::vector<DataPath>& group1, const std::vector<DataPath>& group2)
+{
+  std::vector<DataPath> overlap;
+  std::set_intersection(group1.begin(), group1.end(), group2.begin(), group2.end(), std::inserter(overlap, overlap.begin()));
+  return overlap;
+}
+
+/**
+ * @brief Removes the overlap between two groups of DataPaths
+ * @param group1
+ * @param group2
+ */
+void removeOverlap(std::vector<DataPath>& group1, std::vector<DataPath>& group2)
+{
+  auto overlap = getOverlap(group1, group2);
+  for(const auto& value : overlap)
+  {
+    group1.erase(std::remove(group1.begin(), group1.end(), value), group1.end());
+    group2.erase(std::remove(group2.begin(), group2.end(), value), group2.end());
+  }
+}
+
+/**
+ * @brief Finds and returns all detected rename paths between two collections of created DataPaths.
+ * @param oldCreatedPaths
+ * @param newCreatedPaths
+ * @return PipelineFilter::RenamedPaths
+ */
+PipelineFilter::RenamedPaths findAllRenamePaths(const std::vector<DataPath>& oldCreatedPaths, const std::vector<DataPath>& newCreatedPaths)
+{
+  PipelineFilter::RenamedPaths renamedPairs;
+  std::vector<DataPath> remainingPaths = oldCreatedPaths;
+  for(const auto& createdPath : newCreatedPaths)
+  {
+    for(const auto& oldPath : remainingPaths)
+    {
+      if(checkIfRename(createdPath, oldPath))
+      {
+        renamedPairs.push_back({createdPath, oldPath});
+      }
+    }
+  }
+  return renamedPairs;
+}
+
+/**
+ * @brief Takes a collection of possible renamed paths and returns a collection
+ * of pairs that can be determined with a reasonable degree of certainty.
+ *
+ * Rename pairs that could have been between multiple sets of DataPaths are rejected.
+ * @param renamedPairs
+ * @return PipelineFilter::RenamedPaths
+ */
+PipelineFilter::RenamedPaths getConfirmedRenamePaths(const PipelineFilter::RenamedPaths& renamedPairs)
+{
+  std::vector<DataPath> rejectedFirstPaths;
+  std::vector<DataPath> rejectedSecondPaths;
+
+  // Find rejected RenamedPaths
+  auto size = renamedPairs.size();
+  for(usize i = 0; i + 1 < size; i++)
+  {
+    const auto& pair1 = renamedPairs[i];
+
+    for(usize j = i; j < size; j++)
+    {
+      const auto& pair2 = renamedPairs[j];
+
+      // Check for repeated paths
+      if(pair1.first == pair2.first)
+      {
+        rejectedFirstPaths.push_back(pair1.first);
+      }
+      if(pair1.second == pair2.second)
+      {
+        rejectedSecondPaths.push_back(pair1.second);
+      }
+    }
+  }
+
+  PipelineFilter::RenamedPaths confirmed;
+  for(const auto& renamedPair : renamedPairs)
+  {
+    if(std::find(rejectedFirstPaths.begin(), rejectedFirstPaths.end(), renamedPair.first) != rejectedFirstPaths.end())
+    {
+      continue;
+    }
+    if(std::find(rejectedSecondPaths.begin(), rejectedSecondPaths.end(), renamedPair.second) != rejectedSecondPaths.end())
+    {
+      continue;
+    }
+    confirmed.push_back(renamedPair);
+  }
+
+  return confirmed;
+}
+} // namespace
+
+PipelineFilter::RenamedPaths PipelineFilter::checkForRenamedPaths(std::vector<DataPath> oldCreatedPaths) const
+{
+  // If created path sizes do not match, the values cannot be compared
+  if(oldCreatedPaths.size() != m_CreatedPaths.size())
+  {
+    return {};
+  }
+
+  // Create a copy of the created paths to edit in removeOverlap(...)
+  std::vector<DataPath> newCreatedPaths = m_CreatedPaths;
+
+  removeOverlap(oldCreatedPaths, newCreatedPaths);
+  auto renamedPairs = findAllRenamePaths(oldCreatedPaths, newCreatedPaths);
+  renamedPairs = getConfirmedRenamePaths(renamedPairs);
+
+  return renamedPairs;
+}
+
 std::vector<complex::Warning> PipelineFilter::getWarnings() const
 {
   return m_Warnings;
@@ -206,6 +442,14 @@ void PipelineFilter::notifyFilterMessage(const IFilter::Message& message)
   else if(message.type == IFilter::Message::Type::Warning)
   {
     sendFilterFaultMessage(m_Index, complex::FaultState::Warnings);
+  }
+}
+
+void PipelineFilter::notifyRenamedPaths(const RenamedPaths& renamedPathPairs)
+{
+  for(const auto& renamedPath : renamedPathPairs)
+  {
+    notify(std::make_shared<OutputRenamedMessage>(this, renamedPath));
   }
 }
 
@@ -283,4 +527,39 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
   Result<std::unique_ptr<PipelineFilter>> result{std::make_unique<PipelineFilter>(std::move(filter), std::move(argsResult.value()))};
   result.warnings() = std::move(argsResult.warnings());
   return result;
+}
+
+bool isDataPath(const std::any& value)
+{
+  return value.type() == typeid(DataPath);
+}
+
+bool attemptRenamePath(DataPath& path, const AbstractPipelineNode::RenamedPaths& renamedPaths)
+{
+  bool pathChanged = false;
+  for(const auto& renamedPath : renamedPaths)
+  {
+    if(path.attemptRename(renamedPath.second, renamedPath.first))
+    {
+      pathChanged = true;
+    }
+  }
+
+  return pathChanged;
+}
+
+void PipelineFilter::renamePathArgs(const RenamedPaths& renamedPaths)
+{
+  for(const auto& arg : m_Arguments)
+  {
+    const std::any& argValue = arg.second;
+    if(isDataPath(argValue))
+    {
+      auto argPath = std::any_cast<DataPath>(argValue);
+      if(attemptRenamePath(argPath, renamedPaths))
+      {
+        m_Arguments.insertOrAssign(arg.first, std::make_any<DataPath>(argPath));
+      }
+    }
+  }
 }

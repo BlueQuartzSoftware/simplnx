@@ -9,7 +9,7 @@ namespace complex
 /**
  * @brief Action for creating an ImageGeometry in a DataStructure
  */
-class COMPLEX_EXPORT CreateImageGeometryAction : public IDataAction
+class COMPLEX_EXPORT CreateImageGeometryAction : public IDataCreationAction
 {
 public:
   using DimensionType = std::vector<size_t>;
@@ -18,7 +18,7 @@ public:
 
   CreateImageGeometryAction() = delete;
 
-  CreateImageGeometryAction(DataPath path, DimensionType dims, OriginType origin, SpacingType spacing);
+  CreateImageGeometryAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing);
 
   ~CreateImageGeometryAction() noexcept override;
 
@@ -37,9 +37,9 @@ public:
 
   /**
    * @brief Returns the path of the ImageGeometry to be created.
-   * @return
+   * @return DataPath
    */
-  const DataPath& path() const;
+  DataPath path() const;
 
   /**
    * @brief Returns the dimensions of the ImageGeometry to be created.
@@ -60,7 +60,6 @@ public:
   const SpacingType& spacing() const;
 
 private:
-  DataPath m_GeometryPath;
   DimensionType m_Dims;
   OriginType m_Origin;
   SpacingType m_Spacing;
