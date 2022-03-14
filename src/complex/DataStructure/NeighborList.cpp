@@ -146,19 +146,6 @@ void NeighborList<T>::setNumberOfComponents(int32 nc)
 }
 
 template <typename T>
-usize NeighborList<T>::getNumberOfComponents() const
-{
-  return 1;
-}
-
-template <typename T>
-std::vector<usize> NeighborList<T>::getComponentDimensions() const
-{
-  std::vector<usize> dims = {1};
-  return dims;
-}
-
-template <typename T>
 usize NeighborList<T>::getTypeSize() const
 {
   return sizeof(SharedVectorType);
@@ -295,18 +282,6 @@ template <typename T>
 typename NeighborList<T>::VectorType& NeighborList<T>::operator[](usize grainId)
 {
   return *(m_Array[grainId]);
-}
-
-template <typename T>
-IDataStore* NeighborList<T>::getIDataStore()
-{
-  return nullptr;
-}
-
-template <typename T>
-const IDataStore* NeighborList<T>::getIDataStore() const
-{
-  return nullptr;
 }
 
 template <typename ValueType>
