@@ -20,6 +20,7 @@ set(FilterList
   CropImageGeometry
   CropVertexGeometry
   DeleteData
+  ExtractInternalSurfacesFromTriangleGeometry
   ExportDREAM3DFilter
   FindDifferencesMap
   FindFeaturePhasesFilter

@@ -16,6 +16,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CopyFeatureArrayToElementArrayTest.cpp
   CreateImageGeometryTest.cpp
   CropImageGeomTest.cpp
+  ExtractInternalSurfacesFromTriangleGeometryTest.cpp
   FindDifferencesMapTest.cpp
   FindFeaturePhasesFilterTest.cpp
   FindNeighborListStatisticsTest.cpp
