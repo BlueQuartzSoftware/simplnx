@@ -298,6 +298,9 @@ void QuickSurfaceMesh::flipProblemVoxelCase3(Int32Array& featureIds, MeshIndexTy
 // -----------------------------------------------------------------------------
 void QuickSurfaceMesh::correctProblemVoxels()
 {
+
+  m_MessageHandler(IFilter::Message::Type::Info, "Correcting Problem Voxels");
+
   AbstractGeometryGrid* grid = m_DataStructure.getDataAs<AbstractGeometryGrid>(m_Inputs->pGridGeomDataPath);
 
   Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFeatureIdsArrayPath);
@@ -464,6 +467,8 @@ void QuickSurfaceMesh::correctProblemVoxels()
 // -----------------------------------------------------------------------------
 void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds, MeshIndexType& nodeCount, MeshIndexType& triangleCount)
 {
+  m_MessageHandler(IFilter::Message::Type::Info, "Determining active Nodes");
+
   AbstractGeometryGrid* grid = m_DataStructure.getDataAs<AbstractGeometryGrid>(m_Inputs->pGridGeomDataPath);
 
   Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFeatureIdsArrayPath);
@@ -762,6 +767,8 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
 // -----------------------------------------------------------------------------
 void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_NodeIds, MeshIndexType nodeCount, MeshIndexType triangleCount)
 {
+  m_MessageHandler(IFilter::Message::Type::Info, "Creating mesh");
+
   Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFeatureIdsArrayPath);
 
   size_t numFeatures = 0;
@@ -1358,6 +1365,7 @@ void QuickSurfaceMesh::generateTripleLines()
    * later if needed.
    * Mike Jackson, JULY 2018
    */
+  m_MessageHandler(IFilter::Message::Type::Info, "Generating Triple Lines");
 
   //  DataContainer* m = getDataContainerArray()->getDataContainer(m_FeatureIdsArrayPath.getDataContainerName());
   //  DataContainer* sm = getDataContainerArray()->getDataContainer(getSurfaceDataContainerName());
