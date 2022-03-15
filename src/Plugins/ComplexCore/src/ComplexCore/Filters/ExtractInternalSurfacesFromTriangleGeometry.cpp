@@ -56,7 +56,7 @@ struct CopyDataFunctor
         ptrIndex = nComps * elementMap[i] + d;
         outputData[tmpIndex] = inputData[ptrIndex];
       }
-      }
+    }
   }
 };
 } // namespace
@@ -314,14 +314,14 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
       triCounter++;
     }
 
-      // if(counter > prog)
-      //{
-      // progressInt = static_cast<int64>((static_cast<float>(counter) / numTris) * 100.0f);
-      // std::string ss = fmt::format("Checking Triangle {} of {} || {}% Completed", counter, numTris, progressInt);
-      // notifyStatusMessage(ss);
-      // prog = prog + progIncrement;
-      //}
-      // counter++;
+    // if(counter > prog)
+    //{
+    // progressInt = static_cast<int64>((static_cast<float>(counter) / numTris) * 100.0f);
+    // std::string ss = fmt::format("Checking Triangle {} of {} || {}% Completed", counter, numTris, progressInt);
+    // notifyStatusMessage(ss);
+    // prog = prog + progIncrement;
+    //}
+    // counter++;
   }
 
   tmpVerts.shrink_to_fit();
