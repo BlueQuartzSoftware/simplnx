@@ -104,11 +104,11 @@ DataStructure ImportDataStructureV8(const H5::FileReader& fileReader, H5::ErrorT
  * @param cDims
  */
 template <typename T>
-void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const H5::DatasetReader& dataArrayReader, usize tDims, usize cDims)
+void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const H5::DatasetReader& dataArrayReader, const std::vector<usize>& tDims, const std::vector<usize>& cDims)
 {
   const std::string daName = dataArrayReader.getName();
 
-  auto dataStore = std::make_unique<DataStore<T>>(std::vector<usize>{tDims}, std::vector<usize>{cDims});
+  auto dataStore = std::make_unique<DataStore<T>>(tDims, cDims);
   auto data = dataArrayReader.readAsVector<T>();
   if(data.size() != dataStore->getSize())
   {
@@ -129,7 +129,7 @@ void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const
  * @param tDims
  * @param cDims
  */
-void readLegacyDataArrayDims(const H5::DatasetReader& dataArrayReader, usize& tDims, usize& cDims)
+void readLegacyDataArrayDims(const H5::DatasetReader& dataArrayReader, std::vector<usize>& tDims, std::vector<usize>& cDims)
 {
   hid_t compType = H5::Support::HdfTypeForPrimitive<int64>();
 
@@ -140,8 +140,7 @@ void readLegacyDataArrayDims(const H5::DatasetReader& dataArrayReader, usize& tD
       throw std::runtime_error("Error reading legacy DataArray dimensions");
     }
 
-    auto buffer = compAttrib.readAsVector<int64>();
-    cDims = std::accumulate(buffer.begin(), buffer.end(), static_cast<usize>(0));
+    cDims = compAttrib.readAsVector<usize>();
   }
 
   {
@@ -151,8 +150,7 @@ void readLegacyDataArrayDims(const H5::DatasetReader& dataArrayReader, usize& tD
       throw std::runtime_error("Error reading legacy DataArray dimensions");
     }
 
-    auto buffer = tupleAttrib.readAsVector<int64>();
-    tDims = std::accumulate(buffer.begin(), buffer.end(), static_cast<usize>(0));
+    tDims = tupleAttrib.readAsVector<usize>();
   }
 }
 
@@ -161,8 +159,8 @@ void readLegacyDataArray(DataStructure& ds, const H5::DatasetReader& dataArrayRe
   auto size = H5Dget_storage_size(dataArrayReader.getId());
   auto typeId = dataArrayReader.getTypeId();
 
-  usize tDims;
-  usize cDims;
+  std::vector<usize> tDims;
+  std::vector<usize> cDims;
   readLegacyDataArrayDims(dataArrayReader, tDims, cDims);
 
   if(H5Tequal(typeId, H5T_NATIVE_FLOAT) > 0)
