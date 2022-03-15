@@ -7,7 +7,8 @@
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
   ConvertOrientationsTest.cpp
-  )
+  GenerateFZQuaternionsTest.cpp
+)
 set(DISABLED_TESTS
     BadDataNeighborOrientationCheckTest.cpp
     #ConvertHexGridToSquareGridTest.cpp    # MISSING 1 or more Parameter Implementations
@@ -34,7 +35,6 @@ set(DISABLED_TESTS
     FindSlipTransmissionMetricsTest.cpp
     FindTwinBoundariesTest.cpp
     FindTwinBoundarySchmidFactorsTest.cpp
-    GenerateFZQuaternionsTest.cpp
     GenerateFaceIPFColoringTest.cpp
     GenerateFaceMisorientationColoringTest.cpp
     GenerateIPFColorsTest.cpp
