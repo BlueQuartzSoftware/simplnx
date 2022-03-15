@@ -27,7 +27,16 @@ EdgeGeom::EdgeGeom(DataStructure& ds, std::string name, const SharedEdgeList* ed
   setVertices(vertices);
 }
 
-EdgeGeom::EdgeGeom(const EdgeGeom& other) = default;
+EdgeGeom::EdgeGeom(const EdgeGeom& other)
+: AbstractGeometry(other)
+, m_VertexListId(other.m_VertexListId)
+, m_EdgeListId(other.m_EdgeListId)
+, m_EdgesContainingVertId(other.m_EdgesContainingVertId)
+, m_EdgeNeighborsId(other.m_EdgeNeighborsId)
+, m_EdgeCentroidsId(other.m_EdgeCentroidsId)
+, m_EdgeSizesId(other.m_EdgeSizesId)
+{
+}
 
 EdgeGeom::EdgeGeom(EdgeGeom&& other) noexcept
 : AbstractGeometry(std::move(other))
