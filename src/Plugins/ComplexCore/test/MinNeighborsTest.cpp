@@ -17,8 +17,8 @@ using namespace complex::Constants;
 
 namespace
 {
-inline const std::vector<uint64> k_Dimensions{5, 5, 5};
-inline const std::vector<uint64> k_CompShape{1};
+inline const std::vector<usize> k_Dimensions{5, 5, 5};
+inline const std::vector<usize> k_CompShape{1};
 
 inline const std::string k_ImageGeomName = "Image Geom";
 inline const std::string k_FeaturePhasesName = "Feature Phases";
