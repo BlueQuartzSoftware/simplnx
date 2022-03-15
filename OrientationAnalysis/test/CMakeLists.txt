@@ -6,10 +6,11 @@
 #------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
-
+  ConvertOrientationsTest.cpp
+  )
+set(DISABLED_TESTS
     BadDataNeighborOrientationCheckTest.cpp
     #ConvertHexGridToSquareGridTest.cpp    # MISSING 1 or more Parameter Implementations
-    ConvertOrientationsTest.cpp
     ConvertQuaternionTest.cpp
     #CreateEnsembleInfoTest.cpp    # MISSING 1 or more Parameter Implementations
     CreateLambertSphereTest.cpp
