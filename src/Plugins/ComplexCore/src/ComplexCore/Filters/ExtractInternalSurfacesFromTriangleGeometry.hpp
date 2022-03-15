@@ -8,24 +8,24 @@
 
 namespace complex
 {
-class COMPLEXCORE_EXPORT CreateDataArray : public IFilter
+class COMPLEXCORE_EXPORT ExtractInternalSurfacesFromTriangleGeometry : public IFilter
 {
 public:
-  CreateDataArray() = default;
-  ~CreateDataArray() noexcept override = default;
+  ExtractInternalSurfacesFromTriangleGeometry() = default;
+  ~ExtractInternalSurfacesFromTriangleGeometry() noexcept override = default;
 
-  CreateDataArray(const CreateDataArray&) = delete;
-  CreateDataArray(CreateDataArray&&) noexcept = delete;
+  ExtractInternalSurfacesFromTriangleGeometry(const ExtractInternalSurfacesFromTriangleGeometry&) = delete;
+  ExtractInternalSurfacesFromTriangleGeometry(ExtractInternalSurfacesFromTriangleGeometry&&) noexcept = delete;
 
-  CreateDataArray& operator=(const CreateDataArray&) = delete;
-  CreateDataArray& operator=(CreateDataArray&&) noexcept = delete;
+  ExtractInternalSurfacesFromTriangleGeometry& operator=(const ExtractInternalSurfacesFromTriangleGeometry&) = delete;
+  ExtractInternalSurfacesFromTriangleGeometry& operator=(ExtractInternalSurfacesFromTriangleGeometry&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_NumericType_Key = "numeric_type";
-  static inline constexpr StringLiteral k_NumComps_Key = "component_count";
-  static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
-  static inline constexpr StringLiteral k_DataPath_Key = "output_data_array";
-  static inline constexpr StringLiteral k_InitilizationValue_Key = "initialization_value";
+  static inline constexpr StringLiteral k_TriangleGeom_Key = "triangle_geom";
+  static inline constexpr StringLiteral k_InternalTriangleGeom_Key = "internal_triangle_geom";
+  static inline constexpr StringLiteral k_NodeTypesPath_Key = "node_types";
+  static inline constexpr StringLiteral k_CopyVertexPaths_Key = "copy_vertex_array_paths";
+  static inline constexpr StringLiteral k_CopyTrianglePaths_Key = "copy_triangle_array_paths";
 
   /**
    * @brief Returns the filter's name.
@@ -69,6 +69,7 @@ protected:
    * @param data
    * @param filterArgs
    * @param messageHandler
+   * @param shouldCancel
    * @return Result<OutputActions>
    */
   PreflightResult preflightImpl(const DataStructure& data, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
@@ -79,6 +80,7 @@ protected:
    * @param args
    * @param pipelineNode
    * @param messageHandler
+   * @param shouldCancel
    * @return Result<>
    */
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
@@ -86,4 +88,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, CreateDataArray, "67041f9b-bdc6-4122-acc6-c9fe9280e90d");
+COMPLEX_DEF_FILTER_TRAITS(complex, ExtractInternalSurfacesFromTriangleGeometry, "52a069b4-6a46-5810-b0ec-e0693c636034");

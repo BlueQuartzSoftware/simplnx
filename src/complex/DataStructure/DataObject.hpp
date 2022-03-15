@@ -198,10 +198,10 @@ public:
   ParentCollectionType getParentIds() const;
 
   /**
-   * @brief Returns a vector of the parent DataPaths.
+   * @brief Returns a vector of DataPaths to the object.
    * @return std::vector<DataPath>
    */
-  std::vector<DataPath> getParentDataPaths() const;
+  std::vector<DataPath> getDataPaths() const;
 
   /**
    * @brief Returns a reference to the object's Metadata.
