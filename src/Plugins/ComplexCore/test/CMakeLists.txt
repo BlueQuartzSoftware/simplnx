@@ -29,6 +29,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   InterpolatePointCloudToRegularGridTest.cpp
   LaplacianSmoothingFilterTest.cpp
   MapPointCloudToRegularGridTest.cpp
+  MinNeighborsTest.cpp
   PointSampleTriangleGeometryFilterTest.cpp
   QuickSurfaceMeshFilterTest.cpp
   RemoveFlaggedVerticesTest.cpp
