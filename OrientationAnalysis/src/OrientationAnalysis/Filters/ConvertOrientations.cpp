@@ -195,12 +195,14 @@ std::vector<std::string> ConvertOrientations::defaultTags() const
 //------------------------------------------------------------------------------
 Parameters ConvertOrientations::parameters() const
 {
+  using OrientationConverterType = OrientationConverter<EbsdDataArray<float>, float>;
+
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(
-      std::make_unique<ChoicesParameter>(k_InputType_Key, "Input Orientation Type", "", 0, OrientationConverter<Float32Array, float>::GetOrientationTypeStrings<ChoicesParameter::Choices>()));
+      std::make_unique<ChoicesParameter>(k_InputType_Key, "Input Orientation Type", "", 0, OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::Choices>()));
   params.insert(
-      std::make_unique<ChoicesParameter>(k_OutputType_Key, "Output Orientation Type", "", 1, OrientationConverter<Float32Array, float>::GetOrientationTypeStrings<ChoicesParameter::Choices>()));
+      std::make_unique<ChoicesParameter>(k_OutputType_Key, "Output Orientation Type", "", 1, OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::Choices>()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputOrientationArrayPath_Key, "Input Orientations", "", DataPath{}, false, ArraySelectionParameter::AllowedTypes{DataType::float32}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputOrientationArrayName_Key, "Output Orientations", "", DataPath{}));
 
