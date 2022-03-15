@@ -230,7 +230,7 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
 
     itk::ImageIOBase::IOComponentEnum component = imageIO->GetComponentType();
 
-    std::optional<NumericType> numericType = ITK::ConvertIOComponentToNumericType(component);
+    std::optional<DataType> numericType = ITK::ConvertIOComponentToDataType(component);
     if(!numericType.has_value())
     {
       return MakeErrorResult<OutputActions>(-4, fmt::format("Unsupported pixel component: {}", imageIO->GetComponentTypeAsString(component)));

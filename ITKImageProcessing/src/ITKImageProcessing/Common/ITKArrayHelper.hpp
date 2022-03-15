@@ -85,6 +85,53 @@ inline constexpr std::optional<NumericType> ConvertIOComponentToNumericType(itk:
 }
 
 /**
+ * @brief Attempts to convert itk::IOComponentEnum to complex::DataType
+ * @param component
+ * @return
+ */
+inline constexpr std::optional<DataType> ConvertIOComponentToDataType(itk::ImageIOBase::IOComponentEnum component) noexcept
+{
+  using ComponentType = itk::ImageIOBase::IOComponentEnum;
+
+  switch(component)
+  {
+  case ComponentType::UCHAR: {
+    return DataType::uint8;
+  }
+  case ComponentType::CHAR: {
+    return DataType::int8;
+  }
+  case ComponentType::USHORT: {
+    return DataType::uint16;
+  }
+  case ComponentType::SHORT: {
+    return DataType::int16;
+  }
+  case ComponentType::UINT: {
+    return DataType::uint32;
+  }
+  case ComponentType::INT: {
+    return DataType::int32;
+  }
+  case ComponentType::ULONG: {
+    return DataType::uint64;
+  }
+  case ComponentType::LONG: {
+    return DataType::int64;
+  }
+  case ComponentType::FLOAT: {
+    return DataType::float32;
+  }
+  case ComponentType::DOUBLE: {
+    return DataType::float64;
+  }
+  default: {
+    return {};
+  }
+  }
+}
+
+/**
  * @brief CastVec3ToITK Input type should be FloatVec3Type or IntVec3Type, Output
    type should be some kind of ITK "array" (itk::Size, itk::Index,...)
  */
@@ -377,7 +424,7 @@ Result<OutputActions> DataCheckImpl(const DataStructure& dataStructure, const Da
 
   OutputActions outputActions;
 
-  NumericType outputType = GetNumericType<OutputValueType>();
+  DataType outputType = GetDataType<OutputValueType>();
   SizeVec3 imageDims = imageGeom.getDimensions();
   std::vector<usize> tDims(std::make_reverse_iterator(imageDims.end()), std::make_reverse_iterator(imageDims.begin()));
   std::vector<usize> outputPixelDims = ITK::GetComponentDimensions<OutputPixelT>();
