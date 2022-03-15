@@ -1,5 +1,6 @@
 #include "CreateDataArray.hpp"
 
+#include "complex/Common/TypesUtility.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
@@ -108,7 +109,7 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
   }
 
   OutputActions actions;
-  auto action = std::make_unique<CreateArrayAction>(numericType, tupleDims, std::vector<usize>{numComponents}, dataArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, std::vector<usize>{numComponents}, dataArrayPath);
   actions.actions.push_back(std::move(action));
 
   return {std::move(actions)};

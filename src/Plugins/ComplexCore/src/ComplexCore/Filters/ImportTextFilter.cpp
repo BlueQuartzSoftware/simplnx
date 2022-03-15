@@ -4,6 +4,7 @@
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/TypeTraits.hpp"
+#include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
@@ -77,7 +78,7 @@ IFilter::PreflightResult ImportTextFilter::preflightImpl(const DataStructure& da
   auto arrayPath = args.value<DataPath>(k_DataArrayKey);
   auto nTuples = args.value<uint64>(k_NTuplesKey);
   auto nComp = args.value<uint64>(k_NCompKey);
-  auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{nTuples}, std::vector<usize>{nComp}, arrayPath);
+  auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), std::vector<usize>{nTuples}, std::vector<usize>{nComp}, arrayPath);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));

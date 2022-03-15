@@ -430,7 +430,7 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
   }
 
   // Create the output boolean array
-  auto action = std::make_unique<CreateArrayAction>(NumericType::uint8, dataArray->getIDataStore()->getTupleShape(), std::vector<usize>{1}, maskArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(DataType::uint8, dataArray->getIDataStore()->getTupleShape(), std::vector<usize>{1}, maskArrayPath);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));
