@@ -65,6 +65,64 @@ constexpr NumericType GetNumericType() noexcept
 }
 
 /**
+ * @brief Returns the DataType associated with T.
+ * @tparam T
+ * @return
+ */
+template <class T>
+constexpr DataType GetDataType() noexcept
+{
+  if constexpr(std::is_same_v<T, int8>)
+  {
+    return DataType::int8;
+  }
+  else if constexpr(std::is_same_v<T, uint8>)
+  {
+    return DataType::uint8;
+  }
+  else if constexpr(std::is_same_v<T, int16>)
+  {
+    return DataType::int16;
+  }
+  else if constexpr(std::is_same_v<T, uint16>)
+  {
+    return DataType::uint16;
+  }
+  else if constexpr(std::is_same_v<T, int32>)
+  {
+    return DataType::int32;
+  }
+  else if constexpr(std::is_same_v<T, uint32>)
+  {
+    return DataType::uint32;
+  }
+  else if constexpr(std::is_same_v<T, int64>)
+  {
+    return DataType::int64;
+  }
+  else if constexpr(std::is_same_v<T, uint64>)
+  {
+    return DataType::uint64;
+  }
+  else if constexpr(std::is_same_v<T, float32>)
+  {
+    return DataType::float32;
+  }
+  else if constexpr(std::is_same_v<T, float64>)
+  {
+    return DataType::float64;
+  }
+  else if constexpr(std::is_same_v<T, bool>)
+  {
+    return DataType::boolean;
+  }
+  else
+  {
+    static_assert(dependent_false<T>, "complex::GetDataType: Unsupported type");
+  }
+}
+
+/**
  * @brief Returns sizeof(T) for the T associated with the given NumericType.
  * @param numericType
  * @return
