@@ -14,7 +14,13 @@ AbstractGeometry2D::AbstractGeometry2D(DataStructure& ds, std::string name, IdTy
 {
 }
 
-AbstractGeometry2D::AbstractGeometry2D(const AbstractGeometry2D& other) = default;
+AbstractGeometry2D::AbstractGeometry2D(const AbstractGeometry2D& other)
+: AbstractGeometry(other)
+, m_VertexListId(other.m_VertexListId)
+, m_EdgeListId(other.m_EdgeListId)
+, m_UnsharedEdgeListId(other.m_UnsharedEdgeListId)
+{
+}
 
 AbstractGeometry2D::AbstractGeometry2D(AbstractGeometry2D&& other) noexcept
 : AbstractGeometry(std::move(other))
