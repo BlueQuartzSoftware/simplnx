@@ -27,6 +27,7 @@ set(FilterList
   FindDifferencesMap
   FindFeaturePhasesFilter
   FindNeighborListStatistics
+  FindNeighbors
   FindSurfaceFeatures
   IdentifySample
   ImportDREAM3DFilter

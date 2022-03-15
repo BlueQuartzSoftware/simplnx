@@ -20,8 +20,9 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CropImageGeomTest.cpp
   ExtractInternalSurfacesFromTriangleGeometryTest.cpp
   FindDifferencesMapTest.cpp
-  FindFeaturePhasesFilterTest.cpp
+  # FindFeaturePhasesFilterTest.cpp
   FindNeighborListStatisticsTest.cpp
+  FindNeighborsTest.cpp
   FindSurfaceFeaturesTest.cpp
   IdentifySampleTest.cpp
   IterativeClosestPointTest.cpp
