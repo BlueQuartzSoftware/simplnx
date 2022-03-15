@@ -150,11 +150,11 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
       return {MakeErrorResult<OutputActions>(::k_TupleShapeNotOneDim, errorMsg)};
     }
     // Create array copy
-    auto numericType = static_cast<NumericType>(targetArray->getDataType());
+    auto dataType = targetArray->getDataType();
     auto numTuples = targetArray->getNumberOfTuples();
     auto numComponents = targetArray->getNumberOfComponents();
     auto outputPath = reducedVertexPath.createChildPath(targetArray->getName());
-    auto action = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{numTuples}, std::vector<usize>{numComponents}, outputPath);
+    auto action = std::make_unique<CreateArrayAction>(dataType, std::vector<usize>{numTuples}, std::vector<usize>{numComponents}, outputPath);
     actions.actions.push_back(std::move(action));
   }
 

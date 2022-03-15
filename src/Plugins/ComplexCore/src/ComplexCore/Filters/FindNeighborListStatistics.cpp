@@ -203,13 +203,13 @@ OutputActions FindNeighborListStatistics::createCompatibleArrays(const DataStruc
   auto inputArrayPath = args.value<DataPath>(k_InputArray_Key);
   auto* inputArray = data.getDataAs<INeighborList>(inputArrayPath);
   std::vector<usize> tupleDims{inputArray->getNumberOfTuples()};
-  auto dataType = static_cast<NumericType>(inputArray->getDataType());
+  DataType dataType = inputArray->getDataType();
 
   OutputActions actions;
   if(findLength)
   {
     auto arrayPath = args.value<DataPath>(k_Length_Key);
-    auto action = std::make_unique<CreateArrayAction>(NumericType::uint64, tupleDims, std::vector<usize>{1}, arrayPath);
+    auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.actions.push_back(std::move(action));
   }
   if(findMin)
@@ -227,25 +227,25 @@ OutputActions FindNeighborListStatistics::createCompatibleArrays(const DataStruc
   if(findMean)
   {
     auto arrayPath = args.value<DataPath>(k_Mean_Key);
-    auto action = std::make_unique<CreateArrayAction>(NumericType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
+    auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.actions.push_back(std::move(action));
   }
   if(findMedian)
   {
     auto arrayPath = args.value<DataPath>(k_Median_Key);
-    auto action = std::make_unique<CreateArrayAction>(NumericType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
+    auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.actions.push_back(std::move(action));
   }
   if(findStdDeviation)
   {
     auto arrayPath = args.value<DataPath>(k_StandardDeviation_Key);
-    auto action = std::make_unique<CreateArrayAction>(NumericType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
+    auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.actions.push_back(std::move(action));
   }
   if(findSummation)
   {
     auto arrayPath = args.value<DataPath>(k_Summation_Key);
-    auto action = std::make_unique<CreateArrayAction>(NumericType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
+    auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.actions.push_back(std::move(action));
   }
 

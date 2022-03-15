@@ -152,8 +152,8 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   data.validateNumberOfTuples(dataPaths);
 
   // Create Active array
-  auto createActiveAction = std::make_unique<CreateArrayAction>(NumericType::uint8, std::vector<usize>{numTuples}, std::vector<usize>{1}, activeArrayPath);
-  auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(NumericType::int32, std::vector<usize>{numTuples}, std::vector<usize>{1}, featureIdsPath);
+  auto createActiveAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{numTuples}, std::vector<usize>{1}, activeArrayPath);
+  auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{numTuples}, std::vector<usize>{1}, featureIdsPath);
 
   OutputActions actions;
   actions.actions.push_back(std::move(createActiveAction));

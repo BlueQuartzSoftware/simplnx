@@ -91,9 +91,9 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
   std::vector<usize> tupleDimensions = {1ULL};
   uint64 numberOfComponents = 1;
 
-  auto createVolumesAction = std::make_unique<CreateArrayAction>(NumericType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, volumesPath);
-  auto createEquivalentDiametersAction = std::make_unique<CreateArrayAction>(NumericType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, equivalentDiametersPath);
-  auto createNumElementsAction = std::make_unique<CreateArrayAction>(NumericType::int32, tupleDimensions, std::vector<usize>{numberOfComponents}, numElementsPath);
+  auto createVolumesAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, volumesPath);
+  auto createEquivalentDiametersAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, equivalentDiametersPath);
+  auto createNumElementsAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDimensions, std::vector<usize>{numberOfComponents}, numElementsPath);
 
   OutputActions actions;
   actions.actions.push_back(std::move(createVolumesAction));
