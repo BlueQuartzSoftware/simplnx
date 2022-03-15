@@ -238,7 +238,7 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
 
     uint32 nDims = imageIO->GetNumberOfDimensions();
 
-    std::vector<usize> dims = {1, 1, 1};
+    std::vector<size_t> dims = {1, 1, 1};
     std::vector<float32> origin = {0.0f, 0.0f, 0.0f};
     std::vector<float32> spacing = {1.0f, 1.0f, 1.0f};
 
