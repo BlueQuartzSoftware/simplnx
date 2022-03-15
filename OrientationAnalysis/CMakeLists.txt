@@ -95,10 +95,10 @@ target_link_libraries(${PLUGIN_NAME} PUBLIC EbsdLib::EbsdLib)
 #------------------------------------------------------------------------------
 # If there are additional include directories that are needed for this plugin
 # you can use the target_include_directories(.....) cmake call
-# target_include_directories(${PLUGIN_NAME}
-#     PUBLIC
-#     additional include directories here
-# )
+ target_include_directories(${PLUGIN_NAME}
+     PUBLIC
+     ${EbsdLib_INCLUDE_DIRS}
+ )
 
 #------------------------------------------------------------------------------
 # Add in the unit tests for the filters included in this plugin
