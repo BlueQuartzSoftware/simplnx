@@ -192,7 +192,12 @@ inline constexpr StringLiteral DataTypeToString(DataType dataType)
   }
 }
 
-inline constexpr std::optional<NumericType> ConvertDataTypeToNumericType(DataType dataType)
+/**
+ * @brief Converts DataType to NumericType. Fails on DataType::bool and DataType::error.
+ * @param dataType
+ * @return
+ */
+inline constexpr std::optional<NumericType> ConvertDataTypeToNumericType(DataType dataType) noexcept
 {
   switch(dataType)
   {
@@ -226,9 +231,53 @@ inline constexpr std::optional<NumericType> ConvertDataTypeToNumericType(DataTyp
   case DataType::float64: {
     return NumericType::float64;
   }
-  // insert other cases here
   default: {
     return {};
+  }
+  }
+}
+
+/**
+ * @brief Converts NumericType to DataType. NumericType is a subset of DataType so this function cannot fail.
+ * @param numericType
+ * @return
+ */
+inline constexpr DataType ConvertNumericTypeToDataType(NumericType numericType)
+{
+  switch(numericType)
+  {
+  case NumericType::int8: {
+    return DataType::int8;
+  }
+  case NumericType::int16: {
+    return DataType::int16;
+  }
+  case NumericType::int32: {
+    return DataType::int32;
+  }
+  case NumericType::int64: {
+    return DataType::int64;
+  }
+  case NumericType::uint8: {
+    return DataType::uint8;
+  }
+  case NumericType::uint16: {
+    return DataType::uint16;
+  }
+  case NumericType::uint32: {
+    return DataType::uint32;
+  }
+  case NumericType::uint64: {
+    return DataType::uint64;
+  }
+  case NumericType::float32: {
+    return DataType::float32;
+  }
+  case NumericType::float64: {
+    return DataType::float64;
+  }
+  default: {
+    throw std::runtime_error("complex::ConvertNumericTypeToDataType: Invalid NumericType");
   }
   }
 }

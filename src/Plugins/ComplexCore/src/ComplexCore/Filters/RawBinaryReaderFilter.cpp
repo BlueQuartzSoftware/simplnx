@@ -163,7 +163,7 @@ IFilter::PreflightResult RawBinaryReaderFilter::preflightImpl(const DataStructur
 
   // Create the CreateArray action and add it to the resultOutputActions object
   {
-    auto action = std::make_unique<CreateArrayAction>(pScalarTypeValue, tupleDims, std::vector<usize>{pNumberOfComponentsValue}, pCreatedAttributeArrayPathValue);
+    auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(pScalarTypeValue), tupleDims, std::vector<usize>{pNumberOfComponentsValue}, pCreatedAttributeArrayPathValue);
 
     resultOutputActions.value().actions.push_back(std::move(action));
   }
