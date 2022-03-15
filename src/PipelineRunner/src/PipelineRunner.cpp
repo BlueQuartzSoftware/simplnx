@@ -25,18 +25,20 @@ void loadApp(complex::Application& app)
 #if(__APPLE__)
   {
     fs::path appPath = app.getCurrentDir();
+    app.loadPlugins(appPath, true);
     appPath = appPath.parent_path();
 
     // Check if there is a Plugins Folder inside the app package
     if(fs::exists(appPath / "Plugins"))
     {
       appPath = appPath / "Plugins";
+      app.loadPlugins(appPath, true);
     }
     else // Climb out of the app package and look in the build directory
     {
       appPath = appPath.parent_path().parent_path();
+      app.loadPlugins(appPath, true);
     }
-    app.loadPlugins(appPath, true);
   }
 #else
   app.loadPlugins(app.getCurrentDir(), true);
@@ -70,6 +72,7 @@ Pipeline createTestPipeline()
 
 int main(int argc, char* argv[])
 {
+  std::cout << "PipelineRunner Version 7" << std::endl;
   complex::Application app;
   loadApp(app);
 
@@ -85,14 +88,18 @@ int main(int argc, char* argv[])
   fs::path targetPath = argv[1];
   if(!fs::exists(targetPath))
   {
-    std::cout << fmt::format("Path '{}' does not exist", targetPath.string()) << std::endl;
+    fmt::print("Input file does not exist.\n  '{}'\n", targetPath.string());
     return -1;
   }
 
   auto result = Pipeline::FromFile(targetPath);
   if(result.invalid())
   {
-    std::cout << fmt::format("Could not load pipeline at path: '{}'", targetPath.string()) << std::endl;
+    fmt::print("Error loading pipeline from file. Errors given are:\n");
+    for(const auto& error : result.errors())
+    {
+      fmt::print("  Error Code: '{}'   Message: '{}'\n", error.code, error.message);
+    }
     return -1;
   }
 
@@ -101,9 +108,9 @@ int main(int argc, char* argv[])
   Pipeline pipeline = result.value();
 #endif
   PipelineRunner::PipelineObserver obs(&pipeline);
+
   pipeline.execute();
 
-  std::cout << "\n---------------------------" << std::endl;
   std::cout << "Finished executing pipeline" << std::endl;
 
   return 0;
