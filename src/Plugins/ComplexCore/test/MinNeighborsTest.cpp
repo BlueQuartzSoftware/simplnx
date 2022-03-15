@@ -5,6 +5,7 @@
 #include <catch2/catch.hpp>
 
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
