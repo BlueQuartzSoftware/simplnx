@@ -161,7 +161,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
       return {MakeErrorResult<OutputActions>(k_MissingVertexArray, ss)};
     }
 
-    NumericType type = static_cast<NumericType>(targetDataArray->getDataType());
+    DataType type = targetDataArray->getDataType();
     DataPath copyPath = internalTrianglesGeomPath.createChildPath(data_array.getTargetName());
     auto numTuples = targetDataArray->getNumberOfTuples();
     auto components = targetDataArray->getNumberOfComponents();
@@ -178,7 +178,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
       return {MakeErrorResult<OutputActions>(k_MissingTriangleArray, ss)};
     }
 
-    NumericType type = static_cast<NumericType>(targetDataArray->getDataType());
+    DataType type = targetDataArray->getDataType();
     DataPath copyPath = internalTrianglesGeomPath.createChildPath(data_array.getTargetName());
     auto numTuples = targetDataArray->getNumberOfTuples();
     auto components = targetDataArray->getNumberOfComponents();

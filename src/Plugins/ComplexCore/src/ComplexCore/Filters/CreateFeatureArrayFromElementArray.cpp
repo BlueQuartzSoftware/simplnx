@@ -132,15 +132,10 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArray::preflightImpl(const
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  auto numericTypeResult = ConvertDataTypeToNumericType(selectedCellArray.getDataType());
-  if(!numericTypeResult.has_value())
-  {
-    return {MakeErrorResult<OutputActions>(-5000, fmt::format("The Cell data array '{}' has a data type that does not have a corresponding numeric type.", selectedCellArray.getName()))};
-  }
-  NumericType numericType = numericTypeResult.value();
+  DataType dataType = selectedCellArray.getDataType();
 
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(numericType, std::vector<usize>{1}, selectedCellArrayStore.getComponentShape(), pCreatedArrayNameValue);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, std::vector<usize>{1}, selectedCellArrayStore.getComponentShape(), pCreatedArrayNameValue);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 

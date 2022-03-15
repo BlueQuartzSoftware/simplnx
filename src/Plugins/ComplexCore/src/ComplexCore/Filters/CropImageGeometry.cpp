@@ -302,10 +302,10 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
         return {MakeErrorResult<OutputActions>(-5551, ss)};
       }
 
-      auto numericType = static_cast<NumericType>(srcArray->getDataType());
+      DataType dataType = srcArray->getDataType();
       auto components = srcArray->getNumberOfComponents();
       auto dataArrayPath = newCellFeaturesPath.createChildPath(srcArrayPath.getTargetName());
-      auto action = std::make_unique<CreateArrayAction>(numericType, tDims, std::vector<usize>{components}, dataArrayPath);
+      auto action = std::make_unique<CreateArrayAction>(dataType, tDims, std::vector<usize>{components}, dataArrayPath);
       actions.actions.push_back(std::move(action));
     }
   }

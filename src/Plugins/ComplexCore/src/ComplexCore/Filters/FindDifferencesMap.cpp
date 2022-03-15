@@ -76,52 +76,6 @@ IFilter::PreflightResult warnOnUnsignedTypes(const DataStructure& data, const st
   return {};
 }
 
-NumericType getNumericType(const IDataArray* firstInputArray)
-{
-  if(dynamic_cast<const Int8Array*>(firstInputArray))
-  {
-    return NumericType::int8;
-  }
-  else if(dynamic_cast<const Int16Array*>(firstInputArray))
-  {
-    return NumericType::int16;
-  }
-  else if(dynamic_cast<const Int32Array*>(firstInputArray))
-  {
-    return NumericType::int32;
-  }
-  else if(dynamic_cast<const Int64Array*>(firstInputArray))
-  {
-    return NumericType::int64;
-  }
-  else if(dynamic_cast<const UInt8Array*>(firstInputArray))
-  {
-    return NumericType::uint8;
-  }
-  else if(dynamic_cast<const UInt16Array*>(firstInputArray))
-  {
-    return NumericType::uint16;
-  }
-  else if(dynamic_cast<const UInt32Array*>(firstInputArray))
-  {
-    return NumericType::uint32;
-  }
-  else if(dynamic_cast<const UInt64Array*>(firstInputArray))
-  {
-    return NumericType::uint64;
-  }
-  else if(dynamic_cast<const Float32Array*>(firstInputArray))
-  {
-    return NumericType::float32;
-  }
-  else if(dynamic_cast<const Float64Array*>(firstInputArray))
-  {
-    return NumericType::float64;
-  }
-  // Default state
-  return NumericType::int8;
-}
-
 /**
  * @brief The FindDifferenceMapImpl class implements a threaded algorithm that computes the difference map
  * between two arrays
@@ -267,8 +221,8 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
 
   // At this point we have two valid arrays of the same type and component dimensions, so we
   // are safe to make the output array with the correct type and component dimensions
-  auto numericType = getNumericType(firstInputArray);
-  auto action = std::make_unique<CreateArrayAction>(numericType, firstInputArray->getIDataStore()->getTupleShape(), firstInputArray->getIDataStore()->getComponentShape(), differenceMapArrayPath);
+  DataType dataType = firstInputArray->getDataType();
+  auto action = std::make_unique<CreateArrayAction>(dataType, firstInputArray->getIDataStore()->getTupleShape(), firstInputArray->getIDataStore()->getComponentShape(), differenceMapArrayPath);
 
   //
   OutputActions actions;
