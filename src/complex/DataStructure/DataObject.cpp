@@ -43,7 +43,7 @@ DataObject::DataObject(const DataObject& rhs)
 }
 
 DataObject::DataObject(DataObject&& rhs)
-: m_DataStructure(std::move(rhs.m_DataStructure))
+: m_DataStructure(rhs.m_DataStructure)
 , m_ParentList(std::move(rhs.m_ParentList))
 , m_Id(rhs.m_Id)
 , m_Name(std::move(rhs.m_Name))
@@ -53,6 +53,10 @@ DataObject::DataObject(DataObject&& rhs)
 
 DataObject& DataObject::operator=(const DataObject& rhs)
 {
+  if(this == &rhs)
+  {
+    return *this;
+  }
   m_DataStructure = rhs.m_DataStructure;
   m_Id = rhs.m_Id;
   m_Name = rhs.m_Name;
@@ -61,8 +65,8 @@ DataObject& DataObject::operator=(const DataObject& rhs)
 
 DataObject& DataObject::operator=(DataObject&& rhs) noexcept
 {
-  m_DataStructure = std::move(rhs.m_DataStructure);
-  m_Id = std::move(rhs.m_Id);
+  m_DataStructure = rhs.m_DataStructure;
+  m_Id = rhs.m_Id;
   m_Name = std::move(rhs.m_Name);
   return *this;
 }
