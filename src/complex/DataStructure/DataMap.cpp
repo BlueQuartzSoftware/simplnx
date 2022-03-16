@@ -260,8 +260,6 @@ void DataMap::setDataStructure(DataStructure* dataStr)
     {
       continue;
     }
-
-    m_Map[key]->setDataStructure(nullptr);
     shareData->setDataStructure(dataStr);
     m_Map[key] = shareData;
     dataStr->setData(key, shareData);

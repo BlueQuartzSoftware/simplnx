@@ -33,6 +33,8 @@ Result<> CreateTriangleGeomAction::apply(DataStructure& dataStructure, Mode mode
     return geomResult;
   }
 
+  TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(m_Path);
+
   if(shouldCreateVertexArray())
   {
     auto vertexResult = createVertexArray(dataStructure, mode);
@@ -40,6 +42,9 @@ Result<> CreateTriangleGeomAction::apply(DataStructure& dataStructure, Mode mode
     {
       return vertexResult;
     }
+    DataPath vertPath = path().createChildPath(k_DefaultVerticesName);
+    Float32Array* verArray = dataStructure.getDataAs<Float32Array>(vertPath);
+    triangleGeom.setVertices(verArray);
   }
   if(shouldCreateTriangleArray())
   {
@@ -48,6 +53,9 @@ Result<> CreateTriangleGeomAction::apply(DataStructure& dataStructure, Mode mode
     {
       return triangleResult;
     }
+    DataPath facePath = path().createChildPath(k_DefaultFacesName);
+    UInt64Array* faceArray = dataStructure.getDataAs<UInt64Array>(facePath);
+    triangleGeom.setFaces(faceArray);
   }
 
   return {};
