@@ -135,6 +135,21 @@ void RectGridGeom::setBounds(const Float32Array* xBounds, const Float32Array* yB
   }
 }
 
+Float32Array* RectGridGeom::getXBounds()
+{
+  return dynamic_cast<Float32Array*>(getDataStructure()->getData(m_xBoundsId));
+}
+
+Float32Array* RectGridGeom::getYBounds()
+{
+  return dynamic_cast<Float32Array*>(getDataStructure()->getData(m_yBoundsId));
+}
+
+Float32Array* RectGridGeom::getZBounds()
+{
+  return dynamic_cast<Float32Array*>(getDataStructure()->getData(m_zBoundsId));
+}
+
 const Float32Array* RectGridGeom::getXBounds() const
 {
   return dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_xBoundsId));

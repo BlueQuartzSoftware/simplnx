@@ -98,6 +98,24 @@ public:
 
   /**
    * @brief
+   * @return Float32Array*
+   */
+  Float32Array* getXBounds();
+
+  /**
+   * @brief
+   * @return Float32Array*
+   */
+  Float32Array* getYBounds();
+
+  /**
+   * @brief
+   * @return Float32Array*
+   */
+  Float32Array* getZBounds();
+
+  /**
+   * @brief
    * @return const Float32Array*
    */
   const Float32Array* getXBounds() const;
