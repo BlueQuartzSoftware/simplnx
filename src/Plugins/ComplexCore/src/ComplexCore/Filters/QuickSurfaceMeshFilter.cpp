@@ -6,7 +6,7 @@
 #include "complex/Filter/Actions/CopyArrayInstanceAction.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
-#include "complex/Filter/Actions/CreateGeometry2DAction.hpp"
+#include "complex/Filter/Actions/CreateTriangleGeomAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
@@ -142,7 +142,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
 
   // Create the Triangle Geometry action and store it
   {
-    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, 1, 3);
+    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeomAction>(pTriangleGeometryPath, CreateTriangleGeomAction::AdditionalData::VerticesTriangles);
     resultOutputActions.value().actions.push_back(std::move(createTriangleGeometryAction));
   }
   // Create Triangle Vertex Data action and store it
