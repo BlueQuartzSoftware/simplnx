@@ -49,8 +49,7 @@ enum class DataType : uint8
   uint64,
   float32,
   float64,
-  boolean,
-  error = 255
+  boolean
 };
 
 enum class RunState
