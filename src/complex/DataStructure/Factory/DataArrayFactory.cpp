@@ -46,13 +46,13 @@ void importDataArray(DataStructure& dataStructure, const H5::DatasetReader& data
 {
   if(preflight)
   {
-    auto dataStore = EmptyDataStore<float>::readHdf5(datasetReader);
-    DataArray<float>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
+    auto dataStore = EmptyDataStore<T>::readHdf5(datasetReader);
+    DataArray<T>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
   }
   else
   {
-    auto dataStore = DataStore<float>::readHdf5(datasetReader);
-    DataArray<float>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
+    auto dataStore = DataStore<T>::readHdf5(datasetReader);
+    DataArray<T>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
   }
 }
 
