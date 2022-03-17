@@ -105,7 +105,8 @@ DataStructure ImportDataStructureV8(const H5::FileReader& fileReader, H5::ErrorT
  * @param cDims
  */
 template <typename T>
-void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const H5::DatasetReader& dataArrayReader, const std::vector<usize>& tDims, const std::vector<usize>& cDims, bool preflight = false)
+void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const H5::DatasetReader& dataArrayReader, const std::vector<usize>& tDims, const std::vector<usize>& cDims,
+                           bool preflight = false)
 {
   const std::string daName = dataArrayReader.getName();
 
@@ -116,7 +117,7 @@ void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const
   }
 
   auto dataStore = std::make_unique<DataStore<T>>(tDims, cDims);
-  
+
   auto data = dataArrayReader.readAsVector<T>();
   if(data.size() != dataStore->getSize())
   {

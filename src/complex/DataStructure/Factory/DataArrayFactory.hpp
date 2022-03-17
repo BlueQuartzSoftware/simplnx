@@ -88,8 +88,7 @@ public:
    * @return H5::ErrorType
    */
   H5::ErrorType readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader,
-                              const std::optional<DataObject::IdType>& parentId = {},
-                              bool preflight = false) override
+                              const std::optional<DataObject::IdType>& parentId = {}, bool preflight = false) override
   {
     H5::ErrorType err = 0;
     H5::Type type = datasetReader.getType();
