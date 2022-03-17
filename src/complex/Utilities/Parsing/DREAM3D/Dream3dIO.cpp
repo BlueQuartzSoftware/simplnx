@@ -112,7 +112,7 @@ void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const
 
   if(preflight)
   {
-    DataArray<T>::CreateWithStore<EmptyDataStore<T>>(ds, daName, tDims, cDims, parentId);
+    typename DataArray<T>::CreateWithStore<EmptyDataStore<T>>(ds, daName, tDims, cDims, parentId);
     return;
   }
 
@@ -129,7 +129,7 @@ void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const
     dataStore->setValue(i, data.at(i));
   }
   // Insert the DataArray into the DataStructure
-  auto dataArray = DataArray<T>::Create(ds, daName, std::move(dataStore), parentId);
+  auto dataArray = typename DataArray<T>::Create(ds, daName, std::move(dataStore), parentId);
 }
 
 /**

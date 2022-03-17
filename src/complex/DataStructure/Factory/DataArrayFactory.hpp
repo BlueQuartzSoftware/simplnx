@@ -47,20 +47,20 @@ public:
    * @param parentId
    * @param preflight
    */
-  template <typename T>
+  template <typename K>
   void importDataArray(DataStructure& dataStructure, const H5::DatasetReader& datasetReader, const std::string dataArrayName, DataObject::IdType importId, H5::ErrorType& err,
                        const std::optional<DataObject::IdType>& parentId, bool preflight)
   {
-    DataArray<T>* data = nullptr;
+    DataArray<K>* data = nullptr;
     if(preflight)
     {
-      auto dataStore = EmptyDataStore<T>::readHdf5(datasetReader);
-      data = DataArray<T>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
+      auto dataStore = EmptyDataStore<K>::readHdf5(datasetReader);
+      data = DataArray<K>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
     }
     else
     {
-      auto dataStore = DataStore<T>::readHdf5(datasetReader);
-      data = DataArray<T>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
+      auto dataStore = DataStore<K>::readHdf5(datasetReader);
+      data = DataArray<K>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
     }
     err = (data == nullptr) ? -400 : 0;
   }
