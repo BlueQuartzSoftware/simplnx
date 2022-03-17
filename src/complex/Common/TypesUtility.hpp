@@ -242,9 +242,6 @@ inline constexpr StringLiteral DataTypeToString(DataType dataType)
   case DataType::boolean: {
     return "boolean";
   }
-  case DataType::error: {
-    return "error";
-  }
   default:
     throw std::runtime_error("complex::DataTypeToString: Unknown DataType");
   }

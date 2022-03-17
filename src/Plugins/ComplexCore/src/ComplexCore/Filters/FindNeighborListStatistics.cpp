@@ -184,7 +184,6 @@ void findStatistics(const IFilter* filter, INeighborList& source, bool length, b
     findStatisticsImpl<float64>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays);
     return;
   case DataType::boolean:
-  case DataType::error:
     return;
   }
 }

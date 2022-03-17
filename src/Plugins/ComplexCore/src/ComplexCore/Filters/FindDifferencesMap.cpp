@@ -1,5 +1,6 @@
 #include "FindDifferencesMap.hpp"
 
+#include <optional>
 #include <vector>
 
 #include "complex/DataStructure/AbstractDataStore.hpp"
@@ -19,7 +20,7 @@ constexpr int32 k_TupleCountMismatchError = -90004;
 
 IFilter::PreflightResult validateArrayTypes(const DataStructure& data, const std::vector<DataPath>& dataPaths)
 {
-  DataType dataType = DataType::error;
+  std::optional<DataType> dataType = {};
   for(const auto& dataPath : dataPaths)
   {
     if(data.getDataAs<BoolArray>(dataPath) != nullptr)
@@ -29,7 +30,7 @@ IFilter::PreflightResult validateArrayTypes(const DataStructure& data, const std
     }
     if(auto dataArray = data.getDataAs<IDataArray>(dataPath))
     {
-      if(dataType == DataType::error)
+      if(!dataType.has_value())
       {
         dataType = dataArray->getDataType();
       }
@@ -279,9 +280,6 @@ Result<> FindDifferencesMap::executeImpl(DataStructure& data, const Arguments& a
   case DataType::boolean:
     ExecuteFindDifferenceMap<bool>(firstInputArray, secondInputArray, differenceMapArray);
     break;
-  case DataType::error:
-    std::string ss = fmt::format("Cannot handle indeterminate array types");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-90006, ss}})};
   }
 
   return {};
