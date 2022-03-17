@@ -127,6 +127,14 @@ Result<> VectorParameter<T>::validate(const std::any& value) const
 template <class T>
 Result<> VectorParameter<T>::validateVector(const ValueType& value) const
 {
+  usize requiredSize = m_DefaultValue.size();
+  usize size = value.size();
+
+  if(size != requiredSize)
+  {
+    return MakeErrorResult(-1, fmt::format("VectorParameter requires size {}. Received size {}.", requiredSize, size));
+  }
+
   return {};
 }
 
