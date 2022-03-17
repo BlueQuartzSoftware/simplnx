@@ -35,6 +35,9 @@ Result<> CreateTriangleGeomAction::apply(DataStructure& dataStructure, Mode mode
 
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(m_Path);
 
+  dataStructure.makePath(m_Path.createChildPath("VertexData"));
+  dataStructure.makePath(m_Path.createChildPath("FaceData"));
+
   if(shouldCreateVertexArray())
   {
     auto vertexResult = createVertexArray(dataStructure, mode);
