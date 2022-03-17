@@ -284,12 +284,6 @@ typename NeighborList<T>::VectorType& NeighborList<T>::operator[](usize grainId)
   return *(m_Array[grainId]);
 }
 
-template <typename ValueType>
-DataType NeighborList<ValueType>::getDataType() const
-{
-  return DataType::error;
-}
-
 template <>
 DataType COMPLEX_EXPORT NeighborList<int8>::getDataType() const
 {

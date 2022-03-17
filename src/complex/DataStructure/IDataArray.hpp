@@ -136,13 +136,9 @@ public:
    * @brief Returns the DataArray's value type as an enum
    * @return DataType
    */
-  virtual DataType getDataType() const
+  DataType getDataType() const
   {
-    if(auto store = getIDataStore())
-    {
-      return store->getDataType();
-    }
-    return DataType::error;
+    return getIDataStoreRef().getDataType();
   }
 
 protected:

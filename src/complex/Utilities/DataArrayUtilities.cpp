@@ -149,8 +149,6 @@ Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObjec
   case complex::DataType::boolean:
     return ConditionalReplaceValueInArrayFromString<bool>(valueAsStr, inputDataObject, conditionalDataArray);
     break;
-  case complex::DataType::error:
-    return {MakeErrorResult(-260, fmt::format("Input DataObject could not be cast to any primitive type."))};
   }
   return {};
 }

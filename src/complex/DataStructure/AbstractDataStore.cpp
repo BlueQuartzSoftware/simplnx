@@ -2,12 +2,6 @@
 
 using namespace complex;
 
-template <typename ValueType>
-DataType AbstractDataStore<ValueType>::getDataType() const
-{
-  return DataType::error;
-}
-
 template <>
 DataType COMPLEX_EXPORT AbstractDataStore<int8>::getDataType() const
 {
