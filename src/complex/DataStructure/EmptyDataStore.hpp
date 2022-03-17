@@ -2,6 +2,9 @@
 
 #include "complex/DataStructure/AbstractDataStore.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+
+#include <fmt/format.h>
 
 #include <numeric>
 #include <stdexcept>
@@ -211,7 +214,7 @@ public:
   static std::unique_ptr<EmptyDataStore> readHdf5(const H5::DatasetReader& datasetReader)
   {
     // tupleShape
-    H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(k_TupleShape);
+    H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(AbstractDataStore::k_TupleShape);
     if(!tupleShapeAttribute.isValid())
     {
       throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
@@ -219,7 +222,7 @@ public:
     typename AbstractDataStore<T>::ShapeType tupleShape = tupleShapeAttribute.readAsVector<size_t>();
 
     // componentShape
-    H5::AttributeReader componentShapeAttribute = datasetReader.getAttribute(k_ComponentShape);
+    H5::AttributeReader componentShapeAttribute = datasetReader.getAttribute(AbstractDataStore::k_ComponentShape);
     if(!componentShapeAttribute.isValid())
     {
       throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
