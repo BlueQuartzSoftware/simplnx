@@ -478,7 +478,11 @@ bool DataStructure::finishAddingObject(const std::shared_ptr<DataObject>& dataOb
 {
   if(parent.has_value() && containsData(*parent))
   {
-    auto parentContainer = dynamic_cast<BaseGroup*>(getData(*parent));
+    auto* parentContainer = dynamic_cast<BaseGroup*>(getData(*parent));
+    if(parentContainer == nullptr)
+    {
+      return false;
+    }
     if(!parentContainer->insert(dataObject))
     {
       return false;
