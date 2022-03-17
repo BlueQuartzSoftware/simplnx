@@ -116,7 +116,7 @@ void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const
 
   if(preflight)
   {
-    DataArrayType::CreateWithStore<template EmptyDataStoreType>(ds, daName, tDims, cDims, parentId);
+    DataArrayType::template CreateWithStore<EmptyDataStoreType>(ds, daName, tDims, cDims, parentId);
     return;
   }
   auto dataStore = std::make_unique<DataStoreType>(tDims, cDims);
