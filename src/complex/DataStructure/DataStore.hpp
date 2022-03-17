@@ -338,14 +338,14 @@ public:
     }
 
     // Write shape attributes to the dataset
-    auto tupleAttribute = datasetWriter.createAttribute(k_TupleShape);
+    auto tupleAttribute = datasetWriter.createAttribute(AbstractDataStore<T>::k_TupleShape);
     err = tupleAttribute.writeVector({m_TupleShape.size()}, m_TupleShape);
     if(err < 0)
     {
       return err;
     }
 
-    auto componentAttribute = datasetWriter.createAttribute(k_ComponentShape);
+    auto componentAttribute = datasetWriter.createAttribute(AbstractDataStore<T>::k_ComponentShape);
     err = componentAttribute.writeVector({m_ComponentShape.size()}, m_ComponentShape);
 
     return err;
@@ -354,7 +354,7 @@ public:
   static std::unique_ptr<DataStore> readHdf5(const H5::DatasetReader& datasetReader)
   {
     // tupleShape
-    H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(k_TupleShape);
+    H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(AbstractDataStore<T>::k_TupleShape);
     if(!tupleShapeAttribute.isValid())
     {
       throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
@@ -362,7 +362,7 @@ public:
     typename DataStore<T>::ShapeType tupleShape = tupleShapeAttribute.readAsVector<size_t>();
 
     // componentShape
-    H5::AttributeReader componentShapeAttribute = datasetReader.getAttribute(k_ComponentShape);
+    H5::AttributeReader componentShapeAttribute = datasetReader.getAttribute(AbstractDataStore<T>::k_ComponentShape);
     if(!componentShapeAttribute.isValid())
     {
       throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
