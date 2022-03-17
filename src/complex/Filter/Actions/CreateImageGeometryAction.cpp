@@ -48,6 +48,10 @@ Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode mod
 
   // Create the ImageGeometry
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath).value());
+  if(imageGeom == nullptr)
+  {
+    return MakeErrorResult(-225, fmt::format("CreateGeometry2DAction: Failed to create ImageGeometry:'{}'", getCreatedPath().toString()));
+  }
   imageGeom->setDimensions(m_Dims);
   imageGeom->setOrigin(m_Origin);
   imageGeom->setSpacing(m_Spacing);
