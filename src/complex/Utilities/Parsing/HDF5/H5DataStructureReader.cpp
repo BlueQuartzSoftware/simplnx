@@ -91,7 +91,7 @@ H5::ErrorType H5::DataStructureReader::readObjectFromGroup(const H5::GroupReader
   if(parentGroup.isGroup(objectName))
   {
     auto childGroup = parentGroup.openGroup(objectName);
-    auto errorCode = factory->readH5Group(*this, childGroup, parentId, preflight);
+    auto errorCode = factory->readH5Group(*this, parentGroup, childGroup, parentId, preflight);
     if(errorCode < 0)
     {
       return errorCode;
@@ -100,7 +100,7 @@ H5::ErrorType H5::DataStructureReader::readObjectFromGroup(const H5::GroupReader
   else if(parentGroup.isDataset(objectName))
   {
     auto childDataset = parentGroup.openDataset(objectName);
-    auto errorCode = factory->readH5Dataset(*this, childDataset, parentId, preflight);
+    auto errorCode = factory->readH5Dataset(*this, parentGroup, childDataset, parentId, preflight);
     if(errorCode < 0)
     {
       return errorCode;

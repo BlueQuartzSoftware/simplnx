@@ -111,12 +111,12 @@ void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const
 
   if(preflight)
   {
-    DataArray<T>::CreateWithStore<EmptyDataStore<T>>(ds, daName, std::vector<usize>{tDims}, std::vector<usize>{cDims}, parentId);
+    DataArray<T>::CreateWithStore<EmptyDataStore<T>>(ds, daName, tDims, cDims, parentId);
+    return;
   }
-  
-  auto dataStore = std::make_unique<DataStore<T>>(std::vector<usize>{tDims}, std::vector<usize>{cDims});
-  
+
   auto dataStore = std::make_unique<DataStore<T>>(tDims, cDims);
+  
   auto data = dataArrayReader.readAsVector<T>();
   if(data.size() != dataStore->getSize())
   {

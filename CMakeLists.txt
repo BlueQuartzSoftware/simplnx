@@ -343,7 +343,6 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/FilterHandle.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/FilterList.cpp
 
-  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/EdgeGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/GridMontageFactory.cpp

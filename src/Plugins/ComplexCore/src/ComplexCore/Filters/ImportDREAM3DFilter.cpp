@@ -5,6 +5,7 @@
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Filter/Actions/ImportH5ObjectPathsAction.hpp"
+#include "complex/Filter/Actions/ImportObjectAction.hpp"
 #include "complex/Parameters/Dream3dImportParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
