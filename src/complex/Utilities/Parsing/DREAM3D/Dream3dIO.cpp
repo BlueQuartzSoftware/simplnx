@@ -108,15 +108,18 @@ template <typename T>
 void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const H5::DatasetReader& dataArrayReader, const std::vector<usize>& tDims, const std::vector<usize>& cDims,
                            bool preflight = false)
 {
+  using DataArrayType = DataArray<T>;
+  using EmptyDataStoreType = EmptyDataStore<T>;
+  using DataStoreType = DataStore<T>;
+
   const std::string daName = dataArrayReader.getName();
 
   if(preflight)
   {
-    typename DataArray<T>::CreateWithStore<EmptyDataStore<T>>(ds, daName, tDims, cDims, parentId);
+    DataArrayType::CreateWithStore<EmptyDataStoreType>(ds, daName, tDims, cDims, parentId);
     return;
   }
-
-  auto dataStore = std::make_unique<DataStore<T>>(tDims, cDims);
+  auto dataStore = std::make_unique<DataStoreType>(tDims, cDims);
 
   auto data = dataArrayReader.readAsVector<T>();
   if(data.size() != dataStore->getSize())
@@ -129,7 +132,7 @@ void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const
     dataStore->setValue(i, data.at(i));
   }
   // Insert the DataArray into the DataStructure
-  auto dataArray = typename DataArray<T>::Create(ds, daName, std::move(dataStore), parentId);
+  auto dataArray = DataArrayType::Create(ds, daName, std::move(dataStore), parentId);
 }
 
 /**
