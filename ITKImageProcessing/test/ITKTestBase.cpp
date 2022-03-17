@@ -160,12 +160,10 @@ std::string ComputeMd5Hash(DataStructure& ds, const DataPath& outputDataPath)
   case DataType::boolean: {
     [[fallthrough]];
   }
-  case DataType::error: {
+  default: {
     return {};
   }
   }
-
-  return {};
 }
 
 //------------------------------------------------------------------------------
@@ -286,9 +284,6 @@ Result<> CompareImages(DataStructure& ds, const DataPath& baselineGeometryPath, 
     return CompareImagesTyped<uint64>(*inputImageGeom, *outputDataArray, *baselineImageGeom, *baselineDataArray, tolerance);
   }
   case DataType::boolean: {
-    [[fallthrough]];
-  }
-  case DataType::error: {
     [[fallthrough]];
   }
   default: {
