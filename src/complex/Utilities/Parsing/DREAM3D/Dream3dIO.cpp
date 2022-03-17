@@ -492,7 +492,7 @@ complex::DREAM3D::FileData complex::DREAM3D::ReadFile(const H5::FileReader& file
     return {};
   }
 
-  auto dataStructure = ImportDataStructureFromFile(fileReader, errorCode);
+  auto dataStructure = ImportDataStructureFromFile(fileReader, errorCode, preflight);
   if(errorCode < 0)
   {
     return {};

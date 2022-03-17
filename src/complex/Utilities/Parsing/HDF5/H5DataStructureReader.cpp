@@ -34,7 +34,7 @@ complex::DataStructure H5::DataStructureReader::readH5Group(const H5::GroupReade
 
   m_CurrentStructure = DataStructure();
   m_CurrentStructure.setNextId(idAttribute.readAsValue<DataObject::IdType>());
-  errorCode = m_CurrentStructure.getRootGroup().readH5Group(*this, rootGroupReader, preflight);
+  errorCode = m_CurrentStructure.getRootGroup().readH5Group(*this, rootGroupReader, {}, preflight);
   return std::move(m_CurrentStructure);
 }
 
