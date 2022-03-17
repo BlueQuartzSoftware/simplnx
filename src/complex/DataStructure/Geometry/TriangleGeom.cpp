@@ -115,14 +115,36 @@ std::string TriangleGeom::getGeometryTypeAsString() const
   return "TriangleGeom";
 }
 
+void TriangleGeom::resizeVertexList(usize newNumVertices)
+{
+  AbstractGeometry::SharedVertexList* vertices = getVertices();
+  if(vertices == nullptr)
+  {
+    auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{newNumVertices}, std::vector<usize>{3});
+    DataStructure* ds = getDataStructure();
+    vertices = AbstractGeometry::SharedVertexList::Create(*ds, "SahredVertList", std::move(dataStore));
+    setVertices(vertices);
+  }
+  else
+  {
+    vertices->getDataStore()->reshapeTuples({newNumVertices});
+  }
+}
+
 void TriangleGeom::resizeFaceList(usize newNumTris)
 {
   auto* faces = getFaces();
   if(faces == nullptr)
   {
-    return;
+    auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{newNumTris}, std::vector<usize>{3});
+    DataStructure* ds = getDataStructure();
+    faces = AbstractGeometry::SharedFaceList::Create(*ds, "SharedTriList", std::move(dataStore));
+    setFaces(faces);
   }
-  faces->getDataStore()->reshapeTuples({newNumTris});
+  else
+  {
+    faces->getDataStore()->reshapeTuples({newNumTris});
+  }
 }
 
 void TriangleGeom::setFaces(const SharedTriList* triangles)

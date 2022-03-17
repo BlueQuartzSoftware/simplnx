@@ -91,6 +91,12 @@ public:
   std::string getGeometryTypeAsString() const override;
 
   /**
+   * @brief resizeVertexList
+   * @param newNumVertices
+   */
+  void resizeVertexList(usize newNumVertices);
+
+  /**
    * @brief
    * @param newNumTris
    */
