@@ -13,6 +13,9 @@ namespace complex
 {
 namespace
 {
+constexpr int64 k_TupleCountInvalidError = -250;
+constexpr int64 k_MissingFeaturePhasesError = -251;
+
 void assignBadPoints(DataStructure& data, const Arguments& args)
 {
   auto imageGeomPath = args.value<DataPath>(MinNeighbors::k_ImageGeom_Key);
@@ -28,6 +31,12 @@ void assignBadPoints(DataStructure& data, const Arguments& args)
   auto& featureIds = featureIdsArray.getDataStoreRef();
   auto& featurePhases = featurePhasesArray.getDataStoreRef();
 
+  std::vector<std::reference_wrapper<IDataArray>> voxelArrays;
+  for(const auto& arrayPath : voxelArrayPaths)
+  {
+    voxelArrays.push_back(data.getDataRefAs<IDataArray>(arrayPath));
+  }
+
   usize totalPoints = featureIdsArray.getNumberOfTuples();
   SizeVec3 udims = data.getDataRefAs<ImageGeom>(imageGeomPath).getDimensions();
 
@@ -38,8 +47,7 @@ void assignBadPoints(DataStructure& data, const Arguments& args)
   };
 
   DataStructure temp;
-  auto* neighborsPtr = Int32Array::CreateWithStore<Int32DataStore>(temp, std::string("_INTERNAL_USE_ONLY_Neighbors"), IDataStore::ShapeType{totalPoints}, IDataStore::ShapeType{1});
-  auto& neighbors = neighborsPtr->getDataStoreRef();
+  auto& neighbors = Int32DataStore(IDataStore::ShapeType{totalPoints}, IDataStore::ShapeType{1});
   neighbors.fill(-1);
 
   int32 good = 1;
@@ -170,17 +178,16 @@ void assignBadPoints(DataStructure& data, const Arguments& args)
       neighbor = neighbors[j];
       if(featurename < 0 && neighbor >= 0 && featureIds[neighbor] >= 0)
       {
-        for(const auto& arrayPath : voxelArrayPaths)
+        for(const auto& voxelArray : voxelArrays)
         {
-          auto* p = data.getDataAs<IDataArray>(arrayPath);
-          p->copyTuple(neighbor, j);
+          voxelArray.get().copyTuple(neighbor, j);
         }
       }
     }
   }
 }
 
-std::vector<bool> mergeContainedFeatures(DataStructure& data, const Arguments& args, Error& err)
+nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure& data, const Arguments& args)
 {
   auto imageGeomPath = args.value<DataPath>(MinNeighbors::k_ImageGeom_Key);
   auto featureIdsPath = args.value<DataPath>(MinNeighbors::k_FeatureIds_Key);
@@ -233,8 +240,7 @@ std::vector<bool> mergeContainedFeatures(DataStructure& data, const Arguments& a
   }
   if(!good)
   {
-    err = Error{-1, "The minimum number of neighbors is larger than the Feature with the most neighbors.  All Features would be removed"};
-    return activeObjects;
+    return nonstd::make_unexpected<Error>({-1, "The minimum number of neighbors is larger than the Feature with the most neighbors.  All Features would be removed"});
   }
   for(usize i = 0; i < totalPoints; i++)
   {
@@ -310,10 +316,21 @@ IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& data, 
 
   if(applyToSinglePhase)
   {
+    auto* featurePhasesArray = data.getDataAs<Int32Array>(featurePhasesPath);
+    if(featurePhasesArray == nullptr)
+    {
+      std::string ss = fmt::format("Could not find Feature Phases array at path '{}'", featurePhasesPath.toString());
+      return {MakeErrorResult<OutputActions>(k_MissingFeaturePhasesError, ss)};
+    }
+
     dataArrayPaths.push_back(featurePhasesPath);
   }
 
-  data.validateNumberOfTuples(dataArrayPaths);
+  if(!data.validateNumberOfTuples(dataArrayPaths))
+  {
+    std::string ss = fmt::format("DataArrays do not have matching tuple count");
+    return {MakeErrorResult<OutputActions>(k_TupleCountInvalidError, ss)};
+  }
 
   OutputActions actions;
   return {std::move(actions)};
@@ -331,10 +348,10 @@ Result<> MinNeighbors::executeImpl(DataStructure& data, const Arguments& args, c
   // we don't have acces to the data yet
   if(applyToSinglePhase)
   {
-    auto* featurePhasesArray = data.getDataAs<Int32Array>(featurePhasesPath);
-    auto& featurePhases = featurePhasesArray->getDataStoreRef();
+    auto& featurePhasesArray = data.getDataRefAs<Int32Array>(featurePhasesPath);
+    auto& featurePhases = featurePhasesArray.getDataStoreRef();
 
-    usize numFeatures = featurePhasesArray->getNumberOfTuples();
+    usize numFeatures = featurePhasesArray.getNumberOfTuples();
     bool unavailablePhase = true;
     for(usize i = 0; i < numFeatures; i++)
     {
@@ -352,11 +369,10 @@ Result<> MinNeighbors::executeImpl(DataStructure& data, const Arguments& args, c
     }
   }
 
-  Error err;
-  std::vector<bool> activeObjects = mergeContainedFeatures(data, args, err);
-  if(err.code < 0)
+  auto activeObjects = mergeContainedFeatures(data, args);
+  if(!activeObjects.has_value())
   {
-    return {{nonstd::make_unexpected(std::vector<Error>{err})}};
+    return {nonstd::make_unexpected(std::vector<Error>{activeObjects.error()})};
   }
   assignBadPoints(data, args);
 
