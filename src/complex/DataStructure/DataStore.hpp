@@ -338,7 +338,7 @@ public:
     }
 
     // Write shape attributes to the dataset
-    auto tupleAttribute = datasetWriter.createAttribute(AbstractDataStore<T>::k_TupleShape);
+    auto tupleAttribute = datasetWriter.createAttribute(IDataStore::k_TupleShape);
     err = tupleAttribute.writeVector({m_TupleShape.size()}, m_TupleShape);
     if(err < 0)
     {
@@ -351,10 +351,10 @@ public:
     return err;
   }
 
-  static std::unique_ptr<DataStore> readHdf5(const H5::DatasetReader& datasetReader)
+  static std::unique_ptr<AbstractDataStore> ReadHdf5(const H5::DatasetReader& datasetReader)
   {
     // tupleShape
-    H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(AbstractDataStore<T>::k_TupleShape);
+    H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(IDataStore::k_TupleShape);
     if(!tupleShapeAttribute.isValid())
     {
       throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));

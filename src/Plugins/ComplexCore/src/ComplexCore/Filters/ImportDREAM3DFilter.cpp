@@ -68,10 +68,9 @@ IFilter::PreflightResult ImportDREAM3DFilter::preflightImpl(const DataStructure&
 
   // Require at least one DataPath to import
   // NX does not allow the use of this value as intended.
-  if(importData.DataPaths->empty())
+  if(importData.DataPaths.has_value() && importData.DataPaths->empty())
   {
     importData.DataPaths = std::nullopt;
-    // return {nonstd::make_unexpected(std::vector<Error>{Error{k_NoSelectedPaths, "No paths were selected for importing"}})};
   }
 
   OutputActions actions;

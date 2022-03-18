@@ -51,17 +51,8 @@ public:
   void importDataArray(DataStructure& dataStructure, const H5::DatasetReader& datasetReader, const std::string dataArrayName, DataObject::IdType importId, H5::ErrorType& err,
                        const std::optional<DataObject::IdType>& parentId, bool preflight)
   {
-    DataArray<K>* data = nullptr;
-    if(preflight)
-    {
-      auto dataStore = EmptyDataStore<K>::readHdf5(datasetReader);
-      data = DataArray<K>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
-    }
-    else
-    {
-      auto dataStore = DataStore<K>::readHdf5(datasetReader);
-      data = DataArray<K>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
-    }
+    std::unique_ptr<AbstractDataStore<K>> dataStore = preflight ? EmptyDataStore<K>::ReadHdf5(datasetReader) : DataStore<K>::ReadHdf5(datasetReader);
+    DataArray<K>* data = DataArray<K>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
     err = (data == nullptr) ? -400 : 0;
   }
 

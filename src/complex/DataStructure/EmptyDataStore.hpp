@@ -211,10 +211,10 @@ public:
    * @param datasetReader
    * @return std::unique_ptr<EmptyDataStore>
    */
-  static std::unique_ptr<EmptyDataStore> readHdf5(const H5::DatasetReader& datasetReader)
+  static std::unique_ptr<AbstractDataStore> ReadHdf5(const H5::DatasetReader& datasetReader)
   {
     // tupleShape
-    H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(AbstractDataStore<T>::k_TupleShape);
+    H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(IDataStore::k_TupleShape);
     if(!tupleShapeAttribute.isValid())
     {
       throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
