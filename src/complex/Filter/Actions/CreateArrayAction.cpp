@@ -18,14 +18,6 @@ CreateArrayAction::CreateArrayAction(DataType type, const std::vector<usize>& tD
 {
 }
 
-CreateArrayAction::CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path)
-: IDataCreationAction(path)
-, m_Type(type)
-, m_Dims(tDims)
-, m_CDims(cDims)
-{
-}
-
 CreateArrayAction::~CreateArrayAction() noexcept = default;
 
 Result<> CreateArrayAction::apply(DataStructure& dataStructure, Mode mode) const

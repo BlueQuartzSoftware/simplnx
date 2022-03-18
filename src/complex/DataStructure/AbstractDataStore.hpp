@@ -44,9 +44,13 @@ public:
     using pointer = T*;
     using reference = T&;
 
-    Iterator() = delete;
+    Iterator()
+    : m_DataStore(nullptr)
+    , m_Index(0)
+    {
+    }
 
-    Iterator(AbstractDataStore& dataStore, usize index)
+    Iterator(AbstractDataStore* dataStore, usize index)
     : m_DataStore(dataStore)
     , m_Index(index)
     {
@@ -60,14 +64,23 @@ public:
 
     ~Iterator() noexcept = default;
 
+    bool isValid() const
+    {
+      if(m_DataStore == nullptr)
+      {
+        return false;
+      }
+      return m_Index < m_DataStore->getSize();
+    }
+
     Iterator operator+(usize offset) const
     {
-      return Iterator(m_DataStore.get(), m_Index + offset);
+      return Iterator(m_DataStore, m_Index + offset);
     }
 
     Iterator operator-(usize offset) const
     {
-      return Iterator(m_DataStore.get(), m_Index - offset);
+      return Iterator(m_DataStore, m_Index - offset);
     }
 
     Iterator& operator+=(usize offset)
@@ -119,12 +132,16 @@ public:
 
     reference operator*() const
     {
-      return m_DataStore.get()[m_Index];
+      return (*m_DataStore)[m_Index];
     }
 
     bool operator==(const Iterator& rhs) const
     {
-      return (std::addressof(m_DataStore.get()) == std::addressof(rhs.m_DataStore.get())) && (m_Index == rhs.m_Index);
+      if(!isValid() && !rhs.isValid())
+      {
+        return true;
+      }
+      return (m_DataStore == rhs.m_DataStore) && (m_Index == rhs.m_Index);
     }
 
     bool operator!=(const Iterator& rhs) const
@@ -153,7 +170,7 @@ public:
     }
 
   private:
-    std::reference_wrapper<AbstractDataStore> m_DataStore;
+    AbstractDataStore* m_DataStore = nullptr;
     usize m_Index = 0;
   };
 
@@ -166,9 +183,13 @@ public:
     using pointer = const T*;
     using reference = const T&;
 
-    ConstIterator() = delete;
+    ConstIterator()
+    : m_DataStore(nullptr)
+    , m_Index(0)
+    {
+    }
 
-    ConstIterator(const AbstractDataStore& dataStore, usize index)
+    ConstIterator(const AbstractDataStore* dataStore, usize index)
     : m_DataStore(dataStore)
     , m_Index(index)
     {
@@ -182,14 +203,23 @@ public:
 
     ~ConstIterator() noexcept = default;
 
+    bool isValid() const
+    {
+      if(m_DataStore == nullptr)
+      {
+        return false;
+      }
+      return m_Index < m_DataStore->getSize();
+    }
+
     ConstIterator operator+(usize offset) const
     {
-      return ConstIterator(m_DataStore.get(), m_Index + offset);
+      return ConstIterator(m_DataStore, m_Index + offset);
     }
 
     ConstIterator operator-(usize offset) const
     {
-      return ConstIterator(m_DataStore.get(), m_Index - offset);
+      return ConstIterator(m_DataStore, m_Index - offset);
     }
 
     ConstIterator& operator+=(usize offset)
@@ -241,12 +271,16 @@ public:
 
     reference operator*() const
     {
-      return m_DataStore.get()[m_Index];
+      return m_DataStore->getValue(m_Index);
     }
 
     bool operator==(const ConstIterator& rhs) const
     {
-      return (std::addressof(m_DataStore.get()) == std::addressof(rhs.m_DataStore.get())) && (m_Index == rhs.m_Index);
+      if(!isValid() && !rhs.isValid())
+      {
+        return true;
+      }
+      return (m_DataStore == rhs.m_DataStore) && (m_Index == rhs.m_Index);
     }
 
     bool operator!=(const ConstIterator& rhs) const
@@ -275,7 +309,7 @@ public:
     }
 
   private:
-    std::reference_wrapper<const AbstractDataStore> m_DataStore;
+    const AbstractDataStore* m_DataStore = nullptr;
     usize m_Index = 0;
   };
   ///////////////////////////////
@@ -329,7 +363,7 @@ public:
    */
   Iterator begin()
   {
-    return Iterator(*this, 0);
+    return Iterator(this, 0);
   }
 
   /**
@@ -338,7 +372,7 @@ public:
    */
   Iterator end()
   {
-    return Iterator(*this, getSize());
+    return Iterator(this, getSize());
   }
 
   /**
@@ -347,7 +381,7 @@ public:
    */
   ConstIterator begin() const
   {
-    return ConstIterator(*this, 0);
+    return ConstIterator(this, 0);
   }
 
   /**
@@ -356,7 +390,7 @@ public:
    */
   ConstIterator end() const
   {
-    return ConstIterator(*this, getSize());
+    return ConstIterator(this, getSize());
   }
 
   /**
