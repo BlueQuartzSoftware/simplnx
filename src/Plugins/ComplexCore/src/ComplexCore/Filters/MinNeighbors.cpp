@@ -47,7 +47,7 @@ void assignBadPoints(DataStructure& data, const Arguments& args)
   };
 
   DataStructure temp;
-  auto& neighbors = Int32DataStore(IDataStore::ShapeType{totalPoints}, IDataStore::ShapeType{1});
+  Int32DataStore neighbors(IDataStore::ShapeType{totalPoints}, IDataStore::ShapeType{1});
   neighbors.fill(-1);
 
   int32 good = 1;
