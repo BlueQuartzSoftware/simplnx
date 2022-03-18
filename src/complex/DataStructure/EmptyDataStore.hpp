@@ -211,7 +211,7 @@ public:
    * @param datasetReader
    * @return std::unique_ptr<EmptyDataStore>
    */
-  static std::unique_ptr<AbstractDataStore<T>> ReadHdf5(const H5::DatasetReader& datasetReader)
+  static std::unique_ptr<EmptyDataStore> ReadHdf5(const H5::DatasetReader& datasetReader)
   {
     // tupleShape
     H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(IDataStore::k_TupleShape);
