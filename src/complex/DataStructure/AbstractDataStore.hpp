@@ -266,12 +266,16 @@ public:
 
     difference_type operator-(const ConstIterator& rhs) const
     {
+      if(!isValid() && !rhs.isValid())
+      {
+        return 0;
+      }
       return m_Index - rhs.m_Index;
     }
 
     reference operator*() const
     {
-      return m_DataStore->getValue(m_Index);
+      return (*m_DataStore)[m_Index];
     }
 
     bool operator==(const ConstIterator& rhs) const
