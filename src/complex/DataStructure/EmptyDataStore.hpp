@@ -213,7 +213,7 @@ public:
    */
   static std::unique_ptr<EmptyDataStore> ReadHdf5(const H5::DatasetReader& datasetReader)
   {
-    auto tupleShape = ReadTupleShape(datasetReader);
+    auto tupleShape = IDataStore::ReadTupleShape(datasetReader);
 
     // componentShape
     H5::AttributeReader componentShapeAttribute = datasetReader.getAttribute(AbstractDataStore<T>::k_ComponentShape);
