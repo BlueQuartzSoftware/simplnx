@@ -63,7 +63,7 @@ std::any GeometrySelectionParameter::defaultValue() const
   return defaultPath();
 }
 
-const GeometrySelectionParameter::AllowedTypes& GeometrySelectionParameter::getAllowedTypes() const
+const GeometrySelectionParameter::AllowedTypes& GeometrySelectionParameter::allowedTypes() const
 {
   return m_AllowedTypes;
 }
