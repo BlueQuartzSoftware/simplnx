@@ -354,12 +354,7 @@ public:
   static std::unique_ptr<DataStore> ReadHdf5(const H5::DatasetReader& datasetReader)
   {
     // tupleShape
-    H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(IDataStore::k_TupleShape);
-    if(!tupleShapeAttribute.isValid())
-    {
-      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
-    }
-    typename DataStore<T>::ShapeType tupleShape = tupleShapeAttribute.readAsVector<size_t>();
+    auto tupleShape = ReadTupleShape(datasetReader);
 
     // componentShape
     H5::AttributeReader componentShapeAttribute = datasetReader.getAttribute(AbstractDataStore<T>::k_ComponentShape);
