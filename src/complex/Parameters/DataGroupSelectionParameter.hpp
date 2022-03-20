@@ -5,6 +5,7 @@
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/complex_export.hpp"
 
+#include <set>
 #include <string>
 
 namespace complex
@@ -13,6 +14,8 @@ class COMPLEX_EXPORT DataGroupSelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
+
+  using AllowedTypes = std::set<DataObject::Type>;
 
   DataGroupSelectionParameter() = delete;
   DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
@@ -67,6 +70,12 @@ public:
    * @return
    */
   ValueType defaultPath() const;
+
+  /**
+   * @brief Returns the set of allowed DataArray types. An empty set means all are allowed.
+   * @return
+   */
+  AllowedTypes allowedTypes() const;
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.

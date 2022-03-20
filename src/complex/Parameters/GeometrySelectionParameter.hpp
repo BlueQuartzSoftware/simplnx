@@ -79,7 +79,7 @@ public:
    * @brief Returns the list of allowed DataObject types.
    * @return
    */
-  const AllowedTypes& getAllowedTypes() const;
+  const AllowedTypes& allowedTypes() const;
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
