@@ -377,7 +377,7 @@ H5::ErrorType NeighborList<T>::writeHdf5(H5::DataStructureWriter& dataStructureW
   }
 
   // Create flattened neighbor DataStore
-  DataStore<T> flattenedData(totalItems);
+  DataStore<T> flattenedData(totalItems, static_cast<T>(0));
   usize offset = 0;
   for(const auto& segment : m_Array)
   {

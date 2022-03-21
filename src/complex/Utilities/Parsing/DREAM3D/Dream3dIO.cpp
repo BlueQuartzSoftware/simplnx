@@ -130,7 +130,7 @@ IDataArray* createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId
   {
     return DataArrayType::template CreateWithStore<EmptyDataStoreType>(ds, daName, tDims, cDims, parentId);
   }
-  auto dataStore = std::make_unique<DataStoreType>(tDims, cDims);
+  auto dataStore = std::make_unique<DataStore<T>>(tDims, cDims, static_cast<T>(0));
 
   auto data = dataArrayReader.readAsVector<T>();
   if(data.size() != dataStore->getSize())

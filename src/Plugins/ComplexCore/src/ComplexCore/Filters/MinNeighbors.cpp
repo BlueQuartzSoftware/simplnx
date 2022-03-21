@@ -46,8 +46,7 @@ void assignBadPoints(DataStructure& data, const Arguments& args)
       static_cast<int64>(udims[2]),
   };
 
-  Int32DataStore neighbors(IDataStore::ShapeType{totalPoints}, IDataStore::ShapeType{1});
-  neighbors.fill(-1);
+  Int32DataStore neighbors(IDataStore::ShapeType{totalPoints}, IDataStore::ShapeType{1}, -1);
 
   int32 good = 1;
   int32 current = 0;

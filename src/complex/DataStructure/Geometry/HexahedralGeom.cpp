@@ -228,7 +228,7 @@ usize HexahedralGeom::getNumberOfElements() const
 
 AbstractGeometry::StatusCode HexahedralGeom::findElementSizes()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfHexas()}, std::vector<usize>{1});
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfHexas()}, std::vector<usize>{1}, 0.0f);
   Float32Array* hexSizes = DataArray<float32>::Create(*getDataStructure(), "Hex Volumes", std::move(dataStore), getId());
   m_HexSizesId = hexSizes->getId();
   GeometryHelpers::Topology::FindHexVolumes<uint64_t>(getHexahedrals(), getVertices(), hexSizes);
@@ -310,7 +310,7 @@ void HexahedralGeom::deleteElementNeighbors()
 
 AbstractGeometry::StatusCode HexahedralGeom::findElementCentroids()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfHexas()}, std::vector<usize>{3});
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfHexas()}, std::vector<usize>{3}, 0.0f);
   auto* hexCentroids = DataArray<float32>::Create(*getDataStructure(), "Hex Centroids", std::move(dataStore), getId());
   m_HexCentroidsId = hexCentroids->getId();
   GeometryHelpers::Topology::FindElementCentroids<uint64_t>(getHexahedrals(), getVertices(), hexCentroids);
@@ -419,7 +419,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findFaces()
 
 AbstractGeometry::StatusCode HexahedralGeom::findUnsharedEdges()
 {
-  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2});
+  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
   DataArray<MeshIndexType>* unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", std::move(dataStore), getId());
   GeometryHelpers::Connectivity::FindUnsharedHexEdges<uint64_t>(getHexahedrals(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
@@ -433,7 +433,7 @@ AbstractGeometry::StatusCode HexahedralGeom::findUnsharedEdges()
 
 AbstractGeometry::StatusCode HexahedralGeom::findUnsharedFaces()
 {
-  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{4});
+  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{4}, 0);
   auto* unsharedQuadList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", std::move(dataStore), getId());
   GeometryHelpers::Connectivity::FindUnsharedHexFaces<uint64_t>(getHexahedrals(), unsharedQuadList);
   if(unsharedQuadList == nullptr)

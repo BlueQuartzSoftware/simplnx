@@ -44,7 +44,7 @@ DataObject::Type AbstractGeometry3D::getDataObjectType() const
 
 AbstractGeometry3D::SharedQuadList* AbstractGeometry3D::createSharedQuadList(usize numQuads)
 {
-  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numQuads}, std::vector<usize>{4});
+  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numQuads}, std::vector<usize>{4}, 0);
   SharedQuadList* quads = DataArray<MeshIndexType>::Create(*getDataStructure(), "Shared Quad List", std::move(dataStore), getId());
   dataStore->fill(0);
   return quads;
@@ -52,7 +52,7 @@ AbstractGeometry3D::SharedQuadList* AbstractGeometry3D::createSharedQuadList(usi
 
 AbstractGeometry3D::SharedTriList* AbstractGeometry3D::createSharedTriList(usize numTris)
 {
-  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numTris}, std::vector<usize>{3});
+  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numTris}, std::vector<usize>{3}, 0);
   SharedTriList* triangles = DataArray<MeshIndexType>::Create(*getDataStructure(), "Shared Tri List", std::move(dataStore), getId());
   triangles->getDataStore()->fill(0);
   return triangles;
