@@ -118,6 +118,12 @@ public:
   const SharedVertexList* getVertices() const;
 
   /**
+   * @brief Returns the DataObject ID for the vertices array. Returns an empty optional if no vertex array has been set.
+   * @return std::optional<IdType>
+   */
+  std::optional<IdType> getVerticesId() const;
+
+  /**
    * @brief Gets the coordinates at the target vertex ID.
    * @param vertId
    */
