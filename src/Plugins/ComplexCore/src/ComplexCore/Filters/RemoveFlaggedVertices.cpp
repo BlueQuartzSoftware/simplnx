@@ -82,7 +82,7 @@ Parameters RemoveFlaggedVertices::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Vertex}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraySelection_Key, "Target Arrays", "Paths to the target DataArrays", std::vector<DataPath>()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask Array", "DataPath to the conditional array that will be used to decide which vertices are removed.", DataPath(), false,
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::uint8}));
   params.insert(
       std::make_unique<DataGroupCreationParameter>(k_ReducedVertexPath_Key, "Reduced Vertex Geometry", "Created Vertex Geometry DataPath. This will be created during the filter.", DataPath()));
   return params;
@@ -110,16 +110,18 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
     std::string errorMsg = fmt::format("Vertex Geometry not found at path: '{}'", vertexGeomPath.toString());
     return {MakeErrorResult<OutputActions>(::k_VertexGeomNotFound, errorMsg)};
   }
-  if(vertex->getVertices() == nullptr)
+  auto verticesId = vertex->getVerticesId();
+  auto* verticesArray = dataStructure.getDataAs<Float32Array>(verticesId);
+  if(verticesArray == nullptr)
   {
     std::string errorMsg = fmt::format("Vertex Geometry does not have a vertex list");
     return {MakeErrorResult<OutputActions>(::k_VertexGeomNotFound, errorMsg)};
   }
-  dataArrayPaths.push_back(vertex->getVertices()->getDataPaths()[0]);
+  // dataArrayPaths.push_back(verticesArray->getDataPaths()[0]);
 
   std::vector<size_t> cDims(1, 1);
 
-  const auto* maskArray = dataStructure.getDataAs<DataArray<bool>>(maskArrayPath);
+  const auto* maskArray = dataStructure.getDataAs<DataArray<uint8>>(maskArrayPath);
   if(maskArray != nullptr)
   {
     dataArrayPaths.push_back(maskArrayPath);
@@ -170,7 +172,7 @@ Result<> RemoveFlaggedVertices::executeImpl(DataStructure& data, const Arguments
   auto reducedVertexPath = args.value<DataPath>(k_ReducedVertexPath_Key);
 
   VertexGeom& vertex = data.getDataRefAs<VertexGeom>(vertexGeomPath);
-  auto& mask = data.getDataRefAs<BoolArray>(maskArrayPath);
+  auto& mask = data.getDataRefAs<UInt8Array>(maskArrayPath);
 
   size_t numMaskTuples = mask.getSize();
   size_t trueCount = std::count(mask.begin(), mask.end(), true);

@@ -162,6 +162,11 @@ const AbstractGeometry::SharedVertexList* VertexGeom::getVertices() const
   return dataStructure->getDataAs<SharedVertexList>(m_VertexListId);
 }
 
+std::optional<DataObject::IdType> VertexGeom::getVerticesId() const
+{
+  return m_VertexListId;
+}
+
 Point3D<float32> VertexGeom::getCoords(usize vertId) const
 {
   auto vertices = getVertices();
