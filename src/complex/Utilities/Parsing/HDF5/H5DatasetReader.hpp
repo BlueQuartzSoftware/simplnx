@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include <nonstd/span.hpp>
+
 #include "complex/Utilities/Parsing/HDF5/H5ObjectReader.hpp"
 
 namespace complex
@@ -93,6 +95,15 @@ public:
    */
   template <typename T>
   std::vector<T> readAsVector() const;
+
+  /**
+   * @brief Reads the dataset into the given span. Requires the span to be the correct size.
+   * Returns false if unable to read.
+   * @tparam T
+   * @param data
+   */
+  template <class T>
+  bool readIntoSpan(nonstd::span<T> data) const;
 
 protected:
   /**

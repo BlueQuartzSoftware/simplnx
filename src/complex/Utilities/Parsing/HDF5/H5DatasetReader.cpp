@@ -60,17 +60,15 @@ size_t H5::DatasetReader::getTypeSize() const
 
 size_t H5::DatasetReader::getNumElements() const
 {
-  auto typeId = getTypeId();
-  size_t typeSize = H5Tget_size(typeId);
   std::vector<hsize_t> dims;
   auto dataspaceId = getDataspaceId();
   if(dataspaceId >= 0)
   {
     if(getType() == Type::string)
     {
-      size_t rank = 1;
-      dims.resize(rank);
-      dims[0] = typeSize;
+      auto typeId = getTypeId();
+      size_t typeSize = H5Tget_size(typeId);
+      dims = {typeSize};
     }
     else
     {
@@ -219,13 +217,31 @@ std::vector<T> H5::DatasetReader::readAsVector() const
     return {};
   }
 
-  hid_t dataType = H5::Support::HdfTypeForPrimitive<T>();
-  if(dataType == -1)
+  usize numElements = getNumElements();
+
+  std::vector<T> data(numElements);
+
+  if(!readIntoSpan<T>(data))
   {
     return {};
   }
 
-  std::vector<T> data;
+  return data;
+}
+
+template <class T>
+bool H5::DatasetReader::readIntoSpan(nonstd::span<T> data) const
+{
+  if(!isValid())
+  {
+    return false;
+  }
+
+  hid_t dataType = H5::Support::HdfTypeForPrimitive<T>();
+  if(dataType == -1)
+  {
+    return false;
+  }
 
   auto spaceId = getDataspaceId();
   if(spaceId > 0)
@@ -233,13 +249,13 @@ std::vector<T> H5::DatasetReader::readAsVector() const
     int32_t rank = H5Sget_simple_extent_ndims(spaceId);
     if(rank > 0)
     {
-      std::vector<hsize_t> dims(rank, 0); // Allocate enough room for the dims
-      auto error = H5Sget_simple_extent_dims(spaceId, dims.data(), nullptr);
-      hsize_t numElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<hsize_t>(1), std::multiplies<>());
+      hsize_t numElements = getNumElements();
       // std::cout << "NumElements: " << numElements << std::endl;
-      // Resize the vector
-      data.resize(numElements);
-      error = H5Dread(getId(), dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.data());
+      if(numElements != data.size())
+      {
+        return false;
+      }
+      herr_t error = H5Dread(getId(), dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.data());
       if(error < 0)
       {
         std::cout << "Error Reading Data.'" << getName() << "'" << std::endl;
@@ -256,7 +272,7 @@ std::vector<T> H5::DatasetReader::readAsVector() const
     std::cout << "Error Opening SpaceID" << std::endl;
   }
 
-  return data;
+  return true;
 }
 
 // declare readAsVector
@@ -273,3 +289,17 @@ template std::vector<size_t> H5::DatasetReader::readAsVector<size_t>() const;
 #endif
 template std::vector<float> H5::DatasetReader::readAsVector<float>() const;
 template std::vector<double> H5::DatasetReader::readAsVector<double>() const;
+
+template bool H5::DatasetReader::readIntoSpan<int8>(nonstd::span<int8>) const;
+template bool H5::DatasetReader::readIntoSpan<int16>(nonstd::span<int16>) const;
+template bool H5::DatasetReader::readIntoSpan<int32>(nonstd::span<int32>) const;
+template bool H5::DatasetReader::readIntoSpan<int64>(nonstd::span<int64>) const;
+template bool H5::DatasetReader::readIntoSpan<uint8>(nonstd::span<uint8>) const;
+template bool H5::DatasetReader::readIntoSpan<uint16>(nonstd::span<uint16>) const;
+template bool H5::DatasetReader::readIntoSpan<uint32>(nonstd::span<uint32>) const;
+template bool H5::DatasetReader::readIntoSpan<uint64>(nonstd::span<uint64>) const;
+#ifdef __APPLE__
+template bool H5::DatasetReader::readIntoSpan<size_t>(nonstd::span<int8>) const;
+#endif
+template bool H5::DatasetReader::readIntoSpan<float32>(nonstd::span<float32>) const;
+template bool H5::DatasetReader::readIntoSpan<float64>(nonstd::span<float64>) const;
