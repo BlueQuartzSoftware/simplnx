@@ -459,7 +459,7 @@ public:
    * DataPath. If the DataPath is empty, the DataObject is added directly to
    * the DataStructure.
    *
-   * Returns true if the process succeeds. Returns false otherwise.
+   * Returns true if the process succeeds. Returns false otherwise. Returns false if dataObject is null.
    * @param dataObject
    * @param dataPath
    * @return bool

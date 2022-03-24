@@ -88,6 +88,11 @@ DataObject::Type DataObject::getDataObjectType() const
   return Type::DataObject;
 }
 
+void DataObject::setId(IdType newId)
+{
+  m_Id = newId;
+}
+
 bool DataObject::AttemptToAddObject(DataStructure& ds, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId)
 {
   return ds.finishAddingObject(data, parentId);
