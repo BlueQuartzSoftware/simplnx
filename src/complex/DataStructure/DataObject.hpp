@@ -245,7 +245,7 @@ protected:
   /**
    * @brief Updates the data ID for lookup within the DataStructure.
    * This method should only be called from within the DataStructure.
-   * @param newId 
+   * @param newId
    */
   void setId(IdType newId);
 
