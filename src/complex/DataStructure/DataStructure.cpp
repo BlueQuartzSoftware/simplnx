@@ -745,7 +745,7 @@ void DataStructure::resetIds(DataObject::IdType startingId)
     {
       continue;
     }
-    
+
     auto oldId = dataObjectIter.first;
     auto newId = generateId();
 
