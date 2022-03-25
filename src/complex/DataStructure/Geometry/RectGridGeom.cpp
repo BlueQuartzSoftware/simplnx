@@ -706,3 +706,29 @@ H5::ErrorType RectGridGeom::writeHdf5(H5::DataStructureWriter& dataStructureWrit
 
   return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }
+
+void RectGridGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+{
+  for(const auto& updatedId : updatedIds)
+  {
+    if(m_xBoundsId == updatedId.first)
+    {
+      m_xBoundsId = updatedId.second;
+    }
+
+    if(m_yBoundsId == updatedId.first)
+    {
+      m_yBoundsId = updatedId.second;
+    }
+
+    if(m_zBoundsId == updatedId.first)
+    {
+      m_zBoundsId = updatedId.second;
+    }
+
+    if(m_VoxelSizesId == updatedId.first)
+    {
+      m_VoxelSizesId = updatedId.second;
+    }
+  }
+}

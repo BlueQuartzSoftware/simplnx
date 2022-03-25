@@ -336,3 +336,34 @@ H5::ErrorType AbstractGeometry3D::writeHdf5(H5::DataStructureWriter& dataStructu
   }
   return errorCode;
 }
+
+void AbstractGeometry3D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+{
+  for(const auto& updatedId : updatedIds)
+  {
+    if(m_VertexListId == updatedId.first)
+    {
+      m_VertexListId = updatedId.second;
+    }
+
+    if(m_EdgeListId == updatedId.first)
+    {
+      m_EdgeListId = updatedId.second;
+    }
+
+    if(m_UnsharedEdgeListId == updatedId.first)
+    {
+      m_UnsharedEdgeListId = updatedId.second;
+    }
+
+    if(m_FaceListId == updatedId.first)
+    {
+      m_FaceListId = updatedId.second;
+    }
+
+    if(m_UnsharedFaceListId == updatedId.first)
+    {
+      m_UnsharedFaceListId = updatedId.second;
+    }
+  }
+}

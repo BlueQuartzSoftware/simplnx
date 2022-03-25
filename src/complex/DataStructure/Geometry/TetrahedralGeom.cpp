@@ -602,3 +602,44 @@ H5::ErrorType TetrahedralGeom::writeHdf5(H5::DataStructureWriter& dataStructureW
 
   return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }
+
+void TetrahedralGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+{
+  for(const auto& updatedId : updatedIds)
+  {
+    if(m_TriListId == updatedId.first)
+    {
+      m_TriListId = updatedId.second;
+    }
+
+    if(m_UnsharedTriListId == updatedId.first)
+    {
+      m_UnsharedTriListId = updatedId.second;
+    }
+
+    if(m_TetListId == updatedId.first)
+    {
+      m_TetListId = updatedId.second;
+    }
+
+    if(m_TetsContainingVertId == updatedId.first)
+    {
+      m_TetsContainingVertId = updatedId.second;
+    }
+
+    if(m_TetNeighborsId == updatedId.first)
+    {
+      m_TetNeighborsId = updatedId.second;
+    }
+
+    if(m_TetCentroidsId == updatedId.first)
+    {
+      m_TetCentroidsId = updatedId.second;
+    }
+
+    if(m_TetSizesId == updatedId.first)
+    {
+      m_TetSizesId = updatedId.second;
+    }
+  }
+}

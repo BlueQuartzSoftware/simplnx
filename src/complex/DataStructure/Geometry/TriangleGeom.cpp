@@ -553,3 +553,34 @@ H5::ErrorType TriangleGeom::writeHdf5(H5::DataStructureWriter& dataStructureWrit
 
   return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }
+
+void TriangleGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+{
+  for(const auto& updatedId : updatedIds)
+  {
+    if(m_TriListId == updatedId.first)
+    {
+      m_TriListId = updatedId.second;
+    }
+
+    if(m_TrianglesContainingVertId == updatedId.first)
+    {
+      m_TrianglesContainingVertId = updatedId.second;
+    }
+
+    if(m_TriangleNeighborsId == updatedId.first)
+    {
+      m_TriangleNeighborsId = updatedId.second;
+    }
+
+    if(m_TriangleCentroidsId == updatedId.first)
+    {
+      m_TriangleCentroidsId = updatedId.second;
+    }
+
+    if(m_TriangleSizesId == updatedId.first)
+    {
+      m_TriangleSizesId = updatedId.second;
+    }
+  }
+}

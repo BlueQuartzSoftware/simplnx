@@ -186,3 +186,8 @@ H5::ErrorType BaseGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter,
 
   return m_DataMap.writeH5Group(dataStructureWriter, groupWriter);
 }
+
+void BaseGroup::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+{
+  m_DataMap.updateIds(updatedIds);
+}

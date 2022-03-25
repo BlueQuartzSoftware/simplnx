@@ -48,6 +48,8 @@ class FileWriter;
  */
 class COMPLEX_EXPORT DataStructure
 {
+  using WeakCollectionType = std::map<DataObject::IdType, std::weak_ptr<DataObject>>;
+
 protected:
   /**
    * @brief Finalizes adding a DataObject to the DataStructure. This should
@@ -467,6 +469,12 @@ public:
   bool insert(const std::shared_ptr<DataObject>& dataObject, const DataPath& dataPath);
 
   /**
+   * @brief Returns the next ID value to use in the DataStructure
+   * @return DataObject::IdType
+   */
+  DataObject::IdType getNextId() const;
+
+  /**
    * @brief Adds an additional parent to the target DataObject.
    * @param targetId
    * @param newParent
@@ -534,6 +542,13 @@ public:
    * @return bool
    */
   bool validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const;
+
+  /**
+   * @brief Resets DataObject IDs starting at the provided value.
+   * Because 0 is a reserved value, if the starting value is set to 0, this method will use 1 instead.
+   * @param startingId
+   */
+  void resetIds(DataObject::IdType startingId);
 
   /**
    * @brief Copy assignment operator. The copied DataStructure's observers are not retained.
@@ -648,7 +663,7 @@ private:
   ////////////
   // Variables
   SignalType m_Signal;
-  std::map<DataObject::IdType, std::weak_ptr<DataObject>> m_DataObjects;
+  WeakCollectionType m_DataObjects;
   DataMap m_RootGroup;
   bool m_IsValid = false;
   DataObject::IdType m_NextId = 1;
