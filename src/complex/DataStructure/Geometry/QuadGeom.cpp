@@ -558,6 +558,8 @@ H5::ErrorType QuadGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, 
 
 void QuadGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
+  AbstractGeometry2D::checkUpdatedIdsImpl(updatedIds);
+
   for(const auto& updatedId : updatedIds)
   {
     if(m_QuadListId == updatedId.first)

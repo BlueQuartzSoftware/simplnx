@@ -339,6 +339,8 @@ H5::ErrorType AbstractGeometry3D::writeHdf5(H5::DataStructureWriter& dataStructu
 
 void AbstractGeometry3D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
+  BaseGroup::checkUpdatedIdsImpl(updatedIds);
+
   for(const auto& updatedId : updatedIds)
   {
     if(m_VertexListId == updatedId.first)

@@ -633,6 +633,8 @@ H5::ErrorType HexahedralGeom::writeHdf5(H5::DataStructureWriter& dataStructureWr
 
 void HexahedralGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
+  AbstractGeometry3D::checkUpdatedIdsImpl(updatedIds);
+
   for(const auto& updatedId : updatedIds)
   {
     if(m_HexListId == updatedId.first)

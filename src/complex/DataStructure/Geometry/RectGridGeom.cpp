@@ -709,6 +709,8 @@ H5::ErrorType RectGridGeom::writeHdf5(H5::DataStructureWriter& dataStructureWrit
 
 void RectGridGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
+  AbstractGeometryGrid::checkUpdatedIdsImpl(updatedIds);
+
   for(const auto& updatedId : updatedIds)
   {
     if(m_xBoundsId == updatedId.first)

@@ -556,6 +556,8 @@ H5::ErrorType TriangleGeom::writeHdf5(H5::DataStructureWriter& dataStructureWrit
 
 void TriangleGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
+  AbstractGeometry2D::checkUpdatedIdsImpl(updatedIds);
+
   for(const auto& updatedId : updatedIds)
   {
     if(m_TriListId == updatedId.first)

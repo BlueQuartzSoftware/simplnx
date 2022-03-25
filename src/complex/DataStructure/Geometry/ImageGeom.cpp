@@ -640,6 +640,8 @@ H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter,
 
 void ImageGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
+  AbstractGeometryGrid::checkUpdatedIdsImpl(updatedIds);
+
   for(const auto& updatedId : updatedIds)
   {
     if(m_VoxelSizesId == updatedId.first)

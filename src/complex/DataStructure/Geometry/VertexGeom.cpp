@@ -376,6 +376,8 @@ H5::ErrorType VertexGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter
 
 void VertexGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
+  AbstractGeometry::checkUpdatedIdsImpl(updatedIds);
+
   for(const auto& updatedId : updatedIds)
   {
     if(m_VertexListId == updatedId.first)

@@ -605,6 +605,8 @@ H5::ErrorType TetrahedralGeom::writeHdf5(H5::DataStructureWriter& dataStructureW
 
 void TetrahedralGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
+  AbstractGeometry3D::checkUpdatedIdsImpl(updatedIds);
+
   for(const auto& updatedId : updatedIds)
   {
     if(m_TriListId == updatedId.first)

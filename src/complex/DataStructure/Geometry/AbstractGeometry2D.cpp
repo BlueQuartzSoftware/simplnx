@@ -181,6 +181,8 @@ H5::ErrorType AbstractGeometry2D::writeHdf5(H5::DataStructureWriter& dataStructu
 
 void AbstractGeometry2D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
+  BaseGroup::checkUpdatedIdsImpl(updatedIds);
+
   for(const auto& updatedId : updatedIds)
   {
     if(m_VertexListId == updatedId.first)
