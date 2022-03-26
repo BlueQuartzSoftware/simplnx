@@ -12,9 +12,11 @@ class COMPLEX_EXPORT MultiArraySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = std::vector<DataPath>;
+  using AllowedTypes = std::set<DataType>;
 
   MultiArraySelectionParameter() = delete;
-  MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty = false,
+                               const AllowedTypes& allowedTypes = {});
   ~MultiArraySelectionParameter() override = default;
 
   MultiArraySelectionParameter(const MultiArraySelectionParameter&) = delete;
@@ -68,6 +70,12 @@ public:
   ValueType defaultPath() const;
 
   /**
+   * @brief Returns the set of allowed DataArray types. An empty set means all are allowed.
+   * @return
+   */
+  AllowedTypes allowedTypes() const;
+
+  /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
    * @param dataStructure The active DataStructure to use during validation
    * @param value The value to validate
@@ -94,6 +102,8 @@ public:
 
 private:
   ValueType m_DefaultValue = {};
+  bool m_AllowEmpty = false;
+  AllowedTypes m_AllowedTypes = {};
 };
 } // namespace complex
 
