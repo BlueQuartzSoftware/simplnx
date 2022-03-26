@@ -8,8 +8,8 @@
 
 namespace complex
 {
-MultiArraySelectionParameter::MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty,
-                                                           const AllowedTypes& allowedTypes)
+MultiArraySelectionParameter::MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
+                                                           const AllowedTypes& allowedTypes, bool allowEmpty)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
 , m_AllowEmpty(allowEmpty)
@@ -76,7 +76,7 @@ Result<std::any> MultiArraySelectionParameter::fromJson(const nlohmann::json& js
 
 IParameter::UniquePointer MultiArraySelectionParameter::clone() const
 {
-  return std::make_unique<MultiArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue);
+  return std::make_unique<MultiArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes, m_AllowEmpty);
 }
 
 std::any MultiArraySelectionParameter::defaultValue() const
