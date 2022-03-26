@@ -52,7 +52,7 @@ Parameters ErodeDilateMask::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_YDirOn_Key, "Y Direction", "", false));
   params.insert(std::make_unique<BoolParameter>(k_ZDirOn_Key, "Z Direction", "", false));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
 
   return params;
 }

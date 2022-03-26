@@ -50,7 +50,7 @@ Parameters ReplaceElementAttributesWithNeighborValues::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_SelectedComparison_Key, "Comparison Operator", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
   params.insert(std::make_unique<BoolParameter>(k_Loop_Key, "Loop Until Gone", "", false));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ConfidenceIndexArrayPath_Key, "Comparison Array", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ConfidenceIndexArrayPath_Key, "Comparison Array", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
 
   return params;
 }

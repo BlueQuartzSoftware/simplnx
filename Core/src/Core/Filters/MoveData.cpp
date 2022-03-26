@@ -48,7 +48,7 @@ Parameters MoveData::parameters() const
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_WhatToMove_Key, "Object to Move", "", 0, ChoicesParameter::Choices{"Attribute Matrix", "Attribute Array"}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_AttributeMatrixSource_Key, "Attribute Matrix Source", "", DataPath{}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataContainerDestination_Key, "Data Container Destination", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_DataArraySource_Key, "Attribute Array Source", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_DataArraySource_Key, "Attribute Array Source", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_AttributeMatrixDestination_Key, "Attribute Matrix Destination", "", DataPath{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_WhatToMove_Key, k_DataContainerDestination_Key, 0);

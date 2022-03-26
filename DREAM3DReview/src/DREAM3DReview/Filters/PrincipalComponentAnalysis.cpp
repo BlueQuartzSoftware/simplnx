@@ -50,7 +50,7 @@ Parameters PrincipalComponentAnalysis::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays for Computing Principal Components", "",
-                                                               MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+                                                               MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}, MultiArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ChoicesParameter>(k_MatrixApproach_Key, "Matrix Approach", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ProjectDataSpace_Key, "Project Data Space", "", false));
   params.insert(std::make_unique<Int32Parameter>(k_NumberOfDimensionsForProjection_Key, "Number of Dimensions for Projection", "", 1234356));

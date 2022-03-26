@@ -45,7 +45,7 @@ Parameters SharedFeatureFaceFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Face Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Face Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceMeshFeatureFaceIdsArrayName_Key, "Feature Face Ids", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Face Feature Data"});

@@ -48,7 +48,8 @@ Parameters CreateBsamFile::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path ", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputDir));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path ", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputDir));
   params.insert(std::make_unique<StringParameter>(k_OutputFilePrefix_Key, "Output File Prefix", "", "SomeString"));
   params.insert(std::make_unique<Int32Parameter>(k_NumClusters_Key, "Number of Clusters", "", 1234356));
 

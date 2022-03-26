@@ -50,8 +50,8 @@ Parameters LocalDislocationDensityCalculator::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<VectorFloat32Parameter>(k_CellSize_Key, "Cell Size (Microns)", "", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_EdgeDataContainerName_Key, "Edge DataContainer", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_BurgersVectorsArrayPath_Key, "Burgers Vectors Array", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SlipPlaneNormalsArrayPath_Key, "Slip Plane Normals Array", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_BurgersVectorsArrayPath_Key, "Burgers Vectors Array", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SlipPlaneNormalsArrayPath_Key, "Slip Plane Normals Array", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_OutputDataContainerName_Key, "Volume Data Container", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputAttributeMatrixName_Key, "Cell AttributeMatrix", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputArrayName_Key, "Dislocation Line Density Array Name", "", DataPath{}));

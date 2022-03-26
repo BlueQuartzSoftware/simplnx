@@ -48,8 +48,8 @@ Parameters CombineAttributeMatrices::parameters() const
   params.insertSeparator(Parameters::Separator{"Feature/Ensemble Data"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_FirstAttributeMatrixPath_Key, "First Feature/Ensemble Attribute Matrix", "", DataPath{}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_SecondAttributeMatrixPath_Key, "Second Feature/Ensemble Attribute Matrix", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FirstIndexArrayPath_Key, "First Index Array", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SecondIndexArrayPath_Key, "Second Index Array", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FirstIndexArrayPath_Key, "First Index Array", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SecondIndexArrayPath_Key, "Second Index Array", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell/Feature Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_NewIndexArrayName_Key, "New Index Array", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Feature/Ensemble Data"});

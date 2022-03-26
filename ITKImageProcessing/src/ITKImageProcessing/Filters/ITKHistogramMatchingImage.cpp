@@ -89,9 +89,10 @@ Parameters ITKHistogramMatchingImage::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image", "The image data that will be processed by this filter.", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image", "The image data that will be processed by this filter.", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image", "The result of the processing will be stored in this Data Array.", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ReferenceImageDataPath_Key, "ReferenceImage", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ReferenceImageDataPath_Key, "ReferenceImage", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<UInt32Parameter>(k_NumberOfHistogramLevels_Key, "NumberOfHistogramLevels", "", 256u));
   params.insert(std::make_unique<UInt32Parameter>(k_NumberOfMatchPoints_Key, "NumberOfMatchPoints", "", 1u));
   params.insert(std::make_unique<BoolParameter>(k_ThresholdAtMeanIntensity_Key, "ThresholdAtMeanIntensity", "", true));

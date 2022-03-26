@@ -47,8 +47,8 @@ Parameters CombineAttributeArrays::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<BoolParameter>(k_NormalizeData_Key, "Normalize Data", "", false));
   params.insert(std::make_unique<BoolParameter>(k_MoveValues_Key, "Move Data", "", false));
-  params.insert(
-      std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Combine", "", MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Combine", "",
+                                                               MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}, MultiArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<StringParameter>(k_StackedDataArrayName_Key, "Combined Data", "", "SomeString"));
 
   return params;

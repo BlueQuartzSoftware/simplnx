@@ -48,7 +48,8 @@ Parameters RegularizeZSpacing::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Current Z Positions File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Current Z Positions File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<Float32Parameter>(k_NewZRes_Key, "New Z Spacing", "", 1.23345f));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellAttributeMatrixPath_Key, "Cell Attribute Matrix", "", DataPath{}));

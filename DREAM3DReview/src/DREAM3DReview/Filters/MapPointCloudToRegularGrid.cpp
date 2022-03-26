@@ -57,7 +57,7 @@ Parameters MapPointCloudToRegularGrid::parameters() const
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataContainerName_Key, "Data Container to Map", "", DataPath{}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "", false));
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_VoxelIndicesArrayPath_Key, "Voxel Indices", "", DataPath{}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageDataContainerName_Key, "Created Image DataContainer", "", DataPath{}));

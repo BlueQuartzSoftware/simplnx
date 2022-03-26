@@ -44,7 +44,7 @@ Parameters FindMinkowskiBouligandDimension::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_AttributeMatrixName_Key, "Fractal Attribute Matrix", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_MinkowskiBouligandDimensionArrayName_Key, "Minkowski-Bouligand Dimension", "", DataPath{}));
 

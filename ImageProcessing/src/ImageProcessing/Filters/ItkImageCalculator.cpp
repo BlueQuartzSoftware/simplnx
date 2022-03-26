@@ -46,9 +46,9 @@ Parameters ItkImageCalculator::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath1_Key, "First Attribute Array to Process", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath1_Key, "First Attribute Array to Process", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ChoicesParameter>(k_Operator_Key, "Operator", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath2_Key, "Second Array to Process", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath2_Key, "Second Array to Process", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_NewCellArrayName_Key, "Output Attribute Array", "", DataPath{}));
 

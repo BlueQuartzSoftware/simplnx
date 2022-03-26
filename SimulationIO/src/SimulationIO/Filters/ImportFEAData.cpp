@@ -52,15 +52,18 @@ Parameters ImportFEAData::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_FEAPackage_Key, "FEA package", "", 0, ChoicesParameter::Choices{"ABAQUS", "BSAM", "DEFORM", "DEFORM_POINT_TRACK"}));
   params.insert(std::make_unique<StringParameter>(k_odbName_Key, "odb Name", "", "SomeString"));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_odbFilePath_Key, "odb File Path", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputDir));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_odbFilePath_Key, "odb File Path", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputDir));
   params.insert(std::make_unique<StringParameter>(k_ABQPythonCommand_Key, "ABAQUS Python Command", "", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_InstanceName_Key, "Instance Name", "", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_Step_Key, "Step", "", "SomeString"));
   params.insert(std::make_unique<Int32Parameter>(k_FrameNumber_Key, "Frame Number", "", 1234356));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_BSAMInputFile_Key, "Input File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_DEFORMInputFile_Key, "Input File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
-  params.insert(
-      std::make_unique<FileSystemPathParameter>(k_DEFORMPointTrackInputFile_Key, "Input File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_BSAMInputFile_Key, "Input File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_DEFORMInputFile_Key, "Input File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_DEFORMPointTrackInputFile_Key, "Input File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::InputFile));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ImportSingleTimeStep_Key, "Read Single Time Step", "", false));
   params.insert(std::make_unique<Int32Parameter>(k_SingleTimeStepValue_Key, "Time Step", "", 1234356));
   params.insertSeparator(Parameters::Separator{""});

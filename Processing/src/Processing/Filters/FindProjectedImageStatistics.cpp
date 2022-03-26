@@ -47,7 +47,7 @@ Parameters FindProjectedImageStatistics::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<ChoicesParameter>(k_Plane_Key, "Plane of Interest", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Quantify", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Quantify", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_ProjectedImageMinArrayName_Key, "Projected Image Min", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_ProjectedImageMaxArrayName_Key, "Projected Image Max", "", DataPath{}));

@@ -45,7 +45,7 @@ Parameters FindDerivatives::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Data Array to Process", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Data Array to Process", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_DerivativesArrayPath_Key, "Derivatives Array", "", DataPath{}));
 
   return params;

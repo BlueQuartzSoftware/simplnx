@@ -46,7 +46,7 @@ Parameters ItkBinaryWatershedLabeled::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to Watershed", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to Watershed", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<Float32Parameter>(k_PeakTolerance_Key, "Peak Noise Tolerance", "", 1.23345f));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_NewCellArrayName_Key, "Watershed Array", "", DataPath{}));

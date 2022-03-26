@@ -70,14 +70,16 @@ Parameters ImportPrintRiteTDMSFiles::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_SplitRegions1_Key, "Split Contiguous Regions into Separate Files", "", false));
   params.insert(std::make_unique<BoolParameter>(k_SplitRegions2_Key, "Split Contiguous Regions into Separate Files", "", false));
   params.insertSeparator(Parameters::Separator{"Input File Parameters"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_STLFilePath1_Key, "Build STL File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_STLFilePath2_Key, "Build STL File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputSpatialTransformFilePath_Key, "Spatial Transformation Coefficients File", "", fs::path("<default file to read goes here>"),
+  params.insert(std::make_unique<FileSystemPathParameter>(k_STLFilePath1_Key, "Build STL File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_STLFilePath2_Key, "Build STL File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputSpatialTransformFilePath_Key, "Spatial Transformation Coefficients File", "", fs::path("<default file to read goes here>"),
+                                                          FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<GeneratedFileListParameter>(k_InputFilesList_Key, "Input PrintRite Files", "", GeneratedFileListParameter::ValueType{}));
   params.insertSeparator(Parameters::Separator{"Output File Parameters"});
-  params.insert(
-      std::make_unique<FileSystemPathParameter>(k_OutputDirectory_Key, "Output File Directory", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputDir));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputDirectory_Key, "Output File Directory", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputDir));
   params.insert(std::make_unique<StringParameter>(k_OutputFilePrefix_Key, "Output File Prefix", "", "SomeString"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_ScaleLaserPower_Key, k_PowerScalingCoefficients_Key, true);

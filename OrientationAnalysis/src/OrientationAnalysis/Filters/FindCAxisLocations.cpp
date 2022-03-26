@@ -45,7 +45,7 @@ Parameters FindCAxisLocations::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Element Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Quaternions", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Quaternions", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Element Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CAxisLocationsArrayName_Key, "C-Axis Locations", "", DataPath{}));
 

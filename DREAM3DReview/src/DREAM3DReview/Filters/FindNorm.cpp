@@ -47,7 +47,7 @@ Parameters FindNorm::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<Float32Parameter>(k_PSpace_Key, "p-Space Value", "", 1.23345f));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Input Attribute Array", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Input Attribute Array", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_NormArrayPath_Key, "Norm", "", DataPath{}));
 
   return params;

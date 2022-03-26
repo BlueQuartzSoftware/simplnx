@@ -47,7 +47,7 @@ Parameters ExtractTripleLinesFromTriangleGeometry::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<BoolParameter>(k_SmoothTripleLines_Key, "Compactify Triple Lines", "", false));
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesArrayPath_Key, "Node Types", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesArrayPath_Key, "Node Types", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<StringParameter>(k_EdgeGeometry_Key, "Edge Geometry", "", "SomeString"));
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
   params.insert(std::make_unique<StringParameter>(k_VertexAttributeMatrixName_Key, "Vertex Attribute Matrix", "", "SomeString"));

@@ -48,7 +48,7 @@ Parameters ItkDiscreteGaussianBlur::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveAsNewArray_Key, "Save as New Array", "", false));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to Blur", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to Blur", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_NewCellArrayName_Key, "Blurred Array", "", DataPath{}));
   params.insert(std::make_unique<Float32Parameter>(k_Stdev_Key, "Standard Deviation", "", 1.23345f));

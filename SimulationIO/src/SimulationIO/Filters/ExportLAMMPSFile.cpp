@@ -47,8 +47,9 @@ Parameters ExportLAMMPSFile::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<FileSystemPathParameter>(k_LammpsFile_Key, "LAMMPS File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputFile));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_AtomFeatureLabelsPath_Key, "Atom Feature Labels", "", DataPath{}));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_LammpsFile_Key, "LAMMPS File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputFile));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_AtomFeatureLabelsPath_Key, "Atom Feature Labels", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
 
   return params;
 }

@@ -45,8 +45,8 @@ Parameters FindDifferenceMap::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FirstInputArrayPath_Key, "First Attribute Array", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SecondInputArrayPath_Key, "Second Attribute Array", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FirstInputArrayPath_Key, "First Attribute Array", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SecondInputArrayPath_Key, "Second Attribute Array", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_DifferenceMapArrayPath_Key, "Difference Map", "", DataPath{}));
 
   return params;

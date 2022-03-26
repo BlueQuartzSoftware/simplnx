@@ -54,9 +54,9 @@ Parameters NormalizeArrays::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_DefaultValue_Key, "Default Masked Value", "", 2.3456789));
   params.insert(std::make_unique<Float64Parameter>(k_RangeMin_Key, "Range Minimum", "", 2.3456789));
   params.insert(std::make_unique<Float64Parameter>(k_RangeMax_Key, "Range Maximum", "", 2.3456789));
-  params.insert(
-      std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Normalize", "", MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Normalize", "",
+                                                               MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}, MultiArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_NormalizeType_Key, k_RangeMin_Key, 0);
   params.linkParameters(k_NormalizeType_Key, k_RangeMax_Key, 0);

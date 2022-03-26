@@ -1,79 +1,67 @@
-#include "InitializeData.hpp"
+#include "ExtractInternalSurfacesFromTriangleGeometry.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/MultiArraySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/RangeFilterParameter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Parameters/StringParameter.hpp"
 
 using namespace complex;
 
 namespace complex
 {
 //------------------------------------------------------------------------------
-std::string InitializeData::name() const
+std::string ExtractInternalSurfacesFromTriangleGeometry::name() const
 {
-  return FilterTraits<InitializeData>::name.str();
+  return FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string InitializeData::className() const
+std::string ExtractInternalSurfacesFromTriangleGeometry::className() const
 {
-  return FilterTraits<InitializeData>::className;
+  return FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid InitializeData::uuid() const
+Uuid ExtractInternalSurfacesFromTriangleGeometry::uuid() const
 {
-  return FilterTraits<InitializeData>::uuid;
+  return FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string InitializeData::humanName() const
+std::string ExtractInternalSurfacesFromTriangleGeometry::humanName() const
 {
-  return "Initialize Data";
+  return "Extract Internal Surfaces from Triangle Geometry";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> InitializeData::defaultTags() const
+std::vector<std::string> ExtractInternalSurfacesFromTriangleGeometry::defaultTags() const
 {
-  return {"#Processing", "#Conversion"};
+  return {"#DREAM3D Review", "#Geometry"};
 }
 
 //------------------------------------------------------------------------------
-Parameters InitializeData::parameters() const
+Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_CellAttributeMatrixPaths_Key, "Cell Arrays", "", MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()},
-                                                               MultiArraySelectionParameter::AllowedTypes{}));
-  params.insert(std::make_unique<Int32Parameter>(k_XMin_Key, "X Min (Column)", "", 1234356));
-  params.insert(std::make_unique<Int32Parameter>(k_YMin_Key, "Y Min (Row)", "", 1234356));
-  params.insert(std::make_unique<Int32Parameter>(k_ZMin_Key, "Z Min (Plane)", "", 1234356));
-  params.insert(std::make_unique<Int32Parameter>(k_XMax_Key, "X Max (Column)", "", 1234356));
-  params.insert(std::make_unique<Int32Parameter>(k_YMax_Key, "Y Max (Row)", "", 1234356));
-  params.insert(std::make_unique<Int32Parameter>(k_ZMax_Key, "Z Max (Plane)", "", 1234356));
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "", 0, ChoicesParameter::Choices{"Manual", "Random", "Random With Range"}));
-  params.insert(std::make_unique<Float64Parameter>(k_InitValue_Key, "Initialization Value", "", 2.3456789));
-  /*[x]*/ params.insert(std::make_unique<RangeFilterParameter>(k_InitRange_Key, "Initialization Range", "", {}));
-  // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_InitType_Key, k_InitValue_Key, 0);
-  params.linkParameters(k_InitType_Key, k_InitRange_Key, 2);
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_TriangleDataContainerName_Key, "Triangle Data Container", "", DataPath{}));
+  params.insertSeparator(Parameters::Separator{"Vertex Data"});
+  params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesArrayPath_Key, "Node Types", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<StringParameter>(k_InternalTrianglesName_Key, "Internal Triangles Data Container", "", "SomeString"));
 
   return params;
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer InitializeData::clone() const
+IFilter::UniquePointer ExtractInternalSurfacesFromTriangleGeometry::clone() const
 {
-  return std::make_unique<InitializeData>();
+  return std::make_unique<ExtractInternalSurfacesFromTriangleGeometry>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                                    const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -84,16 +72,9 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pCellAttributeMatrixPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CellAttributeMatrixPaths_Key);
-  auto pXMinValue = filterArgs.value<int32>(k_XMin_Key);
-  auto pYMinValue = filterArgs.value<int32>(k_YMin_Key);
-  auto pZMinValue = filterArgs.value<int32>(k_ZMin_Key);
-  auto pXMaxValue = filterArgs.value<int32>(k_XMax_Key);
-  auto pYMaxValue = filterArgs.value<int32>(k_YMax_Key);
-  auto pZMaxValue = filterArgs.value<int32>(k_ZMax_Key);
-  auto pInitTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_InitType_Key);
-  auto pInitValue = filterArgs.value<float64>(k_InitValue_Key);
-  auto pInitRangeValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_InitRange_Key);
+  auto pTriangleDataContainerNameValue = filterArgs.value<DataPath>(k_TriangleDataContainerName_Key);
+  auto pNodeTypesArrayPathValue = filterArgs.value<DataPath>(k_NodeTypesArrayPath_Key);
+  auto pInternalTrianglesNameValue = filterArgs.value<StringParameter::ValueType>(k_InternalTrianglesName_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -138,22 +119,15 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
 }
 
 //------------------------------------------------------------------------------
-Result<> InitializeData::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                     const std::atomic_bool& shouldCancel) const
+Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pCellAttributeMatrixPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CellAttributeMatrixPaths_Key);
-  auto pXMinValue = filterArgs.value<int32>(k_XMin_Key);
-  auto pYMinValue = filterArgs.value<int32>(k_YMin_Key);
-  auto pZMinValue = filterArgs.value<int32>(k_ZMin_Key);
-  auto pXMaxValue = filterArgs.value<int32>(k_XMax_Key);
-  auto pYMaxValue = filterArgs.value<int32>(k_YMax_Key);
-  auto pZMaxValue = filterArgs.value<int32>(k_ZMax_Key);
-  auto pInitTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_InitType_Key);
-  auto pInitValue = filterArgs.value<float64>(k_InitValue_Key);
-  auto pInitRangeValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_InitRange_Key);
+  auto pTriangleDataContainerNameValue = filterArgs.value<DataPath>(k_TriangleDataContainerName_Key);
+  auto pNodeTypesArrayPathValue = filterArgs.value<DataPath>(k_NodeTypesArrayPath_Key);
+  auto pInternalTrianglesNameValue = filterArgs.value<StringParameter::ValueType>(k_InternalTrianglesName_Key);
 
   /****************************************************************************
    * Write your algorithm implementation in this function

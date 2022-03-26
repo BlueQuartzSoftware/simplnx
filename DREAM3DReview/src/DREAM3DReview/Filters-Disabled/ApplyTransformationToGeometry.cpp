@@ -57,7 +57,7 @@ Parameters ApplyTransformationToGeometry::parameters() const
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Translation_Key, "Translation", "", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Scale_Key, "Scale", "", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_GeometryToTransform_Key, "Geometry to Transform", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ComputedTransformationMatrix_Key, "Transformation Matrix", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ComputedTransformationMatrix_Key, "Transformation Matrix", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_TransformationMatrixType_Key, k_ComputedTransformationMatrix_Key, 1);
   params.linkParameters(k_TransformationMatrixType_Key, k_ManualTransformationMatrix_Key, 2);

@@ -53,14 +53,14 @@ Parameters ExportCLIFile::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<Float64Parameter>(k_UnitsScaleFactor_Key, "Units Scale Factor", "", 2.3456789));
   params.insert(std::make_unique<Int32Parameter>(k_Precision_Key, "Precision (places after decimal)", "", 1234356));
-  params.insert(
-      std::make_unique<FileSystemPathParameter>(k_OutputDirectory_Key, "Output File Directory", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputDir));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputDirectory_Key, "Output File Directory", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputDir));
   params.insert(std::make_unique<StringParameter>(k_OutputFilePrefix_Key, "Output File Prefix", "", "SomeString"));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SplitByGroup_Key, "Split CLI Files by Group", "", false));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_EdgeGeometry_Key, "Edge Geometry", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Edge Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_LayerIdsArrayPath_Key, "Layer Ids", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GroupIdsArrayPath_Key, "Group Ids", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_LayerIdsArrayPath_Key, "Layer Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_GroupIdsArrayPath_Key, "Group Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_SplitByGroup_Key, k_GroupIdsArrayPath_Key, true);
 

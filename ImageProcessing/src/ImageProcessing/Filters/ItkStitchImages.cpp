@@ -49,8 +49,8 @@ Parameters ItkStitchImages::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_AttributeMatrixName_Key, "Image Tile Attribute Matrix", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_StitchedCoordinatesArrayPath_Key, "Image Tile Origins", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_AttributeArrayNamesPath_Key, "Stitched Coordinates Names", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_StitchedCoordinatesArrayPath_Key, "Image Tile Origins", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_AttributeArrayNamesPath_Key, "Stitched Coordinates Names", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_StitchedVolumeDataContainerName_Key, "Stitched Image Data Container", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_StitchedAttributeMatrixName_Key, "Montage Attribute Matrix", "", DataPath{}));

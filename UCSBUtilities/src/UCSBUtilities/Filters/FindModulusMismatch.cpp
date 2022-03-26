@@ -44,8 +44,8 @@ Parameters FindModulusMismatch::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ModuliArrayPath_Key, "Moduli", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "SurfaceMeshFaceLabels", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ModuliArrayPath_Key, "Moduli", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "SurfaceMeshFaceLabels", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceMeshDeltaModulusArrayName_Key, "SurfaceMeshDeltaModulus", "", DataPath{}));
 
   return params;

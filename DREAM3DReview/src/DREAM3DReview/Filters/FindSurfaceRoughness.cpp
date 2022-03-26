@@ -44,7 +44,7 @@ Parameters FindSurfaceRoughness::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ArraySelectionParameter>(k_BoundaryCellsArrayPath_Key, "Boundary Cells", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_BoundaryCellsArrayPath_Key, "Boundary Cells", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<StringParameter>(k_AttributeMatrixName_Key, "Roughness Attribute Matrix", "", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_RoughnessParamsArrayName_Key, "Roughness Parameters", "", "SomeString"));
 

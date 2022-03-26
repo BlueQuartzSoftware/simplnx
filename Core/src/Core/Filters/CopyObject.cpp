@@ -50,7 +50,7 @@ Parameters CopyObject::parameters() const
       std::make_unique<ChoicesParameter>(k_ObjectToCopy_Key, "Object Type to Copy", "", 0, ChoicesParameter::Choices{"Data Container", "Attribute Matrix", "Attribute Array"}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataContainerToCopy_Key, "Data Container to Copy", "", DataPath{}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_AttributeMatrixToCopy_Key, "Attribute Matrix to Copy", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_AttributeArrayToCopy_Key, "Attribute Array to Copy", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_AttributeArrayToCopy_Key, "Attribute Array to Copy", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<StringParameter>(k_CopiedObjectName_Key, "Copied Object Name", "", "SomeString"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_ObjectToCopy_Key, k_DataContainerToCopy_Key, 0);

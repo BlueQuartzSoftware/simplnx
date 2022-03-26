@@ -45,8 +45,8 @@ Parameters FindBoundaryAreas::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshTriangleAreasArrayPath_Key, "Triangle Areas", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFeatureFaceIdsArrayPath_Key, "Face Feature Ids", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshTriangleAreasArrayPath_Key, "Triangle Areas", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFeatureFaceIdsArrayPath_Key, "Face Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceMeshBoundaryAreasArrayPath_Key, "Boundary Areas Array", "", DataPath{}));
 
   return params;

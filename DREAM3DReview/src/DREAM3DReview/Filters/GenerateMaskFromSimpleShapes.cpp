@@ -48,11 +48,11 @@ Parameters GenerateMaskFromSimpleShapes::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_MaskShape_Key, "Mask Shape", "", 0, ChoicesParameter::Choices{"Ellipsoid", "Box", "Cylinder"}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CentersArrayPath_Key, "Centers", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_AxesLengthArrayPath_Key, "Ellipsoid Axes Lengths", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_BoxDimensionsArrayPath_Key, "Box Dimensions", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CylinderRadiusArrayPath_Key, "Cylinder Radii", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CylinderHeightArrayPath_Key, "Cylinder Heights", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CentersArrayPath_Key, "Centers", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_AxesLengthArrayPath_Key, "Ellipsoid Axes Lengths", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_BoxDimensionsArrayPath_Key, "Box Dimensions", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CylinderRadiusArrayPath_Key, "Cylinder Radii", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CylinderHeightArrayPath_Key, "Cylinder Heights", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_MaskShape_Key, k_AxesLengthArrayPath_Key, 0);
   params.linkParameters(k_MaskShape_Key, k_BoxDimensionsArrayPath_Key, 1);

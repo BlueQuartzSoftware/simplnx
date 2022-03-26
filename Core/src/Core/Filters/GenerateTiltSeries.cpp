@@ -49,7 +49,7 @@ Parameters GenerateTiltSeries::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_RotationAxis_Key, "Rotation Axis", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationLimits_Key, "Rotation Limits (Start, Stop, Increment) Degrees", "", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Resample Spacing", "", std::vector<float32>(3), std::vector<std::string>(3)));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputDataArrayPath_Key, "Input Data Array Path", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputDataArrayPath_Key, "Input Data Array Path", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<StringParameter>(k_OutputPrefix_Key, "DataContainer Prefix", "", "SomeString"));
 
   return params;

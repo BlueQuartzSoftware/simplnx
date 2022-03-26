@@ -53,7 +53,7 @@ Parameters FindRelativeMotionBetweenSlices::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_SSize2_Key, "Search Distance 2", "", 1234356));
   params.insert(std::make_unique<Int32Parameter>(k_SliceStep_Key, "Slice Step", "", 1234356));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Track Motion", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Track Motion", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_MotionDirectionArrayName_Key, "Motion Direction", "", DataPath{}));
 

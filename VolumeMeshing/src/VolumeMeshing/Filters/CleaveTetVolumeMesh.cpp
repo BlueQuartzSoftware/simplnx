@@ -45,8 +45,8 @@ Parameters CleaveTetVolumeMesh::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(
-      std::make_unique<MultiArraySelectionParameter>(k_SignedDistanceArrayPaths_Key, "Attribute Arrays to Combine", "", MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SignedDistanceArrayPaths_Key, "Attribute Arrays to Combine", "",
+                                                               MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}, MultiArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<Float32Parameter>(k_Lipschitz_Key, "Lipschitz", "", 1.23345f));
   params.insert(std::make_unique<Float32Parameter>(k_Scale_Key, "Scale", "", 1.23345f));
   params.insert(std::make_unique<Float32Parameter>(k_Multiplier_Key, "Multiplier", "", 1.23345f));

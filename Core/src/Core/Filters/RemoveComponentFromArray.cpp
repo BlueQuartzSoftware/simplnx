@@ -47,7 +47,7 @@ Parameters RemoveComponentFromArray::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<Int32Parameter>(k_CompNumber_Key, "Component Number to Remove", "", 1234356));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Multicomponent Attribute Array", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Multicomponent Attribute Array", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_NewArrayArrayName_Key, "Removed Component Attribute Array", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_ReducedArrayArrayName_Key, "Reduced Attribute Array", "", DataPath{}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveRemovedComponent_Key, "Save Removed Component in New Array", "", false));

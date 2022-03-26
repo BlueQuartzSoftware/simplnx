@@ -44,7 +44,7 @@ Parameters SplitAttributeArray::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPath_Key, "Multicomponent Attribute Array", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPath_Key, "Multicomponent Attribute Array", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<StringParameter>(k_SplitArraysSuffix_Key, "Postfix", "", "SomeString"));
 
   return params;

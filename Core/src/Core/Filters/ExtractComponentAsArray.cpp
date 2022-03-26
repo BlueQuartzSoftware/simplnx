@@ -46,7 +46,7 @@ Parameters ExtractComponentAsArray::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<Int32Parameter>(k_CompNumber_Key, "Component Number to Extract", "", 1234356));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Multicomponent Attribute Array", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Multicomponent Attribute Array", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_NewArrayArrayName_Key, "Scalar Attribute Array", "", DataPath{}));
 
   return params;

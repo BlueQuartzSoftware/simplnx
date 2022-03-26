@@ -56,7 +56,7 @@ Parameters CreateLambertSphere::parameters() const
   params.insert(std::make_unique<DataGroupCreationParameter>(k_TriangleDataContainerName_Key, "Output Triangle DataContainer Name", "", DataPath{}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_CreateQuadGeometry_Key, "Create Quad Geometry", "", false));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_QuadDataContainerName_Key, "Output Quad DataContainer Name", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ImageDataArrayPath_Key, "Image Data", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ImageDataArrayPath_Key, "Image Data", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_CreateVertexGeometry_Key, k_VertexDataContainerName_Key, true);
   params.linkParameters(k_CreateEdgeGeometry_Key, k_EdgeDataContainerName_Key, true);

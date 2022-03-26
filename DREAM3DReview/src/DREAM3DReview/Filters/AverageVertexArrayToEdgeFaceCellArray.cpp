@@ -48,7 +48,7 @@ Parameters AverageVertexArrayToEdgeFaceCellArray::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<BoolParameter>(k_WeightedAverage_Key, "Perform Weighted Average", "", false));
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Vertex Array to Average", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Vertex Array to Average", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Edge/Face/Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_AverageCellArrayPath_Key, "Average Edge/Face/Cell Array", "", DataPath{}));
 

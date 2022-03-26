@@ -49,7 +49,7 @@ Parameters TesselateFarFieldGrains::parameters() const
   params.insert(std::make_unique<GeneratedFileListParameter>(k_FeatureInputFileListInfo_Key, "Feature Input File List", "", GeneratedFileListParameter::ValueType{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_OutputCellAttributeMatrixName_Key, "Cell Attribute Matrix", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsArrayName_Key, "Feature Ids", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_CellPhasesArrayName_Key, "Phases", "", DataPath{}));
