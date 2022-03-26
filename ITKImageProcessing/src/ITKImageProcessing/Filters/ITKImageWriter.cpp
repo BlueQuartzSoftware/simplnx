@@ -245,7 +245,7 @@ Parameters ITKImageWriter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_Plane_Key, "Plane", "", 0, ChoicesParameter::Choices{"XY", "XZ", "YZ"}));
   params.insert(std::make_unique<FileSystemPathParameter>(k_FileName_Key, "Output File", "", fs::path(), ExtensionListType{}, FileSystemPathParameter::PathType::OutputFile));
   params.insert(std::make_unique<UInt64Parameter>(k_IndexOffset_Key, "Index Offset", "", 0));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ImageArrayPath_Key, "Image", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ImageArrayPath_Key, "Image", "", DataPath{}, complex::k_AllDataTypes));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "", DataPath{}, std::set<AbstractGeometry::Type>{AbstractGeometry::Type::Image}));
 
   return params;
