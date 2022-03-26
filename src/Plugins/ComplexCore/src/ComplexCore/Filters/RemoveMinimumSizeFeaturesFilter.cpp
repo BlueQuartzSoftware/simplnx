@@ -287,12 +287,12 @@ Parameters RemoveMinimumSizeFeaturesFilter::parameters() const
   params.insert(std::make_unique<NumberParameter<int64>>(k_MinAllowedFeaturesSize_Key, "Minimum Allowed Features Size", "Minimum allowed features size", 0));
   params.insert(std::make_unique<NumberParameter<int64>>(k_PhaseNumber_Key, "Phase Number", "Target Phase", 0));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "[Feature] Phases Array", "DataPath to Feature Phases DataArray", DataPath{}, false,
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_NumCellsPath_Key, "[Feature] Num Cells Array", "DataPath to NumCells DataArray", DataPath{}, false,
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "[Cell] FeatureIds Array", "DataPath to FeatureIds DataArray", DataPath{}, false,
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "[Feature] Phases Array", "DataPath to Feature Phases DataArray", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_NumCellsPath_Key, "[Feature] Num Cells Array", "DataPath to NumCells DataArray", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "[Cell] FeatureIds Array", "DataPath to FeatureIds DataArray", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, false));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "DataPath to Image Geometry", DataPath{}));
 
   return params;

@@ -36,8 +36,8 @@ constexpr int32 k_Validate_AllowedType_Error = -206;
 
 namespace complex
 {
-ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty,
-                                                 const AllowedTypes& allowedTypes)
+ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
+                                                 bool allowEmpty)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
 , m_AllowEmpty(allowEmpty)
@@ -84,7 +84,7 @@ Result<std::any> ArraySelectionParameter::fromJson(const nlohmann::json& json) c
 
 IParameter::UniquePointer ArraySelectionParameter::clone() const
 {
-  return std::make_unique<ArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowEmpty);
+  return std::make_unique<ArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes, m_AllowEmpty);
 }
 
 std::any ArraySelectionParameter::defaultValue() const

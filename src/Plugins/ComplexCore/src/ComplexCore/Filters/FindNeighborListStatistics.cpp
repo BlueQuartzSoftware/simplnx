@@ -283,8 +283,7 @@ Parameters FindNeighborListStatistics::parameters() const
       std::make_unique<BoolParameter>(k_FindStandardDeviation_Key, "Find Standard Deviation", "Specifies whether or not the filter creates the Standard Deviation array during calculations", true));
   params.insert(std::make_unique<BoolParameter>(k_FindSummation_Key, "Find Summation", "Specifies whether or not the filter creates the Summation array during calculations", true));
 
-  params.insert(
-      std::make_unique<ArraySelectionParameter>(k_InputArray_Key, "Arrays to Compute Statistics", "Specifies whether or not the filter creates the Summation array during calculations", DataPath()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputArray_Key, "Array to Compute Statistics", "Input Data Array to compute statistics", DataPath(), complex::k_AllDataTypes));
 
   params.insert(std::make_unique<ArrayCreationParameter>(k_Length_Key, "Length", "Path to create the Length array during calculations", DataPath()));
   params.insert(std::make_unique<ArrayCreationParameter>(k_Minimum_Key, "Minimum", "Path to create the Minimum array during calculations", DataPath()));
