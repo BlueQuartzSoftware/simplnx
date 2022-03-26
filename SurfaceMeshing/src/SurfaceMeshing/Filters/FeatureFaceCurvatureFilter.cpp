@@ -54,10 +54,10 @@ Parameters FeatureFaceCurvatureFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseNormalsForCurveFitting_Key, "Use Face Normals for Curve Fitting", "", false));
   params.insertSeparator(Parameters::Separator{"Face Data"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_FaceAttributeMatrixPath_Key, "Face Attribute Matrix", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFeatureFaceIdsArrayPath_Key, "Feature Face Ids", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceNormalsArrayPath_Key, "Face Normals", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshTriangleCentroidsArrayPath_Key, "Face Centroids", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFeatureFaceIdsArrayPath_Key, "Feature Face Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceNormalsArrayPath_Key, "Face Normals", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshTriangleCentroidsArrayPath_Key, "Face Centroids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Face Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceMeshPrincipalCurvature1sArrayName_Key, "Principal Curvature 1", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceMeshPrincipalCurvature2sArrayName_Key, "Principal Curvature 2", "", DataPath{}));

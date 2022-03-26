@@ -57,7 +57,7 @@ Parameters SliceTriangleGeometry::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_SliceResolution_Key, "Slice Spacing", "", 1.23345f));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_HaveRegionIds_Key, "Have Region Ids", "", false));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_CADDataContainerName_Key, "CAD Geometry", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_RegionIdArrayPath_Key, "Region Ids", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_RegionIdArrayPath_Key, "Region Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<StringParameter>(k_SliceDataContainerName_Key, "Slice Geometry", "", "SomeString"));
   params.insert(std::make_unique<ArrayCreationParameter>(k_EdgeAttributeMatrixName_Key, "Edge Attribute Matrix", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_SliceIdArrayName_Key, "Slice Ids", "", DataPath{}));

@@ -49,7 +49,7 @@ Parameters UncertainRegularGridSampleSurfaceMesh::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Face Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<Int32Parameter>(k_XPoints_Key, "X Points", "", 1234356));
   params.insert(std::make_unique<Int32Parameter>(k_YPoints_Key, "Y Points", "", 1234356));
   params.insert(std::make_unique<Int32Parameter>(k_ZPoints_Key, "Z Points", "", 1234356));

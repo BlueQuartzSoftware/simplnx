@@ -85,7 +85,8 @@ Parameters IlluminationCorrection::parameters() const
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MedianRadius_Key, "MedianRadius", "", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplyCorrection_Key, "Apply Background Correction to Input Images", "", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ExportCorrectedImages_Key, "Export Corrected Images", "", false));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputDir));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputDir));
   params.insert(std::make_unique<StringParameter>(k_FileExtension_Key, "File Extension", "", "SomeString"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_ApplyMedianFilter_Key, k_MedianRadius_Key, true);

@@ -47,9 +47,10 @@ Parameters WriteTriangleGeometry::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputNodesFile_Key, "Output Nodes File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputFile));
-  params.insert(
-      std::make_unique<FileSystemPathParameter>(k_OutputTrianglesFile_Key, "Output Triangles File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputNodesFile_Key, "Output Nodes File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputTrianglesFile_Key, "Output Triangles File", "", fs::path("<default file to read goes here>"),
+                                                          FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputFile));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataContainerSelection_Key, "DataContainer", "", DataPath{}));
 
   return params;

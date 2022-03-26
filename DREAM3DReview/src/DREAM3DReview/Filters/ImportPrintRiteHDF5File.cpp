@@ -47,7 +47,8 @@ Parameters ImportPrintRiteHDF5File::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input TDMS-HDF5 File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input TDMS-HDF5 File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<StringParameter>(k_HFDataContainerName_Key, "High Frequency Data Container", "", "SomeString"));
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
   params.insert(std::make_unique<StringParameter>(k_HFDataName_Key, "High Frequency Vertex Attribute Matrix", "", "SomeString"));

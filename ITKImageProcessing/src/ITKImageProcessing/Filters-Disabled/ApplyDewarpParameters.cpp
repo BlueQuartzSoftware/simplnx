@@ -47,7 +47,7 @@ Parameters ApplyDewarpParameters::parameters() const
   // Create the parameter descriptors that are needed for this filter
   /*[x]*/ params.insert(std::make_unique<MontageStructureSelectionFilterParameter>(k_MontageName_Key, "Montage Name", "", {}));
   params.insert(std::make_unique<StringParameter>(k_AttributeMatrixName_Key, "Attribute Matrix Name", "", "SomeString"));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_TransformPath_Key, "Transform Array", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_TransformPath_Key, "Transform Array", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<StringParameter>(k_TransformPrefix_Key, "Transformed Data Container Prefix", "", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_MaskName_Key, "Mask Array Name", "", "SomeString"));
 

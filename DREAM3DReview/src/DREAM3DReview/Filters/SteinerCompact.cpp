@@ -52,12 +52,14 @@ Parameters SteinerCompact::parameters() const
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_Plane_Key, "Section Plane", "", 0, ChoicesParameter::Choices{"XY", "XZ", "YZ"}));
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_Sites_Key, "Number Of Sites", "", 0, ChoicesParameter::Choices{"8", "12", "16", "24", "36"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_VtkOutput_Key, "Graphical Output As .vtk", "", false));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_VtkFileName_Key, "Output Vtk File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_VtkFileName_Key, "Output Vtk File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputFile));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_TxtOutput_Key, "Text Output As .txt", "", false));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_TxtFileName_Key, "Output Text File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_TxtFileName_Key, "Output Text File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputFile));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_VtkOutput_Key, k_VtkFileName_Key, true);
   params.linkParameters(k_TxtOutput_Key, k_TxtFileName_Key, true);

@@ -52,16 +52,18 @@ Parameters Export3dSolidMesh::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_MeshingPackage_Key, "Meshing package", "", 0, ChoicesParameter::Choices{"TetGen", "Netgen", "Gmsh"}));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_outputPath_Key, "Path", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputDir));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_PackageLocation_Key, "Package Location", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputDir));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_outputPath_Key, "Path", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputDir));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_PackageLocation_Key, "Package Location", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputDir));
   params.insert(std::make_unique<StringParameter>(k_NetgenSTLFileName_Key, "STL File Prefix", "", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_GmshSTLFileName_Key, "STL File Prefix", "", "SomeString"));
   params.insertSeparator(Parameters::Separator{"Face Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Feature Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureEulerAnglesArrayPath_Key, "Euler Angles", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureCentroidArrayPath_Key, "Feature Centroids", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureEulerAnglesArrayPath_Key, "Euler Angles", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureCentroidArrayPath_Key, "Feature Centroids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ChoicesParameter>(k_MeshFileFormat_Key, "Mesh File Format", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
   params.insertSeparator(Parameters::Separator{"Mesh Quality Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RefineMesh_Key, "Refine Mesh (q)", "", false));

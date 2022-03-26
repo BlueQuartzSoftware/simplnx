@@ -56,9 +56,9 @@ Parameters ComputeFeatureEigenstrains::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_Beta13_Key, "Beta13", "", 1.23345f));
   params.insert(std::make_unique<Float32Parameter>(k_Beta12_Key, "Beta12", "", 1.23345f));
   params.insertSeparator(Parameters::Separator{"Cell Feature Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_AxisLengthsArrayPath_Key, "Axis Lengths", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_AxisEulerAnglesArrayPath_Key, "Axis Euler Angles", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ElasticStrainsArrayPath_Key, "Elastic Strains (Voigt Notation)", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_AxisLengthsArrayPath_Key, "Axis Lengths", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_AxisEulerAnglesArrayPath_Key, "Axis Euler Angles", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ElasticStrainsArrayPath_Key, "Elastic Strains (Voigt Notation)", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell Feature Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_EigenstrainsArrayName_Key, "Eigenstrains", "", DataPath{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control

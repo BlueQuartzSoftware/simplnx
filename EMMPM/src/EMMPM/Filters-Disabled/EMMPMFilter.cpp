@@ -57,7 +57,7 @@ Parameters EMMPMFilter::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_CurvatureRMax_Key, "R Max", "", 2.3456789));
   params.insert(std::make_unique<Int32Parameter>(k_CurvatureEMLoopDelay_Key, "EM Loop Delay", "", 1234356));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputDataArrayPath_Key, "Input Attribute Array", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputDataArrayPath_Key, "Input Attribute Array", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputDataArrayPath_Key, "Output Attribute Array", "", DataPath{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control

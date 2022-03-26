@@ -46,7 +46,7 @@ Parameters ReplaceValueInArray::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<Float64Parameter>(k_RemoveValue_Key, "Value to Replace", "", 2.3456789));
   params.insert(std::make_unique<Float64Parameter>(k_ReplaceValue_Key, "New Value", "", 2.3456789));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArray_Key, "Attribute Array", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArray_Key, "Attribute Array", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
 
   return params;
 }

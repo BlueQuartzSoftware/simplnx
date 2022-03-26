@@ -49,7 +49,7 @@ Parameters ItkManualThreshold::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_ManualParameter_Key, "Threshold Value", "", 1234356));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveAsNewArray_Key, "Save as New Array", "", false));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to Threshold", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to Threshold", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_NewCellArrayName_Key, "Threshold Array", "", DataPath{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control

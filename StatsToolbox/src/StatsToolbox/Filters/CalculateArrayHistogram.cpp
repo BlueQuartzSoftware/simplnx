@@ -53,7 +53,7 @@ Parameters CalculateArrayHistogram::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_MinRange_Key, "Min Value", "", 2.3456789));
   params.insert(std::make_unique<Float64Parameter>(k_MaxRange_Key, "Max Value", "", 2.3456789));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_NewDataContainer_Key, "New Data Container", "", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Histogram", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Histogram", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewDataContainerName_Key, "Data Container ", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_NewAttributeMatrixName_Key, "Attribute Matrix", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_NewDataArrayName_Key, "Histogram", "", DataPath{}));

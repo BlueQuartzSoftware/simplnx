@@ -45,8 +45,8 @@ Parameters IdentifyDislocationSegments::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Edge Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_BurgersVectorsArrayPath_Key, "Burgers Vectors", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SlipPlaneNormalsArrayPath_Key, "Slip Plane Normals", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_BurgersVectorsArrayPath_Key, "Burgers Vectors", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SlipPlaneNormalsArrayPath_Key, "Slip Plane Normals", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Edge Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_DislocationIdsArrayName_Key, "Dislocation Ids", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Edge Feature Data"});

@@ -47,8 +47,8 @@ Parameters WaveFrontObjectFileWriter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(
-      std::make_unique<FileSystemPathParameter>(k_OutputWaveFrontFile_Key, "Output Wavefront File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputWaveFrontFile_Key, "Output Wavefront File", "", fs::path("<default file to read goes here>"),
+                                                          FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputFile));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_TriangleGeometry_Key, "Triangle Geometry", "", DataPath{}));
 
   return params;

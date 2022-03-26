@@ -45,9 +45,9 @@ Parameters ItkGrayToRGB::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_RedArrayPath_Key, "Red Channel", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GreenArrayPath_Key, "Green Channel", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_BlueArrayPath_Key, "Blue Channel", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_RedArrayPath_Key, "Red Channel", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_GreenArrayPath_Key, "Green Channel", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_BlueArrayPath_Key, "Blue Channel", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_NewCellArrayName_Key, "RGB Array", "", DataPath{}));
 

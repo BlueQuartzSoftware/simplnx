@@ -50,7 +50,7 @@ Parameters ItkKMeans::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_Slice_Key, "Slice at a Time", "", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveAsNewArray_Key, "Save as New Array", "", false));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to Cluster", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to Cluster", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_NewCellArrayName_Key, "Clustered Array", "", DataPath{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control

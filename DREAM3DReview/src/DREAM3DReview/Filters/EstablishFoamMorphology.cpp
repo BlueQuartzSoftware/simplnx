@@ -56,12 +56,12 @@ Parameters EstablishFoamMorphology::parameters() const
   params.insertSeparator(Parameters::Separator{"Data Container"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataContainerName_Key, "Data Container", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Cell Ensemble Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputStatsArrayPath_Key, "Statistics", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputPhaseTypesArrayPath_Key, "Phase Types", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputPhaseNamesArrayPath_Key, "Phase Names", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputShapeTypesArrayPath_Key, "Shape Types", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputStatsArrayPath_Key, "Statistics", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputPhaseTypesArrayPath_Key, "Phase Types", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputPhaseNamesArrayPath_Key, "Phase Names", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputShapeTypesArrayPath_Key, "Shape Types", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputCellFeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputCellFeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell Ensemble Data"});
   params.insert(std::make_unique<StringParameter>(k_OutputCellEnsembleAttributeMatrixName_Key, "Cell Ensemble Attribute Matrix", "", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_NumFeaturesArrayName_Key, "Number of Features", "", "SomeString"));
@@ -75,8 +75,8 @@ Parameters EstablishFoamMorphology::parameters() const
   params.insert(std::make_unique<StringParameter>(k_TJEuclideanDistancesArrayName_Key, "Triple Junction Euclidean Distances", "", "SomeString"));
   params.insert(std::make_unique<StringParameter>(k_GBEuclideanDistancesArrayName_Key, "Grain Boundary Euclidean Distances", "", "SomeString"));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_WriteGoalAttributes_Key, "Write Goal Attributes", "", false));
-  params.insert(
-      std::make_unique<FileSystemPathParameter>(k_CsvOutputFile_Key, "Goal Attribute CSV File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_CsvOutputFile_Key, "Goal Attribute CSV File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputFile));
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_HaveFeatures_Key, "Already Have Features", "", 0, ChoicesParameter::Choices{"No", "Yes"}));
   params.insert(std::make_unique<Float64Parameter>(k_MinStrutThickness_Key, "Minimum Strut Thickness", "", 2.3456789));
   params.insert(std::make_unique<Float32Parameter>(k_StrutThicknessVariability_Key, "Strut Thickness Variability Factor", "", 1.23345f));

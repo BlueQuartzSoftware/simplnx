@@ -58,11 +58,12 @@ Parameters InterpolatePointCloudToRegularGrid::parameters() const
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataContainerName_Key, "Data Container to Interpolate", "", DataPath{}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_InterpolatedDataContainerName_Key, "Interpolated Data Container", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_VoxelIndicesArrayPath_Key, "Voxel Indices", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}));
-  params.insert(
-      std::make_unique<MultiArraySelectionParameter>(k_ArraysToInterpolate_Key, "Attribute Arrays to Interpolate", "", MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraysToCopy_Key, "Attribute Arrays to Copy", "", MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_VoxelIndicesArrayPath_Key, "Voxel Indices", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraysToInterpolate_Key, "Attribute Arrays to Interpolate", "",
+                                                               MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}, MultiArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraysToCopy_Key, "Attribute Arrays to Copy", "", MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()},
+                                                               MultiArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_InterpolatedAttributeMatrixName_Key, "Interpolated Attribute Matrix", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_KernelDistancesArrayName_Key, "Kernel Distances", "", DataPath{}));

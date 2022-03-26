@@ -47,7 +47,8 @@ Parameters DataContainerWriter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::OutputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputFile));
   params.insert(std::make_unique<BoolParameter>(k_WriteXdmfFile_Key, "Write Xdmf File", "", false));
   params.insert(std::make_unique<BoolParameter>(k_WriteTimeSeries_Key, "Include Xdmf Time Markers", "", false));
 

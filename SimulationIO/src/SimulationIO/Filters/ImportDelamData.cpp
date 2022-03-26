@@ -50,8 +50,10 @@ Parameters ImportDelamData::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<FileSystemPathParameter>(k_CSDGMFile_Key, "CSDGM File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_BvidStdOutFile_Key, "Bvid StdOut File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_CSDGMFile_Key, "CSDGM File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_BvidStdOutFile_Key, "Bvid StdOut File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<Float32Parameter>(k_InterfaceThickness_Key, "Interface Thickness", "", 1.23345f));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerPath_Key, "Data Container", "", DataPath{}));
   params.insert(std::make_unique<StringParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "", "SomeString"));

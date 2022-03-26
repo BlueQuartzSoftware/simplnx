@@ -113,8 +113,8 @@ IFilter::PreflightResult ItkConvertArrayTo8BitImageAttributeMatrix::preflightImp
 }
 
 //------------------------------------------------------------------------------
-Result<> ItkConvertArrayTo8BitImageAttributeMatrix::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode,
-                                                                const MessageHandler& messageHandler) const
+Result<> ItkConvertArrayTo8BitImageAttributeMatrix::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                                const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
