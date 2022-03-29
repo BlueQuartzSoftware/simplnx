@@ -138,7 +138,7 @@ Result<> ChangeAngleRepresentation::executeImpl(DataStructure& dataStructure, co
 
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0ULL, static_cast<size_t>(angles.getSize()));
+  dataAlg.setRange(0ULL, angles.getSize());
   dataAlg.execute(::ChangeAngleRepresentationImpl(angles, conversionFactor));
 
   return {};
