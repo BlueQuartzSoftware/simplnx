@@ -522,6 +522,11 @@ bool DataStructure::insert(const std::shared_ptr<DataObject>& dataObject, const 
     return false;
   }
 
+  if(dataObject.get() == getData(dataObject->getId()))
+  {
+    return false;
+  }
+
   if(getData(dataObject->getId()) != nullptr)
   {
     dataObject->setId(generateId());
