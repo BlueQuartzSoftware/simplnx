@@ -134,5 +134,15 @@ protected:
     }
     return tupleShapeAttribute.readAsVector<usize>();
   }
+
+  static ShapeType ReadComponentShape(const H5::DatasetReader& datasetReader)
+  {
+    H5::AttributeReader componentShapeAttribute = datasetReader.getAttribute(k_ComponentShape);
+    if(!componentShapeAttribute.isValid())
+    {
+      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+    }
+    return componentShapeAttribute.readAsVector<usize>();
+  }
 };
 } // namespace complex
