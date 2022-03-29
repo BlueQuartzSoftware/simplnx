@@ -13,7 +13,7 @@ In order to compile `complex` you will need a C++17 compiler suite installed on 
 + Compiler
   + Windows Visual Studio 2017 v141 toolset
   + macOS 10.15 and Xcode 12.4 or higher
-  + Linux with GCC Version 9.0 or higher
+  + Linux with GCC Version 9.0 or higher or clang.
 
 ## Install vcpkg ##
 
@@ -28,7 +28,7 @@ cd C:/Users/[USERNAME]/Applications
 git clone ssh://git@github.com/microsoft/vcpkg
 ```
 
-Use the Windows Explorer to open the vcpkg directory and double click the `bootstrap-vcpkg.bat` file. This will create the `vcpkg.exe` file. You will need to ensure that the path to the `vcpkg.exe` is on your `PATH` environment variable. There are several ways to do this in Windows, select the one that is right for your environment.
+The `bootstrap-vcpkg.bat` file should be run automatically by CMake the first time. This will create the `vcpkg.exe` file. Additionally CMake should automatically find `vcpkg.exe`. If CMake does not find it, you may need to add it to your `PATH` variable.
 
 ### MacOS/Linux ###
 
@@ -45,13 +45,13 @@ export PATH=/Users/Shared/DREAM3DNX_SDK/vcpkg:$PATH
 
 ## Clone Appropriate Repositories ##
 
-Within the folder DREAM3D-Dev clone both the `complex` and `DREAM3DNX` repositories
+Within the folder DREAM3D-Dev clone both the `complex` and `DREAM3D_Data` repositories. The `DREAM3D_Data` repo is optional but does contain testing data.
 
 Create a location to keep the `complex` repositories and make builds. You can do either in-source our out-of-source builds.
 
 ```(lang-console)
-git clone --recursive ssh://git@github.com/bluequartzsoftware/complex
-git clone --recursive ssh://git@github.com:DREAM3D/DREAM3D_Data.git
+git clone --recursive https://git@github.com/bluequartzsoftware/complex
+git clone --recursive https://git@github.com:DREAM3D/DREAM3D_Data.git
 ```
 
 ## Configure complex with CMake (Windows & MSVC) ##
@@ -65,7 +65,7 @@ cd complex
 mkdir Release
 cd Release
 
-cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=C:/Applications/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Releas -DVCPKG_MANIFEST_DIR=C:/Users/mjackson/Workspace1/complex -DVCPKG_MANIFEST_FEATURES="tests;parallel" -DVCPKG_INSTALLED_DIR=C:/Users/mjackson/Workspace1/vcpkg-installed -DVCPKG_MANIFEST_INSTALL=ON -DCMAKE_MAKE_PROGRAM=C:/Applications/ninja-win/ninja.exe ../
+cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/local/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release -DVCPKG_MANIFEST_FEATURES="tests;parallel" ../../complex
 ```
 
 Once the project is configured it should build using **ninja.exe**
