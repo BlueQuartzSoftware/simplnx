@@ -35,6 +35,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   RobustAutomaticThresholdTest.cpp
   RawBinaryReaderTest.cpp
   ScalarSegmentFeaturesFilterTest.cpp
+  SetOriginResolutionImageGeomTest.cpp
   StlFileReaderTest.cpp
 )
 
