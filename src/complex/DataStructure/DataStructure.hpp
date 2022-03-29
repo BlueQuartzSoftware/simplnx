@@ -457,9 +457,19 @@ public:
   const DataMap& getDataMap() const;
 
   /**
-   * @brief Inserts a DataObject into the DataStructure nested under the given
+   * @brief Inserts a new DataObject into the DataStructure nested under the given
    * DataPath. If the DataPath is empty, the DataObject is added directly to
-   * the DataStructure.
+   * the DataStructure. The provided DataObject can exist outside of the DataStructure,
+   * but calling this method with a DataObject already contained within the DataStructure
+   * is undefined behavior.
+   *
+   * This method is a purely for inserting DataObjects new to the DataStructure.
+   *
+   * This method is not meant to add additional parents to a DataObject already
+   * existing in the DataStructure. Use addAdditionalParent for that purpose.
+   *
+   * This method is not meant to replace the DataObject at a given DataPath.
+   * Using it as such is undefined behavior within the DataStructure.
    *
    * Returns true if the process succeeds. Returns false otherwise. Returns false if dataObject is null.
    * @param dataObject
