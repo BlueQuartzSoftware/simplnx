@@ -43,6 +43,10 @@ ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const 
 , m_AllowEmpty(allowEmpty)
 , m_AllowedTypes(allowedTypes)
 {
+  if(allowedTypes.empty())
+  {
+    throw std::runtime_error("ArraySelectionParmaeter REQUIRES a non-empty AllowedTypes variable. Please report this to the developer.");
+  }
 }
 
 Uuid ArraySelectionParameter::uuid() const

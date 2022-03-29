@@ -66,11 +66,6 @@ typename DataGroupSelectionParameter::ValueType DataGroupSelectionParameter::def
   return m_DefaultValue;
 }
 
-DataGroupSelectionParameter::AllowedTypes DataGroupSelectionParameter::allowedTypes() const
-{
-  return {};
-}
-
 Result<> DataGroupSelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);

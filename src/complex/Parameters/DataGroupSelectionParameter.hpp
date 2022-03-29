@@ -72,12 +72,6 @@ public:
   ValueType defaultPath() const;
 
   /**
-   * @brief Returns the set of allowed DataArray types. An empty set means all are allowed.
-   * @return
-   */
-  AllowedTypes allowedTypes() const;
-
-  /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
    * @param dataStructure The active DataStructure to use during validation
    * @param value The value to validate
