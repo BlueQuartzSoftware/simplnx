@@ -277,7 +277,7 @@ void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, DataSt
 
   // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
   // was essentially done in the preflight part.
-  UInt8Array& outputResultArray = dataStructure.getDataRefAs<UInt8Array>(outputResultArrayPath);
+  BoolArray& outputResultArray = dataStructure.getDataRefAs<BoolArray>(outputResultArrayPath);
 
   // Get the total number of tuples, create and initialize an array with ZERO to use for these results
   size_t totalTuples = outputResultArray.getNumberOfTuples();
