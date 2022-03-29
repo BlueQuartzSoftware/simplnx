@@ -12,6 +12,7 @@ set(FilterList
   CalculateFeatureSizesFilter
   CalculateTriangleAreasFilter
   CreateFeatureArrayFromElementArray
+  ChangeAngleRepresentation
   ConditionalSetValue
   CopyDataGroup
   CopyFeatureArrayToElementArray

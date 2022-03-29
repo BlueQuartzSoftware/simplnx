@@ -9,6 +9,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   AlignGeometriesTest.cpp
   ApproximatePointCloudHullTest.cpp
   CalculateTriangleAreasFilterTest.cpp
+  ChangeAngleRepresentationTest.cpp
   ConditionalSetValueTest.cpp
   CopyDataGroupTest.cpp
   CreateDataArrayTest.cpp
