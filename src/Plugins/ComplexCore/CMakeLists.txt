@@ -46,6 +46,7 @@ set(FilterList
   RobustAutomaticThreshold
   ScalarSegmentFeaturesFilter
   SegmentFeaturesFilter
+  SetOriginResolutionImageGeom
   StlFileReaderFilter
 )
 
