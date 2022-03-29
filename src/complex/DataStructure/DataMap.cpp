@@ -325,3 +325,18 @@ H5::ErrorType DataMap::writeH5Group(H5::DataStructureWriter& dataStructureWriter
   }
   return 0;
 }
+
+void DataMap::updateIds(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+{
+  for(const auto& updatedId : updatedIds)
+  {
+    if(!contains(updatedId.first))
+    {
+      continue;
+    }
+
+    auto extractedPair = m_Map.extract(updatedId.first);
+    extractedPair.key() = updatedId.second;
+    m_Map.insert(std::move(extractedPair));
+  }
+}

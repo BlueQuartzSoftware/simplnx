@@ -48,6 +48,8 @@ class FileWriter;
  */
 class COMPLEX_EXPORT DataStructure
 {
+  using WeakCollectionType = std::map<DataObject::IdType, std::weak_ptr<DataObject>>;
+
 protected:
   /**
    * @brief Finalizes adding a DataObject to the DataStructure. This should
@@ -455,16 +457,32 @@ public:
   const DataMap& getDataMap() const;
 
   /**
-   * @brief Inserts a DataObject into the DataStructure nested under the given
+   * @brief Inserts a new DataObject into the DataStructure nested under the given
    * DataPath. If the DataPath is empty, the DataObject is added directly to
-   * the DataStructure.
+   * the DataStructure. The provided DataObject can exist outside of the DataStructure,
+   * but calling this method with a DataObject already contained within the DataStructure
+   * is undefined behavior.
    *
-   * Returns true if the process succeeds. Returns false otherwise.
+   * This method is a purely for inserting DataObjects new to the DataStructure.
+   *
+   * This method is not meant to add additional parents to a DataObject already
+   * existing in the DataStructure. Use addAdditionalParent for that purpose.
+   *
+   * This method is not meant to replace the DataObject at a given DataPath.
+   * Using it as such is undefined behavior within the DataStructure.
+   *
+   * Returns true if the process succeeds. Returns false otherwise. Returns false if dataObject is null.
    * @param dataObject
    * @param dataPath
    * @return bool
    */
   bool insert(const std::shared_ptr<DataObject>& dataObject, const DataPath& dataPath);
+
+  /**
+   * @brief Returns the next ID value to use in the DataStructure
+   * @return DataObject::IdType
+   */
+  DataObject::IdType getNextId() const;
 
   /**
    * @brief Adds an additional parent to the target DataObject.
@@ -534,6 +552,13 @@ public:
    * @return bool
    */
   bool validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const;
+
+  /**
+   * @brief Resets DataObject IDs starting at the provided value.
+   * Because 0 is a reserved value, if the starting value is set to 0, this method will use 1 instead.
+   * @param startingId
+   */
+  void resetIds(DataObject::IdType startingId);
 
   /**
    * @brief Copy assignment operator. The copied DataStructure's observers are not retained.
@@ -648,7 +673,7 @@ private:
   ////////////
   // Variables
   SignalType m_Signal;
-  std::map<DataObject::IdType, std::weak_ptr<DataObject>> m_DataObjects;
+  WeakCollectionType m_DataObjects;
   DataMap m_RootGroup;
   bool m_IsValid = false;
   DataObject::IdType m_NextId = 1;

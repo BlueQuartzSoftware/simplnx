@@ -54,7 +54,9 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
     return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, "Failed to import a DataStructure from the target HDF5 file."}})};
   }
 
-  const auto& importStructure = fileData.second;
+  // Ensure there are no conflicting DataObject ID values
+  DataStructure importStructure = fileData.second;
+  importStructure.resetIds(dataStructure.getNextId());
 
   auto importPaths = getImportPaths(importStructure, m_Paths);
   for(const auto& targetPath : importPaths)

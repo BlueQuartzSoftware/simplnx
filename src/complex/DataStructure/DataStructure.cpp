@@ -521,6 +521,21 @@ DataStructure::ConstIterator DataStructure::end() const
 
 bool DataStructure::insert(const std::shared_ptr<DataObject>& dataObject, const DataPath& dataPath)
 {
+  if(dataObject == nullptr)
+  {
+    return false;
+  }
+
+  if(dataObject.get() == getData(dataObject->getId()))
+  {
+    return false;
+  }
+
+  if(getData(dataObject->getId()) != nullptr)
+  {
+    dataObject->setId(generateId());
+  }
+
   if(dataPath.empty())
   {
     return insertIntoRoot(dataObject);
@@ -528,6 +543,11 @@ bool DataStructure::insert(const std::shared_ptr<DataObject>& dataObject, const 
 
   auto parentGroup = getDataAs<BaseGroup>(dataPath);
   return insertIntoParent(dataObject, parentGroup);
+}
+
+DataObject::IdType DataStructure::getNextId() const
+{
+  return m_NextId;
 }
 
 bool DataStructure::insertIntoRoot(const std::shared_ptr<DataObject>& dataObject)
@@ -712,4 +732,47 @@ bool DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPath
   }
   return true;
 }
+
+void DataStructure::resetIds(DataObject::IdType startingId)
+{
+  // 0 is reserved
+  if(startingId == 0)
+  {
+    startingId = 1;
+  }
+
+  m_NextId = startingId;
+
+  // Update DataObject IDs and track changes
+  WeakCollectionType newCollection;
+  using UpdatedId = std::pair<DataObject::IdType, DataObject::IdType>;
+  std::vector<UpdatedId> updatedIds;
+  for(auto& dataObjectIter : m_DataObjects)
+  {
+    auto dataObjectPtr = dataObjectIter.second.lock();
+    if(dataObjectPtr == nullptr)
+    {
+      continue;
+    }
+
+    auto oldId = dataObjectIter.first;
+    auto newId = generateId();
+
+    dataObjectPtr->setId(newId);
+    updatedIds.push_back({oldId, newId});
+
+    newCollection.insert({newId, dataObjectPtr});
+  }
+
+  // Update m_DataObjects collection
+  m_DataObjects = newCollection;
+
+  // Update ID references between DataObjects
+  for(auto& dataObjectIter : m_DataObjects)
+  {
+    auto dataObjectPtr = dataObjectIter.second.lock();
+    dataObjectPtr->checkUpdatedIds(updatedIds);
+  }
+}
+
 } // namespace complex

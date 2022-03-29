@@ -292,6 +292,12 @@ public:
    */
   H5::ErrorType writeH5Group(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& groupWriter) const;
 
+  /**
+   * @brief Updates the map IDs using a vector of updated IDs and their new values.
+   * @param updatedIds
+   */
+  void updateIds(const std::vector<std::pair<IdType, IdType>>& updatedIds);
+
 private:
   MapType m_Map;
 };

@@ -36,6 +36,9 @@ const fs::path k_LegacyFilepath = "SmallN100.dream3d";
 const fs::path k_Dream3dFilename = "newFile.dream3d";
 const fs::path k_ExportFilename1 = "export.dream3d";
 const fs::path k_ExportFilename2 = "export2.dream3d";
+const fs::path k_MultiExportFilename1 = "multi_export1.dream3d";
+const fs::path k_MultiExportFilename2 = "multi_export2.dream3d";
+const fs::path k_MultiExportFilename3 = "multi_export3.dream3d";
 } // namespace Constants
 
 std::mutex m_DataMutex;
@@ -94,6 +97,39 @@ fs::path GetReExportDataPath()
   return GetDataDir(*app) / Constants::k_ExportFilename2;
 }
 
+fs::path GetMultiExportDataPath1()
+{
+  auto app = Application::Instance();
+  if(app == nullptr)
+  {
+    throw std::runtime_error("complex::Application instance not found");
+  }
+
+  return GetDataDir(*app) / Constants::k_MultiExportFilename1;
+}
+
+fs::path GetMultiExportDataPath2()
+{
+  auto app = Application::Instance();
+  if(app == nullptr)
+  {
+    throw std::runtime_error("complex::Application instance not found");
+  }
+
+  return GetDataDir(*app) / Constants::k_MultiExportFilename2;
+}
+
+fs::path GetReMultiExportDataPath()
+{
+  auto app = Application::Instance();
+  if(app == nullptr)
+  {
+    throw std::runtime_error("complex::Application instance not found");
+  }
+
+  return GetDataDir(*app) / Constants::k_MultiExportFilename3;
+}
+
 DataStructure CreateTestDataStructure()
 {
   DataStructure dataStructure;
@@ -147,6 +183,67 @@ Pipeline CreateImportPipeline()
   {
     Arguments args;
     args.insert("Export_File_Path", GetReExportDataPath());
+    pipeline.push_back(k_ExportD3DHandle, args);
+  }
+  return pipeline;
+}
+
+void CreateMultiExportFiles()
+{
+  // Pipeline 1
+  {
+    Pipeline pipeline("Export Multi DREAM3D Pipeline 1");
+    {
+      Arguments args;
+      args.insert("Data_Object_Path", DataPath({DataNames::k_Group1Name}));
+      pipeline.push_back(k_CreateDataGroupHandle, args);
+    }
+    {
+      Arguments args;
+      args.insert("Export_File_Path", GetMultiExportDataPath1());
+      pipeline.push_back(k_ExportD3DHandle, args);
+    }
+    REQUIRE(pipeline.execute());
+  }
+  // Pipeline 2
+  {
+    Pipeline pipeline("Export Multi DREAM3D Pipeline 2");
+    {
+      Arguments args;
+      args.insert("Data_Object_Path", DataPath({DataNames::k_Group2Name}));
+      pipeline.push_back(k_CreateDataGroupHandle, args);
+    }
+    {
+      Arguments args;
+      args.insert("Export_File_Path", GetMultiExportDataPath2());
+      pipeline.push_back(k_ExportD3DHandle, args);
+    }
+    REQUIRE(pipeline.execute());
+  }
+}
+
+Pipeline CreateMultiImportPipeline()
+{
+  Pipeline pipeline("Import DREAM3D Pipeline");
+  {
+    Arguments args;
+    Dream3dImportParameter::ImportData importData;
+    importData.FilePath = GetMultiExportDataPath1();
+    importData.DataPaths = std::vector<DataPath>{DataPath({DataNames::k_Group1Name})};
+    args.insert("Import_File_Data", importData);
+    pipeline.push_back(k_ImportD3DHandle, args);
+  }
+  {
+    Arguments args;
+    Dream3dImportParameter::ImportData importData;
+    importData.FilePath = GetMultiExportDataPath2();
+    importData.DataPaths = std::vector<DataPath>{DataPath({DataNames::k_Group2Name})};
+    args.insert("Import_File_Data", importData);
+    pipeline.push_back(k_ImportD3DHandle, args);
+  }
+  {
+    Arguments args;
+    args.insert("Export_File_Path", GetReMultiExportDataPath());
     pipeline.push_back(k_ExportD3DHandle, args);
   }
   return pipeline;
@@ -228,4 +325,23 @@ TEST_CASE("Import/Export DREAM3D Filter Test")
     REQUIRE(dataArray != nullptr);
     REQUIRE(dataArray->getIDataStoreAs<EmptyDataStore<int8>>() != nullptr);
   }
+}
+
+TEST_CASE("Import/Export Multi-DREAM3D Filter Test")
+{
+  Application app;
+  fs::path pluginPath = complex::unit_test::k_BuildDir.str();
+  app.loadPlugins(pluginPath, false);
+
+  std::lock_guard<std::mutex> lock(m_DataMutex);
+
+  CreateMultiExportFiles();
+
+  auto importPipeline = CreateMultiImportPipeline();
+  REQUIRE(importPipeline.execute());
+  auto importDataStructure = importPipeline[1]->getDataStructure();
+  auto size = importDataStructure.getSize();
+  REQUIRE(size == 2);
+  REQUIRE(importDataStructure.getData(DataPath({DataNames::k_Group1Name})) != nullptr);
+  REQUIRE(importDataStructure.getData(DataPath({DataNames::k_Group2Name})) != nullptr);
 }

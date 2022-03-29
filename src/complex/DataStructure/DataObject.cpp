@@ -88,6 +88,27 @@ DataObject::Type DataObject::getDataObjectType() const
   return Type::DataObject;
 }
 
+void DataObject::setId(IdType newId)
+{
+  m_Id = newId;
+}
+
+void DataObject::checkUpdatedIds(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+{
+  for(const auto& updatedId : updatedIds)
+  {
+    // Update parent list
+    std::replace(m_ParentList.begin(), m_ParentList.end(), updatedId.first, updatedId.second);
+  }
+
+  // For derived classes
+  checkUpdatedIdsImpl(updatedIds);
+}
+
+void DataObject::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+{
+}
+
 bool DataObject::AttemptToAddObject(DataStructure& ds, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId)
 {
   return ds.finishAddingObject(data, parentId);
