@@ -118,7 +118,7 @@ DataStructure ImportDataStructureV8(const H5::FileReader& fileReader, H5::ErrorT
  */
 template <typename T>
 IDataArray* createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const H5::DatasetReader& dataArrayReader, const std::vector<usize>& tDims, const std::vector<usize>& cDims,
-                           bool preflight = false)
+                                  bool preflight = false)
 {
   using DataArrayType = DataArray<T>;
   using EmptyDataStoreType = EmptyDataStore<T>;
