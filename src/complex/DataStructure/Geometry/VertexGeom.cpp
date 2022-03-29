@@ -373,3 +373,21 @@ H5::ErrorType VertexGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter
 
   return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }
+
+void VertexGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+{
+  AbstractGeometry::checkUpdatedIdsImpl(updatedIds);
+
+  for(const auto& updatedId : updatedIds)
+  {
+    if(m_VertexListId == updatedId.first)
+    {
+      m_VertexListId = updatedId.second;
+    }
+
+    if(m_VertexSizesId == updatedId.first)
+    {
+      m_VertexSizesId = updatedId.second;
+    }
+  }
+}

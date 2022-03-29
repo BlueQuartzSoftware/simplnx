@@ -263,6 +263,12 @@ protected:
   BaseGroup(DataStructure& ds, std::string name, IdType importId);
 
   /**
+   * @brief Updates the DataMap IDs. Should only be called by DataObject::checkUpdatedIds.
+   * @param updatedIds
+   */
+  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
+
+  /**
    * @brief Checks if the provided DataObject can be added to the container.
    * This is a virtual method so that derived classes can modify what can or
    * cannot be added to the container. Returns true if the DataObject can be

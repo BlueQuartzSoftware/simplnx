@@ -243,6 +243,25 @@ protected:
   DataObject(DataStructure& ds, std::string name, IdType importId);
 
   /**
+   * @brief Updates the data ID for lookup within the DataStructure.
+   * This method should only be called from within the DataStructure.
+   * @param newId
+   */
+  void setId(IdType newId);
+
+  /**
+   * @brief Notifies the DataObject of DataObject IDs that have been changed by the DataStructure.
+   * @param updatedIds std::pair ordered as {old ID, new ID}
+   */
+  void checkUpdatedIds(const std::vector<std::pair<IdType, IdType>>& updatedIds);
+
+  /**
+   * @brief Calls specialized checks for derived classes. Should only be called by checkUpdatedIds.
+   * @param updatedIds
+   */
+  virtual void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds);
+
+  /**
    * @brief Attempts to add the specified DataObject to the target DataStructure.
    * If a parentId is provided, then the DataObject will be added as a child to
    * the target DataObject. Otherwise, the DataObject will be added directly

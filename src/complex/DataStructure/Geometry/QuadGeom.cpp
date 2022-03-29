@@ -555,3 +555,36 @@ H5::ErrorType QuadGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, 
 
   return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }
+
+void QuadGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+{
+  AbstractGeometry2D::checkUpdatedIdsImpl(updatedIds);
+
+  for(const auto& updatedId : updatedIds)
+  {
+    if(m_QuadListId == updatedId.first)
+    {
+      m_QuadListId = updatedId.second;
+    }
+
+    if(m_QuadsContainingVertId == updatedId.first)
+    {
+      m_QuadsContainingVertId = updatedId.second;
+    }
+
+    if(m_QuadNeighborsId == updatedId.first)
+    {
+      m_QuadNeighborsId = updatedId.second;
+    }
+
+    if(m_QuadCentroidsId == updatedId.first)
+    {
+      m_QuadCentroidsId = updatedId.second;
+    }
+
+    if(m_QuadSizesId == updatedId.first)
+    {
+      m_QuadSizesId = updatedId.second;
+    }
+  }
+}

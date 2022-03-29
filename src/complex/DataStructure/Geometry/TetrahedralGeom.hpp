@@ -397,6 +397,12 @@ protected:
    */
   void setElementCentroids(const Float32Array* elementCentroids) override;
 
+  /**
+   * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
+   * @param updatedIds
+   */
+  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
+
 private:
   std::optional<IdType> m_TriListId;
   std::optional<IdType> m_UnsharedTriListId;

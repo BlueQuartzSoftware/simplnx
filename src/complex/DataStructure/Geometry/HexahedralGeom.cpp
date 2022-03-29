@@ -630,3 +630,36 @@ H5::ErrorType HexahedralGeom::writeHdf5(H5::DataStructureWriter& dataStructureWr
 
   return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }
+
+void HexahedralGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+{
+  AbstractGeometry3D::checkUpdatedIdsImpl(updatedIds);
+
+  for(const auto& updatedId : updatedIds)
+  {
+    if(m_HexListId == updatedId.first)
+    {
+      m_HexListId = updatedId.second;
+    }
+
+    if(m_HexasContainingVertId == updatedId.first)
+    {
+      m_HexasContainingVertId = updatedId.second;
+    }
+
+    if(m_HexNeighborsId == updatedId.first)
+    {
+      m_HexNeighborsId = updatedId.second;
+    }
+
+    if(m_HexCentroidsId == updatedId.first)
+    {
+      m_HexCentroidsId = updatedId.second;
+    }
+
+    if(m_HexSizesId == updatedId.first)
+    {
+      m_HexSizesId = updatedId.second;
+    }
+  }
+}

@@ -578,3 +578,41 @@ H5::ErrorType EdgeGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, 
 
   return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }
+
+void EdgeGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+{
+  AbstractGeometry::checkUpdatedIdsImpl(updatedIds);
+
+  for(const auto& updatedId : updatedIds)
+  {
+    if(m_VertexListId == updatedId.first)
+    {
+      m_VertexListId = updatedId.second;
+    }
+
+    if(m_EdgeListId == updatedId.first)
+    {
+      m_EdgeListId = updatedId.second;
+    }
+
+    if(m_EdgesContainingVertId == updatedId.first)
+    {
+      m_EdgesContainingVertId = updatedId.second;
+    }
+
+    if(m_EdgeNeighborsId == updatedId.first)
+    {
+      m_EdgeNeighborsId = updatedId.second;
+    }
+
+    if(m_EdgeCentroidsId == updatedId.first)
+    {
+      m_EdgeCentroidsId = updatedId.second;
+    }
+
+    if(m_EdgeSizesId == updatedId.first)
+    {
+      m_EdgeSizesId = updatedId.second;
+    }
+  }
+}
