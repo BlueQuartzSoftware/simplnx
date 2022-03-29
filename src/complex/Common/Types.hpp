@@ -71,7 +71,7 @@ enum class FaultState
 static const std::set<DataType> k_AllDataTypes = {complex::DataType::int8,    complex::DataType::uint8,   complex::DataType::int16,  complex::DataType::uint16,
                                                   complex::DataType::int32,   complex::DataType::uint32,  complex::DataType::int64,  complex::DataType::uint64,
                                                   complex::DataType::float32, complex::DataType::float64, complex::DataType::boolean};
-static const std::set<DataType> k_AllNumericDataTypes = {complex::DataType::int8,   complex::DataType::uint8, complex::DataType::int16,  complex::DataType::uint16,  complex::DataType::int32,
+inline const std::set<DataType> k_AllNumericDataTypes = {complex::DataType::int8,   complex::DataType::uint8, complex::DataType::int16,  complex::DataType::uint16,  complex::DataType::int32,
                                                          complex::DataType::uint32, complex::DataType::int64, complex::DataType::uint64, complex::DataType::float32, complex::DataType::float64};
 
 inline const std::set<DataType> k_AllIntegerDataTypes = {complex::DataType::int8,  complex::DataType::uint8,  complex::DataType::int16, complex::DataType::uint16,
