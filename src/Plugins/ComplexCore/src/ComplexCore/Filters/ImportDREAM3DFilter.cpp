@@ -73,25 +73,10 @@ IFilter::PreflightResult ImportDREAM3DFilter::preflightImpl(const DataStructure&
     importData.DataPaths = std::nullopt;
   }
 
-  auto importedDataStructure = fileData.second;
-  importedDataStructure.resetIds(dataStructure.getNextId());
-
-  // Create target DataPaths for the output DataStructure
-  auto& importDataPaths = importData.DataPaths;
-  if(!importDataPaths.has_value())
-  {
-    return {getDataCreationResults(importedDataStructure)};
-  }
-
-  // Require at least one DataPath to import.
-  if(importDataPaths->empty())
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_NoSelectedPaths, "No paths were selected for importing"}})};
-  }
-
-  // Import shortest paths first
-  std::sort(importDataPaths->begin(), importDataPaths->end(), [](const DataPath& first, const DataPath& second) { return first.getLength() < second.getLength(); });
-  return {getDataCreationResults(fileData.second, importDataPaths.value())};
+  OutputActions actions;
+  auto action = std::make_unique<ImportH5ObjectPathsAction>(fileReader, importData.DataPaths);
+  actions.actions.push_back(std::move(action));
+  return {std::move(actions)};
 }
 
 Result<> ImportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
