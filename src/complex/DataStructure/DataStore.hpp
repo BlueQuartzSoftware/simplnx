@@ -32,8 +32,6 @@ public:
   using ShapeType = typename IDataStore::ShapeType;
 
   static constexpr const char k_DataStore[] = "DataStore";
-  static constexpr const char k_TupleShape[] = "TupleShape";
-  static constexpr const char k_ComponentShape[] = "ComponentShape";
   static constexpr const char k_DataObjectId[] = "DataObjectId";
   static constexpr const char k_DataArrayTypeName[] = "DataArray";
 
@@ -340,36 +338,23 @@ public:
     }
 
     // Write shape attributes to the dataset
-    auto tupleAttribute = datasetWriter.createAttribute(k_TupleShape);
+    auto tupleAttribute = datasetWriter.createAttribute(IDataStore::k_TupleShape);
     err = tupleAttribute.writeVector({m_TupleShape.size()}, m_TupleShape);
     if(err < 0)
     {
       return err;
     }
 
-    auto componentAttribute = datasetWriter.createAttribute(k_ComponentShape);
+    auto componentAttribute = datasetWriter.createAttribute(IDataStore::k_ComponentShape);
     err = componentAttribute.writeVector({m_ComponentShape.size()}, m_ComponentShape);
 
     return err;
   }
 
-  static std::unique_ptr<DataStore> readHdf5(const H5::DatasetReader& datasetReader)
+  static std::unique_ptr<DataStore> ReadHdf5(const H5::DatasetReader& datasetReader)
   {
-    // tupleShape
-    H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(k_TupleShape);
-    if(!tupleShapeAttribute.isValid())
-    {
-      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
-    }
-    typename DataStore<T>::ShapeType tupleShape = tupleShapeAttribute.readAsVector<size_t>();
-
-    // componentShape
-    H5::AttributeReader componentShapeAttribute = datasetReader.getAttribute(k_ComponentShape);
-    if(!componentShapeAttribute.isValid())
-    {
-      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
-    }
-    typename DataStore<T>::ShapeType componentShape = componentShapeAttribute.readAsVector<size_t>();
+    auto tupleShape = IDataStore::ReadTupleShape(datasetReader);
+    auto componentShape = IDataStore::ReadComponentShape(datasetReader);
 
     // Create DataStore
     auto dataStore = std::make_unique<DataStore<T>>(tupleShape, componentShape);

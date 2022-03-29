@@ -26,14 +26,14 @@ std::string NeighborListFactory::getDataTypeName() const
 }
 
 H5::ErrorType NeighborListFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::GroupReader& groupReader,
-                                               const std::optional<DataObject::IdType>& parentId)
+                                               const std::optional<DataObject::IdType>& parentId, bool preflight)
 {
   return -1;
 }
 
 template <typename T>
 inline void importNeighborList(DataStructure& dataStructure, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader, const std::string& dataArrayName, DataObject::IdType importId,
-                               const std::optional<DataObject::IdType>& parentId)
+                               const std::optional<DataObject::IdType>& parentId, bool preflight)
 {
   using NeighborListType = NeighborList<T>;
   auto dataVector = NeighborListType::ReadHdf5Data(parentReader, datasetReader);
@@ -41,7 +41,7 @@ inline void importNeighborList(DataStructure& dataStructure, const H5::GroupRead
 }
 
 H5::ErrorType NeighborListFactory::readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader,
-                                                 const std::optional<DataObject::IdType>& parentId)
+                                                 const std::optional<DataObject::IdType>& parentId, bool preflight)
 {
   H5::ErrorType err = 0;
   H5::Type type = datasetReader.getType();
@@ -56,43 +56,43 @@ H5::ErrorType NeighborListFactory::readH5Dataset(H5::DataStructureReader& dataSt
   switch(type)
   {
   case H5::Type::float32: {
-    importNeighborList<float32>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId);
+    importNeighborList<float32>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId, preflight);
     break;
   }
   case H5::Type::float64: {
-    importNeighborList<float64>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId);
+    importNeighborList<float64>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId, preflight);
     break;
   }
   case H5::Type::int8: {
-    importNeighborList<int8>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId);
+    importNeighborList<int8>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId, preflight);
     break;
   }
   case H5::Type::int16: {
-    importNeighborList<int16>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId);
+    importNeighborList<int16>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId, preflight);
     break;
   }
   case H5::Type::int32: {
-    importNeighborList<int32>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId);
+    importNeighborList<int32>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId, preflight);
     break;
   }
   case H5::Type::int64: {
-    importNeighborList<int64>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId);
+    importNeighborList<int64>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId, preflight);
     break;
   }
   case H5::Type::uint8: {
-    importNeighborList<uint8>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId);
+    importNeighborList<uint8>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId, preflight);
     break;
   }
   case H5::Type::uint16: {
-    importNeighborList<uint16>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId);
+    importNeighborList<uint16>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId, preflight);
     break;
   }
   case H5::Type::uint32: {
-    importNeighborList<uint32>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId);
+    importNeighborList<uint32>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId, preflight);
     break;
   }
   case H5::Type::uint64: {
-    importNeighborList<uint64>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId);
+    importNeighborList<uint64>(dataStructureReader.getDataStructure(), parentReader, datasetReader, dataArrayName, importId, parentId, preflight);
     break;
   }
   default:

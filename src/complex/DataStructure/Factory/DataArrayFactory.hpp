@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
@@ -17,7 +18,7 @@ namespace complex
 namespace H5
 {
 template <typename T>
-class COMPLEX_EXPORT DataArrayFactory : public IDataFactory
+class DataArrayFactory : public IDataFactory
 {
 public:
   DataArrayFactory()
@@ -37,6 +38,26 @@ public:
   }
 
   /**
+   * @brief Creates and imports a DataArray based on the provided DatasetReader
+   * @param dataStructure
+   * @param datasetReader
+   * @param dataArrayName
+   * @param importId
+   * @param err
+   * @param parentId
+   * @param preflight
+   */
+  template <typename K>
+  void importDataArray(DataStructure& dataStructure, const H5::DatasetReader& datasetReader, const std::string dataArrayName, DataObject::IdType importId, H5::ErrorType& err,
+                       const std::optional<DataObject::IdType>& parentId, bool preflight)
+  {
+    std::unique_ptr<AbstractDataStore<K>> dataStore =
+        preflight ? std::unique_ptr<AbstractDataStore<K>>(EmptyDataStore<K>::ReadHdf5(datasetReader)) : std::unique_ptr<AbstractDataStore<K>>(DataStore<K>::ReadHdf5(datasetReader));
+    DataArray<K>* data = DataArray<K>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
+    err = (data == nullptr) ? -400 : 0;
+  }
+
+  /**
    * @brief Creates and adds an HexahedralGeom to the provided DataStructure from
    * the target HDF5 ID.
    * @param dataStructureReader Active DataStructureReader
@@ -47,7 +68,7 @@ public:
    * @return H5::ErrorType
    */
   H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::GroupReader& groupReader,
-                            const std::optional<DataObject::IdType>& parentId = {}) override
+                            const std::optional<DataObject::IdType>& parentId = {}, bool preflight = false) override
   {
     return -1;
   }
@@ -61,7 +82,7 @@ public:
    * @return H5::ErrorType
    */
   H5::ErrorType readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader,
-                              const std::optional<DataObject::IdType>& parentId = {}) override
+                              const std::optional<DataObject::IdType>& parentId = {}, bool preflight = false) override
   {
     H5::ErrorType err = 0;
     H5::Type type = datasetReader.getType();
@@ -82,56 +103,36 @@ public:
 
     switch(type)
     {
-    case H5::Type::float32: {
-      auto dataStore = DataStore<float>::readHdf5(datasetReader);
-      DataArray<float>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, std::move(dataStore), parentId);
+    case H5::Type::float32:
+      importDataArray<float32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, preflight);
       break;
-    }
-    case H5::Type::float64: {
-      auto dataStore = DataStore<double>::readHdf5(datasetReader);
-      DataArray<double>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, std::move(dataStore), parentId);
+    case H5::Type::float64:
+      importDataArray<float64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, preflight);
       break;
-    }
-    case H5::Type::int8: {
-      auto dataStore = DataStore<int8_t>::readHdf5(datasetReader);
-      DataArray<int8_t>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, std::move(dataStore), parentId);
+    case H5::Type::int8:
+      importDataArray<int8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, preflight);
       break;
-    }
-    case H5::Type::int16: {
-      auto dataStore = DataStore<int16_t>::readHdf5(datasetReader);
-      DataArray<int16_t>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, std::move(dataStore), parentId);
+    case H5::Type::int16:
+      importDataArray<int16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, preflight);
       break;
-    }
-    case H5::Type::int32: {
-      auto dataStore = DataStore<int32_t>::readHdf5(datasetReader);
-      DataArray<int32_t>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, std::move(dataStore), parentId);
+    case H5::Type::int32:
+      importDataArray<int32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, preflight);
       break;
-    }
-    case H5::Type::int64: {
-      auto dataStore = DataStore<int64_t>::readHdf5(datasetReader);
-      DataArray<int64_t>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, std::move(dataStore), parentId);
+    case H5::Type::int64:
+      importDataArray<int64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, preflight);
       break;
-    }
-    case H5::Type::uint8: {
-      auto dataStore = DataStore<uint8_t>::readHdf5(datasetReader);
-      DataArray<uint8_t>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, std::move(dataStore), parentId);
+    case H5::Type::uint8:
+      importDataArray<uint8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, preflight);
       break;
-    }
-    case H5::Type::uint16: {
-      auto dataStore = DataStore<uint16_t>::readHdf5(datasetReader);
-      DataArray<uint16_t>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, std::move(dataStore), parentId);
+    case H5::Type::uint16:
+      importDataArray<uint16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, preflight);
       break;
-    }
-    case H5::Type::uint32: {
-      auto dataStore = DataStore<uint32_t>::readHdf5(datasetReader);
-      DataArray<uint32_t>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, std::move(dataStore), parentId);
+    case H5::Type::uint32:
+      importDataArray<uint32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, preflight);
       break;
-    }
-    case H5::Type::uint64: {
-      auto dataStore = DataStore<uint64_t>::readHdf5(datasetReader);
-      DataArray<uint64_t>::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, std::move(dataStore), parentId);
+    case H5::Type::uint64:
+      importDataArray<uint64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, preflight);
       break;
-    }
     default:
       err = -777;
       break;

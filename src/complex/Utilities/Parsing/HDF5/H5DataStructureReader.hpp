@@ -43,9 +43,10 @@ public:
    * is set to 0.
    * @param groupReader Target HDF5 group reader
    * @param errorCode HDF5 error code from reading the file.
+   * @param preflight
    * @return complex::DataStructure
    */
-  complex::DataStructure readH5Group(const H5::GroupReader& groupReader, H5::ErrorType& errorCode);
+  complex::DataStructure readH5Group(const H5::GroupReader& groupReader, H5::ErrorType& errorCode, bool preflight = false);
 
   /**
    * @brief Imports a complex::DataObject with the specified name from the target
@@ -53,9 +54,10 @@ public:
    * @param parentGroup HDF5 group reader for the parent DataMap
    * @param objectName Target complex::DataObject name
    * @param parentId = {} complex::DataObject parent ID
+   * @param preflight
    * @return H5::ErrorType
    */
-  H5::ErrorType readObjectFromGroup(const H5::GroupReader& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId = {});
+  H5::ErrorType readObjectFromGroup(const H5::GroupReader& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId = {}, bool preflight = false);
 
   /**
    * @brief Returns a reference to the current DataStructure. Returns an empty

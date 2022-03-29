@@ -14,7 +14,7 @@ H5::DataStructureReader::DataStructureReader(DataFactoryManager* h5FactoryManage
 
 H5::DataStructureReader::~DataStructureReader() = default;
 
-complex::DataStructure H5::DataStructureReader::readH5Group(const H5::GroupReader& groupReader, H5::ErrorType& errorCode)
+complex::DataStructure H5::DataStructureReader::readH5Group(const H5::GroupReader& groupReader, H5::ErrorType& errorCode, bool preflight)
 {
   clearDataStructure();
 
@@ -34,11 +34,11 @@ complex::DataStructure H5::DataStructureReader::readH5Group(const H5::GroupReade
 
   m_CurrentStructure = DataStructure();
   m_CurrentStructure.setNextId(idAttribute.readAsValue<DataObject::IdType>());
-  errorCode = m_CurrentStructure.getRootGroup().readH5Group(*this, rootGroupReader);
+  errorCode = m_CurrentStructure.getRootGroup().readH5Group(*this, rootGroupReader, {}, preflight);
   return std::move(m_CurrentStructure);
 }
 
-H5::ErrorType H5::DataStructureReader::readObjectFromGroup(const H5::GroupReader& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId)
+H5::ErrorType H5::DataStructureReader::readObjectFromGroup(const H5::GroupReader& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId, bool preflight)
 {
   H5::IDataFactory* factory = nullptr;
 
@@ -91,7 +91,7 @@ H5::ErrorType H5::DataStructureReader::readObjectFromGroup(const H5::GroupReader
   if(parentGroup.isGroup(objectName))
   {
     auto childGroup = parentGroup.openGroup(objectName);
-    auto errorCode = factory->readH5Group(*this, parentGroup, childGroup, parentId);
+    auto errorCode = factory->readH5Group(*this, parentGroup, childGroup, parentId, preflight);
     if(errorCode < 0)
     {
       return errorCode;
@@ -100,7 +100,7 @@ H5::ErrorType H5::DataStructureReader::readObjectFromGroup(const H5::GroupReader
   else if(parentGroup.isDataset(objectName))
   {
     auto childDataset = parentGroup.openDataset(objectName);
-    auto errorCode = factory->readH5Dataset(*this, parentGroup, childDataset, parentId);
+    auto errorCode = factory->readH5Dataset(*this, parentGroup, childDataset, parentId, preflight);
     if(errorCode < 0)
     {
       return errorCode;
