@@ -6,6 +6,7 @@
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/DataStructure/EmptyDataStore.hpp"
 #include "complex/DataStructure/Geometry/EdgeGeom.hpp"
 #include "complex/DataStructure/Geometry/HexahedralGeom.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
@@ -80,10 +81,10 @@ complex::DREAM3D::PipelineVersionType complex::DREAM3D::GetPipelineVersion(const
   return pipelineVersionAttribute.readAsValue<PipelineVersionType>();
 }
 
-DataStructure ImportDataStructureV8(const H5::FileReader& fileReader, H5::ErrorType& errorCode)
+DataStructure ImportDataStructureV8(const H5::FileReader& fileReader, H5::ErrorType& errorCode, bool preflight)
 {
   H5::DataStructureReader dataStructureReader;
-  auto dataStructure = dataStructureReader.readH5Group(fileReader, errorCode);
+  auto dataStructure = dataStructureReader.readH5Group(fileReader, errorCode, preflight);
   if(errorCode < 0)
   {
     return {};
@@ -104,11 +105,22 @@ DataStructure ImportDataStructureV8(const H5::FileReader& fileReader, H5::ErrorT
  * @param cDims
  */
 template <typename T>
-void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const H5::DatasetReader& dataArrayReader, const std::vector<usize>& tDims, const std::vector<usize>& cDims)
+void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const H5::DatasetReader& dataArrayReader, const std::vector<usize>& tDims, const std::vector<usize>& cDims,
+                           bool preflight = false)
 {
+  using DataArrayType = DataArray<T>;
+  using EmptyDataStoreType = EmptyDataStore<T>;
+  using DataStoreType = DataStore<T>;
+
   const std::string daName = dataArrayReader.getName();
 
-  auto dataStore = std::make_unique<DataStore<T>>(tDims, cDims);
+  if(preflight)
+  {
+    DataArrayType::template CreateWithStore<EmptyDataStoreType>(ds, daName, tDims, cDims, parentId);
+    return;
+  }
+  auto dataStore = std::make_unique<DataStoreType>(tDims, cDims);
+
   auto data = dataArrayReader.readAsVector<T>();
   if(data.size() != dataStore->getSize())
   {
@@ -120,7 +132,7 @@ void createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const
     dataStore->setValue(i, data.at(i));
   }
   // Insert the DataArray into the DataStructure
-  auto dataArray = DataArray<T>::Create(ds, daName, std::move(dataStore), parentId);
+  auto dataArray = DataArrayType::Create(ds, daName, std::move(dataStore), parentId);
 }
 
 /**
@@ -154,7 +166,7 @@ void readLegacyDataArrayDims(const H5::DatasetReader& dataArrayReader, std::vect
   }
 }
 
-void readLegacyDataArray(DataStructure& ds, const H5::DatasetReader& dataArrayReader, DataObject::IdType parentId)
+void readLegacyDataArray(DataStructure& ds, const H5::DatasetReader& dataArrayReader, DataObject::IdType parentId, bool preflight = false)
 {
   auto size = H5Dget_storage_size(dataArrayReader.getId());
   auto typeId = dataArrayReader.getTypeId();
@@ -165,49 +177,49 @@ void readLegacyDataArray(DataStructure& ds, const H5::DatasetReader& dataArrayRe
 
   if(H5Tequal(typeId, H5T_NATIVE_FLOAT) > 0)
   {
-    createLegacyDataArray<float32>(ds, parentId, dataArrayReader, tDims, cDims);
+    createLegacyDataArray<float32>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_DOUBLE) > 0)
   {
-    createLegacyDataArray<float64>(ds, parentId, dataArrayReader, tDims, cDims);
+    createLegacyDataArray<float64>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT8) > 0)
   {
-    createLegacyDataArray<int8>(ds, parentId, dataArrayReader, tDims, cDims);
+    createLegacyDataArray<int8>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT16) > 0)
   {
-    createLegacyDataArray<int16>(ds, parentId, dataArrayReader, tDims, cDims);
+    createLegacyDataArray<int16>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT32) > 0)
   {
-    createLegacyDataArray<int32>(ds, parentId, dataArrayReader, tDims, cDims);
+    createLegacyDataArray<int32>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT64) > 0)
   {
-    createLegacyDataArray<int64>(ds, parentId, dataArrayReader, tDims, cDims);
+    createLegacyDataArray<int64>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT8) > 0)
   {
-    createLegacyDataArray<uint8>(ds, parentId, dataArrayReader, tDims, cDims);
+    createLegacyDataArray<uint8>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT16) > 0)
   {
-    createLegacyDataArray<uint16>(ds, parentId, dataArrayReader, tDims, cDims);
+    createLegacyDataArray<uint16>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT32) > 0)
   {
-    createLegacyDataArray<uint32>(ds, parentId, dataArrayReader, tDims, cDims);
+    createLegacyDataArray<uint32>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT64) > 0)
   {
-    createLegacyDataArray<uint64>(ds, parentId, dataArrayReader, tDims, cDims);
+    createLegacyDataArray<uint64>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
   }
 
   H5Tclose(typeId);
 }
 
-void readLegacyAttributeMatrix(DataStructure& ds, const H5::GroupReader& amGroupReader, DataObject::IdType parentId)
+void readLegacyAttributeMatrix(DataStructure& ds, const H5::GroupReader& amGroupReader, DataObject::IdType parentId, bool preflight = false)
 {
   const std::string amName = amGroupReader.getName();
   auto attributeMatrix = DataGroup::Create(ds, amName, parentId);
@@ -218,7 +230,7 @@ void readLegacyAttributeMatrix(DataStructure& ds, const H5::GroupReader& amGroup
     if(daName != "NeighborList")
     {
       auto dataArraySet = amGroupReader.openDataset(daName);
-      readLegacyDataArray(ds, dataArraySet, attributeMatrix->getId());
+      readLegacyDataArray(ds, dataArraySet, attributeMatrix->getId(), preflight);
     }
   }
 }
@@ -318,7 +330,7 @@ DataObject* readLegacyImageGeom(DataStructure& ds, const H5::GroupReader& geomGr
 }
 // End legacy Geometry importing
 
-void readLegacyDataContainer(DataStructure& ds, const H5::GroupReader& dcGroup)
+void readLegacyDataContainer(DataStructure& ds, const H5::GroupReader& dcGroup, bool preflight = false)
 {
   DataObject* container = nullptr;
   const std::string dcName = dcGroup.getName();
@@ -378,11 +390,11 @@ void readLegacyDataContainer(DataStructure& ds, const H5::GroupReader& dcGroup)
     }
 
     auto attributeMatrixGroup = dcGroup.openGroup(amName);
-    readLegacyAttributeMatrix(ds, attributeMatrixGroup, container->getId());
+    readLegacyAttributeMatrix(ds, attributeMatrixGroup, container->getId(), preflight);
   }
 }
 
-DataStructure ImportLegacyDataStructure(const H5::FileReader& fileReader, H5::ErrorType& errorCode)
+DataStructure ImportLegacyDataStructure(const H5::FileReader& fileReader, H5::ErrorType& errorCode, bool preflight)
 {
   // auto dataStructureGroup = fileReader.openGroup(k_LegacyDataStructureGroupTag);
   DataStructure ds;
@@ -394,7 +406,7 @@ DataStructure ImportLegacyDataStructure(const H5::FileReader& fileReader, H5::Er
   for(const auto& dcName : dcNames)
   {
     auto dcGroup = dcaGroup.openGroup(dcName);
-    readLegacyDataContainer(ds, dcGroup);
+    readLegacyDataContainer(ds, dcGroup, preflight);
   }
 
   return ds;
@@ -402,18 +414,18 @@ DataStructure ImportLegacyDataStructure(const H5::FileReader& fileReader, H5::Er
   throw std::runtime_error("Not implemented: ImportLegacyDataStructure from dream3d file");
 }
 
-complex::DataStructure complex::DREAM3D::ImportDataStructureFromFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode)
+complex::DataStructure complex::DREAM3D::ImportDataStructureFromFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode, bool preflight)
 {
   errorCode = 0;
 
   const auto fileVersion = GetFileVersion(fileReader);
   if(fileVersion == k_CurrentFileVersion)
   {
-    return ImportDataStructureV8(fileReader, errorCode);
+    return ImportDataStructureV8(fileReader, errorCode, preflight);
   }
   else if(fileVersion == Legacy::FileVersion)
   {
-    return ImportLegacyDataStructure(fileReader, errorCode);
+    return ImportLegacyDataStructure(fileReader, errorCode, preflight);
   }
   // Unsupported file version
   return DataStructure();
@@ -473,7 +485,7 @@ Result<complex::Pipeline> complex::DREAM3D::ImportPipelineFromFile(const std::fi
   return {std::move(pipeline)};
 }
 
-complex::DREAM3D::FileData complex::DREAM3D::ReadFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode)
+complex::DREAM3D::FileData complex::DREAM3D::ReadFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode, bool preflight)
 {
   errorCode = 0;
   // Pipeline pipeline;
@@ -483,7 +495,7 @@ complex::DREAM3D::FileData complex::DREAM3D::ReadFile(const H5::FileReader& file
     return {};
   }
 
-  auto dataStructure = ImportDataStructureFromFile(fileReader, errorCode);
+  auto dataStructure = ImportDataStructureFromFile(fileReader, errorCode, preflight);
   if(errorCode < 0)
   {
     return {};

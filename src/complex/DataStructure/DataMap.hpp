@@ -280,9 +280,10 @@ public:
    * @param dataStructureReader
    * @param h5Group
    * @param dsParentId = {}
+   * @param preflight = false
    * @return H5::ErrorType
    */
-  H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& h5Group, const std::optional<IdType>& dsParentId = {});
+  H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& h5Group, const std::optional<IdType>& dsParentId = {}, bool preflight = false);
 
   /**
    * @brief Writes the DataMap and its DataObjects to the target HDF5 group.

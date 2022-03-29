@@ -569,6 +569,7 @@ void DataStructure::trackDataObject(const std::shared_ptr<DataObject>& dataObjec
       m_NextId = dataObject->getId() + 1;
     }
   }
+  dataObject->setDataStructure(this);
 }
 
 bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject::IdType newParentId)

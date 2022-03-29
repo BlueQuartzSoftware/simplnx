@@ -1,6 +1,10 @@
 #pragma once
 
 #include "complex/DataStructure/AbstractDataStore.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+
+#include <fmt/format.h>
 
 #include <numeric>
 #include <stdexcept>
@@ -200,6 +204,21 @@ public:
   H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const override
   {
     throw std::runtime_error("");
+  }
+
+  /**
+   * @brief Creates and returns an EmptyDataStore from the provided DatasetReader
+   * @param datasetReader
+   * @return std::unique_ptr<EmptyDataStore>
+   */
+  static std::unique_ptr<EmptyDataStore> ReadHdf5(const H5::DatasetReader& datasetReader)
+  {
+    auto tupleShape = IDataStore::ReadTupleShape(datasetReader);
+    auto componentShape = IDataStore::ReadComponentShape(datasetReader);
+
+    // Create DataStore
+    auto dataStore = std::make_unique<EmptyDataStore<T>>(tupleShape, componentShape);
+    return dataStore;
   }
 
 private:

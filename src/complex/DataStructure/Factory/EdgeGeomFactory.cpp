@@ -20,7 +20,7 @@ std::string EdgeGeomFactory::getDataTypeName() const
 }
 
 H5::ErrorType EdgeGeomFactory::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::GroupReader& groupReader,
-                                           const std::optional<DataObject::IdType>& parentId)
+                                           const std::optional<DataObject::IdType>& parentId, bool preflight)
 {
   std::string name = groupReader.getName();
   auto importId = ReadObjectId(groupReader);
@@ -30,7 +30,7 @@ H5::ErrorType EdgeGeomFactory::readH5Group(H5::DataStructureReader& dataStructur
 
 //------------------------------------------------------------------------------
 H5::ErrorType EdgeGeomFactory::readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader,
-                                             const std::optional<DataObject::IdType>& parentId)
+                                             const std::optional<DataObject::IdType>& parentId, bool preflight)
 {
   return -1;
 }

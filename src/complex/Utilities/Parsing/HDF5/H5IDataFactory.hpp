@@ -38,10 +38,11 @@ public:
    * @param groupReader Wrapper around an HDF5 group.
    * @param parentId = {} Optional DataObject ID describing which parent object
    * to create the generated DataObject under.
+   * @param preflight = false
    * @return H5::ErrorType
    */
   virtual H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::GroupReader& groupReader,
-                                    const std::optional<complex::DataObject::IdType>& parentId = {}) = 0;
+                                    const std::optional<complex::DataObject::IdType>& parentId = {}, bool preflight = false) = 0;
 
   /**
    * @brief Creates and adds a DataObject to the provided DataStructure from
@@ -50,10 +51,11 @@ public:
    * @param parentReader Wrapper around the parent HDF5 group.
    * @param datasetReader Wrapper around the HDF5 dataset.
    * @param parentId = {}
+   * @param preflight = false
    * @return H5::ErrorType
    */
   virtual H5::ErrorType readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader,
-                                      const std::optional<complex::DataObject::IdType>& parentId = {}) = 0;
+                                      const std::optional<complex::DataObject::IdType>& parentId = {}, bool preflight = false) = 0;
 
   // Copy and move constuctors / operators deleted
   IDataFactory(const IDataFactory& other) = delete;
