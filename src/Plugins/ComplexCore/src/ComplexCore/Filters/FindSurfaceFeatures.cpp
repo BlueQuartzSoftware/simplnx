@@ -6,7 +6,6 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
@@ -106,7 +105,7 @@ void findSurfaceFeatures3D(DataStructure& ds, const DataPath& featureGeometryPat
 {
   const ImageGeom& featureGeometry = ds.getDataRefAs<ImageGeom>(featureGeometryPathValue);
   const Int32Array& featureIds = ds.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
-  Int8Array& surfaceFeatures = ds.getDataRefAs<Int8Array>(surfaceFeaturesArrayPathValue);
+  BoolArray& surfaceFeatures = ds.getDataRefAs<BoolArray>(surfaceFeaturesArrayPathValue);
 
   usize xPoints = featureGeometry.getNumXPoints();
   usize yPoints = featureGeometry.getNumYPoints();
@@ -126,11 +125,11 @@ void findSurfaceFeatures3D(DataStructure& ds, const DataPath& featureGeometryPat
         }
 
         int32 gnum = featureIds[zStride + yStride + x];
-        if(gnum != 0 && surfaceFeatures[gnum] == 0)
+        if(gnum != 0 && !surfaceFeatures[gnum])
         {
           if(isPointASurfaceFeature(Point3D{x, y, z}, xPoints, yPoints, zPoints, markFeature0Neighbors, featureIds))
           {
-            surfaceFeatures[gnum] = 1;
+            surfaceFeatures[gnum] = true;
           }
         }
       }
@@ -143,7 +142,7 @@ void findSurfaceFeatures2D(DataStructure& ds, const DataPath& featureGeometryPat
 {
   const ImageGeom& featureGeometry = ds.getDataRefAs<ImageGeom>(featureGeometryPathValue);
   const Int32Array& featureIds = ds.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
-  Int8Array& surfaceFeatures = ds.getDataRefAs<Int8Array>(surfaceFeaturesArrayPathValue);
+  BoolArray& surfaceFeatures = ds.getDataRefAs<BoolArray>(surfaceFeaturesArrayPathValue);
 
   usize xPoints = 0;
   usize yPoints = 0;
@@ -278,8 +277,8 @@ Result<> FindSurfaceFeatures::executeImpl(DataStructure& dataStructure, const Ar
 
   // Resize the surface features array to the proper size
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
-  Int8Array& surfaceFeatures = dataStructure.getDataRefAs<Int8Array>(pSurfaceFeaturesArrayPathValue);
-  DataStore<int8>& surfaceFeaturesStore = surfaceFeatures.getIDataStoreRefAs<DataStore<int8>>();
+  BoolArray& surfaceFeatures = dataStructure.getDataRefAs<BoolArray>(pSurfaceFeaturesArrayPathValue);
+  DataStore<bool>& surfaceFeaturesStore = surfaceFeatures.getIDataStoreRefAs<DataStore<bool>>();
 
   usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
   usize maxFeature = featureIds[featureIdsMaxIdx];
