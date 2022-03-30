@@ -38,8 +38,6 @@ Select an install location (the example below uses `/Users/Shared/DREAM3DNX_SDK/
 mkdir -p /Users/Shared/DREAM3DNX_SDK/
 cd /Users/Shared/DREAM3DNX_SDK/
 git clone https://github.com/microsoft/vcpkg
-cd vcpkg
-./bootstrap-vcpkg.sh -disableMetrics
 export PATH=/Users/Shared/DREAM3DNX_SDK/vcpkg:$PATH
 ```
 
@@ -65,7 +63,7 @@ cd complex
 mkdir Release
 cd Release
 
-cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/local/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release -DVCPKG_MANIFEST_FEATURES="tests;parallel" ../../complex
+cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=C:/Applications/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release -DVCPKG_MANIFEST_FEATURES="tests;parallel" ../../complex
 ```
 
 Once the project is configured it should build using **ninja.exe**
