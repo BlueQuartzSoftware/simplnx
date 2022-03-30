@@ -134,6 +134,13 @@ TEST_CASE("FindNeighborListStatistics: Test Algorithm", "[FindNeighborListStatis
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
+  if(preflightResult.outputActions.invalid())
+  {
+    for(const auto& error : preflightResult.outputActions.errors())
+    {
+      std::cout << error.code << ": " << error.message << std::endl;
+    }
+  }
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
