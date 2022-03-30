@@ -51,7 +51,7 @@ public:
     T value = static_cast<T>(m_ComparisonValue);
     for(size_t i = 0; i < m_NumValues; ++i)
     {
-      m_Output[i] = (m_Input[i] > value) ;
+      m_Output[i] = (m_Input[i] > value);
     }
   }
 
@@ -65,7 +65,7 @@ public:
     T value = static_cast<T>(m_ComparisonValue);
     for(size_t i = 0; i < m_NumValues; ++i)
     {
-      m_Output[i] = (m_Input[i] == value) ;
+      m_Output[i] = (m_Input[i] == value);
     }
   }
 
@@ -79,7 +79,7 @@ public:
     T value = static_cast<T>(m_ComparisonValue);
     for(size_t i = 0; i < m_NumValues; ++i)
     {
-      m_Output[i] = (m_Input[i] != value) ;
+      m_Output[i] = (m_Input[i] != value);
     }
   }
 
@@ -198,7 +198,7 @@ void InsertThreshold(int64_t numItems, BoolArray& currentArray, complex::IArrayT
 
     if(complex::IArrayThreshold::UnionOperator::Or == unionOperator)
     {
-      (currentArray[i]  || newArrayPtr[i] ) ? currentArray[i] = true : currentArray[i] = false;
+      (currentArray[i] || newArrayPtr[i]) ? currentArray[i] = true : currentArray[i] = false;
     }
     else if(!currentArray[i] || !newArrayPtr[i])
     {
@@ -245,7 +245,10 @@ void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, DataStruct
   {
     if(inverse)
     {
-      std::for_each(tempResultVector.begin(), tempResultVector.end(), [](bool& n) { (!n ? n = true : n = false); });
+      for(size_t i = 0; i < tempResultVector.size(); i++)
+      {
+        tempResultVector[i] = !tempResultVector[i];
+      }
     }
     // copy the temp uint8 vector to the final uint8 result array
     for(size_t i = 0; i < totalTuples; i++)
@@ -307,7 +310,10 @@ void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, DataSt
   {
     if(inverse)
     {
-      std::for_each(tempResultVector.begin(), tempResultVector.end(), [](uint8_t& n) { (n == 0 ? n = 1 : n = 0); });
+      for(size_t i = 0; i < tempResultVector.size(); i++)
+      {
+        tempResultVector[i] = !tempResultVector[i];
+      }
     }
     // copy the temp uint8 vector to the final uint8 result array
     for(size_t i = 0; i < totalTuples; i++)
@@ -449,20 +455,19 @@ Result<> MultiThresholdObjects::executeImpl(DataStructure& dataStructure, const 
   bool firstValueFound = false;
 
   int32_t err = 0;
-  ArrayThresholdSet::CollectionType thresholds = thresholdsObject.getArrayThresholds();
-
-  for(const std::shared_ptr<IArrayThreshold>& threshold : thresholds)
+  ArrayThresholdSet::CollectionType thresholdSet = thresholdsObject.getArrayThresholds();
+  for(const std::shared_ptr<IArrayThreshold>& threshold : thresholdSet)
   {
     if(std::dynamic_pointer_cast<ArrayThresholdSet>(threshold))
     {
       std::shared_ptr<ArrayThresholdSet> comparisonSet = std::dynamic_pointer_cast<ArrayThresholdSet>(threshold);
-      ThresholdSet(comparisonSet, dataStructure, maskArrayPath, err, !firstValueFound, false);
+      ThresholdSet(comparisonSet, dataStructure, maskArrayPath, err, !firstValueFound, thresholdsObject.isInverted());
       firstValueFound = true;
     }
     else if(std::dynamic_pointer_cast<ArrayThreshold>(threshold))
     {
       std::shared_ptr<ArrayThreshold> comparisonValue = std::dynamic_pointer_cast<ArrayThreshold>(threshold);
-      ThresholdValue(comparisonValue, dataStructure, maskArrayPath, err, !firstValueFound, false);
+      ThresholdValue(comparisonValue, dataStructure, maskArrayPath, err, !firstValueFound, thresholdsObject.isInverted());
       firstValueFound = true;
     }
   }
