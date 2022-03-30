@@ -260,7 +260,7 @@ IFilter::PreflightResult FindSurfaceFeatures::preflightImpl(const DataStructure&
   std::vector<PreflightValue> preflightUpdatedValues;
 
   {
-    auto createSurfaceFeaturesAction = std::make_unique<CreateArrayAction>(DataType::int8, std::vector<usize>{1}, std::vector<usize>{1}, pSurfaceFeaturesArrayPathValue);
+    auto createSurfaceFeaturesAction = std::make_unique<CreateArrayAction>(DataType::boolean, std::vector<usize>{1}, std::vector<usize>{1}, pSurfaceFeaturesArrayPathValue);
     resultOutputActions.value().actions.push_back(std::move(createSurfaceFeaturesAction));
   }
 
