@@ -10,7 +10,7 @@
 namespace complex
 {
 
-class NeighborListSelectionParameter : public MutableDataParameter
+class COMPLEX_EXPORT NeighborListSelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
