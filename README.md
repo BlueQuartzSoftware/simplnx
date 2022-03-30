@@ -50,8 +50,8 @@ Within the folder DREAM3D-Dev clone both the `complex` and `DREAM3D_Data` reposi
 Create a location to keep the `complex` repositories and make builds. You can do either in-source our out-of-source builds.
 
 ```(lang-console)
-git clone --recursive https://git@github.com/bluequartzsoftware/complex
-git clone --recursive https://git@github.com:DREAM3D/DREAM3D_Data.git
+git clone --recursive https://github.com/bluequartzsoftware/complex
+git clone --recursive https://github.com/DREAM3D/DREAM3D_Data
 ```
 
 ## Configure complex with CMake (Windows & MSVC) ##
