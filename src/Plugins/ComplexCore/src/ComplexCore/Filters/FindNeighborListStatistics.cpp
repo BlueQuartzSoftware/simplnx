@@ -275,7 +275,7 @@ Parameters FindNeighborListStatistics::parameters() const
 {
   Parameters params;
   params.insert(
-      std::make_unique<NeighborListSelectionParameter>(k_InputArray_Key, "NeighborList to Compute Statistics", "Input Data Array to compute statistics", DataPath(), complex::k_AllDataTypes));
+      std::make_unique<NeighborListSelectionParameter>(k_InputArray_Key, "NeighborList to Compute Statistics", "Input Data Array to compute statistics", DataPath(), complex::GetAllDataTypes()));
 
   params.insert(std::make_unique<BoolParameter>(k_FindLength_Key, "Find Length", "Specifies whether or not the filter creates the Length array during calculations", true));
   params.insert(std::make_unique<BoolParameter>(k_FindMinimum_Key, "Find Minimum", "Specifies whether or not the filter creates the Minimum array during calculations", true));

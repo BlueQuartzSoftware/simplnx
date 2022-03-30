@@ -93,9 +93,9 @@ Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
   params.insert(
       std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath(), ArraySelectionParameter::AllowedTypes{complex::DataType::int8}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays", "Paths to vertex-related DataArrays that should be copied to the new geometry",
-                                                               std::vector<DataPath>{}, complex::k_AllDataTypes, true));
+                                                               std::vector<DataPath>{}, complex::GetAllDataTypes(), true));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyTrianglePaths_Key, "Copy Triangle Arrays", "Paths to face-related DataArrays that should be copied to the new geometry",
-                                                               std::vector<DataPath>{}, complex::k_AllDataTypes, true));
+                                                               std::vector<DataPath>{}, complex::GetAllDataTypes(), true));
   return params;
 }
 
