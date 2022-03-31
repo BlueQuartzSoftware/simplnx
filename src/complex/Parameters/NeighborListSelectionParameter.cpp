@@ -1,9 +1,8 @@
-#include "ArraySelectionParameter.hpp"
+#include "NeighborListSelectionParameter.hpp"
 
 #include "complex/Common/Any.hpp"
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/IDataArray.hpp"
 #include "complex/DataStructure/INeighborList.hpp"
 
 #include <fmt/core.h>
@@ -36,8 +35,8 @@ constexpr int32 k_Validate_AllowedType_Error = -206;
 
 namespace complex
 {
-ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
-                                                 bool allowEmpty)
+NeighborListSelectionParameter::NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
+                                                               const AllowedTypes& allowedTypes, bool allowEmpty)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
 , m_AllowEmpty(allowEmpty)
@@ -45,30 +44,30 @@ ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const 
 {
   if(allowedTypes.empty())
   {
-    throw std::runtime_error("ArraySelectionParameter REQUIRES a non-empty AllowedTypes variable. Please report this to the developer.");
+    throw std::runtime_error("NeighborListSelectionParameter REQUIRES a non-empty AllowedTypes variable. Please report this to the developer.");
   }
 }
 
-Uuid ArraySelectionParameter::uuid() const
+Uuid NeighborListSelectionParameter::uuid() const
 {
-  return ParameterTraits<ArraySelectionParameter>::uuid;
+  return ParameterTraits<NeighborListSelectionParameter>::uuid;
 }
 
-IParameter::AcceptedTypes ArraySelectionParameter::acceptedTypes() const
+IParameter::AcceptedTypes NeighborListSelectionParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
 
-nlohmann::json ArraySelectionParameter::toJson(const std::any& value) const
+nlohmann::json NeighborListSelectionParameter::toJson(const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
   nlohmann::json json = path.toString();
   return json;
 }
 
-Result<std::any> ArraySelectionParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> NeighborListSelectionParameter::fromJson(const nlohmann::json& json) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'ArraySelectionParameter' JSON Error: ";
+  static constexpr StringLiteral prefix = "FilterParameter 'NeighborListSelectionParameter' JSON Error: ";
   if(!json.is_string())
   {
     return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), name()));
@@ -86,34 +85,34 @@ Result<std::any> ArraySelectionParameter::fromJson(const nlohmann::json& json) c
   return {{std::move(*path)}};
 }
 
-IParameter::UniquePointer ArraySelectionParameter::clone() const
+IParameter::UniquePointer NeighborListSelectionParameter::clone() const
 {
-  return std::make_unique<ArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes, m_AllowEmpty);
+  return std::make_unique<NeighborListSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes, m_AllowEmpty);
 }
 
-std::any ArraySelectionParameter::defaultValue() const
+std::any NeighborListSelectionParameter::defaultValue() const
 {
   return defaultPath();
 }
 
-typename ArraySelectionParameter::ValueType ArraySelectionParameter::defaultPath() const
+typename NeighborListSelectionParameter::ValueType NeighborListSelectionParameter::defaultPath() const
 {
   return m_DefaultValue;
 }
 
-ArraySelectionParameter::AllowedTypes ArraySelectionParameter::allowedTypes() const
+NeighborListSelectionParameter::AllowedTypes NeighborListSelectionParameter::allowedTypes() const
 {
   return m_AllowedTypes;
 }
 
-Result<> ArraySelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
+Result<> NeighborListSelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
 
   return validatePath(dataStructure, path);
 }
 
-Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
+Result<> NeighborListSelectionParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
 {
   const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
 
@@ -132,26 +131,26 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
     return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const IDataArray* dataArray = dynamic_cast<const IDataArray*>(object);
-  if(dataArray == nullptr)
+  const INeighborList* neighborList = dynamic_cast<const INeighborList*>(object);
+  if(neighborList == nullptr)
   {
-    return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, value.toString()));
+    return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' is a neighbor list.", prefix, value.toString()));
   }
 
   if(!m_AllowedTypes.empty())
   {
-    DataType dataType = dataArray->getDataType();
+    DataType dataType = neighborList->getDataType();
     if(m_AllowedTypes.count(dataType) == 0)
     {
       return complex::MakeErrorResult(k_Validate_AllowedType_Error,
-                                      fmt::format("{}DataArray at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), dataType, m_AllowedTypes));
+                                      fmt::format("{}DataNeighborList at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), dataType, m_AllowedTypes));
     }
   }
 
   return {};
 }
 
-Result<std::any> ArraySelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
+Result<std::any> NeighborListSelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
   DataObject* object = dataStructure.getData(path);
