@@ -122,7 +122,7 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
 
   std::vector<size_t> cDims(1, 1);
 
-  const auto* maskArray = dataStructure.getDataAs<DataArray<uint8>>(maskArrayPath);
+  const auto* maskArray = dataStructure.getDataAs<BoolArray>(maskArrayPath);
   if(maskArray != nullptr)
   {
     dataArrayPaths.push_back(maskArrayPath);
@@ -173,7 +173,7 @@ Result<> RemoveFlaggedVertices::executeImpl(DataStructure& data, const Arguments
   auto reducedVertexPath = args.value<DataPath>(k_ReducedVertexPath_Key);
 
   VertexGeom& vertex = data.getDataRefAs<VertexGeom>(vertexGeomPath);
-  auto& mask = data.getDataRefAs<UInt8Array>(maskArrayPath);
+  auto& mask = data.getDataRefAs<BoolArray>(maskArrayPath);
 
   size_t numMaskTuples = mask.getSize();
   size_t trueCount = std::count(mask.begin(), mask.end(), true);

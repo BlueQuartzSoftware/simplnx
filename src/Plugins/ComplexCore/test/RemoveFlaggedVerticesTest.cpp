@@ -43,7 +43,7 @@ TEST_CASE("RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][RemoveFlaggedV
   Int32Array* slipVector = UnitTest::CreateTestDataArray<int32>(dataGraph, Constants::k_SlipVector, vertexTupleDims, vertexCompDims, vertexGeom->getId());
   Int32Array* featureIds = UnitTest::CreateTestDataArray<int32>(dataGraph, Constants::k_FeatureIds, vertexTupleDims, {1}, vertexGeom->getId());
 
-  UInt8Array* conditionalArray = UnitTest::CreateTestDataArray<uint8>(dataGraph, Constants::k_ConditionalArray, vertexTupleDims, {1}, vertexGeom->getId());
+  BoolArray* conditionalArray = UnitTest::CreateTestDataArray<bool>(dataGraph, Constants::k_ConditionalArray, vertexTupleDims, {1}, vertexGeom->getId());
   conditionalArray->fill(true);
   // initialize the coords just to have something other than 0.0
   // Set the first 25 values of the conditional array to false, thus keeping 75 vertices
