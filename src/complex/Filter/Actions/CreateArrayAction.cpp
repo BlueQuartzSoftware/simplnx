@@ -12,7 +12,7 @@ namespace complex
 {
 CreateArrayAction::CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path)
 : IDataCreationAction(path)
-, m_Type(static_cast<DataType>(type))
+, m_Type(type)
 , m_Dims(tDims)
 , m_CDims(cDims)
 {

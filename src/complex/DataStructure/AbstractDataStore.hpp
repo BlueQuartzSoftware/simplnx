@@ -144,6 +144,10 @@ public:
       {
         return true;
       }
+      if(!isValid() || !rhs.isValid())
+      {
+        return false;
+      }
       return (m_DataStore == rhs.m_DataStore) && (m_Index == rhs.m_Index);
     }
 
@@ -289,6 +293,10 @@ public:
       if(!isValid() && !rhs.isValid())
       {
         return true;
+      }
+      if(isValid() || rhs.isValid())
+      {
+        return false;
       }
       return (m_DataStore == rhs.m_DataStore) && (m_Index == rhs.m_Index);
     }
