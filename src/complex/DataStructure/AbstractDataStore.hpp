@@ -44,14 +44,17 @@ public:
     using pointer = T*;
     using reference = T&;
 
+    /**
+     * @brief Default iterator required for some standard library algorithm implementations.
+     */
     Iterator()
     : m_DataStore(nullptr)
     , m_Index(0)
     {
     }
 
-    Iterator(AbstractDataStore* dataStore, usize index)
-    : m_DataStore(dataStore)
+    Iterator(AbstractDataStore& dataStore, usize index)
+    : m_DataStore(&dataStore)
     , m_Index(index)
     {
     }
@@ -75,12 +78,12 @@ public:
 
     Iterator operator+(usize offset) const
     {
-      return Iterator(m_DataStore, m_Index + offset);
+      return Iterator(*m_DataStore, m_Index + offset);
     }
 
     Iterator operator-(usize offset) const
     {
-      return Iterator(m_DataStore, m_Index - offset);
+      return Iterator(*m_DataStore, m_Index - offset);
     }
 
     Iterator& operator+=(usize offset)
@@ -183,14 +186,17 @@ public:
     using pointer = const T*;
     using reference = const T&;
 
+    /**
+     * @brief Default iterator required for some standard library algorithm implementations.
+     */
     ConstIterator()
     : m_DataStore(nullptr)
     , m_Index(0)
     {
     }
 
-    ConstIterator(const AbstractDataStore* dataStore, usize index)
-    : m_DataStore(dataStore)
+    ConstIterator(const AbstractDataStore& dataStore, usize index)
+    : m_DataStore(&dataStore)
     , m_Index(index)
     {
     }
@@ -214,12 +220,12 @@ public:
 
     ConstIterator operator+(usize offset) const
     {
-      return ConstIterator(m_DataStore, m_Index + offset);
+      return ConstIterator(*m_DataStore, m_Index + offset);
     }
 
     ConstIterator operator-(usize offset) const
     {
-      return ConstIterator(m_DataStore, m_Index - offset);
+      return ConstIterator(*m_DataStore, m_Index - offset);
     }
 
     ConstIterator& operator+=(usize offset)
@@ -367,7 +373,7 @@ public:
    */
   Iterator begin()
   {
-    return Iterator(this, 0);
+    return Iterator(*this, 0);
   }
 
   /**
@@ -376,7 +382,7 @@ public:
    */
   Iterator end()
   {
-    return Iterator(this, getSize());
+    return Iterator(*this, getSize());
   }
 
   /**
@@ -385,7 +391,7 @@ public:
    */
   ConstIterator begin() const
   {
-    return ConstIterator(this, 0);
+    return ConstIterator(*this, 0);
   }
 
   /**
@@ -394,7 +400,7 @@ public:
    */
   ConstIterator end() const
   {
-    return ConstIterator(this, getSize());
+    return ConstIterator(*this, getSize());
   }
 
   /**

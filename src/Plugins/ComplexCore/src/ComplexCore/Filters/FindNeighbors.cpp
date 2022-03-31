@@ -15,10 +15,6 @@
 
 namespace complex
 {
-namespace
-{
-} // namespace
-
 std::string FindNeighbors::name() const
 {
   return FilterTraits<FindNeighbors>::name;
@@ -163,13 +159,13 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
   const auto imageGeomNumY = imageGeom.getNumYPoints();
   const auto imageGeomNumZ = imageGeom.getNumZPoints();
 
-  int64 dims[3] = {
+  std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),
       static_cast<int64>(udims[1]),
       static_cast<int64>(udims[2]),
   };
 
-  int64 neighpoints[6] = {0, 0, 0, 0, 0, 0};
+  std::array<int64, 6> neighpoints = {0, 0, 0, 0, 0, 0};
   neighpoints[0] = -dims[0] * dims[1];
   neighpoints[1] = -dims[0];
   neighpoints[2] = -1;
@@ -177,7 +173,9 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
   neighpoints[4] = dims[0];
   neighpoints[5] = dims[0] * dims[1];
 
-  int64 column = 0, row = 0, plane = 0;
+  int64 column = 0;
+  int64 row = 0;
+  int64 plane = 0;
   int32 feature = 0;
   int32 nnum = 0;
   int8 onsurf = 0;
@@ -314,7 +312,7 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
 
     for(const auto [neigh, number] : neighToCount)
     {
-      float area = float(number) * spacing[0] * spacing[1];
+      float area = static_cast<float>(number) * spacing[0] * spacing[1];
 
       // Push the neighbor feature id back onto the list so we stay synced up
       neighborlist[i].push_back(neigh);

@@ -11,14 +11,14 @@ using namespace complex;
 
 namespace
 {
-inline const std::string k_ImageGeomName = "Image Geom";
-inline const std::string k_FeatureIdsName = "Feature IDs";
-inline const std::string k_BoundaryCellsName = "Boundary Cells";
-inline const std::string k_NumNeighborsName = "Num Neighbors";
-inline const std::string k_NeighborListName = "Neighbor List";
-inline const std::string k_SharedSurfaceAreaName = "Shared Surface Area";
-inline const std::string k_SurfaceFeaturesName = "Surface Features";
-inline const std::vector<std::string> k_CellFeatureNames{"Array 1", "Array 2", "Array 3"};
+const std::string k_ImageGeomName = "Image Geom";
+const std::string k_FeatureIdsName = "Feature IDs";
+const std::string k_BoundaryCellsName = "Boundary Cells";
+const std::string k_NumNeighborsName = "Num Neighbors";
+const std::string k_NeighborListName = "Neighbor List";
+const std::string k_SharedSurfaceAreaName = "Shared Surface Area";
+const std::string k_SurfaceFeaturesName = "Surface Features";
+const std::vector<std::string> k_CellFeatureNames{"Array 1", "Array 2", "Array 3"};
 
 DataStructure createTestData()
 {
