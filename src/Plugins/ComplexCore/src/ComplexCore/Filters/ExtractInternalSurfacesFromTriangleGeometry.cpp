@@ -1,11 +1,5 @@
 #include "ExtractInternalSurfacesFromTriangleGeometry.hpp"
 
-#include <limits>
-#include <string>
-#include <unordered_map>
-
-#include "fmt/format.h"
-
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateTriangleGeomAction.hpp"
@@ -13,14 +7,17 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
+
+#include <limits>
+#include <unordered_map>
+
+#include "fmt/format.h"
 
 using namespace complex;
 
 namespace
 {
-constexpr complex::int32 k_EMPTY_PARAMETER = -350;
 constexpr complex::int32 k_MissingTrianglVerticesArray = -351;
 constexpr complex::int32 k_MissingTriangleFacesArray = -352;
 constexpr complex::int32 k_NoNodeTypesArray = -353;
@@ -175,7 +172,10 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
 
   // Create Geometry
   IDataStore::ShapeType geomShape = {1};
-  auto createInternalTrianglesAction = std::make_unique<CreateTriangleGeomAction>(internalTrianglesGeomPath, geomShape, CreateTriangleGeomAction::AdditionalData::VerticesTriangles);
+  auto createInternalTrianglesAction = std::make_unique<CreateTriangleGeomAction>(internalTrianglesGeomPath, geomShape,
+                                                                                  CreateTriangleGeomAction::AdditionalDataTypes{CreateTriangleGeomAction::AdditionalData::VerticesTriangles,
+                                                                                                                                CreateTriangleGeomAction::AdditionalData::CreateVertexGroup,
+                                                                                                                                CreateTriangleGeomAction::AdditionalData::CreateTriangleGroup});
   actions.actions.push_back(std::move(createInternalTrianglesAction));
 
   std::vector<usize> tDims(1, 0);
@@ -294,8 +294,6 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
     }
   }
 
-  std::cout << "Triangles Extracted Size: " << currentNewTriIndex << std::endl;
-  std::cout << "Vertex Max Index: " << currentNewVertIndex << std::endl;
   // Resize the vertex and triangle arrays
   internalTriangleGeom.resizeVertexList(currentNewVertIndex);
   internalTriangleGeom.resizeFaceList(currentNewTriIndex);
