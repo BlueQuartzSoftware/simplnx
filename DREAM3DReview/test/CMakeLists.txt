@@ -24,7 +24,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     DownsampleVertexGeometryTest.cpp
     EstablishFoamMorphologyTest.cpp
     ExportCLIFileTest.cpp
-    ExtractInternalSurfacesFromTriangleGeometryTest.cpp
     ExtractTripleLinesFromTriangleGeometryTest.cpp
     FFTHDFWriterFilterTest.cpp
     FindArrayStatisticsTest.cpp

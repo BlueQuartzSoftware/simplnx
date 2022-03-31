@@ -23,7 +23,6 @@ set(FilterList
   DownsampleVertexGeometry
   EstablishFoamMorphology
   ExportCLIFile
-  ExtractInternalSurfacesFromTriangleGeometry
   ExtractTripleLinesFromTriangleGeometry
   FFTHDFWriterFilter
   FindArrayStatistics
