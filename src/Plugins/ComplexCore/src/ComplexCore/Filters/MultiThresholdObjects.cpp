@@ -245,10 +245,7 @@ void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, DataStruct
   {
     if(inverse)
     {
-      for(size_t i = 0; i < tempResultVector.size(); i++)
-      {
-        tempResultVector[i] = !tempResultVector[i];
-      }
+      tempResultVector.flip();
     }
     // copy the temp uint8 vector to the final uint8 result array
     for(size_t i = 0; i < totalTuples; i++)
