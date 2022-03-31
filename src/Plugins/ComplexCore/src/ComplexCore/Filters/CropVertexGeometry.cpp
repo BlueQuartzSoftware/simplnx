@@ -70,7 +70,7 @@ Parameters CropVertexGeometry::parameters() const
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CroppedGeom_Key, "Cropped Vertex Geometry", "Created VertexGeom path", DataPath{}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MinPos_Key, "Min Pos", "Minimum vertex position", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MaxPos_Key, "Max Pos", "Maximum vertex position", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_TargetArrayPaths_Key, "Crop Arrays", "", std::vector<DataPath>()));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_TargetArrayPaths_Key, "Vertex Data Arrays to crop", "", std::vector<DataPath>(), complex::GetAllDataTypes()));
   params.insert(std::make_unique<StringParameter>(k_CroppedGroupName_Key, "Cropped Group Name", "", "Cropped Data"));
   return params;
 }

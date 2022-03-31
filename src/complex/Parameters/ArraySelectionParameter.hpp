@@ -1,7 +1,7 @@
 #pragma once
 
+#include <set>
 #include <string>
-#include <unordered_set>
 
 #include "complex/Filter/MutableDataParameter.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
@@ -17,11 +17,10 @@ class COMPLEX_EXPORT ArraySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
-  using AllowedTypes = std::unordered_set<DataType>;
+  using AllowedTypes = std::set<DataType>;
 
   ArraySelectionParameter() = delete;
-  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty = false,
-                          const AllowedTypes& allowedTypes = {});
+  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes, bool allowEmpty = false);
   ~ArraySelectionParameter() override = default;
 
   ArraySelectionParameter(const ArraySelectionParameter&) = delete;

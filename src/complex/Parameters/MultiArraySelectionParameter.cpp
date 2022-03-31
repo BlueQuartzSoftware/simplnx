@@ -8,9 +8,12 @@
 
 namespace complex
 {
-MultiArraySelectionParameter::MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+MultiArraySelectionParameter::MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
+                                                           const AllowedTypes& allowedTypes, bool allowEmpty)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
+, m_AllowEmpty(allowEmpty)
+, m_AllowedTypes(allowedTypes)
 {
 }
 
@@ -73,7 +76,7 @@ Result<std::any> MultiArraySelectionParameter::fromJson(const nlohmann::json& js
 
 IParameter::UniquePointer MultiArraySelectionParameter::clone() const
 {
-  return std::make_unique<MultiArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue);
+  return std::make_unique<MultiArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes, m_AllowEmpty);
 }
 
 std::any MultiArraySelectionParameter::defaultValue() const
@@ -84,6 +87,11 @@ std::any MultiArraySelectionParameter::defaultValue() const
 typename MultiArraySelectionParameter::ValueType MultiArraySelectionParameter::defaultPath() const
 {
   return m_DefaultValue;
+}
+
+MultiArraySelectionParameter::AllowedTypes MultiArraySelectionParameter::allowedTypes() const
+{
+  return m_AllowedTypes;
 }
 
 Result<> MultiArraySelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const

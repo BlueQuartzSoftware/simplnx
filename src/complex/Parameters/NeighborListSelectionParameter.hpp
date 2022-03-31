@@ -3,33 +3,29 @@
 #include <set>
 #include <string>
 
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "complex/Filter/MutableDataParameter.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
-/**
- * @brief This Filter Parameter describes a specific DataPath where the last DataObject in
- * the path is a geometry of the specified type.
- */
-class COMPLEX_EXPORT GeometrySelectionParameter : public MutableDataParameter
+
+class COMPLEX_EXPORT NeighborListSelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
-  using AllowedType = AbstractGeometry::Type;
-  using AllowedTypes = std::set<AllowedType>;
+  using AllowedTypes = std::set<DataType>;
 
-  GeometrySelectionParameter() = delete;
-  GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes);
-  ~GeometrySelectionParameter() override = default;
+  NeighborListSelectionParameter() = delete;
+  NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
+                                 bool allowEmpty = false);
+  ~NeighborListSelectionParameter() override = default;
 
-  GeometrySelectionParameter(const GeometrySelectionParameter&) = delete;
-  GeometrySelectionParameter(GeometrySelectionParameter&&) noexcept = delete;
+  NeighborListSelectionParameter(const NeighborListSelectionParameter&) = delete;
+  NeighborListSelectionParameter(NeighborListSelectionParameter&&) noexcept = delete;
 
-  GeometrySelectionParameter& operator=(const GeometrySelectionParameter&) = delete;
-  GeometrySelectionParameter& operator=(GeometrySelectionParameter&&) noexcept = delete;
+  NeighborListSelectionParameter& operator=(const NeighborListSelectionParameter&) = delete;
+  NeighborListSelectionParameter& operator=(NeighborListSelectionParameter&&) noexcept = delete;
 
   /**
    * @brief Returns the parameter's uuid.
@@ -70,16 +66,16 @@ public:
   std::any defaultValue() const override;
 
   /**
-   * @brief Returns the default path.
+   * @brief
    * @return
    */
-  const ValueType& defaultPath() const;
+  ValueType defaultPath() const;
 
   /**
-   * @brief Returns the list of allowed DataObject types.
+   * @brief Returns the set of allowed DataArray types. An empty set means all are allowed.
    * @return
    */
-  const AllowedTypes& allowedTypes() const;
+  AllowedTypes allowedTypes() const;
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
@@ -108,8 +104,10 @@ public:
 
 private:
   ValueType m_DefaultValue = {};
-  AllowedTypes m_AllowedTypes = {AbstractGeometry::Type::Any};
+  bool m_AllowEmpty = false;
+  AllowedTypes m_AllowedTypes = {};
 };
+
 } // namespace complex
 
-COMPLEX_DEF_PARAMETER_TRAITS(complex::GeometrySelectionParameter, "3804cd7f-4ee4-400f-80ad-c5af17735de2");
+COMPLEX_DEF_PARAMETER_TRAITS(complex::NeighborListSelectionParameter, "ab0b7a7f-f9ab-4e6f-99b5-610e7b69fc5b");

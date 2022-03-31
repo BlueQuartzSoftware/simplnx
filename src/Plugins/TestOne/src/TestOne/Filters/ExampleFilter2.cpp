@@ -74,9 +74,10 @@ Parameters ExampleFilter2::parameters() const
   // These should show up under the "Required Objects" Section in the GUI
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_Param9, "DataGroupSelectionParameter", "Example data group selection help text", DataPath{}));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_Param10, "DataPathSelectionParameter", "Example data path selection help text", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_Param6, "Array Selection", "Example array selection help text", ArraySelectionParameter::ValueType{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_Param6, "Array Selection", "Example array selection help text", ArraySelectionParameter::ValueType{}, complex::GetAllDataTypes()));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_Param11, "GeometrySelectionParameter", "Example geometry selection help text", DataPath{}, GeometrySelectionParameter::AllowedTypes{}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_Param12, "MultiArraySelectionParameter", "Example multiarray selection help text", MultiArraySelectionParameter::ValueType{}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_Param12, "MultiArraySelectionParameter", "Example multiarray selection help text", MultiArraySelectionParameter::ValueType{},
+                                                               complex::GetAllDataTypes()));
 
   // These should show up under the "Created Objects" section in the GUI
   params.insert(std::make_unique<DataGroupCreationParameter>(k_Param8, "DataGroupCreationParameter", "Example data group creation help text", DataPath{}));

@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <set>
 
 namespace complex
 {
@@ -66,5 +67,27 @@ enum class FaultState
   Warnings = 1,
   Errors = 2
 };
+
+inline const std::set<DataType>& GetAllDataTypes()
+{
+  static const std::set<DataType> dataTypes = {complex::DataType::int8,    complex::DataType::uint8,   complex::DataType::int16,  complex::DataType::uint16,
+                                               complex::DataType::int32,   complex::DataType::uint32,  complex::DataType::int64,  complex::DataType::uint64,
+                                               complex::DataType::float32, complex::DataType::float64, complex::DataType::boolean};
+  return dataTypes;
+}
+
+inline const std::set<DataType>& GetAllNumericTypes()
+{
+  static const std::set<DataType> dataTypes = {complex::DataType::int8,   complex::DataType::uint8, complex::DataType::int16,  complex::DataType::uint16,  complex::DataType::int32,
+                                               complex::DataType::uint32, complex::DataType::int64, complex::DataType::uint64, complex::DataType::float32, complex::DataType::float64};
+  return dataTypes;
+}
+
+inline const std::set<DataType>& GetIntegerDataTypes()
+{
+  static const std::set<DataType> dataTypes = {complex::DataType::int8,  complex::DataType::uint8,  complex::DataType::int16, complex::DataType::uint16,
+                                               complex::DataType::int32, complex::DataType::uint32, complex::DataType::int64, complex::DataType::uint64};
+  return dataTypes;
+}
 
 } // namespace complex
