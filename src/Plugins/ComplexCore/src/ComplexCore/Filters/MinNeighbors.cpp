@@ -280,10 +280,10 @@ Parameters MinNeighbors::parameters() const
   params.insert(std::make_unique<UInt64Parameter>(k_MinNumNeighbors_Key, "Minimum Number Neighbors", "", 0));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplyToSinglePhase_Key, "Apply to Single Phase Only", "", true));
   params.insert(std::make_unique<UInt64Parameter>(k_PhaseNumber_Key, "Phase Index", "", 0));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "", DataPath{}, false, ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhases_Key, "Feature Phases", "", DataPath{}, true, ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_NumNeighbors_Key, "Number of Neighbors", "", DataPath{}, false, ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_VoxelArrays_Key, "Voxel Arrays", "", std::vector<DataPath>{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhases_Key, "Feature Phases", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, true));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_NumNeighbors_Key, "Number of Neighbors", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, false));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_VoxelArrays_Key, "Voxel Arrays", "", std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{}));
 
   params.linkParameters(k_ApplyToSinglePhase_Key, k_PhaseNumber_Key, std::make_any<bool>(true));
   params.linkParameters(k_ApplyToSinglePhase_Key, k_FeaturePhases_Key, std::make_any<bool>(false));
