@@ -43,7 +43,6 @@ set(FilterList
   #MultiThresholdObjects2 # MISSING 1 or more Parameter Implementations
   #PipelineAnnotation # MISSING 1 or more Parameter Implementations
   PostSlackMessage
-  RawBinaryReader
   #ReadASCIIData # MISSING 1 or more Parameter Implementations
   #RemoveArrays # MISSING 1 or more Parameter Implementations
   RemoveComponentFromArray
