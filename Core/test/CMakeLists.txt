@@ -44,7 +44,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     #MultiThresholdObjects2Test.cpp    # MISSING 1 or more Parameter Implementations
     #PipelineAnnotationTest.cpp    # MISSING 1 or more Parameter Implementations
     PostSlackMessageTest.cpp
-    RawBinaryReaderTest.cpp
     #ReadASCIIDataTest.cpp    # MISSING 1 or more Parameter Implementations
     #RemoveArraysTest.cpp    # MISSING 1 or more Parameter Implementations
     RemoveComponentFromArrayTest.cpp
