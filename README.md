@@ -25,7 +25,7 @@ Clone the vcpkg repository into a location that it will be used from. inside you
 
 ```(lang-console)
 cd C:/Users/[USERNAME]/Applications
-git clone ssh://git@github.com/microsoft/vcpkg
+git clone https://www.github.com/microsoft/vcpkg
 ```
 
 The `bootstrap-vcpkg.bat` file should be run automatically by CMake the first time. This will create the `vcpkg.exe` file. Additionally CMake should automatically find `vcpkg.exe`. If CMake does not find it, you may need to add it to your `PATH` variable.
