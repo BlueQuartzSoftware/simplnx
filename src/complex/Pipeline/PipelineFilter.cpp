@@ -489,13 +489,18 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
     return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-2, fmt::format("Filter JSON does not contain key '{}'", k_FilterUuidKey.view()));
   }
 
-  const auto& uuidObject = filterObject[k_FilterUuidKey];
+  const auto& filterNameObject = filterObject[k_FilterNameKey];
+  if(!filterNameObject.is_string())
+  {
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-7, "'name' json value is not a string");
+  }
 
+  const auto& uuidObject = filterObject[k_FilterUuidKey];
   if(!uuidObject.is_string())
   {
     return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-3, "UUID value is not a string");
   }
-
+  auto filterName = filterNameObject.get<std::string>();
   auto uuidString = uuidObject.get<std::string>();
   std::optional<Uuid> uuid = Uuid::FromString(uuidString);
   if(!uuid.has_value())
@@ -505,7 +510,7 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
   IFilter::UniquePointer filter = filterList.createFilter(*uuid);
   if(filter == nullptr)
   {
-    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-5, fmt::format("Failed to create filter with UUID '{}'", uuidString));
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-5, fmt::format("Failed to create filter '{}' from UUID '{}'", filterName, uuidString));
   }
 
   if(!json.contains(k_ArgsKey.view()))
