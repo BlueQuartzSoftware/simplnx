@@ -267,6 +267,7 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds, const std::atomi
   // Send notification that the pipeline is executing
   sendPipelineRunStateMessage(RunState::Executing);
   size_t currentIndex = 0;
+  // Send notifications that all the filters in the pipeline are queued up
   for(auto iter = begin() + index; iter != end(); iter++)
   {
     auto* filter = iter->get();
@@ -277,6 +278,7 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds, const std::atomi
   }
 
   clearFaultState();
+  // Loop over each filter and execute the filter.
   for(auto iter = begin() + index; iter != end(); iter++)
   {
     auto* filter = iter->get();
@@ -285,12 +287,13 @@ bool Pipeline::executeFrom(index_type index, DataStructure& ds, const std::atomi
       continue;
     }
 
+    bool success = filter->execute(ds, shouldCancel);
+    // Check if the filter was cancelled, and send out signal if it was.
     if(shouldCancel)
     {
       sendCancelledMessage();
       break;
     }
-    bool success = filter->execute(ds, shouldCancel);
 
     setHasWarnings(filter->hasWarnings());
     if(!success)
