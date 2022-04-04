@@ -67,7 +67,7 @@ public:
    * provided, a default name of "Unnamed Pipeline" will be used.
    * @param name = "Unnamed Pipeline"
    */
-  Pipeline(const std::string& name = "Unnamed Pipeline", FilterList* filterList = nullptr);
+  Pipeline(const std::string& name = "Untitled Pipeline", FilterList* filterList = nullptr);
 
   /**
    * @brief Creates a copy of the specified Pipeline.
