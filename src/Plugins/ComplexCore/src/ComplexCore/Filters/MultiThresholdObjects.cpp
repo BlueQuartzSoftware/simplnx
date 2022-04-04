@@ -198,7 +198,7 @@ void InsertThreshold(int64_t numItems, BoolArray& currentArray, complex::IArrayT
 
     if(complex::IArrayThreshold::UnionOperator::Or == unionOperator)
     {
-      (currentArray[i] || newArrayPtr[i]) ? currentArray[i] = true : currentArray[i] = false;
+      currentArray[i] = currentArray[i] || newArrayPtr[i];
     }
     else if(!currentArray[i] || !newArrayPtr[i])
     {
