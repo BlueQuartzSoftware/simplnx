@@ -147,6 +147,10 @@ bool DataObject::canRename(const std::string& name) const
   }
 
   auto dataStruct = getDataStructure();
+  if(dataStruct == nullptr)
+  {
+    return false;
+  }
   return !std::any_of(m_ParentList.cbegin(), m_ParentList.cend(), [dataStruct, name](IdType parentId) { return dataStruct->getDataAs<BaseGroup>(parentId)->contains(name); });
 }
 
