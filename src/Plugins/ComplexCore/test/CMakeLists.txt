@@ -22,6 +22,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindDifferencesMapTest.cpp
   FindFeaturePhasesFilterTest.cpp
   FindNeighborListStatisticsTest.cpp
+  FindNeighborsTest.cpp
   FindSurfaceFeaturesTest.cpp
   IdentifySampleTest.cpp
   IterativeClosestPointTest.cpp

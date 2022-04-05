@@ -26,31 +26,31 @@ public:
    * @brief Applies this action's change to the given DataStructure in the given mode.
    * Returns any warnings/errors. On error, DataStructure is not guaranteed to be consistent.
    * @param dataStructure
-   * @return
+   * @return Result<>
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
   /**
    * @brief Returns the DataType of the DataArray to be created.
-   * @return
+   * @return DataType
    */
   DataType type() const;
 
   /**
    * @brief Returns the dimensions of the DataArray to be created.
-   * @return
+   * @return const std::vector<usize>&
    */
   const std::vector<usize>& dims() const;
 
   /**
    * @brief Returns the component dimensions of the DataArray to be created.
-   * @return
+   * @return const std::vector<usize>&
    */
   const std::vector<usize>& componentDims() const;
 
   /**
    * @brief Returns the path of the DataArray to be created.
-   * @return DataPath
+   * @return const DataPath&
    */
   DataPath path() const;
 
