@@ -38,6 +38,7 @@ set(FilterList
   LaplacianSmoothingFilter
   LinkGeometryDataFilter
   MapPointCloudToRegularGridFilter
+  MinNeighbors
   MultiThresholdObjects
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
