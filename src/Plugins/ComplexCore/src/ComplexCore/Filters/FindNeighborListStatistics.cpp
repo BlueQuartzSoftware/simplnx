@@ -1,12 +1,14 @@
 #include "FindNeighborListStatistics.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/INeighborList.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/NeighborListSelectionParameter.hpp"
 #include "complex/Utilities/Math/StatisticsCalculations.hpp"
+#include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 namespace complex
 {
@@ -23,7 +25,7 @@ class FindNeighborListStatisticsImpl
 public:
   using NeighborListType = NeighborList<T>;
 
-  FindNeighborListStatisticsImpl(const IFilter* filter, NeighborListType& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
+  FindNeighborListStatisticsImpl(const IFilter* filter, INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
                                  std::vector<IDataArray*>& arrays)
   : m_Filter(filter)
   , m_Source(source)
@@ -42,79 +44,97 @@ public:
 
   void compute(usize start, usize end) const
   {
+
+    using DataArrayType = DataArray<T>;
+
+    auto* array0 = dynamic_cast<DataArray<uint64_t>*>(m_Arrays[0]);
+    if(m_Length && array0 == nullptr)
+    {
+      throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'Length' array to needed type. Check input array selection.");
+    }
+    auto* array1 = dynamic_cast<DataArrayType*>(m_Arrays[1]);
+    if(m_Min && array1 == nullptr)
+    {
+      throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'Min' array to needed type. Check input array selection.");
+    }
+    auto* array2 = dynamic_cast<DataArrayType*>(m_Arrays[2]);
+    if(m_Max && array2 == nullptr)
+    {
+      throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'Max' array to needed type. Check input array selection.");
+    }
+    auto* array3 = dynamic_cast<Float32Array*>(m_Arrays[3]);
+    if(m_Mean && array3 == nullptr)
+    {
+      throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'Mean' array to needed type. Check input array selection.");
+    }
+    auto* array4 = dynamic_cast<Float32Array*>(m_Arrays[4]);
+    if(m_Median && array4 == nullptr)
+    {
+      throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'Median' array to needed type. Check input array selection.");
+    }
+    auto* array5 = dynamic_cast<Float32Array*>(m_Arrays[5]);
+    if(m_StdDeviation && array5 == nullptr)
+    {
+      throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'StdDev' array to needed type. Check input array selection.");
+    }
+    auto* array6 = dynamic_cast<Float32Array*>(m_Arrays[6]);
+    if(m_Summation && array6 == nullptr)
+    {
+      throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'Summation' array to needed type. Check input array selection.");
+    }
+
+    NeighborListType& sourceList = dynamic_cast<NeighborListType&>(m_Source);
+
     for(usize i = start; i < end; i++)
     {
-      std::vector<T>& tmpList = m_Source[i];
+      std::vector<T>& tmpList = sourceList[i];
 
       if(m_Length)
       {
-        if(auto* array = dynamic_cast<DataArray<usize>*>(m_Arrays[0]))
-        {
-          int64_t val = static_cast<int64_t>(tmpList.size());
-          array->initializeTuple(i, val);
-        }
+        int64_t val = static_cast<int64_t>(tmpList.size());
+        array0->initializeTuple(i, val);
       }
       if(m_Min)
       {
-        if(auto* array = dynamic_cast<DataArray<T>*>(m_Arrays[1]))
-        {
-          T val = StaticicsCalculations::findMin(tmpList);
-          array->initializeTuple(i, val);
-        }
+        T val = StaticicsCalculations::findMin(tmpList);
+        array1->initializeTuple(i, val);
       }
       if(m_Max)
       {
-        if(auto* array = dynamic_cast<DataArray<T>*>(m_Arrays[2]))
-        {
-          T val = StaticicsCalculations::findMax(tmpList);
-          array->initializeTuple(i, val);
-        }
+        T val = StaticicsCalculations::findMax(tmpList);
+        array2->initializeTuple(i, val);
       }
       if(m_Mean)
       {
-        if(auto* array = dynamic_cast<Float32Array*>(m_Arrays[3]))
-        {
-          float val = StaticicsCalculations::findMean(tmpList);
-          array->initializeTuple(i, val);
-        }
+        float val = StaticicsCalculations::findMean(tmpList);
+        array3->initializeTuple(i, val);
       }
       if(m_Median)
       {
-        if(auto* array = dynamic_cast<Float32Array*>(m_Arrays[4]))
-        {
-          float val = StaticicsCalculations::findMedian(tmpList);
-          array->initializeTuple(i, val);
-        }
+        float val = StaticicsCalculations::findMedian(tmpList);
+        array4->initializeTuple(i, val);
       }
       if(m_StdDeviation)
       {
-        if(auto* array = dynamic_cast<Float32Array*>(m_Arrays[5]))
-        {
-          float val = StaticicsCalculations::findStdDeviation(tmpList);
-          array->initializeTuple(i, val);
-        }
+        float val = StaticicsCalculations::findStdDeviation(tmpList);
+        array5->initializeTuple(i, val);
       }
       if(m_Summation)
       {
-        if(auto* array = dynamic_cast<Float32Array*>(m_Arrays[6]))
-        {
-          float val = StaticicsCalculations::findSummation(tmpList);
-          array->initializeTuple(i, val);
-        }
+        float val = StaticicsCalculations::findSummation(tmpList);
+        array6->initializeTuple(i, val);
       }
     }
   }
 
-#if 0
-  void operator()(const SIMPLRange& range) const
+  void operator()(const ComplexRange& range) const
   {
     compute(range.min(), range.max());
   }
-#endif
 
 private:
   const IFilter* m_Filter = nullptr;
-  NeighborListType& m_Source;
+  INeighborList& m_Source;
   bool m_Length = false;
   bool m_Min = false;
   bool m_Max = false;
@@ -130,16 +150,10 @@ template <typename DataType>
 void findStatisticsImpl(const IFilter* filter, INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation, std::vector<IDataArray*>& arrays)
 {
   usize numTuples = source.getNumberOfTuples();
-  auto sourceList = dynamic_cast<NeighborList<DataType>&>(source);
-  FindNeighborListStatisticsImpl<DataType> algorithm(filter, sourceList, length, min, max, mean, median, stdDeviation, summation, arrays);
-  algorithm.compute(0, numTuples - 1);
-
-#if 0
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, numTuples);
-  dataAlg.execute(FindNeighborListStatisticsImpl<T>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays));
-#endif
+  dataAlg.execute(FindNeighborListStatisticsImpl<DataType>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays));
 }
 
 void findStatistics(const IFilter* filter, INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation, std::vector<IDataArray*>& arrays)
