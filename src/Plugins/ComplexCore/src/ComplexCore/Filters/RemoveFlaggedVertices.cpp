@@ -111,16 +111,18 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
     std::string errorMsg = fmt::format("Vertex Geometry not found at path: '{}'", vertexGeomPath.toString());
     return {MakeErrorResult<OutputActions>(::k_VertexGeomNotFound, errorMsg)};
   }
-  if(vertex->getVertices() == nullptr)
+  auto verticesId = vertex->getVerticesId();
+  auto* verticesArray = dataStructure.getDataAs<Float32Array>(verticesId);
+  if(verticesArray == nullptr)
   {
     std::string errorMsg = fmt::format("Vertex Geometry does not have a vertex list");
     return {MakeErrorResult<OutputActions>(::k_VertexGeomNotFound, errorMsg)};
   }
-  dataArrayPaths.push_back(vertex->getVertices()->getDataPaths()[0]);
+  // dataArrayPaths.push_back(verticesArray->getDataPaths()[0]);
 
   std::vector<size_t> cDims(1, 1);
 
-  const auto* maskArray = dataStructure.getDataAs<DataArray<bool>>(maskArrayPath);
+  const auto* maskArray = dataStructure.getDataAs<BoolArray>(maskArrayPath);
   if(maskArray != nullptr)
   {
     dataArrayPaths.push_back(maskArrayPath);
