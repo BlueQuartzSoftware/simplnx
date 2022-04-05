@@ -318,9 +318,81 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Manual", "[ComplexCo
   herr_t err = dataGraph.writeHdf5(fileWriter);
   REQUIRE(err >= 0);
 }
-// TODO: Add 1 more test for Precomputed Matrix
 
-// 0,0,1,45
-// 100,100,100
-// 2,3,4
-// dynamicTable{{{-1.0, 0, 0, 0}, {0, 1.0, 0, 0}, {0, 0, 1.0, 0}, {0, 0, 0, 1.0}},
+TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Precomputed", "[ComplexCore][ApplyTransformationToGeometryFilter]")
+{
+  DataStructure dataGraph;
+  ReadSTLFile(dataGraph);
+  DataPath geometryPath = DataPath({triangleGeometryName});
+
+  {
+    ApplyTransformationToGeometryFilter filter;
+    Arguments args;
+    std::string triangleAreasName = "Triangle Areas";
+    std::string precomputedName = "Precomputed Matrix";
+
+    std::vector<size_t> tupleShape = {4, 4};
+    std::vector<size_t> componentShape = {1};
+    size_t i = 0;
+    Float32Array* precomputedData = complex::UnitTest::CreateTestDataArray<float32>(dataGraph, precomputedName, tupleShape, componentShape, 0);
+    (*precomputedData)[i++] = -1.0F;
+    (*precomputedData)[i++] = 0.0F;
+    (*precomputedData)[i++] = 0.0F;
+    (*precomputedData)[i++] = 0.0F;
+
+    (*precomputedData)[i++] = 0.0F;
+    (*precomputedData)[i++] = 1.0F;
+    (*precomputedData)[i++] = 0.0F;
+    (*precomputedData)[i++] = 0.0F;
+
+    (*precomputedData)[i++] = 0.0F;
+    (*precomputedData)[i++] = 0.0F;
+    (*precomputedData)[i++] = 1.0F;
+    (*precomputedData)[i++] = 0.0F;
+
+    (*precomputedData)[i++] = 0.0F;
+    (*precomputedData)[i++] = 0.0F;
+    (*precomputedData)[i++] = 0.0F;
+    (*precomputedData)[i++] = 1.0F;
+
+    // Create default Parameters for the filter.
+    DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleAreasName);
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_GeometryToTransform_Key, std::make_any<DataPath>(geometryPath));
+
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformType_Key, std::make_any<complex::ChoicesParameter::ValueType>(1));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, std::make_any<DataPath>({precomputedName}));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataGraph, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataGraph, args);
+    REQUIRE(executeResult.result.valid());
+
+    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
+    REQUIRE(triangleGeom.getNumberOfFaces() == 92);
+    REQUIRE(triangleGeom.getNumberOfVertices() == 48);
+  }
+  // Validate the output data
+  {
+    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
+    REQUIRE(triangleGeom.getNumberOfVertices() == 48);
+    Float32Array* vertices = triangleGeom.getVertices();
+    bool verticesEqual = true;
+    for(size_t eIdx = 0; eIdx < vertices->getSize(); eIdx++)
+    {
+      if(fabsf((*vertices)[eIdx] - ::s_ManualVertices[eIdx]) > 0.0001F)
+      {
+        verticesEqual = false;
+        break;
+      }
+    }
+    REQUIRE(verticesEqual);
+  }
+  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_precomputed.dream3d", unit_test::k_BinaryDir));
+  H5::FileWriter fileWriter = std::move(result.value());
+
+  herr_t err = dataGraph.writeHdf5(fileWriter);
+  REQUIRE(err >= 0);
+}

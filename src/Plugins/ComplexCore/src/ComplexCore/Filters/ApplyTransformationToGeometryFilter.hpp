@@ -24,13 +24,14 @@ public:
   ApplyTransformationToGeometryFilter& operator=(ApplyTransformationToGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_GeometryToTransform_Key = "GeometryToTransform";
+
   static inline constexpr StringLiteral k_TransformType_Key = "TransformationType";
   static inline constexpr StringLiteral k_ManualTransformationMatrix_Key = "ManualTransformationMatrix";
 
   static inline constexpr StringLiteral k_RotationAxisAngle_Key = "RotationAxisAngle";
   static inline constexpr StringLiteral k_Translation_Key = "Translation";
   static inline constexpr StringLiteral k_Scale_Key = "Scale";
-  static inline constexpr StringLiteral k_GeometryToTransform_Key = "GeometryToTransform";
   static inline constexpr StringLiteral k_ComputedTransformationMatrix_Key = "ComputedTransformationMatrix";
 
   /**
