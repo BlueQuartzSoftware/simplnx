@@ -179,4 +179,3 @@ void ApplyTransformationToGeometry::applyTransformation()
   dataAlg.setRange(0, m_TotalElements);
   dataAlg.execute(ApplyTransformationToGeometryImpl(*this, m_InputValues->transformationMatrix, vertexList, m_ShouldCancel));
 }
-

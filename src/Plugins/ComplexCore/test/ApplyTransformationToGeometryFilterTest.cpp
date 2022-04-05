@@ -13,6 +13,7 @@
 #include "ComplexCore/Filters/ApplyTransformationToGeometryFilter.hpp"
 #include "ComplexCore/Filters/StlFileReaderFilter.hpp"
 
+#include <cmath>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -24,7 +25,7 @@ using namespace complex::Constants;
 
 namespace
 {
-static const std::vector<float> s_ManualVertices = {
+const std::vector<float> s_ManualVertices = {
     0.00000,    19.00000, 3.20000,  -40.35763,  19.00000, 3.20000,  0.00000,    19.00000, 0.00000,  -40.35763,  19.00000, 0.00000,  0.00000,    0.00000,  3.20000,  0.00000,    0.00000,  -0.00000,
     -40.35763,  0.00000,  3.20000,  -40.35763,  0.00000,  -0.00000, -45.55068,  1.30760,  -0.00000, -45.55068,  1.30760,  3.20000,  -50.82293,  2.24626,  -0.00000, -50.82293,  2.24626,  3.20000,
     -56.14818,  2.81133,  -0.00000, -56.14818,  2.81133,  3.20000,  -61.50000,  3.00000,  -0.00000, -61.50000,  3.00000,  3.20000,  -118.50000, 3.00000,  3.20000,  -118.50000, 3.00000,  -0.00000,
@@ -34,7 +35,7 @@ static const std::vector<float> s_ManualVertices = {
     -123.85180, 16.18867, -0.00000, -123.85180, 16.18867, 3.20000,  -118.50000, 16.00000, -0.00000, -118.50000, 16.00000, 3.20000,  -61.50000,  16.00000, 3.20000,  -61.50000,  16.00000, -0.00000,
     -56.14818,  16.18867, -0.00000, -56.14818,  16.18867, 3.20000,  -50.82293,  16.75374, -0.00000, -50.82293,  16.75374, 3.20000,  -45.55068,  17.69240, -0.00000, -45.55068,  17.69240, 3.20000};
 
-static const std::vector<float> s_RotationVertices = {
+const std::vector<float> s_RotationVertices = {
     -13.43503, 13.43503,  3.20000,  15.10213, 41.97218,  3.20000,  -13.43503, 13.43503,  0.00000,  15.10213,  41.97218,  0.00000,  0.00000,   0.00000,   3.20000,  0.00000,   0.00000,   -0.00000,
     28.53716,  28.53716,  3.20000,  28.53716, 28.53716,  -0.00000, 31.28458,  33.13381,  -0.00000, 31.28458,  33.13381,  3.20000,  34.34889,  37.52558,  -0.00000, 34.34889,  37.52558,  3.20000,
     37.71484,  41.69067,  -0.00000, 37.71484, 41.69067,  3.20000,  41.36575,  45.60839,  -0.00000, 41.36575,  45.60839,  3.20000,  81.67083,  85.91348,  3.20000,  81.67083,  85.91348,  -0.00000,
@@ -44,7 +45,7 @@ static const std::vector<float> s_RotationVertices = {
     76.12933,  99.02357,  -0.00000, 76.12933, 99.02357,  3.20000,  72.47845,  95.10586,  -0.00000, 72.47845,  95.10586,  3.20000,  32.17336,  54.80078,  3.20000,  32.17336,  54.80078,  -0.00000,
     28.25564,  51.14987,  -0.00000, 28.25564, 51.14987,  3.20000,  24.09056,  47.78392,  -0.00000, 24.09056,  47.78392,  3.20000,  19.69878,  44.71961,  -0.00000, 19.69878,  44.71961,  3.20000};
 
-static const std::vector<float> s_ScaleVertices = {
+const std::vector<float> s_ScaleVertices = {
     0.00000,   57.00000, 12.80000, 80.71526,  57.00000, 12.80000, 0.00000,   57.00000, 0.00000,  80.71526,  57.00000, 0.00000,  0.00000,   0.00000,  12.80000, 0.00000,   0.00000,  -0.00000,
     80.71526,  0.00000,  12.80000, 80.71526,  0.00000,  -0.00000, 91.10136,  3.92280,  -0.00000, 91.10136,  3.92280,  12.80000, 101.64586, 6.73878,  -0.00000, 101.64586, 6.73878,  12.80000,
     112.29636, 8.43399,  -0.00000, 112.29636, 8.43399,  12.80000, 123.00000, 9.00000,  -0.00000, 123.00000, 9.00000,  12.80000, 237.00000, 9.00000,  12.80000, 237.00000, 9.00000,  -0.00000,
@@ -54,7 +55,7 @@ static const std::vector<float> s_ScaleVertices = {
     247.70360, 48.56601, -0.00000, 247.70360, 48.56601, 12.80000, 237.00000, 48.00000, -0.00000, 237.00000, 48.00000, 12.80000, 123.00000, 48.00000, 12.80000, 123.00000, 48.00000, -0.00000,
     112.29636, 48.56601, -0.00000, 112.29636, 48.56601, 12.80000, 101.64586, 50.26122, -0.00000, 101.64586, 50.26122, 12.80000, 91.10136,  53.07721, -0.00000, 91.10136,  53.07721, 12.80000};
 
-static const std::vector<float> s_TranslationVertices = {
+const std::vector<float> s_TranslationVertices = {
     100.00000, 119.00000, 103.20000, 140.35764, 119.00000, 103.20000, 100.00000, 119.00000, 100.00000, 140.35764, 119.00000, 100.00000, 100.00000, 100.00000, 103.20000, 100.00000,
     100.00000, 100.00000, 140.35764, 100.00000, 103.20000, 140.35764, 100.00000, 100.00000, 145.55067, 101.30760, 100.00000, 145.55067, 101.30760, 103.20000, 150.82294, 102.24626,
     100.00000, 150.82294, 102.24626, 103.20000, 156.14818, 102.81133, 100.00000, 156.14818, 102.81133, 103.20000, 161.50000, 103.00000, 100.00000, 161.50000, 103.00000, 103.20000,
@@ -66,9 +67,9 @@ static const std::vector<float> s_TranslationVertices = {
     100.00000, 156.14818, 116.18867, 103.20000, 150.82294, 116.75374, 100.00000, 150.82294, 116.75374, 103.20000, 145.55067, 117.69240, 100.00000, 145.55067, 117.69240, 103.20000,
 };
 
-std::string triangleGeometryName = "[Triangle Geometry]";
-std::string triangleFaceDataGroupName = "Face Data";
-std::string normalsDataArrayName = "Normals";
+const std::string triangleGeometryName = "[Triangle Geometry]";
+const std::string triangleFaceDataGroupName = "Face Data";
+const std::string normalsDataArrayName = "Normals";
 
 } // namespace
 
@@ -114,7 +115,6 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Translation", "[Comp
     Arguments args;
     std::string triangleAreasName = "Triangle Areas";
 
-
     // Create default Parameters for the filter.
     DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleAreasName);
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_GeometryToTransform_Key, std::make_any<DataPath>(geometryPath));
@@ -142,7 +142,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Translation", "[Comp
     bool verticesEqual = true;
     for(size_t eIdx = 0; eIdx < vertices->getSize(); eIdx++)
     {
-      if( std::fabsf((*vertices)[eIdx] - ::s_TranslationVertices[eIdx]) > 0.0001F)
+      if(std::fabsf((*vertices)[eIdx] - ::s_TranslationVertices[eIdx]) > 0.0001F)
       {
         verticesEqual = false;
         break;
@@ -167,7 +167,6 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Rotation", "[Complex
     ApplyTransformationToGeometryFilter filter;
     Arguments args;
     std::string triangleAreasName = "Triangle Areas";
-
 
     // Create default Parameters for the filter.
     DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleAreasName);
@@ -196,7 +195,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Rotation", "[Complex
     bool verticesEqual = true;
     for(size_t eIdx = 0; eIdx < vertices->getSize(); eIdx++)
     {
-      if( std::fabsf((*vertices)[eIdx] - ::s_RotationVertices[eIdx]) > 0.0001F)
+      if(std::fabsf((*vertices)[eIdx] - ::s_RotationVertices[eIdx]) > 0.0001F)
       {
         verticesEqual = false;
         break;
@@ -249,7 +248,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Scale", "[ComplexCor
     bool verticesEqual = true;
     for(size_t eIdx = 0; eIdx < vertices->getSize(); eIdx++)
     {
-      if( std::fabsf((*vertices)[eIdx] - ::s_ScaleVertices[eIdx]) > 0.0001F)
+      if(std::fabsf((*vertices)[eIdx] - ::s_ScaleVertices[eIdx]) > 0.0001F)
       {
         verticesEqual = false;
         break;
@@ -305,7 +304,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Manual", "[ComplexCo
     bool verticesEqual = true;
     for(size_t eIdx = 0; eIdx < vertices->getSize(); eIdx++)
     {
-      if( std::fabsf((*vertices)[eIdx] - ::s_ManualVertices[eIdx]) > 0.0001F)
+      if(std::fabsf((*vertices)[eIdx] - ::s_ManualVertices[eIdx]) > 0.0001F)
       {
         verticesEqual = false;
         break;
@@ -325,4 +324,3 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Manual", "[ComplexCo
 // 100,100,100
 // 2,3,4
 // dynamicTable{{{-1.0, 0, 0, 0}, {0, 1.0, 0, 0}, {0, 0, 1.0, 0}, {0, 0, 0, 1.0}},
-
