@@ -24,9 +24,6 @@ protected:
    * @param msg
    */
   void onNotify(AbstractPipelineNode* node, const std::shared_ptr<AbstractPipelineMessage>& msg) override;
-
-private:
-  std::vector<nod::scoped_connection> m_SignalConnections;
 };
 } // namespace PipelineRunner
 } // namespace complex
