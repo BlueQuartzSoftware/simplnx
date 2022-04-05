@@ -24,7 +24,7 @@ using namespace complex;
 namespace
 {
 using FeatureIdsArrayType = Int32Array;
-using GoodVoxelsArrayType = UInt8Array;
+using GoodVoxelsArrayType = BoolArray;
 
 constexpr StringLiteral k_CompareFunctKey = "Compare Function";
 
@@ -144,7 +144,7 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
     if(maskArray == nullptr)
     {
       return {nonstd::make_unexpected(
-          std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array at path '{}' is not of the correct type. It must be UInt8.", goodVoxelsPath.toString())}})};
+          std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array at path '{}' is not of the correct type. It must be Bool.", goodVoxelsPath.toString())}})};
     }
     dataPaths.push_back(goodVoxelsPath);
   }

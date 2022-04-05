@@ -21,11 +21,11 @@ constexpr int32 k_IncorrectInputArrayType = -63;
 constexpr int32 k_MismatchedDims = -64;
 
 template <class T>
-void FindThreshold(const DataArray<T>& inputArray, const Float32Array& gradMagnitudeArray, UInt8Array& maskArray)
+void FindThreshold(const DataArray<T>& inputArray, const Float32Array& gradMagnitudeArray, BoolArray& maskArray)
 {
   const AbstractDataStore<T>& inputData = inputArray.getDataStoreRef();
   const AbstractDataStore<float32>& gradMag = gradMagnitudeArray.getDataStoreRef();
-  AbstractDataStore<uint8>& maskStore = maskArray.getDataStoreRef();
+  AbstractDataStore<bool>& maskStore = maskArray.getDataStoreRef();
 
   usize numTuples = inputArray.getNumberOfTuples();
   float numerator = 0;
@@ -52,7 +52,7 @@ void FindThreshold(const DataArray<T>& inputArray, const Float32Array& gradMagni
   }
 }
 
-void FindThreshold(const IDataArray& inputObject, const Float32Array& gradMagnitudeArray, UInt8Array& maskArray)
+void FindThreshold(const IDataArray& inputObject, const Float32Array& gradMagnitudeArray, BoolArray& maskArray)
 {
   if(auto inputArray = dynamic_cast<const Int8Array*>(&inputObject); inputArray != nullptr)
   {
@@ -183,7 +183,7 @@ IFilter::PreflightResult RobustAutomaticThreshold::preflightImpl(const DataStruc
     return {MakeErrorResult<OutputActions>(k_IncorrectInputArrayType, "Input array and gradient array have mismatched dimensions")};
   }
 
-  auto action = std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{numComponents}, createdMaskPath);
+  auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{numComponents}, createdMaskPath);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));
@@ -199,8 +199,8 @@ Result<> RobustAutomaticThreshold::executeImpl(DataStructure& data, const Argume
   auto createdMaskPath = args.value<DataPath>(k_ArrayCreationPath);
 
   const auto& inputArray = data.getDataRefAs<IDataArray>(inputArrayPath);
-  const auto& gradientArray = data.getDataRefAs<DataArray<float32>>(gradientArrayPath);
-  auto& maskArray = data.getDataRefAs<DataArray<uint8>>(createdMaskPath);
+  const auto& gradientArray = data.getDataRefAs<Float32Array>(gradientArrayPath);
+  auto& maskArray = data.getDataRefAs<BoolArray>(createdMaskPath);
 
   FindThreshold(inputArray, gradientArray, maskArray);
 
