@@ -142,7 +142,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Translation", "[Comp
     bool verticesEqual = true;
     for(size_t eIdx = 0; eIdx < vertices->getSize(); eIdx++)
     {
-      if(std::fabsf((*vertices)[eIdx] - ::s_TranslationVertices[eIdx]) > 0.0001F)
+      if(fabsf((*vertices)[eIdx] - ::s_TranslationVertices[eIdx]) > 0.0001F)
       {
         verticesEqual = false;
         break;
@@ -195,7 +195,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Rotation", "[Complex
     bool verticesEqual = true;
     for(size_t eIdx = 0; eIdx < vertices->getSize(); eIdx++)
     {
-      if(std::fabsf((*vertices)[eIdx] - ::s_RotationVertices[eIdx]) > 0.0001F)
+      if(fabsf((*vertices)[eIdx] - ::s_RotationVertices[eIdx]) > 0.0001F)
       {
         verticesEqual = false;
         break;
@@ -248,7 +248,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Scale", "[ComplexCor
     bool verticesEqual = true;
     for(size_t eIdx = 0; eIdx < vertices->getSize(); eIdx++)
     {
-      if(std::fabsf((*vertices)[eIdx] - ::s_ScaleVertices[eIdx]) > 0.0001F)
+      if(fabsf((*vertices)[eIdx] - ::s_ScaleVertices[eIdx]) > 0.0001F)
       {
         verticesEqual = false;
         break;
@@ -304,7 +304,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Manual", "[ComplexCo
     bool verticesEqual = true;
     for(size_t eIdx = 0; eIdx < vertices->getSize(); eIdx++)
     {
-      if(std::fabsf((*vertices)[eIdx] - ::s_ManualVertices[eIdx]) > 0.0001F)
+      if(fabsf((*vertices)[eIdx] - ::s_ManualVertices[eIdx]) > 0.0001F)
       {
         verticesEqual = false;
         break;
