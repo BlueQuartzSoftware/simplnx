@@ -97,10 +97,10 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
   auto executeResult = filter.execute(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int8Array>(k_SurfaceFeaturesArrayPath));
+  REQUIRE_NOTHROW(ds.getDataRefAs<BoolArray>(k_SurfaceFeaturesArrayPath));
   REQUIRE_NOTHROW(ds.getDataRefAs<Int8Array>(k_SurfaceFeaturesExemplaryPath));
 
-  Int8Array& surfaceFeatures = ds.getDataRefAs<Int8Array>(k_SurfaceFeaturesArrayPath);
+  BoolArray& surfaceFeatures = ds.getDataRefAs<BoolArray>(k_SurfaceFeaturesArrayPath);
   Int8Array& surfaceFeaturesExemplary = ds.getDataRefAs<Int8Array>(k_SurfaceFeaturesExemplaryPath);
   REQUIRE(surfaceFeatures.getSize() == surfaceFeaturesExemplary.getSize());
   REQUIRE(surfaceFeatures.getSize() == 796);

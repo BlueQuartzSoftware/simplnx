@@ -18,7 +18,7 @@ constexpr int64 k_PathNotFoundError = -178;
 class ThresholdFilterHelper
 {
 public:
-  ThresholdFilterHelper(complex::ArrayThreshold::ComparisonType compType, complex::ArrayThreshold::ComparisonValue compValue, std::vector<uint8_t>& output)
+  ThresholdFilterHelper(complex::ArrayThreshold::ComparisonType compType, complex::ArrayThreshold::ComparisonValue compValue, std::vector<bool>& output)
   : m_ComparisonOperator(compType)
   , m_ComparisonValue(compValue)
   , m_Output(output)
@@ -34,10 +34,10 @@ public:
   void filterDataLessThan(const DataArray<T>& m_Input)
   {
     size_t m_NumValues = m_Input.getNumberOfTuples();
-    T v = static_cast<T>(m_ComparisonValue);
+    T value = static_cast<T>(m_ComparisonValue);
     for(size_t i = 0; i < m_NumValues; ++i)
     {
-      m_Output[i] = (m_Input[i] < v) ? 1 : 0;
+      m_Output[i] = (m_Input[i] < value);
     }
   }
 
@@ -48,10 +48,10 @@ public:
   void filterDataGreaterThan(const DataArray<T>& m_Input)
   {
     size_t m_NumValues = m_Input.getNumberOfTuples();
-    T v = static_cast<T>(m_ComparisonValue);
+    T value = static_cast<T>(m_ComparisonValue);
     for(size_t i = 0; i < m_NumValues; ++i)
     {
-      m_Output[i] = (m_Input[i] > v) ? 1 : 0;
+      m_Output[i] = (m_Input[i] > value);
     }
   }
 
@@ -62,10 +62,10 @@ public:
   void filterDataEqualTo(const DataArray<T>& m_Input)
   {
     size_t m_NumValues = m_Input.getNumberOfTuples();
-    T v = static_cast<T>(m_ComparisonValue);
+    T value = static_cast<T>(m_ComparisonValue);
     for(size_t i = 0; i < m_NumValues; ++i)
     {
-      m_Output[i] = (m_Input[i] == v) ? 1 : 0;
+      m_Output[i] = (m_Input[i] == value);
     }
   }
 
@@ -76,10 +76,10 @@ public:
   void filterDataNotEqualTo(const DataArray<T>& m_Input)
   {
     size_t m_NumValues = m_Input.getNumberOfTuples();
-    T v = static_cast<T>(m_ComparisonValue);
+    T value = static_cast<T>(m_ComparisonValue);
     for(size_t i = 0; i < m_NumValues; ++i)
     {
-      m_Output[i] = (m_Input[i] != v) ? 1 : 0;
+      m_Output[i] = (m_Input[i] != value);
     }
   }
 
@@ -168,7 +168,7 @@ public:
 private:
   complex::ArrayThreshold::ComparisonType m_ComparisonOperator;
   complex::ArrayThreshold::ComparisonValue m_ComparisonValue;
-  std::vector<uint8_t>& m_Output;
+  std::vector<bool>& m_Output;
 
 public:
   ThresholdFilterHelper(const ThresholdFilterHelper&) = delete;            // Copy Constructor Not Implemented
@@ -185,23 +185,24 @@ public:
  * @param newArrayPtr
  * @param inverse
  */
-void InsertThreshold(int64_t numItems, UInt8Array& currentArray, complex::IArrayThreshold::UnionOperator unionOperator, std::vector<uint8_t>& newArrayPtr, bool inverse)
+void InsertThreshold(int64_t numItems, BoolArray& currentArray, complex::IArrayThreshold::UnionOperator unionOperator, std::vector<bool>& newArrayPtr, bool inverse)
 {
+
   for(int64_t i = 0; i < numItems; i++)
   {
     // invert the current comparison if necessary
     if(inverse)
     {
-      (newArrayPtr[i] == 0 ? newArrayPtr[i] = 1 : newArrayPtr[i] = 0);
+      newArrayPtr[i] = !newArrayPtr[i];
     }
 
     if(complex::IArrayThreshold::UnionOperator::Or == unionOperator)
     {
-      (currentArray[i] != 0 || newArrayPtr[i] != 0) ? currentArray[i] = 1 : currentArray[i] = 0;
+      currentArray[i] = currentArray[i] || newArrayPtr[i];
     }
-    else if(currentArray[i] == 0 || newArrayPtr[i] == 0)
+    else if(!currentArray[i] || !newArrayPtr[i])
     {
-      currentArray[i] = 0;
+      currentArray[i] = false;
     }
   }
 }
@@ -224,11 +225,11 @@ void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, DataStruct
   }
   // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
   // was essentially done in the preflight part.
-  UInt8Array& outputResultArray = dataStructure.getDataRefAs<UInt8Array>(outputResultArrayPath);
+  BoolArray& outputResultArray = dataStructure.getDataRefAs<BoolArray>(outputResultArrayPath);
 
-  // Get the total number of tuples, create and initialize an array with ZERO to use for these results
+  // Get the total number of tuples, create and initialize an array with FALSE to use for these results
   size_t totalTuples = outputResultArray.getNumberOfTuples();
-  std::vector<uint8_t> tempResultVector(totalTuples, 0xFF);
+  std::vector<bool> tempResultVector(totalTuples, false);
 
   complex::ArrayThreshold::ComparisonType compOperator = comparisonValue->getComparisonType();
   complex::ArrayThreshold::ComparisonValue compValue = comparisonValue->getComparisonValue();
@@ -244,7 +245,7 @@ void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, DataStruct
   {
     if(inverse)
     {
-      std::for_each(tempResultVector.begin(), tempResultVector.end(), [](uint8_t& n) { (n == 0 ? n = 1 : n = 0); });
+      tempResultVector.flip();
     }
     // copy the temp uint8 vector to the final uint8 result array
     for(size_t i = 0; i < totalTuples; i++)
@@ -277,11 +278,11 @@ void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, DataSt
 
   // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
   // was essentially done in the preflight part.
-  UInt8Array& outputResultArray = dataStructure.getDataRefAs<UInt8Array>(outputResultArrayPath);
+  BoolArray& outputResultArray = dataStructure.getDataRefAs<BoolArray>(outputResultArrayPath);
 
-  // Get the total number of tuples, create and initialize an array with ZERO to use for these results
+  // Get the total number of tuples, create and initialize an array with FALSE to use for these results
   size_t totalTuples = outputResultArray.getNumberOfTuples();
-  std::vector<uint8_t> tempResultVector(totalTuples, 0xFF);
+  std::vector<bool> tempResultVector(totalTuples, false);
 
   bool firstValueFound = false;
 
@@ -306,7 +307,7 @@ void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, DataSt
   {
     if(inverse)
     {
-      std::for_each(tempResultVector.begin(), tempResultVector.end(), [](uint8_t& n) { (n == 0 ? n = 1 : n = 0); });
+      tempResultVector.flip();
     }
     // copy the temp uint8 vector to the final uint8 result array
     for(size_t i = 0; i < totalTuples; i++)
@@ -430,7 +431,7 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
   }
 
   // Create the output boolean array
-  auto action = std::make_unique<CreateArrayAction>(DataType::uint8, dataArray->getIDataStore()->getTupleShape(), std::vector<usize>{1}, maskArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(DataType::boolean, dataArray->getIDataStore()->getTupleShape(), std::vector<usize>{1}, maskArrayPath);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));
@@ -448,20 +449,19 @@ Result<> MultiThresholdObjects::executeImpl(DataStructure& dataStructure, const 
   bool firstValueFound = false;
 
   int32_t err = 0;
-  ArrayThresholdSet::CollectionType thresholds = thresholdsObject.getArrayThresholds();
-
-  for(const std::shared_ptr<IArrayThreshold>& threshold : thresholds)
+  ArrayThresholdSet::CollectionType thresholdSet = thresholdsObject.getArrayThresholds();
+  for(const std::shared_ptr<IArrayThreshold>& threshold : thresholdSet)
   {
     if(std::dynamic_pointer_cast<ArrayThresholdSet>(threshold))
     {
       std::shared_ptr<ArrayThresholdSet> comparisonSet = std::dynamic_pointer_cast<ArrayThresholdSet>(threshold);
-      ThresholdSet(comparisonSet, dataStructure, maskArrayPath, err, !firstValueFound, false);
+      ThresholdSet(comparisonSet, dataStructure, maskArrayPath, err, !firstValueFound, thresholdsObject.isInverted());
       firstValueFound = true;
     }
     else if(std::dynamic_pointer_cast<ArrayThreshold>(threshold))
     {
       std::shared_ptr<ArrayThreshold> comparisonValue = std::dynamic_pointer_cast<ArrayThreshold>(threshold);
-      ThresholdValue(comparisonValue, dataStructure, maskArrayPath, err, !firstValueFound, false);
+      ThresholdValue(comparisonValue, dataStructure, maskArrayPath, err, !firstValueFound, thresholdsObject.isInverted());
       firstValueFound = true;
     }
   }
