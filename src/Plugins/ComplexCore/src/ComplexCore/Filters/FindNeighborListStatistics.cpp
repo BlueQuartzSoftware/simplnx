@@ -1,6 +1,7 @@
 #include "FindNeighborListStatistics.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/INeighborList.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
@@ -24,7 +25,7 @@ class FindNeighborListStatisticsImpl
 public:
   using NeighborListType = NeighborList<T>;
 
-  FindNeighborListStatisticsImpl(const IFilter* filter, NeighborListType& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
+  FindNeighborListStatisticsImpl(const IFilter* filter, INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
                                  std::vector<IDataArray*>& arrays)
   : m_Filter(filter)
   , m_Source(source)
@@ -46,7 +47,7 @@ public:
 
     using DataArrayType = DataArray<T>;
 
-    auto* array0 = dynamic_cast<DataArray<usize>*>(m_Arrays[0]);
+    auto* array0 = dynamic_cast<DataArray<uint64_t>*>(m_Arrays[0]);
     if(m_Length && array0 == nullptr)
     {
       throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'Length' array to needed type. Check input array selection.");
@@ -82,9 +83,11 @@ public:
       throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'Summation' array to needed type. Check input array selection.");
     }
 
+    NeighborListType& sourceList = dynamic_cast<NeighborListType&>(m_Source);
+
     for(usize i = start; i < end; i++)
     {
-      std::vector<T>& tmpList = m_Source[i];
+      std::vector<T>& tmpList = sourceList[i];
 
       if(m_Length)
       {
@@ -131,7 +134,7 @@ public:
 
 private:
   const IFilter* m_Filter = nullptr;
-  NeighborListType& m_Source;
+  INeighborList& m_Source;
   bool m_Length = false;
   bool m_Min = false;
   bool m_Max = false;
@@ -146,13 +149,11 @@ private:
 template <typename DataType>
 void findStatisticsImpl(const IFilter* filter, INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation, std::vector<IDataArray*>& arrays)
 {
-  usize numTuples = source->getNumberOfTuples();
-  auto sourceList = dynamic_cast<NeighborList<DataType>*>(source);
-
+  usize numTuples = source.getNumberOfTuples();
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, numTuples);
-  dataAlg.execute(FindNeighborListStatisticsImpl<DataType>(filter, sourceList, length, min, max, mean, median, stdDeviation, summation, arrays));
+  dataAlg.execute(FindNeighborListStatisticsImpl<DataType>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays));
 }
 
 void findStatistics(const IFilter* filter, INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation, std::vector<IDataArray*>& arrays)
