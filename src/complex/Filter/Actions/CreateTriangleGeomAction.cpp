@@ -10,13 +10,13 @@ using namespace complex;
 
 namespace complex
 {
-CreateTriangleGeomAction::CreateTriangleGeomAction(const DataPath& path, AdditionalData additional)
+CreateTriangleGeomAction::CreateTriangleGeomAction(const DataPath& path, AdditionalDataTypes additional)
 : m_Path(path)
 , m_AdditionalData(additional)
 {
 }
 
-CreateTriangleGeomAction::CreateTriangleGeomAction(const DataPath& path, const ShapeType& tupleSize, AdditionalData additional)
+CreateTriangleGeomAction::CreateTriangleGeomAction(const DataPath& path, const ShapeType& tupleSize, AdditionalDataTypes additional)
 : m_Path(path)
 , m_TupleSize(tupleSize)
 , m_AdditionalData(additional)
@@ -34,6 +34,15 @@ Result<> CreateTriangleGeomAction::apply(DataStructure& dataStructure, Mode mode
   }
 
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(m_Path);
+
+  if(m_AdditionalData.find(AdditionalData::CreateVertexGroup) != m_AdditionalData.end())
+  {
+    dataStructure.makePath(m_Path.createChildPath("VertexData"));
+  }
+  if(m_AdditionalData.find(AdditionalData::CreateTriangleGroup) != m_AdditionalData.end())
+  {
+    dataStructure.makePath(m_Path.createChildPath("FaceData"));
+  }
 
   if(shouldCreateVertexArray())
   {
@@ -73,16 +82,13 @@ CreateTriangleGeomAction::ShapeType CreateTriangleGeomAction::tupleSize() const
 
 bool CreateTriangleGeomAction::shouldCreateVertexArray() const
 {
-  auto additionalInt8 = static_cast<int8>(m_AdditionalData);
-  auto targetInt8 = static_cast<int8>(AdditionalData::Vertices);
-  return (additionalInt8 & targetInt8) != 0;
+
+  return (m_AdditionalData.find(AdditionalData::Vertices) != m_AdditionalData.end() || m_AdditionalData.find(AdditionalData::VerticesTriangles) != m_AdditionalData.end());
 }
 
 bool CreateTriangleGeomAction::shouldCreateTriangleArray() const
 {
-  auto additionalInt8 = static_cast<int8>(m_AdditionalData);
-  auto targetInt8 = static_cast<int8>(AdditionalData::Triangles);
-  return (additionalInt8 & targetInt8) != 0;
+  return (m_AdditionalData.find(AdditionalData::Triangles) != m_AdditionalData.end() || m_AdditionalData.find(AdditionalData::VerticesTriangles) != m_AdditionalData.end());
 }
 
 Result<> CreateTriangleGeomAction::createGeometry(DataStructure& dataStructure, Mode mode) const

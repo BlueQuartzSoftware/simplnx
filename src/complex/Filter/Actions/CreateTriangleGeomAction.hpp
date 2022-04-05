@@ -18,16 +18,20 @@ public:
     None = 0,
     Vertices = 1,
     Triangles = 2,
-    VerticesTriangles = 3
+    VerticesTriangles = 3,
+    CreateVertexGroup = 4,
+    CreateTriangleGroup = 5
   };
+
+  using AdditionalDataTypes = std::set<AdditionalData>;
 
   static constexpr StringLiteral k_DefaultVerticesName = "Vertex Array";
   static constexpr StringLiteral k_DefaultFacesName = "Triangle Array";
 
   CreateTriangleGeomAction() = delete;
 
-  CreateTriangleGeomAction(const DataPath& path, AdditionalData additional = AdditionalData::None);
-  CreateTriangleGeomAction(const DataPath& path, const ShapeType& tupleSize, AdditionalData additional);
+  CreateTriangleGeomAction(const DataPath& path, AdditionalDataTypes additional = AdditionalDataTypes());
+  CreateTriangleGeomAction(const DataPath& path, const ShapeType& tupleSize, AdditionalDataTypes additional = AdditionalDataTypes());
 
   ~CreateTriangleGeomAction() noexcept override;
 
@@ -97,6 +101,6 @@ private:
 
   DataPath m_Path;
   ShapeType m_TupleSize = {1};
-  AdditionalData m_AdditionalData = AdditionalData::None;
+  AdditionalDataTypes m_AdditionalData = {};
 };
 } // namespace complex

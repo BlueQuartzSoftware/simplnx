@@ -106,7 +106,7 @@ TEST_CASE("ExtractInternalSurfacesFromTriangleGeometry(Data)", "[ComplexCore][Ex
     REQUIRE(newVerticesArray != nullptr);
     REQUIRE(oldVerticesArray != nullptr);
 
-    REQUIRE(newVerticesArray->getSize() == 3);
+    REQUIRE(newVerticesArray->getSize() == 18);
   }
 
   {
