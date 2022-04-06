@@ -60,7 +60,7 @@ public:
     reshapeTuples(m_TupleShape);
     if(initValue.has_value())
     {
-      std::fill_n(data(), getSize(), *initValue);
+      std::fill_n(data(), this->getSize(), *initValue);
     }
   }
 
