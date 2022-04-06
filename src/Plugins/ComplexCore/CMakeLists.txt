@@ -44,6 +44,7 @@ set(FilterList
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
   RawBinaryReaderFilter
+  ReadASCIIDataFilter
   RemoveFlaggedVertices
   RemoveMinimumSizeFeaturesFilter
   RenameDataObject
