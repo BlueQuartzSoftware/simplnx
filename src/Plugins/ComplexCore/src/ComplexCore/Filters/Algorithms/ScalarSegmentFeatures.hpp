@@ -36,7 +36,7 @@ public:
   using SeedGenerator = std::mt19937_64;
   using Int64Distribution = std::uniform_int_distribution<int64>;
   using FeatureIdsArrayType = Int32Array;
-  using GoodVoxelsArrayType = UInt8Array;
+  using GoodVoxelsArrayType = BoolArray;
 
   ScalarSegmentFeatures(DataStructure& data, ScalarSegmentFeaturesInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
   ~ScalarSegmentFeatures() noexcept;
