@@ -132,15 +132,9 @@ IDataArray* createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId
   }
   auto dataStore = std::make_unique<DataStore<T>>(tDims, cDims, static_cast<T>(0));
 
-  auto data = dataArrayReader.readAsVector<T>();
-  if(data.size() != dataStore->getSize())
+  if(!dataArrayReader.readIntoSpan(dataStore->createSpan()))
   {
     throw std::runtime_error(fmt::format("Error reading HDF5 Data set {}", complex::H5::Support::GetObjectPath(dataArrayReader.getId())));
-  }
-  // Copy values
-  for(usize i = 0; i < data.size(); i++)
-  {
-    dataStore->setValue(i, data.at(i));
   }
   // Insert the DataArray into the DataStructure
   return DataArray<T>::Create(ds, daName, std::move(dataStore), parentId);
