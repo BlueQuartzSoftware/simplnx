@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <vector>
 
@@ -39,24 +40,28 @@ public:
    * @brief Creates a new DataStore with a single tuple dimensions of 'numTuples' and
    * a single component dimension of {1}
    * @param numTuples
+   * @param initValue
    */
-  DataStore(usize numTuples)
-  : m_ComponentShape({1})
-  , m_TupleShape({numTuples})
+  DataStore(usize numTuples, std::optional<T> initValue)
+  : DataStore({numTuples}, {1}, initValue)
   {
-    reshapeTuples(m_TupleShape);
   }
 
   /**
    * @brief Constructs a DataStore with the specified tupleSize and tupleCount.
    * @param tupleShape The dimensions of the tuples
    * @param componentShape The dimensions of the component at each tuple
+   * @param initValue
    */
-  DataStore(const ShapeType& tupleShape, const ShapeType& componentShape)
+  DataStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::optional<T> initValue)
   : m_ComponentShape(componentShape)
   , m_TupleShape(tupleShape)
   {
     reshapeTuples(m_TupleShape);
+    if(initValue.has_value())
+    {
+      std::fill_n(data(), this->getSize(), *initValue);
+    }
   }
 
   /**
@@ -301,7 +306,7 @@ public:
    */
   std::unique_ptr<IDataStore> createNewInstance() const override
   {
-    return std::make_unique<DataStore<T>>(this->getTupleShape(), this->getComponentShape());
+    return std::make_unique<DataStore<T>>(this->getTupleShape(), this->getComponentShape(), static_cast<T>(0));
   }
 
   /**
@@ -357,7 +362,7 @@ public:
     auto componentShape = IDataStore::ReadComponentShape(datasetReader);
 
     // Create DataStore
-    auto dataStore = std::make_unique<DataStore<T>>(tupleShape, componentShape);
+    auto dataStore = std::make_unique<DataStore<T>>(tupleShape, componentShape, static_cast<T>(0));
 
     auto count = dataStore->getSize();
     auto dataVector = datasetReader.readAsVector<T>();

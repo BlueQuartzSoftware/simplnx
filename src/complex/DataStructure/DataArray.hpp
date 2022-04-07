@@ -1,6 +1,7 @@
 #pragma once
 
 #include "complex/Common/Bit.hpp"
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
@@ -79,7 +80,18 @@ public:
   static DataArray* CreateWithStore(DataStructure& ds, const std::string& name, const std::vector<usize>& tupleShape, const std::vector<usize>& componentShape,
                                     const std::optional<IdType>& parentId = {})
   {
-    auto dataStore = std::make_shared<DataStoreType>(tupleShape, componentShape);
+    static_assert(std::is_base_of_v<AbstractDataStore<T>, DataStoreType>);
+
+    std::shared_ptr<DataStoreType> dataStore;
+
+    if constexpr(std::is_same_v<DataStoreType, DataStore<T>>)
+    {
+      dataStore = std::make_shared<DataStoreType>(tupleShape, componentShape, static_cast<T>(0));
+    }
+    else
+    {
+      dataStore = std::make_shared<DataStoreType>(tupleShape, componentShape);
+    }
 
     auto data = std::shared_ptr<DataArray>(new DataArray(ds, name, std::move(dataStore)));
     if(!AttemptToAddObject(ds, data, parentId))

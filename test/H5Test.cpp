@@ -158,7 +158,7 @@ DataStructure GetTestDataStructure()
   auto scalar = ScalarData<int32>::Create(ds, "Scalar", 7, geom->getId());
   REQUIRE(scalar != nullptr);
 
-  auto dataStore = std::make_unique<DataStore<uint8>>(std::vector<usize>{2}, std::vector<usize>{3});
+  auto dataStore = std::make_unique<DataStore<uint8>>(std::vector<usize>{2}, std::vector<usize>{3}, 0);
   auto dataArray = DataArray<uint8>::Create(ds, "DataArray", std::move(dataStore), geom->getId());
   REQUIRE(dataArray != nullptr);
 
@@ -172,7 +172,7 @@ DataArray<T>* CreateTestDataArray(const std::string& name, DataStructure& dataGr
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
 
-  auto data_store = std::make_unique<DataStoreType>(tupleShape, componentShape);
+  auto data_store = std::make_unique<DataStoreType>(tupleShape, componentShape, static_cast<T>(0));
   ArrayType* dataArray = ArrayType::Create(dataGraph, name, std::move(data_store), parentId);
 
   return dataArray;

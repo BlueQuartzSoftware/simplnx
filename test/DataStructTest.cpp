@@ -249,7 +249,7 @@ TEST_CASE("DataStoreTest")
 {
   const size_t numComponents = 3;
   const size_t numTuples = 10;
-  DataStore<int32_t> store({numTuples}, {numComponents});
+  DataStore<int32_t> store({numTuples}, {numComponents}, 0);
 
   REQUIRE(store.getNumberOfTuples() == numTuples);
   REQUIRE(store.getNumberOfComponents() == numComponents);
@@ -294,7 +294,7 @@ TEST_CASE("DataArrayTest")
 {
   DataStructure dataStr;
 
-  auto store = std::make_shared<DataStore<int32>>(std::vector<usize>{2}, std::vector<usize>{2});
+  auto store = std::make_shared<DataStore<int32>>(std::vector<usize>{2}, std::vector<usize>{2}, 0);
   REQUIRE(store != nullptr);
   auto dataArr = DataArray<int32>::Create(dataStr, "array", store);
   REQUIRE(dataArr != nullptr);

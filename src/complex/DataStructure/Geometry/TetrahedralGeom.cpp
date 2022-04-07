@@ -279,7 +279,7 @@ usize TetrahedralGeom::getNumberOfElements() const
 
 AbstractGeometry::StatusCode TetrahedralGeom::findElementSizes()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfTets()}, std::vector<usize>{1});
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfTets()}, std::vector<usize>{1}, 0.0f);
   Float32Array* tetSizes = DataArray<float32>::Create(*getDataStructure(), "Tet Volumes", std::move(dataStore), getId());
   GeometryHelpers::Topology::FindTetVolumes(getTetrahedra(), getVertices(), tetSizes);
   if(tetSizes == nullptr)
@@ -361,7 +361,7 @@ void TetrahedralGeom::deleteElementNeighbors()
 
 AbstractGeometry::StatusCode TetrahedralGeom::findElementCentroids()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfTets()}, std::vector<usize>{3});
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfTets()}, std::vector<usize>{3}, 0.0f);
   DataArray<float>* tetCentroids = DataArray<float32>::Create(*getDataStructure(), "Tet Centroids", std::move(dataStore), getId());
   GeometryHelpers::Topology::FindElementCentroids(getTetrahedra(), getVertices(), tetCentroids);
   if(tetCentroids == nullptr)
@@ -458,7 +458,7 @@ AbstractGeometry::StatusCode TetrahedralGeom::findFaces()
 
 AbstractGeometry::StatusCode TetrahedralGeom::findUnsharedEdges()
 {
-  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2});
+  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
   auto* unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", std::move(dataStore), getId());
   GeometryHelpers::Connectivity::FindUnsharedTetEdges(getTetrahedra(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
@@ -472,7 +472,7 @@ AbstractGeometry::StatusCode TetrahedralGeom::findUnsharedEdges()
 
 AbstractGeometry::StatusCode TetrahedralGeom::findUnsharedFaces()
 {
-  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{3});
+  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{3}, 0);
   auto* unsharedTriList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Face List", std::move(dataStore), getId());
   GeometryHelpers::Connectivity::FindUnsharedTetFaces(getTetrahedra(), unsharedTriList);
   if(unsharedTriList == nullptr)
