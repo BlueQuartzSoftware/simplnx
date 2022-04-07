@@ -496,7 +496,7 @@ void QuadGeom::setElementSizes(const Float32Array* elementSizes)
   m_QuadSizesId = elementSizes->getId();
 }
 
-H5::ErrorType QuadGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
+H5::ErrorType QuadGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   m_QuadListId = ReadH5DataId(groupReader, H5Constants::k_QuadListTag);
   m_QuadsContainingVertId = ReadH5DataId(groupReader, H5Constants::k_QuadsContainingVertTag);
@@ -504,7 +504,7 @@ H5::ErrorType QuadGeom::readHdf5(H5::DataStructureReader& dataStructureReader, c
   m_QuadCentroidsId = ReadH5DataId(groupReader, H5Constants::k_QuadCentroidsTag);
   m_QuadSizesId = ReadH5DataId(groupReader, H5Constants::k_QuadSizesTag);
 
-  return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
+  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 H5::ErrorType QuadGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const

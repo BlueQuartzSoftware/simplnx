@@ -432,7 +432,7 @@ public:
    * @param groupReader
    * @return H5::ErrorType
    */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupId) override;
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupId, bool preflight = false) override;
 
   /**
    * @brief Writes the geometry to HDF5 using the provided parent group ID.

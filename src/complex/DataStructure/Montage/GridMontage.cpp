@@ -269,7 +269,7 @@ usize GridMontage::getOffsetFromTilePos(const SizeVec3& tilePos, const Dimension
   return tilePos[0] + tilePos[1] * numCols + tilePos[2] * numCols * numRows;
 }
 
-H5::ErrorType GridMontage::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
+H5::ErrorType GridMontage::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   auto rowCountAttribute = groupReader.getAttribute(H5Constants::k_RowCountTag);
   m_RowCount = rowCountAttribute.readAsValue<uint64_t>();
@@ -280,7 +280,7 @@ H5::ErrorType GridMontage::readHdf5(H5::DataStructureReader& dataStructureReader
   auto depthCountAttribute = groupReader.getAttribute(H5Constants::k_DepthCountTag);
   m_DepthCount = depthCountAttribute.readAsValue<uint64_t>();
 
-  return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
+  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 H5::ErrorType GridMontage::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const

@@ -550,7 +550,7 @@ void ImageGeom::setElementSizes(const Float32Array* elementSizes)
   m_VoxelSizesId = elementSizes->getId();
 }
 
-H5::ErrorType ImageGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
+H5::ErrorType ImageGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   auto volumeAttribute = groupReader.getAttribute(H5Constants::k_H5_DIMENSIONS);
   if(!volumeAttribute.isValid())
@@ -581,7 +581,7 @@ H5::ErrorType ImageGeom::readHdf5(H5::DataStructureReader& dataStructureReader, 
   // Read DataObject ID
   m_VoxelSizesId = ReadH5DataId(groupReader, H5Constants::k_VoxelSizesTag);
 
-  return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
+  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
