@@ -25,7 +25,7 @@ H5::ErrorType VertexGeomFactory::readH5Group(H5::DataStructureReader& dataStruct
   auto name = groupReader.getName();
   auto importId = ReadObjectId(groupReader);
   auto geom = VertexGeom::Import(dataStructureReader.getDataStructure(), name, importId, parentId);
-  return geom->readHdf5(dataStructureReader, groupReader);
+  return geom->readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 //------------------------------------------------------------------------------
