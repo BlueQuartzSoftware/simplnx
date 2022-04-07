@@ -14,7 +14,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include <string.h>
+#include <cstring>
 
 namespace complex
 {
