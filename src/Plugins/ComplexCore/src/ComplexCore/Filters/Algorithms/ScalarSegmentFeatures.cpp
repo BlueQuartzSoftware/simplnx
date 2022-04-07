@@ -138,7 +138,7 @@ ScalarSegmentFeatures::~ScalarSegmentFeatures() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ScalarSegmentFeatures::operator()()
 {
-  complex::AbstractDataStore<uint8_t>* goodVoxels = nullptr;
+  complex::AbstractDataStore<bool>* goodVoxels = nullptr;
   if(m_InputValues->pUseGoodVoxels)
   {
     m_GoodVoxelsArray = m_DataStructure.getDataAs<GoodVoxelsArrayType>(m_InputValues->pGoodVoxelsPath);
@@ -285,13 +285,13 @@ void ScalarSegmentFeatures::randomizeFeatureIds(Int32Array* featureIds, uint64 t
 // -----------------------------------------------------------------------------
 int64_t ScalarSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 {
-  complex::AbstractDataStore<uint8_t>* goodVoxels = nullptr;
+  complex::AbstractDataStore<bool>* goodVoxels = nullptr;
   if(m_InputValues->pUseGoodVoxels)
   {
     goodVoxels = m_GoodVoxelsArray->getDataStore();
   }
 
-  auto featureIds = m_FeatureIdsArray->getDataStore();
+  complex::DataArray<int32>::store_type* featureIds = m_FeatureIdsArray->getDataStore();
   usize totalPoints = featureIds->getNumberOfTuples();
 
   int64 seed = -1;
@@ -332,7 +332,7 @@ bool ScalarSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighb
 
   auto featureIds = m_FeatureIdsArray->getDataStore();
 
-  const complex::AbstractDataStore<uint8_t>* goodVoxels = nullptr;
+  const complex::AbstractDataStore<bool>* goodVoxels = nullptr;
   if(m_InputValues->pUseGoodVoxels)
   {
     goodVoxels = m_GoodVoxelsArray->getDataStore();
