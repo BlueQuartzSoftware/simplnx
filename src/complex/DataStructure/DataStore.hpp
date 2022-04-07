@@ -313,12 +313,12 @@ public:
 
   nonstd::span<T> createSpan()
   {
-    return {data(), getSize()};
+    return {data(), this->getSize()};
   }
 
   nonstd::span<const T> createSpan() const
   {
-    return {data(), getSize()};
+    return {data(), this->getSize()};
   }
 
   /**
