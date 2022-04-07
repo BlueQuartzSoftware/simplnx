@@ -84,11 +84,6 @@ public:
   {
     const usize count = other.getSize();
     auto data = new value_type[count];
-    //    for(usize i = 0; i < count; i++)
-    //    {
-    //      data[i] = other.m_Data.get()[i];
-    //    }
-
     std::memcpy(data, other.m_Data.get(), count * sizeof(T));
     m_Data.reset(data);
   }
@@ -276,12 +271,9 @@ public:
    */
   const_reference at(usize index) const override
   {
-    if(index >= IDataStore::getSize())
+    if(index >= this->getSize())
     {
-      if(index >= this->getSize())
-      {
-        throw std::runtime_error("");
-      }
+      throw std::runtime_error("");
     }
     return m_Data[index];
   }
@@ -293,7 +285,6 @@ public:
   std::unique_ptr<IDataStore> deepCopy() const override
   {
     return std::make_unique<DataStore<T>>(*this);
-    return copy;
   }
 
   /**
