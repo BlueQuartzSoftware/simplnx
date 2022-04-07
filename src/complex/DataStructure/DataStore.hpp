@@ -14,6 +14,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include <string.h>
+
 namespace complex
 {
 /**
@@ -82,10 +84,12 @@ public:
   {
     const usize count = other.getSize();
     auto data = new value_type[count];
-    for(usize i = 0; i < count; i++)
-    {
-      data[i] = other.m_Data.get()[i];
-    }
+    //    for(usize i = 0; i < count; i++)
+    //    {
+    //      data[i] = other.m_Data.get()[i];
+    //    }
+
+    std::memcpy(data, other.m_Data.get(), count * sizeof(T));
     m_Data.reset(data);
   }
 
@@ -273,10 +277,12 @@ public:
   const_reference at(usize index) const override
   {
     if(index >= IDataStore::getSize())
+    {
       if(index >= this->getSize())
       {
         throw std::runtime_error("");
       }
+    }
     return m_Data[index];
   }
 
@@ -288,10 +294,6 @@ public:
   {
     auto copy = std::make_unique<DataStore<T>>(*this);
     auto size = this->getSize();
-    for(usize i = 0; i < size; i++)
-    {
-      copy->setValue(i, getValue(i));
-    }
     return copy;
   }
 
