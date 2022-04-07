@@ -299,7 +299,7 @@ template bool H5::DatasetReader::readIntoSpan<uint16>(nonstd::span<uint16>) cons
 template bool H5::DatasetReader::readIntoSpan<uint32>(nonstd::span<uint32>) const;
 template bool H5::DatasetReader::readIntoSpan<uint64>(nonstd::span<uint64>) const;
 #ifdef __APPLE__
-template bool H5::DatasetReader::readIntoSpan<size_t>(nonstd::span<int8>) const;
+template bool H5::DatasetReader::readIntoSpan<usize>(nonstd::span<usize>) const;
 #endif
 template bool H5::DatasetReader::readIntoSpan<float32>(nonstd::span<float32>) const;
 template bool H5::DatasetReader::readIntoSpan<float64>(nonstd::span<float64>) const;
