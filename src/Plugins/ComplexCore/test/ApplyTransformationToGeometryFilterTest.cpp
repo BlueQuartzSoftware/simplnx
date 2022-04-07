@@ -230,7 +230,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Scale", "[ComplexCor
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataGraph, args);
