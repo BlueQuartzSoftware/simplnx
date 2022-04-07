@@ -141,6 +141,11 @@ const AbstractGeometry::SharedVertexList* EdgeGeom::getVertices() const
   return dynamic_cast<const SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
 }
 
+std::optional<DataObject::IdType> EdgeGeom::getVerticesId() const
+{
+  return m_VertexListId;
+}
+
 void EdgeGeom::setCoords(usize vertId, const complex::Point3D<float32>& coords)
 {
   auto vertices = getVertices();

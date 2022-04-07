@@ -89,6 +89,11 @@ const AbstractGeometry::SharedVertexList* AbstractGeometry3D::getVertices() cons
   return dynamic_cast<const SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
 }
 
+std::optional<DataObject::IdType> AbstractGeometry3D::getVerticesId() const
+{
+  return m_VertexListId;
+}
+
 void AbstractGeometry3D::setCoords(usize vertId, const complex::Point3D<float32>& coords)
 {
   auto vertices = dynamic_cast<Float32Array*>(getDataStructure()->getData(m_VertexListId));

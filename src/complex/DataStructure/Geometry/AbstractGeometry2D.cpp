@@ -68,9 +68,9 @@ const AbstractGeometry::SharedVertexList* AbstractGeometry2D::getVertices() cons
   return dynamic_cast<const SharedVertexList*>(data);
 }
 
-DataObject::IdType AbstractGeometry2D::getVertListId() const
+std::optional<DataObject::IdType> AbstractGeometry2D::getVerticesId() const
 {
-  return m_VertexListId.value();
+  return m_VertexListId;
 }
 
 AbstractGeometry::SharedEdgeList* AbstractGeometry2D::getEdges()

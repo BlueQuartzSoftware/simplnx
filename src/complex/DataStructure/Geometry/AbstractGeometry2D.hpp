@@ -64,7 +64,11 @@ public:
    */
   const SharedVertexList* getVertices() const;
 
-  DataObject::IdType getVertListId() const;
+  /**
+   * @brief Returns the DataObject ID for the vertices array. Returns an empty optional if no vertex array has been set.
+   * @return std::optional<IdType>
+   */
+  std::optional<DataObject::IdType> getVerticesId() const;
 
   /**
    * @brief Returns the Point3D<float32> coordinate for the specified vertex ID.
