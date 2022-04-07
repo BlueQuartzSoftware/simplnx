@@ -494,7 +494,7 @@ void TriangleGeom::setElementSizes(const Float32Array* elementSizes)
   m_TriangleSizesId = elementSizes->getId();
 }
 
-H5::ErrorType TriangleGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
+H5::ErrorType TriangleGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   m_TriListId = ReadH5DataId(groupReader, H5Constants::k_TriangleListTag);
   m_TrianglesContainingVertId = ReadH5DataId(groupReader, H5Constants::k_TrianglesContainingVertTag);
@@ -502,7 +502,7 @@ H5::ErrorType TriangleGeom::readHdf5(H5::DataStructureReader& dataStructureReade
   m_TriangleCentroidsId = ReadH5DataId(groupReader, H5Constants::k_TriangleCentroidsTag);
   m_TriangleSizesId = ReadH5DataId(groupReader, H5Constants::k_TriangleSizesTag);
 
-  return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
+  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 H5::ErrorType TriangleGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const

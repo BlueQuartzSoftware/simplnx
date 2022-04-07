@@ -25,7 +25,7 @@ H5::ErrorType TetrahedralGeomFactory::readH5Group(H5::DataStructureReader& dataS
   auto name = groupReader.getName();
   auto importId = ReadObjectId(groupReader);
   auto geom = TetrahedralGeom::Import(dataStructureReader.getDataStructure(), name, importId, parentId);
-  return geom->readHdf5(dataStructureReader, groupReader);
+  return geom->readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 //------------------------------------------------------------------------------

@@ -25,7 +25,7 @@ H5::ErrorType DataGroupFactory::readH5Group(H5::DataStructureReader& dataStructu
   auto name = groupReader.getName();
   auto importId = ReadObjectId(groupReader);
   auto group = DataGroup::Import(dataStructureReader.getDataStructure(), name, importId, parentId);
-  return group->readHdf5(dataStructureReader, groupReader);
+  return group->readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 //------------------------------------------------------------------------------

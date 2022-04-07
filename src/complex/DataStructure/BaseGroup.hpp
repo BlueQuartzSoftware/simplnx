@@ -301,7 +301,7 @@ protected:
    * @param groupReader
    * @return H5::Error
    */
-  virtual H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader);
+  virtual H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false);
 
   /**
    * @brief Writes the contained DataObjects to the target HDF5 group.

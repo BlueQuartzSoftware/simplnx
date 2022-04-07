@@ -529,7 +529,7 @@ void TetrahedralGeom::setElementCentroids(const Float32Array* elementCentroids)
   m_TetCentroidsId = elementCentroids->getId();
 }
 
-H5::ErrorType TetrahedralGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
+H5::ErrorType TetrahedralGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   m_TriListId = ReadH5DataId(groupReader, H5Constants::k_TriListTag);
   m_UnsharedTriListId = ReadH5DataId(groupReader, H5Constants::k_UnsharedTriListTag);
@@ -539,7 +539,7 @@ H5::ErrorType TetrahedralGeom::readHdf5(H5::DataStructureReader& dataStructureRe
   m_TetCentroidsId = ReadH5DataId(groupReader, H5Constants::k_TetCentroidsTag);
   m_TetSizesId = ReadH5DataId(groupReader, H5Constants::k_TetSizesTag);
 
-  return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
+  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 H5::ErrorType TetrahedralGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const

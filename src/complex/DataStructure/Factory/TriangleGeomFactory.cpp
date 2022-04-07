@@ -25,7 +25,7 @@ H5::ErrorType TriangleGeomFactory::readH5Group(H5::DataStructureReader& dataStru
   auto name = groupReader.getName();
   auto importId = ReadObjectId(groupReader);
   auto geom = TriangleGeom::Import(dataStructureReader.getDataStructure(), name, importId, parentId);
-  return geom->readHdf5(dataStructureReader, groupReader);
+  return geom->readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 //------------------------------------------------------------------------------
