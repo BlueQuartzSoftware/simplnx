@@ -2,7 +2,7 @@
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
-#include "complex/Parameters/ReadASCIIDataFilterParameter.hpp"
+#include "complex/Parameters/ReadASCIIDataParameter.hpp"
 
 using namespace complex;
 
@@ -43,7 +43,7 @@ Parameters ReadASCIIDataFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  /*[x]*/ params.insert(std::make_unique<ReadASCIIDataFilterParameter>(k_WizardData_Key, "ASCII Wizard Data", "", {}));
+  /*[x]*/ params.insert(std::make_unique<ReadASCIIDataParameter>(k_WizardData_Key, "ASCII Wizard Data", "", ASCIIWizardData()));
 
   return params;
 }
@@ -55,7 +55,8 @@ IFilter::UniquePointer ReadASCIIDataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadASCIIDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler) const
+IFilter::PreflightResult ReadASCIIDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                            const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -66,7 +67,7 @@ IFilter::PreflightResult ReadASCIIDataFilter::preflightImpl(const DataStructure&
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pWizardDataValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_WizardData_Key);
+  auto pWizardDataValue = filterArgs.value<ASCIIWizardData>(k_WizardData_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -111,12 +112,13 @@ IFilter::PreflightResult ReadASCIIDataFilter::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadASCIIDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler) const
+Result<> ReadASCIIDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pWizardDataValue = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_WizardData_Key);
+  auto pWizardDataValue = filterArgs.value<ASCIIWizardData>(k_WizardData_Key);
 
   /****************************************************************************
    * Write your algorithm implementation in this function

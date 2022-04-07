@@ -22,22 +22,22 @@
 
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ReadASCIIDataFilterParameter.hpp"
+#include "complex/Parameters/ReadASCIIDataParameter.hpp"
 
-#include "Core/Core_test_dirs.hpp"
-#include "Core/Filters/ReadASCIIData.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/ReadASCIIDataFilter.hpp"
 
 using namespace complex;
 
 TEST_CASE("Core::ReadASCIIData: Instantiation and Parameter Check", "[Core][ReadASCIIData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  ReadASCIIData filter;
+  ReadASCIIDataFilter filter;
   DataStructure ds;
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insertOrAssign(ReadASCIIData::k_WizardData_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
+  /*[x]*/ args.insertOrAssign(ReadASCIIDataFilter::k_WizardData_Key, std::make_any<ASCIIWizardData>(ASCIIWizardData()));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
