@@ -8,6 +8,8 @@
 
 #include <fmt/core.h>
 
+#include <nonstd/span.hpp>
+
 #include <algorithm>
 #include <iostream>
 #include <memory>
@@ -309,6 +311,16 @@ public:
     return std::make_unique<DataStore<T>>(this->getTupleShape(), this->getComponentShape(), static_cast<T>(0));
   }
 
+  nonstd::span<T> createSpan()
+  {
+    return {data(), this->getSize()};
+  }
+
+  nonstd::span<const T> createSpan() const
+  {
+    return {data(), this->getSize()};
+  }
+
   /**
    * @brief Writes the data store to HDF5. Returns the HDF5 error code should
    * one be encountered. Otherwise, returns 0.
@@ -364,11 +376,10 @@ public:
     // Create DataStore
     auto dataStore = std::make_unique<DataStore<T>>(tupleShape, componentShape, static_cast<T>(0));
 
-    auto count = dataStore->getSize();
-    auto dataVector = datasetReader.readAsVector<T>();
-    auto dataPtr = std::make_unique<value_type[]>(count);
-    std::copy(dataVector.begin(), dataVector.end(), dataPtr.get());
-    dataStore->m_Data = std::move(dataPtr);
+    if(!datasetReader.readIntoSpan(dataStore->createSpan()))
+    {
+      throw std::runtime_error(fmt::format("Error reading data from DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+    }
 
     return dataStore;
   }
