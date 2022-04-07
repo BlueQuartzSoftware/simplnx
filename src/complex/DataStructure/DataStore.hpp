@@ -292,8 +292,7 @@ public:
    */
   std::unique_ptr<IDataStore> deepCopy() const override
   {
-    auto copy = std::make_unique<DataStore<T>>(*this);
-    auto size = this->getSize();
+    return std::make_unique<DataStore<T>>(*this);
     return copy;
   }
 
