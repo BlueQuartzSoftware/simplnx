@@ -44,7 +44,7 @@ public:
   Result<> operator()();
 
   /**
-   * @brief
+   * @brief Allows thread safe progress updates
    * @param counter
    */
   void sendThreadSafeProgressMessage(int64_t counter);
@@ -58,12 +58,12 @@ private:
   // Threadsafe Progress Message
   mutable std::mutex m_ProgressMessage_Mutex;
   size_t m_InstanceIndex = {0};
-  size_t m_TotalElements = 0;
+  size_t m_TotalElements = {0};
 
   /**
-   * @brief
+   * @brief Applies the 4x4 Transform matrix to the node based geometry
    */
-  void applyTransformation();
+  Result<> applyTransformation();
 };
 
 } // namespace complex

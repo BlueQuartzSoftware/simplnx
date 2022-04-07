@@ -1,8 +1,6 @@
 
 #include "ApplyTransformationToGeometry.hpp"
 
-#include <Eigen/Dense>
-
 #include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "complex/DataStructure/Geometry/EdgeGeom.hpp"
 #include "complex/DataStructure/Geometry/HexahedralGeom.hpp"
@@ -11,6 +9,10 @@
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
+
+#include <Eigen/Dense>
+
+#include <fmt/format.h>
 
 #include <cstdint>
 #include <map>
@@ -102,9 +104,7 @@ Result<> ApplyTransformationToGeometry::operator()()
   ApplyTransformationProgress::s_ProgressValues[m_InstanceIndex] = 0;
   ApplyTransformationProgress::s_LastProgressInt[m_InstanceIndex] = 0;
 
-  applyTransformation();
-  // TODO: Fix this return
-  return {};
+  return applyTransformation();
 }
 
 // -----------------------------------------------------------------------------
@@ -131,7 +131,7 @@ void ApplyTransformationToGeometry::sendThreadSafeProgressMessage(int64_t counte
   lastProgressInt = progressInt;
 }
 // -----------------------------------------------------------------------------
-void ApplyTransformationToGeometry::applyTransformation()
+Result<> ApplyTransformationToGeometry::applyTransformation()
 {
 
   DataObject* dataObject = m_DataStructure.getData(m_InputValues->pGeometryToTransform);
@@ -170,7 +170,7 @@ void ApplyTransformationToGeometry::applyTransformation()
   }
   else
   {
-    throw std::runtime_error("Geometry was of unknown type or DataObjet was not an Abstract Geometry");
+    return {MakeErrorResult(-7010, fmt::format("Geometry is not of the proper Type of Vertex, Edge, Triangle, Quad, Tetrahedral, hexahedral. Type is: '{}", dataObject->getDataObjectType()))};
   }
 
   m_TotalElements = vertexList->getNumberOfTuples();
@@ -178,4 +178,5 @@ void ApplyTransformationToGeometry::applyTransformation()
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, m_TotalElements);
   dataAlg.execute(ApplyTransformationToGeometryImpl(*this, m_InputValues->transformationMatrix, vertexList, m_ShouldCancel));
+  return {};
 }
