@@ -234,7 +234,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Scale", "[ComplexCor
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataGraph, args);
-    REQUIRE(executeResult.result.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
     TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 92);
