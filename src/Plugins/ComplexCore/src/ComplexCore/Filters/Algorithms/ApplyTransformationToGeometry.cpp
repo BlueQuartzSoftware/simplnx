@@ -40,6 +40,11 @@ public:
   }
   ~ApplyTransformationToGeometryImpl() = default;
 
+  ApplyTransformationToGeometryImpl(const ApplyTransformationToGeometryImpl&) = default;           // Copy Constructor defaulted
+  ApplyTransformationToGeometryImpl(ApplyTransformationToGeometryImpl&&) = delete;                 // Move Constructor Not Implemented
+  ApplyTransformationToGeometryImpl& operator=(const ApplyTransformationToGeometryImpl&) = delete; // Copy Assignment Not Implemented
+  ApplyTransformationToGeometryImpl& operator=(ApplyTransformationToGeometryImpl&&) = delete;      // Move Assignment Not Implemented
+
   void convert(size_t start, size_t end) const
   {
     using ProjectiveMatrix = Eigen::Matrix<float, 4, 4, Eigen::RowMajor>;
