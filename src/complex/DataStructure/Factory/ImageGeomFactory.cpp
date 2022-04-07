@@ -25,7 +25,7 @@ H5::ErrorType ImageGeomFactory::readH5Group(H5::DataStructureReader& dataStructu
   auto name = groupReader.getName();
   auto importId = ReadObjectId(groupReader);
   auto geom = ImageGeom::Import(dataStructureReader.getDataStructure(), name, importId, parentId);
-  return geom->readHdf5(dataStructureReader, groupReader);
+  return geom->readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 //------------------------------------------------------------------------------

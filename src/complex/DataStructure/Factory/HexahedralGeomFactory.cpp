@@ -25,7 +25,7 @@ H5::ErrorType HexahedralGeomFactory::readH5Group(H5::DataStructureReader& dataSt
   std::string name = groupReader.getName();
   auto importId = ReadObjectId(groupReader);
   auto geom = HexahedralGeom::Import(dataStructureReader.getDataStructure(), name, importId, parentId);
-  return geom->readHdf5(dataStructureReader, groupReader);
+  return geom->readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 //------------------------------------------------------------------------------

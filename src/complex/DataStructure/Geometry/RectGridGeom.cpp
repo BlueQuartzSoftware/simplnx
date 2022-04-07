@@ -635,7 +635,7 @@ void RectGridGeom::setElementSizes(const Float32Array* elementSizes)
   m_VoxelSizesId = elementSizes->getId();
 }
 
-H5::ErrorType RectGridGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
+H5::ErrorType RectGridGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   // Read Dimensions
   auto volumeAttribute = groupReader.getAttribute("Dimensions");
@@ -652,7 +652,7 @@ H5::ErrorType RectGridGeom::readHdf5(H5::DataStructureReader& dataStructureReade
   m_zBoundsId = ReadH5DataId(groupReader, H5Constants::k_ZBoundsTag);
   m_VoxelSizesId = ReadH5DataId(groupReader, H5Constants::k_VoxelSizesTag);
 
-  return getDataMap().readH5Group(dataStructureReader, groupReader, getId());
+  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 H5::ErrorType RectGridGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const

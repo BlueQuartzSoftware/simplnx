@@ -170,9 +170,9 @@ BaseGroup::ConstIterator BaseGroup::end() const
   return m_DataMap.end();
 }
 
-H5::ErrorType BaseGroup::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader)
+H5::ErrorType BaseGroup::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
-  return m_DataMap.readH5Group(dataStructureReader, groupReader, getId());
+  return m_DataMap.readH5Group(dataStructureReader, groupReader, getId(), preflight);
 }
 
 H5::ErrorType BaseGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
