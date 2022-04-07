@@ -183,7 +183,7 @@ usize RectGridGeom::getNumberOfElements() const
 
 AbstractGeometry::StatusCode RectGridGeom::findElementSizes()
 {
-  auto sizes = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfElements()}, std::vector<usize>{1});
+  auto sizes = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfElements()}, std::vector<usize>{1}, 0.0f);
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
   auto zBnds = getZBounds();

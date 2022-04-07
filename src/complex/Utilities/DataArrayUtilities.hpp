@@ -249,7 +249,7 @@ std::unique_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
     return std::make_unique<EmptyDataStore<T>>(tupleShape, componentShape);
   }
   case IDataAction::Mode::Execute: {
-    return std::make_unique<DataStore<T>>(tupleShape, componentShape);
+    return std::make_unique<DataStore<T>>(tupleShape, componentShape, static_cast<T>(0));
   }
   default: {
     throw std::runtime_error("Invalid mode");
@@ -422,7 +422,7 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
     return nullptr;
   }
 
-  std::shared_ptr<DataStoreType> dataStore = std::shared_ptr<DataStoreType>(new DataStoreType({tupleShape}, componentShape));
+  std::shared_ptr<DataStoreType> dataStore = std::shared_ptr<DataStoreType>(new DataStoreType({tupleShape}, componentShape, static_cast<T>(0)));
   ArrayType* dataArray = ArrayType::Create(dataGraph, name, dataStore, parentId);
 
   const size_t fileSize = fs::file_size(filename);
