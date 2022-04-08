@@ -215,17 +215,24 @@ std::string MapPointCloudToRegularGridFilter::humanName() const
 Parameters MapPointCloudToRegularGridFilter::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<ChoicesParameter>(k_SamplingGridType_Key, "Sampling Grid Type", "Specifies how data is saved or accessed", 0,
-                                                   std::vector<std::string>{"Manual", "Use Existing Image Geometry"}));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SamplingGridType_Key, "Sampling Grid Type", "Specifies how data is saved or accessed", 0,
+                                                                    std::vector<std::string>{"Manual", "Use Existing Image Geometry"}));
   params.insert(std::make_unique<VectorInt32Parameter>(k_GridDimensions_Key, "Grid Dimensions", "Target grid size", std::vector<int32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_ExistingImageGeometry_Key, "Image Geometry", "Path to the target Image Geometry", DataPath()));
+
   params.insert(std::make_unique<DataPathSelectionParameter>(k_VertexGeometry_Key, "Vertex Geometry", "Path to the target Vertex Geometry", DataPath()));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewImageGeometry_Key, "Image Geometry", "Path to create the Image Geometry", DataPath()));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_ExistingImageGeometry_Key, "Image Geometry", "Path to the target Image Geometry", DataPath()));
+
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraysToMap_Key, "Arrays to Map", "Paths to map to the grid geometry", std::vector<DataPath>(), complex::GetAllDataTypes()));
-  params.insert(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Specifies if a mask array should be used", false));
+
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Specifies if a mask array should be used", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask", "Path to the target mask array", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean}, false));
   params.insert(
       std::make_unique<ArraySelectionParameter>(k_VoxelIndices_Key, "Voxel Indices", "Path to the Voxel Indices array", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::uint64}, false));
+
+  params.linkParameters(k_UseMask_Key, k_MaskPath_Key, std::make_any<bool>(true));
+  params.linkParameters(k_SamplingGridType_Key, k_GridDimensions_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  params.linkParameters(k_SamplingGridType_Key, k_ExistingImageGeometry_Key, std::make_any<ChoicesParameter::ValueType>(1));
   return params;
 }
 

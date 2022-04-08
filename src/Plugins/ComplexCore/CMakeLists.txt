@@ -9,6 +9,7 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${complex_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 set(FilterList
   AlignGeometries
   ApproximatePointCloudHull
+  ApplyTransformationToGeometryFilter
   CalculateFeatureSizesFilter
   CalculateTriangleAreasFilter
   CreateFeatureArrayFromElementArray
@@ -57,6 +58,7 @@ set(ActionList
   )
 
 set(AlgorithmList
+  ApplyTransformationToGeometry
   StlFileReader
   LaplacianSmoothing
   QuickSurfaceMesh
