@@ -14,7 +14,7 @@ TEST_CASE("DataArrayCreation")
   complex::DataStructure ds;
 
   using DataStoreType = complex::DataStore<int32_t>;
-  DataStoreType data_array = DataStoreType({0}, {2});
+  DataStoreType data_array = DataStoreType(complex::IDataStore::ShapeType{0}, complex::IDataStore::ShapeType{2}, 0);
   size_t numTuples = data_array.getNumberOfTuples();
   REQUIRE(numTuples == 0);
 }
