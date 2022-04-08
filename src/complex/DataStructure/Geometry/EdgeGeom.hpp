@@ -16,6 +16,8 @@ class COMPLEX_EXPORT EdgeGeom : public AbstractGeometry
 public:
   friend class DataStructure;
 
+  static inline constexpr usize k_NumVerts = 2;
+
   /**
    * @brief
    * @param ds
@@ -174,7 +176,7 @@ public:
    * @param edgeId
    * @param verts
    */
-  void getVertsAtEdge(usize edgeId, usize verts[2]);
+  void getVertsAtEdge(usize edgeId, usize verts[2]) const;
 
   /**
    * @brief

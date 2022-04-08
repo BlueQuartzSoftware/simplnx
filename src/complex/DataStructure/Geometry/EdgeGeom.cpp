@@ -236,7 +236,7 @@ void EdgeGeom::setVertsAtEdge(usize edgeId, usize verts[2])
   }
 }
 
-void EdgeGeom::getVertsAtEdge(usize edgeId, usize verts[2])
+void EdgeGeom::getVertsAtEdge(usize edgeId, usize verts[2]) const
 {
   auto edges = getEdges();
   if(edges == nullptr)
