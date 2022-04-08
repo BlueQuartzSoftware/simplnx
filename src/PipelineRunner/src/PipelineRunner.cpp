@@ -68,6 +68,81 @@ Pipeline createTestPipeline()
 }
 #endif
 
+bool shouldPreflight(int argc, char* argv[])
+{
+  if(argc < 3)
+  {
+    return false;
+  }
+
+  std::string arg(argv[2]);
+  if(arg == "-p" || arg == "--preflight")
+  {
+    return true;
+  }
+  return false;
+}
+
+int preflightPipeline(Pipeline& pipeline)
+{
+  PipelineRunner::PipelineObserver obs(&pipeline);
+  if(!pipeline.preflight())
+  {
+    std::cout << "\n-------------------------" << std::endl;
+    std::cout << "Error preflighting pipeline" << std::endl;
+    return -2;
+  }
+
+  std::cout << "\n---------------------------" << std::endl;
+  std::cout << "Finished preflighting pipeline" << std::endl;
+  return 0;
+}
+
+int preflightPipelinePath(const fs::path& pipelinePath)
+{
+  auto result = Pipeline::FromFile(pipelinePath);
+  if(result.invalid())
+  {
+    std::cout << fmt::format("Could not load pipeline at path: '{}'", pipelinePath.string()) << std::endl;
+    return -1;
+  }
+
+  std::cout << fmt::format("Preflighting pipeline at path: '{}'\n", pipelinePath.string()) << std::endl;
+
+  Pipeline pipeline = result.value();
+  return preflightPipeline(pipeline);
+}
+
+int executePipeline(Pipeline& pipeline)
+{
+  PipelineRunner::PipelineObserver obs(&pipeline);
+  if(!pipeline.execute())
+  {
+    std::cout << "\n-------------------------" << std::endl;
+    std::cout << "Error executing pipeline" << std::endl;
+    return -2;
+  }
+
+  std::cout << "\n---------------------------" << std::endl;
+  std::cout << "Finished executing pipeline" << std::endl;
+  return 0;
+}
+
+int executePipelinePath(const fs::path& pipelinePath)
+{
+  auto result = Pipeline::FromFile(pipelinePath);
+  if(result.invalid())
+  {
+    std::cout << fmt::format("Could not load pipeline at path: '{}'", pipelinePath.string()) << std::endl;
+    return -1;
+  }
+
+  std::cout << fmt::format("Executing pipeline at path: '{}'\n", pipelinePath.string()) << std::endl;
+
+  Pipeline pipeline = result.value();
+  return executePipeline(pipeline);
+}
+
 int main(int argc, char* argv[])
 {
   complex::Application app;
@@ -75,7 +150,8 @@ int main(int argc, char* argv[])
 
 #ifdef TEST_PIPELINE
   Pipeline pipeline = createTestPipeline();
-#else
+  return executePipeline(pipeline);
+#endif
   if(argc < 2)
   {
     std::cout << "PipelineRunner requires a filepath to run" << std::endl;
@@ -89,22 +165,12 @@ int main(int argc, char* argv[])
     return -1;
   }
 
-  auto result = Pipeline::FromFile(targetPath);
-  if(result.invalid())
+  if(shouldPreflight(argc, argv))
   {
-    std::cout << fmt::format("Could not load pipeline at path: '{}'", targetPath.string()) << std::endl;
-    return -1;
+    return preflightPipelinePath(targetPath);
   }
-
-  std::cout << fmt::format("Executing pipeline at path: '{}'\n", targetPath.string()) << std::endl;
-
-  Pipeline pipeline = result.value();
-#endif
-  PipelineRunner::PipelineObserver obs(&pipeline);
-  pipeline.execute();
-
-  std::cout << "\n---------------------------" << std::endl;
-  std::cout << "Finished executing pipeline" << std::endl;
-
-  return 0;
+  else
+  {
+    return executePipelinePath(targetPath);
+  }
 }
