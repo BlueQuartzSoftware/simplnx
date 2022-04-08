@@ -97,7 +97,7 @@ void ReadSTLFile(DataStructure& dataGraph)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataGraph, args);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
   TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
   REQUIRE(triangleGeom.getNumberOfFaces() == 92);
@@ -124,11 +124,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Translation", "[Comp
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataGraph, args);
-    REQUIRE(executeResult.result.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
     TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 92);
@@ -177,7 +177,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Rotation", "[Complex
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataGraph, args);
@@ -290,7 +290,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Manual", "[ComplexCo
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataGraph, args);
-    REQUIRE(executeResult.result.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
     TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 92);
@@ -364,11 +364,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Precomputed", "[Comp
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataGraph, args);
-    REQUIRE(executeResult.result.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
     TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 92);
