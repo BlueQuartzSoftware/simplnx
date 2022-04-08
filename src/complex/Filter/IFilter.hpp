@@ -47,7 +47,7 @@ public:
 
   struct ProgressMessage : public Message
   {
-    int32 progress;
+    int32 progress = 0;
   };
 
   struct MessageHandler
