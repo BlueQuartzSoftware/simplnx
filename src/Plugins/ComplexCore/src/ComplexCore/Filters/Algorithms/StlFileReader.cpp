@@ -332,7 +332,7 @@ Result<> StlFileReader::eliminate_duplicate_nodes()
   }
 
   // Create array to hold unique node numbers
-  Int64DataStore uniqueIds({nNodes}, {1});
+  Int64DataStore uniqueIds(IDataStore::ShapeType{nNodes}, IDataStore::ShapeType{1}, {});
   for(AbstractGeometry::MeshIndexType i = 0; i < nNodesAll; i++)
   {
     uniqueIds[i] = static_cast<int64_t>(i);
