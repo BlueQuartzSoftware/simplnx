@@ -70,7 +70,7 @@ Parameters ScalarSegmentFeaturesFilter::parameters() const
   params.insert(std::make_unique<DataPathSelectionParameter>(k_GridGeomPath_Key, "Grid Geometry", "DataPath to target Grid Geometry", DataPath{}));
 
   params.insert(std::make_unique<NumberParameter<int>>(k_ScalarToleranceKey, "Scalar Tolerance", "Tolerance for segmenting input Cell Data", 1));
-  params.insert(std::make_unique<BoolParameter>(k_UseGoodVoxelsKey, "Use Mask Array", "Determines if a mask array is used for segmenting", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseGoodVoxelsKey, "Use Mask Array", "Determines if a mask array is used for segmenting", false));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPathKey, "Scalar Array to Segment", "Path to the DataArray to segment", DataPath(), complex::GetIntegerDataTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsPathKey, "Mask", "Path to the DataArray Mask", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean}, true));
@@ -81,6 +81,8 @@ Parameters ScalarSegmentFeaturesFilter::parameters() const
   params.insert(std::make_unique<ArrayCreationParameter>(k_ActiveArrayPathKey, "Active", "Created array", DataPath()));
 
   params.insert(std::make_unique<BoolParameter>(k_RandomizeFeaturesKey, "Randomize Feature IDs", "Specifies if feature IDs should be randomized during calculations", false));
+
+  params.linkParameters(k_UseGoodVoxelsKey, k_GoodVoxelsPathKey, std::make_any<bool>(true));
   return params;
 }
 
