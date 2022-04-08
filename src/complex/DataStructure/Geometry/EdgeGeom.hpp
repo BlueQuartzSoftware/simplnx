@@ -174,7 +174,7 @@ public:
    * @param edgeId
    * @param verts
    */
-  void getVertsAtEdge(usize edgeId, usize verts[2]);
+  void getVertsAtEdge(usize edgeId, usize verts[2]) const;
 
   /**
    * @brief
