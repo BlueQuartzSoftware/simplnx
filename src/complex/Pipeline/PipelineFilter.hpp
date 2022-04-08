@@ -119,7 +119,7 @@ public:
    * @param renamedPaths Collection of renamed output paths.
    * @return bool
    */
-  bool preflight(DataStructure& data, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel) override;
+  bool preflight(DataStructure& data, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming) override;
 
   /**
    * @brief Attempts to execute the node using the provided DataStructure.

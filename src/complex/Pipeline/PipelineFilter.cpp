@@ -146,7 +146,7 @@ bool PipelineFilter::preflight(DataStructure& data, const std::atomic_bool& shou
   return true;
 }
 
-bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel)
+bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
   sendFilterRunStateMessage(m_Index, RunState::Preflighting);
 
@@ -204,9 +204,13 @@ bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, 
   {
     sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
   }
-  renamedPaths = checkForRenamedPaths(oldCreatedPaths);
 
-  notifyRenamedPaths(renamedPaths);
+  if(allowRenaming)
+  {
+    renamedPaths = checkForRenamedPaths(oldCreatedPaths);
+    notifyRenamedPaths(renamedPaths);
+  }
+
   sendFilterRunStateMessage(m_Index, RunState::Idle);
   return true;
 }

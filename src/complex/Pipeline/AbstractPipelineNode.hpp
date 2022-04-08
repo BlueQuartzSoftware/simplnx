@@ -131,9 +131,11 @@ public:
    * @param data
    * @param RenamedPaths& renamedPaths = {} Collection of renamed output paths.
    * Only used for PipelineFilters.
+   * @param shouldCancel
+   * @param allowRenaming
    * @return bool
    */
-  virtual bool preflight(DataStructure& data, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel) = 0;
+  virtual bool preflight(DataStructure& data, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming) = 0;
 
   /**
    * @brief Attempts to execute the node using the provided DataStructure.
