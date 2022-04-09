@@ -112,7 +112,12 @@ std::optional<DataObject::IdType> DataStructure::getId(const DataPath& path) con
   {
     return {0};
   }
-  return getData(path)->getId();
+  const DataObject* dataObject = getData(path);
+  if(nullptr == dataObject)
+  {
+    return {0};
+  }
+  return dataObject->getId();
 }
 
 LinkedPath DataStructure::getLinkedPath(const DataPath& path) const

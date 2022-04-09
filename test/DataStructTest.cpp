@@ -116,6 +116,9 @@ TEST_CASE("DataPathTest")
     REQUIRE(dataStr.setAdditionalParent(grandchildId, child2Id));
   }
 
+  auto shouldNotExist = dataStr.getId(DataPath({"Does", "Not", "Exist"}));
+  REQUIRE(false == shouldNotExist.has_value());
+
   const DataPath gcPath1({"Foo", "Bar1", "Bazz"});
   const DataPath gcPath2({"Foo", "Bar2", "Bazz"});
 
