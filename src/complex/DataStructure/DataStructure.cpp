@@ -115,7 +115,7 @@ std::optional<DataObject::IdType> DataStructure::getId(const DataPath& path) con
   const DataObject* dataObject = getData(path);
   if(nullptr == dataObject)
   {
-    return {0};
+    return std::nullopt;
   }
   return dataObject->getId();
 }
