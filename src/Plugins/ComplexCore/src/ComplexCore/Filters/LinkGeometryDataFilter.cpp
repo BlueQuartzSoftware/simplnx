@@ -13,6 +13,7 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 
@@ -55,7 +56,8 @@ Parameters LinkGeometryDataFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_GeometryDataPath_Key, "Grid Geometry", "The complete path to the Geometry with which to link the data", DataPath{}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryDataPath_Key, "Selected Geometry", "The complete path to the Geometry with which to link the data", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Any}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedVertexDataArrayPaths_Key, "Vertex Data Arrays to Link", "Data associated with a vertex or point",
                                                                MultiArraySelectionParameter::ValueType{}, complex::GetAllDataTypes(), true));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedEdgeDataArrayPaths_Key, "Edge Data Arrays to Link", "Data associated with an edge", MultiArraySelectionParameter::ValueType{},

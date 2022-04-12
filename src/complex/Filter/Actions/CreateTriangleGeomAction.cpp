@@ -37,11 +37,11 @@ Result<> CreateTriangleGeomAction::apply(DataStructure& dataStructure, Mode mode
 
   if(m_AdditionalData.find(AdditionalData::CreateVertexGroup) != m_AdditionalData.end())
   {
-    dataStructure.makePath(m_Path.createChildPath("VertexData"));
+    dataStructure.makePath(m_Path.createChildPath(k_DefaultVertexGroup));
   }
   if(m_AdditionalData.find(AdditionalData::CreateTriangleGroup) != m_AdditionalData.end())
   {
-    dataStructure.makePath(m_Path.createChildPath("FaceData"));
+    dataStructure.makePath(m_Path.createChildPath(k_DefaultFacesGroup));
   }
 
   if(shouldCreateVertexArray())
@@ -119,14 +119,14 @@ Result<> CreateTriangleGeomAction::createGeometry(DataStructure& dataStructure, 
 
 Result<> CreateTriangleGeomAction::createVertexArray(DataStructure& dataStructure, Mode mode) const
 {
-  DataPath arrayPath = path().createChildPath("Vertex Array");
+  DataPath arrayPath = path().createChildPath(k_DefaultVerticesName);
   IDataStore::ShapeType compShape{3};
   return CreateArray<float32>(dataStructure, m_TupleSize, compShape, arrayPath, mode);
 }
 
 Result<> CreateTriangleGeomAction::createTriangleArray(DataStructure& dataStructure, Mode mode) const
 {
-  DataPath arrayPath = path().createChildPath("Triangle Array");
+  DataPath arrayPath = path().createChildPath(k_DefaultFacesName);
   IDataStore::ShapeType compShape{3};
   return CreateArray<uint64>(dataStructure, m_TupleSize, compShape, arrayPath, mode);
 }
