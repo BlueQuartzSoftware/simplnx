@@ -25,8 +25,10 @@ public:
 
   using AdditionalDataTypes = std::set<AdditionalData>;
 
-  static constexpr StringLiteral k_DefaultVerticesName = "Vertex Array";
-  static constexpr StringLiteral k_DefaultFacesName = "Triangle Array";
+  static constexpr StringLiteral k_DefaultVerticesName = "SharedVertexList";
+  static constexpr StringLiteral k_DefaultFacesName = "SharedTriList";
+  static constexpr StringLiteral k_DefaultFacesGroup = "FaceData";
+  static constexpr StringLiteral k_DefaultVertexGroup = "VertexData";
 
   CreateTriangleGeomAction() = delete;
 
