@@ -156,6 +156,7 @@ void readLegacyDataArrayDims(const H5::DatasetReader& dataArrayReader, std::vect
     }
 
     cDims = compAttrib.readAsVector<usize>();
+    std::reverse(cDims.begin(), cDims.end());
   }
 
   {
@@ -166,6 +167,7 @@ void readLegacyDataArrayDims(const H5::DatasetReader& dataArrayReader, std::vect
     }
 
     tDims = tupleAttrib.readAsVector<usize>();
+    std::reverse(tDims.begin(), tDims.end());
   }
 }
 
@@ -229,7 +231,7 @@ IDataArray* readLegacyDataArray(DataStructure& ds, const H5::DatasetReader& data
 template <typename T>
 void createLegacyNeighborList(DataStructure& ds, DataObject ::IdType parentId, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader, const std::vector<usize>& tupleDims)
 {
-  auto numTuples = std::accumulate(std::begin(tupleDims), std::end(tupleDims), 1, std::multiplies<float>());
+  auto numTuples = std::accumulate(tupleDims.cbegin(), tupleDims.cend(), static_cast<usize>(1), std::multiplies<>());
   auto data = NeighborList<T>::ReadHdf5Data(parentReader, datasetReader);
   auto* neighborList = NeighborList<T>::Create(ds, datasetReader.getName(), numTuples, parentId);
   for(usize i = 0; i < data.size(); ++i)
