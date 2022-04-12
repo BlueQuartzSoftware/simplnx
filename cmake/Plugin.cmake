@@ -83,10 +83,12 @@ function(complex_add_plugin)
     complex_COMPILE_PLUGIN(PLUGIN_NAME ${ARGS_PLUGIN_NAME}
                            PLUGIN_SOURCE_DIR ${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}
     )
-    # Increment the plugin count
-    get_property(PLUGIN_COUNT GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT)
-    math(EXPR PLUGIN_COUNT "${PLUGIN_COUNT}+1")
-    set_property(GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT ${PLUGIN_COUNT})
+    if(COMPLEX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME})
+      # Increment the plugin count only if it is enabled
+      get_property(PLUGIN_COUNT GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT)
+      math(EXPR PLUGIN_COUNT "${PLUGIN_COUNT}+1")
+      set_property(GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT ${PLUGIN_COUNT})
+    endif()
   else()
     set(COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR ${pluginSearchDir} CACHE PATH "" FORCE)
     message(STATUS "${ARGS_PLUGIN_NAME} [DISABLED]. Missing Source Directory. Use -DCOMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR=/Path/To/PluginDir")
