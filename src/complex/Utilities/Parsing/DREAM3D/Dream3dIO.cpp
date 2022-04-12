@@ -156,6 +156,7 @@ void readLegacyDataArrayDims(const H5::DatasetReader& dataArrayReader, std::vect
     }
 
     cDims = compAttrib.readAsVector<usize>();
+    std::reverse(cDims.begin(), cDims.end());
   }
 
   {
@@ -166,6 +167,7 @@ void readLegacyDataArrayDims(const H5::DatasetReader& dataArrayReader, std::vect
     }
 
     tDims = tupleAttrib.readAsVector<usize>();
+    std::reverse(tDims.begin(), tDims.end());
   }
 }
 
