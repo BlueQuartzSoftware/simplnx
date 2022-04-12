@@ -294,7 +294,7 @@ public:
       {
         return true;
       }
-      if(isValid() || rhs.isValid())
+      if(!isValid() || !rhs.isValid())
       {
         return false;
       }
