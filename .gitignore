@@ -28,4 +28,3 @@ CMakeLists.txt.*
 test_data/
 CMakeUserPresets.json
 Workspace
-docs
