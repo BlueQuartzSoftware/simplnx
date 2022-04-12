@@ -15,6 +15,8 @@ class COMPLEX_EXPORT TetrahedralGeom : public AbstractGeometry3D
 public:
   friend class DataStructure;
 
+  static inline constexpr usize k_NumVerts = 4;
+
   /**
    * @brief
    * @param ds
