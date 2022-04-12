@@ -16,6 +16,8 @@ class COMPLEX_EXPORT VertexGeom : public AbstractGeometry
 public:
   friend class DataStructure;
 
+  static inline constexpr usize k_NumVerts = 1;
+
   /**
    * @brief
    * @param ds
