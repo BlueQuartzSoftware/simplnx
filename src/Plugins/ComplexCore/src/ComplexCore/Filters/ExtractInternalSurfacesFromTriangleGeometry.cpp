@@ -113,11 +113,16 @@ std::string ExtractInternalSurfacesFromTriangleGeometry::humanName() const
 Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
 {
   Parameters params;
+  params.insertSeparator(Parameters::Separator{"Input Geometry and Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeom_Key, "Triangle Geometry", "Path to the existing Triangle Geometry", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Triangle}));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_InternalTriangleGeom_Key, "Interior Triangle Geometry", "Path to create the new Triangle Geometry", DataPath()));
   params.insert(
       std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath(), ArraySelectionParameter::AllowedTypes{complex::DataType::int8}));
+
+  params.insertSeparator(Parameters::Separator{"Created/Output Data"});
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_InternalTriangleGeom_Key, "Created Triangle Geometry Path", "Path to create the new Triangle Geometry", DataPath()));
+
+  params.insertSeparator(Parameters::Separator{"Optional Transferred Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays", "Paths to vertex-related DataArrays that should be copied to the new geometry",
                                                                std::vector<DataPath>{}, complex::GetAllDataTypes(), true));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyTrianglePaths_Key, "Copy Triangle Arrays", "Paths to face-related DataArrays that should be copied to the new geometry",
