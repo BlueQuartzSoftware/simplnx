@@ -165,6 +165,8 @@ function(create_complex_plugin)
     )
   endforeach()
 
+  source_group("${NAME}/Filters" FILES )
+
   # Include all of the custom Actions
   foreach(action ${ARGS_ACTION_LIST})
     list(APPEND ${ARGS_NAME}_Plugin_HDRS
@@ -251,7 +253,8 @@ function(create_complex_plugin)
       ${${ARGS_NAME}_Plugin_SRCS}
   )
 
-  source_group(TREE "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}" PREFIX ${ARGS_NAME} FILES ${${ARGS_NAME}_ARGS_FILTER_FILES})
+  source_group(TREE "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}" PREFIX ${ARGS_NAME} FILES ${${ARGS_NAME}_Plugin_HDRS} ${${ARGS_NAME}_Plugin_SRCS} )
+  source_group("${ARGS_NAME}_Generated/" FILES ${${ARGS_NAME}_GENERATED_HEADERS} )
 
   target_include_directories(${ARGS_NAME}
     PUBLIC

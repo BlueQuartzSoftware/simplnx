@@ -105,6 +105,13 @@ add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 #   PRIVATE
 #     additional source files
  )
+ source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} 
+    FILES
+      ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nanoflann.hpp
+      ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp
+      ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.cpp
+   )
+
 
 #------------------------------------------------------------------------------
 # If there are additional include directories that are needed for this plugin

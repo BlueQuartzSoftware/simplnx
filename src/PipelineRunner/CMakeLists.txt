@@ -13,3 +13,9 @@ target_sources(PipelineRunner
     )
 
 target_link_libraries(PipelineRunner complex::complex)
+
+source_group("PiplineRunner" FILES     
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/PipelineRunner.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/PRObserver.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/PRObserver.hpp
+)
