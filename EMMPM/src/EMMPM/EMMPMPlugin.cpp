@@ -16,7 +16,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("cd34edc4-d9d0-555c-85
 EMMPMPlugin::EMMPMPlugin()
 : AbstractPlugin(k_ID, "EMMPM", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 EMMPMPlugin::~EMMPMPlugin() = default;
@@ -31,4 +31,4 @@ COMPLEX_DEF_PLUGIN(EMMPMPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "EMMPM/plugin_filter_registration.h"
+#include "EMMPM/EMMPM_filter_registration.hpp"

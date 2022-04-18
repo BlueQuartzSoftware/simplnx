@@ -26,7 +26,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("115b0d10-ab97-5a18-88
 ITKImageProcessingPlugin::ITKImageProcessingPlugin()
 : AbstractPlugin(k_ID, "ITKImageProcessing", "<<--Description was not read-->>", "BlueQuartz Software")
 {
-  registerFilters();
+  registerPublicFilters();
   RegisterITKImageIO();
 }
 
@@ -66,4 +66,4 @@ COMPLEX_DEF_PLUGIN(ITKImageProcessingPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "ITKImageProcessing/plugin_filter_registration.h"
+#include "ITKImageProcessing/ITKImageProcessing_filter_registration.hpp"

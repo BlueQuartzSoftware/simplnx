@@ -18,7 +18,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("279232bf-84e0-530c-98
 VolumeMeshingPlugin::VolumeMeshingPlugin()
 : AbstractPlugin(k_ID, "VolumeMeshing", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 VolumeMeshingPlugin::~VolumeMeshingPlugin() = default;
@@ -33,4 +33,4 @@ COMPLEX_DEF_PLUGIN(VolumeMeshingPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "VolumeMeshing/plugin_filter_registration.h"
+#include "VolumeMeshing/VolumeMeshing_filter_registration.hpp"

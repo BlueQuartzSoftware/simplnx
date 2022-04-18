@@ -79,7 +79,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("302815ff-93a3-55c4-85
 DREAM3DReviewPlugin::DREAM3DReviewPlugin()
 : AbstractPlugin(k_ID, "DREAM3DReview", "<<--Description was not read-->>", "Open-Source")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 DREAM3DReviewPlugin::~DREAM3DReviewPlugin() = default;
@@ -94,4 +94,4 @@ COMPLEX_DEF_PLUGIN(DREAM3DReviewPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "DREAM3DReview/plugin_filter_registration.h"
+#include "DREAM3DReview/DREAM3DReview_filter_registration.hpp"

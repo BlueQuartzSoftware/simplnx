@@ -15,7 +15,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("6d1011be-24af-5887-8b
 OSUToolboxPlugin::OSUToolboxPlugin()
 : AbstractPlugin(k_ID, "OSUToolbox", "<<--Description was not read-->>", "Vendor Name")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 OSUToolboxPlugin::~OSUToolboxPlugin() = default;
@@ -30,4 +30,4 @@ COMPLEX_DEF_PLUGIN(OSUToolboxPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "OSUToolbox/plugin_filter_registration.h"
+#include "OSUToolbox/OSUToolbox_filter_registration.hpp"

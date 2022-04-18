@@ -62,7 +62,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("c09cf01b-014e-5adb-84
 OrientationAnalysisPlugin::OrientationAnalysisPlugin()
 : AbstractPlugin(k_ID, "OrientationAnalysis", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 OrientationAnalysisPlugin::~OrientationAnalysisPlugin() = default;
@@ -77,4 +77,4 @@ COMPLEX_DEF_PLUGIN(OrientationAnalysisPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "OrientationAnalysis/plugin_filter_registration.h"
+#include "OrientationAnalysis/OrientationAnalysis_filter_registration.hpp"

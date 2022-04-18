@@ -33,7 +33,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("8889d277-c880-5a78-aa
 ImportExportPlugin::ImportExportPlugin()
 : AbstractPlugin(k_ID, "ImportExport", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 ImportExportPlugin::~ImportExportPlugin() = default;
@@ -48,4 +48,4 @@ COMPLEX_DEF_PLUGIN(ImportExportPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "ImportExport/plugin_filter_registration.h"
+#include "ImportExport/ImportExport_filter_registration.hpp"

@@ -25,7 +25,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("660e085c-7718-5572-a4
 ProcessingPlugin::ProcessingPlugin()
 : AbstractPlugin(k_ID, "Processing", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 ProcessingPlugin::~ProcessingPlugin() = default;
@@ -40,4 +40,4 @@ COMPLEX_DEF_PLUGIN(ProcessingPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "Processing/plugin_filter_registration.h"
+#include "Processing/Processing_filter_registration.hpp"

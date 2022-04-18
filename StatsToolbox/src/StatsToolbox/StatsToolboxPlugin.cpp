@@ -31,7 +31,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("b2e819c6-314c-56da-ab
 StatsToolboxPlugin::StatsToolboxPlugin()
 : AbstractPlugin(k_ID, "StatsToolbox", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 StatsToolboxPlugin::~StatsToolboxPlugin() = default;
@@ -46,4 +46,4 @@ COMPLEX_DEF_PLUGIN(StatsToolboxPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "StatsToolbox/plugin_filter_registration.h"
+#include "StatsToolbox/StatsToolbox_filter_registration.hpp"

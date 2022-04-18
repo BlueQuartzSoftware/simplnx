@@ -24,7 +24,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("40bd9d86-8fae-5451-a3
 SimulationIOPlugin::SimulationIOPlugin()
 : AbstractPlugin(k_ID, "SimulationIO", "<<--Description was not read-->>", "BlueQuartz Software")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 SimulationIOPlugin::~SimulationIOPlugin() = default;
@@ -39,4 +39,4 @@ COMPLEX_DEF_PLUGIN(SimulationIOPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "SimulationIO/plugin_filter_registration.h"
+#include "SimulationIO/SimulationIO_filter_registration.hpp"
