@@ -33,7 +33,7 @@
 namespace complex
 {
 // -----------------------------------------------------------------------------
-ReadASCIIDataParameter::ReadASCIIDataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty)
+ReadASCIIDataParameter::ReadASCIIDataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 {

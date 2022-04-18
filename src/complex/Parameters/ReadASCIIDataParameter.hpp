@@ -43,7 +43,7 @@ public:
   using ValueType = ASCIIWizardData;
 
   ReadASCIIDataParameter() = delete;
-  ReadASCIIDataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty = true);
+  ReadASCIIDataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
   ~ReadASCIIDataParameter() override = default;
 
   ReadASCIIDataParameter(const ReadASCIIDataParameter&) = delete;
