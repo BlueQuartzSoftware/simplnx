@@ -34,7 +34,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("af9f4652-17c1-58f9-94
 ImageProcessingPlugin::ImageProcessingPlugin()
 : AbstractPlugin(k_ID, "ImageProcessing", "<<--Description was not read-->>", "Open-Source")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 ImageProcessingPlugin::~ImageProcessingPlugin() = default;
@@ -49,4 +49,4 @@ COMPLEX_DEF_PLUGIN(ImageProcessingPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "ImageProcessing/plugin_filter_registration.h"
+#include "ImageProcessing/ImageProcessing_filter_registration.hpp"

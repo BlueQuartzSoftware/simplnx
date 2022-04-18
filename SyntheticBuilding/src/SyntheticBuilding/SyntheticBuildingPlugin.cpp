@@ -27,7 +27,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("290cb19c-d8ba-5c4c-82
 SyntheticBuildingPlugin::SyntheticBuildingPlugin()
 : AbstractPlugin(k_ID, "SyntheticBuilding", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 SyntheticBuildingPlugin::~SyntheticBuildingPlugin() = default;
@@ -42,4 +42,4 @@ COMPLEX_DEF_PLUGIN(SyntheticBuildingPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "SyntheticBuilding/plugin_filter_registration.h"
+#include "SyntheticBuilding/SyntheticBuilding_filter_registration.hpp"

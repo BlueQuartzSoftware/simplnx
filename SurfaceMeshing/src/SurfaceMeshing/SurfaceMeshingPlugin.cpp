@@ -28,7 +28,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("c257fabd-df24-55b2-80
 SurfaceMeshingPlugin::SurfaceMeshingPlugin()
 : AbstractPlugin(k_ID, "SurfaceMeshing", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 SurfaceMeshingPlugin::~SurfaceMeshingPlugin() = default;
@@ -43,4 +43,4 @@ COMPLEX_DEF_PLUGIN(SurfaceMeshingPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "SurfaceMeshing/plugin_filter_registration.h"
+#include "SurfaceMeshing/SurfaceMeshing_filter_registration.hpp"

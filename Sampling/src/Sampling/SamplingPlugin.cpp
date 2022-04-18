@@ -25,7 +25,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("82c85742-5a33-5bc3-9b
 SamplingPlugin::SamplingPlugin()
 : AbstractPlugin(k_ID, "Sampling", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 SamplingPlugin::~SamplingPlugin() = default;
@@ -40,4 +40,4 @@ COMPLEX_DEF_PLUGIN(SamplingPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "Sampling/plugin_filter_registration.h"
+#include "Sampling/Sampling_filter_registration.hpp"

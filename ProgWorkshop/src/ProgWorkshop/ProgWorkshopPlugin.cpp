@@ -21,7 +21,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("35442d72-ad89-5db3-9c
 ProgWorkshopPlugin::ProgWorkshopPlugin()
 : AbstractPlugin(k_ID, "ProgWorkshop", "<<--Description was not read-->>", "Open-Source")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 ProgWorkshopPlugin::~ProgWorkshopPlugin() = default;
@@ -36,4 +36,4 @@ COMPLEX_DEF_PLUGIN(ProgWorkshopPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "ProgWorkshop/plugin_filter_registration.h"
+#include "ProgWorkshop/ProgWorkshop_filter_registration.hpp"

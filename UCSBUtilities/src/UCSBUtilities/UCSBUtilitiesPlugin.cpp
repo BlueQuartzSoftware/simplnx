@@ -23,7 +23,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("2b77f77b-b232-51f1-b9
 UCSBUtilitiesPlugin::UCSBUtilitiesPlugin()
 : AbstractPlugin(k_ID, "UCSBUtilities", "<<--Description was not read-->>", "University of California, Santa Barbara")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 UCSBUtilitiesPlugin::~UCSBUtilitiesPlugin() = default;
@@ -38,4 +38,4 @@ COMPLEX_DEF_PLUGIN(UCSBUtilitiesPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "UCSBUtilities/plugin_filter_registration.h"
+#include "UCSBUtilities/UCSBUtilities_filter_registration.hpp"

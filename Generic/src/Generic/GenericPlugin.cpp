@@ -21,7 +21,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("57c4ff38-8348-5336-8f
 GenericPlugin::GenericPlugin()
 : AbstractPlugin(k_ID, "Generic", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 GenericPlugin::~GenericPlugin() = default;
@@ -36,4 +36,4 @@ COMPLEX_DEF_PLUGIN(GenericPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "Generic/plugin_filter_registration.h"
+#include "Generic/Generic_filter_registration.hpp"

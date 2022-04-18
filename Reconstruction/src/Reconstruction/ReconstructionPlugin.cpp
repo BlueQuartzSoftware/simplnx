@@ -25,7 +25,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("a506e94f-2a20-5eb4-b1
 ReconstructionPlugin::ReconstructionPlugin()
 : AbstractPlugin(k_ID, "Reconstruction", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 ReconstructionPlugin::~ReconstructionPlugin() = default;
@@ -40,4 +40,4 @@ COMPLEX_DEF_PLUGIN(ReconstructionPlugin)
 // The below file is generated at CMake configure time. This is done because
 // the cmake system knows what filters are being compiled. This saves the
 // developer from having to upkeep these lists.
-#include "Reconstruction/plugin_filter_registration.h"
+#include "Reconstruction/Reconstruction_filter_registration.hpp"
