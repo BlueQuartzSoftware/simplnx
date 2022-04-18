@@ -38,7 +38,7 @@ ASCIIWizardData::ASCIIWizardData() = default;
 // -----------------------------------------------------------------------------
 bool ASCIIWizardData::isEmpty()
 {
-  return (m_InputFilePath.empty() && m_DataHeaders.empty() && m_DataTypes.empty() && m_TupleDims.empty() && m_BeginIndex < 0 && m_NumberOfLines < 0 && m_SelectedPath.empty());
+  return (m_InputFilePath.empty() && m_DataHeaders.empty() && m_DataTypes.empty() && m_BeginIndex < 0 && m_NumberOfLines < 0);
 }
 
 // -----------------------------------------------------------------------------
@@ -65,17 +65,17 @@ void ASCIIWizardData::writeJson(nlohmann::json& json) const
   }
   json["Delimiters"] = delimiters;
 
-  nlohmann::json tDims;
-  for(const auto& tDim : m_TupleDims)
-  {
-    tDims.push_back(tDim);
-  }
-  json["Tuple Dimensions"] = tDims;
+  //  nlohmann::json tDims;
+  //  for(const auto& tDim : m_TupleDims)
+  //  {
+  //    tDims.push_back(tDim);
+  //  }
+  //  json["Tuple Dimensions"] = tDims;
 
   json["Input File Path"] = m_InputFilePath;
   json["Begin Index"] = m_BeginIndex;
   json["Number of Lines"] = m_NumberOfLines;
-  json["Data Path"] = m_SelectedPath.toString();
+  //  json["Data Path"] = m_SelectedPath.toString();
   json["Header Line"] = m_HeaderLine;
   json["Header Mode"] = m_HeaderMode;
   json["Consecutive Delimiters"] = m_ConsecutiveDelimiters;
@@ -112,14 +112,14 @@ bool ASCIIWizardData::readJson(const nlohmann::json& json)
     }
   }
 
-  nlohmann::json tDims = json["Tuple Dimensions"];
-  for(const auto& tDim : tDims)
-  {
-    if(tDim.is_number_integer())
-    {
-      m_TupleDims.push_back(tDim);
-    }
-  }
+  //  nlohmann::json tDims = json["Tuple Dimensions"];
+  //  for(const auto& tDim : tDims)
+  //  {
+  //    if(tDim.is_number_integer())
+  //    {
+  //      m_TupleDims.push_back(tDim);
+  //    }
+  //  }
 
   m_InputFilePath = json["Input File Path"];
   m_BeginIndex = json["Begin Index"];
@@ -129,17 +129,17 @@ bool ASCIIWizardData::readJson(const nlohmann::json& json)
   m_ConsecutiveDelimiters = json["Consecutive Delimiters"];
   m_AutomaticGroup = json["Automatic Group"];
 
-  std::optional<DataPath> dPath = DataPath::FromString(json["Data Path"].dump());
-  if(dPath.has_value())
-  {
-    m_SelectedPath = dPath.value();
-  }
+  //  std::optional<DataPath> dPath = DataPath::FromString(json["Data Path"].dump());
+  //  if(dPath.has_value())
+  //  {
+  //    m_SelectedPath = dPath.value();
+  //  }
 
   return true;
 }
 
 // -----------------------------------------------------------------------------
-const std::string& ASCIIWizardData::getInputFilePath() const
+const std::string& ASCIIWizardData::inputFilePath() const
 {
   return m_InputFilePath;
 }
@@ -151,7 +151,7 @@ void ASCIIWizardData::setInputFilePath(const std::string& newInputFilePath)
 }
 
 // -----------------------------------------------------------------------------
-const std::list<std::string>& ASCIIWizardData::getDataHeaders() const
+const std::list<std::string>& ASCIIWizardData::dataHeaders() const
 {
   return m_DataHeaders;
 }
@@ -163,7 +163,7 @@ void ASCIIWizardData::setDataHeaders(const std::list<std::string>& newDataHeader
 }
 
 // -----------------------------------------------------------------------------
-usize ASCIIWizardData::getBeginIndex() const
+usize ASCIIWizardData::beginIndex() const
 {
   return m_BeginIndex;
 }
@@ -175,19 +175,19 @@ void ASCIIWizardData::setBeginIndex(usize newBeginIndex)
 }
 
 // -----------------------------------------------------------------------------
-usize ASCIIWizardData::getNumberOfLines() const
+int64 ASCIIWizardData::numberOfLines() const
 {
   return m_NumberOfLines;
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::setNumberOfLines(usize newNumberOfLines)
+void ASCIIWizardData::setNumberOfLines(int64 newNumberOfLines)
 {
   m_NumberOfLines = newNumberOfLines;
 }
 
 // -----------------------------------------------------------------------------
-const std::list<std::string>& ASCIIWizardData::getDataTypes() const
+const std::list<std::string>& ASCIIWizardData::dataTypes() const
 {
   return m_DataTypes;
 }
@@ -199,43 +199,43 @@ void ASCIIWizardData::setDataTypes(const std::list<std::string>& newDataTypes)
 }
 
 // -----------------------------------------------------------------------------
-const std::list<uint8>& ASCIIWizardData::getDelimiters() const
+const std::list<std::string>& ASCIIWizardData::delimiters() const
 {
   return m_Delimiters;
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::setDelimiters(const std::list<uint8>& newDelimiters)
+void ASCIIWizardData::setDelimiters(const std::list<std::string>& newDelimiters)
 {
   m_Delimiters = newDelimiters;
 }
 
-// -----------------------------------------------------------------------------
-const std::vector<usize>& ASCIIWizardData::getTupleDims() const
-{
-  return m_TupleDims;
-}
+//// -----------------------------------------------------------------------------
+// const std::vector<usize>& ASCIIWizardData::tupleDims() const
+//{
+//   return m_TupleDims;
+// }
+
+//// -----------------------------------------------------------------------------
+// void ASCIIWizardData::setTupleDims(const std::vector<usize>& newTupleDims)
+//{
+//   m_TupleDims = newTupleDims;
+// }
+
+//// -----------------------------------------------------------------------------
+// const DataPath& ASCIIWizardData::selectedPath() const
+//{
+//   return m_SelectedPath;
+// }
+
+//// -----------------------------------------------------------------------------
+// void ASCIIWizardData::setSelectedPath(const DataPath& newSelectedPath)
+//{
+//   m_SelectedPath = newSelectedPath;
+// }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::setTupleDims(const std::vector<usize>& newTupleDims)
-{
-  m_TupleDims = newTupleDims;
-}
-
-// -----------------------------------------------------------------------------
-const DataPath& ASCIIWizardData::getSelectedPath() const
-{
-  return m_SelectedPath;
-}
-
-// -----------------------------------------------------------------------------
-void ASCIIWizardData::setSelectedPath(const DataPath& newSelectedPath)
-{
-  m_SelectedPath = newSelectedPath;
-}
-
-// -----------------------------------------------------------------------------
-usize ASCIIWizardData::getHeaderLine() const
+usize ASCIIWizardData::headerLine() const
 {
   return m_HeaderLine;
 }
@@ -247,7 +247,7 @@ void ASCIIWizardData::setHeaderLine(usize newHeaderLine)
 }
 
 // -----------------------------------------------------------------------------
-bool ASCIIWizardData::getConsecutiveDelimiters() const
+bool ASCIIWizardData::consecutiveDelimiters() const
 {
   return m_ConsecutiveDelimiters;
 }
@@ -259,7 +259,7 @@ void ASCIIWizardData::setConsecutiveDelimiters(bool newConsecutiveDelimiters)
 }
 
 // -----------------------------------------------------------------------------
-bool ASCIIWizardData::getAutomaticGroup() const
+bool ASCIIWizardData::automaticGroup() const
 {
   return m_AutomaticGroup;
 }
@@ -271,7 +271,7 @@ void ASCIIWizardData::setAutomaticGroup(bool newAutomaticGroup)
 }
 
 // -----------------------------------------------------------------------------
-ASCIIWizardData::HeaderMode ASCIIWizardData::getHeaderMode() const
+ASCIIWizardData::HeaderMode ASCIIWizardData::headerMode() const
 {
   return m_HeaderMode;
 }
@@ -280,4 +280,58 @@ ASCIIWizardData::HeaderMode ASCIIWizardData::getHeaderMode() const
 void ASCIIWizardData::setHeaderMode(ASCIIWizardData::HeaderMode newHeaderMode)
 {
   m_HeaderMode = newHeaderMode;
+}
+
+// -----------------------------------------------------------------------------
+bool ASCIIWizardData::tabAsDelimiter() const
+{
+  return m_TabAsDelimiter;
+}
+
+// -----------------------------------------------------------------------------
+void ASCIIWizardData::setTabAsDelimiter(bool newTabAsDelimiter)
+{
+  m_TabAsDelimiter = newTabAsDelimiter;
+}
+
+// -----------------------------------------------------------------------------
+bool ASCIIWizardData::semicolonAsDelimiter() const
+{
+  return m_SemicolonAsDelimiter;
+}
+
+// -----------------------------------------------------------------------------
+void ASCIIWizardData::setSemicolonAsDelimiter(bool newSemicolonAsDelimiter)
+{
+  m_SemicolonAsDelimiter = newSemicolonAsDelimiter;
+}
+
+// -----------------------------------------------------------------------------
+bool ASCIIWizardData::commaAsDelimiter() const
+{
+  return m_CommaAsDelimiter;
+}
+
+// -----------------------------------------------------------------------------
+void ASCIIWizardData::setCommaAsDelimiter(bool newCommaAsDelimiter)
+{
+  m_CommaAsDelimiter = newCommaAsDelimiter;
+}
+
+// -----------------------------------------------------------------------------
+bool ASCIIWizardData::spaceAsDelimiter() const
+{
+  return m_SpaceAsDelimiter;
+}
+
+// -----------------------------------------------------------------------------
+void ASCIIWizardData::setSpaceAsDelimiter(bool newSpaceAsDelimiter)
+{
+  m_SpaceAsDelimiter = newSpaceAsDelimiter;
+}
+
+// -----------------------------------------------------------------------------
+usize ASCIIWizardData::totalPreviewLines() const
+{
+  return m_TotalPreviewLines;
 }
