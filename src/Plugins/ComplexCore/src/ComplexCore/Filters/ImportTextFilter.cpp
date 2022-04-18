@@ -49,7 +49,7 @@ Uuid ImportTextFilter::uuid() const
 
 std::string ImportTextFilter::humanName() const
 {
-  return "Import ASCII Data";
+  return "Import ASCII Data Array";
 }
 
 Parameters ImportTextFilter::parameters() const
