@@ -15,10 +15,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("01ff618b-781f-4ac0-b9
 TestOnePlugin::TestOnePlugin()
 : AbstractPlugin(k_ID, "TestOne", "Test Plugin", "BlueQuartz Software")
 {
-  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<TestFilter>(); });
-  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<ExampleFilter1>(); });
-  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<ExampleFilter2>(); });
-  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<ErrorWarningFilter>(); });
+  registerPublicFilters();
 }
 
 TestOnePlugin::~TestOnePlugin() = default;
@@ -29,3 +26,5 @@ std::vector<complex::H5::IDataFactory*> TestOnePlugin::getDataFactories() const
 }
 
 COMPLEX_DEF_PLUGIN(TestOnePlugin)
+
+#include "TestOne/TestOne_filter_registration.hpp"

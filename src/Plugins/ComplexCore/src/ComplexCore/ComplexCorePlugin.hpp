@@ -28,7 +28,13 @@ public:
 
 private:
   /**
-   * @brief This will register all the filters that are contained in this plugin
+   * @brief This will register all the filters that are contained in this plugin that are to be exposed to external programs
    */
-  void registerFilters();
+  void registerPublicFilters();
+
+  /**
+   * @brief This will register all the filters that are contained in this plugin that are NOT to be exposed to external programs.
+   * This will allow the filters to be compiled and tested but not exposed in the user interface
+   */
+  void registerPrivateFilters();
 };

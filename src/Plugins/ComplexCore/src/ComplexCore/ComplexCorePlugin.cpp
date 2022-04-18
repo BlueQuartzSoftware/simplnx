@@ -16,7 +16,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("05cc618b-781f-4ac0-b9
 ComplexCorePlugin::ComplexCorePlugin()
 : AbstractPlugin(k_ID, "ComplexCore", "Description", "BlueQuartz Software")
 {
-  registerFilters();
+  registerPublicFilters();
 }
 
 ComplexCorePlugin::~ComplexCorePlugin() = default;
@@ -28,4 +28,4 @@ std::vector<complex::H5::IDataFactory*> ComplexCorePlugin::getDataFactories() co
 
 COMPLEX_DEF_PLUGIN(ComplexCorePlugin)
 
-#include "ComplexCore/plugin_filter_registration.h"
+#include "ComplexCore/ComplexCore_filter_registration.hpp"

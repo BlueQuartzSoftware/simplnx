@@ -134,12 +134,15 @@ function(create_complex_plugin)
     ${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/${ARGS_NAME}Plugin.cpp
   )
 
+
+
   #------------------------------------------------------------------------------
   # Plugin Filter Files
   set(${ARGS_NAME}_ARGS_FILTER_FILES)
 
   set(Filter_Registration_Include_String "")
-  set(Filter_Registration_Code "")
+  set(Public_Filter_Registration_Code "")
+  set(Private_Filter_Registration_Code "")
 
   #------------------------------------------------------------------------------
   # Add Filter Sources that need to be compiled.
@@ -160,7 +163,7 @@ function(create_complex_plugin)
       "#include \"${ARGS_NAME}/Filters/${filter}.hpp\"\n"
     )
 
-    string(APPEND Filter_Registration_Code
+    string(APPEND Public_Filter_Registration_Code
       "  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<${filter}>(); });\n"
     )
   endforeach()
@@ -186,7 +189,7 @@ function(create_complex_plugin)
   endforeach()
 
   configure_file( ${complex_SOURCE_DIR}/cmake/plugin_filter_registration.h.in
-    ${ARGS_GENERATED_HEADER_DIR}/plugin_filter_registration.h
+    ${ARGS_GENERATED_HEADER_DIR}/${ARGS_NAME}_filter_registration.hpp
   )
 
   add_library(${ARGS_NAME} SHARED)
@@ -239,6 +242,7 @@ function(create_complex_plugin)
   )
   set(${ARGS_NAME}_GENERATED_HEADERS
     ${ARGS_EXPORT_HEADER}
+    ${ARGS_GENERATED_HEADER_DIR}/${ARGS_NAME}_filter_registration.hpp
   )
   set(${ARGS_NAME}_ALL_HDRS
     ${${ARGS_NAME}_Plugin_HDRS}

@@ -4,8 +4,14 @@
  */
 @Filter_Registration_Include_String@
 
-void @PLUGIN_NAME@Plugin::registerFilters()
+void @PLUGIN_NAME@Plugin::registerPublicFilters()
 {
-@Filter_Registration_Code@
+@Public_Filter_Registration_Code@
+}
+
+
+void @PLUGIN_NAME@Plugin::registerPrivateFilters()
+{
+@Private_Filter_Registration_Code@
 }
 
