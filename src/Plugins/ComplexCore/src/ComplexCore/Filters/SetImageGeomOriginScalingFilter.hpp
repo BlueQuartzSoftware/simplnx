@@ -8,17 +8,17 @@
 
 namespace complex
 {
-class COMPLEXCORE_EXPORT SetOriginResolutionImageGeom : public IFilter
+class COMPLEXCORE_EXPORT SetImageGeomOriginScalingFilter : public IFilter
 {
 public:
-  SetOriginResolutionImageGeom() = default;
-  ~SetOriginResolutionImageGeom() noexcept override = default;
+  SetImageGeomOriginScalingFilter() = default;
+  ~SetImageGeomOriginScalingFilter() noexcept override = default;
 
-  SetOriginResolutionImageGeom(const SetOriginResolutionImageGeom&) = delete;
-  SetOriginResolutionImageGeom(SetOriginResolutionImageGeom&&) noexcept = delete;
+  SetImageGeomOriginScalingFilter(const SetImageGeomOriginScalingFilter&) = delete;
+  SetImageGeomOriginScalingFilter(SetImageGeomOriginScalingFilter&&) noexcept = delete;
 
-  SetOriginResolutionImageGeom& operator=(const SetOriginResolutionImageGeom&) = delete;
-  SetOriginResolutionImageGeom& operator=(SetOriginResolutionImageGeom&&) noexcept = delete;
+  SetImageGeomOriginScalingFilter& operator=(const SetImageGeomOriginScalingFilter&) = delete;
+  SetImageGeomOriginScalingFilter& operator=(SetImageGeomOriginScalingFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_ImageGeomPath_Key = "image_geom";
@@ -86,4 +86,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, SetOriginResolutionImageGeom, "6d3a3852-6251-5d2e-b749-6257fd0d8951");
+COMPLEX_DEF_FILTER_TRAITS(complex, SetImageGeomOriginScalingFilter, "6d3a3852-6251-5d2e-b749-6257fd0d8951");
