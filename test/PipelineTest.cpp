@@ -223,7 +223,7 @@ TEST_CASE("Rename Output")
     filterNode->setArguments(args1);
   }
 
-  REQUIRE(pipeline.preflight());
+  REQUIRE(pipeline.preflight(false, true));
 
   // Check Node 2 arguments
   {
@@ -233,5 +233,48 @@ TEST_CASE("Rename Output")
     const auto& inPath = std::any_cast<DataPath>(args2Alt.at("Data_Object_Path"));
     DataPath targetPath({group1Name, group2Name});
     REQUIRE(inPath == targetPath);
+  }
+}
+
+TEST_CASE("Not Renaming")
+{
+  Application app;
+  app.loadPlugins(unit_test::k_BuildDir.view());
+
+  std::string group1Name = "Foo";
+  std::string group2Name = "Bar";
+
+  Arguments args1;
+  args1.insert("Data_Object_Path", std::make_any<DataPath>(DataPath({group1Name})));
+
+  Arguments args2;
+  args2.insert("Data_Object_Path", std::make_any<DataPath>(DataPath({group1Name, group2Name})));
+
+  Pipeline pipeline("Rename Test Pipeline");
+  REQUIRE(pipeline.push_back(k_CreateDataGroupHandle, args1));
+  REQUIRE(pipeline.push_back(k_CreateDataGroupHandle, args2));
+
+  REQUIRE(pipeline.preflight());
+
+  // Update arguments to test renaming
+  {
+    group1Name = "Bizz";
+    args1.insertOrAssign("Data_Object_Path", std::make_any<DataPath>(DataPath({group1Name})));
+
+    auto* filterNode = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+    REQUIRE(filterNode != nullptr);
+    filterNode->setArguments(args1);
+  }
+
+  REQUIRE(pipeline.preflight(false, false));
+
+  // Check Node 2 arguments
+  {
+    auto* filterNode2 = dynamic_cast<PipelineFilter*>(pipeline.at(1));
+    REQUIRE(filterNode2 != nullptr);
+    auto args2Alt = filterNode2->getArguments();
+    const auto& inPath = std::any_cast<DataPath>(args2Alt.at("Data_Object_Path"));
+    DataPath targetPath({group1Name, group2Name});
+    REQUIRE(inPath != targetPath);
   }
 }
