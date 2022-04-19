@@ -22,7 +22,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     CreateStringArrayTest.cpp
     CropVertexGeometryTest.cpp
     #DataContainerReaderTest.cpp    # MISSING 1 or more Parameter Implementations
-    DataContainerWriterTest.cpp
     ExecuteProcessTest.cpp
     ExtractAttributeArraysFromGeometryTest.cpp
     ExtractComponentAsArrayTest.cpp
@@ -54,7 +53,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     RequiredZThicknessTest.cpp
     #RotateSampleRefFrameTest.cpp    # MISSING 1 or more Parameter Implementations
     ScaleVolumeTest.cpp
-    SetOriginResolutionImageGeomTest.cpp
     SplitAttributeArrayTest.cpp
     WriteASCIIDataTest.cpp
     WriteTriangleGeometryTest.cpp

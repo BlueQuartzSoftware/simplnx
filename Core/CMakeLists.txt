@@ -21,7 +21,6 @@ set(FilterList
   CreateStringArray
   CropVertexGeometry
   #DataContainerReader # MISSING 1 or more Parameter Implementations
-  DataContainerWriter
   ExecuteProcess
   ExtractAttributeArraysFromGeometry
   ExtractComponentAsArray
@@ -53,7 +52,6 @@ set(FilterList
   RequiredZThickness
   #RotateSampleRefFrame # MISSING 1 or more Parameter Implementations
   ScaleVolume
-  SetOriginResolutionImageGeom
   SplitAttributeArray
   WriteASCIIData
   WriteTriangleGeometry
