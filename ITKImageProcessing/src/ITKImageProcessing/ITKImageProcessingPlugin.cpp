@@ -1,4 +1,5 @@
 #include "ITKImageProcessingPlugin.hpp"
+#include "ITKImageProcessing/ITKImageProcessing_filter_registration.hpp"
 
 #include <itkBMPImageIOFactory.h>
 #include <itkBioRadImageIOFactory.h>
@@ -26,7 +27,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("115b0d10-ab97-5a18-88
 ITKImageProcessingPlugin::ITKImageProcessingPlugin()
 : AbstractPlugin(k_ID, "ITKImageProcessing", "<<--Description was not read-->>", "BlueQuartz Software")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
   RegisterITKImageIO();
 }
 
@@ -62,8 +67,3 @@ std::vector<std::string> ITKImageProcessingPlugin::GetList2DSupportedFileExtensi
 }
 
 COMPLEX_DEF_PLUGIN(ITKImageProcessingPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "ITKImageProcessing/ITKImageProcessing_filter_registration.hpp"

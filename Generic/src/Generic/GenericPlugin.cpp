@@ -1,4 +1,5 @@
 #include "GenericPlugin.hpp"
+#include "Generic/Generic_filter_registration.hpp"
 
 using namespace complex;
 
@@ -21,7 +22,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("57c4ff38-8348-5336-8f
 GenericPlugin::GenericPlugin()
 : AbstractPlugin(k_ID, "Generic", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 GenericPlugin::~GenericPlugin() = default;
@@ -32,8 +37,3 @@ std::vector<complex::H5::IDataFactory*> GenericPlugin::getDataFactories() const
 }
 
 COMPLEX_DEF_PLUGIN(GenericPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "Generic/Generic_filter_registration.hpp"

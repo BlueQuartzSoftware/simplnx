@@ -1,4 +1,5 @@
 #include "SIMPLPlugin.hpp"
+#include "SIMPL/SIMPL_filter_registration.hpp"
 
 using namespace complex;
 
@@ -67,7 +68,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("45a0f3fc-8c93-5505-8a
 SIMPLPlugin::SIMPLPlugin()
 : AbstractPlugin(k_ID, "SIMPL", "<<--Description was not read-->>", "OpenSource")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 SIMPLPlugin::~SIMPLPlugin() = default;
@@ -78,8 +83,3 @@ std::vector<complex::H5::IDataFactory*> SIMPLPlugin::getDataFactories() const
 }
 
 COMPLEX_DEF_PLUGIN(SIMPLPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "SIMPL/SIMPL_filter_registration.hpp"

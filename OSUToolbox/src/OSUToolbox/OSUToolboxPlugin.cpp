@@ -1,4 +1,5 @@
 #include "OSUToolboxPlugin.hpp"
+#include "OSUToolbox/OSUToolbox_filter_registration.hpp"
 
 using namespace complex;
 
@@ -15,7 +16,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("6d1011be-24af-5887-8b
 OSUToolboxPlugin::OSUToolboxPlugin()
 : AbstractPlugin(k_ID, "OSUToolbox", "<<--Description was not read-->>", "Vendor Name")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 OSUToolboxPlugin::~OSUToolboxPlugin() = default;
@@ -26,8 +31,3 @@ std::vector<complex::H5::IDataFactory*> OSUToolboxPlugin::getDataFactories() con
 }
 
 COMPLEX_DEF_PLUGIN(OSUToolboxPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "OSUToolbox/OSUToolbox_filter_registration.hpp"

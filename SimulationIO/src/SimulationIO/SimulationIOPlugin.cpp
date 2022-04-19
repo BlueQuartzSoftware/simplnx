@@ -1,4 +1,5 @@
 #include "SimulationIOPlugin.hpp"
+#include "SimulationIO/SimulationIO_filter_registration.hpp"
 
 using namespace complex;
 
@@ -24,7 +25,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("40bd9d86-8fae-5451-a3
 SimulationIOPlugin::SimulationIOPlugin()
 : AbstractPlugin(k_ID, "SimulationIO", "<<--Description was not read-->>", "BlueQuartz Software")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 SimulationIOPlugin::~SimulationIOPlugin() = default;
@@ -35,8 +40,3 @@ std::vector<complex::H5::IDataFactory*> SimulationIOPlugin::getDataFactories() c
 }
 
 COMPLEX_DEF_PLUGIN(SimulationIOPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "SimulationIO/SimulationIO_filter_registration.hpp"

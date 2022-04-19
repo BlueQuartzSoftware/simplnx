@@ -1,4 +1,5 @@
 #include "ImageProcessingPlugin.hpp"
+#include "ImageProcessing/ImageProcessing_filter_registration.hpp"
 
 using namespace complex;
 
@@ -34,7 +35,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("af9f4652-17c1-58f9-94
 ImageProcessingPlugin::ImageProcessingPlugin()
 : AbstractPlugin(k_ID, "ImageProcessing", "<<--Description was not read-->>", "Open-Source")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 ImageProcessingPlugin::~ImageProcessingPlugin() = default;
@@ -45,8 +50,3 @@ std::vector<complex::H5::IDataFactory*> ImageProcessingPlugin::getDataFactories(
 }
 
 COMPLEX_DEF_PLUGIN(ImageProcessingPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "ImageProcessing/ImageProcessing_filter_registration.hpp"

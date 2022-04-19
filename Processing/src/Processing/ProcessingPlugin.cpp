@@ -1,4 +1,5 @@
 #include "ProcessingPlugin.hpp"
+#include "Processing/Processing_filter_registration.hpp"
 
 using namespace complex;
 
@@ -25,7 +26,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("660e085c-7718-5572-a4
 ProcessingPlugin::ProcessingPlugin()
 : AbstractPlugin(k_ID, "Processing", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 ProcessingPlugin::~ProcessingPlugin() = default;
@@ -36,8 +41,3 @@ std::vector<complex::H5::IDataFactory*> ProcessingPlugin::getDataFactories() con
 }
 
 COMPLEX_DEF_PLUGIN(ProcessingPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "Processing/Processing_filter_registration.hpp"

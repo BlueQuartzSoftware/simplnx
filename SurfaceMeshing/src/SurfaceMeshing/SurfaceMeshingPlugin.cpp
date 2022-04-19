@@ -1,4 +1,5 @@
 #include "SurfaceMeshingPlugin.hpp"
+#include "SurfaceMeshing/SurfaceMeshing_filter_registration.hpp"
 
 using namespace complex;
 
@@ -28,7 +29,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("c257fabd-df24-55b2-80
 SurfaceMeshingPlugin::SurfaceMeshingPlugin()
 : AbstractPlugin(k_ID, "SurfaceMeshing", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 SurfaceMeshingPlugin::~SurfaceMeshingPlugin() = default;
@@ -39,8 +44,3 @@ std::vector<complex::H5::IDataFactory*> SurfaceMeshingPlugin::getDataFactories()
 }
 
 COMPLEX_DEF_PLUGIN(SurfaceMeshingPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "SurfaceMeshing/SurfaceMeshing_filter_registration.hpp"

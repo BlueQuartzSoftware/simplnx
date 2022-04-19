@@ -1,4 +1,5 @@
 #include "SamplingPlugin.hpp"
+#include "Sampling/Sampling_filter_registration.hpp"
 
 using namespace complex;
 
@@ -25,7 +26,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("82c85742-5a33-5bc3-9b
 SamplingPlugin::SamplingPlugin()
 : AbstractPlugin(k_ID, "Sampling", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 SamplingPlugin::~SamplingPlugin() = default;
@@ -36,8 +41,3 @@ std::vector<complex::H5::IDataFactory*> SamplingPlugin::getDataFactories() const
 }
 
 COMPLEX_DEF_PLUGIN(SamplingPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "Sampling/Sampling_filter_registration.hpp"

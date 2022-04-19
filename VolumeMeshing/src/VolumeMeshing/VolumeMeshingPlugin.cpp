@@ -1,4 +1,5 @@
 #include "VolumeMeshingPlugin.hpp"
+#include "VolumeMeshing/VolumeMeshing_filter_registration.hpp"
 
 using namespace complex;
 
@@ -18,7 +19,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("279232bf-84e0-530c-98
 VolumeMeshingPlugin::VolumeMeshingPlugin()
 : AbstractPlugin(k_ID, "VolumeMeshing", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 VolumeMeshingPlugin::~VolumeMeshingPlugin() = default;
@@ -29,8 +34,3 @@ std::vector<complex::H5::IDataFactory*> VolumeMeshingPlugin::getDataFactories() 
 }
 
 COMPLEX_DEF_PLUGIN(VolumeMeshingPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "VolumeMeshing/VolumeMeshing_filter_registration.hpp"

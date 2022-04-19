@@ -1,4 +1,5 @@
 #include "OrientationAnalysisPlugin.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_filter_registration.hpp"
 
 using namespace complex;
 
@@ -62,7 +63,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("c09cf01b-014e-5adb-84
 OrientationAnalysisPlugin::OrientationAnalysisPlugin()
 : AbstractPlugin(k_ID, "OrientationAnalysis", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 OrientationAnalysisPlugin::~OrientationAnalysisPlugin() = default;
@@ -73,8 +78,3 @@ std::vector<complex::H5::IDataFactory*> OrientationAnalysisPlugin::getDataFactor
 }
 
 COMPLEX_DEF_PLUGIN(OrientationAnalysisPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "OrientationAnalysis/OrientationAnalysis_filter_registration.hpp"

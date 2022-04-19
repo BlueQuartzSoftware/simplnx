@@ -1,4 +1,5 @@
 #include "EMMPMPlugin.hpp"
+#include "EMMPM/EMMPM_filter_registration.hpp"
 
 using namespace complex;
 
@@ -16,7 +17,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("cd34edc4-d9d0-555c-85
 EMMPMPlugin::EMMPMPlugin()
 : AbstractPlugin(k_ID, "EMMPM", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 EMMPMPlugin::~EMMPMPlugin() = default;
@@ -27,8 +32,3 @@ std::vector<complex::H5::IDataFactory*> EMMPMPlugin::getDataFactories() const
 }
 
 COMPLEX_DEF_PLUGIN(EMMPMPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "EMMPM/EMMPM_filter_registration.hpp"
