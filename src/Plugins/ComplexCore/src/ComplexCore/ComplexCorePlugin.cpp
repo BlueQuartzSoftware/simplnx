@@ -1,4 +1,5 @@
 #include "ComplexCorePlugin.hpp"
+#include "ComplexCore/ComplexCore_filter_registration.hpp"
 
 using namespace complex;
 
@@ -16,7 +17,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("05cc618b-781f-4ac0-b9
 ComplexCorePlugin::ComplexCorePlugin()
 : AbstractPlugin(k_ID, "ComplexCore", "Description", "BlueQuartz Software")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 ComplexCorePlugin::~ComplexCorePlugin() = default;
@@ -27,5 +32,3 @@ std::vector<complex::H5::IDataFactory*> ComplexCorePlugin::getDataFactories() co
 }
 
 COMPLEX_DEF_PLUGIN(ComplexCorePlugin)
-
-#include "ComplexCore/ComplexCore_filter_registration.hpp"

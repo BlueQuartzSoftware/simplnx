@@ -2,16 +2,23 @@
  * This file is auto generated during CMake configuration. The generating code is at:
  * @CMAKE_CURRENT_LIST_FILE@
  */
+
+#include "complex/Filter/IFilter.hpp"
+
 @Filter_Registration_Include_String@
 
-void @PLUGIN_NAME@Plugin::registerPublicFilters()
+#include <vector>
+#include <memory>
+
+namespace {
+
+using FilterCreationFunc = std::unique_ptr<complex::IFilter> (*)();
+
+std::vector<FilterCreationFunc> GetPluginFilterList()
 {
+  std::vector<FilterCreationFunc> filters;
 @Public_Filter_Registration_Code@
+  return filters;
 }
 
-
-void @PLUGIN_NAME@Plugin::registerPrivateFilters()
-{
-@Private_Filter_Registration_Code@
 }
-

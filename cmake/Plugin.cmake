@@ -164,7 +164,7 @@ function(create_complex_plugin)
     )
 
     string(APPEND Public_Filter_Registration_Code
-      "  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<${filter}>(); });\n"
+      "  filters.push_back([]() -> complex::IFilter::UniquePointer { return std::make_unique<complex::${filter}>(); });\n"
     )
   endforeach()
 
