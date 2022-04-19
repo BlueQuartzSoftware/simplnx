@@ -77,7 +77,7 @@ Parameters DynamicTableExample::parameters() const
     params.insert(std::make_unique<DynamicTableParameter>(k_Param2, "Fixed Coumn | Dynamic Row", "DynamicTableParameter Example Help Text", dynamicTable));
   }
 
-  params.insertSeparator({"Dynamic Coumn | Fixed Row"});
+  params.insertSeparator({"Dynamic Column | Fixed Row"});
   {
     DynamicTableParameter::ValueType dynamicTable{{{10, 20}, {30, 40}}, {"Row 1", "Row2"}, {"Col 1", "Col 2"}};
     dynamicTable.setMinCols(2);
