@@ -82,15 +82,17 @@ Result<> GeometrySelectionParameter::validate(const DataStructure& dataStructure
 
 Result<> GeometrySelectionParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
 {
+  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
+
   if(value.empty())
   {
-    return MakeErrorResult(-1, "DataPath cannot be empty");
+    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}Geometry Path cannot be empty", prefix));
   }
 
   const DataObject* object = dataStructure.getData(value);
   if(object == nullptr)
   {
-    return MakeErrorResult(-2, fmt::format("Object does not exist at path '{}'", value.toString()));
+    return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
   const AbstractGeometry* abstractGeometry = dynamic_cast<const AbstractGeometry*>(object);
@@ -111,7 +113,9 @@ Result<> GeometrySelectionParameter::validatePath(const DataStructure& dataStruc
     return {};
   }
 
-  return MakeErrorResult(-4, fmt::format("Object at path '{}' is not an accepted geometry type.", value.toString()));
+  return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_AllowedType_Error,
+                                  fmt::format("{}Geometry at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), abstractGeometry->getGeometryTypeAsString(),
+                                              fmt::join(AbstractGeometry::StringListFromGeometryType(m_AllowedTypes), ",")));
 }
 
 Result<std::any> GeometrySelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const

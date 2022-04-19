@@ -29,11 +29,6 @@ struct fmt::formatter<complex::DataType>
   }
 };
 
-namespace
-{
-constexpr int32 k_Validate_AllowedType_Error = -206;
-} // namespace
-
 namespace complex
 {
 ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
@@ -143,7 +138,7 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
     DataType dataType = dataArray->getDataType();
     if(m_AllowedTypes.count(dataType) == 0)
     {
-      return complex::MakeErrorResult(k_Validate_AllowedType_Error,
+      return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_AllowedType_Error,
                                       fmt::format("{}DataArray at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), dataType, m_AllowedTypes));
     }
   }
