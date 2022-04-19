@@ -1,5 +1,5 @@
 #include "DREAM3DReviewPlugin.hpp"
-
+#include "DREAM3DReview/DREAM3DReview_filter_registration.hpp"
 using namespace complex;
 
 namespace
@@ -79,7 +79,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("302815ff-93a3-55c4-85
 DREAM3DReviewPlugin::DREAM3DReviewPlugin()
 : AbstractPlugin(k_ID, "DREAM3DReview", "<<--Description was not read-->>", "Open-Source")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 DREAM3DReviewPlugin::~DREAM3DReviewPlugin() = default;
@@ -90,8 +94,3 @@ std::vector<complex::H5::IDataFactory*> DREAM3DReviewPlugin::getDataFactories() 
 }
 
 COMPLEX_DEF_PLUGIN(DREAM3DReviewPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "DREAM3DReview/DREAM3DReview_filter_registration.hpp"

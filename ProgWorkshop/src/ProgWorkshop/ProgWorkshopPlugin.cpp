@@ -1,4 +1,5 @@
 #include "ProgWorkshopPlugin.hpp"
+#include "ProgWorkshop/ProgWorkshop_filter_registration.hpp"
 
 using namespace complex;
 
@@ -21,7 +22,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("35442d72-ad89-5db3-9c
 ProgWorkshopPlugin::ProgWorkshopPlugin()
 : AbstractPlugin(k_ID, "ProgWorkshop", "<<--Description was not read-->>", "Open-Source")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 ProgWorkshopPlugin::~ProgWorkshopPlugin() = default;
@@ -32,8 +37,3 @@ std::vector<complex::H5::IDataFactory*> ProgWorkshopPlugin::getDataFactories() c
 }
 
 COMPLEX_DEF_PLUGIN(ProgWorkshopPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "ProgWorkshop/ProgWorkshop_filter_registration.hpp"

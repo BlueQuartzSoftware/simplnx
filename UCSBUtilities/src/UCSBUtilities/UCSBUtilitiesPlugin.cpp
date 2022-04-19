@@ -1,4 +1,5 @@
 #include "UCSBUtilitiesPlugin.hpp"
+#include "UCSBUtilities/UCSBUtilities_filter_registration.hpp"
 
 using namespace complex;
 
@@ -23,7 +24,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("2b77f77b-b232-51f1-b9
 UCSBUtilitiesPlugin::UCSBUtilitiesPlugin()
 : AbstractPlugin(k_ID, "UCSBUtilities", "<<--Description was not read-->>", "University of California, Santa Barbara")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 UCSBUtilitiesPlugin::~UCSBUtilitiesPlugin() = default;
@@ -34,8 +39,3 @@ std::vector<complex::H5::IDataFactory*> UCSBUtilitiesPlugin::getDataFactories() 
 }
 
 COMPLEX_DEF_PLUGIN(UCSBUtilitiesPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "UCSBUtilities/UCSBUtilities_filter_registration.hpp"

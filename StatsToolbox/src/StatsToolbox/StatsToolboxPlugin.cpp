@@ -1,4 +1,5 @@
 #include "StatsToolboxPlugin.hpp"
+#include "StatsToolbox/StatsToolbox_filter_registration.hpp"
 
 using namespace complex;
 
@@ -31,7 +32,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("b2e819c6-314c-56da-ab
 StatsToolboxPlugin::StatsToolboxPlugin()
 : AbstractPlugin(k_ID, "StatsToolbox", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 StatsToolboxPlugin::~StatsToolboxPlugin() = default;
@@ -42,8 +47,3 @@ std::vector<complex::H5::IDataFactory*> StatsToolboxPlugin::getDataFactories() c
 }
 
 COMPLEX_DEF_PLUGIN(StatsToolboxPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "StatsToolbox/StatsToolbox_filter_registration.hpp"

@@ -1,4 +1,5 @@
 #include "SyntheticBuildingPlugin.hpp"
+#include "SyntheticBuilding/SyntheticBuilding_filter_registration.hpp"
 
 using namespace complex;
 
@@ -27,7 +28,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("290cb19c-d8ba-5c4c-82
 SyntheticBuildingPlugin::SyntheticBuildingPlugin()
 : AbstractPlugin(k_ID, "SyntheticBuilding", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  registerPublicFilters();
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 SyntheticBuildingPlugin::~SyntheticBuildingPlugin() = default;
@@ -38,8 +43,3 @@ std::vector<complex::H5::IDataFactory*> SyntheticBuildingPlugin::getDataFactorie
 }
 
 COMPLEX_DEF_PLUGIN(SyntheticBuildingPlugin)
-
-// The below file is generated at CMake configure time. This is done because
-// the cmake system knows what filters are being compiled. This saves the
-// developer from having to upkeep these lists.
-#include "SyntheticBuilding/SyntheticBuilding_filter_registration.hpp"
