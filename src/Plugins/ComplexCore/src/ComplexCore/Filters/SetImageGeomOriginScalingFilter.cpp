@@ -1,4 +1,4 @@
-#include "SetOriginResolutionImageGeom.hpp"
+#include "SetImageGeomOriginScalingFilter.hpp"
 
 #include <optional>
 #include <string>
@@ -20,32 +20,32 @@ constexpr complex::int32 k_EMPTY_PARAMETER = -123;
 namespace complex
 {
 
-std::string SetOriginResolutionImageGeom::name() const
+std::string SetImageGeomOriginScalingFilter::name() const
 {
-  return FilterTraits<SetOriginResolutionImageGeom>::name;
+  return FilterTraits<SetImageGeomOriginScalingFilter>::name;
 }
 
-std::string SetOriginResolutionImageGeom::className() const
+std::string SetImageGeomOriginScalingFilter::className() const
 {
-  return FilterTraits<SetOriginResolutionImageGeom>::className;
+  return FilterTraits<SetImageGeomOriginScalingFilter>::className;
 }
 
-Uuid SetOriginResolutionImageGeom::uuid() const
+Uuid SetImageGeomOriginScalingFilter::uuid() const
 {
-  return FilterTraits<SetOriginResolutionImageGeom>::uuid;
+  return FilterTraits<SetImageGeomOriginScalingFilter>::uuid;
 }
 
-std::string SetOriginResolutionImageGeom::humanName() const
+std::string SetImageGeomOriginScalingFilter::humanName() const
 {
-  return "Set Origin Resolution Image Geom";
+  return "Set Origin & Spacing (Image Geom)";
 }
 
-Parameters SetOriginResolutionImageGeom::parameters() const
+Parameters SetImageGeomOriginScalingFilter::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "Path to the target ImageGeom", DataPath(), std::set{AbstractGeometry::Type::Image}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Change Origin", "Specifies if the origin should be changed", true));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeResolution_Key, "Change Resolution", "Specifies if the resolution should be changed", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeResolution_Key, "Change Spacing", "Specifies if the spacing should be changed", true));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_Origin_Key, "Origin", "Specifies the new origin values", std::vector<float64>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_Spacing_Key, "Spacing", "Specifies the new spacing values", std::vector<float64>{1, 1, 1}, std::vector<std::string>{"X", "Y", "Z"}));
 
@@ -54,13 +54,13 @@ Parameters SetOriginResolutionImageGeom::parameters() const
   return params;
 }
 
-IFilter::UniquePointer SetOriginResolutionImageGeom::clone() const
+IFilter::UniquePointer SetImageGeomOriginScalingFilter::clone() const
 {
-  return std::make_unique<SetOriginResolutionImageGeom>();
+  return std::make_unique<SetImageGeomOriginScalingFilter>();
 }
 
-IFilter::PreflightResult SetOriginResolutionImageGeom::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                        const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
   auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
@@ -87,8 +87,8 @@ IFilter::PreflightResult SetOriginResolutionImageGeom::preflightImpl(const DataS
   return {std::move(actions)};
 }
 
-Result<> SetOriginResolutionImageGeom::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel) const
+Result<> SetImageGeomOriginScalingFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                      const std::atomic_bool& shouldCancel) const
 {
   return {};
 }
