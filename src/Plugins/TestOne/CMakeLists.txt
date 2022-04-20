@@ -9,6 +9,7 @@ set(FilterList
   ExampleFilter1
   ExampleFilter2
   TestFilter
+  DynamicTableExample
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
@@ -21,3 +22,4 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 # Add in the unit tests for the filters included in this plugin
 enable_testing()
 add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
+
