@@ -39,7 +39,7 @@ Image
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
-| **Attribute Matrix** | CellData | Cell | N/A | **Cell Attribute Matrix** that holds the data to rotate |
+| **DataArray** | N/A | Any | Same as geometry | List of **DataArrays** associated with the geometry |
 
 ## Created Objects ##
 
