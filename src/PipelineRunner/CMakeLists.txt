@@ -21,7 +21,7 @@ target_sources(PipelineRunner
     ${PipelineRunner_SRCS}
     )
 
-target_link_libraries(PipelineRunner complex::complex)
+target_link_libraries(PipelineRunner PRIVATE complex::complex)
 
 source_group("PiplineRunner" FILES ${PipelineRunner_HDRS} ${PipelineRunner_SRCS})
 
