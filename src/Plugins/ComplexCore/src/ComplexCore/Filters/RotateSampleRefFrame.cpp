@@ -269,7 +269,7 @@ constexpr RotationRepresentation CastIndexToRotationRepresentation(uint64 index)
     return RotationRepresentation::RotationMatrix;
   }
   default: {
-    throw std::runtime_error("RotateSampleRefFrame: Failed to cast index to RotationRepresentation");
+    throw std::runtime_error(fmt::format("RotateSampleRefFrame: Failed to cast index {} to RotationRepresentation", index));
   }
   }
 }
