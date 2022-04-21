@@ -254,7 +254,7 @@ function(create_complex_plugin)
   )
 
   source_group(TREE "${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}" PREFIX ${ARGS_NAME} FILES ${${ARGS_NAME}_Plugin_HDRS} ${${ARGS_NAME}_Plugin_SRCS})
-  source_group("${ARGS_NAME}_Generated/" FILES ${${ARGS_NAME}_GENERATED_HEADERS} )
+  source_group("Generated" FILES ${${ARGS_NAME}_GENERATED_HEADERS} )
 
   target_include_directories(${ARGS_NAME}
     PUBLIC
