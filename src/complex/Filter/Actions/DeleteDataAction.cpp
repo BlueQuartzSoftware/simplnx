@@ -20,14 +20,7 @@ Result<> RemoveFromParent(DataStructure& dataStructure, const DataPath& path, ID
     return {nonstd::make_unexpected(std::vector<Error>{{k_TargetNotFoundErrorCode, fmt::format("Trying to delete DataPath '{}' which does not exist.", path.toString())}})};
   }
 
-  const auto parentPath = path.getParent();
-  DataObject::IdType parentId = 0;
-  if(!parentPath.empty())
-  {
-    auto parentObject = dataStructure.getData(parentPath);
-    parentId = parentObject->getId();
-  }
-  dataStructure.removeParent(targetObject->getId(), parentId);
+  dataStructure.removeData(targetObject->getId());
   return {};
 }
 } // namespace
