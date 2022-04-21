@@ -69,7 +69,7 @@ public:
   , m_SliceBySlice(sliceBySlice)
   , m_Params(args)
   {
-    // We have to inline the 3x3 Maxtrix transpose here because of the "const" nature of the 'convert' function
+    // We have to inline the 3x3 Matrix transpose here because of the "const" nature of the 'convert' function
     Matrix3fR transpose = rotationMatrix.transpose();
     // Need to use row based Eigen matrix so that the values get mapped to the right place in the raw array
     // Raw array is faster than Eigen
