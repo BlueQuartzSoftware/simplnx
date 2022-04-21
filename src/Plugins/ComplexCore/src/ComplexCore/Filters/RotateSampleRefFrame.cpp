@@ -522,6 +522,11 @@ Result<> RotateSampleRefFrame::executeImpl(DataStructure& dataStructure, const A
 
   for(const auto& cellArrayPath : selectedCellArrays)
   {
+    if(shouldCancel)
+    {
+      return {};
+    }
+
     const auto& oldCellArray = dataStructure.getDataRefAs<IDataArray>(cellArrayPath);
     DataPath createdArrayPath = createdImageGeomPath.createChildPath(oldCellArray.getName());
     auto& newCellArray = dataStructure.getDataRefAs<IDataArray>(createdArrayPath);
