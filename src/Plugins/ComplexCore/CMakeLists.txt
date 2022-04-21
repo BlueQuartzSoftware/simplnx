@@ -48,6 +48,7 @@ set(FilterList
   RemoveMinimumSizeFeaturesFilter
   RenameDataObject
   RobustAutomaticThreshold
+  RotateSampleRefFrame
   ScalarSegmentFeaturesFilter
   SegmentFeaturesFilter
   SetImageGeomOriginScalingFilter
