@@ -165,8 +165,6 @@ function(create_complex_plugin)
     )
   endforeach()
 
-  source_group("${NAME}/Filters" FILES )
-
   # Include all of the custom Actions
   foreach(action ${ARGS_ACTION_LIST})
     list(APPEND ${ARGS_NAME}_Plugin_HDRS
