@@ -456,6 +456,106 @@ DataStructure CreateNodeBasedGeometries()
   return dataGraph;
 }
 
+struct VertexGeomData
+{
+  std::optional<DataObject::IdType> verticesId;
+
+  bool operator==(const VertexGeomData& rhs) const
+  {
+    return verticesId == rhs.verticesId;
+  }
+};
+
+struct EdgeGeomData
+{
+  std::optional<DataObject::IdType> verticesId;
+  std::optional<DataObject::IdType> edgesId;
+
+  bool operator==(const EdgeGeomData& rhs) const
+  {
+    return (verticesId == rhs.verticesId) && (edgesId == rhs.edgesId);
+  }
+};
+
+struct TriangleGeomData
+{
+  std::optional<DataObject::IdType> verticesId;
+  std::optional<DataObject::IdType> edgesId;
+  std::optional<DataObject::IdType> trianglesId;
+
+  bool operator==(const TriangleGeomData& rhs) const
+  {
+    return (verticesId == rhs.verticesId) && (edgesId == rhs.edgesId) && (trianglesId == rhs.trianglesId);
+  }
+};
+
+struct QuadGeomData
+{
+  std::optional<DataObject::IdType> verticesId;
+  std::optional<DataObject::IdType> edgesId;
+  std::optional<DataObject::IdType> quadsId;
+
+  bool operator==(const QuadGeomData& rhs) const
+  {
+    return (verticesId == rhs.verticesId) && (edgesId == rhs.edgesId) && (quadsId == rhs.quadsId);
+  }
+};
+
+struct NodeBasedGeomData
+{
+  VertexGeomData vertexData;
+  EdgeGeomData edgeData;
+  TriangleGeomData triangleData;
+  QuadGeomData quadData;
+
+  bool operator==(const NodeBasedGeomData& rhs) const
+  {
+    bool vertexCheck = (vertexData == rhs.vertexData);
+    bool edgeCheck = (edgeData == rhs.edgeData);
+    bool triangleCheck = (triangleData == rhs.triangleData);
+    bool quadCheck = (quadData == rhs.quadData);
+    return vertexCheck && edgeCheck && triangleCheck && quadCheck;
+  }
+};
+
+NodeBasedGeomData getNodeGeomData(const DataStructure& dataStructure)
+{
+  NodeBasedGeomData nodeData;
+
+  DataPath vertexPath({k_VertexGroupName, "[Geometry] Vertex"});
+  auto* vertexGeom = dataStructure.getDataAs<VertexGeom>(vertexPath);
+  REQUIRE(vertexGeom != nullptr);
+  nodeData.vertexData.verticesId = vertexGeom->getVerticesId();
+
+  DataPath edgePath({k_EdgeGroupName, "[Geometry] Edge"});
+  auto* edgeGeom = dataStructure.getDataAs<EdgeGeom>(edgePath);
+  REQUIRE(edgeGeom != nullptr);
+  nodeData.edgeData.verticesId = edgeGeom->getVerticesId();
+  nodeData.edgeData.edgesId = edgeGeom->getEdgesId();
+
+  DataPath trianglePath({k_TriangleGroupName, "[Geometry] Triangle"});
+  auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(trianglePath);
+  REQUIRE(triangleGeom != nullptr);
+  nodeData.triangleData.verticesId = triangleGeom->getVerticesId();
+  nodeData.triangleData.edgesId = triangleGeom->getEdgesId();
+  nodeData.triangleData.trianglesId = triangleGeom->getFacesId();
+
+  DataPath quadPath({k_QuadGroupName, "[Geometry] Quad"});
+  auto* quadGeom = dataStructure.getDataAs<QuadGeom>(quadPath);
+  REQUIRE(quadGeom != nullptr);
+  nodeData.quadData.verticesId = quadGeom->getVerticesId();
+  nodeData.quadData.edgesId = quadGeom->getEdgesId();
+  nodeData.quadData.quadsId = quadGeom->getFacesId();
+
+  return nodeData;
+}
+
+void checkNodeGeomData(const DataStructure& dataStructure, const NodeBasedGeomData& nodeData)
+{
+  NodeBasedGeomData newNodeData = getNodeGeomData(dataStructure);
+  REQUIRE(newNodeData == nodeData);
+}
+
 TEST_CASE("Node Based Geometry IO")
 {
   Application app;
@@ -471,10 +571,13 @@ TEST_CASE("Node Based Geometry IO")
 
   std::string filePathString = filePath.string();
 
+  NodeBasedGeomData nodeData;
+
   // Write HDF5 file
   try
   {
     DataStructure ds = CreateNodeBasedGeometries();
+    nodeData = getNodeGeomData(ds);
     Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePathString);
     REQUIRE(result.valid());
 
@@ -498,6 +601,7 @@ TEST_CASE("Node Based Geometry IO")
     herr_t err;
     auto ds = DataStructure::readFromHdf5(fileReader, err);
     REQUIRE(err >= 0);
+    checkNodeGeomData(ds, nodeData);
   } catch(const std::exception& e)
   {
     FAIL(e.what());

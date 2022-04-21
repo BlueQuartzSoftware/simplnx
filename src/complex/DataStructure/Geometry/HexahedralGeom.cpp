@@ -580,7 +580,7 @@ H5::ErrorType HexahedralGeom::readHdf5(H5::DataStructureReader& dataStructureRea
   m_HexCentroidsId = ReadH5DataId(groupReader, H5Constants::k_HexCentroidsTag);
   m_HexSizesId = ReadH5DataId(groupReader, H5Constants::k_HexSizesTag);
 
-  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
+  return AbstractGeometry3D::readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 H5::ErrorType HexahedralGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const

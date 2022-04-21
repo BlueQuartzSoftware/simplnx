@@ -1,6 +1,7 @@
 #include "AbstractGeometry2D.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
 
@@ -83,6 +84,11 @@ const AbstractGeometry::SharedEdgeList* AbstractGeometry2D::getEdges() const
   return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
 }
 
+std::optional<DataObject::IdType> AbstractGeometry2D::getEdgesId() const
+{
+  return m_EdgeListId;
+}
+
 usize AbstractGeometry2D::getNumberOfEdges() const
 {
   const SharedEdgeList* edges = getEdges();
@@ -150,6 +156,15 @@ void AbstractGeometry2D::setUnsharedEdges(const SharedEdgeList* bEdgeList)
     return;
   }
   m_UnsharedEdgeListId = bEdgeList->getId();
+}
+
+H5::ErrorType AbstractGeometry2D::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
+{
+  m_VertexListId = ReadH5DataId(groupReader, H5Constants::k_VertexListTag);
+  m_EdgeListId = ReadH5DataId(groupReader, H5Constants::k_EdgeListTag);
+  m_UnsharedEdgeListId = ReadH5DataId(groupReader, H5Constants::k_UnsharedEdgeListTag);
+
+  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 H5::ErrorType AbstractGeometry2D::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const

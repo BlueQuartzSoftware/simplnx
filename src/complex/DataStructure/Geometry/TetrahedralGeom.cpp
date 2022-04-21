@@ -539,7 +539,7 @@ H5::ErrorType TetrahedralGeom::readHdf5(H5::DataStructureReader& dataStructureRe
   m_TetCentroidsId = ReadH5DataId(groupReader, H5Constants::k_TetCentroidsTag);
   m_TetSizesId = ReadH5DataId(groupReader, H5Constants::k_TetSizesTag);
 
-  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
+  return AbstractGeometry3D::readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 H5::ErrorType TetrahedralGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
