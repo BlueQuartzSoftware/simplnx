@@ -216,6 +216,11 @@ const AbstractGeometry::SharedEdgeList* EdgeGeom::getEdges() const
   return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
 }
 
+std::optional<DataObject::IdType> EdgeGeom::getEdgesId() const
+{
+  return m_EdgeListId;
+}
+
 void EdgeGeom::setVertsAtEdge(usize edgeId, usize verts[2])
 {
   auto edges = getEdges();

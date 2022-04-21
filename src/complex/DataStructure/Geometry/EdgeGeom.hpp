@@ -165,6 +165,12 @@ public:
   const SharedEdgeList* getEdges() const;
 
   /**
+   * @brief Returns the DataObject ID for the SharedEdgeList array. Returns an empty optional if no edge list array has been set.
+   * @return std::optional<IdType>
+   */
+  std::optional<DataObject::IdType> getEdgesId() const;
+
+  /**
    * @brief
    * @param edgeId
    * @param verts

@@ -3,6 +3,7 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
 
@@ -154,6 +155,11 @@ const AbstractGeometry::SharedEdgeList* AbstractGeometry3D::getEdges() const
   return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
 }
 
+std::optional<DataObject::IdType> AbstractGeometry3D::getEdgesId() const
+{
+  return m_EdgeListId;
+}
+
 void AbstractGeometry3D::setVertsAtEdge(usize edgeId, const usize verts[2])
 {
   auto edges = dynamic_cast<SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
@@ -286,6 +292,11 @@ void AbstractGeometry3D::setFaces(const SharedFaceList* faces)
   m_FaceListId = faces->getId();
 }
 
+std::optional<DataObject::IdType> AbstractGeometry3D::getFacesId() const
+{
+  return m_FaceListId;
+}
+
 void AbstractGeometry3D::setUnsharedEdges(const SharedEdgeList* bEdgeList)
 {
   if(!bEdgeList)
@@ -304,6 +315,17 @@ void AbstractGeometry3D::setUnsharedFaces(const SharedFaceList* bFaceList)
     return;
   }
   m_UnsharedFaceListId = bFaceList->getId();
+}
+
+H5::ErrorType AbstractGeometry3D::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
+{
+  m_VertexListId = ReadH5DataId(groupReader, H5Constants::k_VertexListTag);
+  m_EdgeListId = ReadH5DataId(groupReader, H5Constants::k_EdgeListTag);
+  m_UnsharedEdgeListId = ReadH5DataId(groupReader, H5Constants::k_UnsharedEdgeListTag);
+  m_FaceListId = ReadH5DataId(groupReader, H5Constants::k_FaceeListTag);
+  m_UnsharedFaceListId = ReadH5DataId(groupReader, H5Constants::k_UnsharedFaceeListTag);
+
+  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 H5::ErrorType AbstractGeometry3D::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const

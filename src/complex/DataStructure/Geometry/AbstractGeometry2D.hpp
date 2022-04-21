@@ -111,6 +111,12 @@ public:
   const SharedEdgeList* getEdges() const;
 
   /**
+   * @brief Returns the DataObject ID for the SharedEdgeList array. Returns an empty optional if no edge list array has been set.
+   * @return std::optional<IdType>
+   */
+  std::optional<DataObject::IdType> getEdgesId() const;
+
+  /**
    * @brief Sets the vertex IDs making up the specified edge. This method does
    * nothing if the edge list could not be found.
    * @param edgeId
@@ -183,6 +189,14 @@ public:
    * @param bEdgeList
    */
   void setUnsharedEdges(const SharedEdgeList* bEdgeList);
+
+  /**
+   * @brief Reads values from HDF5
+   * @param dataStructureReader
+   * @param groupReader
+   * @return H5::ErrorType
+   */
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override;
 
   /**
    * @brief Writes the geometry to HDF5 using the provided parent group ID.
