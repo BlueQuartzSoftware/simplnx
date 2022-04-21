@@ -139,6 +139,11 @@ const AbstractGeometry::SharedQuadList* QuadGeom::getFaces() const
   return dynamic_cast<const SharedQuadList*>(getDataStructure()->getData(m_QuadListId));
 }
 
+std::optional<DataObject::IdType> QuadGeom::getFacesId() const
+{
+  return m_QuadListId;
+}
+
 void QuadGeom::setVertexIdsForFace(usize faceId, usize verts[4])
 {
   auto faces = getFaces();
@@ -504,7 +509,7 @@ H5::ErrorType QuadGeom::readHdf5(H5::DataStructureReader& dataStructureReader, c
   m_QuadCentroidsId = ReadH5DataId(groupReader, H5Constants::k_QuadCentroidsTag);
   m_QuadSizesId = ReadH5DataId(groupReader, H5Constants::k_QuadSizesTag);
 
-  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
+  return AbstractGeometry2D::readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 H5::ErrorType QuadGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const

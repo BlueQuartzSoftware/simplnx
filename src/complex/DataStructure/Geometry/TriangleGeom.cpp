@@ -145,6 +145,11 @@ const AbstractGeometry::SharedTriList* TriangleGeom::getFaces() const
   return dynamic_cast<const SharedTriList*>(getDataStructure()->getData(m_TriListId));
 }
 
+std::optional<DataObject::IdType> TriangleGeom::getFacesId() const
+{
+  return m_TriListId;
+}
+
 DataObject::IdType TriangleGeom::getTriangleArrayId()
 {
   return m_TriListId.value();
@@ -502,7 +507,7 @@ H5::ErrorType TriangleGeom::readHdf5(H5::DataStructureReader& dataStructureReade
   m_TriangleCentroidsId = ReadH5DataId(groupReader, H5Constants::k_TriangleCentroidsTag);
   m_TriangleSizesId = ReadH5DataId(groupReader, H5Constants::k_TriangleSizesTag);
 
-  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
+  return AbstractGeometry2D::readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 H5::ErrorType TriangleGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const

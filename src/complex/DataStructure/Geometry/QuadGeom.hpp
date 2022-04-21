@@ -115,6 +115,12 @@ public:
   const SharedQuadList* getFaces() const;
 
   /**
+   * @brief Returns the DataObject ID for the face list array. Returns an empty optional if no face list array has been set.
+   * @return std::optional<IdType>
+   */
+  std::optional<DataObject::IdType> getFacesId() const;
+
+  /**
    * @brief
    * @param quadId
    * @param verts
