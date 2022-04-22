@@ -90,12 +90,10 @@ nlohmann::json ImportDREAM3DFilter::toJson(const Arguments& args) const
   auto json = IFilter::toJson(args);
 
   auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
-  H5::FileReader fileReader(importData.FilePath);
-  if(fileReader.isValid())
+  Result<Pipeline> pipelineResult = DREAM3D::ImportPipelineFromFile(importData.FilePath);
+  if(pipelineResult.valid())
   {
-    H5::ErrorType errorCode;
-    auto [importedPipeline, importedDataStructure] = DREAM3D::ReadFile(fileReader, errorCode);
-    json[k_ImportedPipeline] = std::move(importedPipeline.toJson());
+    json[k_ImportedPipeline] = pipelineResult.value().toJson();
   }
   return json;
 }
