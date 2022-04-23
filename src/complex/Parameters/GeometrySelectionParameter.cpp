@@ -5,6 +5,7 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 
 #include <fmt/core.h>
+#include <fmt/ranges.h>
 
 #include <nlohmann/json.hpp>
 
@@ -115,7 +116,7 @@ Result<> GeometrySelectionParameter::validatePath(const DataStructure& dataStruc
 
   return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_AllowedType_Error,
                                   fmt::format("{}Geometry at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), abstractGeometry->getGeometryTypeAsString(),
-                                              fmt::join(AbstractGeometry::StringListFromGeometryType(m_AllowedTypes), ",")));
+                                              AbstractGeometry::StringListFromGeometryType(m_AllowedTypes)));
 }
 
 Result<std::any> GeometrySelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
