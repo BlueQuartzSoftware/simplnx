@@ -142,7 +142,6 @@ function(create_complex_plugin)
 
   set(Filter_Registration_Include_String "")
   set(Public_Filter_Registration_Code "")
-  set(Private_Filter_Registration_Code "")
 
   #------------------------------------------------------------------------------
   # Add Filter Sources that need to be compiled.

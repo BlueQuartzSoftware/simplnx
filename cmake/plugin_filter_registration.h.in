@@ -12,11 +12,9 @@
 
 namespace {
 
-using FilterCreationFunc = std::unique_ptr<complex::IFilter> (*)();
-
-std::vector<FilterCreationFunc> GetPluginFilterList()
+std::vector<complex::FilterCreationFunc> GetPluginFilterList()
 {
-  std::vector<FilterCreationFunc> filters;
+  std::vector<complex::FilterCreationFunc> filters;
 @Public_Filter_Registration_Code@
   return filters;
 }
