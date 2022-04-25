@@ -1,9 +1,5 @@
 #include "TestOnePlugin.hpp"
-
-#include "TestOne/Filters/ErrorWarningFilter.hpp"
-#include "TestOne/Filters/ExampleFilter1.hpp"
-#include "TestOne/Filters/ExampleFilter2.hpp"
-#include "TestOne/Filters/TestFilter.hpp"
+#include "TestOne/TestOne_filter_registration.hpp"
 
 using namespace complex;
 
@@ -15,10 +11,11 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("01ff618b-781f-4ac0-b9
 TestOnePlugin::TestOnePlugin()
 : AbstractPlugin(k_ID, "TestOne", "Test Plugin", "BlueQuartz Software")
 {
-  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<TestFilter>(); });
-  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<ExampleFilter1>(); });
-  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<ExampleFilter2>(); });
-  addFilter([]() -> IFilter::UniquePointer { return std::make_unique<ErrorWarningFilter>(); });
+  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  for(const auto& filterFunc : filterFuncs)
+  {
+    addFilter(filterFunc);
+  }
 }
 
 TestOnePlugin::~TestOnePlugin() = default;

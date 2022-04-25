@@ -25,10 +25,4 @@ public:
    * @return std::vector<complex::H5::IDataFactory*>
    */
   std::vector<complex::H5::IDataFactory*> getDataFactories() const override;
-
-private:
-  /**
-   * @brief This will register all the filters that are contained in this plugin
-   */
-  void registerFilters();
 };
