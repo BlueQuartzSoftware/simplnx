@@ -89,7 +89,7 @@ public:
         {Type::Quad, "Quad"},       {Type::Tetrahedral, "Tetrahedral"}, {Type::Hexahedral, "Hexahedral"}, {Type::Unknown, "Unknown"}, {Type::Any, "Any"}};
 
     std::set<std::string> stringValues;
-    for(const auto& geomType : geomTypes)
+    for(auto geomType : geomTypes)
     {
       stringValues.insert(k_TypeToStringMap[geomType]);
     }
