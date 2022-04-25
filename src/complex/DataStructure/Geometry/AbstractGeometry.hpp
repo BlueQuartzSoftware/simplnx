@@ -84,14 +84,14 @@ public:
 
   static std::set<std::string> StringListFromGeometryType(const std::set<Type>& geomTypes)
   {
-    static std::map<Type, std::string> k_TypeToStringMap = {
+    static const std::map<Type, std::string> k_TypeToStringMap = {
         {Type::Image, "ImageGeom"}, {Type::RectGrid, "RectGrid"},       {Type::Vertex, "Vertex"},         {Type::Edge, "Edge"},       {Type::Triangle, "Triangle"},
         {Type::Quad, "Quad"},       {Type::Tetrahedral, "Tetrahedral"}, {Type::Hexahedral, "Hexahedral"}, {Type::Unknown, "Unknown"}, {Type::Any, "Any"}};
 
     std::set<std::string> stringValues;
     for(auto geomType : geomTypes)
     {
-      stringValues.insert(k_TypeToStringMap[geomType]);
+      stringValues.insert(k_TypeToStringMap.at(geomType));
     }
     return stringValues;
   }
