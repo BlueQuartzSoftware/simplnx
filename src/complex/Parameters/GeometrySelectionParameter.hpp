@@ -108,7 +108,7 @@ public:
 
 private:
   ValueType m_DefaultValue = {};
-  AllowedTypes m_AllowedTypes = {AbstractGeometry::Type::Any};
+  AllowedTypes m_AllowedTypes = {};
 };
 } // namespace complex
 
