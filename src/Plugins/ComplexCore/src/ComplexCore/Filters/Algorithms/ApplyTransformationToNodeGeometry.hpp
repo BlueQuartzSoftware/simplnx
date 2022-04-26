@@ -23,23 +23,23 @@ enum class TransformType
   Scale
 };
 
-struct COMPLEXCORE_EXPORT ApplyTransformationToGeometryInputValues
+struct COMPLEXCORE_EXPORT ApplyTransformationToNodeGeometryInputValues
 {
   DataPath pGeometryToTransform;
   TransformType pTransformationType;
   std::vector<float> transformationMatrix;
 };
 
-class COMPLEXCORE_EXPORT ApplyTransformationToGeometry
+class COMPLEXCORE_EXPORT ApplyTransformationToNodeGeometry
 {
 public:
-  ApplyTransformationToGeometry(DataStructure& data, ApplyTransformationToGeometryInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
-  ~ApplyTransformationToGeometry() noexcept;
+  ApplyTransformationToNodeGeometry(DataStructure& data, ApplyTransformationToNodeGeometryInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
+  ~ApplyTransformationToNodeGeometry() noexcept;
 
-  ApplyTransformationToGeometry(const ApplyTransformationToGeometry&) = delete;
-  ApplyTransformationToGeometry(ApplyTransformationToGeometry&&) noexcept = delete;
-  ApplyTransformationToGeometry& operator=(const ApplyTransformationToGeometry&) = delete;
-  ApplyTransformationToGeometry& operator=(ApplyTransformationToGeometry&&) noexcept = delete;
+  ApplyTransformationToNodeGeometry(const ApplyTransformationToNodeGeometry&) = delete;
+  ApplyTransformationToNodeGeometry(ApplyTransformationToNodeGeometry&&) noexcept = delete;
+  ApplyTransformationToNodeGeometry& operator=(const ApplyTransformationToNodeGeometry&) = delete;
+  ApplyTransformationToNodeGeometry& operator=(ApplyTransformationToNodeGeometry&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -51,7 +51,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const ApplyTransformationToGeometryInputValues* m_InputValues = nullptr;
+  const ApplyTransformationToNodeGeometryInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 

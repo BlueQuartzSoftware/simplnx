@@ -9,7 +9,8 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
-#include "ComplexCore/Filters/Algorithms/ApplyTransformationToGeometry.hpp"
+#include "ComplexCore/Filters/Algorithms/ApplyTransformationToNodeGeometry.hpp"
+#include "ComplexCore/Filters/Algorithms/ApplyTransformationToImageGeometry.hpp"
 
 using namespace complex;
 
@@ -252,14 +253,15 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
   /****************************************************************************
    * Write your algorithm implementation in this function
    ***************************************************************************/
-  complex::ApplyTransformationToGeometryInputValues inputValues;
+  complex::ApplyTransformationToNodeGeometryInputValues inputNodeValues;
+  complex::ApplyTransformationToImageGeometryInputValues inputImageValues;
 
-  inputValues.pGeometryToTransform = filterArgs.value<GeometrySelectionParameter::ValueType>(k_GeometryToTransform_Key);
-  inputValues.pTransformationType = static_cast<TransformType>(filterArgs.value<ChoicesParameter::ValueType>(k_TransformType_Key));
+  inputNodeValues.pGeometryToTransform = filterArgs.value<GeometrySelectionParameter::ValueType>(k_GeometryToTransform_Key);
+  inputNodeValues.pTransformationType = static_cast<TransformType>(filterArgs.value<ChoicesParameter::ValueType>(k_TransformType_Key));
   auto pComputedTransformationMatrixPath = filterArgs.value<DataPath>(k_ComputedTransformationMatrix_Key);
 
   std::vector<float> m_TransformationMatrix(16, 0.0F);
-  switch(inputValues.pTransformationType)
+  switch(inputNodeValues.pTransformationType)
   {
   case TransformType::No_Transform: {
     complex::Result<> resultActions;
@@ -321,6 +323,6 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
   inputValues.transformationMatrix = m_TransformationMatrix;
 
   // Let the Algorithm instance do the work
-  return ApplyTransformationToGeometry(dataStructure, &inputValues, shouldCancel, messageHandler)();
+  return ApplyTransformationToNodeGeometry(dataStructure, &inputValues, shouldCancel, messageHandler)();
 }
 } // namespace complex

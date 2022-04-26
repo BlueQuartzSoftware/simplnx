@@ -1,5 +1,5 @@
 
-#include "ApplyTransformationToGeometry.hpp"
+#include "ApplyTransformationToImageGeometry.hpp"
 
 #include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "complex/DataStructure/Geometry/EdgeGeom.hpp"
@@ -19,11 +19,11 @@
 
 using namespace complex;
 
-class ApplyTransformationToGeometryImpl
+class ApplyTransformationToImageGeometryImpl
 {
 
 public:
-  ApplyTransformationToGeometryImpl(ApplyTransformationToGeometry& filter, const std::vector<float>& transformationMatrix, AbstractGeometry::SharedVertexList* verticesPtr,
+  ApplyTransformationToImageGeometryImpl(ApplyTransformationToImageGeometry& filter, const std::vector<float>& transformationMatrix, AbstractGeometry::SharedVertexList* verticesPtr,
                                     const std::atomic_bool& shouldCancel, size_t progIncrement)
   : m_Filter(filter)
   , m_TransformationMatrix(transformationMatrix)
@@ -32,12 +32,12 @@ public:
   , m_ProgIncrement(progIncrement)
   {
   }
-  ~ApplyTransformationToGeometryImpl() = default;
+  ~ApplyTransformationToImageGeometryImpl() = default;
 
-  ApplyTransformationToGeometryImpl(const ApplyTransformationToGeometryImpl&) = default;           // Copy Constructor defaulted
-  ApplyTransformationToGeometryImpl(ApplyTransformationToGeometryImpl&&) = delete;                 // Move Constructor Not Implemented
-  ApplyTransformationToGeometryImpl& operator=(const ApplyTransformationToGeometryImpl&) = delete; // Copy Assignment Not Implemented
-  ApplyTransformationToGeometryImpl& operator=(ApplyTransformationToGeometryImpl&&) = delete;      // Move Assignment Not Implemented
+  ApplyTransformationToImageGeometryImpl(const ApplyTransformationToImageGeometryImpl&) = default;           // Copy Constructor defaulted
+  ApplyTransformationToImageGeometryImpl(ApplyTransformationToImageGeometryImpl&&) = delete;                 // Move Constructor Not Implemented
+  ApplyTransformationToImageGeometryImpl& operator=(const ApplyTransformationToImageGeometryImpl&) = delete; // Copy Assignment Not Implemented
+  ApplyTransformationToImageGeometryImpl& operator=(ApplyTransformationToImageGeometryImpl&&) = delete;      // Move Assignment Not Implemented
 
   void convert(size_t start, size_t end) const
   {
@@ -76,7 +76,7 @@ public:
   }
 
 private:
-  ApplyTransformationToGeometry& m_Filter;
+  ApplyTransformationToImageGeometry& m_Filter;
   const std::vector<float>& m_TransformationMatrix;
   AbstractGeometry::SharedVertexList* m_Vertices;
   const std::atomic_bool& m_ShouldCancel;
@@ -84,7 +84,7 @@ private:
 };
 
 // -----------------------------------------------------------------------------
-ApplyTransformationToGeometry::ApplyTransformationToGeometry(DataStructure& dataStructure, ApplyTransformationToGeometryInputValues* inputValues, const std::atomic_bool& shouldCancel,
+ApplyTransformationToImageGeometry::ApplyTransformationToImageGeometry(DataStructure& dataStructure, ApplyTransformationToImageGeometryInputValues* inputValues, const std::atomic_bool& shouldCancel,
                                                              const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
@@ -94,10 +94,10 @@ ApplyTransformationToGeometry::ApplyTransformationToGeometry(DataStructure& data
 }
 
 // -----------------------------------------------------------------------------
-ApplyTransformationToGeometry::~ApplyTransformationToGeometry() noexcept = default;
+ApplyTransformationToImageGeometry::~ApplyTransformationToImageGeometry() noexcept = default;
 
 // -----------------------------------------------------------------------------
-Result<> ApplyTransformationToGeometry::operator()()
+Result<> ApplyTransformationToImageGeometry::operator()()
 {
 
   DataObject* dataObject = m_DataStructure.getData(m_InputValues->pGeometryToTransform);
@@ -148,12 +148,12 @@ Result<> ApplyTransformationToGeometry::operator()()
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, m_TotalElements);
-  dataAlg.execute(ApplyTransformationToGeometryImpl(*this, m_InputValues->transformationMatrix, vertexList, m_ShouldCancel, progIncrement));
+  dataAlg.execute(ApplyTransformationToImageGeometryImpl(*this, m_InputValues->transformationMatrix, vertexList, m_ShouldCancel, progIncrement));
   return {};
 }
 
 // -----------------------------------------------------------------------------
-void ApplyTransformationToGeometry::sendThreadSafeProgressMessage(size_t counter)
+void ApplyTransformationToImageGeometry::sendThreadSafeProgressMessage(size_t counter)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
 

@@ -59,7 +59,8 @@ set(ActionList
   )
 
 set(AlgorithmList
-  ApplyTransformationToGeometry
+  ApplyTransformationToNodeGeometry
+  ApplyTransformationToImageGeometry
   StlFileReader
   LaplacianSmoothing
   QuickSurfaceMesh
