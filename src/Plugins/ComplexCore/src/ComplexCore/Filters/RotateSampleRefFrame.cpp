@@ -6,6 +6,8 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "complex/Filter/Actions/DeleteDataAction.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
@@ -427,6 +429,8 @@ Parameters RotateSampleRefFrame::parameters() const
 
   params.linkParameters(k_RotationRepresentation_Key, k_RotationMatrix_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::RotationMatrix)));
 
+  params.insert(std::make_unique<BoolParameter>(k_DeleteOriginalGeom_Key, "Delete Original Geometry", "", false));
+
   return params;
 }
 
@@ -487,6 +491,13 @@ IFilter::PreflightResult RotateSampleRefFrame::preflightImpl(const DataStructure
     }
     DataPath createdArrayPath = createdImageGeomPath.createChildPath(cellArray.getName());
     actions.actions.push_back(std::make_unique<CreateArrayAction>(cellArray.getDataType(), cellArrayDims, cellArray.getIDataStoreRef().getComponentShape(), createdArrayPath));
+  }
+
+  auto deleteOriginalGeom = filterArgs.value<bool>(k_DeleteOriginalGeom_Key);
+  if(deleteOriginalGeom)
+  {
+    auto action = std::make_unique<DeleteDataAction>(selectedImageGeomPath);
+    actions.deferredActions.push_back(std::move(action));
   }
 
   return {std::move(actions)};
