@@ -3,6 +3,8 @@
 #include <memory>
 #include <vector>
 
+#include <nonstd/span.hpp>
+
 #include "complex/Common/Result.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
@@ -84,5 +86,14 @@ private:
 struct OutputActions
 {
   std::vector<IDataAction::UniquePointer> actions;
+  std::vector<IDataAction::UniquePointer> deferredActions;
+
+  static Result<> ApplyActions(nonstd::span<const IDataAction::UniquePointer> actions, DataStructure& dataStructure, IDataAction::Mode mode);
+
+  Result<> applyRegular(DataStructure& dataStructure, IDataAction::Mode mode) const;
+
+  Result<> applyDeferred(DataStructure& dataStructure, IDataAction::Mode mode) const;
+
+  Result<> applyAll(DataStructure& dataStructure, IDataAction::Mode mode) const;
 };
 } // namespace complex
