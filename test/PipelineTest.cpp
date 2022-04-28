@@ -1,6 +1,8 @@
 #include "catch2/catch.hpp"
 
 #include "complex/Core/Application.hpp"
+#include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/DeleteDataAction.hpp"
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Filter/FilterHandle.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
@@ -37,6 +39,72 @@ const FilterHandle k_Test2FilterHandle(k_Test2FilterId, k_Test2PluginId);
 const Uuid k_CreateDataGroupId = *Uuid::FromString("e7d2f9b8-4131-4b28-a843-ea3c6950f101");
 const Uuid k_CorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
 const FilterHandle k_CreateDataGroupHandle(k_CreateDataGroupId, k_CorePluginId);
+
+const DataPath k_DeferredActionPath({"foo"});
+
+class DeferredActionTestFilter : public IFilter
+{
+public:
+  DeferredActionTestFilter() = default;
+
+  ~DeferredActionTestFilter() noexcept override = default;
+
+  DeferredActionTestFilter(const DeferredActionTestFilter&) = delete;
+  DeferredActionTestFilter(DeferredActionTestFilter&&) noexcept = delete;
+
+  DeferredActionTestFilter& operator=(const DeferredActionTestFilter&) = delete;
+  DeferredActionTestFilter& operator=(DeferredActionTestFilter&&) noexcept = delete;
+
+  std::string name() const override
+  {
+    return "DeferredActionTestFilter";
+  }
+
+  std::string className() const override
+  {
+    return "DeferredActionTestFilter";
+  }
+
+  Uuid uuid() const override
+  {
+    static constexpr Uuid uuid = *Uuid::FromString("907b9eb7-c48e-4666-9d9d-21cc70f426f1");
+    return uuid;
+  }
+
+  std::string humanName() const override
+  {
+    return "Deferred Action Test Filter";
+  }
+
+  Parameters parameters() const override
+  {
+    return {};
+  }
+
+  UniquePointer clone() const override
+  {
+    return std::make_unique<DeferredActionTestFilter>();
+  }
+
+protected:
+  PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+  {
+    OutputActions outputActions;
+    outputActions.actions.push_back(std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{10}, std::vector<usize>{1}, k_DeferredActionPath));
+    outputActions.deferredActions.push_back(std::make_unique<DeleteDataAction>(k_DeferredActionPath));
+    return {std::move(outputActions)};
+  }
+
+  Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+  {
+    // object should exist because the delete should happen after execute
+    if(data.getData(k_DeferredActionPath) == nullptr)
+    {
+      return MakeErrorResult(-1, fmt::format("DataPath '{}' must exist", k_DeferredActionPath.toString()));
+    }
+    return {};
+  }
+};
 } // namespace
 
 TEST_CASE("Execute Pipeline")
@@ -277,4 +345,26 @@ TEST_CASE("Not Renaming")
     DataPath targetPath({group1Name, group2Name});
     REQUIRE(inPath != targetPath);
   }
+}
+
+TEST_CASE("PipelineDeferredActionTest")
+{
+  Pipeline pipeline;
+
+  REQUIRE(pipeline.push_back(std::make_unique<DeferredActionTestFilter>()));
+
+  DataStructure dataStructure;
+
+  REQUIRE(pipeline.preflight(dataStructure, false));
+
+  // should be deleted in preflight
+  DataObject* preflightObject = dataStructure.getData(k_DeferredActionPath);
+  REQUIRE(preflightObject == nullptr);
+
+  // DeferredActionTestFilter checks the k_DeferredActionPath hasn't been deleted until after execute
+  REQUIRE(pipeline.execute(dataStructure, false));
+
+  // after execute the object will be deleted
+  DataObject* executeObject = dataStructure.getData(k_DeferredActionPath);
+  REQUIRE(executeObject == nullptr);
 }
