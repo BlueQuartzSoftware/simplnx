@@ -55,12 +55,7 @@ DataGroup* DataGroup::Import(DataStructure& ds, std::string name, IdType importI
 
 DataObject* DataGroup::deepCopy()
 {
-  auto copy = new DataGroup(*getDataStructure(), getName(), getId());
-  for(auto& [id, childPtr] : getDataMap())
-  {
-    copy->insert(childPtr);
-  }
-  return copy;
+  return new DataGroup(*this);
 }
 
 DataObject* DataGroup::shallowCopy()

@@ -85,19 +85,7 @@ DataObject* RectGridGeom::shallowCopy()
 
 DataObject* RectGridGeom::deepCopy()
 {
-  auto copy = new RectGridGeom(*getDataStructure(), getName(), getId());
-
-  copy->m_xBoundsId = m_xBoundsId;
-  copy->m_yBoundsId = m_yBoundsId;
-  copy->m_zBoundsId = m_zBoundsId;
-  copy->m_VoxelSizesId = m_VoxelSizesId;
-  copy->m_Dimensions = m_Dimensions;
-
-  for(auto& [id, childPtr] : getDataMap())
-  {
-    copy->insert(childPtr);
-  }
-  return copy;
+  return new RectGridGeom(*this);
 }
 
 std::string RectGridGeom::getGeometryTypeAsString() const

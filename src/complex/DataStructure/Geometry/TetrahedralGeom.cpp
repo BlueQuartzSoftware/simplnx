@@ -98,21 +98,7 @@ DataObject* TetrahedralGeom::shallowCopy()
 
 DataObject* TetrahedralGeom::deepCopy()
 {
-  auto copy = new TetrahedralGeom(*getDataStructure(), getName(), getId());
-
-  copy->m_TriListId = m_TriListId;
-  copy->m_UnsharedTriListId = m_UnsharedTriListId;
-  copy->m_TetListId = m_TetListId;
-  copy->m_TetsContainingVertId = m_TetsContainingVertId;
-  copy->m_TetNeighborsId = m_TetNeighborsId;
-  copy->m_TetCentroidsId = m_TetCentroidsId;
-  copy->m_TetSizesId = m_TetSizesId;
-
-  for(auto& [id, childPtr] : getDataMap())
-  {
-    copy->insert(childPtr);
-  }
-  return copy;
+  return new TetrahedralGeom(*this);
 }
 
 std::string TetrahedralGeom::getGeometryTypeAsString() const
