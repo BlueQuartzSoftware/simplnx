@@ -63,17 +63,7 @@ DataObject* GridMontage::shallowCopy()
 
 DataObject* GridMontage::deepCopy()
 {
-  auto copy = new GridMontage(*getDataStructure(), getName(), getId());
-
-  copy->m_RowCount = m_RowCount;
-  copy->m_ColumnCount = m_ColumnCount;
-  copy->m_DepthCount = m_DepthCount;
-
-  for(auto& [id, childPtr] : getDataMap())
-  {
-    copy->insert(childPtr);
-  }
-  return copy;
+  return new GridMontage(*this);
 }
 
 usize GridMontage::getRowCount() const
