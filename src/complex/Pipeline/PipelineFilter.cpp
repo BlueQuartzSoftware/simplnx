@@ -83,7 +83,8 @@ void PipelineFilter::setIndex(int32 index)
 // -----------------------------------------------------------------------------
 bool PipelineFilter::preflight(DataStructure& data, const std::atomic_bool& shouldCancel)
 {
-  return preflight(data, RenamedPaths{}, shouldCancel, true);
+  RenamedPaths renamedPaths;
+  return preflight(data, renamedPaths, shouldCancel, true);
 }
 
 bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
