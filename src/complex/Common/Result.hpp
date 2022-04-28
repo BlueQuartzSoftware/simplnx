@@ -202,4 +202,83 @@ inline Result<> MakeWarningVoidResult(int32 code, std::string message)
   result.warnings().push_back(Warning{code, std::move(message)});
   return result;
 }
+
+/**
+ * @brief Extracts a Result<> into vectors of errors/warnings. Returns the validity of the result.
+ * @param result
+ * @param errors
+ * @param warnings
+ * @return
+ */
+inline bool ExtractResult(Result<> result, std::vector<Error>& errors, std::vector<Warning>& warnings)
+{
+  warnings.reserve(warnings.size() + result.warnings().size());
+  for(auto&& warning : result.warnings())
+  {
+    warnings.push_back(std::move(warning));
+  }
+  if(result.invalid())
+  {
+    errors.reserve(errors.size() + result.errors().size());
+    for(auto&& error : result.errors())
+    {
+      errors.push_back(std::move(error));
+    }
+  }
+
+  return result.valid();
+}
+
+/**
+ * @brief Merges two Result<> into one.
+ * @param first
+ * @param second
+ * @return
+ */
+inline Result<> MergeResults(Result<> first, Result<> second)
+{
+  usize warningsSize = first.warnings().size() + second.warnings().size();
+  std::vector<Warning> warnings;
+  warnings.reserve(warningsSize);
+
+  for(auto&& warning : first.warnings())
+  {
+    warnings.push_back(std::move(warning));
+  }
+  for(auto&& warning : second.warnings())
+  {
+    warnings.push_back(std::move(warning));
+  }
+
+  usize errorsSize = 0;
+  if(first.invalid())
+  {
+    errorsSize += first.errors().size();
+  }
+  if(second.invalid())
+  {
+    errorsSize += second.errors().size();
+  }
+  std::vector<Error> errors;
+  errors.reserve(errorsSize);
+
+  if(first.invalid())
+  {
+    for(auto&& error : first.errors())
+    {
+      errors.push_back(std::move(error));
+    }
+  }
+  if(second.invalid())
+  {
+    for(auto&& error : second.errors())
+    {
+      errors.push_back(std::move(error));
+    }
+  }
+
+  Result<> result = errors.empty() ? Result<>{} : Result<>{nonstd::make_unexpected(std::move(errors))};
+  result.warnings() = std::move(warnings);
+  return result;
+}
 } // namespace complex
