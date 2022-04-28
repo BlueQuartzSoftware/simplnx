@@ -140,18 +140,22 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& ar
   // resolve dependencies
 
   PreflightResult preflightResult = preflight(data, resolvedArgs, messageHandler, shouldCancel);
-  if(!preflightResult.outputActions.valid())
+  if(preflightResult.outputActions.invalid())
   {
     return ExecuteResult{ConvertResult(std::move(preflightResult.outputActions)), std::move(preflightResult.outputValues)};
   }
 
-  for(const auto& action : preflightResult.outputActions.value().actions)
+  OutputActions outputActions = std::move(preflightResult.outputActions.value());
+
+  Result<> outputActionsResult = ConvertResult(std::move(preflightResult.outputActions));
+
+  Result<> actionsResult = outputActions.applyRegular(data, IDataAction::Mode::Execute);
+
+  Result<> preflightActionsResult = MergeResults(std::move(outputActionsResult), std::move(actionsResult));
+
+  if(preflightActionsResult.invalid())
   {
-    Result<> actionResult = action->apply(data, IDataAction::Mode::Execute);
-    if(!actionResult.valid())
-    {
-      return ExecuteResult{std::move(actionResult), std::move(preflightResult.outputValues)};
-    }
+    return ExecuteResult{std::move(preflightActionsResult), std::move(preflightResult.outputValues)};
   }
 
   Result<> executeImplResult = executeImpl(data, resolvedArgs, pipelineFilter, messageHandler, shouldCancel);
@@ -160,7 +164,18 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& ar
     return {MakeErrorResult(-1, "Filter cancelled")};
   }
 
-  return ExecuteResult{std::move(executeImplResult), std::move(preflightResult.outputValues)};
+  Result<> preflightActionsExecuteResult = MergeResults(std::move(preflightActionsResult), std::move(executeImplResult));
+
+  if(preflightActionsExecuteResult.invalid())
+  {
+    return ExecuteResult{std::move(preflightActionsExecuteResult), std::move(preflightResult.outputValues)};
+  }
+
+  Result<> deferredActionsResult = outputActions.applyDeferred(data, IDataAction::Mode::Execute);
+
+  Result<> finalResult = MergeResults(std::move(preflightActionsExecuteResult), std::move(deferredActionsResult));
+
+  return ExecuteResult{std::move(finalResult), std::move(preflightResult.outputValues)};
 }
 
 nlohmann::json IFilter::toJson(const Arguments& args) const
