@@ -254,7 +254,7 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
     {
       progressInt = static_cast<int64>((static_cast<float>(counter) / iters) * 100.0f);
       std::string ss = fmt::format("Performing Registration Iterations || {}% Completed", progressInt);
-      // notifyStatusMessage(ss);
+      messageHandler(ss);
       prog = prog + progIncrement;
     }
     counter++;
