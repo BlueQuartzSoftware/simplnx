@@ -368,7 +368,7 @@ DataObject* readLegacyTriangleGeom(DataStructure& ds, const H5::GroupReader& geo
   auto* sharedTriList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::TriListName);
 
   geom->setVertices(sharedVertexList);
-  geom->setEdges(sharedTriList);
+  geom->setFaces(sharedTriList);
 
   return geom;
 }
@@ -381,7 +381,7 @@ DataObject* readLegacyTetrahedralGeom(DataStructure& ds, const H5::GroupReader& 
   auto* sharedTetList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::TetraListName);
 
   geom->setVertices(sharedVertexList);
-  geom->setEdges(sharedTetList);
+  geom->setTetrahedra(sharedTetList);
 
   return geom;
 }
@@ -415,7 +415,7 @@ DataObject* readLegacyQuadGeom(DataStructure& ds, const H5::GroupReader& geomGro
   auto* sharedQuadList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::QuadListName);
 
   geom->setVertices(sharedVertexList);
-  geom->setEdges(sharedQuadList);
+  geom->setFaces(sharedQuadList);
 
   return geom;
 }
@@ -428,7 +428,7 @@ DataObject* readLegacyHexGeom(DataStructure& ds, const H5::GroupReader& geomGrou
   auto* sharedHexList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::HexListName);
 
   geom->setVertices(sharedVertexList);
-  geom->setEdges(sharedHexList);
+  geom->setHexahedra(sharedHexList);
 
   return geom;
 }
