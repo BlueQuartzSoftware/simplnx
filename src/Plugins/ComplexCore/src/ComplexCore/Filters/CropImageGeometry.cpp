@@ -148,7 +148,7 @@ Parameters CropImageGeometry::parameters() const
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_VoxelArrays_Key, "Voxel Arrays", "DataPaths to related DataArrays", std::vector<DataPath>(), complex::GetAllDataTypes()));
 
   params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "DataPath to Feature IDs array", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "DataPath to Feature IDs array", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, true));
 
   params.insert(std::make_unique<StringParameter>(k_NewFeaturesName_Key, "New Cell Features Group Name", "Name of the new DataGroup containing updated updated Voxel Arrays", "Cell Features"));
   return params;
@@ -218,6 +218,24 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 
   auto srcImageGeom = data.getDataAs<ImageGeom>(srcImagePath);
   auto oldOrigin = srcImageGeom->getOrigin();
+
+  if(xMax > srcImageGeom->getNumXPoints() - 1)
+  {
+    std::string ss = fmt::format("The X Max ({}) is greater than the Image Geometry X extent ({})", xMax, srcImageGeom->getNumXPoints() - 1);
+    return {MakeErrorResult<OutputActions>(-5550, ss)};
+  }
+
+  if(yMax > srcImageGeom->getNumYPoints() - 1)
+  {
+    std::string ss = fmt::format("The Y Max ({}) is greater than the Image Geometry Y extent ({})", yMax, srcImageGeom->getNumYPoints() - 1);
+    return {MakeErrorResult<OutputActions>(-5550, ss)};
+  }
+
+  if(zMax > srcImageGeom->getNumZPoints() - 1)
+  {
+    std::string ss = fmt::format("The Z Max ({}) is greater than the Image Geometry Z extent ({})", zMax, srcImageGeom->getNumZPoints() - 1);
+    return {MakeErrorResult<OutputActions>(-5550, ss)};
+  }
 
   const usize requiredTupleCount = oldDimensions[0] * oldDimensions[1] * oldDimensions[2];
 
@@ -358,24 +376,6 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   auto& destImageGeom = data.getDataRefAs<ImageGeom>(destImagePath);
 
   DataPath newVoxelParentPath = destImagePath.createChildPath(newFeaturesName);
-
-  if(xMax > (static_cast<int64>(destImageGeom.getNumXPoints()) - 1))
-  {
-    std::string ss = fmt::format("The X Max ({}) is greater than the Image Geometry X extent ({})", xMax, static_cast<int64>(destImageGeom.getNumXPoints()) - 1);
-    return MakeErrorResult(-5550, ss);
-  }
-
-  if(yMax > (static_cast<int64>(destImageGeom.getNumYPoints()) - 1))
-  {
-    std::string ss = fmt::format("The Y Max ({}) is greater than the Image Geometry Y extent ({})", yMax, static_cast<int64>(destImageGeom.getNumYPoints()) - 1);
-    return MakeErrorResult(-5550, ss);
-  }
-
-  if(zMax > (static_cast<int64>(destImageGeom.getNumZPoints()) - 1))
-  {
-    std::string ss = fmt::format("The Z Max ({}) is greater than the Image Geometry Z extent ({})", zMax, static_cast<int64>(destImageGeom.getNumZPoints()) - 1);
-    return MakeErrorResult(-5550, ss);
-  }
 
   // No matter where the AM is (same DC or new DC), we have the correct DC and AM pointers...now it's time to crop
   int64 totalPoints = srcImageGeom.getNumberOfElements();
