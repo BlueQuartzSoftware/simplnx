@@ -29,10 +29,12 @@ template <typename Derived>
 struct VertexGeomAdaptor
 {
   const Derived& obj;
+  Float32Array* verts;
 
   VertexGeomAdaptor(const Derived& obj_)
   : obj(obj_)
   {
+    verts = derived()->getVertices();
   }
 
   inline const Derived& derived() const
@@ -42,25 +44,24 @@ struct VertexGeomAdaptor
 
   inline usize kdtree_get_point_count() const
   {
-    return derived()->getNumberOfVertices();
+    return verts->getNumberOfTuples();
   }
 
   inline float kdtree_get_pt(const usize idx, const usize dim) const
   {
-    auto derivedVertices = derived()->getVertices();
-    auto numComponents = derivedVertices->getNumberOfComponents();
+    auto numComponents = verts->getNumberOfComponents();
     auto offset = idx * numComponents;
 
     if(dim == 0)
     {
-      return (*derived()->getVertices())[offset + 0];
+      return (*verts)[offset + 0];
     }
     if(dim == 1)
     {
-      return (*derived()->getVertices())[offset + 1];
+      return (*verts)[offset + 1];
     }
 
-    return (*derived()->getVertices())[offset + 2];
+    return (*verts)[offset + 2];
   }
 
   template <class BBOX>
