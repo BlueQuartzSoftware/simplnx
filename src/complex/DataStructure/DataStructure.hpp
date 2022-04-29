@@ -445,6 +445,12 @@ public:
   std::vector<DataPath> getAllDataPaths() const;
 
   /**
+   * @brief Returns a collection of all DataObject ids within the structure.
+   * @return std::vector<DataObject::IdType>
+   */
+  std::vector<DataObject::IdType> getAllDataObjectIds() const;
+
+  /**
    * @brief Returns the top-level of the DataStructure.
    * @return std::vector<DataObject*>
    */
