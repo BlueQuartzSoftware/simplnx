@@ -201,6 +201,16 @@ std::vector<DataPath> DataStructure::getAllDataPaths() const
   return dataPaths;
 }
 
+std::vector<DataObject::IdType> DataStructure::getAllDataObjectIds() const
+{
+  std::vector<DataObject::IdType> dataIds;
+  for(const auto& [id, weakPtr] : m_DataObjects)
+  {
+    dataIds.push_back(id);
+  }
+  return dataIds;
+}
+
 DataObject* DataStructure::getData(DataObject::IdType id)
 {
   auto iter = m_DataObjects.find(id);
