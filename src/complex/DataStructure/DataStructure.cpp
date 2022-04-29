@@ -204,6 +204,7 @@ std::vector<DataPath> DataStructure::getAllDataPaths() const
 std::vector<DataObject::IdType> DataStructure::getAllDataObjectIds() const
 {
   std::vector<DataObject::IdType> dataIds;
+  dataIds.reserve(m_DataObjects.size());
   for(const auto& [id, weakPtr] : m_DataObjects)
   {
     dataIds.push_back(id);
