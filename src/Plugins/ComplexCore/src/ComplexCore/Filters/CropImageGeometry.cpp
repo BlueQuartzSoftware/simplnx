@@ -356,7 +356,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   auto destImagePath = args.value<DataPath>(k_NewImageGeom_Key);
   auto minVoxels = args.value<std::vector<uint64>>(k_MinVoxel_Key);
   auto maxVoxels = args.value<std::vector<uint64>>(k_MaxVoxel_Key);
- // auto shouldUpdateOrigin = args.value<bool>(k_UpdateOrigin_Key);
+  // auto shouldUpdateOrigin = args.value<bool>(k_UpdateOrigin_Key);
   auto shouldRenumberFeatures = args.value<bool>(k_RenumberFeatures_Key);
   auto newFeaturesName = args.value<std::string>(k_NewFeaturesName_Key);
   auto voxelArrayPaths = args.value<std::vector<DataPath>>(k_VoxelArrays_Key);
@@ -430,8 +430,8 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
     {
       return {};
     }
-     std::string ss = fmt::format("Cropping Volume || Slice {} of {} Complete", i, ZP);
-     messageHandler.operator()(ss);
+    std::string ss = fmt::format("Cropping Volume || Slice {} of {} Complete", i, ZP);
+    messageHandler.operator()(ss);
     planeold = (i + zMin) * (srcImageGeom.getNumXPoints() * srcImageGeom.getNumYPoints());
     plane = (i * XP * YP);
     for(int64 j = 0; j < YP; j++)
