@@ -213,11 +213,11 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 
   // Validate the incoming DataContainer, Geometry, and AttributeMatrix.
   // Provides {0, 0, 0} or {1, 1, 1} respectfully if the geometry could not be found.
-  auto oldDimensions = getCurrentVolumeDataContainerDimensions(data, srcImagePath);
-  auto oldResolution = getCurrentVolumeDataContainerResolutions(data, srcImagePath);
+  auto srcDimensions = getCurrentVolumeDataContainerDimensions(data, srcImagePath);
+  auto srcSpacing = getCurrentVolumeDataContainerResolutions(data, srcImagePath);
 
   auto srcImageGeom = data.getDataAs<ImageGeom>(srcImagePath);
-  auto oldOrigin = srcImageGeom->getOrigin();
+  auto srcOrigin = srcImageGeom->getOrigin();
 
   if(xMax > srcImageGeom->getNumXPoints() - 1)
   {
@@ -237,7 +237,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     return {MakeErrorResult<OutputActions>(-5550, ss)};
   }
 
-  const usize requiredTupleCount = oldDimensions[0] * oldDimensions[1] * oldDimensions[2];
+  const usize requiredTupleCount = srcDimensions[0] * srcDimensions[1] * srcDimensions[2];
 
   std::vector<usize> tDims(3, 0);
   if(xMax - xMin < 0)
@@ -257,26 +257,26 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   tDims[1] = (yMax - yMin) + 1;
   tDims[2] = (zMax - zMin) + 1;
 
-  IntVec3 newDimensions;
-  newDimensions[0] = tDims[0];
-  newDimensions[1] = tDims[1];
-  newDimensions[2] = tDims[2];
+  IntVec3 targetDimensions;
+  targetDimensions[0] = tDims[0];
+  targetDimensions[1] = tDims[1];
+  targetDimensions[2] = tDims[2];
 
-  FloatVec3 newResolution;
-  newResolution = oldResolution;
+  FloatVec3 targetSpacing;
+  targetSpacing = srcSpacing;
 
-  std::vector<float32> newOrigin(3);
+  std::vector<float32> targetOrigin(3);
   if(shouldUpdateOrigin)
   {
-    newOrigin[0] = xMin * newResolution[0] + oldOrigin[0];
-    newOrigin[1] = yMin * newResolution[1] + oldOrigin[1];
-    newOrigin[2] = zMin * newResolution[2] + oldOrigin[2];
+    targetOrigin[0] = xMin * targetSpacing[0] + srcOrigin[0];
+    targetOrigin[1] = yMin * targetSpacing[1] + srcOrigin[1];
+    targetOrigin[2] = zMin * targetSpacing[2] + srcOrigin[2];
   }
   else
   {
-    newOrigin[0] = oldOrigin[0];
-    newOrigin[1] = oldOrigin[1];
-    newOrigin[2] = oldOrigin[2];
+    targetOrigin[0] = srcOrigin[0];
+    targetOrigin[1] = srcOrigin[1];
+    targetOrigin[2] = srcOrigin[2];
   }
 
   // saveAsNewImage
@@ -296,7 +296,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     {
       spacingVec[i] = spacing[i];
     }
-    auto action = std::make_unique<CreateImageGeometryAction>(destImagePath, tDims, newOrigin, spacingVec);
+    auto action = std::make_unique<CreateImageGeometryAction>(destImagePath, tDims, targetOrigin, spacingVec);
     actions.actions.push_back(std::move(action));
 
     auto newCellFeaturesPath = destImagePath.createChildPath(newCellFeaturesName);
@@ -305,7 +305,6 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       actions.actions.push_back(std::move(action));
     }
 
-    usize flattenedTupleCount = tDims[0] * tDims[1] * tDims[2];
     for(const auto& srcArrayPath : voxelArrayPaths)
     {
       auto* srcArray = data.getDataAs<IDataArray>(srcArrayPath);
@@ -327,8 +326,6 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       actions.actions.push_back(std::move(action));
     }
   }
-
-  usize totalPoints = srcImageGeom->getNumberOfElements();
 
   if(shouldRenumberFeatures)
   {
@@ -359,7 +356,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   auto destImagePath = args.value<DataPath>(k_NewImageGeom_Key);
   auto minVoxels = args.value<std::vector<uint64>>(k_MinVoxel_Key);
   auto maxVoxels = args.value<std::vector<uint64>>(k_MaxVoxel_Key);
-  auto shouldUpdateOrigin = args.value<bool>(k_UpdateOrigin_Key);
+ // auto shouldUpdateOrigin = args.value<bool>(k_UpdateOrigin_Key);
   auto shouldRenumberFeatures = args.value<bool>(k_RenumberFeatures_Key);
   auto newFeaturesName = args.value<std::string>(k_NewFeaturesName_Key);
   auto voxelArrayPaths = args.value<std::vector<DataPath>>(k_VoxelArrays_Key);
@@ -378,7 +375,6 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   DataPath newVoxelParentPath = destImagePath.createChildPath(newFeaturesName);
 
   // No matter where the AM is (same DC or new DC), we have the correct DC and AM pointers...now it's time to crop
-  int64 totalPoints = srcImageGeom.getNumberOfElements();
 
   SizeVec3 udims = srcImageGeom.getDimensions();
 
@@ -434,8 +430,8 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
     {
       return {};
     }
-    // std::string ss = fmt::format("Cropping Volume || Slice {} of {} Complete", i, ZP);
-    // notifyStatusMessage(ss);
+     std::string ss = fmt::format("Cropping Volume || Slice {} of {} Complete", i, ZP);
+     messageHandler.operator()(ss);
     planeold = (i + zMin) * (srcImageGeom.getNumXPoints() * srcImageGeom.getNumYPoints());
     plane = (i * XP * YP);
     for(int64 j = 0; j < YP; j++)
@@ -462,7 +458,6 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   {
     return {};
   }
-  totalPoints = destImageGeom.getNumberOfElements();
   std::vector<usize> tDims(3, 0);
   tDims[0] = XP;
   tDims[1] = YP;
@@ -476,18 +471,6 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
     {
       return result;
     }
-  }
-
-  if(shouldUpdateOrigin)
-  {
-    FloatVec3 resolution = destImageGeom.getSpacing();
-    FloatVec3 origin = destImageGeom.getOrigin();
-
-    origin[0] = xMin * resolution[0] + oldOrigin[0];
-    origin[1] = yMin * resolution[1] + oldOrigin[1];
-    origin[2] = zMin * resolution[2] + oldOrigin[2];
-
-    destImageGeom.setOrigin(origin);
   }
 
   return {};
