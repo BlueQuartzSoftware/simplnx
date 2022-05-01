@@ -187,7 +187,6 @@ Result<> CropVertexGeometry::executeImpl(DataStructure& dataStructure, const Arg
 
   auto& crop = dataStructure.getDataRefAs<VertexGeom>(croppedGeomPath);
   crop.resizeVertexList(croppedPoints.size());
-  std::array<float, 3> coords = {0.0f, 0.0f, 0.0f};
 
   DataPath croppedGroupPath = croppedGeomPath.createChildPath(croppedGroupName);
 
