@@ -51,13 +51,13 @@ void copyDataArrayTuple(IDataArray& oldArray, IDataArray& newArray, usize oldInd
     copyDataTuple<float32>(oldArray, newArray, oldIndex, newIndex);
     break;
   case DataType::float64:
-    copyDataTuple<float32>(oldArray, newArray, oldIndex, newIndex);
+    copyDataTuple<float64>(oldArray, newArray, oldIndex, newIndex);
     break;
   case DataType::int8:
     copyDataTuple<int8>(oldArray, newArray, oldIndex, newIndex);
     break;
   case DataType::int16:
-    copyDataTuple<int64>(oldArray, newArray, oldIndex, newIndex);
+    copyDataTuple<int16>(oldArray, newArray, oldIndex, newIndex);
     break;
   case DataType::int32:
     copyDataTuple<int32>(oldArray, newArray, oldIndex, newIndex);
@@ -69,7 +69,7 @@ void copyDataArrayTuple(IDataArray& oldArray, IDataArray& newArray, usize oldInd
     copyDataTuple<uint8>(oldArray, newArray, oldIndex, newIndex);
     break;
   case DataType::uint16:
-    copyDataTuple<uint64>(oldArray, newArray, oldIndex, newIndex);
+    copyDataTuple<uint16>(oldArray, newArray, oldIndex, newIndex);
     break;
   case DataType::uint32:
     copyDataTuple<uint32>(oldArray, newArray, oldIndex, newIndex);
@@ -82,9 +82,9 @@ void copyDataArrayTuple(IDataArray& oldArray, IDataArray& newArray, usize oldInd
   }
 }
 
-IntVec3 getCurrentVolumeDataContainerDimensions(const DataStructure& dataStructure, const DataPath& imageGeomPath)
+USizeVec3 getCurrentVolumeDataContainerDimensions(const DataStructure& dataStructure, const DataPath& imageGeomPath)
 {
-  IntVec3 data = {0, 0, 0};
+  USizeVec3 data = {0, 0, 0};
 
   const auto* image = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
   if(image != nullptr)
@@ -108,21 +108,25 @@ FloatVec3 getCurrentVolumeDataContainerResolutions(const DataStructure& dataStru
 }
 } // namespace
 
+//------------------------------------------------------------------------------
 std::string CropImageGeometry::name() const
 {
   return FilterTraits<CropImageGeometry>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string CropImageGeometry::className() const
 {
   return FilterTraits<CropImageGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CropImageGeometry::uuid() const
 {
   return FilterTraits<CropImageGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CropImageGeometry::humanName() const
 {
   return "Crop Geometry (Image)";
@@ -134,6 +138,7 @@ std::vector<std::string> CropImageGeometry::defaultTags() const
   return {"#Core", "#Crop Image Geometry"};
 }
 
+//------------------------------------------------------------------------------
 Parameters CropImageGeometry::parameters() const
 {
   Parameters params;
@@ -182,62 +187,62 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 
   if(xMax < xMin)
   {
-    std::string ss = fmt::format("X Max (%1) less than X Min (%2)", xMax, xMin);
-    return {MakeErrorResult<OutputActions>(-5550, ss)};
+    std::string errMsg = fmt::format("X Max (%1) less than X Min (%2)", xMax, xMin);
+    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
   if(yMax < yMin)
   {
-    std::string ss = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
-    return {MakeErrorResult<OutputActions>(-5550, ss)};
+    std::string errMsg = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
+    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
   if(zMax < zMin)
   {
-    std::string ss = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
-    return {MakeErrorResult<OutputActions>(-5550, ss)};
+    std::string errMsg = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
+    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
   if(xMin < 0)
   {
-    std::string ss = fmt::format("X Min ({}) less than 0", xMin);
-    return {MakeErrorResult<OutputActions>(-5550, ss)};
+    std::string errMsg = fmt::format("X Min ({}) less than 0", xMin);
+    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
   if(yMin < 0)
   {
-    std::string ss = fmt::format("Y Min ({}) less than 0", yMin);
-    return {MakeErrorResult<OutputActions>(-5550, ss)};
+    std::string errMsg = fmt::format("Y Min ({}) less than 0", yMin);
+    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
   if(zMin < 0)
   {
-    std::string ss = fmt::format("Z Min ({}) less than 0", zMin);
-    return {MakeErrorResult<OutputActions>(-5550, ss)};
+    std::string errMsg = fmt::format("Z Min ({}) less than 0", zMin);
+    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
 
   // Validate the incoming DataContainer, Geometry, and AttributeMatrix.
   // Provides {0, 0, 0} or {1, 1, 1} respectfully if the geometry could not be found.
-  auto oldDimensions = getCurrentVolumeDataContainerDimensions(data, srcImagePath);
-  auto oldResolution = getCurrentVolumeDataContainerResolutions(data, srcImagePath);
+  auto srcDimensions = getCurrentVolumeDataContainerDimensions(data, srcImagePath);
+  auto srcSpacing = getCurrentVolumeDataContainerResolutions(data, srcImagePath);
 
-  auto srcImageGeom = data.getDataAs<ImageGeom>(srcImagePath);
-  auto oldOrigin = srcImageGeom->getOrigin();
+  const auto* srcImageGeom = data.getDataAs<ImageGeom>(srcImagePath);
+  auto srcOrigin = srcImageGeom->getOrigin();
 
   if(xMax > srcImageGeom->getNumXPoints() - 1)
   {
-    std::string ss = fmt::format("The X Max ({}) is greater than the Image Geometry X extent ({})", xMax, srcImageGeom->getNumXPoints() - 1);
-    return {MakeErrorResult<OutputActions>(-5550, ss)};
+    std::string errMsg = fmt::format("The X Max ({}) is greater than the Image Geometry X extent ({})", xMax, srcImageGeom->getNumXPoints() - 1);
+    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
 
   if(yMax > srcImageGeom->getNumYPoints() - 1)
   {
-    std::string ss = fmt::format("The Y Max ({}) is greater than the Image Geometry Y extent ({})", yMax, srcImageGeom->getNumYPoints() - 1);
-    return {MakeErrorResult<OutputActions>(-5550, ss)};
+    std::string errMsg = fmt::format("The Y Max ({}) is greater than the Image Geometry Y extent ({})", yMax, srcImageGeom->getNumYPoints() - 1);
+    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
 
   if(zMax > srcImageGeom->getNumZPoints() - 1)
   {
-    std::string ss = fmt::format("The Z Max ({}) is greater than the Image Geometry Z extent ({})", zMax, srcImageGeom->getNumZPoints() - 1);
-    return {MakeErrorResult<OutputActions>(-5550, ss)};
+    std::string errMsg = fmt::format("The Z Max ({}) is greater than the Image Geometry Z extent ({})", zMax, srcImageGeom->getNumZPoints() - 1);
+    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
 
-  const usize requiredTupleCount = oldDimensions[0] * oldDimensions[1] * oldDimensions[2];
+  const usize requiredTupleCount = srcDimensions[0] * srcDimensions[1] * srcDimensions[2];
 
   std::vector<usize> tDims(3, 0);
   if(xMax - xMin < 0)
@@ -257,38 +262,30 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   tDims[1] = (yMax - yMin) + 1;
   tDims[2] = (zMax - zMin) + 1;
 
-  IntVec3 newDimensions;
-  newDimensions[0] = tDims[0];
-  newDimensions[1] = tDims[1];
-  newDimensions[2] = tDims[2];
+  FloatVec3 targetSpacing;
+  targetSpacing = srcSpacing;
 
-  FloatVec3 newResolution;
-  newResolution = oldResolution;
-
-  std::vector<float32> newOrigin(3);
+  std::vector<float32> targetOrigin(3);
   if(shouldUpdateOrigin)
   {
-    newOrigin[0] = xMin * newResolution[0] + oldOrigin[0];
-    newOrigin[1] = yMin * newResolution[1] + oldOrigin[1];
-    newOrigin[2] = zMin * newResolution[2] + oldOrigin[2];
+    targetOrigin[0] = static_cast<float>(xMin) * targetSpacing[0] + srcOrigin[0];
+    targetOrigin[1] = static_cast<float>(yMin) * targetSpacing[1] + srcOrigin[1];
+    targetOrigin[2] = static_cast<float>(zMin) * targetSpacing[2] + srcOrigin[2];
   }
   else
   {
-    newOrigin[0] = oldOrigin[0];
-    newOrigin[1] = oldOrigin[1];
-    newOrigin[2] = oldOrigin[2];
+    targetOrigin[0] = srcOrigin[0];
+    targetOrigin[1] = srcOrigin[1];
+    targetOrigin[2] = srcOrigin[2];
   }
 
   // saveAsNewImage
   {
-    int64 XP = ((xMax - xMin) + 1);
-    int64 YP = ((yMax - yMin) + 1);
-    int64 ZP = ((zMax - zMin) + 1);
+    uint64 XP = ((xMax - xMin) + 1);
+    uint64 YP = ((yMax - yMin) + 1);
+    uint64 ZP = ((zMax - zMin) + 1);
 
-    std::vector<usize> tDims(3, 0);
-    tDims[0] = XP;
-    tDims[1] = YP;
-    tDims[2] = ZP;
+    std::vector<usize> tDims = {XP, YP, ZP};
 
     auto spacing = srcImageGeom->getSpacing();
     std::vector<float32> spacingVec(3);
@@ -296,7 +293,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     {
       spacingVec[i] = spacing[i];
     }
-    auto action = std::make_unique<CreateImageGeometryAction>(destImagePath, tDims, newOrigin, spacingVec);
+    auto action = std::make_unique<CreateImageGeometryAction>(destImagePath, tDims, targetOrigin, spacingVec);
     actions.actions.push_back(std::move(action));
 
     auto newCellFeaturesPath = destImagePath.createChildPath(newCellFeaturesName);
@@ -305,19 +302,18 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       actions.actions.push_back(std::move(action));
     }
 
-    usize flattenedTupleCount = tDims[0] * tDims[1] * tDims[2];
     for(const auto& srcArrayPath : voxelArrayPaths)
     {
-      auto* srcArray = data.getDataAs<IDataArray>(srcArrayPath);
+      const auto* srcArray = data.getDataAs<IDataArray>(srcArrayPath);
       if(srcArray == nullptr)
       {
-        std::string ss = fmt::format("Could not find the DataArray at path '{}'", srcArrayPath.toString());
-        return {MakeErrorResult<OutputActions>(-5551, ss)};
+        std::string errMsg = fmt::format("Could not find the DataArray at path '{}'", srcArrayPath.toString());
+        return {MakeErrorResult<OutputActions>(-5551, errMsg)};
       }
       if(srcArray->getNumberOfTuples() != requiredTupleCount)
       {
-        std::string ss = fmt::format("DataArray at path '{}' does not match the required tuple count of '{}'", srcArrayPath.toString(), requiredTupleCount);
-        return {MakeErrorResult<OutputActions>(-5551, ss)};
+        std::string errMsg = fmt::format("DataArray at path '{}' does not match the required tuple count of '{}'", srcArrayPath.toString(), requiredTupleCount);
+        return {MakeErrorResult<OutputActions>(-5551, errMsg)};
       }
 
       DataType dataType = srcArray->getDataType();
@@ -328,21 +324,19 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     }
   }
 
-  usize totalPoints = srcImageGeom->getNumberOfElements();
-
   if(shouldRenumberFeatures)
   {
     std::vector<usize> cDims = {1};
-    auto* featureIdsPtr = data.getDataAs<DataArray<int32>>(featureIdsArrayPath);
+    const auto* featureIdsPtr = data.getDataAs<DataArray<int32>>(featureIdsArrayPath);
     if(nullptr == featureIdsPtr)
     {
-      std::string ss = fmt::format("The DataArray '{}' which defines the Feature Ids to renumber is invalid. Does it exist? Is it the correct type?", featureIdsArrayPath.toString());
-      return {MakeErrorResult<OutputActions>(-55500, ss)};
+      std::string errMsg = fmt::format("The DataArray '{}' which defines the Feature Ids to renumber is invalid. Does it exist? Is it the correct type?", featureIdsArrayPath.toString());
+      return {MakeErrorResult<OutputActions>(-55500, errMsg)};
     }
     if(featureIdsPtr->getNumberOfComponents() != 1)
     {
-      std::string ss = fmt::format("The Feature IDs array does not have the correct component dimensions. 1 component required. Array has {}", featureIdsPtr->getNumberOfComponents());
-      return {MakeErrorResult<OutputActions>(-55501, ss)};
+      std::string errMsg = fmt::format("The Feature IDs array does not have the correct component dimensions. 1 component required. Array has {}", featureIdsPtr->getNumberOfComponents());
+      return {MakeErrorResult<OutputActions>(-55501, errMsg)};
     }
   }
 
@@ -359,18 +353,18 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   auto destImagePath = args.value<DataPath>(k_NewImageGeom_Key);
   auto minVoxels = args.value<std::vector<uint64>>(k_MinVoxel_Key);
   auto maxVoxels = args.value<std::vector<uint64>>(k_MaxVoxel_Key);
-  auto shouldUpdateOrigin = args.value<bool>(k_UpdateOrigin_Key);
+  // auto shouldUpdateOrigin = args.value<bool>(k_UpdateOrigin_Key);
   auto shouldRenumberFeatures = args.value<bool>(k_RenumberFeatures_Key);
   auto newFeaturesName = args.value<std::string>(k_NewFeaturesName_Key);
   auto voxelArrayPaths = args.value<std::vector<DataPath>>(k_VoxelArrays_Key);
   auto featureIdsArrayPath = args.value<DataPath>(k_FeatureIds_Key);
 
-  auto xMin = minVoxels[0];
-  auto xMax = maxVoxels[0];
-  auto yMax = maxVoxels[1];
-  auto yMin = minVoxels[1];
-  auto zMax = maxVoxels[2];
-  auto zMin = minVoxels[2];
+  uint64 xMin = minVoxels[0];
+  uint64 xMax = maxVoxels[0];
+  uint64 yMax = maxVoxels[1];
+  uint64 yMin = minVoxels[1];
+  uint64 zMax = maxVoxels[2];
+  uint64 zMin = minVoxels[2];
 
   auto& srcImageGeom = data.getDataRefAs<ImageGeom>(srcImagePath);
   auto& destImageGeom = data.getDataRefAs<ImageGeom>(destImagePath);
@@ -378,7 +372,6 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   DataPath newVoxelParentPath = destImagePath.createChildPath(newFeaturesName);
 
   // No matter where the AM is (same DC or new DC), we have the correct DC and AM pointers...now it's time to crop
-  int64 totalPoints = srcImageGeom.getNumberOfElements();
 
   SizeVec3 udims = srcImageGeom.getDimensions();
 
@@ -400,73 +393,83 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   // Check to make sure the new dimensions are not "out of bounds" and warn the user if they are
   if(dims[0] <= xMax)
   {
-    std::string ss = fmt::format("The Max X value ({}) is greater than the Image Geometry X entent ({})."
-                                 " This may lead to junk data being filled into the extra space.",
-                                 xMax, dims[0]);
-    return MakeErrorResult(-950, ss);
+    std::string errMsg = fmt::format("The Max X value ({}) is greater than the Image Geometry X entent ({})."
+                                     " This may lead to junk data being filled into the extra space.",
+                                     xMax, dims[0]);
+    return MakeErrorResult(-950, errMsg);
   }
   if(dims[1] <= yMax)
   {
-    std::string ss = fmt::format("The Max Y value ({}) is greater than the Image Geometry Y entent ({})."
-                                 " This may lead to junk data being filled into the extra space.",
-                                 yMax, dims[1]);
-    return MakeErrorResult(-951, ss);
+    std::string errMsg = fmt::format("The Max Y value ({}) is greater than the Image Geometry Y entent ({})."
+                                     " This may lead to junk data being filled into the extra space.",
+                                     yMax, dims[1]);
+    return MakeErrorResult(-951, errMsg);
   }
   if(dims[2] <= zMax)
   {
-    std::string ss = fmt::format("The Max Z value ({}) is greater than the Image Geometry Z entent ({})."
-                                 " This may lead to junk data being filled into the extra space.",
-                                 zMax, dims[2]);
-    return MakeErrorResult(-952, ss);
+    std::string errMsg = fmt::format("The Max Z value ({}) is greater than the Image Geometry Z entent ({})."
+                                     " This may lead to junk data being filled into the extra space.",
+                                     zMax, dims[2]);
+    return MakeErrorResult(-952, errMsg);
   }
 
-  int64 XP = ((xMax - xMin) + 1);
-  int64 YP = ((yMax - yMin) + 1);
-  int64 ZP = ((zMax - zMin) + 1);
+  uint64 xExtent = ((xMax - xMin) + 1);
+  uint64 yExtent = ((yMax - yMin) + 1);
+  uint64 zExtent = ((zMax - zMin) + 1);
 
-  int64 col = 0, row = 0, plane = 0;
-  int64 colold = 0, rowold = 0, planeold = 0;
-  int64 index = 0;
-  int64 index_old = 0;
-  for(int64 i = 0; i < ZP; i++)
+  for(const auto& voxelPath : voxelArrayPaths)
   {
-    if(shouldCancel)
+    auto& oldDataArray = data.getDataRefAs<IDataArray>(voxelPath);
+    auto& newDataArray = data.getDataRefAs<IDataArray>(newVoxelParentPath.createChildPath(voxelPath.getTargetName()));
+
+    std::string progMsg = fmt::format("Cropping Volume || Copying Data Array {}", voxelPath.getTargetName());
+    messageHandler(progMsg);
+
+    uint64 col = 0;
+    uint64 row = 0;
+    uint64 plane = 0;
+
+    uint64 colold = 0;
+    uint64 rowold = 0;
+    uint64 planeold = 0;
+    uint64 index = 0;
+    uint64 index_old = 0;
+
+    // Loop over every tuple in this array
+    for(int64 i = 0; i < zExtent; i++)
     {
-      return {};
-    }
-    // std::string ss = fmt::format("Cropping Volume || Slice {} of {} Complete", i, ZP);
-    // notifyStatusMessage(ss);
-    planeold = (i + zMin) * (srcImageGeom.getNumXPoints() * srcImageGeom.getNumYPoints());
-    plane = (i * XP * YP);
-    for(int64 j = 0; j < YP; j++)
-    {
-      rowold = (j + yMin) * srcImageGeom.getNumXPoints();
-      row = (j * XP);
-      for(int64 k = 0; k < XP; k++)
+      if(shouldCancel)
       {
-        colold = (k + xMin);
-        col = k;
-        index_old = planeold + rowold + colold;
-        index = plane + row + col;
-        for(const auto& voxelPath : voxelArrayPaths)
+        return {};
+      }
+
+      planeold = (i + zMin) * (srcImageGeom.getNumXPoints() * srcImageGeom.getNumYPoints());
+      plane = (i * xExtent * yExtent);
+      for(int64 j = 0; j < yExtent; j++)
+      {
+        rowold = (j + yMin) * srcImageGeom.getNumXPoints();
+        row = (j * xExtent);
+        for(int64 k = 0; k < xExtent; k++)
         {
-          auto& oldDataArray = data.getDataRefAs<IDataArray>(voxelPath);
-          auto& newDataArray = data.getDataRefAs<IDataArray>(newVoxelParentPath.createChildPath(voxelPath.getTargetName()));
+          colold = (k + xMin);
+          col = k;
+          index_old = planeold + rowold + colold;
+          index = plane + row + col;
 
           copyDataArrayTuple(oldDataArray, newDataArray, index_old, index);
         }
       }
     }
   }
+
   if(shouldCancel)
   {
     return {};
   }
-  totalPoints = destImageGeom.getNumberOfElements();
   std::vector<usize> tDims(3, 0);
-  tDims[0] = XP;
-  tDims[1] = YP;
-  tDims[2] = ZP;
+  tDims[0] = xExtent;
+  tDims[1] = yExtent;
+  tDims[2] = zExtent;
 
   if(shouldRenumberFeatures)
   {
@@ -476,18 +479,6 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
     {
       return result;
     }
-  }
-
-  if(shouldUpdateOrigin)
-  {
-    FloatVec3 resolution = destImageGeom.getSpacing();
-    FloatVec3 origin = destImageGeom.getOrigin();
-
-    origin[0] = xMin * resolution[0] + oldOrigin[0];
-    origin[1] = yMin * resolution[1] + oldOrigin[1];
-    origin[2] = zMin * resolution[2] + oldOrigin[2];
-
-    destImageGeom.setOrigin(origin);
   }
 
   return {};
