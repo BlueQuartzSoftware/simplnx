@@ -423,7 +423,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
     auto& newDataArray = data.getDataRefAs<IDataArray>(newVoxelParentPath.createChildPath(voxelPath.getTargetName()));
 
     std::string progMsg = fmt::format("Cropping Volume || Copying Data Array {}", voxelPath.getTargetName());
-    messageHandler.operator()(progMsg);
+    messageHandler(progMsg);
 
     uint64 col = 0;
     uint64 row = 0;
