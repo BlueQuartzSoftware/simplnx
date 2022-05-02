@@ -208,7 +208,7 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
 
   for(usize i = 0; i < iters; i++)
   {
-    if(shouldCancel.operator bool())
+    if(shouldCancel)
     {
       return {};
     }
