@@ -45,8 +45,9 @@ Parameters SetImageGeomOriginScalingFilter::parameters() const
   Parameters params;
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "Path to the target ImageGeom", DataPath(), std::set{AbstractGeometry::Type::Image}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Change Origin", "Specifies if the origin should be changed", true));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeResolution_Key, "Change Spacing", "Specifies if the spacing should be changed", true));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_Origin_Key, "Origin", "Specifies the new origin values", std::vector<float64>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
+
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeResolution_Key, "Change Spacing", "Specifies if the spacing should be changed", true));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_Spacing_Key, "Spacing", "Specifies the new spacing values", std::vector<float64>{1, 1, 1}, std::vector<std::string>{"X", "Y", "Z"}));
 
   params.linkParameters(k_ChangeOrigin_Key, k_Origin_Key, std::make_any<bool>(true));
