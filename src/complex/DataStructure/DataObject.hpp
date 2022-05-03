@@ -278,6 +278,7 @@ protected:
 
   /**
    * @brief Marks the specified BaseGroup as a parent.
+   * If this object is already parented to the given group, this function does nothing.
    * @param parent
    */
   void addParent(BaseGroup* parent);
