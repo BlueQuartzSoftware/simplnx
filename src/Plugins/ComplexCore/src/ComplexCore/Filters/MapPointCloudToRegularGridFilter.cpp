@@ -358,7 +358,6 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, cons
   SizeVec3 dims = image->getDimensions();
   FloatVec3 res = image->getSpacing();
   FloatVec3 origin = image->getOrigin();
-  float32 coords[3] = {0.0f, 0.0f, 0.0f};
   usize idxs[3] = {0, 0, 0};
   int64 progIncrement = numVerts / 100;
   int64 prog = 1;
