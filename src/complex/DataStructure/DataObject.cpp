@@ -182,7 +182,12 @@ const Metadata& DataObject::getMetadata() const
 
 void DataObject::addParent(BaseGroup* parent)
 {
-  m_ParentList.push_back(parent->getId());
+  IdType id = parent->getId();
+  if(std::find(m_ParentList.cbegin(), m_ParentList.cend(), id) != m_ParentList.cend())
+  {
+    return;
+  }
+  m_ParentList.push_back(id);
 }
 
 void DataObject::removeParent(BaseGroup* parent)
