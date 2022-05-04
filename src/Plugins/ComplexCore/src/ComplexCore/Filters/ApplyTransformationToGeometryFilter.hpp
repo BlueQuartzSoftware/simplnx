@@ -23,6 +23,12 @@ public:
   ApplyTransformationToGeometryFilter& operator=(const ApplyTransformationToGeometryFilter&) = delete;
   ApplyTransformationToGeometryFilter& operator=(ApplyTransformationToGeometryFilter&&) noexcept = delete;
 
+  enum class RotationRepresentation : uint64
+  {
+    AxisAngle = 0,
+    RotationMatrix = 1
+  };
+
   // Parameter Keys
   static inline constexpr StringLiteral k_GeometryToTransform_Key = "GeometryToTransform";
 
@@ -33,6 +39,10 @@ public:
   static inline constexpr StringLiteral k_Translation_Key = "Translation";
   static inline constexpr StringLiteral k_Scale_Key = "Scale";
   static inline constexpr StringLiteral k_ComputedTransformationMatrix_Key = "ComputedTransformationMatrix";
+  static inline constexpr StringLiteral k_InterpolationType_Key = "InterpolationType";
+  static inline constexpr StringLiteral k_SelectedCellArrays_Key = "SelectedCellArrays";
+  static inline constexpr StringLiteral k_UseArraySelector_Key = "UseArraySelector";
+  static inline constexpr StringLiteral k_CreatedImageGeometry_Key = "CreatedGeometry";
 
   /**
    * @brief Returns the name of the filter.

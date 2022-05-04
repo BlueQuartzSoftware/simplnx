@@ -12,11 +12,34 @@
 
 namespace complex
 {
+struct RotateArgs
+{
+  int64 xp = 0;
+  int64 yp = 0;
+  int64 zp = 0;
+  float32 xRes = 0.0f;
+  float32 yRes = 0.0f;
+  float32 zRes = 0.0f;
+  int64 xpNew = 0;
+  int64 ypNew = 0;
+  int64 zpNew = 0;
+  float32 xResNew = 0.0f;
+  float32 yResNew = 0.0f;
+  float32 zResNew = 0.0f;
+  float32 xMinNew = 0.0f;
+  float32 yMinNew = 0.0f;
+  float32 zMinNew = 0.0f;
+};
+
 struct COMPLEXCORE_EXPORT ApplyTransformationToImageGeometryInputValues
 {
   DataPath pGeometryToTransform;
   TransformType pTransformationType;
   std::vector<float> transformationMatrix;
+  int pInterpolationType;
+  RotateArgs rotateArgs;
+  bool useArraySelector;
+  std::vector<DataPath> selectedArrays;
 };
 
 class COMPLEXCORE_EXPORT ApplyTransformationToImageGeometry

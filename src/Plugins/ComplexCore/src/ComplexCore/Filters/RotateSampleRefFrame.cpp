@@ -459,9 +459,6 @@ IFilter::PreflightResult RotateSampleRefFrame::preflightImpl(const DataStructure
   std::vector<float32> spacing = {rotateArgs.xResNew, rotateArgs.yResNew, rotateArgs.zResNew};
 
   std::vector<float32> origin = selectedImageGeom.getOrigin().toContainer<std::vector<float32>>();
-  origin[0] += rotateArgs.xMinNew;
-  origin[1] += rotateArgs.yMinNew;
-  origin[2] += rotateArgs.zMinNew;
 
   OutputActions actions;
 
