@@ -511,12 +511,12 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
 
     if(!interpolatedDataPaths.empty())
     {
-      for(const auto& interpolatedDataPath : interpolatedDataPaths)
+      for(const auto& interpolatedDataPathItem : interpolatedDataPaths)
       {
-        auto parentPath = interpolatedDataPath.getParent();
-        auto dynamicArrayPath = parentPath.createChildPath(interpolatedDataPath.getTargetName() + "Neighbors");
+        auto parentPath = interpolatedDataPathItem.getParent();
+        auto dynamicArrayPath = parentPath.createChildPath(interpolatedDataPathItem.getTargetName() + "Neighbors");
         auto* dynamicArrayToInterpolate = data.getDataAs<INeighborList>(dynamicArrayPath);
-        auto* interpolatedArray = data.getDataAs<IDataArray>(interpolatedDataPath);
+        auto* interpolatedArray = data.getDataAs<IDataArray>(interpolatedDataPathItem);
         mapPointCloudDataByKernel(interpolatedArray, dynamicArrayToInterpolate, kernel, kernelNumVoxels, dims.data(), x, y, z, i);
       }
     }
