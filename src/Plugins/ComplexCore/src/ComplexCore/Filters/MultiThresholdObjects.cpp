@@ -117,51 +117,56 @@ public:
    */
   void execute(DataStructure& dataStructure, DataPath& inputArrayDataPath)
   {
-    DataObject* dataObject = dataStructure.getData(inputArrayDataPath);
+    const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayDataPath);
 
-    if(const auto* dataArray = dynamic_cast<const DataArray<int8>*>(dataObject); dataArray != nullptr)
+    DataType type = dataArray.getDataType();
+
+    switch(type)
     {
-      filterData<int8>(*dataArray);
+    case DataType::int8: {
+      filterData<int8>(dynamic_cast<const DataArray<int8>&>(dataArray));
+      break;
     }
-    else if(const auto* dataArray = dynamic_cast<const DataArray<int16>*>(dataObject); dataArray != nullptr)
-    {
-      filterData<int16>(*dataArray);
+    case DataType::uint8: {
+      filterData<uint8>(dynamic_cast<const DataArray<uint8>&>(dataArray));
+      break;
     }
-    else if(const auto* dataArray = dynamic_cast<const DataArray<int32>*>(dataObject); dataArray != nullptr)
-    {
-      filterData<int32>(*dataArray);
+    case DataType::int16: {
+      filterData<int16>(dynamic_cast<const DataArray<int16>&>(dataArray));
+      break;
     }
-    else if(const auto* dataArray = dynamic_cast<const DataArray<int64>*>(dataObject); dataArray != nullptr)
-    {
-      filterData<int64>(*dataArray);
+    case DataType::uint16: {
+      filterData<uint16>(dynamic_cast<const DataArray<uint16>&>(dataArray));
+      break;
     }
-    else if(const auto* dataArray = dynamic_cast<const DataArray<uint8>*>(dataObject); dataArray != nullptr)
-    {
-      filterData<uint8>(*dataArray);
+    case DataType::int32: {
+      filterData<int32>(dynamic_cast<const DataArray<int32>&>(dataArray));
+      break;
     }
-    else if(const auto* dataArray = dynamic_cast<const DataArray<uint16>*>(dataObject); dataArray != nullptr)
-    {
-      filterData<uint16>(*dataArray);
+    case DataType::uint32: {
+      filterData<uint32>(dynamic_cast<const DataArray<uint32>&>(dataArray));
+      break;
     }
-    else if(const auto* dataArray = dynamic_cast<const DataArray<uint32>*>(dataObject); dataArray != nullptr)
-    {
-      filterData<uint32>(*dataArray);
+    case DataType::int64: {
+      filterData<int64>(dynamic_cast<const DataArray<int64>&>(dataArray));
+      break;
     }
-    else if(const auto* dataArray = dynamic_cast<const DataArray<uint64>*>(dataObject); dataArray != nullptr)
-    {
-      filterData<uint64>(*dataArray);
+    case DataType::uint64: {
+      filterData<uint64>(dynamic_cast<const DataArray<uint64>&>(dataArray));
+      break;
     }
-    else if(const auto* dataArray = dynamic_cast<const DataArray<float32>*>(dataObject); dataArray != nullptr)
-    {
-      filterData<float32>(*dataArray);
+    case DataType::float32: {
+      filterData<float32>(dynamic_cast<const DataArray<float32>&>(dataArray));
+      break;
     }
-    else if(const auto* dataArray = dynamic_cast<const DataArray<float64>*>(dataObject); dataArray != nullptr)
-    {
-      filterData<float64>(*dataArray);
+    case DataType::float64: {
+      filterData<float64>(dynamic_cast<const DataArray<float64>&>(dataArray));
+      break;
     }
-    else if(const auto* dataArray = dynamic_cast<const DataArray<bool>*>(dataObject); dataArray != nullptr)
-    {
-      filterData<bool>(*dataArray);
+    case DataType::boolean: {
+      filterData<bool>(dynamic_cast<const DataArray<bool>&>(dataArray));
+      break;
+    }
     }
   }
 

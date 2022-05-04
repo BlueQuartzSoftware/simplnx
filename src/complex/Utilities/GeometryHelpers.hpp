@@ -214,7 +214,6 @@ void FindTetEdges(const DataArray<T>* tetList, DataArray<T>* edgeList)
   const usize numVertsPerTet = tetList->getNumberOfComponents();
   auto& tets = *tetList;
 
-  std::pair<T, T> edge;
   std::set<std::pair<T, T>> edgeSet;
 
   for(usize i = 0; i < numElems; i++)
@@ -227,12 +226,12 @@ void FindTetEdges(const DataArray<T>* tetList, DataArray<T>* edgeList)
     std::vector<T> edge3 = {tets[offset + 0], tets[offset + 3]};
     std::vector<T> edge4 = {tets[offset + 1], tets[offset + 3]};
     std::vector<T> edge5 = {tets[offset + 2], tets[offset + 3]};
-    std::list<std::vector<T>> edgeList = {edge0, edge1, edge2, edge3, edge4, edge5};
+    std::list<std::vector<T>> edgeVecList = {edge0, edge1, edge2, edge3, edge4, edge5};
 
-    for(auto&& uEdge : edgeList)
+    for(auto&& uEdge : edgeVecList)
     {
       std::sort(uEdge.begin(), uEdge.end());
-      edge = std::make_pair(uEdge[0], uEdge[1]);
+      std::pair<T, T> edge = std::make_pair(uEdge[0], uEdge[1]);
       edgeSet.insert(edge);
     }
   }
@@ -263,7 +262,6 @@ void FindHexEdges(const DataArray<T>* hexList, DataArray<T>* edge_List)
 
   auto& hexas = *hexList;
 
-  std::pair<T, T> edge;
   std::set<std::pair<T, T>> edgeSet;
 
   for(usize i = 0; i < numElems; i++)
@@ -290,7 +288,7 @@ void FindHexEdges(const DataArray<T>* hexList, DataArray<T>* edge_List)
     for(auto&& uEdge : edgeList)
     {
       std::sort(uEdge.begin(), uEdge.end());
-      edge = std::make_pair(uEdge[0], uEdge[1]);
+      std::pair<T, T> edge = std::make_pair(uEdge[0], uEdge[1]);
       edgeSet.insert(edge);
     }
   }
@@ -321,7 +319,6 @@ void FindTetFaces(const DataArray<T>* tetList, DataArray<T>* faceList)
   const usize numElems = tetList->getNumberOfTuples();
   const usize numVertsPerTet = tetList->getNumberOfComponents();
 
-  std::tuple<T, T, T> face;
   std::set<std::tuple<T, T, T>> faceSet;
 
   for(usize i = 0; i < numElems; i++)
@@ -337,7 +334,7 @@ void FindTetFaces(const DataArray<T>* tetList, DataArray<T>* faceList)
     for(auto&& tri : triList)
     {
       std::sort(tri.begin(), tri.end());
-      face = std::make_tuple(tri[0], tri[1], tri[2]);
+      std::tuple<T, T, T> face = std::make_tuple(tri[0], tri[1], tri[2]);
       faceSet.insert(face);
     }
   }
@@ -368,7 +365,6 @@ void FindHexFaces(const DataArray<T>* hexList, DataArray<T>* faceList)
   const usize numElems = hexList->getNumberOfTuples();
   const usize numVertsPerHex = hexList->getNumberOfComponents();
 
-  std::tuple<T, T, T, T> face;
   std::set<std::tuple<T, T, T, T>> faceSet;
 
   for(usize i = 0; i < numElems; i++)
@@ -387,7 +383,7 @@ void FindHexFaces(const DataArray<T>* hexList, DataArray<T>* faceList)
     for(auto&& quad : quadList)
     {
       std::sort(quad.begin(), quad.end());
-      face = std::make_tuple(quad[0], quad[1], quad[2], quad[3]);
+      std::tuple<T, T, T, T> face = std::make_tuple(quad[0], quad[1], quad[2], quad[3]);
       faceSet.insert(face);
     }
   }
@@ -419,7 +415,6 @@ void FindUnsharedTetEdges(const DataArray<T>* tetList, DataArray<T>* edgeList)
   const usize numElems = tetList->getNumberOfTuples();
   const usize numVertsPerTet = tetList->getNumberOfComponents();
 
-  std::pair<T, T> edge;
   std::map<std::pair<T, T>, T> edgeMap;
 
   for(usize i = 0; i < numElems; i++)
@@ -432,12 +427,12 @@ void FindUnsharedTetEdges(const DataArray<T>* tetList, DataArray<T>* edgeList)
     std::vector<T> edge3 = {tets[offset + 0], tets[offset + 3]};
     std::vector<T> edge4 = {tets[offset + 1], tets[offset + 3]};
     std::vector<T> edge5 = {tets[offset + 2], tets[offset + 3]};
-    std::list<std::vector<T>> edgeList = {edge0, edge1, edge2, edge3, edge4, edge5};
+    std::list<std::vector<T>> edgeVecList = {edge0, edge1, edge2, edge3, edge4, edge5};
 
-    for(auto&& uEdge : edgeList)
+    for(auto&& uEdge : edgeVecList)
     {
       std::sort(uEdge.begin(), uEdge.end());
-      edge = std::make_pair(uEdge[0], uEdge[1]);
+      std::pair<T, T> edge = std::make_pair(uEdge[0], uEdge[1]);
       edgeMap[edge]++;
     }
   }
@@ -680,7 +675,6 @@ void Find2DElementEdges(const DataArray<T>* elemList, DataArray<T>* edgeList)
   T v0 = 0;
   T v1 = 0;
 
-  std::pair<T, T> edge;
   std::set<std::pair<T, T>> edgeSet;
 
   for(usize i = 0; i < numElems; i++)
@@ -715,7 +709,7 @@ void Find2DElementEdges(const DataArray<T>* elemList, DataArray<T>* edgeList)
           v1 = elems[offset + j + 1];
         }
       }
-      edge = std::make_pair(v0, v1);
+      std::pair<T, T> edge = std::make_pair(v0, v1);
       edgeSet.insert(edge);
     }
   }
@@ -748,7 +742,6 @@ void Find2DUnsharedEdges(const DataArray<T>* elemList, DataArray<T>* edgeList)
   T v0 = 0;
   T v1 = 0;
 
-  std::pair<T, T> edge;
   std::map<std::pair<T, T>, T> edgeMap;
 
   for(usize i = 0; i < numElems; i++)
@@ -783,7 +776,7 @@ void Find2DUnsharedEdges(const DataArray<T>* elemList, DataArray<T>* edgeList)
           v1 = elems[offset + j + 1];
         }
       }
-      edge = std::make_pair(v0, v1);
+      std::pair<T, T> edge = std::make_pair(v0, v1);
       edgeMap[edge]++;
     }
   }

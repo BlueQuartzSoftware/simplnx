@@ -65,8 +65,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     {
       return {};
     }
-    std::string ss = fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps);
-    m_MessageHandler(IFilter::Message::Type::Info, ss);
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
     // Compute the Deltas for each point
     for(AbstractGeometry::MeshIndexType i = 0; i < nedges; i++)
     {
@@ -88,7 +87,6 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     }
 
     // Move each point
-    float ll = 0.0f;
     for(AbstractGeometry::MeshIndexType i = 0; i < nvert; i++)
     {
       for(AbstractGeometry::MeshIndexType j = 0; j < 3; j++)
@@ -96,7 +94,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
         AbstractGeometry::MeshIndexType in0 = 3 * i + j;
         dlta = deltaArray[in0] / numConnections[i];
 
-        ll = lambdas[i];
+        float ll = lambdas[i];
         verts[3 * i + j] += ll * dlta;
         deltaArray[in0] = 0.0; // reset for next iteration
       }
@@ -113,8 +111,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
       {
         return {};
       }
-      std::string ss = fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps);
-      m_MessageHandler(IFilter::Message::Type::Info, ss);
+      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
       // Compute the Delta's
       for(AbstractGeometry::MeshIndexType i = 0; i < nedges; i++)
       {
@@ -136,7 +133,6 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
       }
 
       // MOve the points
-      float ll = 0.0f;
       for(AbstractGeometry::MeshIndexType i = 0; i < nvert; i++)
       {
         for(AbstractGeometry::MeshIndexType j = 0; j < 3; j++)
@@ -144,7 +140,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
           AbstractGeometry::MeshIndexType in0 = 3 * i + j;
           dlta = deltaArray[in0] / numConnections[i];
 
-          ll = lambdas[i] * m_InputValues->pMuFactor;
+          float ll = lambdas[i] * m_InputValues->pMuFactor;
           verts[3 * i + j] += ll * dlta;
           deltaArray[in0] = 0.0; // reset for next iteration
         }
