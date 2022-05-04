@@ -50,9 +50,9 @@ nlohmann::json VectorParameter<T>::toJson(const std::any& value) const
   const auto& vec = GetAnyRef<ValueType>(value);
 
   auto jsonArray = nlohmann::json::array();
-  for(T value : vec)
+  for(T element : vec)
   {
-    jsonArray.push_back(value);
+    jsonArray.push_back(element);
   }
 
   return jsonArray;
