@@ -36,7 +36,7 @@ void PipelineNodeObserver::startObservingNode(AbstractPipelineNode* node)
     stopObservingNode();
   }
 
-  m_Connection = node->getSignal().connect([this](AbstractPipelineNode* node, const std::shared_ptr<AbstractPipelineMessage>& msg) { this->onNotify(node, msg); });
+  m_Connection = node->getSignal().connect([this](AbstractPipelineNode* pipelineNode, const std::shared_ptr<AbstractPipelineMessage>& msg) { this->onNotify(pipelineNode, msg); });
   m_ObservedNode = node;
 }
 

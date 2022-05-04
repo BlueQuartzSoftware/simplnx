@@ -35,7 +35,7 @@ void AbstractDataStructureObserver::startObservingStructure(DataStructure* ds)
   }
 
   m_ObservedStructure = ds;
-  m_Connection = ds->getSignal().connect([this](DataStructure* ds, const std::shared_ptr<AbstractDataStructureMessage>& msg) { this->onNotify(ds, msg); });
+  m_Connection = ds->getSignal().connect([this](DataStructure* dataStructure, const std::shared_ptr<AbstractDataStructureMessage>& msg) { this->onNotify(dataStructure, msg); });
 }
 
 void AbstractDataStructureObserver::stopObservingStructure()

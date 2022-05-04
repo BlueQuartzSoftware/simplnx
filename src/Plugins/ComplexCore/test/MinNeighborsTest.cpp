@@ -89,7 +89,7 @@ TEST_CASE("MinNeighbors: Phase 0", "[MinNeighbors]")
   DataPath k_ImageGeomPath({k_ImageGeomName});
   bool k_ApplyToSinglePhase = true;
   uint64 k_PhaseNumber = 0;
-  DataPath k_FeatureIds({k_ImageGeomName, k_FeatureIdsName});
+  DataPath k_FeatureIdsPath({k_ImageGeomName, k_FeatureIdsName});
   DataPath k_FeaturePhases({k_ImageGeomName, k_FeaturePhasesName});
   DataPath k_NumNeighbors({k_ImageGeomName, k_NumNeighborsName});
   uint64 k_MinNumNeighbors = 1;
@@ -98,7 +98,7 @@ TEST_CASE("MinNeighbors: Phase 0", "[MinNeighbors]")
   args.insertOrAssign(MinNeighbors::k_ImageGeom_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(MinNeighbors::k_ApplyToSinglePhase_Key, std::make_any<bool>(k_ApplyToSinglePhase));
   args.insertOrAssign(MinNeighbors::k_PhaseNumber_Key, std::make_any<uint64>(k_PhaseNumber));
-  args.insertOrAssign(MinNeighbors::k_FeatureIds_Key, std::make_any<DataPath>(k_FeatureIds));
+  args.insertOrAssign(MinNeighbors::k_FeatureIds_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insertOrAssign(MinNeighbors::k_FeaturePhases_Key, std::make_any<DataPath>(k_FeaturePhases));
   args.insertOrAssign(MinNeighbors::k_NumNeighbors_Key, std::make_any<DataPath>(k_NumNeighbors));
   args.insertOrAssign(MinNeighbors::k_MinNumNeighbors_Key, std::make_any<uint64>(k_MinNumNeighbors));
@@ -112,7 +112,7 @@ TEST_CASE("MinNeighbors: Phase 0", "[MinNeighbors]")
   auto executeResult = filter.execute(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  auto& featureIdsArray = dataGraph.getDataRefAs<Int32Array>(k_FeatureIds);
+  auto& featureIdsArray = dataGraph.getDataRefAs<Int32Array>(k_FeatureIdsPath);
   auto& featureIds = featureIdsArray.getDataStoreRef();
   for(usize i = 0; i < featureIds.getSize(); ++i)
   {
@@ -129,7 +129,7 @@ TEST_CASE("MinNeighbors: Bad Phase Number", "[MinNeighbors]")
   DataPath k_ImageGeomPath({k_ImageGeomName});
   bool k_ApplyToSinglePhase = true;
   uint64 k_PhaseNumber = 500;
-  DataPath k_FeatureIds({k_ImageGeomName, k_FeatureIdsName});
+  DataPath k_FeatureIdsPath({k_ImageGeomName, k_FeatureIdsName});
   DataPath k_FeaturePhases({k_ImageGeomName, k_FeaturePhasesName});
   DataPath k_NumNeighbors({k_ImageGeomName, k_NumNeighborsName});
   uint64 k_MinNumNeighbors = 1;
@@ -138,7 +138,7 @@ TEST_CASE("MinNeighbors: Bad Phase Number", "[MinNeighbors]")
   args.insertOrAssign(MinNeighbors::k_ImageGeom_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(MinNeighbors::k_ApplyToSinglePhase_Key, std::make_any<bool>(k_ApplyToSinglePhase));
   args.insertOrAssign(MinNeighbors::k_PhaseNumber_Key, std::make_any<uint64>(k_PhaseNumber));
-  args.insertOrAssign(MinNeighbors::k_FeatureIds_Key, std::make_any<DataPath>(k_FeatureIds));
+  args.insertOrAssign(MinNeighbors::k_FeatureIds_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insertOrAssign(MinNeighbors::k_FeaturePhases_Key, std::make_any<DataPath>(k_FeaturePhases));
   args.insertOrAssign(MinNeighbors::k_NumNeighbors_Key, std::make_any<DataPath>(k_NumNeighbors));
   args.insertOrAssign(MinNeighbors::k_MinNumNeighbors_Key, std::make_any<uint64>(k_MinNumNeighbors));
@@ -162,7 +162,7 @@ TEST_CASE("MinNeighbors: Phase Array", "[MinNeighbors]")
   DataPath k_ImageGeomPath({k_ImageGeomName});
   bool k_ApplyToSinglePhase = false;
   uint64 k_PhaseNumber = 500;
-  DataPath k_FeatureIds({k_ImageGeomName, k_FeatureIdsName});
+  DataPath k_FeatureIdsPath({k_ImageGeomName, k_FeatureIdsName});
   DataPath k_FeaturePhases({k_ImageGeomName, k_FeaturePhasesName});
   DataPath k_NumNeighbors({k_ImageGeomName, k_NumNeighborsName});
   uint64 k_MinNumNeighbors = 1;
@@ -171,7 +171,7 @@ TEST_CASE("MinNeighbors: Phase Array", "[MinNeighbors]")
   args.insertOrAssign(MinNeighbors::k_ImageGeom_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(MinNeighbors::k_ApplyToSinglePhase_Key, std::make_any<bool>(k_ApplyToSinglePhase));
   args.insertOrAssign(MinNeighbors::k_PhaseNumber_Key, std::make_any<uint64>(k_PhaseNumber));
-  args.insertOrAssign(MinNeighbors::k_FeatureIds_Key, std::make_any<DataPath>(k_FeatureIds));
+  args.insertOrAssign(MinNeighbors::k_FeatureIds_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insertOrAssign(MinNeighbors::k_FeaturePhases_Key, std::make_any<DataPath>(k_FeaturePhases));
   args.insertOrAssign(MinNeighbors::k_NumNeighbors_Key, std::make_any<DataPath>(k_NumNeighbors));
   args.insertOrAssign(MinNeighbors::k_MinNumNeighbors_Key, std::make_any<uint64>(k_MinNumNeighbors));

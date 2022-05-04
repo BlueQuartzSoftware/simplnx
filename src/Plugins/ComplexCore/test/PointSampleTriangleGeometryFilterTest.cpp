@@ -114,7 +114,6 @@ TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][P
   {
     CalculateTriangleAreasFilter filter;
     Arguments args;
-    std::string triangleAreasName = "Triangle Areas";
 
     DataPath geometryPath = DataPath({triangleGeometryName});
 

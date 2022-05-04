@@ -281,25 +281,19 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 
   // saveAsNewImage
   {
-    uint64 XP = ((xMax - xMin) + 1);
-    uint64 YP = ((yMax - yMin) + 1);
-    uint64 ZP = ((zMax - zMin) + 1);
-
-    std::vector<usize> tDims = {XP, YP, ZP};
-
     auto spacing = srcImageGeom->getSpacing();
     std::vector<float32> spacingVec(3);
     for(usize i = 0; i < 3; i++)
     {
       spacingVec[i] = spacing[i];
     }
-    auto action = std::make_unique<CreateImageGeometryAction>(destImagePath, tDims, targetOrigin, spacingVec);
-    actions.actions.push_back(std::move(action));
+    auto geomAction = std::make_unique<CreateImageGeometryAction>(destImagePath, tDims, targetOrigin, spacingVec);
+    actions.actions.push_back(std::move(geomAction));
 
     auto newCellFeaturesPath = destImagePath.createChildPath(newCellFeaturesName);
     {
-      auto action = std::make_unique<CreateDataGroupAction>(newCellFeaturesPath);
-      actions.actions.push_back(std::move(action));
+      auto groupAction = std::make_unique<CreateDataGroupAction>(newCellFeaturesPath);
+      actions.actions.push_back(std::move(groupAction));
     }
 
     for(const auto& srcArrayPath : voxelArrayPaths)
@@ -319,8 +313,8 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       DataType dataType = srcArray->getDataType();
       auto components = srcArray->getNumberOfComponents();
       auto dataArrayPath = newCellFeaturesPath.createChildPath(srcArrayPath.getTargetName());
-      auto action = std::make_unique<CreateArrayAction>(dataType, tDims, std::vector<usize>{components}, dataArrayPath);
-      actions.actions.push_back(std::move(action));
+      auto arrayAction = std::make_unique<CreateArrayAction>(dataType, tDims, std::vector<usize>{components}, dataArrayPath);
+      actions.actions.push_back(std::move(arrayAction));
     }
   }
 
