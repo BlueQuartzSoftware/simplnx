@@ -4,7 +4,7 @@
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 
-#include "nonstd/span.hpp"
+#include <nonstd/span.hpp>
 
 #include <algorithm>
 #include <functional>
@@ -520,76 +520,43 @@ public:
    * The provided pointer is expected to contain at least the same number of values
    * as the number of components.
    *
-   * If the tuple index is out of bounds or the provided pointer is null, this method does nothing.
+   * If the tuple index is out of bounds or the provided pointer is null, this method throws a runtime_error.
    * @param tupleIndex
    * @param values
+   * @throw std::runtime_error
    */
   void setTuple(index_type tupleIndex, value_type* values)
   {
     if(values == nullptr)
     {
-      return;
+      throw std::runtime_error("Provided values pointer cannot be null");
     }
 
-    if(tupleIndex > getNumberOfTuples())
-    {
-      return;
-    }
-
-    index_type numComponents = getNumberOfComponents();
-    index_type offset = tupleIndex * numComponents;
-    for(index_type i = 0; i < numComponents; i++)
-    {
-      setValue(offset + i, values[i]);
-    }
-  }
-
-  /**
-   * @brief Sets all component values for a tuple using a vector of values.
-   *
-   * If the tuple index is out of bounds or the provided vector does not match
-   * the number of components, this method does nothing.
-   * @param tupleIndex
-   * @param values
-   */
-  void setTuple(index_type tupleIndex, const std::vector<value_type>& values)
-  {
-    if(values.size() != getNumberOfComponents())
-    {
-      return;
-    }
-
-    if(tupleIndex > getNumberOfTuples())
-    {
-      return;
-    }
-
-    index_type numComponents = getNumberOfComponents();
-    index_type offset = tupleIndex * numComponents;
-    for(index_type i = 0; i < numComponents; i++)
-    {
-      setValue(offset + i, values[i]);
-    }
+    nonstd::span<const value_type> valueSpan(values, values + getNumberOfComponents());
+    setTuple(tupleIndex, valueSpan);
   }
 
   /**
    * @brief Sets all component values for a tuple using a span of values.
    *
    * If the tuple index is out of bounds or the provided span does not match
-   * the number of components, this method does nothing.
+   * the number of components, this method throws a runtime_error.
    * @param tupleIndex
    * @param values
+   * @throw std::runtime_error
    */
-  void setTuple(index_type tupleIndex, const nonstd::span<value_type>& values)
+  void setTuple(index_type tupleIndex, nonstd::span<const value_type> values)
   {
     if(values.size() != getNumberOfComponents())
     {
-      return;
+      auto ss = fmt::format("Span size ({}) does not match the number of components ({})", values.size(), getNumberOfComponents());
+      throw std::runtime_error(ss);
     }
 
-    if(tupleIndex > getNumberOfTuples())
+    if(tupleIndex >= getNumberOfTuples())
     {
-      return;
+      auto ss = fmt::format("Tuple index ({}) is greater than or equal to the number of tuples ({})", tupleIndex, getNumberOfTuples());
+      throw std::runtime_error(ss);
     }
 
     index_type numComponents = getNumberOfComponents();
@@ -610,14 +577,16 @@ public:
    */
   void setComponent(index_type tupleIndex, index_type componentIndex, value_type value)
   {
-    if(tupleIndex > getNumberOfTuples())
+    if(tupleIndex >= getNumberOfTuples())
     {
-      return;
+      auto ss = fmt::format("Tuple index ({}) is greater than or equal to the number of tuples ({})", tupleIndex, getNumberOfTuples());
+      throw std::runtime_error(ss);
     }
 
-    if(componentIndex > getNumberOfComponents())
+    if(componentIndex >= getNumberOfComponents())
     {
-      return;
+      auto ss = fmt::format("Component index ({}) is greater than or equal to the number of components ({})", componentIndex, getNumberOfComponents());
+      throw std::runtime_error(ss);
     }
 
     index_type index = tupleIndex * getNumberOfComponents() + componentIndex;
@@ -634,14 +603,16 @@ public:
    */
   value_type getComponentValue(index_type tupleIndex, index_type componentIndex) const
   {
-    if(tupleIndex > getNumberOfTuples())
+    if(tupleIndex >= getNumberOfTuples())
     {
-      return {};
+      auto ss = fmt::format("Tuple index ({}) is greater than or equal to the number of tuples ({})", tupleIndex, getNumberOfTuples());
+      throw std::runtime_error(ss);
     }
 
-    if(componentIndex > getNumberOfComponents())
+    if(componentIndex >= getNumberOfComponents())
     {
-      return {};
+      auto ss = fmt::format("Component index ({}) is greater than or equal to the number of components ({})", componentIndex, getNumberOfComponents());
+      throw std::runtime_error(ss);
     }
 
     index_type index = tupleIndex * getNumberOfComponents() + componentIndex;
