@@ -596,7 +596,7 @@ public:
     index_type offset = tupleIndex * numComponents;
     for(uint64 i = 0; i < numComponents; i++)
     {
-      setValue(offset + i, value[i]);
+      setValue(offset + i, values[i]);
     }
   }
 
