@@ -79,9 +79,6 @@ public:
   const std::vector<char>& delimiters() const;
   void setDelimiters(const std::vector<char>& newDelimiters);
 
-  const DataPath& selectedGroupPath() const;
-  void setSelectedGroupPath(const DataPath& selectedGroupPath);
-
   usize headerLine() const;
   void setHeaderLine(usize newHeaderLine);
 
@@ -90,9 +87,6 @@ public:
 
   bool consecutiveDelimiters() const;
   void setConsecutiveDelimiters(bool newConsecutiveDelimiters);
-
-  bool useExistingGroup() const;
-  void setUseExistingGroup(bool useExistingGroup);
 
   HeaderMode headerMode() const;
   void setHeaderMode(HeaderMode newHeaderMode);
@@ -122,7 +116,6 @@ private:
   int64 m_NumberOfLines;
   std::vector<std::optional<DataType>> m_DataTypes;
   std::vector<char> m_Delimiters;
-  DataPath m_SelectedGroupPath;
 
   usize m_HeaderLine;
   HeaderMode m_HeaderMode;
@@ -131,7 +124,6 @@ private:
   bool m_CommaAsDelimiter;
   bool m_SpaceAsDelimiter;
   bool m_ConsecutiveDelimiters;
-  bool m_UseExistingGroup;
 
   const usize m_TotalPreviewLines = 50;
   const std::string m_SkipDataTypeString = "Skip";

@@ -43,7 +43,6 @@ static const std::string k_TupleDimensionsKey = "Tuple Dimensions";
 static const std::string k_InputFilePathKey = "Input File Path";
 static const std::string k_BeginIndexKey = "Begin Index";
 static const std::string k_NumberOfLinesKey = "Number of Lines";
-static const std::string k_SelectedGroupPathKey = "Selected Group Path";
 static const std::string k_HeaderLineKey = "Header Line";
 static const std::string k_HeaderModeKey = "Header Mode";
 static const std::string k_TabAsDelimiterKey = "Tab As Delimiter";
@@ -51,7 +50,6 @@ static const std::string k_SemicolonAsDelimiterKey = "Semicolon As Delimiter";
 static const std::string k_CommaAsDelimiterKey = "Comma As Delimiter";
 static const std::string k_SpaceAsDelimiterKey = "Space As Delimiter";
 static const std::string k_ConsecutiveDelimitersKey = "Consecutive Delimiters";
-static const std::string k_UseExistingGroupKey = "Use Existing Group";
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -82,8 +80,6 @@ void ASCIIWizardData::initialize()
   m_CommaAsDelimiter = false;
   m_SpaceAsDelimiter = false;
   m_ConsecutiveDelimiters = false;
-  m_UseExistingGroup = false;
-  m_SelectedGroupPath = {};
 }
 
 // -----------------------------------------------------------------------------
@@ -126,7 +122,6 @@ void ASCIIWizardData::writeJson(nlohmann::json& json) const
   json[k_InputFilePathKey] = m_InputFilePath;
   json[k_BeginIndexKey] = m_BeginIndex;
   json[k_NumberOfLinesKey] = m_NumberOfLines;
-  json[k_SelectedGroupPathKey] = m_SelectedGroupPath.toString();
   json[k_HeaderLineKey] = m_HeaderLine;
   json[k_HeaderModeKey] = m_HeaderMode;
   json[k_TabAsDelimiterKey] = m_TabAsDelimiter;
@@ -134,7 +129,6 @@ void ASCIIWizardData::writeJson(nlohmann::json& json) const
   json[k_SpaceAsDelimiterKey] = m_SpaceAsDelimiter;
   json[k_CommaAsDelimiterKey] = m_CommaAsDelimiter;
   json[k_ConsecutiveDelimitersKey] = m_ConsecutiveDelimiters;
-  json[k_UseExistingGroupKey] = m_UseExistingGroup;
 }
 
 // -----------------------------------------------------------------------------
@@ -181,13 +175,6 @@ bool ASCIIWizardData::readJson(const nlohmann::json& json)
   m_SpaceAsDelimiter = json[k_SpaceAsDelimiterKey];
   m_CommaAsDelimiter = json[k_CommaAsDelimiterKey];
   m_ConsecutiveDelimiters = json[k_ConsecutiveDelimitersKey];
-  m_UseExistingGroup = json[k_UseExistingGroupKey];
-
-  std::optional<DataPath> dPath = DataPath::FromString(json[k_SelectedGroupPathKey].dump());
-  if(dPath.has_value())
-  {
-    m_SelectedGroupPath = dPath.value();
-  }
 
   return true;
 }
@@ -265,18 +252,6 @@ void ASCIIWizardData::setDelimiters(const std::vector<char>& newDelimiters)
 }
 
 // -----------------------------------------------------------------------------
-const DataPath& ASCIIWizardData::selectedGroupPath() const
-{
-  return m_SelectedGroupPath;
-}
-
-// -----------------------------------------------------------------------------
-void ASCIIWizardData::setSelectedGroupPath(const DataPath& selectedGroupPath)
-{
-  m_SelectedGroupPath = selectedGroupPath;
-}
-
-// -----------------------------------------------------------------------------
 usize ASCIIWizardData::headerLine() const
 {
   return m_HeaderLine;
@@ -298,18 +273,6 @@ bool ASCIIWizardData::consecutiveDelimiters() const
 void ASCIIWizardData::setConsecutiveDelimiters(bool newConsecutiveDelimiters)
 {
   m_ConsecutiveDelimiters = newConsecutiveDelimiters;
-}
-
-// -----------------------------------------------------------------------------
-bool ASCIIWizardData::useExistingGroup() const
-{
-  return m_UseExistingGroup;
-}
-
-// -----------------------------------------------------------------------------
-void ASCIIWizardData::setUseExistingGroup(bool useExistingGroup)
-{
-  m_UseExistingGroup = useExistingGroup;
 }
 
 // -----------------------------------------------------------------------------

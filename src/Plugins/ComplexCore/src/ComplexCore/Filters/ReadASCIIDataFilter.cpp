@@ -10,6 +10,9 @@
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/ReadASCIIDataParameter.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
@@ -31,17 +34,19 @@ enum IssueCodes
 {
   EMPTY_FILE = -100,
   FILE_DOES_NOT_EXIST = -101,
-  EMPTY_CONTAINER = -102,
-  INCONSISTENT_COLS = -103,
-  DUPLICATE_NAMES = -104,
-  INVALID_ARRAY_TYPE = -105,
-  ILLEGAL_NAMES = -106,
-  FILE_NOT_OPEN = -107,
-  MEMORY_ALLOCATION_FAIL = -108,
-  UNABLE_TO_READ_DATA = -109,
-  UNPRINTABLE_CHARACTERS = -110,
-  BINARY_DETECTED = -111,
-  INCORRECT_TUPLES = -112
+  EMPTY_NEW_DG = -102,
+  EMPTY_EXISTING_DG = -103,
+  INCONSISTENT_COLS = -104,
+  DUPLICATE_NAMES = -105,
+  INVALID_ARRAY_TYPE = -106,
+  ILLEGAL_NAMES = -107,
+  FILE_NOT_OPEN = -108,
+  MEMORY_ALLOCATION_FAIL = -109,
+  UNABLE_TO_READ_DATA = -110,
+  UNPRINTABLE_CHARACTERS = -111,
+  BINARY_DETECTED = -112,
+  INCORRECT_TUPLES = -113,
+  NEW_DG_EXISTS = -114
 };
 }
 
@@ -125,6 +130,14 @@ Parameters ReadASCIIDataFilter::parameters() const
   dynamicTable.setDynamicRows(false);
   params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "ASCII Tuple Dimensions", "The tuple dimensions for the imported ASCII data arrays", dynamicTable));
 
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseExistingGroup_Key, "Use Existing Group", "Store the imported ASCII data arrays in an existing group.", false));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedDataGroup_Key, "Existing Data Group", "Store the imported ASCII data arrays in this existing group.", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedDataGroup_Key, "New Data Group", "Store the imported ASCII data arrays in a newly created group.", DataPath{}));
+
+  // Associate the Linkable Parameter(s) to the children parameters that they control
+  params.linkParameters(k_UseExistingGroup_Key, k_SelectedDataGroup_Key, true);
+  params.linkParameters(k_UseExistingGroup_Key, k_CreatedDataGroup_Key, false);
+
   return params;
 }
 
@@ -138,8 +151,14 @@ IFilter::UniquePointer ReadASCIIDataFilter::clone() const
 IFilter::PreflightResult ReadASCIIDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                             const std::atomic_bool& shouldCancel) const
 {
+  //  // Do not allow the user to put a forward slash into the Created Data Group line edit
+  //  m_Ui->dgName->setValidator(new QRegularExpressionValidator(QRegularExpression("[^/]*"), this));
+
   ASCIIWizardData wizardData = filterArgs.value<ASCIIWizardData>(k_WizardData_Key);
   DynamicTableData tupleDims = filterArgs.value<DynamicTableData>(k_TupleDims_Key);
+  bool useExistingGroup = filterArgs.value<bool>(k_UseExistingGroup_Key);
+  DataPath selectedDataGroup = filterArgs.value<DataPath>(k_SelectedDataGroup_Key);
+  DataPath createdDataGroup = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);
 
   complex::Result<OutputActions> resultOutputActions;
 
@@ -151,8 +170,6 @@ IFilter::PreflightResult ReadASCIIDataFilter::preflightImpl(const DataStructure&
   std::string inputFilePath = wizardData.inputFilePath();
   StringVector headers = wizardData.dataHeaders();
   DataTypeVector dataTypes = wizardData.dataTypes();
-  bool useExistingGroup = wizardData.useExistingGroup();
-  DataPath selectedPath = wizardData.selectedGroupPath();
   Dimensions cDims = {1};
 
   fs::path inputFile(inputFilePath);
@@ -175,15 +192,32 @@ IFilter::PreflightResult ReadASCIIDataFilter::preflightImpl(const DataStructure&
   resultOutputActions.warnings() = result.warnings();
   //  }
 
-  if(wizardData.selectedGroupPath().empty())
+  // Validate the tuple dimensions
+  auto tableData = tupleDims.getTableData();
+  if(tableData.size() != 1)
   {
-    return {MakeErrorResult<OutputActions>(IssueCodes::EMPTY_CONTAINER,
-                                           "No container has been selected to store the output data arrays.  Please re-open the wizard to either create or use an existing container.")};
+    return {MakeErrorResult<OutputActions>(IssueCodes::INCORRECT_TUPLES, fmt::format("The tuple dimensions table does not have exactly one row.  Something has gone horribly wrong."))};
   }
 
-  if(wizardData.useExistingGroup())
+  std::vector<usize> tDims(tableData[0].begin(), tableData[0].end());
+  usize tupleTotal = std::accumulate(tDims.begin(), tDims.end(), 1, std::multiplies<usize>());
+  usize importedLines = wizardData.numberOfLines() - wizardData.beginIndex() + 1;
+  if(tupleTotal != importedLines)
   {
-    const BaseGroup& selectedGroup = dataStructure.getDataRefAs<BaseGroup>(wizardData.selectedGroupPath());
+    return {MakeErrorResult<OutputActions>(IssueCodes::INCORRECT_TUPLES,
+                                           fmt::format("The current number of tuples ({}) do not match the total number of imported lines ({}).", tupleTotal, importedLines))};
+  }
+
+  DataPath groupPath;
+  if(useExistingGroup)
+  {
+    groupPath = selectedDataGroup;
+    if(selectedDataGroup.empty())
+    {
+      return {MakeErrorResult<OutputActions>(IssueCodes::EMPTY_EXISTING_DG, "'Existing Data Group' - Data path is empty.")};
+    }
+
+    const BaseGroup& selectedGroup = dataStructure.getDataRefAs<BaseGroup>(selectedDataGroup);
     const auto arrays = selectedGroup.findAllChildrenOfType<IDataArray>();
     for(const std::shared_ptr<IDataArray>& array : arrays)
     {
@@ -204,23 +238,18 @@ IFilter::PreflightResult ReadASCIIDataFilter::preflightImpl(const DataStructure&
   }
   else
   {
-    resultOutputActions.value().actions.push_back(std::make_unique<CreateDataGroupAction>(wizardData.selectedGroupPath()));
-  }
+    groupPath = createdDataGroup;
+    if(createdDataGroup.empty())
+    {
+      return {MakeErrorResult<OutputActions>(IssueCodes::EMPTY_NEW_DG, "'New Data Group' - Data path is empty.")};
+    }
 
-  // Validate the tuple dimensions
-  auto tableData = tupleDims.getTableData();
-  if(tableData.size() != 1)
-  {
-    return {MakeErrorResult<OutputActions>(IssueCodes::INCORRECT_TUPLES, fmt::format("The tuple dimensions table does not have exactly one row.  Something has gone horribly wrong."))};
-  }
+    if(dataStructure.getData(createdDataGroup) != nullptr)
+    {
+      return {MakeErrorResult<OutputActions>(IssueCodes::NEW_DG_EXISTS, fmt::format("The group at the path '{}' cannot be created because it already exists.", createdDataGroup.toString()))};
+    }
 
-  std::vector<usize> tDims(tableData[0].begin(), tableData[0].end());
-  usize tupleTotal = std::accumulate(tDims.begin(), tDims.end(), 1, std::multiplies<usize>());
-  usize importedLines = wizardData.numberOfLines() - wizardData.beginIndex() + 1;
-  if(tupleTotal != importedLines)
-  {
-    return {MakeErrorResult<OutputActions>(IssueCodes::INCORRECT_TUPLES,
-                                           fmt::format("The current number of tuples ({}) do not match the total number of imported lines ({}).", tupleTotal, importedLines))};
+    resultOutputActions.value().actions.push_back(std::make_unique<CreateDataGroupAction>(createdDataGroup));
   }
 
   // Create the arrays
@@ -235,7 +264,7 @@ IFilter::PreflightResult ReadASCIIDataFilter::preflightImpl(const DataStructure&
     DataType dataType = dataTypeOpt.value();
     std::string name = headers[i];
 
-    DataPath arrayPath = wizardData.selectedGroupPath();
+    DataPath arrayPath = groupPath;
     arrayPath = arrayPath.createChildPath(name);
 
     resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, tDims, cDims, arrayPath));
@@ -253,6 +282,10 @@ Result<> ReadASCIIDataFilter::executeImpl(DataStructure& dataStructure, const Ar
                                           const std::atomic_bool& shouldCancel) const
 {
   ASCIIWizardData wizardData = filterArgs.value<ASCIIWizardData>(k_WizardData_Key);
+  DynamicTableData tupleDims = filterArgs.value<DynamicTableData>(k_TupleDims_Key);
+  bool useExistingGroup = filterArgs.value<bool>(k_UseExistingGroup_Key);
+  DataPath selectedDataGroup = filterArgs.value<DataPath>(k_SelectedDataGroup_Key);
+  DataPath createdDataGroup = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);
 
   std::string inputFilePath = wizardData.inputFilePath();
   StringVector headers = wizardData.dataHeaders();
@@ -264,6 +297,12 @@ Result<> ReadASCIIDataFilter::executeImpl(DataStructure& dataStructure, const Ar
 
   std::vector<std::unique_ptr<AbstractDataParser>> dataParsers(dataTypes.size());
 
+  DataPath groupPath = createdDataGroup;
+  if(useExistingGroup)
+  {
+    groupPath = selectedDataGroup;
+  }
+
   for(usize i = 0; i < dataTypes.size(); i++)
   {
     std::optional<DataType> dataTypeOpt = dataTypes[i];
@@ -274,7 +313,7 @@ Result<> ReadASCIIDataFilter::executeImpl(DataStructure& dataStructure, const Ar
 
     std::string name = headers[i];
 
-    DataPath arrayPath = wizardData.selectedGroupPath();
+    DataPath arrayPath = groupPath;
     arrayPath = arrayPath.createChildPath(name);
 
     DataType dataType = dataTypeOpt.value();
