@@ -29,6 +29,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_WizardData_Key = "WizardData";
+  static inline constexpr StringLiteral k_TupleDims_Key = "TupleDims";
 
   /**
    * @brief Returns the name of the filter.

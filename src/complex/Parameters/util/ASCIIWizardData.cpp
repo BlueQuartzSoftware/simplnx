@@ -72,7 +72,6 @@ void ASCIIWizardData::initialize()
   m_InputFilePath = "";
   m_DataHeaders.clear();
   m_DataTypes.clear();
-  m_TupleDims = {0};
   m_BeginIndex = 1;
   m_NumberOfLines = -1;
   m_Delimiters.clear();
@@ -124,13 +123,6 @@ void ASCIIWizardData::writeJson(nlohmann::json& json) const
   }
   json[k_DelimitersKey] = delimiters;
 
-  nlohmann::json tDims;
-  for(const auto& tDim : m_TupleDims)
-  {
-    tDims.push_back(tDim);
-  }
-  json[k_TupleDimensionsKey] = tDims;
-
   json[k_InputFilePathKey] = m_InputFilePath;
   json[k_BeginIndexKey] = m_BeginIndex;
   json[k_NumberOfLinesKey] = m_NumberOfLines;
@@ -176,15 +168,6 @@ bool ASCIIWizardData::readJson(const nlohmann::json& json)
     if(delimiterObj.is_number_integer())
     {
       m_Delimiters.push_back(delimiterObj.get<char>());
-    }
-  }
-
-  nlohmann::json tDims = json[k_TupleDimensionsKey];
-  for(const auto& tDim : tDims)
-  {
-    if(tDim.is_number_integer())
-    {
-      m_TupleDims[0] = tDim;
     }
   }
 
@@ -279,18 +262,6 @@ const std::vector<char>& ASCIIWizardData::delimiters() const
 void ASCIIWizardData::setDelimiters(const std::vector<char>& newDelimiters)
 {
   m_Delimiters = newDelimiters;
-}
-
-// -----------------------------------------------------------------------------
-const std::vector<usize>& ASCIIWizardData::tupleDims() const
-{
-  return m_TupleDims;
-}
-
-// -----------------------------------------------------------------------------
-void ASCIIWizardData::setTupleDims(const std::vector<usize>& newTupleDims)
-{
-  m_TupleDims = newTupleDims;
 }
 
 // -----------------------------------------------------------------------------

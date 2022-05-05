@@ -79,9 +79,6 @@ public:
   const std::vector<char>& delimiters() const;
   void setDelimiters(const std::vector<char>& newDelimiters);
 
-  const std::vector<usize>& tupleDims() const;
-  void setTupleDims(const std::vector<usize>& newTupleDims);
-
   const DataPath& selectedGroupPath() const;
   void setSelectedGroupPath(const DataPath& selectedGroupPath);
 
@@ -125,7 +122,6 @@ private:
   int64 m_NumberOfLines;
   std::vector<std::optional<DataType>> m_DataTypes;
   std::vector<char> m_Delimiters;
-  std::vector<usize> m_TupleDims;
   DataPath m_SelectedGroupPath;
 
   usize m_HeaderLine;

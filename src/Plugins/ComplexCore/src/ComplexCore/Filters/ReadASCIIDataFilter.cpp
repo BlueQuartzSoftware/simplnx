@@ -10,6 +10,7 @@
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
+#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/ReadASCIIDataParameter.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
@@ -39,7 +40,8 @@ enum IssueCodes
   MEMORY_ALLOCATION_FAIL = -108,
   UNABLE_TO_READ_DATA = -109,
   UNPRINTABLE_CHARACTERS = -110,
-  BINARY_DETECTED = -111
+  BINARY_DETECTED = -111,
+  INCORRECT_TUPLES = -112
 };
 }
 
@@ -114,8 +116,14 @@ std::vector<std::string> ReadASCIIDataFilter::defaultTags() const
 Parameters ReadASCIIDataFilter::parameters() const
 {
   Parameters params;
-  // Create the parameter descriptors that are needed for this filter
-  /*[x]*/ params.insert(std::make_unique<ReadASCIIDataParameter>(k_WizardData_Key, "ASCII Wizard Data", "", ASCIIWizardData()));
+
+  params.insert(std::make_unique<ReadASCIIDataParameter>(k_WizardData_Key, "ASCII Wizard Data", "", ASCIIWizardData()));
+
+  DynamicTableParameter::ValueType dynamicTable{{{1}}, {"Dim 0"}, {"Value"}};
+  dynamicTable.setMinCols(1);
+  dynamicTable.setDynamicCols(true);
+  dynamicTable.setDynamicRows(false);
+  params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "ASCII Tuple Dimensions", "The tuple dimensions for the imported ASCII data arrays", dynamicTable));
 
   return params;
 }
@@ -131,6 +139,8 @@ IFilter::PreflightResult ReadASCIIDataFilter::preflightImpl(const DataStructure&
                                                             const std::atomic_bool& shouldCancel) const
 {
   ASCIIWizardData wizardData = filterArgs.value<ASCIIWizardData>(k_WizardData_Key);
+  DynamicTableData tupleDims = filterArgs.value<DynamicTableData>(k_TupleDims_Key);
+
   complex::Result<OutputActions> resultOutputActions;
 
   if(wizardData.inputFilePath().empty())
@@ -143,7 +153,6 @@ IFilter::PreflightResult ReadASCIIDataFilter::preflightImpl(const DataStructure&
   DataTypeVector dataTypes = wizardData.dataTypes();
   bool useExistingGroup = wizardData.useExistingGroup();
   DataPath selectedPath = wizardData.selectedGroupPath();
-  Dimensions tDims = wizardData.tupleDims();
   Dimensions cDims = {1};
 
   fs::path inputFile(inputFilePath);
@@ -196,6 +205,22 @@ IFilter::PreflightResult ReadASCIIDataFilter::preflightImpl(const DataStructure&
   else
   {
     resultOutputActions.value().actions.push_back(std::make_unique<CreateDataGroupAction>(wizardData.selectedGroupPath()));
+  }
+
+  // Validate the tuple dimensions
+  auto tableData = tupleDims.getTableData();
+  if(tableData.size() != 1)
+  {
+    return {MakeErrorResult<OutputActions>(IssueCodes::INCORRECT_TUPLES, fmt::format("The tuple dimensions table does not have exactly one row.  Something has gone horribly wrong."))};
+  }
+
+  std::vector<usize> tDims(tableData[0].begin(), tableData[0].end());
+  usize tupleTotal = std::accumulate(tDims.begin(), tDims.end(), 1, std::multiplies<usize>());
+  usize importedLines = wizardData.numberOfLines() - wizardData.beginIndex() + 1;
+  if(tupleTotal != importedLines)
+  {
+    return {MakeErrorResult<OutputActions>(IssueCodes::INCORRECT_TUPLES,
+                                           fmt::format("The current number of tuples ({}) do not match the total number of imported lines ({}).", tupleTotal, importedLines))};
   }
 
   // Create the arrays
