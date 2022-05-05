@@ -2,8 +2,12 @@
 
 #include "ComplexCore/ComplexCore_export.hpp"
 
+#include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
+
+// our PIMPL private class
+class ReadASCIIDataPrivate;
 
 namespace complex
 {
@@ -14,8 +18,8 @@ namespace complex
 class COMPLEXCORE_EXPORT ReadASCIIDataFilter : public IFilter
 {
 public:
-  ReadASCIIDataFilter() = default;
-  ~ReadASCIIDataFilter() noexcept override = default;
+  ReadASCIIDataFilter();
+  ~ReadASCIIDataFilter() noexcept override;
 
   ReadASCIIDataFilter(const ReadASCIIDataFilter&) = delete;
   ReadASCIIDataFilter(ReadASCIIDataFilter&&) noexcept = delete;
@@ -89,6 +93,11 @@ protected:
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+
+private:
+  std::unique_ptr<ReadASCIIDataPrivate> d_ptr;
+
+  Result<> validateASCIIFile(const std::string& filePath) const;
 };
 } // namespace complex
 

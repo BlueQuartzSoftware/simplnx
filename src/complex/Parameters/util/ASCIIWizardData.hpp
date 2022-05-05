@@ -54,6 +54,8 @@ public:
 
   bool isEmpty();
 
+  void reset();
+
   // Json Reader and Writer
   void writeJson(nlohmann::json& json) const;
   bool readJson(const nlohmann::json& json);
@@ -62,8 +64,8 @@ public:
   const std::string& inputFilePath() const;
   void setInputFilePath(const std::string& newInputFilePath);
 
-  const std::list<std::string>& dataHeaders() const;
-  void setDataHeaders(const std::list<std::string>& newDataHeaders);
+  const std::vector<std::string>& dataHeaders() const;
+  void setDataHeaders(const std::vector<std::string>& newDataHeaders);
 
   usize beginIndex() const;
   void setBeginIndex(usize newBeginIndex);
@@ -71,17 +73,17 @@ public:
   int64 numberOfLines() const;
   void setNumberOfLines(int64 newNumberOfLines);
 
-  const std::list<std::string>& dataTypes() const;
-  void setDataTypes(const std::list<std::string>& newDataTypes);
+  const std::vector<std::optional<DataType>>& dataTypes() const;
+  void setDataTypes(const std::vector<std::optional<DataType>>& newDataTypes);
 
-  const std::list<std::string>& delimiters() const;
-  void setDelimiters(const std::list<std::string>& newDelimiters);
+  const std::vector<char>& delimiters() const;
+  void setDelimiters(const std::vector<char>& newDelimiters);
 
-  //  const std::vector<usize>& tupleDims() const;
-  //  void setTupleDims(const std::vector<usize>& newTupleDims);
+  const std::vector<usize>& tupleDims() const;
+  void setTupleDims(const std::vector<usize>& newTupleDims);
 
-  //  const DataPath& selectedPath() const;
-  //  void setSelectedPath(const DataPath& newSelectedPath);
+  const DataPath& selectedGroupPath() const;
+  void setSelectedGroupPath(const DataPath& selectedGroupPath);
 
   usize headerLine() const;
   void setHeaderLine(usize newHeaderLine);
@@ -92,8 +94,8 @@ public:
   bool consecutiveDelimiters() const;
   void setConsecutiveDelimiters(bool newConsecutiveDelimiters);
 
-  bool automaticGroup() const;
-  void setAutomaticGroup(bool newAutomaticGroup);
+  bool useExistingGroup() const;
+  void setUseExistingGroup(bool useExistingGroup);
 
   HeaderMode headerMode() const;
   void setHeaderMode(HeaderMode newHeaderMode);
@@ -111,26 +113,31 @@ public:
   void setSpaceAsDelimiter(bool newSpaceAsDelimiter);
 
   usize totalPreviewLines() const;
+  std::string skipDataTypeString() const;
+
+protected:
+  void initialize();
 
 private:
   std::string m_InputFilePath;
-  std::list<std::string> m_DataHeaders;
-  usize m_BeginIndex = 1;
-  int64 m_NumberOfLines = -1;
-  std::list<std::string> m_DataTypes;
-  std::list<std::string> m_Delimiters;
-  //  std::vector<usize> m_TupleDims;
-  //  DataPath m_SelectedPath;
+  std::vector<std::string> m_DataHeaders;
+  usize m_BeginIndex;
+  int64 m_NumberOfLines;
+  std::vector<std::optional<DataType>> m_DataTypes;
+  std::vector<char> m_Delimiters;
+  std::vector<usize> m_TupleDims;
+  DataPath m_SelectedGroupPath;
 
-  usize m_HeaderLine = 0; // -1 means this selection is not used
-  HeaderMode m_HeaderMode = HeaderMode::LINE;
-  bool m_TabAsDelimiter = false;
-  bool m_SemicolonAsDelimiter = false;
-  bool m_CommaAsDelimiter = false;
-  bool m_SpaceAsDelimiter = false;
-  bool m_ConsecutiveDelimiters = false;
-  bool m_AutomaticGroup = false;
+  usize m_HeaderLine;
+  HeaderMode m_HeaderMode;
+  bool m_TabAsDelimiter;
+  bool m_SemicolonAsDelimiter;
+  bool m_CommaAsDelimiter;
+  bool m_SpaceAsDelimiter;
+  bool m_ConsecutiveDelimiters;
+  bool m_UseExistingGroup;
 
-  usize m_TotalPreviewLines = 50;
+  const usize m_TotalPreviewLines = 50;
+  const std::string m_SkipDataTypeString = "Skip";
 };
 } // namespace complex

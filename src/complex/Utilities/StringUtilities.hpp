@@ -36,6 +36,7 @@
 
 #include <array>
 #include <cctype>
+#include <list>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -70,18 +71,27 @@ void for_each_token(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_
   }
 }
 
-inline std::vector<std::string> split(std::string_view str, char delim)
+inline std::vector<std::string> split(const std::string_view& str, const std::vector<char>& delimiters, bool consecutiveDelimiters)
 {
   std::vector<std::string> tokens;
-  std::array<char, 1> delims = {delim};
   auto endPos = str.end();
-  for_each_token(str.begin(), endPos, delims.cbegin(), delims.cend(), [&endPos, &tokens](auto first, auto second) {
+  for_each_token(str.begin(), endPos, delimiters.cbegin(), delimiters.cend(), [&endPos, &tokens, &consecutiveDelimiters](auto first, auto second) {
     if(first != second)
     {
-      tokens.push_back({first, second});
+      std::string substr = {first, second};
+      if(!substr.empty() || !consecutiveDelimiters)
+      {
+        tokens.push_back(substr);
+      }
     }
   });
   return tokens;
+}
+
+inline std::vector<std::string> split(std::string_view str, char delim)
+{
+  std::vector<char> delims = {delim};
+  return split(str, delims, false);
 }
 
 inline std::vector<std::string> split_2(const std::string& line, char delimiter)
@@ -157,6 +167,12 @@ inline std::string trimmed(std::string_view str)
   std::string::size_type front = str.find_first_not_of(k_Whitespaces);
 
   return std::string(str.substr(front, back - front + 1));
+}
+
+template <typename T>
+inline bool contains(std::string_view str, T val)
+{
+  return str.find(val) != std::string::npos;
 }
 
 inline std::string chop(std::string_view str, usize numElements)
