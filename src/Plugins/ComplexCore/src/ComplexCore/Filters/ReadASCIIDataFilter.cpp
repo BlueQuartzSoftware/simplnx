@@ -14,7 +14,6 @@
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include "ComplexCore/utils/ASCIIDataParser.hpp"
-#include "ComplexCore/utils/ParserFunctors.hpp"
 
 using namespace complex;
 

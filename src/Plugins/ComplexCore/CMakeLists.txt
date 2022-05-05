@@ -102,7 +102,6 @@ add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
    PUBLIC
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ASCIIDataParser.hpp
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nanoflann.hpp
-    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ParserFunctors.hpp
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.cpp
 #   PRIVATE
@@ -112,7 +111,6 @@ add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
     FILES
       ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ASCIIDataParser.hpp
       ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nanoflann.hpp
-      ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ParserFunctors.hpp
       ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp
       ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.cpp
    )

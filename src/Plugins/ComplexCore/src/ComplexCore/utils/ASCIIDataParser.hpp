@@ -29,9 +29,11 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #pragma once
 
-#include "ComplexCore/utils/ParserFunctors.hpp"
+#include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+
+using namespace complex;
 
 class AbstractDataParser
 {
@@ -77,7 +79,7 @@ private:
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-template <typename ArrayType, class F, typename T>
+template <typename ArrayType, typename T>
 class ASCIIDataParser : public AbstractDataParser
 {
 public:
@@ -95,7 +97,6 @@ public:
 
   Result<> parse(const std::string& token, size_t index) override
   {
-    //    Result<T> parseResult = F()(token);
     Result<T> parseResult = ConvertTo<T>::convert(token);
     if(parseResult.valid())
     {
@@ -109,19 +110,19 @@ private:
   ArrayType& m_Array;
 };
 
-using Int8Parser = ASCIIDataParser<Int8Array, SignedIntegerFunctor<int8>, int8>;
-using UInt8Parser = ASCIIDataParser<UInt8Array, UnsignedIntegerFunctor<uint8>, uint8>;
+using Int8Parser = ASCIIDataParser<Int8Array, int8>;
+using UInt8Parser = ASCIIDataParser<UInt8Array, uint8>;
 
-using Int16Parser = ASCIIDataParser<Int16Array, SignedIntegerFunctor<int16>, int16>;
-using UInt16Parser = ASCIIDataParser<UInt16Array, UnsignedIntegerFunctor<uint16>, uint16>;
+using Int16Parser = ASCIIDataParser<Int16Array, int16>;
+using UInt16Parser = ASCIIDataParser<UInt16Array, uint16>;
 
-using Int32Parser = ASCIIDataParser<Int32Array, SignedIntegerFunctor<int32>, int32>;
-using UInt32Parser = ASCIIDataParser<UInt32Array, UnsignedIntegerFunctor<uint32>, uint32>;
+using Int32Parser = ASCIIDataParser<Int32Array, int32>;
+using UInt32Parser = ASCIIDataParser<UInt32Array, uint32>;
 
-using Int64Parser = ASCIIDataParser<Int64Array, SignedIntegerFunctor<int64>, int64>;
-using UInt64Parser = ASCIIDataParser<UInt64Array, UnsignedIntegerFunctor<uint64>, uint64>;
+using Int64Parser = ASCIIDataParser<Int64Array, int64>;
+using UInt64Parser = ASCIIDataParser<UInt64Array, uint64>;
 
-using Float32Parser = ASCIIDataParser<Float32Array, FloatingPointFunctor<float32>, float32>;
-using Float64Parser = ASCIIDataParser<Float64Array, FloatingPointFunctor<float64>, float64>;
+using Float32Parser = ASCIIDataParser<Float32Array, float32>;
+using Float64Parser = ASCIIDataParser<Float64Array, float64>;
 
-// using StringParser = Parser<StringArray, StringFunctor, std::string>;
+// using StringParser = Parser<StringArray, std::string>;
