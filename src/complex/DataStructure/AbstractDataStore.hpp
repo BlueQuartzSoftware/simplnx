@@ -4,6 +4,8 @@
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 
+#include "nonstd/span.hpp"
+
 #include <algorithm>
 #include <functional>
 #include <iterator>
@@ -31,6 +33,7 @@ public:
   using reference = T&;
   using const_reference = const T&;
   using ShapeType = typename IDataStore::ShapeType;
+  using index_type = uint64;
 
   /////////////////////////////////
   // Begin std::iterator support //
@@ -506,10 +509,143 @@ public:
    * @param i
    * @param value
    */
-  void fillTuple(usize i, T value)
+  void fillTuple(index_type i, T value)
   {
     usize numComponents = getNumberOfComponents();
     std::fill_n(begin() + (i * numComponents), numComponents, value);
+  }
+
+  /**
+   * @brief Sets all component values for a tuple using a pointer array of values.
+   * The provided pointer is expected to contain at least the same number of values
+   * as the number of components.
+   *
+   * If the tuple index is out of bounds or the provided pointer is null, this method does nothing.
+   * @param tupleIndex
+   * @param values
+   */
+  void setTuple(index_type tupleIndex, value_type* values)
+  {
+    if(values == nullptr)
+    {
+      return;
+    }
+
+    if(tupleIndex > getNumberOfTuples())
+    {
+      return;
+    }
+
+    index_type numComponents = getNumberOfComponents();
+    index_type offset = tupleIndex * numComponents;
+    for(index_type i = 0; i < numComponents; i++)
+    {
+      setValue(offset + i, values[i]);
+    }
+  }
+
+  /**
+   * @brief Sets all component values for a tuple using a vector of values.
+   *
+   * If the tuple index is out of bounds or the provided vector does not match
+   * the number of components, this method does nothing.
+   * @param tupleIndex
+   * @param values
+   */
+  void setTuple(index_type tupleIndex, const std::vector<value_type>& values)
+  {
+    if(values.size() != getNumberOfComponents())
+    {
+      return;
+    }
+
+    if(tupleIndex > getNumberOfTuples())
+    {
+      return;
+    }
+
+    index_type numComponents = getNumberOfComponents();
+    index_type offset = tupleIndex * numComponents;
+    for(index_type i = 0; i < numComponents; i++)
+    {
+      setValue(offset + i, values[i]);
+    }
+  }
+
+  /**
+   * @brief Sets all component values for a tuple using a span of values.
+   *
+   * If the tuple index is out of bounds or the provided span does not match
+   * the number of components, this method does nothing.
+   * @param tupleIndex
+   * @param values
+   */
+  void setTuple(index_type tupleIndex, const nonstd::span<value_type>& values)
+  {
+    if(values.size() != getNumberOfComponents())
+    {
+      return;
+    }
+
+    if(tupleIndex > getNumberOfTuples())
+    {
+      return;
+    }
+
+    index_type numComponents = getNumberOfComponents();
+    index_type offset = tupleIndex * numComponents;
+    for(uint64 i = 0; i < numComponents; i++)
+    {
+      setValue(offset + i, value[i]);
+    }
+  }
+
+  /**
+   * @brief Sets the component value using a given tuple and component index.
+   *
+   * This method does nothing if the tuple or component indices are out of bounds
+   * @param tupleIndex
+   * @param componentIndex
+   * @param value
+   */
+  void setComponent(index_type tupleIndex, index_type componentIndex, value_type value)
+  {
+    if(tupleIndex > getNumberOfTuples())
+    {
+      return;
+    }
+
+    if(componentIndex > getNumberOfComponents())
+    {
+      return;
+    }
+
+    index_type index = tupleIndex * getNumberOfComponents() + componentIndex;
+    setValue(index, value);
+  }
+
+  /**
+   * @brief Returns the component value at the specified tuple and component index.
+   *
+   * This method returns the default T value if either index is out of bounds.
+   * @param tupleIndex
+   * @param componentIndex
+   * @return value_type
+   */
+  value_type getComponentValue(index_type tupleIndex, index_type componentIndex) const
+  {
+    if(tupleIndex > getNumberOfTuples())
+    {
+      return {};
+    }
+
+    if(componentIndex > getNumberOfComponents())
+    {
+      return {};
+    }
+
+    index_type index = tupleIndex * getNumberOfComponents() + componentIndex;
+    return getValue(index);
   }
 
 protected:
