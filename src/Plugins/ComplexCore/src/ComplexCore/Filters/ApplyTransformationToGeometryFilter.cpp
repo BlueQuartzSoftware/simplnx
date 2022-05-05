@@ -113,24 +113,24 @@ const Eigen::Vector3f k_XAxis = Eigen::Vector3f::UnitX();
 const Eigen::Vector3f k_YAxis = Eigen::Vector3f::UnitY();
 const Eigen::Vector3f k_ZAxis = Eigen::Vector3f::UnitZ();
 
-struct RotateArgs
-{
-  int64 xp = 0;
-  int64 yp = 0;
-  int64 zp = 0;
-  float32 xRes = 0.0f;
-  float32 yRes = 0.0f;
-  float32 zRes = 0.0f;
-  int64 xpNew = 0;
-  int64 ypNew = 0;
-  int64 zpNew = 0;
-  float32 xResNew = 0.0f;
-  float32 yResNew = 0.0f;
-  float32 zResNew = 0.0f;
-  float32 xMinNew = 0.0f;
-  float32 yMinNew = 0.0f;
-  float32 zMinNew = 0.0f;
-};
+//struct RotateArgs
+//{
+//  int64 xp = 0;
+//  int64 yp = 0;
+//  int64 zp = 0;
+//  float32 xRes = 0.0f;
+//  float32 yRes = 0.0f;
+//  float32 zRes = 0.0f;
+//  int64 xpNew = 0;
+//  int64 ypNew = 0;
+//  int64 zpNew = 0;
+//  float32 xResNew = 0.0f;
+//  float32 yResNew = 0.0f;
+//  float32 zResNew = 0.0f;
+//  float32 xMinNew = 0.0f;
+//  float32 yMinNew = 0.0f;
+//  float32 zMinNew = 0.0f;
+//};
 
 //------------------------------------------------------------------------------
 std::string ApplyTransformationToGeometryFilter::name() const
@@ -170,11 +170,10 @@ void updateGeometry(const complex::ImageGeom& imageGeom, const RotateArgs& param
   float m_TranslationMatrix[3][1] = {0.0f, 0.0f, 0.0f};
   Eigen::Map<Matrix3fR>(&m_ScalingMatrix[0][0], scalingMatrix.rows(), scalingMatrix.cols()) = scalingMatrix;
 
-  FloatVec3 origin = imageGeom.getOrigin();
   Eigen::Vector3f original_origin(origin[0], origin[1], origin[2]);
   Eigen::Vector3f original_origin_rot = rotationMatrix * original_origin;
   float32 spacingArray[3] = {params.xResNew * m_ScalingMatrix[0][0], params.yResNew * m_ScalingMatrix[1][1], params.zResNew * m_ScalingMatrix[2][2]};
-  float32 dimArray[3] = {params.xpNew, params.ypNew, params.zpNew};
+  int64_t dimArray[3] = {params.xpNew, params.ypNew, params.zpNew};
   spacing.insert(spacing.begin(), std::begin(spacingArray), std::end(spacingArray));
   dims.insert(dims.begin(), std::begin(dimArray), std::end(dimArray));
 
@@ -273,7 +272,7 @@ RotateArgs CreateRotateArgs(const ImageGeom& imageGeom, const Matrix3fR& rotatio
   ImageGeom::MeshIndexType ypNew = static_cast<int64>(std::nearbyint((yMax - yMin) / yResNew) + 1);
   ImageGeom::MeshIndexType zpNew = static_cast<int64>(std::nearbyint((zMax - zMin) / zResNew) + 1);
 
-  RotateArgs params;
+  complex::RotateArgs params;
 
   params.xp = origDims[0];
   params.xRes = spacing[0];
@@ -579,7 +578,7 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
   inputImageValues.pInterpolationType = pInterpolationType;
   
   inputNodeValues.transformationMatrix = m_TransformationMatrix;
-  inputImageValues.transformationMatrix = m_TransformationMatrix;
+  inputImageValues.pTransformationMatrix = m_TransformationMatrix;
 
   DataObject* dataObject = dataStructure.getData(inputImageValues.pGeometryToTransform);
 
@@ -593,7 +592,10 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
     Eigen::Transform<float, 3, Eigen::Affine> transform = Eigen::Transform<float, 3, Eigen::Affine>::Transform(transformation);
 	transform.computeRotationScaling(&rotationMatrix, &scaleMatrix);
     rotateArgs = CreateRotateArgs(selectedImageGeom, rotationMatrix);
-    inputImageValues.rotateArgs = rotateArgs;
+    inputImageValues.pRotateArgs = rotateArgs;
+    inputImageValues.pUseArraySelector = pUseArraySelector;
+    inputImageValues.pSelectedArrays = pSelectedArrays;
+    inputImageValues.pCreatedImageGeometry = pCreatedGeomtry;
     return ApplyTransformationToImageGeometry(dataStructure, &inputImageValues, shouldCancel, messageHandler)();
   }
   return ApplyTransformationToNodeGeometry(dataStructure, &inputNodeValues, shouldCancel, messageHandler)();
