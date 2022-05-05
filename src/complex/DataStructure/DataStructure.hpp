@@ -444,7 +444,7 @@ public:
    * @param id
    * @return std::vector<DataPath>
    */
-  std::vector<DataPath> getDataPathsForId(const DataObject::IdType& id) const;
+  std::vector<DataPath> getDataPathsForId(DataObject::IdType id) const;
 
   /**
    * @brief Returns a collection of all DataPaths within the structure.

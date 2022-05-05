@@ -184,7 +184,7 @@ Result<LinkedPath> DataStructure::makePath(const DataPath& path)
   }
 }
 
-std::vector<DataPath> DataStructure::getDataPathsForId(const DataObject::IdType& id) const
+std::vector<DataPath> DataStructure::getDataPathsForId(DataObject::IdType id) const
 {
   auto* dataObject = getData(id);
   if(dataObject == nullptr)
