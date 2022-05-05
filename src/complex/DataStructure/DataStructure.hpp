@@ -439,6 +439,14 @@ public:
   Result<LinkedPath> makePath(const DataPath& path);
 
   /**
+   * @brief Returns a vector of DataPaths for the DataObject with the specified ID.
+   * If no DataObject is found with the given ID, an empty vector is returned.
+   * @param id
+   * @return std::vector<DataPath>
+   */
+  std::vector<DataPath> getDataPathsForId(const DataObject::IdType& id) const;
+
+  /**
    * @brief Returns a collection of all DataPaths within the structure.
    * @return std::vector<DataPath>
    */
