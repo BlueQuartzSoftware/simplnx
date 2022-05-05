@@ -51,7 +51,7 @@ TEST_CASE("DataStore Test")
     REQUIRE(dataStore.getComponentValue(1, i) == newValues[i]);
   }
 
-  dataStore.setComponent(2, 3, 99);
-  REQUIRE(dataStore[9] == 99);
-  REQUIRE(dataStore.getComponentValue(2, 3) == 99);
+  dataStore.setComponent(2, 2, 99);
+  REQUIRE(dataStore[8] == 99);
+  REQUIRE(dataStore.getComponentValue(2, 2) == 99);
 }
