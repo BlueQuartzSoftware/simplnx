@@ -82,13 +82,13 @@ Uuid ReadASCIIDataFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ReadASCIIDataFilter::humanName() const
 {
-  return "Import ASCII Data";
+  return "Import CSV Data";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ReadASCIIDataFilter::defaultTags() const
 {
-  return {"#IO", "#Input", "#Read", "#Import"};
+  return {"#IO", "#Input", "#Read", "#Import", "#ASCII", "#ascii", "#Column"};
 }
 
 //------------------------------------------------------------------------------
