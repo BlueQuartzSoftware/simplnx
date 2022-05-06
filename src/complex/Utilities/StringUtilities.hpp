@@ -33,6 +33,7 @@
 
 #include "complex/Common/StringLiteral.hpp"
 
+#include <cctype>
 #include <sstream>
 #include <vector>
 
