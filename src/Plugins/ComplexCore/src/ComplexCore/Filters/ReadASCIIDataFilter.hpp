@@ -6,9 +6,6 @@
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 
-// our PIMPL private class
-class ReadASCIIDataPrivate;
-
 namespace complex
 {
 /**
@@ -97,9 +94,6 @@ protected:
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
-
-private:
-  std::unique_ptr<ReadASCIIDataPrivate> d_ptr;
 };
 } // namespace complex
 

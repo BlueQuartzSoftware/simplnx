@@ -50,36 +50,10 @@ enum IssueCodes
 };
 }
 
-/**
- * @brief The ReadAngDataPrivate class is a private implementation of the ReadAngData class
- */
-class ReadASCIIDataPrivate
-{
-public:
-  ReadASCIIDataPrivate(ReadASCIIDataFilter* ptr);
-
-  std::string inputFileCache;
-  fs::file_time_type inputFileLastModifiedCache;
-
-private:
-  ReadASCIIDataFilter* const q_ptr;
-};
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-ReadASCIIDataPrivate::ReadASCIIDataPrivate(ReadASCIIDataFilter* ptr)
-: q_ptr(ptr)
-, inputFileCache("")
-, inputFileLastModifiedCache()
-{
-}
-
 namespace complex
 {
 //------------------------------------------------------------------------------
 ReadASCIIDataFilter::ReadASCIIDataFilter()
-: d_ptr(std::make_unique<ReadASCIIDataPrivate>(this))
 {
 }
 
@@ -151,9 +125,6 @@ IFilter::UniquePointer ReadASCIIDataFilter::clone() const
 IFilter::PreflightResult ReadASCIIDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                             const std::atomic_bool& shouldCancel) const
 {
-  //  // Do not allow the user to put a forward slash into the Created Data Group line edit
-  //  m_Ui->dgName->setValidator(new QRegularExpressionValidator(QRegularExpression("[^/]*"), this));
-
   ASCIIWizardData wizardData = filterArgs.value<ASCIIWizardData>(k_WizardData_Key);
   DynamicTableData tupleDims = filterArgs.value<DynamicTableData>(k_TupleDims_Key);
   bool useExistingGroup = filterArgs.value<bool>(k_UseExistingGroup_Key);
