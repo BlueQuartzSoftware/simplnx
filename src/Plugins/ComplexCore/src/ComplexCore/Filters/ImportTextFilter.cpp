@@ -145,8 +145,7 @@ Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& arg
     auto dataArray = complex::ArrayFromPath<uint64>(data, path);
     return CsvParser::ReadFile<uint64_t, uint64_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
-  case NumericType::float32:
-  {
+  case NumericType::float32: {
     auto dataArray = complex::ArrayFromPath<float32>(data, path);
     return CsvParser::ReadFile<float, float>(inputFilePath, *dataArray, skipLines, delimiter);
   }
