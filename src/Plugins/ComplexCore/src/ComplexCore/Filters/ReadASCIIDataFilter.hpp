@@ -100,8 +100,6 @@ protected:
 
 private:
   std::unique_ptr<ReadASCIIDataPrivate> d_ptr;
-
-  Result<> validateASCIIFile(const std::string& filePath) const;
 };
 } // namespace complex
 

@@ -178,20 +178,6 @@ IFilter::PreflightResult ReadASCIIDataFilter::preflightImpl(const DataStructure&
     return {MakeErrorResult<OutputActions>(IssueCodes::FILE_DOES_NOT_EXIST, fmt::format("The input file does not exist: '{}'", inputFilePath))};
   }
 
-  //  // If this is a new file or the file has been modified, validate the ASCII file
-  //  if(d_ptr->inputFileCache != inputFilePath || fs::last_write_time(inputFilePath) > d_ptr->inputFileLastModifiedCache)
-  //  {
-  //    d_ptr->inputFileCache = inputFilePath;
-  //    d_ptr->inputFileLastModifiedCache = fs::last_write_time(inputFilePath);
-
-  Result result = validateASCIIFile(inputFilePath);
-  if(resultOutputActions.invalid())
-  {
-    return {ConvertResultTo<OutputActions>(std::move(result), OutputActions())};
-  }
-  resultOutputActions.warnings() = result.warnings();
-  //  }
-
   // Validate the tuple dimensions
   auto tableData = tupleDims.getTableData();
   if(tableData.size() != 1)
@@ -448,95 +434,5 @@ Result<> ReadASCIIDataFilter::executeImpl(DataStructure& dataStructure, const Ar
   in.close();
 
   return {};
-}
-
-// -----------------------------------------------------------------------------
-Result<> ReadASCIIDataFilter::validateASCIIFile(const std::string& filePath) const
-{
-  Result result;
-  int64_t bufferSize = 2048;
-
-  // Obtain the file size
-  usize fileSize = fs::file_size(filePath);
-
-  // Open the file
-  std::fstream in(filePath.c_str(), std::ios_base::in);
-  if(!in.is_open())
-  {
-    return MakeErrorResult(IssueCodes::FILE_NOT_OPEN, fmt::format("Could not open file for reading: {}", filePath));
-  }
-
-  size_t actualSize = bufferSize;
-  if(fileSize <= bufferSize)
-  {
-    actualSize = fileSize;
-  }
-
-  // Allocate the buffer
-  std::vector<char> buffer;
-  try
-  {
-    buffer.resize(actualSize);
-  } catch(const std::exception& e)
-  {
-    return complex::MakeErrorResult(IssueCodes::MEMORY_ALLOCATION_FAIL, fmt::format("Unable to allocate memory to read in data from \"{}\"", filePath));
-  }
-  //      char* buffer = bufferVec.data();
-  //      if(buffer == nullptr)
-  //      {
-  //        QString errorStr = "Error: Unable to allocate memory to read in data from \"" + filePath + "\"";
-  //        fputs(errorStr.toStdString().c_str(), stderr);
-  //        return;
-  //      }
-
-  // Copy the file contents into the buffer
-  try
-  {
-    in.read(buffer.data(), actualSize);
-  } catch(std::exception e)
-  {
-    return complex::MakeErrorResult(IssueCodes::UNABLE_TO_READ_DATA, fmt::format("There was an error reading the data from \"{}\".  Exception: {}", filePath, e.what()));
-  }
-
-  // Check the buffer for invalid characters, tab characters, new-line characters, and carriage return characters
-  bool hasNewLines = false;
-  bool hasCarriageReturns = false;
-  bool hasTabs = false;
-  for(size_t i = 0; i < actualSize; i++)
-  {
-    char currentChar = buffer[i];
-
-    if(currentChar < 32 && currentChar != 9 && currentChar != 10 && currentChar != 13)
-    {
-      // This is an unprintable character
-      return complex::MakeErrorResult(IssueCodes::UNPRINTABLE_CHARACTERS, fmt::format("Unprintable characters have been detected in the file \"{}\".  Please import a different file.", filePath));
-    }
-    if(currentChar == 9)
-    {
-      hasTabs = true;
-    }
-    else if(currentChar == 10)
-    {
-      hasNewLines = true;
-    }
-    else if(currentChar == 13)
-    {
-      hasCarriageReturns = true;
-    }
-  }
-
-  if(!hasNewLines && !hasCarriageReturns && !hasTabs)
-  {
-    // This might be a binary file
-    std::string warningStr = fmt::format("The file \"{}\" might be a binary file, because line-feed, tab, or carriage return characters have not been detected.  Warning: Using this file may "
-                                         "crash the program or cause unexpected results.",
-                                         filePath);
-    result.warnings().push_back(Warning{IssueCodes::BINARY_DETECTED, warningStr});
-  }
-
-  // Close the file and free the memory from the buffer
-  in.close();
-
-  return result;
 }
 } // namespace complex
