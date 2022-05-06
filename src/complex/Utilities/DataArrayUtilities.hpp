@@ -259,8 +259,7 @@ std::unique_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
   {
     return std::make_unique<DataStore<T>>(tupleShape, componentShape, static_cast<T>(0));
   }
-  default:
-  {
+  default: {
     throw std::runtime_error("Invalid mode");
   }
   }
