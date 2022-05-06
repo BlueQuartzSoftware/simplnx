@@ -137,7 +137,7 @@ set(CoreParameters
   MultiArraySelectionParameter
   NumberParameter
   NumericTypeParameter
-  ReadASCIIDataParameter
+  ImportCSVDataParameter
   StringParameter
   VectorParameter
 )
@@ -269,7 +269,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/UpdateImageGeomAction.hpp
 
   ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableData.hpp
-  ${COMPLEX_SOURCE_DIR}/Parameters/util/ASCIIWizardData.hpp
+  ${COMPLEX_SOURCE_DIR}/Parameters/util/CSVWizardData.hpp
 
   ${COMPLEX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.hpp
@@ -423,7 +423,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/RenameDataAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/UpdateImageGeomAction.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Parameters/util/ASCIIWizardData.cpp
+  ${COMPLEX_SOURCE_DIR}/Parameters/util/CSVWizardData.cpp
   ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableData.cpp
 
   ${COMPLEX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.cpp

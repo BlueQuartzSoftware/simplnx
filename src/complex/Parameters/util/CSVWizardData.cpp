@@ -28,7 +28,7 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "ASCIIWizardData.hpp"
+#include "CSVWizardData.hpp"
 
 using namespace complex;
 
@@ -51,13 +51,13 @@ static const std::string k_ConsecutiveDelimitersKey = "Consecutive Delimiters";
 } // namespace
 
 // -----------------------------------------------------------------------------
-ASCIIWizardData::ASCIIWizardData()
+CSVWizardData::CSVWizardData()
 {
   initialize();
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::initialize()
+void CSVWizardData::initialize()
 {
   m_InputFilePath = "";
   m_DataHeaders.clear();
@@ -75,13 +75,13 @@ void ASCIIWizardData::initialize()
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::reset()
+void CSVWizardData::reset()
 {
   initialize();
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::writeJson(nlohmann::json& json) const
+void CSVWizardData::writeJson(nlohmann::json& json) const
 {
   nlohmann::json dHeaders;
   for(const auto& header : m_DataHeaders)
@@ -124,7 +124,7 @@ void ASCIIWizardData::writeJson(nlohmann::json& json) const
 }
 
 // -----------------------------------------------------------------------------
-bool ASCIIWizardData::readJson(const nlohmann::json& json)
+bool CSVWizardData::readJson(const nlohmann::json& json)
 {
   nlohmann::json dHeaders = json[k_DataHeadersKey];
   for(const auto& header : dHeaders)
@@ -172,169 +172,169 @@ bool ASCIIWizardData::readJson(const nlohmann::json& json)
 }
 
 // -----------------------------------------------------------------------------
-const std::string& ASCIIWizardData::inputFilePath() const
+const std::string& CSVWizardData::inputFilePath() const
 {
   return m_InputFilePath;
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::setInputFilePath(const std::string& newInputFilePath)
+void CSVWizardData::setInputFilePath(const std::string& newInputFilePath)
 {
   m_InputFilePath = newInputFilePath;
 }
 
 // -----------------------------------------------------------------------------
-const std::vector<std::string>& ASCIIWizardData::dataHeaders() const
+const std::vector<std::string>& CSVWizardData::dataHeaders() const
 {
   return m_DataHeaders;
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::setDataHeaders(const std::vector<std::string>& newDataHeaders)
+void CSVWizardData::setDataHeaders(const std::vector<std::string>& newDataHeaders)
 {
   m_DataHeaders = newDataHeaders;
 }
 
 // -----------------------------------------------------------------------------
-usize ASCIIWizardData::beginIndex() const
+usize CSVWizardData::beginIndex() const
 {
   return m_BeginIndex;
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::setBeginIndex(usize newBeginIndex)
+void CSVWizardData::setBeginIndex(usize newBeginIndex)
 {
   m_BeginIndex = newBeginIndex;
 }
 
 // -----------------------------------------------------------------------------
-int64 ASCIIWizardData::numberOfLines() const
+int64 CSVWizardData::numberOfLines() const
 {
   return m_NumberOfLines;
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::setNumberOfLines(int64 newNumberOfLines)
+void CSVWizardData::setNumberOfLines(int64 newNumberOfLines)
 {
   m_NumberOfLines = newNumberOfLines;
 }
 
 // -----------------------------------------------------------------------------
-const std::vector<std::optional<DataType>>& ASCIIWizardData::dataTypes() const
+const std::vector<std::optional<DataType>>& CSVWizardData::dataTypes() const
 {
   return m_DataTypes;
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::setDataTypes(const std::vector<std::optional<DataType>>& newDataTypes)
+void CSVWizardData::setDataTypes(const std::vector<std::optional<DataType>>& newDataTypes)
 {
   m_DataTypes = newDataTypes;
 }
 
 // -----------------------------------------------------------------------------
-const std::vector<char>& ASCIIWizardData::delimiters() const
+const std::vector<char>& CSVWizardData::delimiters() const
 {
   return m_Delimiters;
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::setDelimiters(const std::vector<char>& newDelimiters)
+void CSVWizardData::setDelimiters(const std::vector<char>& newDelimiters)
 {
   m_Delimiters = newDelimiters;
 }
 
 // -----------------------------------------------------------------------------
-usize ASCIIWizardData::headerLine() const
+usize CSVWizardData::headerLine() const
 {
   return m_HeaderLine;
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::setHeaderLine(usize newHeaderLine)
+void CSVWizardData::setHeaderLine(usize newHeaderLine)
 {
   m_HeaderLine = newHeaderLine;
 }
 
 // -----------------------------------------------------------------------------
-bool ASCIIWizardData::consecutiveDelimiters() const
+bool CSVWizardData::consecutiveDelimiters() const
 {
   return m_ConsecutiveDelimiters;
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::setConsecutiveDelimiters(bool newConsecutiveDelimiters)
+void CSVWizardData::setConsecutiveDelimiters(bool newConsecutiveDelimiters)
 {
   m_ConsecutiveDelimiters = newConsecutiveDelimiters;
 }
 
 // -----------------------------------------------------------------------------
-ASCIIWizardData::HeaderMode ASCIIWizardData::headerMode() const
+CSVWizardData::HeaderMode CSVWizardData::headerMode() const
 {
   return m_HeaderMode;
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::setHeaderMode(ASCIIWizardData::HeaderMode newHeaderMode)
+void CSVWizardData::setHeaderMode(CSVWizardData::HeaderMode newHeaderMode)
 {
   m_HeaderMode = newHeaderMode;
 }
 
 // -----------------------------------------------------------------------------
-bool ASCIIWizardData::tabAsDelimiter() const
+bool CSVWizardData::tabAsDelimiter() const
 {
   return m_TabAsDelimiter;
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::setTabAsDelimiter(bool newTabAsDelimiter)
+void CSVWizardData::setTabAsDelimiter(bool newTabAsDelimiter)
 {
   m_TabAsDelimiter = newTabAsDelimiter;
 }
 
 // -----------------------------------------------------------------------------
-bool ASCIIWizardData::semicolonAsDelimiter() const
+bool CSVWizardData::semicolonAsDelimiter() const
 {
   return m_SemicolonAsDelimiter;
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::setSemicolonAsDelimiter(bool newSemicolonAsDelimiter)
+void CSVWizardData::setSemicolonAsDelimiter(bool newSemicolonAsDelimiter)
 {
   m_SemicolonAsDelimiter = newSemicolonAsDelimiter;
 }
 
 // -----------------------------------------------------------------------------
-bool ASCIIWizardData::commaAsDelimiter() const
+bool CSVWizardData::commaAsDelimiter() const
 {
   return m_CommaAsDelimiter;
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::setCommaAsDelimiter(bool newCommaAsDelimiter)
+void CSVWizardData::setCommaAsDelimiter(bool newCommaAsDelimiter)
 {
   m_CommaAsDelimiter = newCommaAsDelimiter;
 }
 
 // -----------------------------------------------------------------------------
-bool ASCIIWizardData::spaceAsDelimiter() const
+bool CSVWizardData::spaceAsDelimiter() const
 {
   return m_SpaceAsDelimiter;
 }
 
 // -----------------------------------------------------------------------------
-void ASCIIWizardData::setSpaceAsDelimiter(bool newSpaceAsDelimiter)
+void CSVWizardData::setSpaceAsDelimiter(bool newSpaceAsDelimiter)
 {
   m_SpaceAsDelimiter = newSpaceAsDelimiter;
 }
 
 // -----------------------------------------------------------------------------
-usize ASCIIWizardData::totalPreviewLines() const
+usize CSVWizardData::totalPreviewLines() const
 {
   return m_TotalPreviewLines;
 }
 
 // -----------------------------------------------------------------------------
-std::string ASCIIWizardData::skipDataTypeString() const
+std::string CSVWizardData::skipDataTypeString() const
 {
   return m_SkipDataTypeString;
 }

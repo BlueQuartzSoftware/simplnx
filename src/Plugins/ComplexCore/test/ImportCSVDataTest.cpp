@@ -1,5 +1,5 @@
 /**
- * This file is auto generated from the original Core/ReadASCIIData
+ * This file is auto generated from the original Core/ImportCSVData
  * runtime information. These are the steps that need to be taken to utilize this
  * unit test in the proper way.
  *
@@ -15,29 +15,29 @@
  * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
  * allow easier parsing of the unit tests.
  *
- * When you start working on this unit test remove "[ReadASCIIData][.][UNIMPLEMENTED]"
+ * When you start working on this unit test remove "[ImportCSVData][.][UNIMPLEMENTED]"
  * from the TEST_CASE macro. This will enable this unit test to be run by default
  * and report errors.
  */
 
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ReadASCIIDataParameter.hpp"
+#include "complex/Parameters/ImportCSVDataParameter.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/ReadASCIIDataFilter.hpp"
+#include "ComplexCore/Filters/ImportCSVDataFilter.hpp"
 
 using namespace complex;
 
-TEST_CASE("Core::ReadASCIIData: Instantiation and Parameter Check", "[Core][ReadASCIIData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::ImportCSVData: Instantiation and Parameter Check", "[Core][ImportCSVData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  ReadASCIIDataFilter filter;
+  ImportCSVDataFilter filter;
   DataStructure ds;
   Arguments args;
 
   // Create default Parameters for the filter.
-  /*[x]*/ args.insertOrAssign(ReadASCIIDataFilter::k_WizardData_Key, std::make_any<ASCIIWizardData>(ASCIIWizardData()));
+  /*[x]*/ args.insertOrAssign(ImportCSVDataFilter::k_WizardData_Key, std::make_any<CSVWizardData>(CSVWizardData()));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
@@ -48,12 +48,12 @@ TEST_CASE("Core::ReadASCIIData: Instantiation and Parameter Check", "[Core][Read
   REQUIRE(executeResult.result.valid());
 }
 
-// TEST_CASE("Core::ReadASCIIData: Valid filter execution")
+// TEST_CASE("Core::ImportCSVData: Valid filter execution")
 //{
 //
 //}
 
-// TEST_CASE("Core::ReadASCIIData: InValid filter execution")
+// TEST_CASE("Core::ImportCSVData: InValid filter execution")
 //{
 //
 //}

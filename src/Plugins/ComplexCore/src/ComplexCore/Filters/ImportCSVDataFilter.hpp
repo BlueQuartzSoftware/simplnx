@@ -11,27 +11,27 @@ class AbstractDataParser;
 namespace complex
 {
 /**
- * @class ReadASCIIDataFilter
- * @brief This filter reads ASCII data from any text-based file and imports the data into complex-style arrays.
+ * @class ImportCSVDataFilter
+ * @brief This filter reads CSV data from any text-based file and imports the data into complex-style arrays.
  * The user uses the filter's wizard to specify which file to import, how the data is formatted, what to call
  * each array, and what type each array should be.
  *
  * Note:* This filter is intended to read data that is column-oriented, such that each created complex array
- * corresponds to a column of data in the ASCII file. Therefore, this filter will only import scalar arrays.
+ * corresponds to a column of data in the CSV file. Therefore, this filter will only import scalar arrays.
  * If multiple columns are in fact different components of the same array, then the columns may be imported as
  * separate arrays and then combined in the correct order using the Combine Attribute Arrays filter.
  */
-class COMPLEXCORE_EXPORT ReadASCIIDataFilter : public IFilter
+class COMPLEXCORE_EXPORT ImportCSVDataFilter : public IFilter
 {
 public:
-  ReadASCIIDataFilter();
-  ~ReadASCIIDataFilter() noexcept override;
+  ImportCSVDataFilter();
+  ~ImportCSVDataFilter() noexcept override;
 
-  ReadASCIIDataFilter(const ReadASCIIDataFilter&) = delete;
-  ReadASCIIDataFilter(ReadASCIIDataFilter&&) noexcept = delete;
+  ImportCSVDataFilter(const ImportCSVDataFilter&) = delete;
+  ImportCSVDataFilter(ImportCSVDataFilter&&) noexcept = delete;
 
-  ReadASCIIDataFilter& operator=(const ReadASCIIDataFilter&) = delete;
-  ReadASCIIDataFilter& operator=(ReadASCIIDataFilter&&) noexcept = delete;
+  ImportCSVDataFilter& operator=(const ImportCSVDataFilter&) = delete;
+  ImportCSVDataFilter& operator=(ImportCSVDataFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_WizardData_Key = "Wizard Data";
@@ -106,4 +106,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ReadASCIIDataFilter, "bdb978bc-96bf-5498-972c-b509c38b8d50");
+COMPLEX_DEF_FILTER_TRAITS(complex, ImportCSVDataFilter, "bdb978bc-96bf-5498-972c-b509c38b8d50");

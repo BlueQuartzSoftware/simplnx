@@ -28,62 +28,62 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "ReadASCIIDataParameter.hpp"
+#include "ImportCSVDataParameter.hpp"
 
 namespace complex
 {
 // -----------------------------------------------------------------------------
-ReadASCIIDataParameter::ReadASCIIDataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+ImportCSVDataParameter::ImportCSVDataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 {
 }
 
 // -----------------------------------------------------------------------------
-Uuid ReadASCIIDataParameter::uuid() const
+Uuid ImportCSVDataParameter::uuid() const
 {
-  return ParameterTraits<ReadASCIIDataParameter>::uuid;
+  return ParameterTraits<ImportCSVDataParameter>::uuid;
 }
 
 // -----------------------------------------------------------------------------
-IParameter::AcceptedTypes ReadASCIIDataParameter::acceptedTypes() const
+IParameter::AcceptedTypes ImportCSVDataParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
 
 // -----------------------------------------------------------------------------
-nlohmann::json ReadASCIIDataParameter::toJson(const std::any& value) const
+nlohmann::json ImportCSVDataParameter::toJson(const std::any& value) const
 {
-  const auto& asciiWizardData = GetAnyRef<ValueType>(value);
+  const auto& CSVWizardData = GetAnyRef<ValueType>(value);
   nlohmann::json json = nlohmann::json::object();
-  asciiWizardData.writeJson(json);
+  CSVWizardData.writeJson(json);
   return json;
 }
 
 // -----------------------------------------------------------------------------
-Result<std::any> ReadASCIIDataParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> ImportCSVDataParameter::fromJson(const nlohmann::json& json) const
 {
-  ValueType asciiWizardData;
-  asciiWizardData.readJson(json);
-  return {{asciiWizardData}};
+  ValueType CSVWizardData;
+  CSVWizardData.readJson(json);
+  return {{CSVWizardData}};
 }
 
 // -----------------------------------------------------------------------------
-IParameter::UniquePointer ReadASCIIDataParameter::clone() const
+IParameter::UniquePointer ImportCSVDataParameter::clone() const
 {
-  return std::make_unique<ReadASCIIDataParameter>(name(), humanName(), helpText(), m_DefaultValue);
+  return std::make_unique<ImportCSVDataParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
 
 // -----------------------------------------------------------------------------
-std::any ReadASCIIDataParameter::defaultValue() const
+std::any ImportCSVDataParameter::defaultValue() const
 {
   return m_DefaultValue;
 }
 
 // -----------------------------------------------------------------------------
-Result<> ReadASCIIDataParameter::validate(const std::any& value) const
+Result<> ImportCSVDataParameter::validate(const std::any& value) const
 {
-  if(value.type() == typeid(ASCIIWizardData))
+  if(value.type() == typeid(CSVWizardData))
   {
     return {};
   }

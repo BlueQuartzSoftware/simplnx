@@ -37,10 +37,10 @@
 
 namespace complex
 {
-class COMPLEX_EXPORT ASCIIWizardData
+class COMPLEX_EXPORT CSVWizardData
 {
 public:
-  ASCIIWizardData();
+  CSVWizardData();
 
   enum class HeaderMode
   {

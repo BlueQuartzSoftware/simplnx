@@ -80,20 +80,20 @@ private:
 //
 // -----------------------------------------------------------------------------
 template <typename ArrayType, typename T>
-class ASCIIDataParser : public AbstractDataParser
+class CSVDataParser : public AbstractDataParser
 {
 public:
-  ASCIIDataParser(ArrayType& array, const std::string& name, usize index)
+  CSVDataParser(ArrayType& array, const std::string& name, usize index)
   : AbstractDataParser(array, name, index)
   , m_Array(array)
   {
   }
-  ~ASCIIDataParser() override = default;
+  ~CSVDataParser() override = default;
 
-  ASCIIDataParser(const ASCIIDataParser&) = delete;            // Copy Constructor Not Implemented
-  ASCIIDataParser(ASCIIDataParser&&) = delete;                 // Move Constructor Not Implemented
-  ASCIIDataParser& operator=(const ASCIIDataParser&) = delete; // Copy Assignment Not Implemented
-  ASCIIDataParser& operator=(ASCIIDataParser&&) = delete;      // Move Assignment
+  CSVDataParser(const CSVDataParser&) = delete;            // Copy Constructor Not Implemented
+  CSVDataParser(CSVDataParser&&) = delete;                 // Move Constructor Not Implemented
+  CSVDataParser& operator=(const CSVDataParser&) = delete; // Copy Assignment Not Implemented
+  CSVDataParser& operator=(CSVDataParser&&) = delete;      // Move Assignment
 
   Result<> parse(const std::string& token, size_t index) override
   {
@@ -110,19 +110,19 @@ private:
   ArrayType& m_Array;
 };
 
-using Int8Parser = ASCIIDataParser<Int8Array, int8>;
-using UInt8Parser = ASCIIDataParser<UInt8Array, uint8>;
+using Int8Parser = CSVDataParser<Int8Array, int8>;
+using UInt8Parser = CSVDataParser<UInt8Array, uint8>;
 
-using Int16Parser = ASCIIDataParser<Int16Array, int16>;
-using UInt16Parser = ASCIIDataParser<UInt16Array, uint16>;
+using Int16Parser = CSVDataParser<Int16Array, int16>;
+using UInt16Parser = CSVDataParser<UInt16Array, uint16>;
 
-using Int32Parser = ASCIIDataParser<Int32Array, int32>;
-using UInt32Parser = ASCIIDataParser<UInt32Array, uint32>;
+using Int32Parser = CSVDataParser<Int32Array, int32>;
+using UInt32Parser = CSVDataParser<UInt32Array, uint32>;
 
-using Int64Parser = ASCIIDataParser<Int64Array, int64>;
-using UInt64Parser = ASCIIDataParser<UInt64Array, uint64>;
+using Int64Parser = CSVDataParser<Int64Array, int64>;
+using UInt64Parser = CSVDataParser<UInt64Array, uint64>;
 
-using Float32Parser = ASCIIDataParser<Float32Array, float32>;
-using Float64Parser = ASCIIDataParser<Float64Array, float64>;
+using Float32Parser = CSVDataParser<Float32Array, float32>;
+using Float64Parser = CSVDataParser<Float64Array, float64>;
 
 // using StringParser = Parser<StringArray, std::string>;

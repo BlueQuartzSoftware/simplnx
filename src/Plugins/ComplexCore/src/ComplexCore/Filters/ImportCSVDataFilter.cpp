@@ -1,4 +1,4 @@
-#include "ReadASCIIDataFilter.hpp"
+#include "ImportCSVDataFilter.hpp"
 
 #include <fstream>
 
@@ -14,10 +14,10 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
-#include "complex/Parameters/ReadASCIIDataParameter.hpp"
+#include "complex/Parameters/ImportCSVDataParameter.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
-#include "ComplexCore/utils/ASCIIDataParser.hpp"
+#include "ComplexCore/utils/CSVDataParser.hpp"
 
 using namespace complex;
 
@@ -248,7 +248,7 @@ void notifyProgress(const IFilter::MessageHandler& messageHandler, usize lineNum
   if(percentCompleted > threshold)
   {
     // Print the status of the import
-    messageHandler({IFilter::Message::Type::Info, fmt::format("Importing ASCII Data || {:.{}f}% Complete", static_cast<double>(percentCompleted), 1)});
+    messageHandler({IFilter::Message::Type::Info, fmt::format("Importing CSV Data || {:.{}f}% Complete", static_cast<double>(percentCompleted), 1)});
     threshold = threshold + 5.0f;
     if(threshold < percentCompleted)
     {
@@ -271,61 +271,61 @@ void skipNumberOfLines(std::fstream& in, usize numberOfLines)
 namespace complex
 {
 //------------------------------------------------------------------------------
-ReadASCIIDataFilter::ReadASCIIDataFilter()
+ImportCSVDataFilter::ImportCSVDataFilter()
 {
 }
 
 // -----------------------------------------------------------------------------
-ReadASCIIDataFilter::~ReadASCIIDataFilter() noexcept
+ImportCSVDataFilter::~ImportCSVDataFilter() noexcept
 {
 }
 
 // -----------------------------------------------------------------------------
-std::string ReadASCIIDataFilter::name() const
+std::string ImportCSVDataFilter::name() const
 {
-  return FilterTraits<ReadASCIIDataFilter>::name.str();
+  return FilterTraits<ImportCSVDataFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string ReadASCIIDataFilter::className() const
+std::string ImportCSVDataFilter::className() const
 {
-  return FilterTraits<ReadASCIIDataFilter>::className;
+  return FilterTraits<ImportCSVDataFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid ReadASCIIDataFilter::uuid() const
+Uuid ImportCSVDataFilter::uuid() const
 {
-  return FilterTraits<ReadASCIIDataFilter>::uuid;
+  return FilterTraits<ImportCSVDataFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string ReadASCIIDataFilter::humanName() const
+std::string ImportCSVDataFilter::humanName() const
 {
   return "Import CSV Data";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> ReadASCIIDataFilter::defaultTags() const
+std::vector<std::string> ImportCSVDataFilter::defaultTags() const
 {
-  return {"#IO", "#Input", "#Read", "#Import", "#ASCII", "#ascii", "#Column"};
+  return {"#IO", "#Input", "#Read", "#Import", "#ASCII", "#ascii", "#CSV", "#csv", "#Column"};
 }
 
 //------------------------------------------------------------------------------
-Parameters ReadASCIIDataFilter::parameters() const
+Parameters ImportCSVDataFilter::parameters() const
 {
   Parameters params;
 
-  params.insert(std::make_unique<ReadASCIIDataParameter>(k_WizardData_Key, "ASCII Wizard Data", "", ASCIIWizardData()));
+  params.insert(std::make_unique<ImportCSVDataParameter>(k_WizardData_Key, "CSV Wizard Data", "", CSVWizardData()));
 
   DynamicTableParameter::ValueType dynamicTable{{{1}}, {"Dim 0"}, {"Value"}};
   dynamicTable.setMinCols(1);
   dynamicTable.setDynamicCols(true);
   dynamicTable.setDynamicRows(false);
-  params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "ASCII Tuple Dimensions", "The tuple dimensions for the imported ASCII data arrays", dynamicTable));
+  params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "CSV Tuple Dimensions", "The tuple dimensions for the imported CSV data arrays", dynamicTable));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseExistingGroup_Key, "Use Existing Group", "Store the imported ASCII data arrays in an existing group.", false));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedDataGroup_Key, "Existing Data Group", "Store the imported ASCII data arrays in this existing group.", DataPath{}));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedDataGroup_Key, "New Data Group", "Store the imported ASCII data arrays in a newly created group.", DataPath{}));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseExistingGroup_Key, "Use Existing Group", "Store the imported CSV data arrays in an existing group.", false));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedDataGroup_Key, "Existing Data Group", "Store the imported CSV data arrays in this existing group.", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedDataGroup_Key, "New Data Group", "Store the imported CSV data arrays in a newly created group.", DataPath{}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseExistingGroup_Key, k_SelectedDataGroup_Key, true);
@@ -335,16 +335,16 @@ Parameters ReadASCIIDataFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadASCIIDataFilter::clone() const
+IFilter::UniquePointer ImportCSVDataFilter::clone() const
 {
-  return std::make_unique<ReadASCIIDataFilter>();
+  return std::make_unique<ImportCSVDataFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadASCIIDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                             const std::atomic_bool& shouldCancel) const
 {
-  ASCIIWizardData wizardData = filterArgs.value<ASCIIWizardData>(k_WizardData_Key);
+  CSVWizardData wizardData = filterArgs.value<CSVWizardData>(k_WizardData_Key);
   DynamicTableData tupleDims = filterArgs.value<DynamicTableData>(k_TupleDims_Key);
   bool useExistingGroup = filterArgs.value<bool>(k_UseExistingGroup_Key);
   DataPath selectedDataGroup = filterArgs.value<DataPath>(k_SelectedDataGroup_Key);
@@ -422,10 +422,10 @@ IFilter::PreflightResult ReadASCIIDataFilter::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadASCIIDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ImportCSVDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                           const std::atomic_bool& shouldCancel) const
 {
-  ASCIIWizardData wizardData = filterArgs.value<ASCIIWizardData>(k_WizardData_Key);
+  CSVWizardData wizardData = filterArgs.value<CSVWizardData>(k_WizardData_Key);
   DynamicTableData tupleDims = filterArgs.value<DynamicTableData>(k_TupleDims_Key);
   bool useExistingGroup = filterArgs.value<bool>(k_UseExistingGroup_Key);
   DataPath selectedDataGroup = filterArgs.value<DataPath>(k_SelectedDataGroup_Key);
