@@ -251,8 +251,7 @@ std::unique_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
 {
   switch(mode)
   {
-  case IDataAction::Mode::Preflight:
-  {
+  case IDataAction::Mode::Preflight: {
     return std::make_unique<EmptyDataStore<T>>(tupleShape, componentShape);
   }
   case IDataAction::Mode::Execute: {
