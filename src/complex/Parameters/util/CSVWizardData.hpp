@@ -30,6 +30,8 @@
 
 #pragma once
 
+#include <optional>
+
 #include "nlohmann/json.hpp"
 
 #include "complex/Common/Types.hpp"
