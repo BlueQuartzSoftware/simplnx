@@ -30,8 +30,6 @@
 
 #include "ASCIIWizardData.hpp"
 
-#include "complex/Common/TypesUtility.hpp"
-
 using namespace complex;
 
 namespace
@@ -56,12 +54,6 @@ static const std::string k_ConsecutiveDelimitersKey = "Consecutive Delimiters";
 ASCIIWizardData::ASCIIWizardData()
 {
   initialize();
-}
-
-// -----------------------------------------------------------------------------
-bool ASCIIWizardData::isEmpty()
-{
-  return (m_InputFilePath.empty() && m_DataHeaders.empty() && m_DataTypes.empty() && m_BeginIndex < 0 && m_NumberOfLines < 0);
 }
 
 // -----------------------------------------------------------------------------

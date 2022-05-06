@@ -6,11 +6,20 @@
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 
+class AbstractDataParser;
+
 namespace complex
 {
 /**
  * @class ReadASCIIDataFilter
- * @brief This filter will ....
+ * @brief This filter reads ASCII data from any text-based file and imports the data into complex-style arrays.
+ * The user uses the filter's wizard to specify which file to import, how the data is formatted, what to call
+ * each array, and what type each array should be.
+ *
+ * Note:* This filter is intended to read data that is column-oriented, such that each created complex array
+ * corresponds to a column of data in the ASCII file. Therefore, this filter will only import scalar arrays.
+ * If multiple columns are in fact different components of the same array, then the columns may be imported as
+ * separate arrays and then combined in the correct order using the Combine Attribute Arrays filter.
  */
 class COMPLEXCORE_EXPORT ReadASCIIDataFilter : public IFilter
 {

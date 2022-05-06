@@ -30,12 +30,9 @@
 
 #pragma once
 
-#include <list>
-
 #include "nlohmann/json.hpp"
 
 #include "complex/Common/Types.hpp"
-#include "complex/DataStructure/DataPath.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
@@ -51,8 +48,6 @@ public:
     CUSTOM,
     DEFAULTS
   };
-
-  bool isEmpty();
 
   void reset();
 
@@ -116,7 +111,6 @@ private:
   int64 m_NumberOfLines;
   std::vector<std::optional<DataType>> m_DataTypes;
   std::vector<char> m_Delimiters;
-
   usize m_HeaderLine;
   HeaderMode m_HeaderMode;
   bool m_TabAsDelimiter;
@@ -125,6 +119,7 @@ private:
   bool m_SpaceAsDelimiter;
   bool m_ConsecutiveDelimiters;
 
+  // Const variables
   const usize m_TotalPreviewLines = 50;
   const std::string m_SkipDataTypeString = "Skip";
 };

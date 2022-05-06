@@ -32,14 +32,8 @@
 #pragma once
 
 #include "complex/Common/StringLiteral.hpp"
-#include "complex/Common/Types.hpp"
 
-#include <array>
-#include <cctype>
-#include <list>
 #include <sstream>
-#include <string>
-#include <string_view>
 #include <vector>
 
 /*' '(0x20)space(SPC)
