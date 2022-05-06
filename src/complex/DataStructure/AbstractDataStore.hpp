@@ -561,10 +561,7 @@ public:
 
     index_type numComponents = getNumberOfComponents();
     index_type offset = tupleIndex * numComponents;
-    for(uint64 i = 0; i < numComponents; i++)
-    {
-      setValue(offset + i, values[i]);
-    }
+    std::copy(values.begin(), values.end(), begin() + offset);
   }
 
   /**
