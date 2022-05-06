@@ -140,8 +140,7 @@ Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& arg
     auto dataArray = complex::ArrayFromPath<int64>(data, path);
     return CsvParser::ReadFile<int64_t, int64_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
-  case NumericType::uint64:
-  {
+  case NumericType::uint64: {
     auto dataArray = complex::ArrayFromPath<uint64>(data, path);
     return CsvParser::ReadFile<uint64_t, uint64_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
