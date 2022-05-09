@@ -442,8 +442,8 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
   auto pGeometryToTransformValue = filterArgs.value<DataPath>(k_GeometryToTransform_Key);
   auto pComputedTransformMatrixDataPath = filterArgs.value<DataPath>(k_ComputedTransformationMatrix_Key);
   auto pCreatedGeomtry = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
-  auto pInterpolationType = filterArgs.value<int>(k_InterpolationType_Key);
-  auto pUseArraySelector = filterArgs.value<bool>(k_UseArraySelector_Key);
+  auto pInterpolationType = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationType_Key);
+  auto pUseArraySelector = filterArgs.value<BoolParameter::ValueType>(k_UseArraySelector_Key);
   auto pSelectedArrays = filterArgs.value<std::vector<DataPath>>(k_SelectedCellArrays_Key);
 
   // Declare the preflightResult variable that will be populated with the results
@@ -554,8 +554,8 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
   auto pGeometryToTransformValue = filterArgs.value<DataPath>(k_GeometryToTransform_Key);
   auto pComputedTransformMatrixDataPath = filterArgs.value<DataPath>(k_ComputedTransformationMatrix_Key);
   auto pCreatedGeomtry = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
-  auto pInterpolationType = filterArgs.value<int>(k_InterpolationType_Key);
-  auto pUseArraySelector = filterArgs.value<bool>(k_UseArraySelector_Key);
+  auto pInterpolationType = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationType_Key);
+  auto pUseArraySelector = filterArgs.value<BoolParameter::ValueType>(k_UseArraySelector_Key);
   auto pSelectedArrays = filterArgs.value<std::vector<DataPath>>(k_SelectedCellArrays_Key);
 
   std::vector<float> m_TransformationMatrix(16, 0.0F);
