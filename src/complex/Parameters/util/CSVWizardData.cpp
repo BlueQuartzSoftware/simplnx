@@ -34,20 +34,20 @@ using namespace complex;
 
 namespace
 {
-static const std::string k_DataHeadersKey = "Data Headers";
-static const std::string k_DataTypesKey = "Data Types";
-static const std::string k_DelimitersKey = "Delimiters";
-static const std::string k_TupleDimensionsKey = "Tuple Dimensions";
-static const std::string k_InputFilePathKey = "Input File Path";
-static const std::string k_BeginIndexKey = "Begin Index";
-static const std::string k_NumberOfLinesKey = "Number of Lines";
-static const std::string k_HeaderLineKey = "Header Line";
-static const std::string k_HeaderModeKey = "Header Mode";
-static const std::string k_TabAsDelimiterKey = "Tab As Delimiter";
-static const std::string k_SemicolonAsDelimiterKey = "Semicolon As Delimiter";
-static const std::string k_CommaAsDelimiterKey = "Comma As Delimiter";
-static const std::string k_SpaceAsDelimiterKey = "Space As Delimiter";
-static const std::string k_ConsecutiveDelimitersKey = "Consecutive Delimiters";
+const std::string k_DataHeadersKey("Data Headers");
+const std::string k_DataTypesKey = "Data Types";
+const std::string k_DelimitersKey = "Delimiters";
+const std::string k_TupleDimensionsKey = "Tuple Dimensions";
+const std::string k_InputFilePathKey = "Input File Path";
+const std::string k_BeginIndexKey = "Begin Index";
+const std::string k_NumberOfLinesKey = "Number of Lines";
+const std::string k_HeaderLineKey = "Header Line";
+const std::string k_HeaderModeKey = "Header Mode";
+const std::string k_TabAsDelimiterKey = "Tab As Delimiter";
+const std::string k_SemicolonAsDelimiterKey = "Semicolon As Delimiter";
+const std::string k_CommaAsDelimiterKey = "Comma As Delimiter";
+const std::string k_SpaceAsDelimiterKey = "Space As Delimiter";
+const std::string k_ConsecutiveDelimitersKey = "Consecutive Delimiters";
 } // namespace
 
 // -----------------------------------------------------------------------------

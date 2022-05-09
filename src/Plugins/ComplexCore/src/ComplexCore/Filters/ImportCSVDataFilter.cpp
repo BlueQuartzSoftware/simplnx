@@ -209,10 +209,10 @@ Result<ParsersVector> createParsers(const DataTypeVector& dataTypes, const DataP
 }
 
 // -----------------------------------------------------------------------------
-Result<> parseLine(std::fstream& in, const ParsersVector& dataParsers, const CharVector& delimiters, bool consecutiveDelimiters, usize lineNumber, usize beginIndex)
+Result<> parseLine(std::fstream& inStream, const ParsersVector& dataParsers, const CharVector& delimiters, bool consecutiveDelimiters, usize lineNumber, usize beginIndex)
 {
   std::string line;
-  std::getline(in, line);
+  std::getline(inStream, line);
 
   StringVector tokens = StringUtilities::split(line, delimiters, consecutiveDelimiters);
 
@@ -244,7 +244,7 @@ Result<> parseLine(std::fstream& in, const ParsersVector& dataParsers, const Cha
 // -----------------------------------------------------------------------------
 void notifyProgress(const IFilter::MessageHandler& messageHandler, usize lineNumber, usize numberOfTuples, float32& threshold)
 {
-  const float32 percentCompleted = (static_cast<float32>(lineNumber) / numberOfTuples) * 100.0f;
+  const float32 percentCompleted = (static_cast<float32>(lineNumber) / static_cast<float32>(numberOfTuples)) * 100.0f;
   if(percentCompleted > threshold)
   {
     // Print the status of the import
@@ -258,12 +258,12 @@ void notifyProgress(const IFilter::MessageHandler& messageHandler, usize lineNum
 }
 
 // -----------------------------------------------------------------------------
-void skipNumberOfLines(std::fstream& in, usize numberOfLines)
+void skipNumberOfLines(std::fstream& inStream, usize numberOfLines)
 {
   for(usize i = 1; i < numberOfLines; i++)
   {
     std::string line;
-    std::getline(in, line);
+    std::getline(inStream, line);
   }
 }
 } // namespace
