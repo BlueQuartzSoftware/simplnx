@@ -60,7 +60,7 @@ public:
    * @brief Allows thread safe progress updates
    * @param counter
    */
-  //void sendThreadSafeProgressMessage(size_t counter);
+  // void sendThreadSafeProgressMessage(size_t counter);
 
 private:
   DataStructure& m_DataStructure;
@@ -69,13 +69,13 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
 
   // Threadsafe Progress Message
-  //mutable std::mutex m_ProgressMessage_Mutex;
-  //size_t m_InstanceIndex = 0;
-  //size_t m_TotalElements = 0;
-  //size_t m_ProgressCounter = 0;
-  //size_t m_LastProgressInt = 0;
+  // mutable std::mutex m_ProgressMessage_Mutex;
+  // size_t m_InstanceIndex = 0;
+  // size_t m_TotalElements = 0;
+  // size_t m_ProgressCounter = 0;
+  // size_t m_LastProgressInt = 0;
 };
 
 } // namespace complex
 
-//Result<> ApplyImageTransformation(DataStructure& dataStructure, const ApplyTransformationToImageGeometryInputValues* inputValues, bool shouldCancel);
+// Result<> ApplyImageTransformation(DataStructure& dataStructure, const ApplyTransformationToImageGeometryInputValues* inputValues, bool shouldCancel);

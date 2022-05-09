@@ -3,17 +3,14 @@
 
 #include "complex/Common/ComplexRange3D.hpp"
 
+#include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Utilities/ParallelDataAlgorithm.hpp"
-#include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelData3DAlgorithm.hpp"
-
-
+#include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <Eigen/Dense>
 
@@ -70,9 +67,7 @@ void linearEquivalent(T& linEquivalent, const DataArray<T>& lin, int64_t linIntI
   }
   if(index7 >= 0 && index7 <= params.xp * params.yp * params.zp)
   {
-    linEquivalent += ((lin[index7] - lin[index6] - lin[index5] - lin[index3] + lin[index1] + lin[index4] +
-                       lin[index2] - lin[index0]) *
-                      xt * yt * zt);
+    linEquivalent += ((lin[index7] - lin[index6] - lin[index5] - lin[index3] + lin[index1] + lin[index4] + lin[index2] - lin[index0]) * xt * yt * zt);
   }
 }
 
@@ -140,9 +135,9 @@ void linearEquivalentRGB(T linEquivalent[3], const DataArray<T>& lin, int64_t li
   {
     for(int i = 0; i < 3; i++)
     {
-      linEquivalent[i] += ((lin[index7 * 3 + i] - lin[index6 * 3 + i] - lin[index5 * 3 + i] - lin[index3 * 3 + i] + lin[index1 * 3 + i] +
-                            lin[index4 * 3 + i] + lin[index2 * 3 + i] - lin[index0 * 3 + i]) *
-                           xt * yt * zt);
+      linEquivalent[i] +=
+          ((lin[index7 * 3 + i] - lin[index6 * 3 + i] - lin[index5 * 3 + i] - lin[index3 * 3 + i] + lin[index1 * 3 + i] + lin[index4 * 3 + i] + lin[index2 * 3 + i] - lin[index0 * 3 + i]) * xt * yt *
+           zt);
     }
   }
 }
@@ -203,7 +198,7 @@ void wrapLinearIndexes(double* LinearInterpolationData, int64_t tupleIndex, cons
   int index = tupleIndex / 6;
 
   T linEquivalent = 0;
-  //const IDataArray& linIData = dynamic_cast<IDataArray>(lin);
+  // const IDataArray& linIData = dynamic_cast<IDataArray>(lin);
   wrote = linearIndexes<T>(LinearInterpolationData, tupleIndex, linEquivalent, lin, params);
   if(wrote)
   {
@@ -222,14 +217,13 @@ void wrapLinearIndexesRGB(double* LinearInterpolationData, int64_t tupleIndex, c
   bool wrote = false;
   int index = tupleIndex / 6;
   T linEquivalent[3] = {0, 0, 0};
-  //const IDataArray& linIData = dynamic_cast<IDataArray>(lin);
+  // const IDataArray& linIData = dynamic_cast<IDataArray>(lin);
   wrote = linearIndexesRGB<T>(LinearInterpolationData, tupleIndex, linEquivalent, lin, params);
   if(wrote)
   {
     linData[index * 3] = linEquivalent[0];
     linData[index * 3 + 1] = linEquivalent[1];
     linData[index * 3 + 2] = linEquivalent[2];
-
   }
   else
   {
@@ -251,7 +245,7 @@ void applyLinearInterpolation(const DataArray<T>& lin, int64_t index, int64_t tu
     wrapLinearIndexes<T>(linearInterpolationData, tupleIndex, lin, linData, params);
   }
 }
-}
+} // namespace
 // -----------------------------------------------------------------------------
 class SampleRefFrameRotator
 {
@@ -309,60 +303,60 @@ public:
           int64 colOld = static_cast<int64>(std::nearbyint(coordsNew[0] / m_Params.xRes));
           int64 rowOld = static_cast<int64>(std::nearbyint(coordsNew[1] / m_Params.yRes));
           int64 planeOld = static_cast<int64>(std::nearbyint(coordsNew[2] / m_Params.zRes));
-		  if (m_InterpolationType == 0)
-		  {
-			if(colOld >= 0 && colOld < m_Params.xp && rowOld >= 0 && rowOld < m_Params.yp && planeOld >= 0 && planeOld < m_Params.zp)
-			{
-			  m_NewIndices[index] = (m_Params.xp * m_Params.yp * planeOld) + (m_Params.xp * rowOld) + colOld;
-			}
-		  }
-		  else if(m_InterpolationType == 1)
-		  {
-	        double colOld = static_cast<double>(coordsNew[0] / m_Params.xRes);
-		    double rowOld = static_cast<double>(coordsNew[1] / m_Params.yRes);
-			double planeOld = static_cast<double>(coordsNew[2] / m_Params.zRes);
+          if(m_InterpolationType == 0)
+          {
+            if(colOld >= 0 && colOld < m_Params.xp && rowOld >= 0 && rowOld < m_Params.yp && planeOld >= 0 && planeOld < m_Params.zp)
+            {
+              m_NewIndices[index] = (m_Params.xp * m_Params.yp * planeOld) + (m_Params.xp * rowOld) + colOld;
+            }
+          }
+          else if(m_InterpolationType == 1)
+          {
+            double colOld = static_cast<double>(coordsNew[0] / m_Params.xRes);
+            double rowOld = static_cast<double>(coordsNew[1] / m_Params.yRes);
+            double planeOld = static_cast<double>(coordsNew[2] / m_Params.zRes);
 
-			double xt = 0.5;
-			double yt = 0.5;
-			double zt = 0.5;
+            double xt = 0.5;
+            double yt = 0.5;
+            double zt = 0.5;
 
-			if(x0 == x1)
-			{
-			  xt = 0;
-			}
-			else
-			{
-			  xt = (colOld - x0) / (x1 - x0);
-			}
-			
-			if(y0 == y1)
-			{
-			  yt = 0;
-			}
-			else
-			{
-			  yt = (rowOld - y0) / (y1 - y0);
-			}
-			
-			if(z0 == z1)
-			{
-			  zt = 0;
-			}
-			else
-			{
-			  zt = (planeOld - z0) / (z1 - z0);
-			}
+            if(x0 == x1)
+            {
+              xt = 0;
+            }
+            else
+            {
+              xt = (colOld - x0) / (x1 - x0);
+            }
 
-			if(colOld >= 0 && colOld < m_Params.xp && rowOld >= 0 && rowOld < m_Params.yp && planeOld >= 0 && planeOld < m_Params.zp)
-			{
-			  m_NewLinearIndices[index * 6] = xt;
-			  m_NewLinearIndices[index * 6 + 1] = yt;
-			  m_NewLinearIndices[index * 6 + 2] = zt;
-			  m_NewLinearIndices[index * 6 + 3] = colOld;
-			  m_NewLinearIndices[index * 6 + 4] = rowOld;
-			  m_NewLinearIndices[index * 6 + 5] = planeOld;
-			}
-		  }
+            if(y0 == y1)
+            {
+              yt = 0;
+            }
+            else
+            {
+              yt = (rowOld - y0) / (y1 - y0);
+            }
+
+            if(z0 == z1)
+            {
+              zt = 0;
+            }
+            else
+            {
+              zt = (planeOld - z0) / (z1 - z0);
+            }
+
+            if(colOld >= 0 && colOld < m_Params.xp && rowOld >= 0 && rowOld < m_Params.yp && planeOld >= 0 && planeOld < m_Params.zp)
+            {
+              m_NewLinearIndices[index * 6] = xt;
+              m_NewLinearIndices[index * 6 + 1] = yt;
+              m_NewLinearIndices[index * 6 + 2] = zt;
+              m_NewLinearIndices[index * 6 + 3] = colOld;
+              m_NewLinearIndices[index * 6 + 4] = rowOld;
+              m_NewLinearIndices[index * 6 + 5] = planeOld;
+            }
+          }
         }
       }
     }
@@ -385,8 +379,7 @@ class ApplyTransformationToImageGeometryImpl
 {
 
 public:
-  ApplyTransformationToImageGeometryImpl(ApplyTransformationToImageGeometry& filter, const std::vector<float>& transformationMatrix,
-                                    const std::atomic_bool& shouldCancel, size_t progIncrement)
+  ApplyTransformationToImageGeometryImpl(ApplyTransformationToImageGeometry& filter, const std::vector<float>& transformationMatrix, const std::atomic_bool& shouldCancel, size_t progIncrement)
   : m_Filter(filter)
   , m_TransformationMatrix(transformationMatrix)
   , m_ShouldCancel(shouldCancel)
@@ -411,15 +404,16 @@ private:
 struct CopyDataFunctor
 {
   template <typename T>
-  Result<> operator()(const IDataArray& oldCellArray, IDataArray& newCellArray, nonstd::span<const int64> newIndices, nonstd::span<double> newLinearIndices, int interpolationType, bool RGB, RotateArgs rotateArgs) const
+  Result<> operator()(const IDataArray& oldCellArray, IDataArray& newCellArray, nonstd::span<const int64> newIndices, nonstd::span<double> newLinearIndices, int interpolationType, bool RGB,
+                      RotateArgs rotateArgs) const
   {
     const auto& oldDataStore = oldCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& newDataStore = newCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
     const auto& typedOldDataArray = dynamic_cast<const DataArray<T>&>(oldCellArray);
-    //auto& typedNewDataArray = dynamic_cast<DataArray<T>>(newCellArray);
+    // auto& typedNewDataArray = dynamic_cast<DataArray<T>>(newCellArray);
 
-	if(interpolationType == 0)
-	{
+    if(interpolationType == 0)
+    {
       for(usize i = 0; i < newIndices.size(); i++)
       {
         int64 newIndicies_I = newIndices[i];
@@ -428,39 +422,39 @@ struct CopyDataFunctor
           if(!newDataStore.copyFrom(i, oldDataStore, newIndicies_I, 1))
           {
             return MakeErrorResult(-45102, fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", oldCellArray.getName(),
-                                                     newIndicies_I, newCellArray.getName(), i));
+                                                       newIndicies_I, newCellArray.getName(), i));
           }
         }
         else
         {
           newDataStore.fillTuple(i, 0);
         }
-	  }
-	}
-	else if (interpolationType == 1)
-	{
-	  for (usize i = 0; i < newIndices.size(); i++)
-	  {
+      }
+    }
+    else if(interpolationType == 1)
+    {
+      for(usize i = 0; i < newIndices.size(); i++)
+      {
         int64_t tupleIndex = i * 6;
         int64 newIndicies_I = newLinearIndices[tupleIndex];
 
-		if(newIndicies_I >= 0)
+        if(newIndicies_I >= 0)
         {
-		  applyLinearInterpolation<T>(typedOldDataArray, i, tupleIndex, newLinearIndices, newDataStore, RGB, rotateArgs);
-		}
-		else
-		{
+          applyLinearInterpolation<T>(typedOldDataArray, i, tupleIndex, newLinearIndices, newDataStore, RGB, rotateArgs);
+        }
+        else
+        {
           newDataStore.fillTuple(i, 0);
-		}
-	  }
-	}
-	return {};
+        }
+      }
+    }
+    return {};
   }
 };
 
 // -----------------------------------------------------------------------------
 ApplyTransformationToImageGeometry::ApplyTransformationToImageGeometry(DataStructure& dataStructure, ApplyTransformationToImageGeometryInputValues* inputValues, const std::atomic_bool& shouldCancel,
-                                                             const IFilter::MessageHandler& mesgHandler)
+                                                                       const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -518,12 +512,12 @@ Result<> ApplyImageTransformation(DataStructure& dataStructure, const ApplyTrans
     const auto& oldCellArray = dataStructure.getDataRefAs<IDataArray>(cellArrayPath);
     DataPath createdArrayPath = createdImage.createChildPath(oldCellArray.getName());
     auto& newCellArray = dataStructure.getDataRefAs<IDataArray>(createdArrayPath);
-    
-	bool RGB = false;
-	if(newCellArray.getNumberOfComponents() == 3)
-	{
+
+    bool RGB = false;
+    if(newCellArray.getNumberOfComponents() == 3)
+    {
       RGB = true;
-	}
+    }
 
     DataType type = oldCellArray.getDataType();
 

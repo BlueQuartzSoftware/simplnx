@@ -24,7 +24,7 @@ class ApplyTransformationToNodeGeometryImpl
 
 public:
   ApplyTransformationToNodeGeometryImpl(ApplyTransformationToNodeGeometry& filter, const std::vector<float>& transformationMatrix, AbstractGeometry::SharedVertexList* verticesPtr,
-                                    const std::atomic_bool& shouldCancel, size_t progIncrement)
+                                        const std::atomic_bool& shouldCancel, size_t progIncrement)
   : m_Filter(filter)
   , m_TransformationMatrix(transformationMatrix)
   , m_Vertices(verticesPtr)
@@ -85,7 +85,7 @@ private:
 
 // -----------------------------------------------------------------------------
 ApplyTransformationToNodeGeometry::ApplyTransformationToNodeGeometry(DataStructure& dataStructure, ApplyTransformationToNodeGeometryInputValues* inputValues, const std::atomic_bool& shouldCancel,
-                                                             const IFilter::MessageHandler& mesgHandler)
+                                                                     const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

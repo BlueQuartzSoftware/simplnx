@@ -113,7 +113,7 @@ const Eigen::Vector3f k_XAxis = Eigen::Vector3f::UnitX();
 const Eigen::Vector3f k_YAxis = Eigen::Vector3f::UnitY();
 const Eigen::Vector3f k_ZAxis = Eigen::Vector3f::UnitZ();
 
-//struct RotateArgs
+// struct RotateArgs
 //{
 //  int64 xp = 0;
 //  int64 yp = 0;
@@ -346,20 +346,18 @@ IFilter::UniquePointer ApplyTransformationToGeometryFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> transformationMatrixCheck(DataStructure dataStructure, std::vector<float> transformationMatrix, TransformType transformType, DataPath computedMatrixDataPath, 
-							   DynamicTableParameter::ValueType manualTranformationMatrix, VectorFloat32Parameter::ValueType rotationAxisAngle,
-                               VectorFloat32Parameter::ValueType translation, VectorFloat32Parameter::ValueType scale)
+Result<OutputActions> transformationMatrixCheck(DataStructure dataStructure, std::vector<float> transformationMatrix, TransformType transformType, DataPath computedMatrixDataPath,
+                                                DynamicTableParameter::ValueType manualTranformationMatrix, VectorFloat32Parameter::ValueType rotationAxisAngle,
+                                                VectorFloat32Parameter::ValueType translation, VectorFloat32Parameter::ValueType scale)
 {
   switch(transformType)
   {
-  case TransformType::No_Transform:
-  {
+  case TransformType::No_Transform: {
     complex::Result<OutputActions> resultOutputActions;
     resultOutputActions.warnings().push_back(Warning{-701, "No transformation has been selected, so this filter will perform no operations"});
     return resultOutputActions;
   }
-  case TransformType::PreComputed_TransformMatrix:
-  {
+  case TransformType::PreComputed_TransformMatrix: {
     // Verify that the selected precomputed array is of type float
     const auto* dataObject = dataStructure.getDataAs<Float32Array>(computedMatrixDataPath);
     if(dataObject == nullptr)
@@ -375,8 +373,7 @@ Result<OutputActions> transformationMatrixCheck(DataStructure dataStructure, std
     std::copy(precomputedTransformMatrix.begin(), precomputedTransformMatrix.end(), transformationMatrix.begin());
     break;
   }
-  case TransformType::ManualTransformMatrix:
-  {
+  case TransformType::ManualTransformMatrix: {
     if(manualTranformationMatrix.getNumberOfColumns() != 4 || manualTranformationMatrix.getNumberOfRows() != 4)
     {
       return {MakeErrorResult<OutputActions>(-702, "Manually specified Transform Matrix is not 4x4. The Transform Matrix must be a 4x4 where the values are stored in ROW Major format")};
@@ -385,8 +382,7 @@ Result<OutputActions> transformationMatrixCheck(DataStructure dataStructure, std
     transformationMatrix = std::vector<float>(flattenedData.begin(), flattenedData.end());
     break;
   }
-  case TransformType::Rotation:
-  {
+  case TransformType::Rotation: {
     auto pRotationAxisAngleValue = rotationAxisAngle;
     // Convert Degrees to Radians for the last element
     pRotationAxisAngleValue[3] = pRotationAxisAngleValue[3] * static_cast<float>(complex::numbers::pi / 180.0f);
@@ -402,8 +398,7 @@ Result<OutputActions> transformationMatrixCheck(DataStructure dataStructure, std
     }
     transformationMatrix[4 * 3 + 3] = 1.0f;
   }
-  case TransformType::Translation:
-  {
+  case TransformType::Translation: {
     auto pTranslationValue = translation;
     transformationMatrix[4 * 0 + 0] = 1.0f;
     transformationMatrix[4 * 1 + 1] = 1.0f;
@@ -467,9 +462,10 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
   // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
   // the std::vector<PreflightValue> object.
   std::vector<PreflightValue> preflightUpdatedValues;
-  
+
   std::vector<float> m_TransformationMatrix(16, 0.0F);
-  transformationMatrixCheck(dataStructure, m_TransformationMatrix, pTransformationType, pComputedTransformMatrixDataPath, pManualTransformationMatrixValue, pRotationAxisAngleValue, pTranslationValue, pScaleValue);
+  transformationMatrixCheck(dataStructure, m_TransformationMatrix, pTransformationType, pComputedTransformMatrixDataPath, pManualTransformationMatrixValue, pRotationAxisAngleValue, pTranslationValue,
+                            pScaleValue);
 
   const DataObject* dataObject = dataStructure.getData(pGeometryToTransformValue);
 
@@ -495,7 +491,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     auto selectedImageGeomPath = filterArgs.value<DataPath>(k_GeometryToTransform_Key);
     const auto& selectedImageGeom = dataStructure.getDataRefAs<ImageGeom>(selectedImageGeomPath);
     Eigen::Map<Matrix4fR> transformation(m_TransformationMatrix.data());
-    Eigen::Transform<float, 3, Eigen::Affine> transform = Eigen::Transform<float, 3, Eigen::Affine>::Transform(transformation);
+    Eigen::Transform<float, 3, Eigen::Affine> transform = Eigen::Transform<float, 3, Eigen::Affine>(transformation);
 
     Matrix3fR rotationMatrix = Matrix3fR::Zero();
     Matrix3fR scaleMatrix = Matrix3fR::Zero();
@@ -561,7 +557,7 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
   auto pInterpolationType = filterArgs.value<int>(k_InterpolationType_Key);
   auto pUseArraySelector = filterArgs.value<bool>(k_UseArraySelector_Key);
   auto pSelectedArrays = filterArgs.value<std::vector<DataPath>>(k_SelectedCellArrays_Key);
-  
+
   std::vector<float> m_TransformationMatrix(16, 0.0F);
   transformationMatrixCheck(dataStructure, m_TransformationMatrix, pTransformationType, pComputedTransformMatrixDataPath, pManualTransformationMatrixValue, pRotationAxisAngleValue, pTranslationValue,
                             pScaleValue);
@@ -576,7 +572,7 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
   inputImageValues.pGeometryToTransform = pGeometryPath;
   inputImageValues.pTransformationType = pTransformationType;
   inputImageValues.pInterpolationType = pInterpolationType;
-  
+
   inputNodeValues.transformationMatrix = m_TransformationMatrix;
   inputImageValues.pTransformationMatrix = m_TransformationMatrix;
 
@@ -590,7 +586,7 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
     Matrix3fR scaleMatrix = Matrix3fR::Zero();
     Eigen::Map<Matrix4fR> transformation(m_TransformationMatrix.data());
     Eigen::Transform<float, 3, Eigen::Affine> transform = Eigen::Transform<float, 3, Eigen::Affine>::Transform(transformation);
-	transform.computeRotationScaling(&rotationMatrix, &scaleMatrix);
+    transform.computeRotationScaling(&rotationMatrix, &scaleMatrix);
     rotateArgs = CreateRotateArgs(selectedImageGeom, rotationMatrix);
     inputImageValues.pRotateArgs = rotateArgs;
     inputImageValues.pUseArraySelector = pUseArraySelector;
