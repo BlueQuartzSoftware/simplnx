@@ -312,9 +312,9 @@ public:
           }
           else if(m_InterpolationType == 1)
           {
-            double colOld = static_cast<double>(coordsNew[0] / m_Params.xRes);
-            double rowOld = static_cast<double>(coordsNew[1] / m_Params.yRes);
-            double planeOld = static_cast<double>(coordsNew[2] / m_Params.zRes);
+            double colOld2 = static_cast<double>(coordsNew[0] / m_Params.xRes);
+            double rowOld2 = static_cast<double>(coordsNew[1] / m_Params.yRes);
+            double planeOld2 = static_cast<double>(coordsNew[2] / m_Params.zRes);
 
             double xt = 0.5;
             double yt = 0.5;
@@ -326,7 +326,7 @@ public:
             }
             else
             {
-              xt = (colOld - x0) / (x1 - x0);
+              xt = (colOld2 - x0) / (x1 - x0);
             }
 
             if(y0 == y1)
@@ -335,7 +335,7 @@ public:
             }
             else
             {
-              yt = (rowOld - y0) / (y1 - y0);
+              yt = (rowOld2 - y0) / (y1 - y0);
             }
 
             if(z0 == z1)
@@ -344,17 +344,17 @@ public:
             }
             else
             {
-              zt = (planeOld - z0) / (z1 - z0);
+              zt = (planeOld2 - z0) / (z1 - z0);
             }
 
-            if(colOld >= 0 && colOld < m_Params.xp && rowOld >= 0 && rowOld < m_Params.yp && planeOld >= 0 && planeOld < m_Params.zp)
+            if(colOld2 >= 0 && colOld2 < m_Params.xp && rowOld2 >= 0 && rowOld2 < m_Params.yp && planeOld2 >= 0 && planeOld2 < m_Params.zp)
             {
               m_NewLinearIndices[index * 6] = xt;
               m_NewLinearIndices[index * 6 + 1] = yt;
               m_NewLinearIndices[index * 6 + 2] = zt;
-              m_NewLinearIndices[index * 6 + 3] = colOld;
-              m_NewLinearIndices[index * 6 + 4] = rowOld;
-              m_NewLinearIndices[index * 6 + 5] = planeOld;
+              m_NewLinearIndices[index * 6 + 3] = colOld2;
+              m_NewLinearIndices[index * 6 + 4] = rowOld2;
+              m_NewLinearIndices[index * 6 + 5] = planeOld2;
             }
           }
         }
@@ -476,7 +476,7 @@ Result<> ApplyImageTransformation(DataStructure& dataStructure, const ApplyTrans
   std::vector<float> transformationMatrix = inputValues->pTransformationMatrix;
   Eigen::Map<Matrix4fR> transformation(transformationMatrix.data());
 
-  Eigen::Transform<float, 3, Eigen::Affine> transform = Eigen::Transform<float, 3, Eigen::Affine>::Transform(transformation);
+  Eigen::Transform<float, 3, Eigen::Affine> transform = Eigen::Transform<float, 3, Eigen::Affine>(transformation);
   Matrix3fR rotationMatrix = Matrix3fR::Zero();
   Matrix3fR scaleMatrix = Matrix3fR::Zero();
 

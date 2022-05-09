@@ -585,7 +585,7 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
     Matrix3fR rotationMatrix = Matrix3fR::Zero();
     Matrix3fR scaleMatrix = Matrix3fR::Zero();
     Eigen::Map<Matrix4fR> transformation(m_TransformationMatrix.data());
-    Eigen::Transform<float, 3, Eigen::Affine> transform = Eigen::Transform<float, 3, Eigen::Affine>::Transform(transformation);
+    Eigen::Transform<float, 3, Eigen::Affine> transform = Eigen::Transform<float, 3, Eigen::Affine>(transformation);
     transform.computeRotationScaling(&rotationMatrix, &scaleMatrix);
     rotateArgs = CreateRotateArgs(selectedImageGeom, rotationMatrix);
     inputImageValues.pRotateArgs = rotateArgs;
