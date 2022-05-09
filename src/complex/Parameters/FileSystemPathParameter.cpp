@@ -7,6 +7,7 @@
 #include <nlohmann/json.hpp>
 
 #include "complex/Common/Any.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 namespace fs = std::filesystem;
 
@@ -166,9 +167,27 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
       return {nonstd::make_unexpected(std::vector<Error>{{-2, "File System Path must include a file extension"}})};
     }
 
-    if(path.has_extension() && !m_AvailableExtensions.empty() && m_AvailableExtensions.find(path.extension().string()) == m_AvailableExtensions.end())
+    if(path.has_extension() && !m_AvailableExtensions.empty())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{{-3, fmt::format("File extension '{}' is not a valid file extension", path.extension().string())}})};
+      bool validExtension = false;
+      for(const auto& ext : m_AvailableExtensions)
+      {
+        std::string inputExt = complex::StringUtilities::toLower(path.extension().string());
+        std::string compareExt = complex::StringUtilities::toLower(ext);
+        if(compareExt.at(0) == '.' && inputExt[0] != '.')
+        {
+          compareExt = complex::StringUtilities::chopr(compareExt, 1);
+        }
+        if(compareExt == inputExt)
+        {
+          validExtension = true;
+          break;
+        }
+      }
+      if(!validExtension)
+      {
+        return {nonstd::make_unexpected(std::vector<Error>{{-3, fmt::format("File extension '{}' is not a valid file extension", path.extension().string())}})};
+      }
     }
   }
 

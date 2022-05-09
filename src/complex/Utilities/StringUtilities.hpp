@@ -34,6 +34,7 @@
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/Types.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cctype>
 #include <sstream>
@@ -164,6 +165,11 @@ inline std::string chop(std::string_view str, usize numElements)
   return std::string(str.substr(0, str.size() - numElements));
 }
 
+inline std::string chopr(std::string_view str, usize numElements)
+{
+  return std::string(str.substr(numElements, str.size() - numElements));
+}
+
 template <typename T>
 inline std::string number(T arg)
 {
@@ -193,5 +199,20 @@ inline std::string simplified(std::string_view text)
   }
   return finalString;
 }
+
+inline std::string toUpper(const std::string& input)
+{
+  std::string data = input;
+  std::for_each(data.begin(), data.end(), [](char& c) { c = ::toupper(c); });
+  return data;
+}
+
+inline std::string toLower(const std::string& input)
+{
+  std::string data = input;
+  std::for_each(data.begin(), data.end(), [](char& c) { c = ::tolower(c); });
+  return data;
+}
+
 } // namespace StringUtilities
 } // namespace complex
