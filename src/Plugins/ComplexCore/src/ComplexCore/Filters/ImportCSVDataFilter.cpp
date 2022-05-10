@@ -276,9 +276,7 @@ namespace complex
 ImportCSVDataFilter::ImportCSVDataFilter() = default;
 
 // -----------------------------------------------------------------------------
-ImportCSVDataFilter::~ImportCSVDataFilter() noexcept
-{
-}
+ImportCSVDataFilter::~ImportCSVDataFilter() noexcept = default;
 
 // -----------------------------------------------------------------------------
 std::string ImportCSVDataFilter::name() const
