@@ -273,9 +273,7 @@ void skipNumberOfLines(std::fstream& inStream, usize numberOfLines)
 namespace complex
 {
 //------------------------------------------------------------------------------
-ImportCSVDataFilter::ImportCSVDataFilter()
-{
-}
+ImportCSVDataFilter::ImportCSVDataFilter() = default;
 
 // -----------------------------------------------------------------------------
 ImportCSVDataFilter::~ImportCSVDataFilter() noexcept
