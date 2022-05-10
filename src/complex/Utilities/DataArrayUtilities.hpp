@@ -34,7 +34,7 @@ namespace fs = std::filesystem;
         return complex::MakeErrorResult<TYPE>(-101, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                   \
       }                                                                                                                                                                                                \
                                                                                                                                                                                                        \
-      if(value > std::numeric_limits<TYPE>().max() || value < std::numeric_limits<TYPE>().min())                                                                                                       \
+      if(value > std::numeric_limits<TYPE>::max() || value < std::numeric_limits<TYPE>::min())                                                                                                         \
       {                                                                                                                                                                                                \
         return complex::MakeErrorResult<TYPE>(-102, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                   \
       }                                                                                                                                                                                                \
