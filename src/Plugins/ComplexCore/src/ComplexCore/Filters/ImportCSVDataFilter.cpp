@@ -144,63 +144,75 @@ Result<ParsersVector> createParsers(const DataTypeVector& dataTypes, const DataP
     arrayPath = arrayPath.createChildPath(name);
 
     DataType dataType = dataTypeOpt.value();
-    if(dataType == complex::DataType::float64)
+    switch(dataType)
     {
-      Float64Array& data = dataStructure.getDataRefAs<Float64Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Float64Parser>(data, name, i);
-    }
-    else if(dataType == complex::DataType::float32)
-    {
-      Float32Array& data = dataStructure.getDataRefAs<Float32Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Float32Parser>(data, name, i);
-    }
-    else if(dataType == complex::DataType::int8)
+    case complex::DataType::int8:
     {
       Int8Array& data = dataStructure.getDataRefAs<Int8Array>(arrayPath);
       dataParsers[i] = std::make_unique<Int8Parser>(data, name, i);
+      break;
     }
-    else if(dataType == complex::DataType::int16)
-    {
-      Int16Array& data = dataStructure.getDataRefAs<Int16Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Int16Parser>(data, name, i);
-    }
-    else if(dataType == complex::DataType::int32)
-    {
-      Int32Array& data = dataStructure.getDataRefAs<Int32Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Int32Parser>(data, name, i);
-    }
-    else if(dataType == complex::DataType::int64)
-    {
-      Int64Array& data = dataStructure.getDataRefAs<Int64Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Int64Parser>(data, name, i);
-    }
-    else if(dataType == complex::DataType::uint8)
+    case complex::DataType::uint8:
     {
       UInt8Array& data = dataStructure.getDataRefAs<UInt8Array>(arrayPath);
       dataParsers[i] = std::make_unique<UInt8Parser>(data, name, i);
+      break;
     }
-    else if(dataType == complex::DataType::uint16)
+    case complex::DataType::int16:
+    {
+      Int16Array& data = dataStructure.getDataRefAs<Int16Array>(arrayPath);
+      dataParsers[i] = std::make_unique<Int16Parser>(data, name, i);
+      break;
+    }
+    case complex::DataType::uint16:
     {
       UInt16Array& data = dataStructure.getDataRefAs<UInt16Array>(arrayPath);
       dataParsers[i] = std::make_unique<UInt16Parser>(data, name, i);
+      break;
     }
-    else if(dataType == complex::DataType::uint32)
+    case complex::DataType::int32:
+    {
+      Int32Array& data = dataStructure.getDataRefAs<Int32Array>(arrayPath);
+      dataParsers[i] = std::make_unique<Int32Parser>(data, name, i);
+      break;
+    }
+    case complex::DataType::uint32:
     {
       UInt32Array& data = dataStructure.getDataRefAs<UInt32Array>(arrayPath);
       dataParsers[i] = std::make_unique<UInt32Parser>(data, name, i);
+      break;
     }
-    else if(dataType == complex::DataType::uint64)
+    case complex::DataType::int64:
+    {
+      Int64Array& data = dataStructure.getDataRefAs<Int64Array>(arrayPath);
+      dataParsers[i] = std::make_unique<Int64Parser>(data, name, i);
+      break;
+    }
+    case complex::DataType::uint64:
     {
       UInt64Array& data = dataStructure.getDataRefAs<UInt64Array>(arrayPath);
       dataParsers[i] = std::make_unique<UInt64Parser>(data, name, i);
+      break;
     }
-    //    else if(dataType == complex::DataType::string)
-    //    {
-    //      StringArray& data = dataStructure.getDataRefAs<StringArray>(arrayPath);
-    //      dataParsers[i] = std::make_unique<StringParser>(data, name, i);
-    //    }
-    else
+    case complex::DataType::float32:
     {
+      Float32Array& data = dataStructure.getDataRefAs<Float32Array>(arrayPath);
+      dataParsers[i] = std::make_unique<Float32Parser>(data, name, i);
+      break;
+    }
+    case complex::DataType::float64:
+    {
+      Float64Array& data = dataStructure.getDataRefAs<Float64Array>(arrayPath);
+      dataParsers[i] = std::make_unique<Float64Parser>(data, name, i);
+      break;
+    }
+      //    case complex::DataType::string:
+      //    {
+      //      StringArray& data = dataStructure.getDataRefAs<StringArray>(arrayPath);
+      //      dataParsers[i] = std::make_unique<StringParser>(data, name, i);
+      //      break;
+      //    }
+    default:
       return {MakeErrorResult<ParsersVector>(IssueCodes::INVALID_ARRAY_TYPE, fmt::format("The data type that was chosen for column number {} is not a valid data array type.", std::to_string(i + 1)))};
     }
   }
