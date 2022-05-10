@@ -66,43 +66,6 @@ void for_each_token(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_
   }
 }
 
-inline std::vector<std::string> split(const std::string_view& str, const std::vector<char>& delimiters, bool consecutiveDelimiters)
-{
-  std::vector<std::string> tokens;
-  auto endPos = str.end();
-  for_each_token(str.begin(), endPos, delimiters.cbegin(), delimiters.cend(), [&endPos, &tokens, &consecutiveDelimiters](auto first, auto second) {
-    if(first != second)
-    {
-      std::string substr = {first, second};
-      if(!substr.empty() || !consecutiveDelimiters)
-      {
-        tokens.push_back(substr);
-      }
-    }
-  });
-  return tokens;
-}
-
-inline std::vector<std::string> split(std::string_view str, char delim)
-{
-  std::vector<char> delims = {delim};
-  return split(str, delims, false);
-}
-
-inline std::vector<std::string> split_2(const std::string& line, char delimiter)
-{
-  std::stringstream ss(line);
-
-  std::vector<std::string> tokens;
-  std::string tempStr;
-
-  while(std::getline(ss, tempStr, delimiter))
-  {
-    tokens.push_back(tempStr);
-  }
-  return tokens;
-}
-
 inline std::string replace(std::string str, std::string_view from, std::string_view to)
 {
   usize startPos = 0;
@@ -162,6 +125,44 @@ inline std::string trimmed(std::string_view str)
   std::string::size_type front = str.find_first_not_of(k_Whitespaces);
 
   return std::string(str.substr(front, back - front + 1));
+}
+
+inline std::vector<std::string> split(const std::string_view& str, const std::vector<char>& delimiters, bool consecutiveDelimiters)
+{
+  std::vector<std::string> tokens;
+  const auto* endPos = str.end();
+  for_each_token(str.begin(), endPos, delimiters.cbegin(), delimiters.cend(), [&tokens, &consecutiveDelimiters](auto first, auto second) {
+    if(first != second)
+    {
+      std::string substr = {first, second};
+      substr = trimmed(substr);
+      if(!substr.empty() || !consecutiveDelimiters)
+      {
+        tokens.push_back(substr);
+      }
+    }
+  });
+  return tokens;
+}
+
+inline std::vector<std::string> split(std::string_view str, char delim)
+{
+  std::vector<char> delims = {delim};
+  return split(str, delims, false);
+}
+
+inline std::vector<std::string> split_2(const std::string& line, char delimiter)
+{
+  std::stringstream ss(line);
+
+  std::vector<std::string> tokens;
+  std::string tempStr;
+
+  while(std::getline(ss, tempStr, delimiter))
+  {
+    tokens.push_back(tempStr);
+  }
+  return tokens;
 }
 
 template <typename T>
