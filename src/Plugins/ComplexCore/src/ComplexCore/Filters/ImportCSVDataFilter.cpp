@@ -30,7 +30,7 @@ namespace fs = std::filesystem;
 
 namespace
 {
-enum IssueCodes
+enum class IssueCodes
 {
   EMPTY_FILE = -100,
   FILE_DOES_NOT_EXIST = -101,
