@@ -54,13 +54,13 @@ Result<OutputActions> validateInputFilePath(const std::string& inputFilePath)
 {
   if(inputFilePath.empty())
   {
-    return {MakeErrorResult<OutputActions>(IssueCodes::EMPTY_FILE, "A file has not been chosen to import. Please pick a file to import.")};
+    return {MakeErrorResult<OutputActions>(static_cast<int32>(IssueCodes::EMPTY_FILE), "A file has not been chosen to import. Please pick a file to import.")};
   }
 
   fs::path inputFile(inputFilePath);
   if(!fs::exists(inputFile))
   {
-    return {MakeErrorResult<OutputActions>(IssueCodes::FILE_DOES_NOT_EXIST, fmt::format("The input file does not exist: '{}'", inputFilePath))};
+    return {MakeErrorResult<OutputActions>(static_cast<int32>(IssueCodes::FILE_DOES_NOT_EXIST), fmt::format("The input file does not exist: '{}'", inputFilePath))};
   }
 
   return {};
@@ -72,8 +72,8 @@ Result<OutputActions> validateTupleDimensions(const std::vector<usize>& tDims, u
   usize tupleTotal = std::accumulate(tDims.begin(), tDims.end(), 1, std::multiplies<usize>());
   if(tupleTotal != totalLines)
   {
-    return {
-        MakeErrorResult<OutputActions>(IssueCodes::INCORRECT_TUPLES, fmt::format("The current number of tuples ({}) do not match the total number of imported lines ({}).", tupleTotal, totalLines))};
+    return {MakeErrorResult<OutputActions>(static_cast<int32>(IssueCodes::INCORRECT_TUPLES),
+                                           fmt::format("The current number of tuples ({}) do not match the total number of imported lines ({}).", tupleTotal, totalLines))};
   }
 
   return {};
@@ -84,7 +84,7 @@ Result<OutputActions> validateExistingGroup(const DataPath& groupPath, const Dat
 {
   if(groupPath.empty())
   {
-    return {MakeErrorResult<OutputActions>(IssueCodes::EMPTY_EXISTING_DG, "'Existing Data Group' - Data path is empty.")};
+    return {MakeErrorResult<OutputActions>(static_cast<int32>(IssueCodes::EMPTY_EXISTING_DG), "'Existing Data Group' - Data path is empty.")};
   }
 
   const BaseGroup& selectedGroup = dataStructure.getDataRefAs<BaseGroup>(groupPath);
@@ -96,11 +96,12 @@ Result<OutputActions> validateExistingGroup(const DataPath& groupPath, const Dat
     {
       if(arrayName == headerName)
       {
-        return {MakeErrorResult<OutputActions>(IssueCodes::DUPLICATE_NAMES, fmt::format("The header name \"{}\" matches an array name that already exists in the selected container.", headerName))};
+        return {MakeErrorResult<OutputActions>(static_cast<int32>(IssueCodes::DUPLICATE_NAMES),
+                                               fmt::format("The header name \"{}\" matches an array name that already exists in the selected container.", headerName))};
       }
       if(StringUtilities::contains(headerName, '&') || StringUtilities::contains(headerName, ':') || StringUtilities::contains(headerName, '/') || StringUtilities::contains(headerName, '\\'))
       {
-        return {MakeErrorResult<OutputActions>(IssueCodes::ILLEGAL_NAMES,
+        return {MakeErrorResult<OutputActions>(static_cast<int32>(IssueCodes::ILLEGAL_NAMES),
                                                fmt::format("The header name \"{}\" contains a character that will cause problems. Do Not use '&',':', '/' or '\\' in the header names.", headerName))};
       }
     }
@@ -114,12 +115,13 @@ Result<OutputActions> validateNewGroup(const DataPath& groupPath, const DataStru
 {
   if(groupPath.empty())
   {
-    return {MakeErrorResult<OutputActions>(IssueCodes::EMPTY_NEW_DG, "'New Data Group' - Data path is empty.")};
+    return {MakeErrorResult<OutputActions>(static_cast<int32>(IssueCodes::EMPTY_NEW_DG), "'New Data Group' - Data path is empty.")};
   }
 
   if(dataStructure.getData(groupPath) != nullptr)
   {
-    return {MakeErrorResult<OutputActions>(IssueCodes::NEW_DG_EXISTS, fmt::format("The group at the path '{}' cannot be created because it already exists.", groupPath.toString()))};
+    return {
+        MakeErrorResult<OutputActions>(static_cast<int32>(IssueCodes::NEW_DG_EXISTS), fmt::format("The group at the path '{}' cannot be created because it already exists.", groupPath.toString()))};
   }
 
   return {};
@@ -146,52 +148,62 @@ Result<ParsersVector> createParsers(const DataTypeVector& dataTypes, const DataP
     DataType dataType = dataTypeOpt.value();
     switch(dataType)
     {
-    case complex::DataType::int8: {
+    case complex::DataType::int8:
+    {
       Int8Array& data = dataStructure.getDataRefAs<Int8Array>(arrayPath);
       dataParsers[i] = std::make_unique<Int8Parser>(data, name, i);
       break;
     }
-    case complex::DataType::uint8: {
+    case complex::DataType::uint8:
+    {
       UInt8Array& data = dataStructure.getDataRefAs<UInt8Array>(arrayPath);
       dataParsers[i] = std::make_unique<UInt8Parser>(data, name, i);
       break;
     }
-    case complex::DataType::int16: {
+    case complex::DataType::int16:
+    {
       Int16Array& data = dataStructure.getDataRefAs<Int16Array>(arrayPath);
       dataParsers[i] = std::make_unique<Int16Parser>(data, name, i);
       break;
     }
-    case complex::DataType::uint16: {
+    case complex::DataType::uint16:
+    {
       UInt16Array& data = dataStructure.getDataRefAs<UInt16Array>(arrayPath);
       dataParsers[i] = std::make_unique<UInt16Parser>(data, name, i);
       break;
     }
-    case complex::DataType::int32: {
+    case complex::DataType::int32:
+    {
       Int32Array& data = dataStructure.getDataRefAs<Int32Array>(arrayPath);
       dataParsers[i] = std::make_unique<Int32Parser>(data, name, i);
       break;
     }
-    case complex::DataType::uint32: {
+    case complex::DataType::uint32:
+    {
       UInt32Array& data = dataStructure.getDataRefAs<UInt32Array>(arrayPath);
       dataParsers[i] = std::make_unique<UInt32Parser>(data, name, i);
       break;
     }
-    case complex::DataType::int64: {
+    case complex::DataType::int64:
+    {
       Int64Array& data = dataStructure.getDataRefAs<Int64Array>(arrayPath);
       dataParsers[i] = std::make_unique<Int64Parser>(data, name, i);
       break;
     }
-    case complex::DataType::uint64: {
+    case complex::DataType::uint64:
+    {
       UInt64Array& data = dataStructure.getDataRefAs<UInt64Array>(arrayPath);
       dataParsers[i] = std::make_unique<UInt64Parser>(data, name, i);
       break;
     }
-    case complex::DataType::float32: {
+    case complex::DataType::float32:
+    {
       Float32Array& data = dataStructure.getDataRefAs<Float32Array>(arrayPath);
       dataParsers[i] = std::make_unique<Float32Parser>(data, name, i);
       break;
     }
-    case complex::DataType::float64: {
+    case complex::DataType::float64:
+    {
       Float64Array& data = dataStructure.getDataRefAs<Float64Array>(arrayPath);
       dataParsers[i] = std::make_unique<Float64Parser>(data, name, i);
       break;
@@ -203,7 +215,8 @@ Result<ParsersVector> createParsers(const DataTypeVector& dataTypes, const DataP
       //      break;
       //    }
     default:
-      return {MakeErrorResult<ParsersVector>(IssueCodes::INVALID_ARRAY_TYPE, fmt::format("The data type that was chosen for column number {} is not a valid data array type.", std::to_string(i + 1)))};
+      return {MakeErrorResult<ParsersVector>(static_cast<int32>(IssueCodes::INVALID_ARRAY_TYPE),
+                                             fmt::format("The data type that was chosen for column number {} is not a valid data array type.", std::to_string(i + 1)))};
     }
   }
 
@@ -220,8 +233,8 @@ Result<> parseLine(std::fstream& inStream, const ParsersVector& dataParsers, con
 
   if(dataParsers.size() != tokens.size())
   {
-    return MakeErrorResult(IssueCodes::INCONSISTENT_COLS, fmt::format("Line {} has an inconsistent number of columns.\nExpecting {} but found {}\nInput line was:\n{}", std::to_string(lineNumber),
-                                                                      std::to_string(dataParsers.size()), std::to_string(tokens.size()), line));
+    return MakeErrorResult(static_cast<int32>(IssueCodes::INCONSISTENT_COLS), fmt::format("Line {} has an inconsistent number of columns.\nExpecting {} but found {}\nInput line was:\n{}",
+                                                                                          std::to_string(lineNumber), std::to_string(dataParsers.size()), std::to_string(tokens.size()), line));
   }
 
   for(const auto& dataParser : dataParsers)
@@ -454,7 +467,7 @@ Result<> ImportCSVDataFilter::executeImpl(DataStructure& dataStructure, const Ar
   std::fstream in(inputFilePath.c_str(), std::ios_base::in);
   if(!in.is_open())
   {
-    return MakeErrorResult(IssueCodes::FILE_NOT_OPEN, fmt::format("Could not open file for reading: {}", inputFilePath));
+    return MakeErrorResult(static_cast<int32>(IssueCodes::FILE_NOT_OPEN), fmt::format("Could not open file for reading: {}", inputFilePath));
   }
 
   // Skip to the first data line
@@ -477,7 +490,6 @@ Result<> ImportCSVDataFilter::executeImpl(DataStructure& dataStructure, const Ar
 
     notifyProgress(messageHandler, lineNum, numTuples, threshold);
   }
-
 
   return {};
 }
