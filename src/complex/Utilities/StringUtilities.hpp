@@ -130,7 +130,7 @@ inline std::string trimmed(std::string_view str)
 inline std::vector<std::string> split(const std::string_view& str, const std::vector<char>& delimiters, bool consecutiveDelimiters)
 {
   std::vector<std::string> tokens;
-  const auto* endPos = str.end();
+  auto endPos = str.end();
   for_each_token(str.begin(), endPos, delimiters.cbegin(), delimiters.cend(), [&tokens, &consecutiveDelimiters](auto first, auto second) {
     if(first != second)
     {
