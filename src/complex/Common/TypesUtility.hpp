@@ -4,10 +4,10 @@
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/Common/Types.hpp"
 
-#include <list>
 #include <optional>
 #include <stdexcept>
 #include <type_traits>
+#include <vector>
 
 namespace complex
 {
@@ -248,12 +248,12 @@ inline constexpr StringLiteral DataTypeToString(DataType dataType)
   }
 }
 
-inline const std::list<std::string>& GetAllDataTypesAsStrings()
+inline const std::vector<std::string>& GetAllDataTypesAsStrings()
 {
-  static const std::list<std::string> dataTypes = {DataTypeToString(complex::DataType::int8),    DataTypeToString(complex::DataType::uint8),  DataTypeToString(complex::DataType::int16),
-                                                   DataTypeToString(complex::DataType::uint16),  DataTypeToString(complex::DataType::int32),  DataTypeToString(complex::DataType::uint32),
-                                                   DataTypeToString(complex::DataType::int64),   DataTypeToString(complex::DataType::uint64), DataTypeToString(complex::DataType::float32),
-                                                   DataTypeToString(complex::DataType::float64), DataTypeToString(complex::DataType::boolean)};
+  static const std::vector<std::string> dataTypes = {DataTypeToString(complex::DataType::int8),    DataTypeToString(complex::DataType::uint8),  DataTypeToString(complex::DataType::int16),
+                                                     DataTypeToString(complex::DataType::uint16),  DataTypeToString(complex::DataType::int32),  DataTypeToString(complex::DataType::uint32),
+                                                     DataTypeToString(complex::DataType::int64),   DataTypeToString(complex::DataType::uint64), DataTypeToString(complex::DataType::float32),
+                                                     DataTypeToString(complex::DataType::float64), DataTypeToString(complex::DataType::boolean)};
   return dataTypes;
 }
 
