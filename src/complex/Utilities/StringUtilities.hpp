@@ -33,6 +33,8 @@
 
 #include "complex/Common/StringLiteral.hpp"
 
+#include <nonstd/span.hpp>
+
 #include <cctype>
 #include <sstream>
 #include <vector>
@@ -127,7 +129,7 @@ inline std::string trimmed(std::string_view str)
   return std::string(str.substr(front, back - front + 1));
 }
 
-inline std::vector<std::string> split(std::string_view str, nonstd::span<char> delimiters, bool consecutiveDelimiters)
+inline std::vector<std::string> split(std::string_view str, nonstd::span<const char> delimiters, bool consecutiveDelimiters)
 {
   std::vector<std::string> tokens;
   auto endPos = str.end();
@@ -165,8 +167,12 @@ inline std::vector<std::string> split_2(const std::string& line, char delimiter)
   return tokens;
 }
 
-template <typename T>
-inline bool contains(std::string_view str, T val)
+inline bool contains(std::string_view str, std::string_view val)
+{
+  return str.find(val) != std::string::npos;
+}
+
+inline bool contains(std::string_view str, char val)
 {
   return str.find(val) != std::string::npos;
 }

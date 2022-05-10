@@ -63,9 +63,7 @@ nlohmann::json ImportCSVDataParameter::toJson(const std::any& value) const
 // -----------------------------------------------------------------------------
 Result<std::any> ImportCSVDataParameter::fromJson(const nlohmann::json& json) const
 {
-  ValueType CSVWizardData;
-  CSVWizardData.readJson(json);
-  return {{CSVWizardData}};
+  return {{CSVWizardData::ReadJson(json)}};
 }
 
 // -----------------------------------------------------------------------------
@@ -83,11 +81,14 @@ std::any ImportCSVDataParameter::defaultValue() const
 // -----------------------------------------------------------------------------
 Result<> ImportCSVDataParameter::validate(const std::any& value) const
 {
-  if(value.type() == typeid(CSVWizardData))
+  try
   {
-    return {};
+    std::any_cast<CSVWizardData>(value);
+  } catch(std::bad_any_cast exception)
+  {
+    return MakeErrorResult(-667, fmt::format("Exception: {}", exception.what()));
   }
 
-  return {nonstd::make_unexpected(std::vector<Error>{Error{-667, "Bad parameter type"}})};
+  return {};
 }
 } // namespace complex

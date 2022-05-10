@@ -34,16 +34,15 @@
 
 #include "nlohmann/json.hpp"
 
+#include "complex/Common/Result.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
-class COMPLEX_EXPORT CSVWizardData
+struct COMPLEX_EXPORT CSVWizardData
 {
 public:
-  CSVWizardData();
-
   enum class HeaderMode
   {
     LINE,
@@ -55,74 +54,23 @@ public:
 
   // Json Reader and Writer
   void writeJson(nlohmann::json& json) const;
-  bool readJson(const nlohmann::json& json);
+  static Result<CSVWizardData> ReadJson(const nlohmann::json& json);
 
-  // Getters and Setters
-  const std::string& inputFilePath() const;
-  void setInputFilePath(const std::string& newInputFilePath);
+  std::string inputFilePath;
+  std::vector<std::string> dataHeaders;
+  usize beginIndex = 1;
+  int64 numberOfLines = -1;
+  std::vector<std::optional<DataType>> dataTypes;
+  std::vector<char> delimiters;
+  usize headerLine = 1;
+  HeaderMode headerMode = HeaderMode::LINE;
+  bool tabAsDelimiter = false;
+  bool semicolonAsDelimiter = false;
+  bool commaAsDelimiter = false;
+  bool spaceAsDelimiter = false;
+  bool consecutiveDelimiters = false;
 
-  const std::vector<std::string>& dataHeaders() const;
-  void setDataHeaders(const std::vector<std::string>& newDataHeaders);
-
-  usize beginIndex() const;
-  void setBeginIndex(usize newBeginIndex);
-
-  int64 numberOfLines() const;
-  void setNumberOfLines(int64 newNumberOfLines);
-
-  const std::vector<std::optional<DataType>>& dataTypes() const;
-  void setDataTypes(const std::vector<std::optional<DataType>>& newDataTypes);
-
-  const std::vector<char>& delimiters() const;
-  void setDelimiters(const std::vector<char>& newDelimiters);
-
-  usize headerLine() const;
-  void setHeaderLine(usize newHeaderLine);
-
-  bool headerIsCustom() const;
-  void setHeaderIsCustom(bool newHeaderIsCustom);
-
-  bool consecutiveDelimiters() const;
-  void setConsecutiveDelimiters(bool newConsecutiveDelimiters);
-
-  HeaderMode headerMode() const;
-  void setHeaderMode(HeaderMode newHeaderMode);
-
-  bool tabAsDelimiter() const;
-  void setTabAsDelimiter(bool newTabAsDelimiter);
-
-  bool semicolonAsDelimiter() const;
-  void setSemicolonAsDelimiter(bool newSemicolonAsDelimiter);
-
-  bool commaAsDelimiter() const;
-  void setCommaAsDelimiter(bool newCommaAsDelimiter);
-
-  bool spaceAsDelimiter() const;
-  void setSpaceAsDelimiter(bool newSpaceAsDelimiter);
-
-  usize totalPreviewLines() const;
-  std::string skipDataTypeString() const;
-
-protected:
-  void initialize();
-
-private:
-  std::string m_InputFilePath;
-  std::vector<std::string> m_DataHeaders;
-  usize m_BeginIndex;
-  int64 m_NumberOfLines;
-  std::vector<std::optional<DataType>> m_DataTypes;
-  std::vector<char> m_Delimiters;
-  usize m_HeaderLine;
-  HeaderMode m_HeaderMode;
-  bool m_TabAsDelimiter;
-  bool m_SemicolonAsDelimiter;
-  bool m_CommaAsDelimiter;
-  bool m_SpaceAsDelimiter;
-  bool m_ConsecutiveDelimiters;
-
-  // Const variables
-  const usize m_TotalPreviewLines = 50;
-  const std::string m_SkipDataTypeString = "Skip";
+  static const usize k_TotalPreviewLines = 50;
+  static const std::string k_SkipDataTypeString;
 };
 } // namespace complex
