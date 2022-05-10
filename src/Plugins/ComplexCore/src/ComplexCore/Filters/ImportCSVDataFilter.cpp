@@ -482,7 +482,6 @@ Result<> ImportCSVDataFilter::executeImpl(DataStructure& dataStructure, const Ar
     notifyProgress(messageHandler, lineNum, numTuples, threshold);
   }
 
-  in.close();
 
   return {};
 }
