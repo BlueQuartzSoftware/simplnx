@@ -224,16 +224,16 @@ Result<> parseLine(std::fstream& inStream, const ParsersVector& dataParsers, con
                                                                       std::to_string(dataParsers.size()), std::to_string(tokens.size()), line));
   }
 
-  for(usize i = 0; i < dataParsers.size(); i++)
+  for(const auto& dataParser : dataParsers)
   {
-    if(dataParsers[i] == nullptr)
+    if(dataParser == nullptr)
     {
       continue;
     }
 
-    usize index = dataParsers[i]->columnIndex();
+    usize index = dataParser->columnIndex();
 
-    Result<> result = dataParsers[i]->parse(tokens[index], lineNumber - beginIndex);
+    Result<> result = dataParser->parse(tokens[index], lineNumber - beginIndex);
     if(result.invalid())
     {
       return result;
