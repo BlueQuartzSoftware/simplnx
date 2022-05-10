@@ -34,7 +34,7 @@ using namespace complex;
 
 namespace
 {
-const std::string k_DataHeadersKey("Data Headers");
+const std::string k_DataHeadersKey = "Data Headers";
 const std::string k_DataTypesKey = "Data Types";
 const std::string k_DelimitersKey = "Delimiters";
 const std::string k_TupleDimensionsKey = "Tuple Dimensions";
