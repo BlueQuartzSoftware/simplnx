@@ -268,47 +268,47 @@ inline const std::vector<std::string>& GetAllDataTypesAsStrings()
  */
 inline constexpr DataType StringToDataType(std::string_view dataTypeString)
 {
-  if(dataTypeString == DataTypeToString(DataType::int8))
+  if(dataTypeString == DataTypeToString(DataType::int8).view())
   {
     return DataType::int8;
   }
-  else if(dataTypeString == DataTypeToString(DataType::uint8))
+  else if(dataTypeString == DataTypeToString(DataType::uint8).view())
   {
     return DataType::uint8;
   }
-  else if(dataTypeString == DataTypeToString(DataType::int16))
+  else if(dataTypeString == DataTypeToString(DataType::int16).view())
   {
     return DataType::int16;
   }
-  else if(dataTypeString == DataTypeToString(DataType::uint16))
+  else if(dataTypeString == DataTypeToString(DataType::uint16).view())
   {
     return DataType::uint16;
   }
-  else if(dataTypeString == DataTypeToString(DataType::int32))
+  else if(dataTypeString == DataTypeToString(DataType::int32).view())
   {
     return DataType::int32;
   }
-  else if(dataTypeString == DataTypeToString(DataType::uint32))
+  else if(dataTypeString == DataTypeToString(DataType::uint32).view())
   {
     return DataType::uint32;
   }
-  else if(dataTypeString == DataTypeToString(DataType::int64))
+  else if(dataTypeString == DataTypeToString(DataType::int64).view())
   {
     return DataType::int64;
   }
-  else if(dataTypeString == DataTypeToString(DataType::uint64))
+  else if(dataTypeString == DataTypeToString(DataType::uint64).view())
   {
     return DataType::uint64;
   }
-  else if(dataTypeString == DataTypeToString(DataType::float32))
+  else if(dataTypeString == DataTypeToString(DataType::float32).view())
   {
     return DataType::float32;
   }
-  else if(dataTypeString == DataTypeToString(DataType::float64))
+  else if(dataTypeString == DataTypeToString(DataType::float64).view())
   {
     return DataType::float64;
   }
-  else if(dataTypeString == DataTypeToString(DataType::boolean))
+  else if(dataTypeString == DataTypeToString(DataType::boolean).view())
   {
     return DataType::boolean;
   }
