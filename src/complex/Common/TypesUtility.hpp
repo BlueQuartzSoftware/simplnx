@@ -248,6 +248,10 @@ inline constexpr StringLiteral DataTypeToString(DataType dataType)
   }
 }
 
+/**
+ * @brief Returns string representations for all DataTypes.
+ * @return
+ */
 inline const std::vector<std::string>& GetAllDataTypesAsStrings()
 {
   static const std::vector<std::string> dataTypes = {DataTypeToString(complex::DataType::int8),    DataTypeToString(complex::DataType::uint8),  DataTypeToString(complex::DataType::int16),
@@ -258,8 +262,8 @@ inline const std::vector<std::string>& GetAllDataTypesAsStrings()
 }
 
 /**
- * @brief Returns a string representation of the passed in DataType
- * @param dataType
+ * @brief Returns a DataType for the passed in string representation
+ * @param dataTypeString
  * @return
  */
 inline constexpr DataType StringToDataType(const std::string& dataTypeString)
