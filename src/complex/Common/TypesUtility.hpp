@@ -266,7 +266,7 @@ inline const std::vector<std::string>& GetAllDataTypesAsStrings()
  * @param dataTypeString
  * @return
  */
-inline constexpr DataType StringToDataType(const std::string& dataTypeString)
+inline constexpr DataType StringToDataType(std::string_view dataTypeString)
 {
   if(dataTypeString == DataTypeToString(DataType::int8))
   {
