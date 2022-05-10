@@ -147,7 +147,7 @@ inline std::vector<std::string> split(std::string_view str, nonstd::span<char> d
 
 inline std::vector<std::string> split(std::string_view str, char delim)
 {
-  std::vector<char> delims = {delim};
+  std::array<char, 1> delims = {delim};
   return split(str, delims, false);
 }
 
