@@ -127,7 +127,7 @@ inline std::string trimmed(std::string_view str)
   return std::string(str.substr(front, back - front + 1));
 }
 
-inline std::vector<std::string> split(const std::string_view& str, const std::vector<char>& delimiters, bool consecutiveDelimiters)
+inline std::vector<std::string> split(std::string_view str, nonstd::span<char> delimiters, bool consecutiveDelimiters)
 {
   std::vector<std::string> tokens;
   auto endPos = str.end();
