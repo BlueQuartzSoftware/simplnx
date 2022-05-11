@@ -167,6 +167,20 @@ inline std::vector<std::string> split_2(const std::string& line, char delimiter)
   return tokens;
 }
 
+inline std::string join(const std::vector<std::string>& vec, char delim)
+{
+  std::string str;
+  for(const auto& token : vec)
+  {
+    if(!str.empty())
+    {
+      str += delim;
+    }
+    str += token;
+  }
+  return str;
+}
+
 inline bool contains(std::string_view str, std::string_view val)
 {
   return str.find(val) != std::string::npos;
