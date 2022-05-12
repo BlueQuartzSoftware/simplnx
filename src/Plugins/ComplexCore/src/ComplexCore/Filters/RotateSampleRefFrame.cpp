@@ -470,7 +470,7 @@ IFilter::PreflightResult RotateSampleRefFrame::preflightImpl(const DataStructure
   actions.actions.push_back(std::make_unique<CreateImageGeometryAction>(createdImageGeomPath, dims, origin, spacing));
 
   auto selectedCellArrays = filterArgs.value<std::vector<DataPath>>(k_SelectedCellArrays_Key);
-  z
+  
   std::vector<usize> cellArrayDims(dims.crbegin(), dims.crend());
 
   SizeVec3 originalImageDims = selectedImageGeom.getDimensions();
