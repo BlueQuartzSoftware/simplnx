@@ -64,7 +64,7 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
       std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Whether to use a boolean mask array to ignore certain Trianlges flagged as false from the sampling algorithm", false));
   params.insertSeparator(Parameters::Separator{"Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleAreasArrayPath_Key, "Face Areas", "The complete path to the array specifying the area of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, false));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "The complete path to the array specifying if the Face can be sampled, if Use Mask is checked", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean}, true));
