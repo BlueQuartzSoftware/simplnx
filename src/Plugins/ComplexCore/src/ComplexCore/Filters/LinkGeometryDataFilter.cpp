@@ -59,14 +59,14 @@ Parameters LinkGeometryDataFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryDataPath_Key, "Selected Geometry", "The complete path to the Geometry with which to link the data", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Any}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedVertexDataArrayPaths_Key, "Vertex Data Arrays to Link", "Data associated with a vertex or point",
-                                                               MultiArraySelectionParameter::ValueType{}, complex::GetAllDataTypes(), true));
+                                                               MultiArraySelectionParameter::ValueType{}, complex::GetAllDataTypes()));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedEdgeDataArrayPaths_Key, "Edge Data Arrays to Link", "Data associated with an edge", MultiArraySelectionParameter::ValueType{},
-                                                               complex::GetAllDataTypes(), true));
+                                                               complex::GetAllDataTypes()));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedFaceDataArrayPaths_Key, "Face Data Arrays to Link", "Data associated with a face", MultiArraySelectionParameter::ValueType{},
-                                                               complex::GetAllDataTypes(), true));
+                                                               complex::GetAllDataTypes()));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedVolumeDataArrayPaths_Key, "Cell Data Arrays to Link",
                                                                "Data associated with a cell or volume element such as a hexahedron or image geometry cell", MultiArraySelectionParameter::ValueType{},
-                                                               complex::GetAllDataTypes(), true));
+                                                               complex::GetAllDataTypes()));
 
   return params;
 }
