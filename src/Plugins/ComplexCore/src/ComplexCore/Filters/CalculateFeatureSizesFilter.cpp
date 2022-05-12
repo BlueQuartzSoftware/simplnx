@@ -54,7 +54,7 @@ Parameters CalculateFeatureSizesFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_SaveElementSizes_Key, "Save Element Sizes", "Save element sizes", false));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_GeometryPath_Key, "Target Geometry", "DataPath to target geometry", DataPath{}));
   params.insert(
-      std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature IDs", "DataPath to Feature IDs array", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, true));
+      std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature IDs", "DataPath to Feature IDs array", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
 
   params.insert(std::make_unique<ArrayCreationParameter>(k_VolumesPath_Key, "Volumes array", "DataPath to volumes array", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_EquivalentDiametersPath_Key, "Equivalent Diameters", "DataPath to equivalent diameters array", DataPath{}));

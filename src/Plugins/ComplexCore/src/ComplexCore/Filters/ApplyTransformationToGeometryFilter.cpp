@@ -137,7 +137,7 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
       std::make_unique<ChoicesParameter>(k_TransformType_Key, "Transformation Type", "", 0,
                                          ChoicesParameter::Choices{"No Transformation", "Pre-Computed Transformation Matrix", "Manual Transformation Matrix", "Rotation", "Translation", "Scale"}));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ComputedTransformationMatrix_Key, "Transformation Matrix", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::float32}, true));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ComputedTransformationMatrix_Key, "Transformation Matrix", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::float32}));
 
   DynamicTableParameter::ValueType dynamicTable{{{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, {"R0", "R1", "R2", "R3"}, {"C0", "C1", "C2", "C3"}};
   dynamicTable.setMinCols(4);

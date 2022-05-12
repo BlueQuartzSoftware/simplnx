@@ -280,7 +280,7 @@ Parameters MinNeighbors::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplyToSinglePhase_Key, "Apply to Single Phase Only", "", true));
   params.insert(std::make_unique<UInt64Parameter>(k_PhaseNumber_Key, "Phase Index", "", 0));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhases_Key, "Feature Phases", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, true));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhases_Key, "Feature Phases", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_NumNeighbors_Key, "Number of Neighbors", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_VoxelArrays_Key, "Voxel Arrays", "", std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{}));
 
