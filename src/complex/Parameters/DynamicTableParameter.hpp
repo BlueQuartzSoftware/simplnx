@@ -19,7 +19,7 @@ public:
   using ValueType = DynamicTableData;
 
   DynamicTableParameter() = delete;
-  DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty = true);
+  DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
   ~DynamicTableParameter() override = default;
 
   DynamicTableParameter(const DynamicTableParameter&) = delete;
@@ -82,7 +82,6 @@ public:
 
 private:
   ValueType m_DefaultValue = {};
-  bool m_AllowEmpty = false;
 };
 } // namespace complex
 
