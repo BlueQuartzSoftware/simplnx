@@ -10,10 +10,9 @@
 
 namespace complex
 {
-DataPathSelectionParameter::DataPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, bool allowEmpty)
+DataPathSelectionParameter::DataPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
-, m_AllowEmpty(allowEmpty)
 {
 }
 
@@ -76,10 +75,6 @@ Result<> DataPathSelectionParameter::validate(const DataStructure& dataStructure
 Result<> DataPathSelectionParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
 {
   const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
-  if(value.empty() && m_AllowEmpty)
-  {
-    return {};
-  }
 
   if(value.empty())
   {
