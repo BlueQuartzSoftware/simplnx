@@ -79,6 +79,19 @@ FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const 
 , m_AvailableExtensions(extensionsType)
 , m_ShouldValidateExtension(shouldValidateExtension)
 {
+  ExtensionsType validatedExtensions;
+  for(const auto& ext : m_AvailableExtensions)
+  {
+    if(ext.at(0) != '.')
+    {
+      validatedExtensions.insert('.' + complex::StringUtilities::toLower(ext));
+    }
+    else
+    {
+      validatedExtensions.insert(complex::StringUtilities::toLower(ext));
+    }
+  }
+  m_AvailableExtensions = validatedExtensions;
 }
 
 //-----------------------------------------------------------------------------
@@ -157,37 +170,19 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
 {
   if(path.empty())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-1, "File System Path must not be empty"}})};
+    return {nonstd::make_unexpected(std::vector<Error>{{-3001, "File System Path must not be empty"}})};
   }
 
   if(m_ShouldValidateExtension)
   {
-    if(!m_AvailableExtensions.empty() && !path.has_extension())
+    if(!path.has_extension())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{{-2, "File System Path must include a file extension"}})};
+      return {nonstd::make_unexpected(std::vector<Error>{{-3002, "File System Path must include a file extension"}})};
     }
-
-    if(path.has_extension() && !m_AvailableExtensions.empty())
+    std::string lowerExtension = complex::StringUtilities::toLower(path.extension().string());
+    if(path.has_extension() && !m_AvailableExtensions.empty() && m_AvailableExtensions.find(lowerExtension) == m_AvailableExtensions.end())
     {
-      bool validExtension = false;
-      for(const auto& ext : m_AvailableExtensions)
-      {
-        std::string inputExt = complex::StringUtilities::toLower(path.extension().string());
-        std::string compareExt = complex::StringUtilities::toLower(ext);
-        if(compareExt.at(0) == '.' && inputExt[0] != '.')
-        {
-          compareExt = complex::StringUtilities::chopr(compareExt, 1);
-        }
-        if(compareExt == inputExt)
-        {
-          validExtension = true;
-          break;
-        }
-      }
-      if(!validExtension)
-      {
-        return {nonstd::make_unexpected(std::vector<Error>{{-3, fmt::format("File extension '{}' is not a valid file extension", path.extension().string())}})};
-      }
+      return {nonstd::make_unexpected(std::vector<Error>{{-3003, fmt::format("File extension '{}' is not a valid file extension", path.extension().string())}})};
     }
   }
 

@@ -34,7 +34,6 @@
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/Types.hpp"
 
-#include <algorithm>
 #include <array>
 #include <cctype>
 #include <sstream>
@@ -200,18 +199,56 @@ inline std::string simplified(std::string_view text)
   return finalString;
 }
 
-inline std::string toUpper(const std::string& input)
+/**
+ * @brief Converts a char to its uppercase version according to the current locale.
+ * Uses std::toupper internally.
+ * @param c
+ * @return char
+ */
+inline char toUpper(char c)
 {
-  std::string data = input;
-  std::for_each(data.begin(), data.end(), [](char& c) { c = ::toupper(c); });
-  return data;
+  return static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
 }
 
-inline std::string toLower(const std::string& input)
+/**
+ * @brief Converts a char to its lowercase version according to the current locale.
+ * Uses std::tolower internally.
+ * @param c
+ * @return char
+ */
+inline char toLower(char c)
 {
-  std::string data = input;
-  std::for_each(data.begin(), data.end(), [](char& c) { c = ::tolower(c); });
-  return data;
+  return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+}
+
+/**
+ * @brief Converts the given string to uppercase.
+ * Assumes that the string is ASCII.
+ * @param input
+ * @return std::string
+ */
+inline std::string toUpper(std::string input)
+{
+  for(char& c : input)
+  {
+    c = toUpper(c);
+  }
+  return input;
+}
+
+/**
+ * @brief Converts the given string to lowercase.
+ * Assumes that the string is ASCII.
+ * @param input
+ * @return std::string
+ */
+inline std::string toLower(std::string input)
+{
+  for(char& c : input)
+  {
+    c = toLower(c);
+  }
+  return input;
 }
 
 } // namespace StringUtilities
