@@ -525,7 +525,7 @@ public:
    * @param values
    * @throw std::runtime_error
    */
-  void setTuple(index_type tupleIndex, value_type* values)
+  void setTuple(index_type tupleIndex, const value_type* values)
   {
     if(values == nullptr)
     {
