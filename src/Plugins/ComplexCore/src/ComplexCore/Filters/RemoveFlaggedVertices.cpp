@@ -83,7 +83,7 @@ Parameters RemoveFlaggedVertices::parameters() const
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraySelection_Key, "Vertex Data Arrays", "Paths to the target Vertex DataArrays to also reduce.", std::vector<DataPath>(),
                                                                complex::GetAllDataTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask Array", "DataPath to the conditional array that will be used to decide which vertices are removed.", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean}, false));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean}));
   params.insert(
       std::make_unique<DataGroupCreationParameter>(k_ReducedVertexPath_Key, "Reduced Vertex Geometry", "Created Vertex Geometry DataPath. This will be created during the filter.", DataPath()));
   return params;

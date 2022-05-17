@@ -96,6 +96,11 @@ void Parameters::linkParameters(std::string groupKey, std::string childKey, std:
     throw std::invalid_argument(fmt::format("Parameters::linkParameters(...): Group '{}' does not exist in Parameters instance.", groupKey));
   }
 
+  if(containsGroup(childKey))
+  {
+    throw std::invalid_argument(fmt::format("Parameters::linkParameters(...): Group '{}' cannot be a child of another group", childKey));
+  }
+
   if(hasGroup(childKey))
   {
     std::string group = getGroup(childKey);

@@ -124,9 +124,9 @@ Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Optional Transferred Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays", "Paths to vertex-related DataArrays that should be copied to the new geometry",
-                                                               std::vector<DataPath>{}, complex::GetAllDataTypes(), true));
+                                                               std::vector<DataPath>{}, complex::GetAllDataTypes()));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyTrianglePaths_Key, "Copy Triangle Arrays", "Paths to face-related DataArrays that should be copied to the new geometry",
-                                                               std::vector<DataPath>{}, complex::GetAllDataTypes(), true));
+                                                               std::vector<DataPath>{}, complex::GetAllDataTypes()));
   return params;
 }
 

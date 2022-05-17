@@ -20,7 +20,7 @@ public:
   using AllowedTypes = std::set<DataType>;
 
   ArraySelectionParameter() = delete;
-  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes, bool allowEmpty = false);
+  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes);
   ~ArraySelectionParameter() override = default;
 
   ArraySelectionParameter(const ArraySelectionParameter&) = delete;
@@ -106,7 +106,6 @@ public:
 
 private:
   ValueType m_DefaultValue = {};
-  bool m_AllowEmpty = false;
   AllowedTypes m_AllowedTypes = {};
 };
 } // namespace complex
