@@ -1,9 +1,8 @@
 #include "FileSystemPathParameter.hpp"
 
-
 #include "complex/Common/Any.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
 #include "complex/Common/StringLiteral.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
 
