@@ -1,13 +1,15 @@
 #include "FileSystemPathParameter.hpp"
 
+
+#include "complex/Common/Any.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 #include "complex/Common/StringLiteral.hpp"
 
 #include <fmt/core.h>
 
 #include <nlohmann/json.hpp>
 
-#include "complex/Common/Any.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
+#include <stdexcept>
 
 namespace fs = std::filesystem;
 
@@ -82,6 +84,10 @@ FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const 
   ExtensionsType validatedExtensions;
   for(const auto& ext : m_AvailableExtensions)
   {
+    if(ext.empty())
+    {
+      throw std::runtime_error("FileSystemPathParameter: One of the given extensions was empty. The filter is required to use non-emtpy extensions");
+    }
     if(ext.at(0) != '.')
     {
       validatedExtensions.insert('.' + complex::StringUtilities::toLower(ext));
