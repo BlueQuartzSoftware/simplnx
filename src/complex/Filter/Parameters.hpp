@@ -142,6 +142,11 @@ public:
    */
   bool isParameterActive(std::string_view key, const std::any& groupValue) const;
 
+  /**
+   * @brief Returns value from a linked parameter for the given key
+   * @param key The activation key
+   * @return The value of the parameter when using the key.
+   */
   std::any parameterActiveValue(std::string_view key) const;
 
   /**
