@@ -164,6 +164,11 @@ inline std::string chop(std::string_view str, usize numElements)
   return std::string(str.substr(0, str.size() - numElements));
 }
 
+inline std::string chopr(std::string_view str, usize numElements)
+{
+  return std::string(str.substr(numElements, str.size() - numElements));
+}
+
 template <typename T>
 inline std::string number(T arg)
 {
@@ -193,5 +198,58 @@ inline std::string simplified(std::string_view text)
   }
   return finalString;
 }
+
+/**
+ * @brief Converts a char to its uppercase version according to the current locale.
+ * Uses std::toupper internally.
+ * @param c
+ * @return char
+ */
+inline char toUpper(char c)
+{
+  return static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+}
+
+/**
+ * @brief Converts a char to its lowercase version according to the current locale.
+ * Uses std::tolower internally.
+ * @param c
+ * @return char
+ */
+inline char toLower(char c)
+{
+  return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+}
+
+/**
+ * @brief Converts the given string to uppercase.
+ * Assumes that the string is ASCII.
+ * @param input
+ * @return std::string
+ */
+inline std::string toUpper(std::string input)
+{
+  for(char& c : input)
+  {
+    c = toUpper(c);
+  }
+  return input;
+}
+
+/**
+ * @brief Converts the given string to lowercase.
+ * Assumes that the string is ASCII.
+ * @param input
+ * @return std::string
+ */
+inline std::string toLower(std::string input)
+{
+  for(char& c : input)
+  {
+    c = toLower(c);
+  }
+  return input;
+}
+
 } // namespace StringUtilities
 } // namespace complex
