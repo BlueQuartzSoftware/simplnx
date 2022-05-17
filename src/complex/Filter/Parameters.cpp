@@ -132,6 +132,12 @@ bool Parameters::isParameterActive(std::string_view key, const std::any& value) 
   return isActive;
 }
 
+std::any Parameters::parameterActiveValue(std::string_view key) const
+{
+  const auto& [groupKey, associatedValue] = MapAt(m_ParamGroups, key, "Key '{}' does not have group in Parameters");
+  return associatedValue;
+}
+
 std::string Parameters::getGroup(std::string_view key) const
 {
   if(!hasGroup(key))

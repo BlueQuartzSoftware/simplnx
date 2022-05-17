@@ -12,6 +12,7 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include <any>
 
 using namespace complex;
 
@@ -62,7 +63,7 @@ Parameters ExampleFilter2::parameters() const
   Parameters params;
   params.insertSeparator({"1rst Group of Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Param7, "Bool Parameter", "Example bool help text", true));
-  params.insert(std::make_unique<ChoicesParameter>(k_Param3, "ChoicesParameter", "Example choices help text", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_Param3, "ChoicesParameter", "Example choices help text", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
 
   params.insertSeparator({"2nd Group of Parameters"});
   DynamicTableParameter::ValueType dynamicTable{{{10, 20}, {30, 40}}, {"Row 1", "Row2"}, {"Col 1", "Col 2"}};
@@ -78,6 +79,12 @@ Parameters ExampleFilter2::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_Param11, "GeometrySelectionParameter", "Example geometry selection help text", DataPath{}, GeometrySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_Param12, "MultiArraySelectionParameter", "Example multiarray selection help text", MultiArraySelectionParameter::ValueType{},
                                                                complex::GetAllDataTypes()));
+
+  params.linkParameters(k_Param7, k_Param9, std::make_any<BoolParameter::ValueType>(true));
+
+  params.linkParameters(k_Param3, k_Param10, std::make_any<ChoicesParameter::ValueType>(0));
+  params.linkParameters(k_Param3, k_Param6, std::make_any<ChoicesParameter::ValueType>(1));
+  params.linkParameters(k_Param3, k_Param11, std::make_any<ChoicesParameter::ValueType>(2));
 
   // These should show up under the "Created Objects" section in the GUI
   params.insert(std::make_unique<DataGroupCreationParameter>(k_Param8, "DataGroupCreationParameter", "Example data group creation help text", DataPath{}));

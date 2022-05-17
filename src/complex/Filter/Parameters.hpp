@@ -108,7 +108,6 @@ public:
   /**
    * @brief Inserts the given parameter and makes it available as a group for other parameters.
    * Requires the parameter to implement a member function bool checkActive(const std::any&, const std::any&) const.
-   * This function detemines whether a parameter in a group is active.
    * @tparam ParameterT
    * @tparam Enable if ParameterT is derived from IParameter
    * @param parameter
@@ -142,6 +141,13 @@ public:
    * @return
    */
   bool isParameterActive(std::string_view key, const std::any& groupValue) const;
+
+  /**
+   * @brief Returns value from a linked parameter for the given key
+   * @param key The activation key
+   * @return The value of the parameter when using the key.
+   */
+  std::any parameterActiveValue(std::string_view key) const;
 
   /**
    * @brief Gets the group key of the parameter with the given key.
