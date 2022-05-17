@@ -42,7 +42,7 @@ Parameters FindNeighbors::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreSurface_Key, "Store Surface Features Array", "", false));
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CellFeatures_Key, "Cell Feature Arrays", "", std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_BoundaryCells_Key, "Boundary Cells", "", DataPath{}));

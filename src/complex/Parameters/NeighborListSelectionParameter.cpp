@@ -36,10 +36,9 @@ constexpr int32 k_Validate_AllowedType_Error = -206;
 namespace complex
 {
 NeighborListSelectionParameter::NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                               const AllowedTypes& allowedTypes, bool allowEmpty)
+                                                               const AllowedTypes& allowedTypes)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
-, m_AllowEmpty(allowEmpty)
 , m_AllowedTypes(allowedTypes)
 {
   if(allowedTypes.empty())
@@ -87,7 +86,7 @@ Result<std::any> NeighborListSelectionParameter::fromJson(const nlohmann::json& 
 
 IParameter::UniquePointer NeighborListSelectionParameter::clone() const
 {
-  return std::make_unique<NeighborListSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes, m_AllowEmpty);
+  return std::make_unique<NeighborListSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes);
 }
 
 std::any NeighborListSelectionParameter::defaultValue() const
@@ -115,11 +114,6 @@ Result<> NeighborListSelectionParameter::validate(const DataStructure& dataStruc
 Result<> NeighborListSelectionParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
 {
   const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
-
-  if(value.empty() && m_AllowEmpty)
-  {
-    return {};
-  }
 
   if(value.empty())
   {
