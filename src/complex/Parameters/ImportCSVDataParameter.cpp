@@ -62,7 +62,7 @@ nlohmann::json ImportCSVDataParameter::toJson(const std::any& value) const
 // -----------------------------------------------------------------------------
 Result<std::any> ImportCSVDataParameter::fromJson(const nlohmann::json& json) const
 {
-  return {ConvertResultTo<std::any>(CSVWizardData::ReadJson(json))};
+  return {{ConvertResultTo<std::any>(CSVWizardData::ReadJson(json))}};
 }
 
 // -----------------------------------------------------------------------------
