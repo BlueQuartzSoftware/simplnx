@@ -168,7 +168,7 @@ inline std::vector<std::string> split_2(const std::string& line, char delimiter)
   return tokens;
 }
 
-inline std::string join(const nonstd::span<std::string_view>& vec, std::string_view delim)
+inline std::string join(nonstd::span<std::string_view> vec, std::string_view delim)
 {
   return fmt::format("{}", fmt::join(vec, delim));
 }

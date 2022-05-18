@@ -42,14 +42,14 @@ using namespace complex;
 namespace
 {
 const fs::path k_TestInput = fs::path(unit_test::k_BinaryDir.view()) / "ImportCSVDataTest" / "Input.txt";
-const int32 k_InvalidArgumentErrorCode = -100;
-const int32 k_OverflowErrorCode = -101;
+constexpr int32 k_InvalidArgumentErrorCode = -100;
+constexpr int32 k_OverflowErrorCode = -101;
 } // namespace
 
 // -----------------------------------------------------------------------------
-void CreateTestDataFile(const nonstd::span<std::string>& colValues, const std::string& header)
+void CreateTestDataFile(nonstd::span<std::string> colValues, const std::string& header)
 {
-  std::ofstream file(k_TestInput.string(), std::ios::out);
+  std::ofstream file(k_TestInput);
   REQUIRE(file.is_open());
 
   file << header << "\n";
@@ -83,7 +83,7 @@ DataStructure createDataStructure(const std::string& dummyGroupName)
 }
 
 // -----------------------------------------------------------------------------
-Arguments createArguments(const std::string& arrayName, std::optional<DataType> dataType, const nonstd::span<std::string>& values, const std::string& newGroupName, const std::string& dummyGroupName)
+Arguments createArguments(const std::string& arrayName, std::optional<DataType> dataType, nonstd::span<std::string> values, const std::string& newGroupName, const std::string& dummyGroupName)
 {
   Arguments args;
 
@@ -108,7 +108,7 @@ Arguments createArguments(const std::string& arrayName, std::optional<DataType> 
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void TestCase_TestPrimitives(const nonstd::span<std::string>& values)
+void TestCase_TestPrimitives(nonstd::span<std::string> values)
 {
   INFO(fmt::format("T = {}", DataTypeToString(GetDataType<T>())))
   INFO(fmt::format("Values = {}", values))
@@ -151,7 +151,7 @@ void TestCase_TestPrimitives(const nonstd::span<std::string>& values)
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void TestCase_TestPrimitives_Error(const nonstd::span<std::string>& values, int32 expectedErrorCode)
+void TestCase_TestPrimitives_Error(nonstd::span<std::string> values, int32 expectedErrorCode)
 {
   INFO(fmt::format("T = {}", DataTypeToString(GetDataType<T>())))
   INFO(fmt::format("Values = {}", values))

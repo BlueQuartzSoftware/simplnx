@@ -178,7 +178,7 @@ std::enable_if_t<std::is_convertible_v<FromT, ToT>, Result<ToT>> ConvertResultTo
   Result<ToT> convertedResult;
   if(from.valid())
   {
-    convertedResult = {{from.value()}};
+    convertedResult = {from.value()};
   }
   else
   {
