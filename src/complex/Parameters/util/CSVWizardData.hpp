@@ -35,6 +35,7 @@
 #include "nlohmann/json.hpp"
 
 #include "complex/Common/Result.hpp"
+#include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
 
@@ -50,10 +51,8 @@ public:
     DEFAULTS
   };
 
-  void reset();
-
   // Json Reader and Writer
-  void writeJson(nlohmann::json& json) const;
+  nlohmann::json writeJson() const;
   static Result<CSVWizardData> ReadJson(const nlohmann::json& json);
 
   std::string inputFilePath;
@@ -70,7 +69,7 @@ public:
   bool spaceAsDelimiter = false;
   bool consecutiveDelimiters = false;
 
-  static const usize k_TotalPreviewLines = 50;
-  static const std::string k_SkipDataTypeString;
+  static inline constexpr usize k_TotalPreviewLines = 50;
+  static inline constexpr StringLiteral k_SkipDataTypeString = "Skip";
 };
 } // namespace complex

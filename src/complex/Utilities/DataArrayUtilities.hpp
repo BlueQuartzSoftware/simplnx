@@ -16,34 +16,52 @@
 
 namespace fs = std::filesystem;
 
-#define COMPLEX_DEF_STRING_CONVERTOR(CONTAINER_TYPE, TYPE, FUNCTION)                                                                                                                                   \
+#define COMPLEX_DEF_STRING_CONVERTOR_INT(CONTAINER_TYPE, TYPE, FUNCTION)                                                                                                                               \
+  CONTAINER_TYPE value;                                                                                                                                                                                \
+  try                                                                                                                                                                                                  \
+  {                                                                                                                                                                                                    \
+    value = FUNCTION(input);                                                                                                                                                                           \
+  } catch(const std::invalid_argument& e)                                                                                                                                                              \
+  {                                                                                                                                                                                                    \
+    return complex::MakeErrorResult<TYPE>(-100, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                                \
+  } catch(const std::out_of_range& e)                                                                                                                                                                  \
+  {                                                                                                                                                                                                    \
+    return complex::MakeErrorResult<TYPE>(-101, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                       \
+  }                                                                                                                                                                                                    \
+                                                                                                                                                                                                       \
+  if(value > std::numeric_limits<TYPE>::max() || value < std::numeric_limits<TYPE>::min())                                                                                                             \
+  {                                                                                                                                                                                                    \
+    return complex::MakeErrorResult<TYPE>(-101, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                       \
+  }                                                                                                                                                                                                    \
+                                                                                                                                                                                                       \
+  return {static_cast<TYPE>(value)};
+
+#define COMPLEX_DEF_STRING_CONVERTOR_SIGNED_INT(CONTAINER_TYPE, TYPE, FUNCTION)                                                                                                                        \
   template <>                                                                                                                                                                                          \
   struct ConvertTo<TYPE>                                                                                                                                                                               \
   {                                                                                                                                                                                                    \
     static Result<TYPE> convert(const std::string& input)                                                                                                                                              \
     {                                                                                                                                                                                                  \
-      CONTAINER_TYPE value;                                                                                                                                                                            \
-      try                                                                                                                                                                                              \
-      {                                                                                                                                                                                                \
-        value = FUNCTION(input);                                                                                                                                                                       \
-      } catch(const std::invalid_argument& e)                                                                                                                                                          \
-      {                                                                                                                                                                                                \
-        return complex::MakeErrorResult<TYPE>(-100, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                            \
-      } catch(const std::out_of_range& e)                                                                                                                                                              \
+      COMPLEX_DEF_STRING_CONVERTOR_INT(CONTAINER_TYPE, TYPE, FUNCTION)                                                                                                                                 \
+    }                                                                                                                                                                                                  \
+  };
+
+#define COMPLEX_DEF_STRING_CONVERTOR_UNSIGNED_INT(CONTAINER_TYPE, TYPE, FUNCTION)                                                                                                                      \
+  template <>                                                                                                                                                                                          \
+  struct ConvertTo<TYPE>                                                                                                                                                                               \
+  {                                                                                                                                                                                                    \
+    static Result<TYPE> convert(const std::string& input)                                                                                                                                              \
+    {                                                                                                                                                                                                  \
+      if(!input.empty() && input.at(0) == '-')                                                                                                                                                         \
       {                                                                                                                                                                                                \
         return complex::MakeErrorResult<TYPE>(-101, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                   \
       }                                                                                                                                                                                                \
                                                                                                                                                                                                        \
-      if(value > std::numeric_limits<TYPE>::max() || value < std::numeric_limits<TYPE>::min())                                                                                                         \
-      {                                                                                                                                                                                                \
-        return complex::MakeErrorResult<TYPE>(-102, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                   \
-      }                                                                                                                                                                                                \
-                                                                                                                                                                                                       \
-      return {static_cast<TYPE>(value)};                                                                                                                                                               \
+      COMPLEX_DEF_STRING_CONVERTOR_INT(CONTAINER_TYPE, TYPE, FUNCTION)                                                                                                                                 \
     }                                                                                                                                                                                                  \
   };
 
-#define COMPLEX_DEF_STRING_CONVERTOR_DIRECT(TYPE, FUNCTION)                                                                                                                                            \
+#define COMPLEX_DEF_STRING_CONVERTOR_FLOATING_POINT(TYPE, FUNCTION)                                                                                                                                    \
   template <>                                                                                                                                                                                          \
   struct ConvertTo<TYPE>                                                                                                                                                                               \
   {                                                                                                                                                                                                    \
@@ -75,19 +93,19 @@ struct ConvertTo
  * These macros will create convertor objects that convert from a string to a numeric type
  */
 
-COMPLEX_DEF_STRING_CONVERTOR(uint64, uint8, std::stoull)
-COMPLEX_DEF_STRING_CONVERTOR(int64, int8, std::stoll)
-COMPLEX_DEF_STRING_CONVERTOR(uint64, uint16, std::stoull)
-COMPLEX_DEF_STRING_CONVERTOR(int64, int16, std::stoll)
-COMPLEX_DEF_STRING_CONVERTOR(uint64, uint32, std::stoull)
-COMPLEX_DEF_STRING_CONVERTOR(int64, int32, std::stoll)
-COMPLEX_DEF_STRING_CONVERTOR_DIRECT(uint64, std::stoull)
-COMPLEX_DEF_STRING_CONVERTOR_DIRECT(int64, std::stoll)
+COMPLEX_DEF_STRING_CONVERTOR_UNSIGNED_INT(uint64, uint8, std::stoull)
+COMPLEX_DEF_STRING_CONVERTOR_SIGNED_INT(int64, int8, std::stoll)
+COMPLEX_DEF_STRING_CONVERTOR_UNSIGNED_INT(uint64, uint16, std::stoull)
+COMPLEX_DEF_STRING_CONVERTOR_SIGNED_INT(int64, int16, std::stoll)
+COMPLEX_DEF_STRING_CONVERTOR_UNSIGNED_INT(uint64, uint32, std::stoull)
+COMPLEX_DEF_STRING_CONVERTOR_SIGNED_INT(int64, int32, std::stoll)
+COMPLEX_DEF_STRING_CONVERTOR_UNSIGNED_INT(uint64, uint64, std::stoull)
+COMPLEX_DEF_STRING_CONVERTOR_SIGNED_INT(int64, int64, std::stoll)
 #ifdef __APPLE__
-COMPLEX_DEF_STRING_CONVERTOR_DIRECT(usize, std::stoull)
+COMPLEX_DEF_STRING_CONVERTOR_UNSIGNED_INT(usize, usize, std::stoull)
 #endif
-COMPLEX_DEF_STRING_CONVERTOR_DIRECT(float32, std::stof)
-COMPLEX_DEF_STRING_CONVERTOR_DIRECT(float64, std::stod)
+COMPLEX_DEF_STRING_CONVERTOR_FLOATING_POINT(float32, std::stof)
+COMPLEX_DEF_STRING_CONVERTOR_FLOATING_POINT(float64, std::stod)
 
 template <>
 struct ConvertTo<bool>

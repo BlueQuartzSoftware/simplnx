@@ -33,6 +33,7 @@
 
 #include "complex/Common/StringLiteral.hpp"
 
+#include <fmt/ranges.h>
 #include <nonstd/span.hpp>
 
 #include <cctype>
@@ -167,18 +168,9 @@ inline std::vector<std::string> split_2(const std::string& line, char delimiter)
   return tokens;
 }
 
-inline std::string join(const std::vector<std::string>& vec, char delim)
+inline std::string join(const nonstd::span<std::string_view>& vec, std::string_view delim)
 {
-  std::string str;
-  for(const auto& token : vec)
-  {
-    if(!str.empty())
-    {
-      str += delim;
-    }
-    str += token;
-  }
-  return str;
+  return fmt::format("{}", fmt::join(vec, delim));
 }
 
 inline bool contains(std::string_view str, std::string_view val)

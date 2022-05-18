@@ -31,7 +31,9 @@
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/CreateDataGroup.hpp"
 #include "ComplexCore/Filters/ImportCSVDataFilter.hpp"
+#include "complex/Common/TypesUtility.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 namespace fs = std::filesystem;
@@ -40,42 +42,28 @@ using namespace complex;
 namespace
 {
 const fs::path k_TestInput = fs::path(unit_test::k_BinaryDir.view()) / "ImportCSVDataTest" / "Input.txt";
-}
+const int32 k_InvalidArgumentErrorCode = -100;
+const int32 k_OverflowErrorCode = -101;
+} // namespace
 
 // -----------------------------------------------------------------------------
-template <typename A, typename B, typename C>
-void CreateTestDataFile(const nonstd::span<A>& col1Values, const nonstd::span<B>& col2Values, const nonstd::span<C>& col3Values, const std::vector<std::string>& headers)
+void CreateTestDataFile(const nonstd::span<std::string>& colValues, const std::string& header)
 {
-  REQUIRE(col1Values.size() == col2Values.size());
-  REQUIRE(col2Values.size() == col3Values.size());
-  REQUIRE(headers.size() == 3);
-
   std::ofstream file(k_TestInput.string(), std::ios::out);
   REQUIRE(file.is_open());
 
-  file << StringUtilities::join(headers, ',') << "\n";
+  file << header << "\n";
 
-  usize rowCount = col1Values.size();
+  usize rowCount = colValues.size();
   for(int i = 0; i < rowCount; i++)
   {
-    file << std::to_string(col1Values[i]) << ", " << std::to_string(col2Values[i]) << ", " << std::to_string(col3Values[i]) << "\n";
+    file << colValues[i] << "\n";
   }
-
-  file.close();
 }
 
-TEST_CASE("Core::ImportCSVData: Valid filter execution")
+// -----------------------------------------------------------------------------
+DataStructure createDataStructure(const std::string& dummyGroupName)
 {
-  std::string newGroupName = "New Group";
-  std::string dummyGroupName = "Dummy Group";
-
-  std::string array1Name = "Array 1";
-  DataPath array1Path = DataPath({newGroupName, array1Name});
-  std::string array2Name = "Array 2";
-  DataPath array2Path = DataPath({newGroupName, array2Name});
-  std::string array3Name = "Array 3";
-  DataPath array3Path = DataPath({newGroupName, array3Name});
-
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataStructure dataStructure;
 
@@ -91,32 +79,52 @@ TEST_CASE("Core::ImportCSVData: Valid filter execution")
     REQUIRE(executeResult.result.valid());
   }
 
-  ImportCSVDataFilter filter;
+  return dataStructure;
+}
+
+// -----------------------------------------------------------------------------
+Arguments createArguments(const std::string& arrayName, std::optional<DataType> dataType, const nonstd::span<std::string>& values, const std::string& newGroupName, const std::string& dummyGroupName)
+{
   Arguments args;
-
-  auto col1Values = std::vector<int8>{3, 12, 4, 18, 31, 62, 127, -128};
-  auto col2Values = std::vector<uint64>{7, 0, 13000, 95, 745, 356, 12000, 7034};
-  auto col3Values = std::vector<float32>{3.23, 9.57, 134.677, -25.954, 0.001, 89.12, -2.67, 92.2};
-
-  // Create the test input data file
-  fs::create_directories(k_TestInput.parent_path());
-  CreateTestDataFile<int8, uint64, float32>(col1Values, col2Values, col3Values, {array1Name, array2Name, array3Name});
 
   CSVWizardData data;
   data.inputFilePath = k_TestInput.string();
-  data.dataHeaders = {array1Name, array2Name, array3Name};
-  data.dataTypes = {DataType::int8, DataType::uint64, DataType::float32};
+  data.dataHeaders = {arrayName};
+  data.dataTypes = {dataType};
   data.beginIndex = 2;
   data.commaAsDelimiter = true;
   data.delimiters = {','};
   data.headerLine = 1;
-  data.numberOfLines = 9;
+  data.numberOfLines = values.size() + 1;
 
   args.insertOrAssign(ImportCSVDataFilter::k_WizardData_Key, std::make_any<CSVWizardData>(data));
-  args.insertOrAssign(ImportCSVDataFilter::k_TupleDims_Key, std::make_any<DynamicTableData>(DynamicTableData{DynamicTableData::TableDataType{{8}}, {""}, {""}}));
+  args.insertOrAssign(ImportCSVDataFilter::k_TupleDims_Key, std::make_any<DynamicTableData>(DynamicTableData{DynamicTableData::TableDataType{{static_cast<double>(values.size())}}, {""}, {""}}));
   args.insertOrAssign(ImportCSVDataFilter::k_UseExistingGroup_Key, std::make_any<bool>(false));
   args.insertOrAssign(ImportCSVDataFilter::k_CreatedDataGroup_Key, std::make_any<DataPath>(DataPath({newGroupName})));
   args.insertOrAssign(ImportCSVDataFilter::k_SelectedDataGroup_Key, std::make_any<DataPath>(DataPath({dummyGroupName})));
+
+  return args;
+}
+
+// -----------------------------------------------------------------------------
+template <typename T>
+void TestCase_TestPrimitives(const nonstd::span<std::string>& values)
+{
+  INFO(fmt::format("T = {}", DataTypeToString(GetDataType<T>())))
+  INFO(fmt::format("Values = {}", values))
+
+  std::string newGroupName = "New Group";
+  std::string dummyGroupName = "Dummy Group";
+
+  std::string arrayName = "Array";
+  DataPath arrayPath = DataPath({newGroupName, arrayName});
+
+  ImportCSVDataFilter filter;
+  DataStructure dataStructure = createDataStructure(dummyGroupName);
+  Arguments args = createArguments(arrayName, GetDataType<T>(), values, newGroupName, dummyGroupName);
+
+  // Create the test input data file
+  CreateTestDataFile(values, arrayName);
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -127,34 +135,231 @@ TEST_CASE("Core::ImportCSVData: Valid filter execution")
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Check the results
-  const Int8Array* array1 = dataStructure.getDataAs<Int8Array>(array1Path);
-  REQUIRE(array1 != nullptr);
-  const UInt64Array* array2 = dataStructure.getDataAs<UInt64Array>(array2Path);
-  REQUIRE(array2 != nullptr);
-  const Float32Array* array3 = dataStructure.getDataAs<Float32Array>(array3Path);
-  REQUIRE(array3 != nullptr);
+  const DataArray<T>* array = dataStructure.getDataAs<DataArray<T>>(arrayPath);
+  REQUIRE(array != nullptr);
 
-  REQUIRE(col1Values.size() == array1->getSize());
-  for(int i = 0; i < col1Values.size(); i++)
+  REQUIRE(values.size() == array->getSize());
+  for(int i = 0; i < values.size(); i++)
   {
-    const auto& exemplaryValue = col1Values[i];
-    const auto& testValue = array1->at(i);
+    Result<T> parseResult = ConvertTo<T>::convert(values[i]);
+    COMPLEX_RESULT_REQUIRE_VALID(parseResult);
+    const auto& exemplaryValue = parseResult.value();
+    const auto& testValue = array->at(i);
     REQUIRE(testValue == exemplaryValue);
   }
+}
 
-  REQUIRE(col2Values.size() == array2->getSize());
-  for(int i = 0; i < col2Values.size(); i++)
-  {
-    const auto& exemplaryValue = col2Values[i];
-    const auto& testValue = array2->at(i);
-    REQUIRE(testValue == exemplaryValue);
-  }
+// -----------------------------------------------------------------------------
+template <typename T>
+void TestCase_TestPrimitives_Error(const nonstd::span<std::string>& values, int32 expectedErrorCode)
+{
+  INFO(fmt::format("T = {}", DataTypeToString(GetDataType<T>())))
+  INFO(fmt::format("Values = {}", values))
 
-  REQUIRE(col3Values.size() == array3->getSize());
-  for(int i = 0; i < col3Values.size(); i++)
-  {
-    const auto& exemplaryValue = col3Values[i];
-    const auto& testValue = array3->at(i);
-    REQUIRE(testValue == Approx(exemplaryValue));
-  }
+  std::string newGroupName = "New Group";
+  std::string dummyGroupName = "Dummy Group";
+
+  std::string arrayName = "Array";
+  DataPath arrayPath = DataPath({newGroupName, arrayName});
+
+  ImportCSVDataFilter filter;
+  DataStructure dataStructure = createDataStructure(dummyGroupName);
+  Arguments args = createArguments(arrayName, GetDataType<T>(), values, newGroupName, dummyGroupName);
+
+  // Create the test input data file
+  fs::create_directories(k_TestInput.parent_path());
+  CreateTestDataFile(values, arrayName);
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().size() == 1);
+  REQUIRE(executeResult.result.errors()[0].code == expectedErrorCode);
+}
+
+TEST_CASE("ImportCSVDataFilter (Case 1): Valid filter execution")
+{
+  // Create the parent directory path
+  fs::create_directories(k_TestInput.parent_path());
+
+  std::vector<std::string> v = {std::to_string(std::numeric_limits<int8>::min()), std::to_string(std::numeric_limits<int8>::max())};
+  TestCase_TestPrimitives<int8>(v);
+
+  v = {std::to_string(std::numeric_limits<int16>::min()), std::to_string(std::numeric_limits<int16>::max())};
+  TestCase_TestPrimitives<int16>(v);
+
+  v = {std::to_string(std::numeric_limits<int32>::min()), std::to_string(std::numeric_limits<int32>::max())};
+  TestCase_TestPrimitives<int32>(v);
+
+  v = {std::to_string(std::numeric_limits<int64>::min()), std::to_string(std::numeric_limits<int64>::max())};
+  TestCase_TestPrimitives<int64>(v);
+
+  v = {std::to_string(std::numeric_limits<uint8>::min()), std::to_string(std::numeric_limits<uint8>::max())};
+  TestCase_TestPrimitives<uint8>(v);
+
+  v = {std::to_string(std::numeric_limits<uint16>::min()), std::to_string(std::numeric_limits<uint16>::max())};
+  TestCase_TestPrimitives<uint16>(v);
+
+  v = {std::to_string(std::numeric_limits<uint32>::min()), std::to_string(std::numeric_limits<uint32>::max())};
+  TestCase_TestPrimitives<uint32>(v);
+
+  v = {std::to_string(std::numeric_limits<uint64>::min()), std::to_string(std::numeric_limits<uint64>::max())};
+  TestCase_TestPrimitives<uint64>(v);
+
+  v = {std::to_string(std::numeric_limits<float32>::min()), std::to_string(std::numeric_limits<float32>::max())};
+  TestCase_TestPrimitives<float32>(v);
+
+  v = {std::to_string(std::numeric_limits<float64>::min()), std::to_string(std::numeric_limits<float64>::max())};
+  TestCase_TestPrimitives<float64>(v);
+}
+
+TEST_CASE("ImportCSVDataFilter (Case 2): Valid filter execution - Skipped Array")
+{
+  std::string newGroupName = "New Group";
+  std::string dummyGroupName = "Dummy Group";
+
+  std::string arrayName = "Array";
+  DataPath arrayPath = DataPath({newGroupName, arrayName});
+
+  ImportCSVDataFilter filter;
+  DataStructure dataStructure = createDataStructure(dummyGroupName);
+  std::vector<std::string> values = {"0", "0"};
+  Arguments args = createArguments(arrayName, {}, values, newGroupName, dummyGroupName);
+
+  // Create the test input data file
+  CreateTestDataFile(values, arrayName);
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  // Check that the array does not exist
+  const IDataArray* array = dataStructure.getDataAs<IDataArray>(arrayPath);
+  REQUIRE(array == nullptr);
+}
+
+TEST_CASE("ImportCSVDataFilter (Case 3): Invalid filter execution - Out of Bounds")
+{
+  // Create the parent directory path
+  fs::create_directories(k_TestInput.parent_path());
+
+  // Int8 - Out of bounds
+  std::vector<std::string> v = {"-129"};
+  TestCase_TestPrimitives_Error<int8>(v, k_OverflowErrorCode);
+
+  v = {"128"};
+  TestCase_TestPrimitives_Error<int8>(v, k_OverflowErrorCode);
+
+  // Int16 - Out of bounds
+  v = {"-32769"};
+  TestCase_TestPrimitives_Error<int16>(v, k_OverflowErrorCode);
+
+  v = {"32768"};
+  TestCase_TestPrimitives_Error<int16>(v, k_OverflowErrorCode);
+
+  // Int32 - Out of bounds
+  v = {"-2147483649"};
+  TestCase_TestPrimitives_Error<int32>(v, k_OverflowErrorCode);
+
+  v = {"2147483648"};
+  TestCase_TestPrimitives_Error<int32>(v, k_OverflowErrorCode);
+
+  // Int64 - Out of bounds
+  v = {"-9223372036854775809"};
+  TestCase_TestPrimitives_Error<int64>(v, k_OverflowErrorCode);
+
+  v = {"9223372036854775808"};
+  TestCase_TestPrimitives_Error<int64>(v, k_OverflowErrorCode);
+
+  // UInt8 - Out of bounds
+  v = {"-1"};
+  TestCase_TestPrimitives_Error<uint8>(v, k_OverflowErrorCode);
+
+  v = {"256"};
+  TestCase_TestPrimitives_Error<uint8>(v, k_OverflowErrorCode);
+
+  // UInt16 - Out of bounds
+  v = {"-1"};
+  TestCase_TestPrimitives_Error<uint16>(v, k_OverflowErrorCode);
+
+  v = {"65536"};
+  TestCase_TestPrimitives_Error<uint16>(v, k_OverflowErrorCode);
+
+  // UInt32 - Out of bounds
+  v = {"-1"};
+  TestCase_TestPrimitives_Error<uint32>(v, k_OverflowErrorCode);
+
+  v = {"4294967296"};
+  TestCase_TestPrimitives_Error<uint32>(v, k_OverflowErrorCode);
+
+  // UInt64 - Out of bounds
+  v = {"-1"};
+  TestCase_TestPrimitives_Error<uint64>(v, k_OverflowErrorCode);
+
+  v = {"18446744073709551616"};
+  TestCase_TestPrimitives_Error<uint64>(v, k_OverflowErrorCode);
+
+  // Float32 - Out of bounds
+  v = {"-3.5E38"};
+  TestCase_TestPrimitives_Error<float32>(v, k_OverflowErrorCode);
+
+  v = {"3.5E38"};
+  TestCase_TestPrimitives_Error<float32>(v, k_OverflowErrorCode);
+
+  // Float64 - Out of bounds
+  v = {"-1.8E308"};
+  TestCase_TestPrimitives_Error<float64>(v, k_OverflowErrorCode);
+
+  v = {"1.8E308"};
+  TestCase_TestPrimitives_Error<float64>(v, k_OverflowErrorCode);
+}
+
+TEST_CASE("ImportCSVDataFilter (Case 4): Invalid filter execution - Invalid arguments")
+{
+  // Create the parent directory path
+  fs::create_directories(k_TestInput.parent_path());
+
+  std::vector<std::string> v = {" "};
+  TestCase_TestPrimitives_Error<int8>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<int16>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<int32>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<int64>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<uint8>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<uint16>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<uint32>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<uint64>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<float32>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<float64>(v, k_InvalidArgumentErrorCode);
+
+  v = {"a"};
+  TestCase_TestPrimitives_Error<int8>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<int16>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<int32>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<int64>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<uint8>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<uint16>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<uint32>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<uint64>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<float32>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<float64>(v, k_InvalidArgumentErrorCode);
+
+  v = {"&"};
+  TestCase_TestPrimitives_Error<int8>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<int16>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<int32>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<int64>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<uint8>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<uint16>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<uint32>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<uint64>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<float32>(v, k_InvalidArgumentErrorCode);
+  TestCase_TestPrimitives_Error<float64>(v, k_InvalidArgumentErrorCode);
 }
