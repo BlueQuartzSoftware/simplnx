@@ -6,43 +6,43 @@
 #------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
-  # AlignGeometriesTest.cpp
-  # ApproximatePointCloudHullTest.cpp
-  # ApplyTransformationToGeometryFilterTest.cpp
-  # CalculateTriangleAreasFilterTest.cpp
-  # ChangeAngleRepresentationTest.cpp
-  # ConditionalSetValueTest.cpp
-  # CopyDataGroupTest.cpp
-  # CreateDataArrayTest.cpp
-  # CreateFeatureArrayFromElementArrayTest.cpp
-  # CropVertexGeometryTest.cpp
-  # CopyFeatureArrayToElementArrayTest.cpp
-  # CreateImageGeometryTest.cpp
-  # CropImageGeomTest.cpp
-  # ExtractInternalSurfacesFromTriangleGeometryTest.cpp
-  # FindDifferencesMapTest.cpp
-  # FindFeaturePhasesFilterTest.cpp
-  # FindNeighborListStatisticsTest.cpp
-  # FindNeighborsTest.cpp
-  # FindSurfaceFeaturesTest.cpp
-  # IdentifySampleTest.cpp
-  # IterativeClosestPointTest.cpp
-  # InitializeDataTest.cpp
-  # InterpolatePointCloudToRegularGridTest.cpp
-  # LaplacianSmoothingFilterTest.cpp
-  # MapPointCloudToRegularGridTest.cpp
-  # MinNeighborsTest.cpp
-  # PointSampleTriangleGeometryFilterTest.cpp
-  # QuickSurfaceMeshFilterTest.cpp
+  AlignGeometriesTest.cpp
+  ApproximatePointCloudHullTest.cpp
+  ApplyTransformationToGeometryFilterTest.cpp
+  CalculateTriangleAreasFilterTest.cpp
+  ChangeAngleRepresentationTest.cpp
+  ConditionalSetValueTest.cpp
+  CopyDataGroupTest.cpp
+  CreateDataArrayTest.cpp
+  CreateFeatureArrayFromElementArrayTest.cpp
+  CropVertexGeometryTest.cpp
+  CopyFeatureArrayToElementArrayTest.cpp
+  CreateImageGeometryTest.cpp
+  CropImageGeomTest.cpp
+  ExtractInternalSurfacesFromTriangleGeometryTest.cpp
+  FindDifferencesMapTest.cpp
+  FindFeaturePhasesFilterTest.cpp
+  FindNeighborListStatisticsTest.cpp
+  FindNeighborsTest.cpp
+  FindSurfaceFeaturesTest.cpp
+  IdentifySampleTest.cpp
+  IterativeClosestPointTest.cpp
+  InitializeDataTest.cpp
+  InterpolatePointCloudToRegularGridTest.cpp
+  LaplacianSmoothingFilterTest.cpp
+  MapPointCloudToRegularGridTest.cpp
+  MinNeighborsTest.cpp
+  PointSampleTriangleGeometryFilterTest.cpp
+  QuickSurfaceMeshFilterTest.cpp
   ImportCSVDataTest.cpp
-  # RemoveFlaggedVerticesTest.cpp
-  # RenameDataObjectTest.cpp
-  # RobustAutomaticThresholdTest.cpp
-  # RotateSampleRefFrameTest.cpp
-  # RawBinaryReaderTest.cpp
-  # ScalarSegmentFeaturesFilterTest.cpp
-  # SetImageGeomOriginScalingFilterTest.cpp
-  # StlFileReaderTest.cpp
+  RemoveFlaggedVerticesTest.cpp
+  RenameDataObjectTest.cpp
+  RobustAutomaticThresholdTest.cpp
+  RotateSampleRefFrameTest.cpp
+  RawBinaryReaderTest.cpp
+  ScalarSegmentFeaturesFilterTest.cpp
+  SetImageGeomOriginScalingFilterTest.cpp
+  StlFileReaderTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
