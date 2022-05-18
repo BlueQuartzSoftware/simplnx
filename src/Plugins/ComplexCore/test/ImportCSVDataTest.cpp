@@ -227,7 +227,7 @@ TEST_CASE("ImportCSVDataFilter (Case 2): Valid filter execution - Skipped Array"
 
   ImportCSVDataFilter filter;
   DataStructure dataStructure = createDataStructure(dummyGroupName);
-  std::vector<std::string> values = {"0", "0"};
+  std::vector<std::string> values = {"0"};
   Arguments args = createArguments(arrayName, {}, values, newGroupName, dummyGroupName);
 
   // Create the test input data file
