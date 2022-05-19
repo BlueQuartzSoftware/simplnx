@@ -622,6 +622,10 @@ complex::Pipeline complex::DREAM3D::ImportPipelineFromFile(const H5::FileReader&
 
 Result<complex::Pipeline> complex::DREAM3D::ImportPipelineFromFile(const std::filesystem::path& filePath)
 {
+  if(!std::filesystem::exists(filePath))
+  {
+    return MakeErrorResult<Pipeline>(-1, fmt::format("complex::DREAM3D::ImportPipelineFromFile: File does not exist. '{}'", filePath.string()));
+  }
   H5::FileReader fileReader(filePath);
   if(!fileReader.isValid())
   {
