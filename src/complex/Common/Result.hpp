@@ -175,18 +175,12 @@ Result<T> ConvertResultTo(Result<>&& fromResult, T&& value)
 template <class ToT, class FromT>
 std::enable_if_t<std::is_convertible_v<FromT, ToT>, Result<ToT>> ConvertResultTo(Result<FromT>&& from)
 {
-  Result<ToT> convertedResult;
-  if(from.valid())
+  if(from.invalid())
   {
-    convertedResult = {from.value()};
+    return {{nonstd::make_unexpected(std::move(from.errors()))}, std::move(from.warnings())};
   }
-  else
-  {
-    convertedResult.m_Expected = nonstd::make_unexpected(std::move(from.errors()));
-  }
-  convertedResult.warnings() = std::move(from.warnings());
 
-  return convertedResult;
+  return {{std::move(from.value())}, std::move(from.warnings())};
 }
 
 /**
