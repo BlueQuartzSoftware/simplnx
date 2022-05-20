@@ -32,13 +32,12 @@
 #pragma once
 
 #include "complex/Common/StringLiteral.hpp"
-#include "complex/Common/Types.hpp"
 
-#include <array>
+#include <fmt/ranges.h>
+#include <nonstd/span.hpp>
+
 #include <cctype>
 #include <sstream>
-#include <string>
-#include <string_view>
 #include <vector>
 
 /*' '(0x20)space(SPC)
@@ -68,34 +67,6 @@ void for_each_token(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_
     }
     first = std::next(pos);
   }
-}
-
-inline std::vector<std::string> split(std::string_view str, char delim)
-{
-  std::vector<std::string> tokens;
-  std::array<char, 1> delims = {delim};
-  auto endPos = str.end();
-  for_each_token(str.begin(), endPos, delims.cbegin(), delims.cend(), [&endPos, &tokens](auto first, auto second) {
-    if(first != second)
-    {
-      tokens.push_back({first, second});
-    }
-  });
-  return tokens;
-}
-
-inline std::vector<std::string> split_2(const std::string& line, char delimiter)
-{
-  std::stringstream ss(line);
-
-  std::vector<std::string> tokens;
-  std::string tempStr;
-
-  while(std::getline(ss, tempStr, delimiter))
-  {
-    tokens.push_back(tempStr);
-  }
-  return tokens;
 }
 
 inline std::string replace(std::string str, std::string_view from, std::string_view to)
@@ -157,6 +128,59 @@ inline std::string trimmed(std::string_view str)
   std::string::size_type front = str.find_first_not_of(k_Whitespaces);
 
   return std::string(str.substr(front, back - front + 1));
+}
+
+inline std::vector<std::string> split(std::string_view str, nonstd::span<const char> delimiters, bool consecutiveDelimiters)
+{
+  std::vector<std::string> tokens;
+  auto endPos = str.end();
+  for_each_token(str.begin(), endPos, delimiters.cbegin(), delimiters.cend(), [&tokens, &consecutiveDelimiters](auto first, auto second) {
+    if(first != second)
+    {
+      std::string substr = {first, second};
+      substr = trimmed(substr);
+      if(!substr.empty() || !consecutiveDelimiters)
+      {
+        tokens.push_back(substr);
+      }
+    }
+  });
+  return tokens;
+}
+
+inline std::vector<std::string> split(std::string_view str, char delim)
+{
+  std::array<char, 1> delims = {delim};
+  return split(str, delims, false);
+}
+
+inline std::vector<std::string> split_2(const std::string& line, char delimiter)
+{
+  std::stringstream ss(line);
+
+  std::vector<std::string> tokens;
+  std::string tempStr;
+
+  while(std::getline(ss, tempStr, delimiter))
+  {
+    tokens.push_back(tempStr);
+  }
+  return tokens;
+}
+
+inline std::string join(nonstd::span<std::string_view> vec, std::string_view delim)
+{
+  return fmt::format("{}", fmt::join(vec, delim));
+}
+
+inline bool contains(std::string_view str, std::string_view val)
+{
+  return str.find(val) != std::string::npos;
+}
+
+inline bool contains(std::string_view str, char val)
+{
+  return str.find(val) != std::string::npos;
 }
 
 inline std::string chop(std::string_view str, usize numElements)

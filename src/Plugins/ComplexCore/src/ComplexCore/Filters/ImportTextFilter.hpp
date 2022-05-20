@@ -38,6 +38,12 @@ public:
   Uuid uuid() const override;
 
   /**
+   * @brief defaultTags
+   * @return
+   */
+  std::vector<std::string> defaultTags() const override;
+
+  /**
    * @brief
    * @return
    */

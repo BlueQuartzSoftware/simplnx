@@ -7,6 +7,7 @@
 #include <optional>
 #include <stdexcept>
 #include <type_traits>
+#include <vector>
 
 namespace complex
 {
@@ -244,6 +245,76 @@ inline constexpr StringLiteral DataTypeToString(DataType dataType)
   }
   default:
     throw std::runtime_error("complex::DataTypeToString: Unknown DataType");
+  }
+}
+
+/**
+ * @brief Returns string representations for all DataTypes.
+ * @return
+ */
+inline const std::vector<std::string>& GetAllDataTypesAsStrings()
+{
+  static const std::vector<std::string> dataTypes = {DataTypeToString(complex::DataType::int8),    DataTypeToString(complex::DataType::uint8),  DataTypeToString(complex::DataType::int16),
+                                                     DataTypeToString(complex::DataType::uint16),  DataTypeToString(complex::DataType::int32),  DataTypeToString(complex::DataType::uint32),
+                                                     DataTypeToString(complex::DataType::int64),   DataTypeToString(complex::DataType::uint64), DataTypeToString(complex::DataType::float32),
+                                                     DataTypeToString(complex::DataType::float64), DataTypeToString(complex::DataType::boolean)};
+  return dataTypes;
+}
+
+/**
+ * @brief Returns a DataType for the passed in string representation
+ * @param dataTypeString
+ * @return
+ */
+inline constexpr DataType StringToDataType(std::string_view dataTypeString)
+{
+  if(dataTypeString == DataTypeToString(DataType::int8).view())
+  {
+    return DataType::int8;
+  }
+  else if(dataTypeString == DataTypeToString(DataType::uint8).view())
+  {
+    return DataType::uint8;
+  }
+  else if(dataTypeString == DataTypeToString(DataType::int16).view())
+  {
+    return DataType::int16;
+  }
+  else if(dataTypeString == DataTypeToString(DataType::uint16).view())
+  {
+    return DataType::uint16;
+  }
+  else if(dataTypeString == DataTypeToString(DataType::int32).view())
+  {
+    return DataType::int32;
+  }
+  else if(dataTypeString == DataTypeToString(DataType::uint32).view())
+  {
+    return DataType::uint32;
+  }
+  else if(dataTypeString == DataTypeToString(DataType::int64).view())
+  {
+    return DataType::int64;
+  }
+  else if(dataTypeString == DataTypeToString(DataType::uint64).view())
+  {
+    return DataType::uint64;
+  }
+  else if(dataTypeString == DataTypeToString(DataType::float32).view())
+  {
+    return DataType::float32;
+  }
+  else if(dataTypeString == DataTypeToString(DataType::float64).view())
+  {
+    return DataType::float64;
+  }
+  else if(dataTypeString == DataTypeToString(DataType::boolean).view())
+  {
+    return DataType::boolean;
+  }
+  else
+  {
+    throw std::runtime_error("complex::StringToDataType: No known DataType matches the given string value.");
   }
 }
 

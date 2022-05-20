@@ -34,6 +34,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   MinNeighborsTest.cpp
   PointSampleTriangleGeometryFilterTest.cpp
   QuickSurfaceMeshFilterTest.cpp
+  ImportCSVDataTest.cpp
   RemoveFlaggedVerticesTest.cpp
   RenameDataObjectTest.cpp
   RobustAutomaticThresholdTest.cpp
