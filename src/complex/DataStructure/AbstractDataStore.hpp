@@ -4,6 +4,8 @@
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 
+#include <nonstd/span.hpp>
+
 #include <algorithm>
 #include <functional>
 #include <iterator>
@@ -31,6 +33,7 @@ public:
   using reference = T&;
   using const_reference = const T&;
   using ShapeType = typename IDataStore::ShapeType;
+  using index_type = uint64;
 
   /////////////////////////////////
   // Begin std::iterator support //
@@ -506,10 +509,111 @@ public:
    * @param i
    * @param value
    */
-  void fillTuple(usize i, T value)
+  void fillTuple(index_type i, T value)
   {
     usize numComponents = getNumberOfComponents();
     std::fill_n(begin() + (i * numComponents), numComponents, value);
+  }
+
+  /**
+   * @brief Sets all component values for a tuple using a pointer array of values.
+   * The provided pointer is expected to contain at least the same number of values
+   * as the number of components.
+   *
+   * If the tuple index is out of bounds or the provided pointer is null, this method throws a runtime_error.
+   * @param tupleIndex
+   * @param values
+   * @throw std::runtime_error
+   */
+  void setTuple(index_type tupleIndex, const value_type* values)
+  {
+    if(values == nullptr)
+    {
+      throw std::runtime_error("Provided values pointer cannot be null");
+    }
+
+    nonstd::span<const value_type> valueSpan(values, values + getNumberOfComponents());
+    setTuple(tupleIndex, valueSpan);
+  }
+
+  /**
+   * @brief Sets all component values for a tuple using a span of values.
+   *
+   * If the tuple index is out of bounds or the provided span does not match
+   * the number of components, this method throws a runtime_error.
+   * @param tupleIndex
+   * @param values
+   * @throw std::runtime_error
+   */
+  void setTuple(index_type tupleIndex, nonstd::span<const value_type> values)
+  {
+    if(values.size() != getNumberOfComponents())
+    {
+      auto ss = fmt::format("Span size ({}) does not match the number of components ({})", values.size(), getNumberOfComponents());
+      throw std::runtime_error(ss);
+    }
+
+    if(tupleIndex >= getNumberOfTuples())
+    {
+      auto ss = fmt::format("Tuple index ({}) is greater than or equal to the number of tuples ({})", tupleIndex, getNumberOfTuples());
+      throw std::runtime_error(ss);
+    }
+
+    index_type numComponents = getNumberOfComponents();
+    index_type offset = tupleIndex * numComponents;
+    std::copy(values.begin(), values.end(), begin() + offset);
+  }
+
+  /**
+   * @brief Sets the component value using a given tuple and component index.
+   *
+   * This method does nothing if the tuple or component indices are out of bounds
+   * @param tupleIndex
+   * @param componentIndex
+   * @param value
+   */
+  void setComponent(index_type tupleIndex, index_type componentIndex, value_type value)
+  {
+    if(tupleIndex >= getNumberOfTuples())
+    {
+      auto ss = fmt::format("Tuple index ({}) is greater than or equal to the number of tuples ({})", tupleIndex, getNumberOfTuples());
+      throw std::runtime_error(ss);
+    }
+
+    if(componentIndex >= getNumberOfComponents())
+    {
+      auto ss = fmt::format("Component index ({}) is greater than or equal to the number of components ({})", componentIndex, getNumberOfComponents());
+      throw std::runtime_error(ss);
+    }
+
+    index_type index = tupleIndex * getNumberOfComponents() + componentIndex;
+    setValue(index, value);
+  }
+
+  /**
+   * @brief Returns the component value at the specified tuple and component index.
+   *
+   * This method returns the default T value if either index is out of bounds.
+   * @param tupleIndex
+   * @param componentIndex
+   * @return value_type
+   */
+  value_type getComponentValue(index_type tupleIndex, index_type componentIndex) const
+  {
+    if(tupleIndex >= getNumberOfTuples())
+    {
+      auto ss = fmt::format("Tuple index ({}) is greater than or equal to the number of tuples ({})", tupleIndex, getNumberOfTuples());
+      throw std::runtime_error(ss);
+    }
+
+    if(componentIndex >= getNumberOfComponents())
+    {
+      auto ss = fmt::format("Component index ({}) is greater than or equal to the number of components ({})", componentIndex, getNumberOfComponents());
+      throw std::runtime_error(ss);
+    }
+
+    index_type index = tupleIndex * getNumberOfComponents() + componentIndex;
+    return getValue(index);
   }
 
 protected:
