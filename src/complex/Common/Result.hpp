@@ -172,6 +172,17 @@ Result<T> ConvertResultTo(Result<>&& fromResult, T&& value)
   return convertedResult;
 }
 
+template <class ToT, class FromT>
+std::enable_if_t<std::is_convertible_v<FromT, ToT>, Result<ToT>> ConvertResultTo(Result<FromT>&& from)
+{
+  if(from.invalid())
+  {
+    return {{nonstd::make_unexpected(std::move(from.errors()))}, std::move(from.warnings())};
+  }
+
+  return {{std::move(from.value())}, std::move(from.warnings())};
+}
+
 /**
  * @brief Convenience function to generate a standard error Result Object
  *

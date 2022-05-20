@@ -44,6 +44,7 @@ set(FilterList
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
   RawBinaryReaderFilter
+  ImportCSVDataFilter
   RemoveFlaggedVertices
   RemoveMinimumSizeFeaturesFilter
   RenameDataObject
@@ -99,6 +100,7 @@ add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 # can use the target_sources(...) cmake call
  target_sources(${PLUGIN_NAME}
    PUBLIC
+    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CSVDataParser.hpp
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nanoflann.hpp
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.cpp
@@ -107,6 +109,7 @@ add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
  )
  source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} 
     FILES
+      ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CSVDataParser.hpp
       ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nanoflann.hpp
       ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp
       ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.cpp

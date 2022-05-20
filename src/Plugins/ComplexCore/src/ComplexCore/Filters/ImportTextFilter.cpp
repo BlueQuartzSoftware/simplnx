@@ -47,9 +47,14 @@ Uuid ImportTextFilter::uuid() const
   return FilterTraits<ImportTextFilter>::uuid;
 }
 
+std::vector<std::string> ImportTextFilter::defaultTags() const
+{
+  return {"#IO", "#Input", "#Read", "#Import", "#Text"};
+}
+
 std::string ImportTextFilter::humanName() const
 {
-  return "Import ASCII Data";
+  return "Import ASCII Data Array";
 }
 
 Parameters ImportTextFilter::parameters() const
