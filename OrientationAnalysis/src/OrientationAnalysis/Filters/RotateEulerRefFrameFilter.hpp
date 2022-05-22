@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SIMPL/SIMPL_export.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,30 +8,25 @@
 namespace complex
 {
 /**
- * @class CropVertexGeometry
+ * @class RotateEulerRefFrameFilter
  * @brief This filter will ....
  */
-class SIMPL_EXPORT CropVertexGeometry : public IFilter
+class ORIENTATIONANALYSIS_EXPORT RotateEulerRefFrameFilter : public IFilter
 {
 public:
-  CropVertexGeometry() = default;
-  ~CropVertexGeometry() noexcept override = default;
+  RotateEulerRefFrameFilter() = default;
+  ~RotateEulerRefFrameFilter() noexcept override = default;
 
-  CropVertexGeometry(const CropVertexGeometry&) = delete;
-  CropVertexGeometry(CropVertexGeometry&&) noexcept = delete;
+  RotateEulerRefFrameFilter(const RotateEulerRefFrameFilter&) = delete;
+  RotateEulerRefFrameFilter(RotateEulerRefFrameFilter&&) noexcept = delete;
 
-  CropVertexGeometry& operator=(const CropVertexGeometry&) = delete;
-  CropVertexGeometry& operator=(CropVertexGeometry&&) noexcept = delete;
+  RotateEulerRefFrameFilter& operator=(const RotateEulerRefFrameFilter&) = delete;
+  RotateEulerRefFrameFilter& operator=(RotateEulerRefFrameFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
-  static inline constexpr StringLiteral k_XMin_Key = "XMin";
-  static inline constexpr StringLiteral k_YMin_Key = "YMin";
-  static inline constexpr StringLiteral k_ZMin_Key = "ZMin";
-  static inline constexpr StringLiteral k_XMax_Key = "XMax";
-  static inline constexpr StringLiteral k_YMax_Key = "YMax";
-  static inline constexpr StringLiteral k_ZMax_Key = "ZMax";
-  static inline constexpr StringLiteral k_CroppedDataContainerName_Key = "CroppedDataContainerName";
+  static inline constexpr StringLiteral k_RotationAngle_Key = "RotationAngle";
+  static inline constexpr StringLiteral k_RotationAxis_Key = "RotationAxis";
+  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "CellEulerAnglesArrayPath";
 
   /**
    * @brief Returns the name of the filter.
@@ -99,4 +94,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, CropVertexGeometry, "f28cbf07-f15a-53ca-8c7f-b41a11dae6cc");
+COMPLEX_DEF_FILTER_TRAITS(complex, RotateEulerRefFrameFilter, "ef9420b2-8c46-55f3-8ae4-f53790639de4");

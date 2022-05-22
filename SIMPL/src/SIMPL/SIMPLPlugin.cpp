@@ -56,7 +56,7 @@ std::map<complex::Uuid, complex::Uuid> k_SimplToComplexFilterMapping = {
     {Uuid::FromString("{1fe19578-6856-55f2-adc8-2236fac22c25}").value(), Uuid::FromString("1fe19578-6856-55f2-adc8-2236fac22c25").value()}, /* RequiredZThickness */
     {Uuid::FromString("{e25d9b4c-2b37-578c-b1de-cf7032b5ef19}").value(), Uuid::FromString("e25d9b4c-2b37-578c-b1de-cf7032b5ef19").value()}, /* RotateSampleRefFrame */
     {Uuid::FromString("{3cf44c27-9149-5548-945a-deef1dc994a8}").value(), Uuid::FromString("3cf44c27-9149-5548-945a-deef1dc994a8").value()}, /* ScaleVolume */
-    {Uuid::FromString("{6d3a3852-6251-5d2e-b749-6257fd0d8951}").value(), Uuid::FromString("6d3a3852-6251-5d2e-b749-6257fd0d8951").value()}, /* SetOriginResolutionImageGeom */
+    {Uuid::FromString("{6d3a3852-6251-5d2e-b749-6257fd0d8951}").value(), Uuid::FromString("6d3a3852-6251-5d2e-b749-6257fd0d8951").value()}, /* SetImageGeomOriginScalingFilter */
     {Uuid::FromString("{5ecf77f4-a38a-52ab-b4f6-0fb8a9c5cb9c}").value(), Uuid::FromString("5ecf77f4-a38a-52ab-b4f6-0fb8a9c5cb9c").value()}, /* SplitAttributeArray */
     {Uuid::FromString("{5fbf9204-2c6c-597b-856a-f4612adbac38}").value(), Uuid::FromString("5fbf9204-2c6c-597b-856a-f4612adbac38").value()}, /* WriteASCIIData */
     {Uuid::FromString("{5e523ec1-49ac-541e-a4ba-6fa725798b91}").value(), Uuid::FromString("5e523ec1-49ac-541e-a4ba-6fa725798b91").value()}, /* WriteTriangleGeometry */

@@ -5,6 +5,10 @@ set(PLUGIN_NAME "UCSBUtilities")
 # These are all the filters in the plugin. All filters should be kept in the
 # UCSBUtilities/src/UCSBUtilities/Filters/ directory.
 set(FilterList
+
+)
+
+set(STUB_FILTERS
   ClearDataMask
   CopyAttributeArray
   CopyAttributeMatrix
@@ -43,6 +47,25 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 #   PRIVATE
 #     additional source files
 # )
+
+#------------------------------------------------------------------------------
+# Include filters that need to be compiled but not available to the general user
+# These are typically auto-generated sources that need to be compiled to ensure
+# the stubs are following the latest API changes
+#------------------------------------------------------------------------------
+foreach(file_name ${STUB_FILTERS})
+  list(APPEND hidden_filter_HDRS
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${file_name}.hpp"
+  )
+  list(APPEND hidden_filter_SRCS
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${file_name}.cpp"
+  )
+endforeach()
+
+target_sources(${PLUGIN_NAME}
+    PRIVATE ${hidden_filter_HDRS} ${hidden_filter_SRCS}
+)
+source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} FILES ${hidden_filter_HDRS} ${hidden_filter_SRCS})
 
 #------------------------------------------------------------------------------
 # If there are additional include directories that are needed for this plugin

@@ -155,7 +155,7 @@ Parameters GenerateFZQuaternions::parameters() const
                                                           DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseGoodVoxels_Key, "Apply to Good Elements Only (Bad Elements Will Be Black)", "", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsArrayPath_Key, "Input Mask [Optional]", "Optional Mask array where valid data is TRUE or 1.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int8, DataType::uint8, DataType::boolean}, true));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int8, DataType::uint8, DataType::boolean}));
   params.insertSeparator(Parameters::Separator{"Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::uint32}));
   params.insertSeparator(Parameters::Separator{"Element Data"});
