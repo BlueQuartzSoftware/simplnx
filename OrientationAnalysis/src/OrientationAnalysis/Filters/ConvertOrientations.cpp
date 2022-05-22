@@ -275,7 +275,6 @@ Result<> ConvertOrientations::executeImpl(DataStructure& dataStructure, const Ar
   using OutputType = Orientation<float>;
   using InputType = Orientation<float>;
   using QuaterionType = Quaternion<float>;
-  using OrientationType = Orientation<float>;
   using QuaterionType = Quaternion<float>;
   using ConversionFunctionType = std::function<OutputType(InputType)>;
   using ToQuaterionFunctionType = std::function<QuaterionType(InputType, Quaternion<float>::Order)>;

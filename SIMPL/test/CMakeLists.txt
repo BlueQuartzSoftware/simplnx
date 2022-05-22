@@ -20,7 +20,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     CreateGeometryTest.cpp
     CreateGridMontageTest.cpp
     CreateStringArrayTest.cpp
-    CropVertexGeometryTest.cpp
     #DataContainerReaderTest.cpp    # MISSING 1 or more Parameter Implementations
     ExecuteProcessTest.cpp
     ExtractAttributeArraysFromGeometryTest.cpp

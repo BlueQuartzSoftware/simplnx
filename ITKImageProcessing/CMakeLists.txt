@@ -150,10 +150,18 @@ set(FilterList
   ITKMaskImage
 )
 
+#-----------------------------------------------------------------------------
+# These are filters that need to be compiled but not exposed to a user
+#-----------------------------------------------------------------------------
+set(STUB_FILTERS
+
+)
+
+
 set(Filters_Disabled
   #-----------------------------------------------------------------------------
   # These filters are custom written filters by BQ and do not conform to the
-  # standard ITK filter wrapping
+  # standard ITK filter wrapping. These Filters are not even compiling
   #-----------------------------------------------------------------------------
   IlluminationCorrection # MISSING 1 or more Parameter Implementations
   ImportAxioVisionV4Montage
@@ -218,6 +226,27 @@ if(WIN32)
   target_compile_definitions(${PLUGIN_NAME} PUBLIC "_SILENCE_CXX17_RESULT_OF_DEPRECATION_WARNING")
   set_target_properties(${PLUGIN_NAME} PROPERTIES LINK_FLAGS_DEBUG "/INCREMENTAL:NO" )
 endif()
+
+
+#------------------------------------------------------------------------------
+# Include filters that need to be compiled but not available to the general user
+# These are typically auto-generated sources that need to be compiled to ensure
+# the stubs are following the latest API changes
+#------------------------------------------------------------------------------
+foreach(file_name ${STUB_FILTERS})
+  list(APPEND hidden_filter_HDRS
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${file_name}.hpp"
+  )
+  list(APPEND hidden_filter_SRCS
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${file_name}.cpp"
+  )
+endforeach()
+
+target_sources(${PLUGIN_NAME}
+    PRIVATE ${hidden_filter_HDRS} ${hidden_filter_SRCS}
+)
+source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} FILES ${hidden_filter_HDRS} ${hidden_filter_SRCS})
+
 
 #------------------------------------------------------------------------------
 # Add in the unit tests for the filters included in this plugin

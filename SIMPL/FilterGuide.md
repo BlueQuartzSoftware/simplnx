@@ -51,7 +51,7 @@
 | RequiredZThickness | TRUE  | | | |
 | RotateSampleRefFrame | FALSE  | | | |
 | ScaleVolume | TRUE  | | | |
-| SetOriginResolutionImageGeom | TRUE  | | | |
+| SetImageGeomOriginScalingFilter | TRUE  | | | |
 | SplitAttributeArray | TRUE  | | | |
 | WriteASCIIData | TRUE  | | | |
 | WriteTriangleGeometry | TRUE  | | | |

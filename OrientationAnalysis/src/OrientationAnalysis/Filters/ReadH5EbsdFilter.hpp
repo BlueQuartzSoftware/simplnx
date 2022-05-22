@@ -8,23 +8,23 @@
 namespace complex
 {
 /**
- * @class ReadH5Ebsd
+ * @class ReadH5EbsdFilter
  * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT ReadH5Ebsd : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ReadH5EbsdFilter : public IFilter
 {
 public:
-  ReadH5Ebsd() = default;
-  ~ReadH5Ebsd() noexcept override = default;
+  ReadH5EbsdFilter() = default;
+  ~ReadH5EbsdFilter() noexcept override = default;
 
-  ReadH5Ebsd(const ReadH5Ebsd&) = delete;
-  ReadH5Ebsd(ReadH5Ebsd&&) noexcept = delete;
+  ReadH5EbsdFilter(const ReadH5EbsdFilter&) = delete;
+  ReadH5EbsdFilter(ReadH5EbsdFilter&&) noexcept = delete;
 
-  ReadH5Ebsd& operator=(const ReadH5Ebsd&) = delete;
-  ReadH5Ebsd& operator=(ReadH5Ebsd&&) noexcept = delete;
+  ReadH5EbsdFilter& operator=(const ReadH5EbsdFilter&) = delete;
+  ReadH5EbsdFilter& operator=(ReadH5EbsdFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ReadH5Ebsd_Key = "ReadH5Ebsd";
+  static inline constexpr StringLiteral k_ReadH5EbsdFilter_Key = "ReadH5EbsdFilter";
   static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
   static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
   static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "CellEnsembleAttributeMatrixName";
@@ -95,4 +95,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ReadH5Ebsd, "4ef7f56b-616e-5a80-9e68-1da8f35ad235");
+COMPLEX_DEF_FILTER_TRAITS(complex, ReadH5EbsdFilter, "4ef7f56b-616e-5a80-9e68-1da8f35ad235");
