@@ -663,9 +663,9 @@ Pipeline::const_iterator Pipeline::end() const
   return m_Collection.end();
 }
 
-nlohmann::json Pipeline::toJson() const
+nlohmann::json Pipeline::toJsonImpl() const
 {
-  auto jsonObject = nlohmann::json::object();
+  nlohmann::json jsonObject;
   jsonObject[k_PipelineNameKey] = m_Name;
 
   auto jsonArray = nlohmann::json::array();
@@ -699,6 +699,7 @@ Result<Pipeline> Pipeline::FromJson(const nlohmann::json& json, FilterList* filt
   auto name = json[k_PipelineNameKey].get<std::string>();
 
   Pipeline pipeline(name, filterList);
+  pipeline.setDisabled(ReadDisabledState(json));
 
   std::vector<complex::Warning> warnings;
 

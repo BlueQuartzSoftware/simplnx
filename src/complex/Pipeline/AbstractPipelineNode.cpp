@@ -3,10 +3,16 @@
 #include "complex/Pipeline/Messaging/NodeStatusMessage.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
 
+#include <nlohmann/json.hpp>
+
 #include <algorithm>
-#include <cstdlib>
 
 using namespace complex;
+
+namespace
+{
+constexpr StringLiteral k_IsDisabledKey = "isDisabled";
+}
 
 AbstractPipelineNode::AbstractPipelineNode(Pipeline* parent)
 : m_Parent(parent)
@@ -286,4 +292,20 @@ AbstractPipelineNode::CancelledSignalType& AbstractPipelineNode::getCancelledSig
 void AbstractPipelineNode::sendCancelledMessage()
 {
   m_CancelledSignal();
+}
+
+nlohmann::json AbstractPipelineNode::toJson() const
+{
+  auto json = toJsonImpl();
+  json[k_IsDisabledKey] = m_IsDisabled;
+  return json;
+}
+
+bool AbstractPipelineNode::ReadDisabledState(const nlohmann::json& json)
+{
+  if(json.contains(k_IsDisabledKey.str()) == false)
+  {
+    return false;
+  }
+  return json[k_IsDisabledKey].get<bool>();
 }
