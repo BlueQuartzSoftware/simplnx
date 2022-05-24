@@ -16,6 +16,8 @@
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelData3DAlgorithm.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
+#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 
 #include <Eigen/Dense>
 
@@ -475,7 +477,7 @@ IFilter::PreflightResult RotateSampleRefFrame::preflightImpl(const DataStructure
 
   SizeVec3 originalImageDims = selectedImageGeom.getDimensions();
   usize originalImageSize = std::accumulate(originalImageDims.begin(), originalImageDims.end(), static_cast<usize>(1), std::multiplies<>{});
-
+  bool createGroup = true;
   for(const auto& cellArrayPath : selectedCellArrays)
   {
     const auto& cellArray = dataStructure.getDataRefAs<IDataArray>(cellArrayPath);
@@ -485,7 +487,15 @@ IFilter::PreflightResult RotateSampleRefFrame::preflightImpl(const DataStructure
       return {MakeErrorResult<OutputActions>(
           -1, fmt::format("Selected Array '{}' was size {}, but Image Geometry '{}' expects size {}", cellArray.getName(), arraySize, selectedImageGeom.getName(), originalImageSize))};
     }
-    DataPath createdArrayPath = createdImageGeomPath.createChildPath(cellArray.getName());
+    std::string aPath = cellArrayPath.toString();
+    aPath = complex::StringUtilities::replace(aPath, selectedImageGeomPath.toString(), createdImageGeomPath.toString());
+    DataPath createdArrayPath = DataPath::FromString(aPath).value(); //createdImageGeomPath.createChildPath(cellArray.getName());
+
+    if(createGroup)
+    {
+      actions.actions.push_back(std::make_unique<CreateDataGroupAction>(createdArrayPath.getParent()));
+      createGroup = false;
+    }
     actions.actions.push_back(std::make_unique<CreateArrayAction>(cellArray.getDataType(), cellArrayDims, cellArray.getIDataStoreRef().getComponentShape(), createdArrayPath));
   }
 
@@ -528,7 +538,9 @@ Result<> RotateSampleRefFrame::executeImpl(DataStructure& dataStructure, const A
     }
 
     const auto& oldCellArray = dataStructure.getDataRefAs<IDataArray>(cellArrayPath);
-    DataPath createdArrayPath = createdImageGeomPath.createChildPath(oldCellArray.getName());
+    std::string aPath = cellArrayPath.toString();
+    aPath = complex::StringUtilities::replace(aPath, selectedImageGeomPath.toString(), createdImageGeomPath.toString());
+    DataPath createdArrayPath = DataPath::FromString(aPath).value(); //createdImageGeomPath.createChildPath(cellArray.getName());
     auto& newCellArray = dataStructure.getDataRefAs<IDataArray>(createdArrayPath);
 
     DataType type = oldCellArray.getDataType();
