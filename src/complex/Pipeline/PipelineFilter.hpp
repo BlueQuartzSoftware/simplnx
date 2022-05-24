@@ -163,18 +163,19 @@ public:
   std::unique_ptr<AbstractPipelineNode> deepCopy() const override;
 
   /**
-   * @brief Converts the current node to json.
-   * @return nlohmann::json
-   */
-  nlohmann::json toJson() const override;
-
-  /**
    * @brief Adjusts arguments for renamed DataPaths.
    * @param renamedPaths
    */
   void renamePathArgs(const RenamedPaths& renamedPaths);
 
 protected:
+  /**
+   * @brief Returns implementation-specific json value for the node.
+   * This method should only be called from toJson().
+   * @return
+   */
+  nlohmann::json toJsonImpl() const override;
+
   /**
    * @brief Notifies observers to an IFilter::Message emitted by the IFilter
    * during preflight or execute.
