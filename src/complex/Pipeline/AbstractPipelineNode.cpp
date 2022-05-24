@@ -303,7 +303,7 @@ nlohmann::json AbstractPipelineNode::toJson() const
 
 bool AbstractPipelineNode::ReadDisabledState(const nlohmann::json& json)
 {
-  if(json.contains(k_IsDisabledKey.str()) == false)
+  if(!json.contains(k_IsDisabledKey.str()))
   {
     return false;
   }
