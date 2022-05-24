@@ -238,7 +238,7 @@ public:
    * @brief Converts the current node to json.
    * @return
    */
-  virtual nlohmann::json toJson() const = 0;
+  nlohmann::json toJson() const;
 
   /**
    * @brief Returns a Pipeline containing the entire pipeline up to the current
@@ -248,6 +248,21 @@ public:
   std::unique_ptr<Pipeline> getPrecedingPipeline() const;
 
 protected:
+  /**
+   * @brief Attempts to read the disabled state from the provided node's json.
+   * If the disabled key is not found, this method returns false.
+   * @param json
+   * @return
+   */
+  static bool ReadDisabledState(const nlohmann::json& json);
+
+  /**
+   * @brief Returns implementation-specific json value for the node.
+   * This method should only be called from toJson().
+   * @return
+   */
+  virtual nlohmann::json toJsonImpl() const = 0;
+
   /**
    * @brief Notifies known observers of the provided message.
    * @param msg

@@ -553,13 +553,14 @@ public:
    */
   void setFilterList(complex::FilterList* filterList);
 
+protected:
   /**
-   * @brief Converts the current node to json.
+   * @brief Returns implementation-specific json value for the node.
+   * This method should only be called from toJson().
    * @return
    */
-  nlohmann::json toJson() const override;
+  nlohmann::json toJsonImpl() const override;
 
-protected:
   /**
    * @brief Called when the specified pipeline node emits a message.
    * @param node

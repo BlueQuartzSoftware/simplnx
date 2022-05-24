@@ -407,7 +407,7 @@ void PipelineFilter::notifyRenamedPaths(const RenamedPaths& renamedPathPairs)
   }
 }
 
-nlohmann::json PipelineFilter::toJson() const
+nlohmann::json PipelineFilter::toJsonImpl() const
 {
   nlohmann::json json;
 
@@ -473,6 +473,7 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
   }
 
   const auto& argsJson = json[k_ArgsKey];
+  const bool isDisabled = ReadDisabledState(json);
 
   auto argsResult = filter->fromJson(argsJson);
 
@@ -483,7 +484,10 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
     return result;
   }
 
-  Result<std::unique_ptr<PipelineFilter>> result{std::make_unique<PipelineFilter>(std::move(filter), std::move(argsResult.value()))};
+  auto pipelineFilter = std::make_unique<PipelineFilter>(std::move(filter), std::move(argsResult.value()));
+  pipelineFilter->setDisabled(isDisabled);
+
+  Result<std::unique_ptr<PipelineFilter>> result{std::move(pipelineFilter)};
   result.warnings() = std::move(argsResult.warnings());
   return result;
 }
