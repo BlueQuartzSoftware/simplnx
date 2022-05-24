@@ -12,6 +12,8 @@
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
+
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 #include "EbsdLib/Core/EbsdMacros.h"
@@ -32,6 +34,8 @@ static inline constexpr complex::StringLiteral k_SelectedImageGeometry_Key = "se
 static inline constexpr complex::StringLiteral k_SelectedCellArrays_Key = "selected_cell_arrays";
 static inline constexpr complex::StringLiteral k_CreatedImageGeometry_Key = "created_image_geometry";
 
+static inline constexpr complex::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
+
 enum class RotationRepresentation : uint64_t
 {
   AxisAngle = 0,
@@ -39,6 +43,19 @@ enum class RotationRepresentation : uint64_t
 };
 
 } // namespace RotateSampleRefFrame
+
+namespace RenameDataObject
+{
+static inline constexpr complex::StringLiteral k_DataObject_Key = "data_object";
+static inline constexpr complex::StringLiteral k_NewName_Key = "new_name";
+}
+
+namespace DeleteData
+{
+static inline constexpr complex::StringLiteral k_DataPath_Key = "removed_data_path";
+
+}
+
 
 namespace
 {
@@ -108,22 +125,46 @@ complex::Result<> LoadInfo(const complex::ReadH5EbsdInputValues* m_InputValues, 
   return {};
 }
 
+template<typename H5EbsdReaderType, typename T>
+void CopyData(complex::DataStructure& dataStructure,
+               H5EbsdReaderType* ebsdReader,
+               const std::vector<std::string>& arrayNames,
+               std::set<std::string> selectedArrayNames,
+               complex::DataPath cellAttributeMatrixPath,
+               size_t totalPoints)
+{
+  using DataArrayType = complex::DataArray<T>;
+  for(const auto& arrayName : arrayNames)
+  {
+    if(selectedArrayNames.find(arrayName) != selectedArrayNames.end())
+    {
+      T* source = reinterpret_cast<T*>(ebsdReader->getPointerByName(arrayName));
+      complex::DataPath dataPath = cellAttributeMatrixPath.createChildPath(arrayName); // get the data from the DataStructure
+      DataArrayType& destination = dataStructure.getDataRefAs<DataArrayType>(dataPath);
+      for(size_t tupleIndex = 0; tupleIndex < totalPoints; tupleIndex++)
+      {
+        destination[tupleIndex] = source[tupleIndex];
+      }
+    }
+  }
+}
+
 /**
  * @brief LoadEbsdData
  * @param m_InputValues
- * @param m_DataStructure
+ * @param dataStructure
  * @param eulerNames
  * @param m_MessageHandler
- * @param m_SelectedArrayNames
+ * @param selectedArrayNames
  * @param dcDims
  * @param floatArrays
  * @param intArrays
  * @return
  */
 template <typename H5EbsdReaderType, typename PhaseType>
-complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* m_InputValues, complex::DataStructure& m_DataStructure, const std::vector<std::string>& eulerNames,
-                               const complex::IFilter::MessageHandler& m_MessageHandler, std::set<std::string> m_SelectedArrayNames, const std::array<size_t, 3>& dcDims,
-                               const std::vector<std::string>& floatArrays, const std::vector<std::string>& intArrays)
+complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* m_InputValues, complex::DataStructure& dataStructure, const std::vector<std::string>& eulerNames,
+                               const complex::IFilter::MessageHandler& m_MessageHandler, std::set<std::string> selectedArrayNames, const std::array<size_t, 3>& dcDims,
+                               const std::vector<std::string>& floatArrayNames, const std::vector<std::string>& intArrayNames)
 {
   int32_t err = 0;
   std::shared_ptr<H5EbsdReaderType> ebsdReader = std::dynamic_pointer_cast<H5EbsdReaderType>(H5EbsdReaderType::New());
@@ -132,7 +173,7 @@ complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* m_InputValu
     return {complex::MakeErrorResult(-50006, fmt::format("Error instantiating H5EbsdVolumeReader"))};
   }
   ebsdReader->setFileName(m_InputValues->inputFilePath);
-  complex::Result<> result = LoadInfo<H5EbsdReaderType, PhaseType>(m_InputValues, m_DataStructure, ebsdReader);
+  complex::Result<> result = LoadInfo<H5EbsdReaderType, PhaseType>(m_InputValues, dataStructure, ebsdReader);
   if(result.invalid())
   {
     return result;
@@ -140,25 +181,25 @@ complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* m_InputValu
 
   std::string manufacturer = ebsdReader->getManufacturer();
 
-  if(m_SelectedArrayNames.find(EbsdLib::CellData::EulerAngles) != m_SelectedArrayNames.end())
+  if(selectedArrayNames.find(EbsdLib::CellData::EulerAngles) != selectedArrayNames.end())
   {
-    m_SelectedArrayNames.insert(eulerNames[0]);
-    m_SelectedArrayNames.insert(eulerNames[1]);
-    m_SelectedArrayNames.insert(eulerNames[2]);
+    selectedArrayNames.insert(eulerNames[0]);
+    selectedArrayNames.insert(eulerNames[1]);
+    selectedArrayNames.insert(eulerNames[2]);
   }
-  if(m_SelectedArrayNames.find(EbsdLib::CellData::Phases) != m_SelectedArrayNames.end())
+  if(selectedArrayNames.find(EbsdLib::CellData::Phases) != selectedArrayNames.end())
   {
-    m_SelectedArrayNames.insert(eulerNames[3]);
+    selectedArrayNames.insert(eulerNames[3]);
   }
 
   // Initialize all the arrays with some default values
-  m_MessageHandler(complex::IFilter::ProgressMessage{complex::IFilter::Message::Type::Progress, fmt::format("Reading Ebsd Data from file {}", m_InputValues->inputFilePath)});
+  m_MessageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, fmt::format("Reading EBSD Data from file {}", m_InputValues->inputFilePath)});
   uint32_t m_RefFrameZDir = ebsdReader->getStackingOrder();
 
   ebsdReader->setSliceStart(m_InputValues->startSlice);
   ebsdReader->setSliceEnd(m_InputValues->endSlice);
   ebsdReader->readAllArrays(false);
-  ebsdReader->setArraysToRead(m_SelectedArrayNames);
+  ebsdReader->setArraysToRead(selectedArrayNames);
   err = ebsdReader->loadData(dcDims[0], dcDims[1], dcDims[2], m_RefFrameZDir);
   if(err < 0)
   {
@@ -173,28 +214,26 @@ complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* m_InputValu
   // Get the Crystal Structure data which should have already been read from the file and copied to the array
   complex::DataPath cellEnsembleMatrixPath = m_InputValues->cellEnsembleMatrixPath;
   complex::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
-  complex::Int32Array& xtalData = m_DataStructure.getDataRefAs<complex::Int32Array>(xtalDataPath);
+  complex::Int32Array& xtalData = dataStructure.getDataRefAs<complex::Int32Array>(xtalDataPath);
 
   // Copy the Phase Values from the EBSDReader to the DataStructure
   auto* phasePtr = reinterpret_cast<int32_t*>(ebsdReader->getPointerByName(eulerNames[3]));           // get the phase data from the EbsdReader
   complex::DataPath phaseDataPath = cellAttributeMatrixPath.createChildPath(EbsdLib::H5Ebsd::Phases); // get the phase data from the DataStructure
-  complex::Int32Array& phaseData = m_DataStructure.getDataRefAs<complex::Int32Array>(phaseDataPath);
-  // Copy the data. Just now sure what to do here. Iterators? ::memcpy()? Out-of-Core may have to change the copy code here.
-  // And this probably isn't as fast as the old ::memcpy()
+  auto& phaseData = dataStructure.getDataRefAs<complex::Int32Array>(phaseDataPath);
   for(size_t tupleIndex = 0; tupleIndex < totalPoints; tupleIndex++)
   {
     phaseData[tupleIndex] = phasePtr[tupleIndex];
   }
 
-  if(m_SelectedArrayNames.find(EbsdLib::CellData::EulerAngles) != m_SelectedArrayNames.end())
+  if(selectedArrayNames.find(EbsdLib::CellData::EulerAngles) != selectedArrayNames.end())
   {
     //  radianconversion = M_PI / 180.0;
-    float* euler0 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[0]));
-    float* euler1 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[1]));
-    float* euler2 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[2]));
+    auto* euler0 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[0]));
+    auto* euler1 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[1]));
+    auto* euler2 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[2]));
     //  std::vector<size_t> cDims = {3};
     complex::DataPath eulerDataPath = cellAttributeMatrixPath.createChildPath(EbsdLib::CellData::EulerAngles); // get the Euler data from the DataStructure
-    complex::Float32Array& eulerData = m_DataStructure.getDataRefAs<complex::Float32Array>(eulerDataPath);
+    auto& eulerData = dataStructure.getDataRefAs<complex::Float32Array>(eulerDataPath);
 
     float degToRad = 1.0f;
     if(m_InputValues->eulerRepresentation != EbsdLib::AngleRepresentation::Radians && m_InputValues->useRecommendedTransform)
@@ -220,42 +259,9 @@ complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* m_InputValu
     }
   }
 
-  // These could probably be templated
-  // Loop over the Float32 arrays
-  for(const auto& arrayName : floatArrays)
-  {
-    // cDims[0] = 1;
-    if(m_SelectedArrayNames.find(arrayName) != m_SelectedArrayNames.end())
-    {
-      float* source = reinterpret_cast<float*>(ebsdReader->getPointerByName(arrayName));
-      complex::DataPath dataPath = cellAttributeMatrixPath.createChildPath(arrayName); // get the data from the DataStructure
-      complex::Float32Array& destination = m_DataStructure.getDataRefAs<complex::Float32Array>(dataPath);
-      // Copy the data. Just now sure what to do here. Iterators? ::memcpy()? Out-of-Core may have to change the copy code here.
-      // And this probably isn't as fast as the old ::memcpy()
-      for(size_t tupleIndex = 0; tupleIndex < totalPoints; tupleIndex++)
-      {
-        destination[tupleIndex] = source[tupleIndex];
-      }
-    }
-  }
-
-  // Loop over the Int32 arrays
-  for(const auto& arrayName : intArrays)
-  {
-    // cDims[0] = 1;
-    if(m_SelectedArrayNames.find(arrayName) != m_SelectedArrayNames.end())
-    {
-      int32_t* source = reinterpret_cast<int32_t*>(ebsdReader->getPointerByName(arrayName));
-      complex::DataPath dataPath = cellAttributeMatrixPath.createChildPath(arrayName); // get the data from the DataStructure
-      complex::Int32Array& destination = m_DataStructure.getDataRefAs<complex::Int32Array>(dataPath);
-      // Copy the data. Just now sure what to do here. Iterators? ::memcpy()? Out-of-Core may have to change the copy code here.
-      // And this probably isn't as fast as the old ::memcpy()
-      for(size_t tupleIndex = 0; tupleIndex < totalPoints; tupleIndex++)
-      {
-        destination[tupleIndex] = source[tupleIndex];
-      }
-    }
-  }
+  // Copy the EBSD Data from its temp location into the final DataStructure location.
+  ::CopyData<H5EbsdReaderType, float>(dataStructure, ebsdReader.get(), floatArrayNames, selectedArrayNames, cellAttributeMatrixPath, totalPoints);
+  ::CopyData<H5EbsdReaderType, int>(dataStructure, ebsdReader.get(), intArrayNames, selectedArrayNames, cellAttributeMatrixPath, totalPoints);
 
   return {};
 }
@@ -380,58 +386,98 @@ Result<> ReadH5Ebsd::operator()()
 
     if(sampleTransAngle > 0)
     {
-      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Warning, "Sample Reference Frame Rotation NOT applied."});
-
-#if 0
-
       const Uuid k_CorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
-      const Uuid k_RotateSampleRefFrameFilterId = *Uuid::FromString("5efdf395-33fb-4dc0-986e-0dc0ae990f6a");
-      const FilterHandle k_RotateSampleRefFrameFilterHandle(k_RotateSampleRefFrameFilterId, k_CorePluginId);
-
       auto* filterList = Application::Instance()->getFilterList();
-      auto filter = filterList->createFilter(k_RotateSampleRefFrameFilterHandle);
+
+      /*************************************************************************
+       * First rename the entire Generated Image Geometry to a temp name
+       ************************************************************************/
+      const Uuid k_RenameDataObjectFilterId = *Uuid::FromString("d53c808f-004d-5fac-b125-0fffc8cc78d6");
+      const FilterHandle k_RenameDataObjectFilterHandle(k_RenameDataObjectFilterId, k_CorePluginId);
+      auto filter = filterList->createFilter(k_RenameDataObjectFilterHandle);
       if(nullptr == filter)
       {
-        return {MakeErrorResult(-50010, fmt::format("Error creating RotateSampleRefFrame filter"))};
+        return {MakeErrorResult(-50010, fmt::format("Error creating RenameDataObject filter"))};
       }
       Arguments args;
-
-      args.insertOrAssign(RotateSampleRefFrame::k_RotationRepresentation_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::AxisAngle)));
-      args.insertOrAssign(RotateSampleRefFrame::k_SelectedImageGeometry_Key, std::make_any<DataPath>(m_InputValues->dataContainerPath));
-      DataPath rotatedGeometryDataPath({".RotatedGeometry"});
-      args.insertOrAssign(RotateSampleRefFrame::k_CreatedImageGeometry_Key, std::make_any<DataPath>(rotatedGeometryDataPath));
-
-      std::vector<DataPath> rotatedDataPaths;
-      for(const auto& path : m_InputValues->hdf5DataPaths)
-      {
-        rotatedDataPaths.push_back(m_InputValues->cellAttributeMatrixPath.createChildPath(path));
-      }
-      args.insertOrAssign(RotateSampleRefFrame::k_SelectedCellArrays_Key, std::make_any<std::vector<DataPath>>(rotatedDataPaths));
-
-      args.insertOrAssign(RotateSampleRefFrame::k_RotationAngle_Key, std::make_any<Float32Parameter::ValueType>(sampleTransAngle));
-      args.insertOrAssign(RotateSampleRefFrame::k_RotationAxis_Key, std::make_any<VectorFloat32Parameter::ValueType>({sampleTransAxis[0], sampleTransAxis[1], sampleTransAxis[2]}));
-
+      args.insertOrAssign(RenameDataObject::k_DataObject_Key, std::make_any<DataPath>(m_InputValues->dataContainerPath));
+      args.insertOrAssign(RenameDataObject::k_NewName_Key, std::make_any<std::string>(RotateSampleRefFrame::k_RotatedGeometryName));
       // Preflight the filter and check result
-      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, "Preflighting Rotate Sample Ref Frame..."});
+      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Preflighting {}...", filter->humanName())});
       complex::IFilter::PreflightResult preflightResult = filter->preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())
       {
-        return {MakeErrorResult(-50010, fmt::format("Error creating RotateSampleRefFrame filter"))};
-
         for(const auto& error : preflightResult.outputActions.errors())
         {
           std::cout << error.code << ": " << error.message << std::endl;
         }
+        return {MakeErrorResult(-50010, fmt::format("Error preflighting {}", filter->humanName()))};
       }
 
       // Execute the filter and check the result
-      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, "Executing Rotate Sample Ref Frame..."});
+      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Executing {}...", filter->humanName())});
       auto executeResult = filter->execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
       if(executeResult.result.invalid())
       {
       }
-      /********************    *************************************/
-      // Delete the original DataContainer
+
+      /*************************************************************************
+       * Rotate Sample Ref Frame
+       ************************************************************************/
+      const Uuid k_RotateSampleRefFrameFilterId = *Uuid::FromString("5efdf395-33fb-4dc0-986e-0dc0ae990f6a");
+      const FilterHandle k_RotateSampleRefFrameFilterHandle(k_RotateSampleRefFrameFilterId, k_CorePluginId);
+
+      filter = filterList->createFilter(k_RotateSampleRefFrameFilterHandle);
+      if(nullptr == filter)
+      {
+        return {MakeErrorResult(-50010, fmt::format("Error creating RotateSampleRefFrame filter"))};
+      }
+      args = Arguments();
+
+      args.insertOrAssign(RotateSampleRefFrame::k_RotationRepresentation_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::AxisAngle)));
+      args.insertOrAssign(RotateSampleRefFrame::k_SelectedImageGeometry_Key, std::make_any<DataPath>(DataPath({RotateSampleRefFrame::k_RotatedGeometryName})));
+      args.insertOrAssign(RotateSampleRefFrame::k_CreatedImageGeometry_Key, std::make_any<DataPath>(m_InputValues->dataContainerPath));
+
+      std::vector<DataPath> rotatedDataPaths;
+      for(const auto& path : m_InputValues->hdf5DataPaths)
+      {
+        std::string aPath = m_InputValues->cellAttributeMatrixPath.createChildPath(path).toString();
+        aPath = complex::StringUtilities::replace(aPath, m_InputValues->dataContainerPath.toString(), RotateSampleRefFrame::k_RotatedGeometryName);
+        rotatedDataPaths.push_back(*DataPath::FromString(aPath));
+      }
+      args.insertOrAssign(RotateSampleRefFrame::k_SelectedCellArrays_Key, std::make_any<std::vector<DataPath>>(rotatedDataPaths));
+      args.insertOrAssign(RotateSampleRefFrame::k_RotationAngle_Key, std::make_any<Float32Parameter::ValueType>(sampleTransAngle));
+      args.insertOrAssign(RotateSampleRefFrame::k_RotationAxis_Key, std::make_any<VectorFloat32Parameter::ValueType>({sampleTransAxis[0], sampleTransAxis[1], sampleTransAxis[2]}));
+
+      // Preflight the filter and check result
+      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Preflighting {}...", filter->humanName())});
+      preflightResult = filter->preflight(m_DataStructure, args);
+      if(preflightResult.outputActions.invalid())
+      {
+        for(const auto& error : preflightResult.outputActions.errors())
+        {
+          std::cout << error.code << ": " << error.message << std::endl;
+        }
+        return {MakeErrorResult(-50010, fmt::format("Error preflighting {}", filter->humanName()))};
+      }
+
+      // Execute the filter and check the result
+      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Executing {}", filter->humanName())});
+      executeResult = filter->execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
+      if(executeResult.result.invalid())
+      {
+      }
+
+      /*************************************************************************
+       * Delete the original Geometry
+       ************************************************************************/
+       DataPath nonRotatedDataGroup = DataPath({RotateSampleRefFrame::k_RotatedGeometryName});
+      // First set the final DataContainer Object as a parent of the Ensemble Data otherwise
+      // that will get deleted.
+      DataObject* dataContainerObject = m_DataStructure.getData(m_InputValues->dataContainerPath);
+      DataObject* ensembleObject = m_DataStructure.getData(nonRotatedDataGroup.createChildPath(m_InputValues->cellEnsembleMatrixPath.getTargetName()));
+      m_DataStructure.setAdditionalParent(ensembleObject->getId(), dataContainerObject->getId());
+
       const Uuid k_DeleteDataFilterId = *Uuid::FromString("bf286740-e987-49fe-a7c8-6e566e3a0606");
       const FilterHandle k_DeleteDataFilterHandle(k_DeleteDataFilterId, k_CorePluginId);
       filter = filterList->createFilter(k_DeleteDataFilterHandle);
@@ -439,8 +485,11 @@ Result<> ReadH5Ebsd::operator()()
       {
         return {MakeErrorResult(-50010, fmt::format("Error creating 'Delete Data Object' filter"))};
       }
+      args = Arguments();
+      args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(nonRotatedDataGroup));
+
       // Preflight the filter and check result
-      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, "Preflighting Delete Data Object Filter ..."});
+      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Preflighting {}...", filter->humanName())});
       preflightResult = filter->preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())
       {
@@ -448,42 +497,16 @@ Result<> ReadH5Ebsd::operator()()
         {
           std::cout << error.code << ": " << error.message << std::endl;
         }
+        return {MakeErrorResult(-50010, fmt::format("Error preflighting {}", filter->humanName()))};
       }
 
       // Execute the filter and check the result
-      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, "Executing Delete Data Object Filter..."});
+      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Executing {}", filter->humanName())});
       executeResult = filter->execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
       if(executeResult.result.invalid())
       {
       }
 
-      /********************    *************************************/
-      // Rename the rotated back to the original
-      const Uuid k_RenameDataObjectFilterId = *Uuid::FromString("d53c808f-004d-5fac-b125-0fffc8cc78d6");
-      const FilterHandle k_RenameDataObjectFilterHandle(k_RenameDataObjectFilterId, k_CorePluginId);
-      filter = filterList->createFilter(k_RenameDataObjectFilterHandle);
-      if(nullptr == filter)
-      {
-        return {MakeErrorResult(-50010, fmt::format("Error creating 'Rename Data Object' filter"))};
-      }
-      // Preflight the filter and check result
-      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, "Preflighting Rename Data Object Filter ..."});
-      preflightResult = filter->preflight(m_DataStructure, args);
-      if(preflightResult.outputActions.invalid())
-      {
-        for(const auto& error : preflightResult.outputActions.errors())
-        {
-          std::cout << error.code << ": " << error.message << std::endl;
-        }
-      }
-
-      // Execute the filter and check the result
-      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, "Executing Rename Data Object Filter..."});
-      executeResult = filter->execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
-      if(executeResult.result.invalid())
-      {
-      }
-#endif
     }
   }
 
