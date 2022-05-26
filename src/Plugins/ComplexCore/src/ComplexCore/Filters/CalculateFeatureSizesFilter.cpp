@@ -82,7 +82,7 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
 
   const auto* featureIdsArray = data.getDataAs<Int32Array>(featureIdsPath);
 
-  const auto* geometry = data.getDataAs<AbstractGeometry>(geometryPath);
+  const auto* geometry = data.getDataAs<IGeometry>(geometryPath);
 
   if(geometry == nullptr)
   {
@@ -218,7 +218,7 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
       int32 err = image->findElementSizes();
       if(err < 0)
       {
-        std::string ss = fmt::format("Error computing Element sizes for Geometry type {}", image->getGeometryTypeAsString());
+        std::string ss = fmt::format("Error computing Element sizes for Geometry type {}", image->getTypeName());
         return {nonstd::make_unexpected(std::vector<Error>{Error{err, ss}})};
       }
     }
@@ -227,7 +227,7 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
   return {};
 }
 
-Result<> CalculateFeatureSizesFilter::findSizesUnstructured(DataStructure& data, const Arguments& args, AbstractGeometry* igeom) const
+Result<> CalculateFeatureSizesFilter::findSizesUnstructured(DataStructure& data, const Arguments& args, IGeometry* igeom) const
 {
   auto saveElementSizes = args.value<bool>(k_SaveElementSizes_Key);
 
@@ -249,7 +249,7 @@ Result<> CalculateFeatureSizesFilter::findSizesUnstructured(DataStructure& data,
     int32_t err = igeom->findElementSizes();
     if(err < 0)
     {
-      std::string ss = fmt::format("Error computing Element sizes for Geometry type {}", igeom->getGeometryTypeAsString());
+      std::string ss = fmt::format("Error computing Element sizes for Geometry type {}", igeom->getTypeName());
       return {nonstd::make_unexpected(std::vector<Error>{Error{err, ss}})};
     }
   }
@@ -286,7 +286,7 @@ Result<> CalculateFeatureSizesFilter::findSizesUnstructured(DataStructure& data,
 Result<> CalculateFeatureSizesFilter::findSizes(DataStructure& data, const Arguments& args) const
 {
   auto geomPath = args.value<DataPath>(k_GeometryPath_Key);
-  auto* geom = data.getDataAs<AbstractGeometry>(geomPath);
+  auto* geom = data.getDataAs<IGeometry>(geomPath);
 
   // If the geometry is an ImageGeometry or a RectilinearGeometry
   auto* imageGeom = dynamic_cast<ImageGeom*>(geom);

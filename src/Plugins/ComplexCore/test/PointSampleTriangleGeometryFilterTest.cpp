@@ -25,7 +25,7 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 
-std::array<float, 6> FindMinMaxCoord(AbstractGeometry::SharedVertexList* vertices, usize numVerts)
+std::array<float, 6> FindMinMaxCoord(IGeometry::SharedVertexList* vertices, usize numVerts)
 {
   std::array<float, 6> minMaxVerts = {std::numeric_limits<float>::max(), std::numeric_limits<float>::min(), std::numeric_limits<float>::max(),
                                       std::numeric_limits<float>::min(), std::numeric_limits<float>::max(), std::numeric_limits<float>::min()};
@@ -179,11 +179,11 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
 
     VertexGeom& vertGeom = dataGraph.getDataRefAs<VertexGeom>(vertGeometryDataPath);
     usize numVerts = vertGeom.getNumberOfVertices();
-    AbstractGeometry::SharedVertexList* vertices = vertGeom.getVertices();
+    IGeometry::SharedVertexList* vertices = vertGeom.getVertices();
     std::array<float, 6> minMaxVerts = FindMinMaxCoord(vertices, numVerts);
 
     TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(triangleGeometryPath);
-    AbstractGeometry::SharedVertexList* triVerts = triangleGeom.getVertices();
+    IGeometry::SharedVertexList* triVerts = triangleGeom.getVertices();
     usize triNumVerts = triangleGeom.getNumberOfVertices();
     std::array<float, 6> minMaxTriVerts = FindMinMaxCoord(triVerts, triNumVerts);
 

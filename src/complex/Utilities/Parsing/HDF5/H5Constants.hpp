@@ -6,11 +6,20 @@ namespace complex
 {
 namespace H5Constants
 {
-
 // Grid Montage
 inline constexpr StringLiteral k_RowCountTag = "Row Count";
 inline constexpr StringLiteral k_ColCountTag = "Column Count";
 inline constexpr StringLiteral k_DepthCountTag = "Depth Count";
+
+// INodeGeometry0D
+
+// INodeGeometry1D
+inline constexpr StringLiteral k_FaceListTag = "Face List ID";
+inline constexpr StringLiteral k_UnsharedEdgeListTag2 = "Unshared Edge List ID";
+
+// INodeGeometry2D
+
+// INodeGeometry3D
 
 // Image Geometry
 inline constexpr StringLiteral k_H5_DIMENSIONS = "_DIMENSIONS";
@@ -69,6 +78,5 @@ inline constexpr StringLiteral k_TetsContainingVertTag = "Tetrahedrals Containin
 inline constexpr StringLiteral k_TetNeighborsTag = "Tetrahedral Neighbors ID";
 inline constexpr StringLiteral k_TetCentroidsTag = "Tetrahedral Centroids ID";
 inline constexpr StringLiteral k_TetSizesTag = "Tetrahedral Sizes ID";
-
 } // namespace H5Constants
 } // namespace complex

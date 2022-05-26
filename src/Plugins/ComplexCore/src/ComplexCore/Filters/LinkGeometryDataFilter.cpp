@@ -57,7 +57,7 @@ Parameters LinkGeometryDataFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryDataPath_Key, "Selected Geometry", "The complete path to the Geometry with which to link the data", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Any}));
+                                                             IGeometry::GetAllGeomTypes()));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedVertexDataArrayPaths_Key, "Vertex Data Arrays to Link", "Data associated with a vertex or point",
                                                                MultiArraySelectionParameter::ValueType{}, complex::GetAllDataTypes()));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedEdgeDataArrayPaths_Key, "Edge Data Arrays to Link", "Data associated with an edge", MultiArraySelectionParameter::ValueType{},
@@ -113,7 +113,7 @@ IFilter::PreflightResult LinkGeometryDataFilter::preflightImpl(const DataStructu
   // Collect all the errors
   std::vector<Error> errors;
 
-  const AbstractGeometry* geometry = dataStructure.getDataAs<AbstractGeometry>(pGeomDataPath);
+  const auto* geometry = dataStructure.getDataAs<IGeometry>(pGeomDataPath);
   if(geometry == nullptr)
   {
     Error result = {-600, fmt::format("DataPath '{}' is not a Geometry", pGeomDataPath.toString())};
@@ -176,7 +176,7 @@ Result<> LinkGeometryDataFilter::executeImpl(DataStructure& dataStructure, const
   auto pSelectedFaceDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFaceDataArrayPaths_Key);
   auto pSelectedVolumeDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedVolumeDataArrayPaths_Key);
 
-  AbstractGeometry& geometry = dataStructure.getDataRefAs<AbstractGeometry>(pGeomDataPath);
+  auto& geometry = dataStructure.getDataRefAs<IGeometry>(pGeomDataPath);
   LinkedGeometryData& geometryData = geometry.getLinkedGeometryData();
 
   using IDataArrayShrdPtrType = std::shared_ptr<IDataArray>;

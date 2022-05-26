@@ -4,7 +4,7 @@
 #include "complex/Common/BoundingBox.hpp"
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
+#include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 
 #include "complex/complex_export.hpp"
 
@@ -13,12 +13,11 @@
 
 namespace complex
 {
-
 /**
  * @class ImageGeom
  * @brief
  */
-class COMPLEX_EXPORT ImageGeom : virtual public AbstractGeometryGrid
+class COMPLEX_EXPORT ImageGeom : public IGridGeometry
 {
 public:
   friend class DataStructure;
@@ -66,13 +65,13 @@ public:
    */
   ImageGeom(ImageGeom&& other) noexcept;
 
-  virtual ~ImageGeom();
+  ~ImageGeom() noexcept override;
 
   /**
    * @brief Returns the type of geometry.
    * @return
    */
-  AbstractGeometry::Type getGeomType() const override;
+  IGeometry::Type getGeomType() const override;
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
@@ -100,21 +99,15 @@ public:
 
   /**
    * @brief
-   * @return std::string
+   * @return FloatVec3
    */
-  std::string getGeometryTypeAsString() const override;
-
-  /**
-   * @brief
-   * @return complex::FloatVec3
-   */
-  complex::FloatVec3 getSpacing() const;
+  FloatVec3 getSpacing() const;
 
   /**
    * @brief
    * @param spacing
    */
-  void setSpacing(const complex::FloatVec3& spacing);
+  void setSpacing(const FloatVec3& spacing);
 
   /**
    * @brief
@@ -126,15 +119,15 @@ public:
 
   /**
    * @brief
-   * @return complex::FloatVec3
+   * @return FloatVec3
    */
-  complex::FloatVec3 getOrigin() const;
+  FloatVec3 getOrigin() const;
 
   /**
    * @brief
    * @param origin
    */
-  void setOrigin(const complex::FloatVec3& origin);
+  void setOrigin(const FloatVec3& origin);
 
   /**
    * @brief
@@ -158,11 +151,6 @@ public:
 
   /**
    * @brief
-   */
-  void initializeWithZeros() override;
-
-  /**
-   * @brief
    * @return usize
    */
   usize getNumberOfElements() const override;
@@ -175,86 +163,16 @@ public:
 
   /**
    * @brief
-   * @return std::shared_ptr<Float32Array>
+   * @return Point3D<float64>
    */
-  const Float32Array* getElementSizes() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementSizes() override;
-
-  /**
-   * @brief
-   * @return StatusCode
-   */
-  StatusCode findElementsContainingVert() override;
-
-  /**
-   * @brief
-   * @return const ElementDynamicList*
-   */
-  const ElementDynamicList* getElementsContainingVert() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementsContainingVert() override;
-
-  /**
-   * @brief
-   * @return StatusCode
-   */
-  StatusCode findElementNeighbors() override;
-
-  /**
-   * @brief
-   * @return const ElementDynamicList*
-   */
-  const ElementDynamicList* getElementNeighbors() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementNeighbors() override;
-
-  /**
-   * @brief
-   * @return StatusCode
-   */
-  StatusCode findElementCentroids() override;
-
-  /**
-   * @brief
-   * @return const Float32Array*
-   */
-  const Float32Array* getElementCentroids() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementCentroids() override;
-
-  /**
-   * @brief
-   * @return complex::Point3D<float64>
-   */
-  complex::Point3D<float64> getParametricCenter() const override;
+  Point3D<float64> getParametricCenter() const override;
 
   /**
    * @brief
    * @param pCoords
    * @param shape
    */
-  void getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const override;
-
-  /**
-   * @brief
-   * @param field
-   * @param derivatives
-   * @param observable
-   */
-  void findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const override;
+  void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
 
   /**
    * @brief getDimensionality Determines the dimensionality of the geometry and returns either 1, 2, or 3
@@ -268,21 +186,15 @@ public:
 
   /**
    * @brief
-   * @return complex::TooltipGenerator
+   * @return SizeVec3
    */
-  complex::TooltipGenerator getTooltipGenerator() const override;
-
-  /**
-   * @brief
-   * @return complex::SizeVec3
-   */
-  complex::SizeVec3 getDimensions() const override;
+  SizeVec3 getDimensions() const override;
 
   /**
    * @brief
    * @param dims
    */
-  void setDimensions(const complex::SizeVec3& dims) override;
+  void setDimensions(const SizeVec3& dims) override;
 
   /**
    * @brief
@@ -305,94 +217,94 @@ public:
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float32>
+   * @return Point3D<float32>
    */
-  complex::Point3D<float32> getPlaneCoordsf(usize idx[3]) const override;
+  Point3D<float32> getPlaneCoordsf(usize idx[3]) const override;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<float32>
+   * @return Point3D<float32>
    */
-  complex::Point3D<float32> getPlaneCoordsf(usize x, usize y, usize z) const override;
-
-  /**
-   * @brief
-   * @param idx
-   * @return complex::Point3D<float32>
-   */
-  complex::Point3D<float32> getPlaneCoordsf(usize idx) const override;
-
-  /**
-   * @brief
-   * @param idx
-   * @return complex::Point3D<float64>
-   */
-  complex::Point3D<float64> getPlaneCoords(usize idx[3]) const override;
-
-  /**
-   * @brief
-   * @param x
-   * @param y
-   * @param z
-   * @return complex::Point3D<float64>
-   */
-  complex::Point3D<float64> getPlaneCoords(usize x, usize y, usize z) const override;
-
-  /**
-   * @brief
-   * @param idx
-   * @return complex::Point3D<float64>
-   */
-  complex::Point3D<float64> getPlaneCoords(usize idx) const override;
-
-  /**
-   * @brief
-   * @param idx
-   * @return complex::Point3D<float32>
-   */
-  complex::Point3D<float32> getCoordsf(usize idx[3]) const override;
-
-  /**
-   * @brief
-   * @param x
-   * @param y
-   * @param z
-   * @return complex::Point3D<float32>
-   */
-  complex::Point3D<float32> getCoordsf(usize x, usize y, usize z) const override;
+  Point3D<float32> getPlaneCoordsf(usize x, usize y, usize z) const override;
 
   /**
    * @brief
    * @param idx
    * @return Point3D<float32>
    */
-  complex::Point3D<float32> getCoordsf(usize idx) const override;
+  Point3D<float32> getPlaneCoordsf(usize idx) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float64>
+   * @return Point3D<float64>
    */
-  complex::Point3D<float64> getCoords(usize idx[3]) const override;
+  Point3D<float64> getPlaneCoords(usize idx[3]) const override;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<float64>
+   * @return Point3D<float64>
    */
-  complex::Point3D<float64> getCoords(usize x, usize y, usize z) const override;
+  Point3D<float64> getPlaneCoords(usize x, usize y, usize z) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float64>
+   * @return Point3D<float64>
    */
-  complex::Point3D<float64> getCoords(usize idx) const override;
+  Point3D<float64> getPlaneCoords(usize idx) const override;
+
+  /**
+   * @brief
+   * @param idx
+   * @return Point3D<float32>
+   */
+  Point3D<float32> getCoordsf(usize idx[3]) const override;
+
+  /**
+   * @brief
+   * @param x
+   * @param y
+   * @param z
+   * @return Point3D<float32>
+   */
+  Point3D<float32> getCoordsf(usize x, usize y, usize z) const override;
+
+  /**
+   * @brief
+   * @param idx
+   * @return Point3D<float32>
+   */
+  Point3D<float32> getCoordsf(usize idx) const override;
+
+  /**
+   * @brief
+   * @param idx
+   * @return Point3D<float64>
+   */
+  Point3D<float64> getCoords(usize idx[3]) const override;
+
+  /**
+   * @brief
+   * @param x
+   * @param y
+   * @param z
+   * @return Point3D<float64>
+   */
+  Point3D<float64> getCoords(usize x, usize y, usize z) const override;
+
+  /**
+   * @brief
+   * @param idx
+   * @return Point3D<float64>
+   */
+  Point3D<float64> getCoords(usize idx) const override;
 
   /**
    * @brief
@@ -418,13 +330,7 @@ public:
    * @param index
    * @return ErrorType
    */
-  ErrorType computeCellIndex(const complex::Point3D<float32>& coords, SizeVec3& index) const;
-
-  /**
-   * @brief
-   * @return uint32
-   */
-  uint32 getXdmfGridType() const override;
+  ErrorType computeCellIndex(const Point3D<float32>& coords, SizeVec3& index) const;
 
   /**
    * @brief Reads values from HDF5
@@ -459,51 +365,7 @@ protected:
    */
   ImageGeom(DataStructure& ds, std::string name, IdType importId);
 
-  /**
-   * @brief
-   * @param parentId
-   * @param volDims
-   * @param spacing
-   * @param origin
-   * @param spatialDims
-   * @param geomName
-   * @param preflight
-   * @return StatusCode
-   */
-  // StatusCode gatherMetaData(hid_t parentId, usize volDims, float32 spacing, float32 origin, uint32 spatialDims, const std::string& geomName, bool preflight);
-
-  /**
-   * @brief
-   * @param elementsContainingVert
-   */
-  void setElementsContainingVert(const ElementDynamicList* elementsContainingVert) override;
-
-  /**
-   * @brief
-   * @param elementsNeighbors
-   */
-  void setElementNeighbors(const ElementDynamicList* elementsNeighbors) override;
-
-  /**
-   * @brief
-   * @param elementCentroids
-   */
-  void setElementCentroids(const Float32Array* elementCentroids) override;
-
-  /**
-   * @brief
-   * @param elementSizes
-   */
-  void setElementSizes(const Float32Array* elementSizes) override;
-
-  /**
-   * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
-   * @param updatedIds
-   */
-  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
-
 private:
-  std::optional<IdType> m_VoxelSizesId;
   FloatVec3 m_Spacing;
   FloatVec3 m_Origin;
   SizeVec3 m_Dimensions;

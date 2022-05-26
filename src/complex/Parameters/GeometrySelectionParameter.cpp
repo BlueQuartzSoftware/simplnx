@@ -96,33 +96,27 @@ Result<> GeometrySelectionParameter::validatePath(const DataStructure& dataStruc
     return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const AbstractGeometry* abstractGeometry = dynamic_cast<const AbstractGeometry*>(object);
-  if(abstractGeometry == nullptr)
+  const IGeometry* geometry = dynamic_cast<const IGeometry*>(object);
+  if(geometry == nullptr)
   {
-    return MakeErrorResult(-3, fmt::format("Object at path '{}' is not a subclass of AbstractGeometry.", value.toString()));
+    return MakeErrorResult(-3, fmt::format("Object at path '{}' is not a subclass of IGeometry.", value.toString()));
   }
 
-  // First look for DataObject::Type::Any, if that is in the allowed types then it doesn't
-  // matter what else is in the set
-  if(m_AllowedTypes.count(AbstractGeometry::Type::Any) > 0)
-  {
-    return {};
-  }
   // Look for the actual geometry type that the user selected in the allowed set
-  if(m_AllowedTypes.count(abstractGeometry->getGeomType()) > 0)
+  if(m_AllowedTypes.count(geometry->getGeomType()) > 0)
   {
     return {};
   }
 
   return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_AllowedType_Error,
-                                  fmt::format("{}Geometry at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), abstractGeometry->getGeometryTypeAsString(),
-                                              AbstractGeometry::StringListFromGeometryType(m_AllowedTypes)));
+                                  fmt::format("{}Geometry at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), geometry->getTypeName(),
+                                              IGeometry::StringListFromGeometryType(m_AllowedTypes)));
 }
 
 Result<std::any> GeometrySelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  AbstractGeometry* object = dataStructure.getDataAs<AbstractGeometry>(path);
+  IGeometry* object = dataStructure.getDataAs<IGeometry>(path);
   return {{object}};
 }
 } // namespace complex

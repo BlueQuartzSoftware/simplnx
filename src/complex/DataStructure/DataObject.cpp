@@ -129,6 +129,26 @@ const DataStructure* DataObject::getDataStructure() const
   return m_DataStructure;
 }
 
+DataStructure& DataObject::getDataStructureRef()
+{
+  if(m_DataStructure == nullptr)
+  {
+    throw std::runtime_error("DataObject's DataStructure is null");
+  }
+
+  return *m_DataStructure;
+}
+
+const DataStructure& DataObject::getDataStructureRef() const
+{
+  if(m_DataStructure == nullptr)
+  {
+    throw std::runtime_error("DataObject's DataStructure is null");
+  }
+
+  return *m_DataStructure;
+}
+
 void DataObject::setDataStructure(DataStructure* ds)
 {
   m_DataStructure = ds;

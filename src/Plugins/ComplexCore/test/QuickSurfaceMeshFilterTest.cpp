@@ -78,8 +78,8 @@ TEST_CASE("ComplexCore::QuickSurfaceMeshFilter", "[ComplexCore][QuickSurfaceMesh
 
     // Check a few things about the generated data.
     TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeometryPath);
-    AbstractGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-    AbstractGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+    IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
+    IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
 
     REQUIRE(triangle->getNumberOfTuples() == 785088);
     REQUIRE(vertices->getNumberOfTuples() == 356239);

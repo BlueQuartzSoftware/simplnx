@@ -11,45 +11,21 @@
 using namespace complex;
 
 EdgeGeom::EdgeGeom(DataStructure& ds, std::string name)
-: AbstractGeometry(ds, std::move(name))
+: INodeGeometry1D(ds, std::move(name))
 {
 }
 
 EdgeGeom::EdgeGeom(DataStructure& ds, std::string name, IdType importId)
-: AbstractGeometry(ds, std::move(name), importId)
+: INodeGeometry1D(ds, std::move(name), importId)
 {
 }
 
-EdgeGeom::EdgeGeom(DataStructure& ds, std::string name, const SharedEdgeList* edges, const SharedVertexList* vertices)
-: AbstractGeometry(ds, std::move(name))
-{
-  setEdges(edges);
-  setVertices(vertices);
-}
+EdgeGeom::EdgeGeom(const EdgeGeom&) = default;
 
-EdgeGeom::EdgeGeom(const EdgeGeom& other)
-: AbstractGeometry(other)
-, m_VertexListId(other.m_VertexListId)
-, m_EdgeListId(other.m_EdgeListId)
-, m_EdgesContainingVertId(other.m_EdgesContainingVertId)
-, m_EdgeNeighborsId(other.m_EdgeNeighborsId)
-, m_EdgeCentroidsId(other.m_EdgeCentroidsId)
-, m_EdgeSizesId(other.m_EdgeSizesId)
-{
-}
+EdgeGeom::EdgeGeom(EdgeGeom&&) noexcept = default;
 
-EdgeGeom::EdgeGeom(EdgeGeom&& other) noexcept
-: AbstractGeometry(std::move(other))
-, m_VertexListId(other.m_VertexListId)
-, m_EdgeListId(other.m_EdgeListId)
-, m_EdgesContainingVertId(other.m_EdgesContainingVertId)
-, m_EdgeNeighborsId(other.m_EdgeNeighborsId)
-, m_EdgeCentroidsId(other.m_EdgeCentroidsId)
-, m_EdgeSizesId(other.m_EdgeSizesId)
-{
-}
+EdgeGeom::~EdgeGeom() noexcept = default;
 
-EdgeGeom::~EdgeGeom() = default;
 DataObject::Type EdgeGeom::getDataObjectType() const
 {
   return DataObject::Type::EdgeGeom;
@@ -75,9 +51,9 @@ EdgeGeom* EdgeGeom::Import(DataStructure& ds, std::string name, IdType importId,
   return data.get();
 }
 
-AbstractGeometry::Type EdgeGeom::getGeomType() const
+IGeometry::Type EdgeGeom::getGeomType() const
 {
-  return AbstractGeometry::Type::Edge;
+  return IGeometry::Type::Edge;
 }
 
 std::string EdgeGeom::getTypeName() const
@@ -95,128 +71,30 @@ DataObject* EdgeGeom::deepCopy()
   return new EdgeGeom(*this);
 }
 
-std::string EdgeGeom::getGeometryTypeAsString() const
+void EdgeGeom::setCoords(usize vertId, const Point3D<float32>& coords)
 {
-  return "EdgeGeom";
-}
-
-void EdgeGeom::resizeVertexList(usize newNumVertices)
-{
-  if(getVertices() == nullptr)
-  {
-    return;
-  }
-  getVertices()->getDataStore()->reshapeTuples({newNumVertices});
-}
-
-void EdgeGeom::setVertices(const SharedVertexList* vertices)
-{
-  if(vertices == nullptr)
-  {
-    return;
-  }
-  m_VertexListId = vertices->getId();
-}
-
-AbstractGeometry::SharedVertexList* EdgeGeom::getVertices()
-{
-  return dynamic_cast<SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
-}
-
-const AbstractGeometry::SharedVertexList* EdgeGeom::getVertices() const
-{
-  return dynamic_cast<const SharedVertexList*>(getDataStructure()->getData(m_VertexListId));
-}
-
-std::optional<DataObject::IdType> EdgeGeom::getVerticesId() const
-{
-  return m_VertexListId;
-}
-
-void EdgeGeom::setCoords(usize vertId, const complex::Point3D<float32>& coords)
-{
-  auto vertices = getVertices();
-  if(vertices == nullptr)
-  {
-    return;
-  }
-
+  auto& vertices = getVerticesRef();
   for(usize i = 0; i < 3; i++)
   {
-    (*vertices)[vertId * 3 + i] = coords[i];
+    vertices[vertId * 3 + i] = coords[i];
   }
 }
 
-complex::Point3D<float32> EdgeGeom::getCoords(usize vertId) const
+Point3D<float32> EdgeGeom::getCoords(usize vertId) const
 {
-  const auto* vertices = getVertices();
-  if(vertices == nullptr)
-  {
-    return {};
-  }
-
+  auto& vertices = getVerticesRef();
   Point3D<float32> coord;
   for(usize i = 0; i < 3; i++)
   {
-    coord[i] = (*vertices)[vertId * 3 + i];
+    coord[i] = vertices[vertId * 3 + i];
   }
   return coord;
 }
 
-usize EdgeGeom::getNumberOfVertices() const
+void EdgeGeom::setVertsAtEdge(usize edgeId, const usize verts[2])
 {
-  auto vertices = getVertices();
-  if(vertices == nullptr)
-  {
-    return 0;
-  }
-  return vertices->getNumberOfTuples();
-}
-
-void EdgeGeom::resizeEdgeList(usize newNumEdges)
-{
-  auto edges = getEdges();
-  if(edges == nullptr)
-  {
-    return;
-  }
-  edges->getDataStore()->reshapeTuples({newNumEdges});
-}
-
-void EdgeGeom::setEdges(const SharedEdgeList* edges)
-{
-  if(edges == nullptr)
-  {
-    m_EdgeListId.reset();
-    return;
-  }
-  m_EdgeListId = edges->getId();
-}
-
-AbstractGeometry::SharedEdgeList* EdgeGeom::getEdges()
-{
-  return dynamic_cast<SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
-}
-
-const AbstractGeometry::SharedEdgeList* EdgeGeom::getEdges() const
-{
-  return dynamic_cast<const SharedEdgeList*>(getDataStructure()->getData(m_EdgeListId));
-}
-
-std::optional<DataObject::IdType> EdgeGeom::getEdgesId() const
-{
-  return m_EdgeListId;
-}
-
-void EdgeGeom::setVertsAtEdge(usize edgeId, usize verts[2])
-{
-  auto edges = getEdges();
-  if(edges == nullptr)
-  {
-    return;
-  }
-
-  auto numEdges = edges->getNumberOfTuples();
+  auto& edges = getEdgesRef();
+  usize numEdges = edges.getNumberOfTuples();
   if(edgeId >= numEdges)
   {
     return;
@@ -224,19 +102,14 @@ void EdgeGeom::setVertsAtEdge(usize edgeId, usize verts[2])
 
   for(usize i = 0; i < 2; i++)
   {
-    (*edges)[edgeId + i] = verts[i];
+    edges[edgeId + i] = verts[i];
   }
 }
 
 void EdgeGeom::getVertsAtEdge(usize edgeId, usize verts[2]) const
 {
-  auto edges = getEdges();
-  if(edges == nullptr)
-  {
-    return;
-  }
-
-  auto numEdges = edges->getNumberOfTuples();
+  auto& edges = getEdgesRef();
+  usize numEdges = edges.getNumberOfTuples();
   if(edgeId >= numEdges)
   {
     return;
@@ -244,76 +117,43 @@ void EdgeGeom::getVertsAtEdge(usize edgeId, usize verts[2]) const
 
   for(usize i = 0; i < 2; i++)
   {
-    verts[i] = (*edges)[edgeId + i];
+    verts[i] = edges[edgeId + i];
   }
 }
 
-void EdgeGeom::getVertCoordsAtEdge(usize edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const
+void EdgeGeom::getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const
 {
-  auto edges = getEdges();
-  if(edges == nullptr)
-  {
-    return;
-  }
-
-  auto numEdges = edges->getNumberOfTuples();
+  auto& edges = getEdgesRef();
+  usize numEdges = edges.getNumberOfTuples();
   if(edgeId >= numEdges)
   {
     return;
   }
 
-  auto vertices = getVertices();
-  if(vertices == nullptr)
-  {
-    return;
-  }
+  auto& vertices = getVerticesRef();
 
-  auto vert1Id = (*edges)[edgeId];
-  auto vert2Id = (*edges)[edgeId + 1];
+  MeshIndexType vert1Id = edges[edgeId];
+  MeshIndexType vert2Id = edges[edgeId + 1];
 
-  vert1 = &(*vertices)[vert1Id];
-  vert2 = &(*vertices)[vert2Id];
-}
-
-usize EdgeGeom::getNumberOfEdges() const
-{
-  auto edges = getEdges();
-  if(edges == nullptr)
-  {
-    return 0;
-  }
-  return edges->getNumberOfTuples();
-}
-
-void EdgeGeom::initializeWithZeros()
-{
-  auto vertices = getVertices();
-  if(vertices != nullptr)
-  {
-    getVertices()->getDataStore()->fill(0.0f);
-  }
-  auto edges = getEdges();
-  if(edges == nullptr)
-  {
-    getEdges()->getDataStore()->fill(0.0f);
-  }
+  vert1 = &vertices[vert1Id];
+  vert2 = &vertices[vert2Id];
 }
 
 usize EdgeGeom::getNumberOfElements() const
 {
-  auto edges = getEdges();
-  if(edges == nullptr)
-  {
-    return 0;
-  }
-  return edges->getNumberOfTuples();
+  auto& edges = getEdgesRef();
+  return edges.getNumberOfTuples();
 }
 
-AbstractGeometry::StatusCode EdgeGeom::findElementSizes()
+IGeometry::StatusCode EdgeGeom::findElementSizes()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfElements(), 0.0f);
-  auto sizes = DataArray<float32>::Create(*getDataStructure(), "Edge Lengths", std::move(dataStore), getId());
-  m_EdgeSizesId = sizes->getId();
+  auto* sizes = DataArray<float32>::Create(*getDataStructure(), "Edge Lengths", std::move(dataStore), getId());
+  if(sizes == nullptr)
+  {
+    return -1;
+  }
+  m_ElementSizesId = sizes->getId();
 
   Point3D<float32> vert0 = {0.0f, 0.0f, 0.0f};
   Point3D<float32> vert1 = {0.0f, 0.0f, 0.0f};
@@ -326,50 +166,29 @@ AbstractGeometry::StatusCode EdgeGeom::findElementSizes()
     {
       length += (vert0[j] - vert1[j]) * (vert0[j] - vert1[j]);
     }
-    (*sizes)[i] = sqrtf(length);
+    (*sizes)[i] = std::sqrt(length);
   }
 
   return 1;
 }
 
-const Float32Array* EdgeGeom::getElementSizes() const
+IGeometry::StatusCode EdgeGeom::findElementsContainingVert()
 {
-  return dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_EdgeSizesId));
-}
-
-void EdgeGeom::deleteElementSizes()
-{
-  getDataStructure()->removeData(m_EdgeSizesId.value());
-  m_EdgeSizesId.reset();
-}
-
-AbstractGeometry::StatusCode EdgeGeom::findElementsContainingVert()
-{
-  auto containsVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Edges Containing Vert", getId());
+  auto* containsVert = ElementDynamicList::Create(*getDataStructure(), "Edges Containing Vert", getId());
+  if(containsVert == nullptr)
+  {
+    return -1;
+  }
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getEdges(), containsVert, getNumberOfVertices());
   if(getElementsContainingVert() == nullptr)
   {
     return -1;
   }
+  m_ElementContainingVertId = containsVert->getId();
   return 1;
 }
 
-const AbstractGeometry::ElementDynamicList* EdgeGeom::getElementsContainingVert() const
-{
-  return dynamic_cast<const ElementDynamicList*>(getDataStructure()->getData(m_EdgesContainingVertId.value()));
-}
-
-void EdgeGeom::deleteElementsContainingVert()
-{
-  if(!m_EdgesContainingVertId)
-  {
-    return;
-  }
-  getDataStructure()->removeData(m_EdgesContainingVertId.value());
-  m_EdgesContainingVertId.reset();
-}
-
-AbstractGeometry::StatusCode EdgeGeom::findElementNeighbors()
+IGeometry::StatusCode EdgeGeom::findElementNeighbors()
 {
   StatusCode err = 0;
   if(getElementsContainingVert() == nullptr)
@@ -380,150 +199,54 @@ AbstractGeometry::StatusCode EdgeGeom::findElementNeighbors()
       return err;
     }
   }
-  auto edgeNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Edge Neighbors", getId());
+  auto* edgeNeighbors = ElementDynamicList::Create(*getDataStructure(), "Edge Neighbors", getId());
   if(edgeNeighbors == nullptr)
   {
     err = -1;
     return err;
   }
-  m_EdgeNeighborsId = edgeNeighbors->getId();
-  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getEdges(), getElementsContainingVert(), edgeNeighbors, AbstractGeometry::Type::Edge);
+  m_ElementNeighborsId = edgeNeighbors->getId();
+  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getEdges(), getElementsContainingVert(), edgeNeighbors, IGeometry::Type::Edge);
   if(getElementNeighbors() == nullptr)
   {
-    m_EdgeNeighborsId.reset();
+    m_ElementNeighborsId.reset();
     err = -1;
   }
   return err;
 }
 
-const AbstractGeometry::ElementDynamicList* EdgeGeom::getElementNeighbors() const
-{
-  return dynamic_cast<const ElementDynamicList*>(getDataStructure()->getData(m_EdgeNeighborsId));
-}
-
-void EdgeGeom::deleteElementNeighbors()
-{
-  if(!m_EdgeNeighborsId)
-  {
-    return;
-  }
-  getDataStructure()->removeData(m_EdgeNeighborsId.value());
-  m_EdgeNeighborsId.reset();
-}
-
-AbstractGeometry::StatusCode EdgeGeom::findElementCentroids()
+IGeometry::StatusCode EdgeGeom::findElementCentroids()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfElements()}, std::vector<usize>{3}, 0.0f);
-  Float32Array* edgeCentroids = DataArray<float32>::Create(*getDataStructure(), "Edge Centroids", std::move(dataStore), getId());
+  auto* edgeCentroids = DataArray<float32>::Create(*getDataStructure(), "Edge Centroids", std::move(dataStore), getId());
   GeometryHelpers::Topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroids);
   if(getElementCentroids() == nullptr)
   {
     return -1;
   }
+  m_ElementCentroidsId = edgeCentroids->getId();
   return 1;
 }
 
-const Float32Array* EdgeGeom::getElementCentroids() const
-{
-  if(!m_EdgeCentroidsId)
-  {
-    return nullptr;
-  }
-  return dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_EdgeCentroidsId.value()));
-}
-
-void EdgeGeom::deleteElementCentroids()
-{
-  if(!m_EdgeCentroidsId)
-  {
-    return;
-  }
-  getDataStructure()->removeData(m_EdgeCentroidsId.value());
-  m_EdgeCentroidsId.reset();
-}
-
-complex::Point3D<float64> EdgeGeom::getParametricCenter() const
+Point3D<float64> EdgeGeom::getParametricCenter() const
 {
   return {0.5, 0.0, 0.0};
 }
 
-void EdgeGeom::getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const
+void EdgeGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pCoords, float64* shape) const
 {
-  (void)pCoords;
-
   shape[0] = -1.0;
   shape[1] = 1.0;
-}
-
-void EdgeGeom::findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const
-{
-  throw std::runtime_error("");
-}
-
-complex::TooltipGenerator EdgeGeom::getTooltipGenerator() const
-{
-  TooltipGenerator toolTipGen;
-  toolTipGen.addTitle("Geometry Info");
-  toolTipGen.addValue("Type", "EdgeGeom");
-  toolTipGen.addValue("Units", LengthUnitToString(getUnits()));
-  toolTipGen.addValue("Number of Edges", std::to_string(getNumberOfEdges()));
-  toolTipGen.addValue("Number of Vertices", std::to_string(getNumberOfVertices()));
-  return toolTipGen;
-}
-
-uint32 EdgeGeom::getXdmfGridType() const
-{
-  throw std::runtime_error("");
-}
-
-void EdgeGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)
-{
-  deleteElementsContainingVert();
-  if(!elementsContainingVert)
-  {
-    return;
-  }
-  m_EdgesContainingVertId = elementsContainingVert->getId();
-}
-
-void EdgeGeom::setElementNeighbors(const ElementDynamicList* elementNeighbors)
-{
-  deleteElementNeighbors();
-  if(!elementNeighbors)
-  {
-    return;
-  }
-  m_EdgeNeighborsId = elementNeighbors->getId();
-}
-
-void EdgeGeom::setElementCentroids(const Float32Array* elementCentroids)
-{
-  deleteElementCentroids();
-  if(!elementCentroids)
-  {
-    return;
-  }
-  m_EdgeCentroidsId = elementCentroids->getId();
-}
-
-void EdgeGeom::setElementSizes(const Float32Array* elementSizes)
-{
-  deleteElementSizes();
-  if(!elementSizes)
-  {
-    return;
-  }
-  m_EdgeSizesId = elementSizes->getId();
 }
 
 H5::ErrorType EdgeGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   m_VertexListId = ReadH5DataId(groupReader, H5Constants::k_VertexListTag);
   m_EdgeListId = ReadH5DataId(groupReader, H5Constants::k_EdgeListTag);
-  m_EdgesContainingVertId = ReadH5DataId(groupReader, H5Constants::k_EdgesContainingVertTag);
-  m_EdgeNeighborsId = ReadH5DataId(groupReader, H5Constants::k_EdgeNeighborsTag);
-  m_EdgeCentroidsId = ReadH5DataId(groupReader, H5Constants::k_EdgeCentroidTag);
-  m_EdgeSizesId = ReadH5DataId(groupReader, H5Constants::k_EdgeSizesTag);
+  m_ElementContainingVertId = ReadH5DataId(groupReader, H5Constants::k_EdgesContainingVertTag);
+  m_ElementNeighborsId = ReadH5DataId(groupReader, H5Constants::k_EdgeNeighborsTag);
+  m_ElementCentroidsId = ReadH5DataId(groupReader, H5Constants::k_EdgeCentroidTag);
+  m_ElementSizesId = ReadH5DataId(groupReader, H5Constants::k_EdgeSizesTag);
 
   return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
 }
@@ -549,67 +272,29 @@ H5::ErrorType EdgeGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, 
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_EdgesContainingVertId, H5Constants::k_EdgesContainingVertTag);
+  errorCode = WriteH5DataId(groupWriter, m_ElementContainingVertId, H5Constants::k_EdgesContainingVertTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_EdgeNeighborsId, H5Constants::k_EdgeNeighborsTag);
+  errorCode = WriteH5DataId(groupWriter, m_ElementNeighborsId, H5Constants::k_EdgeNeighborsTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_EdgeCentroidsId, H5Constants::k_EdgeCentroidTag);
+  errorCode = WriteH5DataId(groupWriter, m_ElementCentroidsId, H5Constants::k_EdgeCentroidTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_EdgeSizesId, H5Constants::k_EdgeSizesTag);
+  errorCode = WriteH5DataId(groupWriter, m_ElementSizesId, H5Constants::k_EdgeSizesTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
-}
-
-void EdgeGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
-{
-  AbstractGeometry::checkUpdatedIdsImpl(updatedIds);
-
-  for(const auto& updatedId : updatedIds)
-  {
-    if(m_VertexListId == updatedId.first)
-    {
-      m_VertexListId = updatedId.second;
-    }
-
-    if(m_EdgeListId == updatedId.first)
-    {
-      m_EdgeListId = updatedId.second;
-    }
-
-    if(m_EdgesContainingVertId == updatedId.first)
-    {
-      m_EdgesContainingVertId = updatedId.second;
-    }
-
-    if(m_EdgeNeighborsId == updatedId.first)
-    {
-      m_EdgeNeighborsId = updatedId.second;
-    }
-
-    if(m_EdgeCentroidsId == updatedId.first)
-    {
-      m_EdgeCentroidsId = updatedId.second;
-    }
-
-    if(m_EdgeSizesId == updatedId.first)
-    {
-      m_EdgeSizesId = updatedId.second;
-    }
-  }
+  return errorCode;
 }

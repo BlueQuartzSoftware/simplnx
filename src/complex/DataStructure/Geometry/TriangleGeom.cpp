@@ -12,50 +12,30 @@
 using namespace complex;
 
 TriangleGeom::TriangleGeom(DataStructure& ds, std::string name)
-: AbstractGeometry2D(ds, std::move(name))
+: INodeGeometry2D(ds, std::move(name))
 {
 }
 
 TriangleGeom::TriangleGeom(DataStructure& ds, std::string name, IdType importId)
-: AbstractGeometry2D(ds, std::move(name), importId)
+: INodeGeometry2D(ds, std::move(name), importId)
 {
 }
 
-// TriangleGeom::TriangleGeom(DataStructure& ds, std::string name, usize numTriangles, const SharedVertexList* vertices, bool allocate)
-//: AbstractGeometry2D(ds, std::move(name))
-//{
-//}
-//
-// TriangleGeom::TriangleGeom(DataStructure& ds, std::string name, const SharedTriList* triangles, const SharedVertexList* vertices)
-//: AbstractGeometry2D(ds, std::move(name))
-//{
-//}
-
 TriangleGeom::TriangleGeom(const TriangleGeom& other)
-: AbstractGeometry2D(other)
-, m_TriListId(other.m_TriListId)
-, m_TrianglesContainingVertId(other.m_TrianglesContainingVertId)
-, m_TriangleNeighborsId(other.m_TriangleNeighborsId)
-, m_TriangleCentroidsId(other.m_TriangleCentroidsId)
-, m_TriangleSizesId(other.m_TriangleSizesId)
+: INodeGeometry2D(other)
 {
 }
 
 TriangleGeom::TriangleGeom(TriangleGeom&& other) noexcept
-: AbstractGeometry2D(std::move(other))
-, m_TriListId(std::move(other.m_TriListId))
-, m_TrianglesContainingVertId(std::move(other.m_TrianglesContainingVertId))
-, m_TriangleNeighborsId(std::move(other.m_TriangleNeighborsId))
-, m_TriangleCentroidsId(std::move(other.m_TriangleCentroidsId))
-, m_TriangleSizesId(std::move(other.m_TriangleSizesId))
+: INodeGeometry2D(std::move(other))
 {
 }
 
-TriangleGeom::~TriangleGeom() = default;
+TriangleGeom::~TriangleGeom() noexcept = default;
 
-AbstractGeometry::Type TriangleGeom::getGeomType() const
+IGeometry::Type TriangleGeom::getGeomType() const
 {
-  return AbstractGeometry::Type::Triangle;
+  return IGeometry::Type::Triangle;
 }
 
 DataObject::Type TriangleGeom::getDataObjectType() const
@@ -85,7 +65,7 @@ TriangleGeom* TriangleGeom::Import(DataStructure& ds, std::string name, IdType i
 
 std::string TriangleGeom::getTypeName() const
 {
-  return getGeometryTypeAsString();
+  return "TriangleGeom";
 }
 
 DataObject* TriangleGeom::shallowCopy()
@@ -98,89 +78,28 @@ DataObject* TriangleGeom::deepCopy()
   return new TriangleGeom(*this);
 }
 
-std::string TriangleGeom::getGeometryTypeAsString() const
-{
-  return "TriangleGeom";
-}
-
-void TriangleGeom::resizeFaceList(usize newNumTris)
-{
-  auto* faces = getFaces();
-  if(faces == nullptr)
-  {
-    return;
-  }
-  faces->getDataStore()->reshapeTuples({newNumTris});
-}
-
-void TriangleGeom::setFaces(const SharedTriList* triangles)
-{
-  if(triangles == nullptr)
-  {
-    m_TriListId.reset();
-    return;
-  }
-  m_TriListId = triangles->getId();
-}
-
-AbstractGeometry::SharedTriList* TriangleGeom::getFaces()
-{
-  return dynamic_cast<SharedTriList*>(getDataStructure()->getData(m_TriListId));
-}
-
-const AbstractGeometry::SharedTriList* TriangleGeom::getFaces() const
-{
-  return dynamic_cast<const SharedTriList*>(getDataStructure()->getData(m_TriListId));
-}
-
-std::optional<DataObject::IdType> TriangleGeom::getFacesId() const
-{
-  return m_TriListId;
-}
-
-DataObject::IdType TriangleGeom::getTriangleArrayId()
-{
-  return m_TriListId.value();
-}
-
 void TriangleGeom::setVertexIdsForFace(usize faceId, usize verts[3])
 {
-  auto faces = getFaces();
-  if(faces == nullptr)
-  {
-    return;
-  }
+  auto& faces = getFacesRef();
   const usize offset = faceId * k_NumVerts;
   for(usize i = 0; i < k_NumVerts; i++)
   {
-    (*faces)[offset + i] = verts[i];
+    faces[offset + i] = verts[i];
   }
 }
 
 void TriangleGeom::getVertexIdsForFace(usize faceId, usize verts[3]) const
 {
-  auto faces = getFaces();
-  if(faces == nullptr)
-  {
-    return;
-  }
+  auto& faces = getFacesRef();
   const usize offset = faceId * k_NumVerts;
   for(usize i = 0; i < k_NumVerts; i++)
   {
-    verts[i] = faces->at(offset + i);
+    verts[i] = faces.at(offset + i);
   }
 }
 
 void TriangleGeom::getVertexCoordsForFace(usize faceId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3) const
 {
-  if(getFaces() == nullptr)
-  {
-    return;
-  }
-  if(getVertices() == nullptr)
-  {
-    return;
-  }
   usize verts[k_NumVerts];
   getVertexIdsForFace(faceId, verts);
   vert1 = getCoords(verts[0]);
@@ -190,75 +109,43 @@ void TriangleGeom::getVertexCoordsForFace(usize faceId, Point3D<float32>& vert1,
 
 usize TriangleGeom::getNumberOfFaces() const
 {
-  auto faces = getFaces();
-  if(faces == nullptr)
-  {
-    return 0;
-  }
-  return faces->getNumberOfTuples();
-}
-
-void TriangleGeom::initializeWithZeros()
-{
-  getVertices()->getDataStore()->fill(0.0f);
-  getFaces()->getDataStore()->fill(0);
+  auto& faces = getFacesRef();
+  return faces.getNumberOfTuples();
 }
 
 usize TriangleGeom::getNumberOfElements() const
 {
-  return getFaces()->getNumberOfTuples();
+  return getFacesRef().getNumberOfTuples();
 }
 
-AbstractGeometry::StatusCode TriangleGeom::findElementSizes()
+IGeometry::StatusCode TriangleGeom::findElementSizes()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfFaces()}, std::vector<usize>{1}, 0.0f);
   Float32Array* triangleSizes = DataArray<float32>::Create(*getDataStructure(), "Triangle Areas", std::move(dataStore), getId());
   GeometryHelpers::Topology::Find2DElementAreas(getFaces(), getVertices(), triangleSizes);
   if(triangleSizes == nullptr)
   {
-    m_TriangleSizesId.reset();
+    m_ElementSizesId.reset();
     return -1;
   }
-  m_TriangleSizesId = triangleSizes->getId();
+  m_ElementSizesId = triangleSizes->getId();
   return 1;
 }
 
-const Float32Array* TriangleGeom::getElementSizes() const
-{
-  return dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_TriangleSizesId));
-}
-
-void TriangleGeom::deleteElementSizes()
-{
-  getDataStructure()->removeData(m_TriangleSizesId);
-  m_TriangleSizesId.reset();
-}
-
-AbstractGeometry::StatusCode TriangleGeom::findElementsContainingVert()
+IGeometry::StatusCode TriangleGeom::findElementsContainingVert()
 {
   auto trianglesContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Triangles Containing Vert", getId());
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), trianglesContainingVert, getNumberOfVertices());
   if(trianglesContainingVert == nullptr)
   {
-    m_TrianglesContainingVertId.reset();
+    m_ElementContainingVertId.reset();
     return -1;
   }
-  m_TrianglesContainingVertId = trianglesContainingVert->getId();
+  m_ElementContainingVertId = trianglesContainingVert->getId();
   return 1;
 }
 
-const AbstractGeometry::ElementDynamicList* TriangleGeom::getElementsContainingVert() const
-{
-  return dynamic_cast<const ElementDynamicList*>(getDataStructure()->getData(m_TrianglesContainingVertId));
-}
-
-void TriangleGeom::deleteElementsContainingVert()
-{
-  getDataStructure()->removeData(m_TrianglesContainingVertId);
-  m_TrianglesContainingVertId.reset();
-}
-
-AbstractGeometry::StatusCode TriangleGeom::findElementNeighbors()
+IGeometry::StatusCode TriangleGeom::findElementNeighbors()
 {
   StatusCode err = 0;
   if(getElementsContainingVert() == nullptr)
@@ -270,50 +157,28 @@ AbstractGeometry::StatusCode TriangleGeom::findElementNeighbors()
     }
   }
   auto triangleNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Triangle Neighbors", getId());
-  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), triangleNeighbors, AbstractGeometry::Type::Triangle);
+  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), triangleNeighbors, IGeometry::Type::Triangle);
   if(triangleNeighbors == nullptr)
   {
-    m_TriangleNeighborsId.reset();
+    m_ElementNeighborsId.reset();
     return -1;
   }
-  m_TriangleNeighborsId = triangleNeighbors->getId();
+  m_ElementNeighborsId = triangleNeighbors->getId();
   return err;
 }
 
-const AbstractGeometry::ElementDynamicList* TriangleGeom::getElementNeighbors() const
-{
-  return dynamic_cast<const ElementDynamicList*>(getDataStructure()->getData(m_TriangleNeighborsId));
-}
-
-void TriangleGeom::deleteElementNeighbors()
-{
-  getDataStructure()->removeData(m_TriangleNeighborsId);
-  m_TriangleNeighborsId.reset();
-}
-
-AbstractGeometry::StatusCode TriangleGeom::findElementCentroids()
+IGeometry::StatusCode TriangleGeom::findElementCentroids()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfFaces()}, std::vector<usize>{3}, 0.0f);
   auto triangleCentroids = DataArray<float32>::Create(*getDataStructure(), "Triangle Centroids", std::move(dataStore), getId());
   GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), triangleCentroids);
   if(triangleCentroids == nullptr)
   {
-    m_TriangleCentroidsId.reset();
+    m_ElementCentroidsId.reset();
     return -1;
   }
-  m_TriangleCentroidsId = triangleCentroids->getId();
+  m_ElementCentroidsId = triangleCentroids->getId();
   return 1;
-}
-
-const Float32Array* TriangleGeom::getElementCentroids() const
-{
-  return dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_TriangleCentroidsId));
-}
-
-void TriangleGeom::deleteElementCentroids()
-{
-  getDataStructure()->removeData(m_TriangleCentroidsId);
-  m_TriangleCentroidsId.reset();
 }
 
 complex::Point3D<float64> TriangleGeom::getParametricCenter() const
@@ -321,10 +186,8 @@ complex::Point3D<float64> TriangleGeom::getParametricCenter() const
   return {1.0 / 3.0, 1.0 / 3.0, 0.0};
 }
 
-void TriangleGeom::getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const
+void TriangleGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pCoords, float64* shape) const
 {
-  (void)pCoords;
-
   // r derivatives
   shape[0] = -1.0;
   shape[1] = 1.0;
@@ -336,171 +199,78 @@ void TriangleGeom::getShapeFunctions(const complex::Point3D<float64>& pCoords, d
   shape[5] = 1.0;
 }
 
-void TriangleGeom::findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const
-{
-  throw std::runtime_error("");
-}
-
-complex::TooltipGenerator TriangleGeom::getTooltipGenerator() const
-{
-  TooltipGenerator toolTipGen;
-  toolTipGen.addTitle("Geometry Info");
-  toolTipGen.addValue("Type", "TriangleGeom");
-  toolTipGen.addValue("Units", LengthUnitToString(getUnits()));
-  toolTipGen.addValue("Number of Triangles", std::to_string(getNumberOfFaces()));
-  toolTipGen.addValue("Number of Vertices", std::to_string(getNumberOfVertices()));
-
-  return toolTipGen;
-}
-
 void TriangleGeom::setCoords(usize vertId, const Point3D<float32>& coords)
 {
-  auto vertices = getVertices();
-  if(!vertices)
-  {
-    return;
-  }
+  auto& vertices = getVerticesRef();
   const usize offset = vertId * 3;
   for(usize i = 0; i < 3; i++)
   {
-    (*vertices)[offset + i] = coords[i];
+    vertices[offset + i] = coords[i];
   }
 }
 
 Point3D<float32> TriangleGeom::getCoords(usize vertId) const
 {
-  auto vertices = getVertices();
-  if(!vertices)
-  {
-    return {};
-  }
+  auto& vertices = getVerticesRef();
   const usize offset = vertId * 3;
   Point3D<float32> coords;
   for(usize i = 0; i < 3; i++)
   {
-    coords[i] = vertices->at(offset + i);
+    coords[i] = vertices.at(offset + i);
   }
   return coords;
 }
 
-usize TriangleGeom::getNumberOfVertices() const
-{
-  auto vertices = getVertices();
-  if(!vertices)
-  {
-    return 0;
-  }
-  return vertices->getNumberOfTuples();
-}
-
-AbstractGeometry::StatusCode TriangleGeom::findEdges()
+IGeometry::StatusCode TriangleGeom::findEdges()
 {
   auto dataStore = std::make_unique<DataStore<uint64>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
   DataArray<uint64>* edgeList = DataArray<uint64>::Create(*getDataStructure(), "Edge List", std::move(dataStore), getId());
   GeometryHelpers::Connectivity::Find2DElementEdges(getFaces(), edgeList);
   if(edgeList == nullptr)
   {
-    setEdges(nullptr);
+    m_EdgeListId.reset();
     return -1;
   }
-  setEdges(edgeList);
+  m_EdgeListId = edgeList->getId();
   return 1;
-}
-
-void TriangleGeom::resizeEdgeList(usize newNumEdges)
-{
-  getEdges()->getDataStore()->reshapeTuples({newNumEdges});
 }
 
 void TriangleGeom::getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const
 {
-  if(!getEdges())
-  {
-    return;
-  }
-  if(!getVertices())
-  {
-    return;
-  }
   usize verts[2];
   getVertsAtEdge(edgeId, verts);
   vert1 = getCoords(verts[0]);
   vert2 = getCoords(verts[1]);
 }
 
-AbstractGeometry::StatusCode TriangleGeom::findUnsharedEdges()
+IGeometry::StatusCode TriangleGeom::findUnsharedEdges()
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
-  auto unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", std::move(dataStore), getId());
+  auto* unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", std::move(dataStore), getId());
   GeometryHelpers::Connectivity::Find2DUnsharedEdges(getFaces(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
-    setUnsharedEdges(nullptr);
+    m_UnsharedEdgeListId.reset();
     return -1;
   }
-  setUnsharedEdges(unsharedEdgeList);
+  m_UnsharedEdgeListId = unsharedEdgeList->getId();
   return 1;
-}
-
-uint32 TriangleGeom::getXdmfGridType() const
-{
-  throw std::runtime_error("");
-}
-
-void TriangleGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)
-{
-  if(!elementsContainingVert)
-  {
-    m_TrianglesContainingVertId.reset();
-    return;
-  }
-  m_TrianglesContainingVertId = elementsContainingVert->getId();
-}
-
-void TriangleGeom::setElementNeighbors(const ElementDynamicList* elementNeighbors)
-{
-  if(!elementNeighbors)
-  {
-    m_TriangleNeighborsId.reset();
-    return;
-  }
-  m_TriangleNeighborsId = elementNeighbors->getId();
-}
-
-void TriangleGeom::setElementCentroids(const Float32Array* elementCentroids)
-{
-  if(!elementCentroids)
-  {
-    m_TriangleCentroidsId.reset();
-    return;
-  }
-  m_TriangleCentroidsId = elementCentroids->getId();
-}
-
-void TriangleGeom::setElementSizes(const Float32Array* elementSizes)
-{
-  if(!elementSizes)
-  {
-    m_TriangleSizesId.reset();
-    return;
-  }
-  m_TriangleSizesId = elementSizes->getId();
 }
 
 H5::ErrorType TriangleGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
-  m_TriListId = ReadH5DataId(groupReader, H5Constants::k_TriangleListTag);
-  m_TrianglesContainingVertId = ReadH5DataId(groupReader, H5Constants::k_TrianglesContainingVertTag);
-  m_TriangleNeighborsId = ReadH5DataId(groupReader, H5Constants::k_TriangleNeighborsTag);
-  m_TriangleCentroidsId = ReadH5DataId(groupReader, H5Constants::k_TriangleCentroidsTag);
-  m_TriangleSizesId = ReadH5DataId(groupReader, H5Constants::k_TriangleSizesTag);
+  m_FaceListId = ReadH5DataId(groupReader, H5Constants::k_TriangleListTag);
+  m_ElementContainingVertId = ReadH5DataId(groupReader, H5Constants::k_TrianglesContainingVertTag);
+  m_ElementNeighborsId = ReadH5DataId(groupReader, H5Constants::k_TriangleNeighborsTag);
+  m_ElementCentroidsId = ReadH5DataId(groupReader, H5Constants::k_TriangleCentroidsTag);
+  m_ElementSizesId = ReadH5DataId(groupReader, H5Constants::k_TriangleSizesTag);
 
-  return AbstractGeometry2D::readHdf5(dataStructureReader, groupReader, preflight);
+  return INodeGeometry2D::readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 H5::ErrorType TriangleGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
-  auto errorCode = AbstractGeometry2D::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
+  auto errorCode = INodeGeometry2D::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
   if(errorCode < 0)
   {
     return errorCode;
@@ -514,68 +284,35 @@ H5::ErrorType TriangleGeom::writeHdf5(H5::DataStructureWriter& dataStructureWrit
   }
 
   // Write DataObject IDs
-  errorCode = WriteH5DataId(groupWriter, m_TriListId, H5Constants::k_TriangleListTag);
+  errorCode = WriteH5DataId(groupWriter, m_FaceListId, H5Constants::k_TriangleListTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_TrianglesContainingVertId, H5Constants::k_TrianglesContainingVertTag);
+  errorCode = WriteH5DataId(groupWriter, m_ElementContainingVertId, H5Constants::k_TrianglesContainingVertTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_TriangleNeighborsId, H5Constants::k_TriangleNeighborsTag);
+  errorCode = WriteH5DataId(groupWriter, m_ElementNeighborsId, H5Constants::k_TriangleNeighborsTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_TriangleCentroidsId, H5Constants::k_TriangleCentroidsTag);
+  errorCode = WriteH5DataId(groupWriter, m_ElementCentroidsId, H5Constants::k_TriangleCentroidsTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_TriangleSizesId, H5Constants::k_TriangleSizesTag);
+  errorCode = WriteH5DataId(groupWriter, m_ElementSizesId, H5Constants::k_TriangleSizesTag);
   if(errorCode < 0)
   {
     return errorCode;
   }
 
-  return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
-}
-
-void TriangleGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
-{
-  AbstractGeometry2D::checkUpdatedIdsImpl(updatedIds);
-
-  for(const auto& updatedId : updatedIds)
-  {
-    if(m_TriListId == updatedId.first)
-    {
-      m_TriListId = updatedId.second;
-    }
-
-    if(m_TrianglesContainingVertId == updatedId.first)
-    {
-      m_TrianglesContainingVertId = updatedId.second;
-    }
-
-    if(m_TriangleNeighborsId == updatedId.first)
-    {
-      m_TriangleNeighborsId = updatedId.second;
-    }
-
-    if(m_TriangleCentroidsId == updatedId.first)
-    {
-      m_TriangleCentroidsId = updatedId.second;
-    }
-
-    if(m_TriangleSizesId == updatedId.first)
-    {
-      m_TriangleSizesId = updatedId.second;
-    }
-  }
+  return errorCode;
 }

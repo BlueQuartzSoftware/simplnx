@@ -18,28 +18,15 @@ using namespace complex;
 ////////////////////////////////////
 // Begin generic geometry testing //
 ////////////////////////////////////
-void testAbstractGeometry(AbstractGeometry* geom)
+void testAbstractGeometry(IGeometry* geom)
 {
   SECTION("abstract geometry")
   {
     SECTION("units")
     {
-      const auto units = AbstractGeometry::LengthUnit::Fathom;
+      const auto units = IGeometry::LengthUnit::Fathom;
       geom->setUnits(units);
       REQUIRE(geom->getUnits() == units);
-    }
-    SECTION("time series")
-    {
-      geom->setTimeSeriesEnabled(false);
-      REQUIRE(geom->getTimeSeriesEnabled() == false);
-      geom->setTimeSeriesEnabled(true);
-      REQUIRE(geom->getTimeSeriesEnabled() == true);
-    }
-    SECTION("time value")
-    {
-      const float32 timeValue = 6.4f;
-      geom->setTimeValue(timeValue);
-      REQUIRE(geom->getTimeValue() == timeValue);
     }
     SECTION("dimensionality")
     {
@@ -51,15 +38,10 @@ void testAbstractGeometry(AbstractGeometry* geom)
       geom->setSpatialDimensionality(sDims);
       REQUIRE(geom->getSpatialDimensionality() == sDims);
     }
-
-    SECTION("info string")
-    {
-      REQUIRE(geom->getInfoString(InfoStringFormat::HtmlFormat) == geom->getTooltipGenerator().generateHTML());
-    }
   }
 }
 
-void testGeom2D(AbstractGeometry2D* geom)
+void testGeom2D(INodeGeometry2D* geom)
 {
   SECTION("abstract geometry 2D")
   {
@@ -70,7 +52,7 @@ void testGeom2D(AbstractGeometry2D* geom)
     {
       auto vertices = createVertexList(geom);
       REQUIRE(vertices != nullptr);
-      geom->setVertices(vertices);
+      geom->setVertices(*vertices);
       REQUIRE(geom->getVertices() == vertices);
       const usize numVertices = 10;
       geom->resizeVertexList(numVertices);
@@ -83,7 +65,7 @@ void testGeom2D(AbstractGeometry2D* geom)
     // edges
     {
       auto edges = createEdgeList(geom);
-      geom->setEdges(edges);
+      geom->setEdges(*edges);
       REQUIRE(geom->getEdges() == edges);
       const usize numEdges = 5;
       geom->resizeEdgeList(numEdges);
@@ -104,7 +86,7 @@ void testGeom2D(AbstractGeometry2D* geom)
   }
 }
 
-void testGeom3D(AbstractGeometry3D* geom)
+void testGeom3D(INodeGeometry3D* geom)
 {
   SECTION("abstract geometry 3D")
   {
@@ -114,7 +96,7 @@ void testGeom3D(AbstractGeometry3D* geom)
     // vertices
     {
       auto vertices = createVertexList(geom);
-      geom->setVertices(vertices);
+      geom->setVertices(*vertices);
       REQUIRE(geom->getVertices() == vertices);
       const usize numVertices = 10;
       geom->resizeVertexList(numVertices);
@@ -126,7 +108,7 @@ void testGeom3D(AbstractGeometry3D* geom)
     // edges
     {
       auto edges = createEdgeList(geom);
-      geom->setEdges(edges);
+      geom->setEdges(*edges);
       REQUIRE(geom->getEdges() == edges);
       const usize numEdges = 5;
       geom->resizeEdgeList(numEdges);
@@ -150,7 +132,7 @@ void testGeom3D(AbstractGeometry3D* geom)
   }
 }
 
-void testGeomGrid(AbstractGeometryGrid* geom)
+void testGeomGrid(IGridGeometry* geom)
 {
   SECTION("abstract geometry grid")
   {
@@ -179,7 +161,7 @@ TEST_CASE("EdgeGeomTest")
 
   SECTION("type as string")
   {
-    REQUIRE(geom->getGeometryTypeAsString() == "EdgeGeom");
+    REQUIRE(geom->getTypeName() == "EdgeGeom");
   }
 }
 
@@ -192,7 +174,7 @@ TEST_CASE("HexahedralGeomTest")
 
   SECTION("type as string")
   {
-    REQUIRE(geom->getGeometryTypeAsString() == "HexahedralGeom");
+    REQUIRE(geom->getTypeName() == "HexahedralGeom");
   }
 }
 
@@ -205,7 +187,7 @@ TEST_CASE("ImageGeomTest")
 
   SECTION("type as string")
   {
-    REQUIRE(geom->getGeometryTypeAsString() == "ImageGeom");
+    REQUIRE(geom->getTypeName() == "ImageGeom");
   }
 }
 
@@ -218,7 +200,7 @@ TEST_CASE("QuadGeomTest")
 
   SECTION("type as string")
   {
-    REQUIRE(geom->getGeometryTypeAsString() == "QuadGeom");
+    REQUIRE(geom->getTypeName() == "QuadGeom");
   }
 }
 
@@ -231,7 +213,7 @@ TEST_CASE("RectGridGeomTest")
 
   SECTION("type as string")
   {
-    REQUIRE(geom->getGeometryTypeAsString() == "RectGridGeom");
+    REQUIRE(geom->getTypeName() == "RectGridGeom");
   }
 }
 
@@ -244,7 +226,7 @@ TEST_CASE("TetrahedralGeomTest")
 
   SECTION("type as string")
   {
-    REQUIRE(geom->getGeometryTypeAsString() == "TetrahedralGeom");
+    REQUIRE(geom->getTypeName() == "TetrahedralGeom");
   }
 }
 
@@ -257,7 +239,7 @@ TEST_CASE("TriangleGeomTest")
 
   SECTION("type as string")
   {
-    REQUIRE(geom->getGeometryTypeAsString() == "TriangleGeom");
+    REQUIRE(geom->getTypeName() == "TriangleGeom");
   }
 }
 
@@ -270,6 +252,6 @@ TEST_CASE("VertexGeomTest")
 
   SECTION("type as string")
   {
-    REQUIRE(geom->getGeometryTypeAsString() == "VertexGeom");
+    REQUIRE(geom->getTypeName() == "VertexGeom");
   }
 }

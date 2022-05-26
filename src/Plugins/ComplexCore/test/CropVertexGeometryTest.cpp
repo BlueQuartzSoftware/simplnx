@@ -21,7 +21,7 @@ DataStructure createTestData()
   DataStructure dataStructure;
   auto* vertexGeom = VertexGeom::Create(dataStructure, "VertexGeom");
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeom->getId());
-  vertexGeom->setVertices(vertexArray);
+  vertexGeom->setVertices(*vertexArray);
 
   auto* dataArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "DataArray", {k_TupleCount}, {1}, vertexGeom->getId());
   auto& dataStore = dataArray->getDataStoreRef();

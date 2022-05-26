@@ -4,8 +4,7 @@
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
+#include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 
@@ -41,7 +40,7 @@ public:
   QuickSurfaceMesh& operator=(const QuickSurfaceMesh&) = delete;
   QuickSurfaceMesh& operator=(QuickSurfaceMesh&&) noexcept = delete;
 
-  using MeshIndexType = AbstractGeometry::MeshIndexType;
+  using MeshIndexType = IGeometry::MeshIndexType;
 
   Result<> operator()();
 
@@ -54,7 +53,7 @@ public:
    * @param verts
    * @param nodeIndex
    */
-  void getGridCoordinates(const AbstractGeometryGrid* grid, size_t x, size_t y, size_t z, AbstractGeometry::SharedVertexList& verts, AbstractGeometry::MeshIndexType nodeIndex);
+  void getGridCoordinates(const IGridGeometry* grid, size_t x, size_t y, size_t z, IGeometry::SharedVertexList& verts, IGeometry::MeshIndexType nodeIndex);
 
   /**
    *

@@ -1,7 +1,7 @@
 #include "GridMontage.hpp"
 
 #include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
@@ -140,7 +140,7 @@ GridTileIndex GridMontage::getTileIndex(const SizeVec3& pos) const
   return getTileIndex(pos[0], pos[1], pos[2]);
 }
 
-std::optional<SizeVec3> GridMontage::getTilePosOfGeometry(const AbstractGeometry* geom) const
+std::optional<SizeVec3> GridMontage::getTilePosOfGeometry(const IGeometry* geom) const
 {
   for(usize i = 0; i < getTileCount(); i++)
   {
@@ -152,7 +152,7 @@ std::optional<SizeVec3> GridMontage::getTilePosOfGeometry(const AbstractGeometry
   return {};
 }
 
-std::shared_ptr<AbstractTileIndex> GridMontage::getTileIndex(AbstractGeometry* geom) const
+std::shared_ptr<AbstractTileIndex> GridMontage::getTileIndex(IGeometry* geom) const
 {
   auto tilePos = getTilePosOfGeometry(geom);
   if(!tilePos)
@@ -162,7 +162,7 @@ std::shared_ptr<AbstractTileIndex> GridMontage::getTileIndex(AbstractGeometry* g
   return std::shared_ptr<AbstractTileIndex>(new GridTileIndex(this, tilePos.value()));
 }
 
-AbstractGeometry* GridMontage::getGeometry(const AbstractTileIndex* index)
+IGeometry* GridMontage::getGeometry(const AbstractTileIndex* index)
 {
   auto pos = dynamic_cast<const GridTileIndex*>(index);
   if(!pos)
@@ -172,7 +172,7 @@ AbstractGeometry* GridMontage::getGeometry(const AbstractTileIndex* index)
   return getGeometry(pos->getTilePos());
 }
 
-const AbstractGeometry* GridMontage::getGeometry(const AbstractTileIndex* index) const
+const IGeometry* GridMontage::getGeometry(const AbstractTileIndex* index) const
 {
   auto pos = dynamic_cast<const GridTileIndex*>(index);
   if(!pos)
@@ -182,19 +182,19 @@ const AbstractGeometry* GridMontage::getGeometry(const AbstractTileIndex* index)
   return getGeometry(pos->getTilePos());
 }
 
-AbstractGeometry* GridMontage::getGeometry(const SizeVec3& position)
+IGeometry* GridMontage::getGeometry(const SizeVec3& position)
 {
   usize index = getOffsetFromTilePos(position);
   return getCollection()[index];
 }
 
-const AbstractGeometry* GridMontage::getGeometry(const SizeVec3& position) const
+const IGeometry* GridMontage::getGeometry(const SizeVec3& position) const
 {
   usize index = getOffsetFromTilePos(position);
   return getCollection()[index];
 }
 
-void GridMontage::setGeometry(const AbstractTileIndex* index, AbstractGeometry* geom)
+void GridMontage::setGeometry(const AbstractTileIndex* index, IGeometry* geom)
 {
   auto pos = dynamic_cast<const GridTileIndex*>(index);
   if(!pos)
@@ -204,7 +204,7 @@ void GridMontage::setGeometry(const AbstractTileIndex* index, AbstractGeometry* 
   setGeometry(pos->getTilePos(), geom);
 }
 
-void GridMontage::setGeometry(const SizeVec3& position, AbstractGeometry* geom)
+void GridMontage::setGeometry(const SizeVec3& position, IGeometry* geom)
 {
   CollectionType& collection = getCollection();
   usize index = getOffsetFromTilePos(position);

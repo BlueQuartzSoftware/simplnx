@@ -109,7 +109,7 @@ Result<> PointSampleTriangleGeometry::operator()()
     return MakeErrorResult(-502, "Use Mask is true but the MaskArray could not be extracted from the DataStructure. Please ensure the path is correct and that the selected DataArray is of type bool");
   }
   // Get a reference to the Vertex List
-  AbstractGeometry::SharedVertexList* vertices = vertex.getVertices();
+  IGeometry::SharedVertexList* vertices = vertex.getVertices();
 
   // Create a vector of TupleTransferFunctions for each of the Triangle Face to Vertex Data Arrays
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;

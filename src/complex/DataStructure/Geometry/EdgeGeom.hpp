@@ -1,7 +1,6 @@
 #pragma once
 
-#include "complex/Common/Point3D.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "complex/DataStructure/Geometry/INodeGeometry1D.hpp"
 
 #include "complex/complex_export.hpp"
 
@@ -11,7 +10,7 @@ namespace complex
  * @class EdgeGeom
  * @brief
  */
-class COMPLEX_EXPORT EdgeGeom : public AbstractGeometry
+class COMPLEX_EXPORT EdgeGeom : public INodeGeometry1D
 {
 public:
   friend class DataStructure;
@@ -49,7 +48,7 @@ public:
    */
   EdgeGeom(EdgeGeom&& other) noexcept;
 
-  virtual ~EdgeGeom();
+  ~EdgeGeom() noexcept override;
 
   EdgeGeom& operator=(const EdgeGeom&) = delete;
   EdgeGeom& operator=(EdgeGeom&&) noexcept = delete;
@@ -58,7 +57,7 @@ public:
    * @brief Returns the type of geometry.
    * @return
    */
-  AbstractGeometry::Type getGeomType() const override;
+  IGeometry::Type getGeomType() const override;
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
@@ -86,103 +85,31 @@ public:
 
   /**
    * @brief
-   * @return std::string
-   */
-  std::string getGeometryTypeAsString() const override;
-
-  /**
-   * @brief
-   * @param newNumVertices
-   */
-  void resizeVertexList(usize newNumVertices);
-
-  /**
-   * @brief
-   * @param vertices
-   */
-  void setVertices(const SharedVertexList* vertices);
-
-  /**
-   * @brief
-   * @return SharedVertexList*
-   */
-  SharedVertexList* getVertices();
-
-  /**
-   * @brief
-   * @return const SharedVertexList*
-   */
-  const SharedVertexList* getVertices() const;
-
-  /**
-   * @brief Returns the DataObject ID for the vertices array. Returns an empty optional if no vertex array has been set.
-   * @return std::optional<IdType>
-   */
-  std::optional<DataObject::IdType> getVerticesId() const;
-
-  /**
-   * @brief
    * @param vertId
    * @param coords
    */
-  void setCoords(usize vertId, const complex::Point3D<float32>& coords);
+  void setCoords(usize vertId, const Point3D<float32>& coords) override;
 
   /**
    * @brief
    * @param vertId
    * @return Point3D<float32>
    */
-  complex::Point3D<float32> getCoords(usize vertId) const;
-
-  /**
-   * @brief
-   * @return usize
-   */
-  usize getNumberOfVertices() const;
-
-  /**
-   * @brief
-   * @param newNumEdges
-   */
-  void resizeEdgeList(usize newNumEdges);
-
-  /**
-   * @brief
-   * @param edges
-   */
-  void setEdges(const SharedEdgeList* edges);
-
-  /**
-   * @brief
-   * @return SharedEdgeList*
-   */
-  SharedEdgeList* getEdges();
-
-  /**
-   * @brief
-   * @return const SharedEdgeList*
-   */
-  const SharedEdgeList* getEdges() const;
-
-  /**
-   * @brief Returns the DataObject ID for the SharedEdgeList array. Returns an empty optional if no edge list array has been set.
-   * @return std::optional<IdType>
-   */
-  std::optional<DataObject::IdType> getEdgesId() const;
+  Point3D<float32> getCoords(usize vertId) const override;
 
   /**
    * @brief
    * @param edgeId
    * @param verts
    */
-  void setVertsAtEdge(usize edgeId, usize verts[2]);
+  void setVertsAtEdge(usize edgeId, const usize verts[2]) override;
 
   /**
    * @brief
    * @param edgeId
    * @param verts
    */
-  void getVertsAtEdge(usize edgeId, usize verts[2]) const;
+  void getVertsAtEdge(usize edgeId, usize verts[2]) const override;
 
   /**
    * @brief
@@ -190,18 +117,7 @@ public:
    * @param vert1
    * @param vert2
    */
-  void getVertCoordsAtEdge(usize edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const;
-
-  /**
-   * @brief
-   * @return usize
-   */
-  usize getNumberOfEdges() const;
-
-  /**
-   * @brief
-   */
-  void initializeWithZeros() override;
+  void getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const override;
 
   /**
    * @brief
@@ -217,31 +133,9 @@ public:
 
   /**
    * @brief
-   * @return const Float32Array*
-   */
-  const Float32Array* getElementSizes() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementSizes() override;
-
-  /**
-   * @brief
    * @return StatusCode
    */
   StatusCode findElementsContainingVert() override;
-
-  /**
-   * @brief
-   * @return const ElementDynamicList*
-   */
-  const ElementDynamicList* getElementsContainingVert() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementsContainingVert() override;
 
   /**
    * @brief
@@ -251,64 +145,22 @@ public:
 
   /**
    * @brief
-   * @return const ElementDynamicList*
-   */
-  const ElementDynamicList* getElementNeighbors() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementNeighbors() override;
-
-  /**
-   * @brief
    * @return StatusCode
    */
   StatusCode findElementCentroids() override;
 
   /**
    * @brief
-   * @return const Float32Array*
+   * @return Point3D<float64>
    */
-  const Float32Array* getElementCentroids() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementCentroids() override;
-
-  /**
-   * @brief
-   * @return complex::Point3D<float64>
-   */
-  complex::Point3D<float64> getParametricCenter() const override;
+  Point3D<float64> getParametricCenter() const override;
 
   /**
    * @brief
    * @param pCoords
    * @param shape
    */
-  void getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const override;
-
-  /**
-   * @brief
-   * @param field
-   * @param derivatives
-   * @param observable
-   */
-  void findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const override;
-
-  /**
-   * @brief
-   * @return complex::TooltipGenerator
-   */
-  complex::TooltipGenerator getTooltipGenerator() const override;
-
-  /**
-   * @brief
-   * @return uint32
-   */
-  uint32 getXdmfGridType() const override;
+  void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
 
   /**
    * @brief Reads values from HDF5
@@ -332,15 +184,6 @@ protected:
    * @brief
    * @param ds
    * @param name
-   * @param edges
-   * @param vertices
-   */
-  EdgeGeom(DataStructure& ds, std::string name, const SharedEdgeList* edges, const SharedVertexList* vertices);
-
-  /**
-   * @brief
-   * @param ds
-   * @param name
    */
   EdgeGeom(DataStructure& ds, std::string name);
 
@@ -351,43 +194,5 @@ protected:
    * @param importId
    */
   EdgeGeom(DataStructure& ds, std::string name, IdType importId);
-
-  /**
-   * @brief
-   * @param elementsContainingVert
-   */
-  void setElementsContainingVert(const ElementDynamicList* elementsContainingVert) override;
-
-  /**
-   * @brief
-   * @param elementNeighbors
-   */
-  void setElementNeighbors(const ElementDynamicList* elementNeighbors) override;
-
-  /**
-   * @brief
-   * @param elementCentroids
-   */
-  void setElementCentroids(const Float32Array* elementCentroids) override;
-
-  /**
-   * @brief
-   * @param elementSizes
-   */
-  void setElementSizes(const Float32Array* elementSizes) override;
-
-  /**
-   * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
-   * @param updatedIds
-   */
-  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
-
-private:
-  std::optional<IdType> m_VertexListId;
-  std::optional<IdType> m_EdgeListId;
-  std::optional<IdType> m_EdgesContainingVertId;
-  std::optional<IdType> m_EdgeNeighborsId;
-  std::optional<IdType> m_EdgeCentroidsId;
-  std::optional<IdType> m_EdgeSizesId;
 };
 } // namespace complex

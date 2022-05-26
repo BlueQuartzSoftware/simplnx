@@ -5,6 +5,7 @@
 #include "complex/Common/Array.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/Utilities/Math/GeometryMath.hpp"
 
 namespace complex
@@ -77,7 +78,7 @@ void FindElementsContainingVert(const DataArray<K>* elemList, DynamicListArray<T
  * @return int32
  */
 template <typename T, typename K>
-ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListArray<T, K>* elemsContainingVert, DynamicListArray<T, K>* dynamicList, AbstractGeometry::Type geometryType)
+ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListArray<T, K>* elemsContainingVert, DynamicListArray<T, K>* dynamicList, IGeometry::Type geometryType)
 {
   DataStructure* dataStructure = dynamicList->getDataStructure();
   auto parentId = dynamicList->getParentIds().front();
@@ -90,27 +91,27 @@ ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListAr
 
   switch(geometryType)
   {
-  case AbstractGeometry::Type::Edge: // edges
+  case IGeometry::Type::Edge: // edges
   {
     numSharedVerts = 1;
     break;
   }
-  case AbstractGeometry::Type::Triangle: // triangles
+  case IGeometry::Type::Triangle: // triangles
   {
     numSharedVerts = 2;
     break;
   }
-  case AbstractGeometry::Type::Quad: // quadrilaterals
+  case IGeometry::Type::Quad: // quadrilaterals
   {
     numSharedVerts = 2;
     break;
   }
-  case AbstractGeometry::Type::Tetrahedral: // tetrahedra
+  case IGeometry::Type::Tetrahedral: // tetrahedra
   {
     numSharedVerts = 3;
     break;
   }
-  case AbstractGeometry::Type::Hexahedral: // hexahedra
+  case IGeometry::Type::Hexahedral: // hexahedra
   {
     numSharedVerts = 4;
     break;

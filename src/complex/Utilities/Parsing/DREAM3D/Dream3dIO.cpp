@@ -361,7 +361,7 @@ void readLegacyAttributeMatrix(DataStructure& ds, const H5::GroupReader& amGroup
 }
 
 // Begin legacy geometry import methods
-void readGenericGeomDims(AbstractGeometry* geom, const H5::GroupReader& geomGroup)
+void readGenericGeomDims(IGeometry* geom, const H5::GroupReader& geomGroup)
 {
   auto sDimAttribute = geomGroup.getAttribute("SpatialDimensionality");
   auto sDims = sDimAttribute.readAsValue<int32>();
@@ -373,14 +373,14 @@ void readGenericGeomDims(AbstractGeometry* geom, const H5::GroupReader& geomGrou
   geom->setUnitDimensionality(uDims);
 }
 
-IDataArray* readLegacyGeomArray(DataStructure& ds, AbstractGeometry* geometry, const H5::GroupReader& geomGroup, const std::string& arrayName)
+IDataArray* readLegacyGeomArray(DataStructure& ds, IGeometry* geometry, const H5::GroupReader& geomGroup, const std::string& arrayName)
 {
   auto dataArraySet = geomGroup.openDataset(arrayName);
   return readLegacyDataArray(ds, dataArraySet, geometry->getId());
 }
 
 template <typename T>
-T* readLegacyGeomArrayAs(DataStructure& ds, AbstractGeometry* geometry, const H5::GroupReader& geomGroup, const std::string& arrayName)
+T* readLegacyGeomArrayAs(DataStructure& ds, IGeometry* geometry, const H5::GroupReader& geomGroup, const std::string& arrayName)
 {
   return dynamic_cast<T*>(readLegacyGeomArray(ds, geometry, geomGroup, arrayName));
 }
@@ -392,7 +392,7 @@ DataObject* readLegacyVertexGeom(DataStructure& ds, const H5::GroupReader& geomG
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
   auto* verts = readLegacyGeomArray(ds, geom, geomGroup, Legacy::VerticesName);
 
-  geom->setVertices(sharedVertexList);
+  geom->setVertices(*sharedVertexList);
   return geom;
 }
 
@@ -403,8 +403,8 @@ DataObject* readLegacyTriangleGeom(DataStructure& ds, const H5::GroupReader& geo
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
   auto* sharedTriList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::TriListName);
 
-  geom->setVertices(sharedVertexList);
-  geom->setFaces(sharedTriList);
+  geom->setVertices(*sharedVertexList);
+  geom->setFaces(*sharedTriList);
 
   return geom;
 }
@@ -416,8 +416,8 @@ DataObject* readLegacyTetrahedralGeom(DataStructure& ds, const H5::GroupReader& 
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
   auto* sharedTetList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::TetraListName);
 
-  geom->setVertices(sharedVertexList);
-  geom->setTetrahedra(sharedTetList);
+  geom->setVertices(*sharedVertexList);
+  geom->setPolyhedra(*sharedTetList);
 
   return geom;
 }
@@ -450,8 +450,8 @@ DataObject* readLegacyQuadGeom(DataStructure& ds, const H5::GroupReader& geomGro
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
   auto* sharedQuadList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::QuadListName);
 
-  geom->setVertices(sharedVertexList);
-  geom->setFaces(sharedQuadList);
+  geom->setVertices(*sharedVertexList);
+  geom->setFaces(*sharedQuadList);
 
   return geom;
 }
@@ -463,8 +463,8 @@ DataObject* readLegacyHexGeom(DataStructure& ds, const H5::GroupReader& geomGrou
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
   auto* sharedHexList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::HexListName);
 
-  geom->setVertices(sharedVertexList);
-  geom->setHexahedra(sharedHexList);
+  geom->setVertices(*sharedVertexList);
+  geom->setPolyhedra(*sharedHexList);
 
   return geom;
 }
@@ -477,8 +477,8 @@ DataObject* readLegacyEdgeGeom(DataStructure& ds, const H5::GroupReader& geomGro
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
   auto* sharedEdgeList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::EdgeListName);
 
-  geom->setVertices(sharedVertexList);
-  geom->setEdges(sharedEdgeList);
+  geom->setVertices(*sharedVertexList);
+  geom->setEdges(*sharedEdgeList);
 
   return geom;
 }

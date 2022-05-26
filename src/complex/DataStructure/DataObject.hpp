@@ -54,20 +54,25 @@ public:
     IDataArray = 6,
     DataArray = 7,
 
-    AbstractGeometry = 8,
-    VertexGeom = 9,
-    EdgeGeom = 10,
-    AbstractGeometryGrid = 11,
-    RectGridGeom = 12,
-    ImageGeom = 13,
+    IGeometry = 8,
 
-    AbstractGeometry2D = 14,
-    QuadGeom = 15,
-    TriangleGeom = 16,
+    IGridGeometry = 9,
+    RectGridGeom = 10,
+    ImageGeom = 11,
 
-    AbstractGeometry3D = 17,
-    HexahedralGeom = 18,
-    TetrahedralGeom = 19,
+    INodeGeometry0D = 12,
+    VertexGeom = 13,
+
+    INodeGeometry1D = 14,
+    EdgeGeom = 15,
+
+    INodeGeometry2D = 16,
+    QuadGeom = 17,
+    TriangleGeom = 18,
+
+    INodeGeometry3D = 19,
+    HexahedralGeom = 20,
+    TetrahedralGeom = 21,
 
     INeighborList = 20,
     NeighborList = 21,
@@ -174,6 +179,19 @@ public:
    * @return const DataStructure*
    */
   const DataStructure* getDataStructure() const;
+
+  /**
+   * @brief Returns a pointer to the DataStructure this DataObject belongs to.
+   * @return DataStructure&
+   */
+  DataStructure& getDataStructureRef();
+
+  /**
+   * @brief Returns a read-only pointer to the DataStructure this DataObject
+   * belongs to.
+   * @return const DataStructure&
+   */
+  const DataStructure& getDataStructureRef() const;
 
   /**
    * @brief Returns the DataObject's name.

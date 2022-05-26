@@ -1,7 +1,5 @@
-
 #include <catch2/catch.hpp>
 
-#include "complex/DataStructure/Geometry/AbstractGeometry2D.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
