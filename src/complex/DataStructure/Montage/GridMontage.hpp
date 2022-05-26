@@ -152,7 +152,7 @@ public:
    * @param geom
    * @return std::optional<SizeVec3>
    */
-  std::optional<SizeVec3> getTilePosOfGeometry(const AbstractGeometry* geom) const;
+  std::optional<SizeVec3> getTilePosOfGeometry(const IGeometry* geom) const;
 
   /**
    * @brief Returns the tile index for the target geometry. Returns nullptr if the geometry
@@ -160,23 +160,23 @@ public:
    * @param geom
    * @return std::shared_ptr<AbstractTileIndex>
    */
-  std::shared_ptr<AbstractTileIndex> getTileIndex(AbstractGeometry* geom) const override;
+  std::shared_ptr<AbstractTileIndex> getTileIndex(IGeometry* geom) const override;
 
   /**
    * @brief Returns a pointer to the geometry at the specified tile index. Returns nullptr
    * if no geometry was found.
    * @param index
-   * @return AbstractGeometry*
+   * @return IGeometry*
    */
-  AbstractGeometry* getGeometry(const AbstractTileIndex* index) override;
+  IGeometry* getGeometry(const AbstractTileIndex* index) override;
 
   /**
    * @brief Returns a pointer to the geometry at the specified tile index. Returns nullptr
    * if no geometry was found.
    * @param index
-   * @return const AbstractGeometry*
+   * @return const IGeometry*
    */
-  const AbstractGeometry* getGeometry(const AbstractTileIndex* index) const override;
+  const IGeometry* getGeometry(const AbstractTileIndex* index) const override;
 
   /**
    * @brief Sets the geometry at the position specified by the provided
@@ -185,7 +185,7 @@ public:
    * @param index
    * @param geom
    */
-  void setGeometry(const AbstractTileIndex* index, AbstractGeometry* geom) override;
+  void setGeometry(const AbstractTileIndex* index, IGeometry* geom) override;
 
   /**
    * @brief Sets the geometry at the specified 3D tile position. Does nothing
@@ -193,21 +193,21 @@ public:
    * @param position
    * @param geom
    */
-  void setGeometry(const SizeVec3& position, AbstractGeometry* geom);
+  void setGeometry(const SizeVec3& position, IGeometry* geom);
 
   /**
    * @brief Returns the geometry at the specified position.
    * Returns nullptr if no geometry could be found.
-   * @return const AbstractGeometry*
+   * @return const IGeometry*
    */
-  AbstractGeometry* getGeometry(const SizeVec3& position);
+  IGeometry* getGeometry(const SizeVec3& position);
 
   /**
    * @brief Returns the geometry at the specified position.
    * Returns nullptr if no geometry could be found.
-   * @return const AbstractGeometry*
+   * @return const IGeometry*
    */
-  const AbstractGeometry* getGeometry(const SizeVec3& position) const;
+  const IGeometry* getGeometry(const SizeVec3& position) const;
 
   /**
    * @brief Returns a TooltipGenerator for generating the appropriate HTML tooltips.

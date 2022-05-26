@@ -18,11 +18,11 @@ using namespace complex;
 
 namespace
 {
-constexpr complex::int32 k_MissingTrianglVerticesArray = -351;
-constexpr complex::int32 k_MissingTriangleFacesArray = -352;
-constexpr complex::int32 k_NoNodeTypesArray = -353;
-constexpr complex::int32 k_MissingVertexArray = -354;
-constexpr complex::int32 k_MissingTriangleArray = -355;
+constexpr int32 k_MissingTrianglVerticesArray = -351;
+constexpr int32 k_MissingTriangleFacesArray = -352;
+constexpr int32 k_NoNodeTypesArray = -353;
+constexpr int32 k_MissingVertexArray = -354;
+constexpr int32 k_MissingTriangleArray = -355;
 
 template <class T>
 inline void hashCombine(usize& seed, const T& obj)
@@ -62,16 +62,16 @@ struct RemoveFlaggedVerticesFunctor
 {
   // copy data to masked geometry
   template <class T>
-  void operator()(IDataArray& inputDataPtr, IDataArray& outputDataArray, const std::vector<complex::AbstractGeometry::MeshIndexType>& indexMapping) const
+  void operator()(IDataArray& inputDataPtr, IDataArray& outputDataArray, const std::vector<IGeometry::MeshIndexType>& indexMapping) const
   {
     auto& inputData = dynamic_cast<DataArray<T>&>(inputDataPtr);
     auto& outputData = dynamic_cast<DataArray<T>&>(outputDataArray);
     usize nComps = inputData.getNumberOfComponents();
-    complex::AbstractGeometry::MeshIndexType notSeen = std::numeric_limits<complex::AbstractGeometry::MeshIndexType>::max();
+    IGeometry::MeshIndexType notSeen = std::numeric_limits<IGeometry::MeshIndexType>::max();
 
     for(usize i = 0; i < indexMapping.size(); i++)
     {
-      complex::AbstractGeometry::MeshIndexType newIndex = indexMapping[i];
+      IGeometry::MeshIndexType newIndex = indexMapping[i];
       if(newIndex != notSeen)
       {
         for(usize compIdx = 0; compIdx < nComps; compIdx++)
@@ -115,18 +115,18 @@ Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Geometry and Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeom_Key, "Triangle Geometry", "Path to the existing Triangle Geometry", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insert(
-      std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath(), ArraySelectionParameter::AllowedTypes{complex::DataType::int8}));
+      std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::int8}));
 
   params.insertSeparator(Parameters::Separator{"Created/Output Data"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_InternalTriangleGeom_Key, "Created Triangle Geometry Path", "Path to create the new Triangle Geometry", DataPath()));
 
   params.insertSeparator(Parameters::Separator{"Optional Transferred Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays", "Paths to vertex-related DataArrays that should be copied to the new geometry",
-                                                               std::vector<DataPath>{}, complex::GetAllDataTypes()));
+                                                               std::vector<DataPath>{}, GetAllDataTypes()));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyTrianglePaths_Key, "Copy Triangle Arrays", "Paths to face-related DataArrays that should be copied to the new geometry",
-                                                               std::vector<DataPath>{}, complex::GetAllDataTypes()));
+                                                               std::vector<DataPath>{}, GetAllDataTypes()));
   return params;
 }
 
@@ -244,16 +244,16 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
   auto& nodeTypes = data.getDataRefAs<Int8Array>(nodeTypesArrayPath);
 
   auto internalVerticesPath = internalTrianglesPath.createChildPath(CreateTriangleGeomAction::k_DefaultVerticesName);
-  internalTriangleGeom.setVertices(data.getDataAs<Float32Array>(internalVerticesPath));
+  internalTriangleGeom.setVertices(*data.getDataAs<Float32Array>(internalVerticesPath));
 
   auto internalFacesPath = internalTrianglesPath.createChildPath(CreateTriangleGeomAction::k_DefaultFacesName);
-  internalTriangleGeom.setFaces(data.getDataAs<UInt64Array>(internalFacesPath));
+  internalTriangleGeom.setFaces(*data.getDataAs<UInt64Array>(internalFacesPath));
 
   // int64 progIncrement = numTris / 100;
   // int64 prog = 1;
   // int64 progressInt = 0;
   // int64 counter = 0;
-  using MeshIndexType = complex::AbstractGeometry::MeshIndexType;
+  using MeshIndexType = IGeometry::MeshIndexType;
 
   const MeshIndexType notSeen = std::numeric_limits<MeshIndexType>::max();
 
@@ -303,8 +303,8 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
   internalTriangleGeom.resizeVertexList(currentNewVertIndex);
   internalTriangleGeom.resizeFaceList(currentNewTriIndex);
 
-  complex::AbstractGeometry::SharedVertexList* internalVerts = internalTriangleGeom.getVertices();
-  complex::AbstractGeometry::SharedFaceList* internalTriangles = internalTriangleGeom.getFaces();
+  IGeometry::SharedVertexList* internalVerts = internalTriangleGeom.getVertices();
+  IGeometry::SharedFaceList* internalTriangles = internalTriangleGeom.getFaces();
 
   // Transfer the data from the old SharedVertexList to the new VertexList
   for(MeshIndexType vertIndex = 0; vertIndex < numVerts; vertIndex++)

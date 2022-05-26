@@ -3,8 +3,7 @@
 #include "LaplacianSmoothing.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry2D.hpp"
+#include "complex/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 
 using namespace complex;
@@ -36,7 +35,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
   TriangleGeom& surfaceMesh = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->pTriangleGeometryDataPath);
 
   Float32Array& verts = *(surfaceMesh.getVertices());
-  AbstractGeometry::MeshIndexType nvert = surfaceMesh.getNumberOfVertices();
+  IGeometry::MeshIndexType nvert = surfaceMesh.getNumberOfVertices();
 
   // Generate the Lambda Array
   std::vector<float> lambdas = generateLambdaArray();
@@ -51,8 +50,8 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     return MakeErrorResult(-560, "Error retrieving the shared edge list");
   }
 
-  AbstractGeometry::SharedEdgeList& uedges = *(surfaceMesh.getEdges());
-  AbstractGeometry::MeshIndexType nedges = uedges.getNumberOfTuples();
+  IGeometry::SharedEdgeList& uedges = *(surfaceMesh.getEdges());
+  IGeometry::MeshIndexType nedges = uedges.getNumberOfTuples();
 
   std::vector<int32_t> numConnections(nvert, 0);
 
@@ -67,12 +66,12 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     }
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
     // Compute the Deltas for each point
-    for(AbstractGeometry::MeshIndexType i = 0; i < nedges; i++)
+    for(IGeometry::MeshIndexType i = 0; i < nedges; i++)
     {
-      AbstractGeometry::MeshIndexType in1 = uedges[2 * i];     // row of the first vertex
-      AbstractGeometry::MeshIndexType in2 = uedges[2 * i + 1]; // row the second vertex
+      IGeometry::MeshIndexType in1 = uedges[2 * i];     // row of the first vertex
+      IGeometry::MeshIndexType in2 = uedges[2 * i + 1]; // row the second vertex
 
-      for(AbstractGeometry::MeshIndexType j = 0; j < 3; j++)
+      for(IGeometry::MeshIndexType j = 0; j < 3; j++)
       {
 #if 0
         Q_ASSERT(static_cast<size_t>(3 * in1 + j) < static_cast<size_t>(nvert * 3));
@@ -87,11 +86,11 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     }
 
     // Move each point
-    for(AbstractGeometry::MeshIndexType i = 0; i < nvert; i++)
+    for(IGeometry::MeshIndexType i = 0; i < nvert; i++)
     {
-      for(AbstractGeometry::MeshIndexType j = 0; j < 3; j++)
+      for(IGeometry::MeshIndexType j = 0; j < 3; j++)
       {
-        AbstractGeometry::MeshIndexType in0 = 3 * i + j;
+        IGeometry::MeshIndexType in0 = 3 * i + j;
         dlta = deltaArray[in0] / numConnections[i];
 
         float ll = lambdas[i];
@@ -113,10 +112,10 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
       }
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
       // Compute the Delta's
-      for(AbstractGeometry::MeshIndexType i = 0; i < nedges; i++)
+      for(IGeometry::MeshIndexType i = 0; i < nedges; i++)
       {
-        AbstractGeometry::MeshIndexType in1 = uedges[2 * i];     // row of the first vertex
-        AbstractGeometry::MeshIndexType in2 = uedges[2 * i + 1]; // row the second vertex
+        IGeometry::MeshIndexType in1 = uedges[2 * i];     // row of the first vertex
+        IGeometry::MeshIndexType in2 = uedges[2 * i + 1]; // row the second vertex
 
         for(int32_t j = 0; j < 3; j++)
         {
@@ -133,11 +132,11 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
       }
 
       // MOve the points
-      for(AbstractGeometry::MeshIndexType i = 0; i < nvert; i++)
+      for(IGeometry::MeshIndexType i = 0; i < nvert; i++)
       {
-        for(AbstractGeometry::MeshIndexType j = 0; j < 3; j++)
+        for(IGeometry::MeshIndexType j = 0; j < 3; j++)
         {
-          AbstractGeometry::MeshIndexType in0 = 3 * i + j;
+          IGeometry::MeshIndexType in0 = 3 * i + j;
           dlta = deltaArray[in0] / numConnections[i];
 
           float ll = lambdas[i] * m_InputValues->pMuFactor;

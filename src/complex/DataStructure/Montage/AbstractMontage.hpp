@@ -10,7 +10,7 @@
 namespace complex
 {
 class AbstractTileIndex;
-class AbstractGeometry;
+class IGeometry;
 
 /**
  * @class AbstractMontage
@@ -19,7 +19,7 @@ class AbstractGeometry;
 class COMPLEX_EXPORT AbstractMontage : public BaseGroup
 {
 public:
-  using CollectionType = std::vector<AbstractGeometry*>;
+  using CollectionType = std::vector<IGeometry*>;
   using Iterator = CollectionType::iterator;
   using ConstIterator = CollectionType::const_iterator;
   using BoundsType = void;
@@ -81,17 +81,17 @@ public:
    * @brief Returns a pointer to the geometry at the specified tile index.
    * Returns nullptr if no geometry was found.
    * @param index
-   * @return AbstractGeometry*
+   * @return IGeometry*
    */
-  virtual AbstractGeometry* getGeometry(const AbstractTileIndex* index) = 0;
+  virtual IGeometry* getGeometry(const AbstractTileIndex* index) = 0;
 
   /**
    * @brief Returns a pointer to the geometry at the specified tile index.
    * Returns nullptr if no geometry was found.
    * @param index
-   * @return const AbstractGeometry*
+   * @return const IGeometry*
    */
-  virtual const AbstractGeometry* getGeometry(const AbstractTileIndex* index) const = 0;
+  virtual const IGeometry* getGeometry(const AbstractTileIndex* index) const = 0;
 
   /**
    * @brief Returns the tile index for the specified geometry. This is a pure
@@ -100,7 +100,7 @@ public:
    * @param geom
    * @return std::shared_ptr<AbstractTileIndex>
    */
-  virtual std::shared_ptr<AbstractTileIndex> getTileIndex(AbstractGeometry* geom) const = 0;
+  virtual std::shared_ptr<AbstractTileIndex> getTileIndex(IGeometry* geom) const = 0;
 
   /**
    * @brief Sets the geometry for the target tile index. The implementation is
@@ -108,7 +108,7 @@ public:
    * @param index
    * @param geom
    */
-  virtual void setGeometry(const AbstractTileIndex* index, AbstractGeometry* geom) = 0;
+  virtual void setGeometry(const AbstractTileIndex* index, IGeometry* geom) = 0;
 
   /**
    * @brief Returns an iterator to the begining of the montage.

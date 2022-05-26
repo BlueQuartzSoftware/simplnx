@@ -2,7 +2,7 @@
 
 #include "complex/Common/ComplexRange.hpp"
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
@@ -22,7 +22,7 @@ namespace
 class CalculateAreasImpl
 {
 public:
-  CalculateAreasImpl(const AbstractGeometry::SharedVertexList& nodes, const AbstractGeometry::SharedTriList& triangles, Float64Array& Areas)
+  CalculateAreasImpl(const IGeometry::SharedVertexList& nodes, const IGeometry::SharedTriList& triangles, Float64Array& Areas)
   : m_Nodes(nodes)
   , m_Triangles(triangles)
   , m_Areas(Areas)
@@ -32,9 +32,9 @@ public:
 
   void convert(size_t start, size_t end) const
   {
-    AbstractGeometry::MeshIndexType nIdx0 = 0;
-    AbstractGeometry::MeshIndexType nIdx1 = 0;
-    AbstractGeometry::MeshIndexType nIdx2 = 0;
+    IGeometry::MeshIndexType nIdx0 = 0;
+    IGeometry::MeshIndexType nIdx1 = 0;
+    IGeometry::MeshIndexType nIdx2 = 0;
     std::array<float, 3> vecA = {0.0f, 0.0f, 0.0f};
     std::array<float, 3> vecB = {0.0f, 0.0f, 0.0f};
     std::array<float, 3> cross = {0.0f, 0.0f, 0.0f};
@@ -62,8 +62,8 @@ public:
   }
 
 private:
-  const AbstractGeometry::SharedVertexList& m_Nodes;
-  const AbstractGeometry::SharedTriList& m_Triangles;
+  const IGeometry::SharedVertexList& m_Nodes;
+  const IGeometry::SharedTriList& m_Triangles;
   Float64Array& m_Areas;
 };
 } // namespace
@@ -106,7 +106,7 @@ Parameters CalculateTriangleAreasFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the face areas", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_CalculatedAreasDataPath_Key, "Calculated Face Areas", "The complete path to the array storing the calculated face areas", DataPath{}));
 
   return params;

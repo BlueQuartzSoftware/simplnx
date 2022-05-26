@@ -1,7 +1,6 @@
 #pragma once
 
-#include "complex/DataStructure/Geometry/AbstractGeometry2D.hpp"
-#include "complex/Utilities/TooltipGenerator.hpp"
+#include "complex/DataStructure/Geometry/INodeGeometry2D.hpp"
 
 #include "complex/complex_export.hpp"
 
@@ -11,7 +10,7 @@ namespace complex
  * @class TriangleGeom
  * @brief
  */
-class COMPLEX_EXPORT TriangleGeom : public AbstractGeometry2D
+class COMPLEX_EXPORT TriangleGeom : public INodeGeometry2D
 {
 public:
   friend class DataStructure;
@@ -49,7 +48,7 @@ public:
    */
   TriangleGeom(TriangleGeom&& other) noexcept;
 
-  virtual ~TriangleGeom();
+  ~TriangleGeom() noexcept override;
 
   TriangleGeom& operator=(const TriangleGeom&) = delete;
   TriangleGeom& operator=(TriangleGeom&&) noexcept = delete;
@@ -58,7 +57,7 @@ public:
    * @brief Returns the type of geometry.
    * @return
    */
-  AbstractGeometry::Type getGeomType() const override;
+  IGeometry::Type getGeomType() const override;
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
@@ -83,44 +82,6 @@ public:
    * @return DataObject*
    */
   DataObject* deepCopy() override;
-
-  /**
-   * @brief
-   * @return std::string
-   */
-  std::string getGeometryTypeAsString() const override;
-
-  /**
-   * @brief
-   * @param newNumTris
-   */
-  void resizeFaceList(usize newNumTris);
-
-  /**
-   * @brief
-   * @param triangles
-   */
-  void setFaces(const SharedTriList* triangles);
-
-  /**
-   * @brief
-   * @return SharedTriList*
-   */
-  SharedTriList* getFaces();
-
-  /**
-   * @brief
-   * @return const SharedTriList*
-   */
-  const SharedTriList* getFaces() const;
-
-  /**
-   * @brief Returns the DataObject ID for the face list array. Returns an empty optional if no face list array has been set.
-   * @return std::optional<IdType>
-   */
-  std::optional<DataObject::IdType> getFacesId() const;
-
-  DataObject::IdType getTriangleArrayId();
 
   /**
    * @brief
@@ -153,11 +114,6 @@ public:
 
   /**
    * @brief
-   */
-  void initializeWithZeros() override;
-
-  /**
-   * @brief
    * @return usize
    */
   usize getNumberOfElements() const override;
@@ -170,49 +126,15 @@ public:
 
   /**
    * @brief
-   * @return const Float32Array*
-   */
-  const Float32Array* getElementSizes() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementSizes() override;
-
-  /**
-   * @brief
    * @return StatusCode
    */
   StatusCode findElementsContainingVert() override;
 
   /**
    * @brief
-   * @return const ElementDynamicList*
-   */
-  const ElementDynamicList* getElementsContainingVert() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementsContainingVert() override;
-
-  /**
-   * @brief
    * @return StatusCode
    */
   StatusCode findElementNeighbors() override;
-
-  /**
-   * @brief
-   * @return const ElementDynamicList*
-   */
-  const ElementDynamicList* getElementNeighbors() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementNeighbors() override;
-
   /**
    * @brief
    * @return StatusCode
@@ -221,42 +143,17 @@ public:
 
   /**
    * @brief
-   * @return const Float32Array*
-   */
-  const Float32Array* getElementCentroids() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementCentroids() override;
-
-  /**
-   * @brief
    * @param pCoords
-   * @return complex::Point3D<float64>
+   * @return Point3D<float64>
    */
-  complex::Point3D<float64> getParametricCenter() const override;
+  Point3D<float64> getParametricCenter() const override;
 
   /**
    * @brief
    * @param pCoords
    * @param shape
    */
-  void getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const override;
-
-  /**
-   * @brief
-   * @param field
-   * @param derivatives
-   * @param observable
-   */
-  void findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const override;
-
-  /**
-   * @brief
-   * @return complex::TooltipGenerator
-   */
-  complex::TooltipGenerator getTooltipGenerator() const override;
+  void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
 
   /**
    * @brief
@@ -273,21 +170,9 @@ public:
 
   /**
    * @brief
-   * @return usize
-   */
-  usize getNumberOfVertices() const override;
-
-  /**
-   * @brief
    * @return StatusCode
    */
   StatusCode findEdges() override;
-
-  /**
-   * @brief
-   * @param newNumEdges
-   */
-  void resizeEdgeList(usize newNumEdges) override;
 
   /**
    * @brief
@@ -302,12 +187,6 @@ public:
    * @return StatusCode
    */
   StatusCode findUnsharedEdges() override;
-
-  /**
-   * @brief
-   * @return uint32
-   */
-  uint32 getXdmfGridType() const override;
 
   /**
    * @brief Reads values from HDF5
@@ -341,61 +220,5 @@ protected:
    * @param importId
    */
   TriangleGeom(DataStructure& ds, std::string name, IdType importId);
-
-  /**
-   * @brief
-   * @param ds
-   * @param name
-   * @param numTriangles
-   * @param vertices
-   * @param allocate
-   */
-  // TriangleGeom(DataStructure& ds, std::string name, usize numTriangles, const SharedVertexList* vertices, bool allocate);
-
-  /**
-   * @brief
-   * @param ds
-   * @param name
-   * @param triangles
-   * @param vertices
-   */
-  // TriangleGeom(DataStructure& ds, std::string name, const SharedTriList* triangles, const SharedVertexList* vertices);
-
-  /**
-   * @brief
-   * @param elementsContainingVert
-   */
-  void setElementsContainingVert(const ElementDynamicList* elementsContainingVert) override;
-
-  /**
-   * @brief
-   * @param elementNeighbors
-   */
-  void setElementNeighbors(const ElementDynamicList* elementNeighbors) override;
-
-  /**
-   * @brief
-   * @param elementCentroids
-   */
-  void setElementCentroids(const Float32Array* elementCentroids) override;
-
-  /**
-   * @brief
-   * @param elementSizes
-   */
-  void setElementSizes(const Float32Array* elementSizes) override;
-
-  /**
-   * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
-   * @param updatedIds
-   */
-  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
-
-private:
-  std::optional<IdType> m_TriListId;
-  std::optional<IdType> m_TrianglesContainingVertId;
-  std::optional<IdType> m_TriangleNeighborsId;
-  std::optional<IdType> m_TriangleCentroidsId;
-  std::optional<IdType> m_TriangleSizesId;
 };
 } // namespace complex

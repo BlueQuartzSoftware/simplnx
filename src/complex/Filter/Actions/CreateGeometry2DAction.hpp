@@ -3,7 +3,7 @@
 #include "complex/Common/Array.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/DataStructure/Geometry/QuadGeom.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Filter/Output.hpp"
@@ -25,7 +25,7 @@ class CreateGeometry2DAction : public IDataCreationAction
 public:
   CreateGeometry2DAction() = delete;
 
-  CreateGeometry2DAction(const DataPath& geometryPath, AbstractGeometry::MeshIndexType numFaces, AbstractGeometry::MeshIndexType numVertices)
+  CreateGeometry2DAction(const DataPath& geometryPath, IGeometry::MeshIndexType numFaces, IGeometry::MeshIndexType numVertices)
   : IDataCreationAction(geometryPath)
   , m_NumFaces(numFaces)
   , m_NumVertices(numVertices)
@@ -81,8 +81,8 @@ public:
     // Create the TriangleGeometry
     auto geometry2d = Geometry2DType::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath).value());
 
-    using MeshIndexType = AbstractGeometry::MeshIndexType;
-    using SharedTriList = AbstractGeometry::SharedTriList;
+    using MeshIndexType = IGeometry::MeshIndexType;
+    using SharedTriList = IGeometry::SharedTriList;
 
     DataPath trianglesPath = getCreatedPath().createChildPath(k_TriangleDataName);
     // Create the default DataArray that will hold the FaceList and Vertices. We
@@ -94,7 +94,7 @@ public:
       return MakeErrorResult(-223, fmt::format("CreateGeometry2DAction: Could not allocate SharedTriList '{}'", trianglesPath.toString()));
     }
     SharedTriList* triangles = complex::ArrayFromPath<MeshIndexType>(dataStructure, trianglesPath);
-    geometry2d->setFaces(triangles);
+    geometry2d->setFaces(*triangles);
 
     // Create the Vertex Array with a component size of 3
     DataPath vertexPath = getCreatedPath().createChildPath(k_VertexDataName);
@@ -106,7 +106,7 @@ public:
       return MakeErrorResult(-224, fmt::format("CreateGeometry2DAction: Could not allocate SharedVertList '{}'", trianglesPath.toString()));
     }
     Float32Array* vertexArray = complex::ArrayFromPath<float>(dataStructure, vertexPath);
-    geometry2d->setVertices(vertexArray);
+    geometry2d->setVertices(*vertexArray);
 
     return {};
   }
@@ -124,7 +124,7 @@ public:
    * @brief Returns the number of faces
    * @return
    */
-  AbstractGeometry::MeshIndexType numFaces() const
+  IGeometry::MeshIndexType numFaces() const
   {
     return m_NumFaces;
   }
@@ -133,14 +133,14 @@ public:
    * @brief Returns the number of vertices (estimated in some circumstances)
    * @return
    */
-  AbstractGeometry::MeshIndexType numVertices() const
+  IGeometry::MeshIndexType numVertices() const
   {
     return m_NumVertices;
   }
 
 private:
-  AbstractGeometry::MeshIndexType m_NumFaces;
-  AbstractGeometry::MeshIndexType m_NumVertices;
+  IGeometry::MeshIndexType m_NumFaces;
+  IGeometry::MeshIndexType m_NumVertices;
 };
 
 using CreateTriangleGeometryAction = CreateGeometry2DAction<TriangleGeom>;

@@ -38,7 +38,7 @@ TEST_CASE("ComplexCore::RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][R
   // Create a Vertex Geometry grid for the Scan Data
   VertexGeom* vertexGeom = VertexGeom::Create(dataGraph, Constants::k_VertexGeometry, topLevelGroup->getId());
   Float32Array* coords = UnitTest::CreateTestDataArray<float>(dataGraph, "coords", vertexTupleDims, vertexCompDims, vertexGeom->getId());
-  vertexGeom->setVertices(coords); // Add the vertices to the VertexGeom object
+  vertexGeom->setVertices(*coords); // Add the vertices to the VertexGeom object
 
   Int32Array* slipVector = UnitTest::CreateTestDataArray<int32>(dataGraph, Constants::k_SlipVector, vertexTupleDims, vertexCompDims, vertexGeom->getId());
   Int32Array* featureIds = UnitTest::CreateTestDataArray<int32>(dataGraph, Constants::k_FeatureIds, vertexTupleDims, {1}, vertexGeom->getId());

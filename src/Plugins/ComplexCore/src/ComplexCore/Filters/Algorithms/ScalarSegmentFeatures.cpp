@@ -1,7 +1,7 @@
 #include "ScalarSegmentFeatures.hpp"
 
 #include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
+#include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 
@@ -142,7 +142,7 @@ Result<> ScalarSegmentFeatures::operator()()
     goodVoxels = m_GoodVoxelsArray->getDataStore();
   }
 
-  auto gridGeom = m_DataStructure.getDataAs<AbstractGeometryGrid>(m_InputValues->pGridGeomPath);
+  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->pGridGeomPath);
 
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->pFeatureIdsPath);
   m_FeatureIdsArray->fill(0); // initialize the output array with zeros

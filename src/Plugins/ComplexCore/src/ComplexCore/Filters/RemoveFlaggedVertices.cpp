@@ -79,7 +79,7 @@ Parameters RemoveFlaggedVertices::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<GeometrySelectionParameter>(k_VertexGeomPath_Key, "Vertex Geometry", "Path to the target Vertex Geometry", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Vertex}));
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraySelection_Key, "Vertex Data Arrays", "Paths to the target Vertex DataArrays to also reduce.", std::vector<DataPath>(),
                                                                complex::GetAllDataTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask Array", "DataPath to the conditional array that will be used to decide which vertices are removed.", DataPath(),
@@ -111,7 +111,7 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
     std::string errorMsg = fmt::format("Vertex Geometry not found at path: '{}'", vertexGeomPath.toString());
     return {MakeErrorResult<OutputActions>(::k_VertexGeomNotFound, errorMsg)};
   }
-  auto verticesId = vertex->getVerticesId();
+  auto verticesId = vertex->getVertexListId();
   auto* verticesArray = dataStructure.getDataAs<Float32Array>(verticesId);
   if(verticesArray == nullptr)
   {

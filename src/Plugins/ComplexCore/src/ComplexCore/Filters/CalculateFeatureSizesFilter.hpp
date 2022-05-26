@@ -100,7 +100,7 @@ protected:
    * @param igeom
    * @return Return<>
    */
-  Result<> findSizesUnstructured(DataStructure& data, const Arguments& args, AbstractGeometry* igeom) const;
+  Result<> findSizesUnstructured(DataStructure& data, const Arguments& args, IGeometry* igeom) const;
 
   /**
    * @brief

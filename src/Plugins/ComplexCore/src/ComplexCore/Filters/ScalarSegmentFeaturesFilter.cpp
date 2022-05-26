@@ -3,7 +3,7 @@
 #include <chrono>
 
 #include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
+#include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
@@ -111,7 +111,7 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
 
   auto gridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
 
-  if(dataStructure.getDataAs<AbstractGeometryGrid>(gridGeomPath) == nullptr)
+  if(dataStructure.getDataAs<IGridGeometry>(gridGeomPath) == nullptr)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingGeomError, fmt::format("A Grid Geometry is required for {}", humanName())}})};
   }

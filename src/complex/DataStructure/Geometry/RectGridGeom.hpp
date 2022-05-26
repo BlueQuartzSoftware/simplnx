@@ -1,7 +1,7 @@
 #pragma once
 
 #include "complex/Common/Point3D.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
+#include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 
 #include "complex/complex_export.hpp"
 
@@ -11,7 +11,7 @@ namespace complex
  * @class RectGridGeom
  * @brief
  */
-class COMPLEX_EXPORT RectGridGeom : public AbstractGeometryGrid
+class COMPLEX_EXPORT RectGridGeom : public IGridGeometry
 {
 public:
   friend class DataStructure;
@@ -47,7 +47,7 @@ public:
    */
   RectGridGeom(RectGridGeom&& other) noexcept;
 
-  virtual ~RectGridGeom();
+  ~RectGridGeom() noexcept override;
 
   RectGridGeom& operator=(const RectGridGeom&) = delete;
   RectGridGeom& operator=(RectGridGeom&&) noexcept = delete;
@@ -56,7 +56,7 @@ public:
    * @brief Returns the type of geometry.
    * @return
    */
-  AbstractGeometry::Type getGeomType() const override;
+  IGeometry::Type getGeomType() const override;
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
@@ -81,12 +81,6 @@ public:
    * @return DataObject*
    */
   DataObject* deepCopy() override;
-
-  /**
-   * @brief
-   * @return std::string
-   */
-  std::string getGeometryTypeAsString() const override;
 
   /**
    * @brief
@@ -134,11 +128,6 @@ public:
 
   /**
    * @brief
-   */
-  void initializeWithZeros() override;
-
-  /**
-   * @brief
    * @return usize
    */
   usize getNumberOfElements() const override;
@@ -151,111 +140,28 @@ public:
 
   /**
    * @brief
-   * @return const Float32Array*
-   */
-  const Float32Array* getElementSizes() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementSizes() override;
-
-  /**
-   * @brief
-   * @return StatusCode
-   */
-  StatusCode findElementsContainingVert() override;
-
-  /**
-   * @brief
-   * @return const ElementDynamicList*
-   */
-  const ElementDynamicList* getElementsContainingVert() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementsContainingVert() override;
-
-  /**
-   * @brief
-   * @return StatusCode
-   */
-  StatusCode findElementNeighbors() override;
-
-  /**
-   * @brief
-   * @return const ElementDynamicList*
-   */
-  const ElementDynamicList* getElementNeighbors() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementNeighbors() override;
-
-  /**
-   * @brief
-   * @return StatusCode
-   */
-  StatusCode findElementCentroids() override;
-
-  /**
-   * @brief
-   * @return const Float32Array*
-   */
-  const Float32Array* getElementCentroids() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementCentroids() override;
-
-  /**
-   * @brief
    * @param pCoords
    */
-  complex::Point3D<float64> getParametricCenter() const override;
+  Point3D<float64> getParametricCenter() const override;
 
   /**
    * @brief
    * @param pCoords
    * @param shape
    */
-  void getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const override;
-
-  /**
-   * @brief
-   * @param field
-   * @param derivatives
-   * @param observable
-   */
-  void findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable = nullptr) const override;
-
-  /**
-   * @brief
-   * @param format
-   * @return std::string
-   */
-  std::string getInfoString(complex::InfoStringFormat format) const override;
-
-  /**
-   * @brief
-   * @return complex::TooltipGenerator
-   */
-  complex::TooltipGenerator getTooltipGenerator() const override;
+  void getShapeFunctions(const Point3D<float64>& pCoords, double* shape) const override;
 
   /**
    * @brief
    * @param dims
    */
-  void setDimensions(const complex::SizeVec3& dims) override;
+  void setDimensions(const SizeVec3& dims) override;
 
   /**
    * @brief
    * @return SizeVec3
    */
-  complex::SizeVec3 getDimensions() const override;
+  SizeVec3 getDimensions() const override;
 
   /**
    * @brief
@@ -278,94 +184,94 @@ public:
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float32>
+   * @return Point3D<float32>
    */
-  complex::Point3D<float32> getPlaneCoordsf(usize idx[3]) const override;
+  Point3D<float32> getPlaneCoordsf(usize idx[3]) const override;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<float32>
+   * @return Point3D<float32>
    */
-  complex::Point3D<float32> getPlaneCoordsf(usize x, usize y, usize z) const override;
+  Point3D<float32> getPlaneCoordsf(usize x, usize y, usize z) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float32>
+   * @return Point3D<float32>
    */
-  complex::Point3D<float32> getPlaneCoordsf(usize idx) const override;
+  Point3D<float32> getPlaneCoordsf(usize idx) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float64>
+   * @return Point3D<float64>
    */
-  complex::Point3D<float64> getPlaneCoords(usize idx[3]) const override;
+  Point3D<float64> getPlaneCoords(usize idx[3]) const override;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<float64>
+   * @return Point3D<float64>
    */
-  complex::Point3D<float64> getPlaneCoords(usize x, usize y, usize z) const override;
+  Point3D<float64> getPlaneCoords(usize x, usize y, usize z) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float64>
+   * @return Point3D<float64>
    */
-  complex::Point3D<float64> getPlaneCoords(usize idx) const override;
+  Point3D<float64> getPlaneCoords(usize idx) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float32>
+   * @return Point3D<float32>
    */
-  complex::Point3D<float32> getCoordsf(usize idx[3]) const override;
+  Point3D<float32> getCoordsf(usize idx[3]) const override;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<float32>
+   * @return Point3D<float32>
    */
-  complex::Point3D<float32> getCoordsf(usize x, usize y, usize z) const override;
+  Point3D<float32> getCoordsf(usize x, usize y, usize z) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float32>
+   * @return Point3D<float32>
    */
-  complex::Point3D<float32> getCoordsf(usize idx) const override;
+  Point3D<float32> getCoordsf(usize idx) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float64>
+   * @return Point3D<float64>
    */
-  complex::Point3D<float64> getCoords(usize idx[3]) const override;
+  Point3D<float64> getCoords(usize idx[3]) const override;
 
   /**
    * @brief
    * @param x
    * @param y
    * @param z
-   * @return complex::Point3D<float64>
+   * @return Point3D<float64>
    */
-  complex::Point3D<float64> getCoords(usize x, usize y, usize z) const override;
+  Point3D<float64> getCoords(usize x, usize y, usize z) const override;
 
   /**
    * @brief
    * @param idx
-   * @return complex::Point3D<float64>
+   * @return Point3D<float64>
    */
-  complex::Point3D<float64> getCoords(usize idx) const override;
+  Point3D<float64> getCoords(usize idx) const override;
 
   /**
    * @brief
@@ -382,12 +288,6 @@ public:
    * @param zCoord
    */
   std::optional<usize> getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const override;
-
-  /**
-   * @brief
-   * @return uint32
-   */
-  uint32 getXdmfGridType() const override;
 
   /**
    * @brief Reads values from HDF5
@@ -423,39 +323,6 @@ protected:
   RectGridGeom(DataStructure& ds, std::string name, IdType importId);
 
   /**
-   * @brief
-   * @param parentId
-   * @param volDims
-   * @param preflight
-   * @return StatusCode
-   */
-  // StatusCode gatherMetaData(hid_t parentId, usize volDims, bool preflight);
-
-  /**
-   * @brief
-   * @param elementsContainingVert
-   */
-  void setElementsContainingVert(const ElementDynamicList* elementsContainingVert) override;
-
-  /**
-   * @brief
-   * @param elementsNeighbors
-   */
-  void setElementNeighbors(const ElementDynamicList* elementsNeighbors) override;
-
-  /**
-   * @brief
-   * @param elementCentroids
-   */
-  void setElementCentroids(const Float32Array* elementCentroids) override;
-
-  /**
-   * @brief
-   * @param elementSizes
-   */
-  void setElementSizes(const Float32Array* elementSizes) override;
-
-  /**
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
    * @param updatedIds
    */
@@ -465,7 +332,6 @@ private:
   std::optional<IdType> m_xBoundsId;
   std::optional<IdType> m_yBoundsId;
   std::optional<IdType> m_zBoundsId;
-  std::optional<IdType> m_VoxelSizesId;
   SizeVec3 m_Dimensions;
 };
 } // namespace complex

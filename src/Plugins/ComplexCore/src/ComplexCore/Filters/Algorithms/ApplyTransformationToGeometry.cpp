@@ -1,13 +1,7 @@
 
 #include "ApplyTransformationToGeometry.hpp"
 
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
-#include "complex/DataStructure/Geometry/EdgeGeom.hpp"
-#include "complex/DataStructure/Geometry/HexahedralGeom.hpp"
-#include "complex/DataStructure/Geometry/QuadGeom.hpp"
-#include "complex/DataStructure/Geometry/TetrahedralGeom.hpp"
-#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
-#include "complex/DataStructure/Geometry/VertexGeom.hpp"
+#include "complex/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <Eigen/Dense>
@@ -23,7 +17,7 @@ class ApplyTransformationToGeometryImpl
 {
 
 public:
-  ApplyTransformationToGeometryImpl(ApplyTransformationToGeometry& filter, const std::vector<float>& transformationMatrix, AbstractGeometry::SharedVertexList* verticesPtr,
+  ApplyTransformationToGeometryImpl(ApplyTransformationToGeometry& filter, const std::vector<float>& transformationMatrix, IGeometry::SharedVertexList* verticesPtr,
                                     const std::atomic_bool& shouldCancel, size_t progIncrement)
   : m_Filter(filter)
   , m_TransformationMatrix(transformationMatrix)
@@ -47,7 +41,7 @@ public:
     size_t progCounter = 0;
     size_t totalElements = static_cast<int64_t>(end - start);
 
-    AbstractGeometry::SharedVertexList& vertices = *(m_Vertices);
+    IGeometry::SharedVertexList& vertices = *(m_Vertices);
     for(size_t i = start; i < end; i++)
     {
       if(m_ShouldCancel)
@@ -78,7 +72,7 @@ public:
 private:
   ApplyTransformationToGeometry& m_Filter;
   const std::vector<float>& m_TransformationMatrix;
-  AbstractGeometry::SharedVertexList* m_Vertices;
+  IGeometry::SharedVertexList* m_Vertices;
   const std::atomic_bool& m_ShouldCancel;
   size_t m_ProgIncrement = 0;
 };
@@ -99,45 +93,9 @@ ApplyTransformationToGeometry::~ApplyTransformationToGeometry() noexcept = defau
 // -----------------------------------------------------------------------------
 Result<> ApplyTransformationToGeometry::operator()()
 {
+  auto& geom = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->pGeometryToTransform);
 
-  DataObject* dataObject = m_DataStructure.getData(m_InputValues->pGeometryToTransform);
-
-  AbstractGeometry::SharedVertexList* vertexList = nullptr;
-
-  if(dataObject->getDataObjectType() == DataObject::Type::VertexGeom)
-  {
-    VertexGeom& geom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->pGeometryToTransform);
-    vertexList = geom.getVertices();
-  }
-  else if(dataObject->getDataObjectType() == DataObject::Type::EdgeGeom)
-  {
-    EdgeGeom& geom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->pGeometryToTransform);
-    vertexList = geom.getVertices();
-  }
-  else if(dataObject->getDataObjectType() == DataObject::Type::TriangleGeom)
-  {
-    TriangleGeom& geom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->pGeometryToTransform);
-    vertexList = geom.getVertices();
-  }
-  else if(dataObject->getDataObjectType() == DataObject::Type::QuadGeom)
-  {
-    QuadGeom& geom = m_DataStructure.getDataRefAs<QuadGeom>(m_InputValues->pGeometryToTransform);
-    vertexList = geom.getVertices();
-  }
-  else if(dataObject->getDataObjectType() == DataObject::Type::TetrahedralGeom)
-  {
-    TetrahedralGeom& geom = m_DataStructure.getDataRefAs<TetrahedralGeom>(m_InputValues->pGeometryToTransform);
-    vertexList = geom.getVertices();
-  }
-  else if(dataObject->getDataObjectType() == DataObject::Type::HexahedralGeom)
-  {
-    HexahedralGeom& geom = m_DataStructure.getDataRefAs<HexahedralGeom>(m_InputValues->pGeometryToTransform);
-    vertexList = geom.getVertices();
-  }
-  else
-  {
-    return {MakeErrorResult(-7010, fmt::format("Geometry is not of the proper Type of Vertex, Edge, Triangle, Quad, Tetrahedral, hexahedral. Type is: '{}", dataObject->getDataObjectType()))};
-  }
+  IGeometry::SharedVertexList* vertexList = geom.getVertices();
 
   m_TotalElements = vertexList->getNumberOfTuples();
   // Needed for Threaded Progress Messages

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "complex/Common/Point3D.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry2D.hpp"
+#include "complex/DataStructure/Geometry/INodeGeometry2D.hpp"
 
 #include "complex/complex_export.hpp"
 
@@ -11,7 +11,7 @@ namespace complex
  * @class QuadGeom
  * @brief
  */
-class COMPLEX_EXPORT QuadGeom : public AbstractGeometry2D
+class COMPLEX_EXPORT QuadGeom : public INodeGeometry2D
 {
 public:
   friend class DataStructure;
@@ -58,7 +58,7 @@ public:
    * @brief Returns the type of geometry.
    * @return
    */
-  AbstractGeometry::Type getGeomType() const override;
+  IGeometry::Type getGeomType() const override;
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
@@ -86,42 +86,6 @@ public:
 
   /**
    * @brief
-   * @return std::string
-   */
-  std::string getGeometryTypeAsString() const override;
-
-  /**
-   * @brief
-   * @param numQuads
-   */
-  void resizeFaceList(usize numQuads);
-
-  /**
-   * @brief
-   * @param quads
-   */
-  void setFaces(const SharedQuadList* quads);
-
-  /**
-   * @brief
-   * @return SharedQuadList*
-   */
-  SharedQuadList* getFaces();
-
-  /**
-   * @brief
-   * @return const SharedQuadList*
-   */
-  const SharedQuadList* getFaces() const;
-
-  /**
-   * @brief Returns the DataObject ID for the face list array. Returns an empty optional if no face list array has been set.
-   * @return std::optional<IdType>
-   */
-  std::optional<DataObject::IdType> getFacesId() const;
-
-  /**
-   * @brief
    * @param quadId
    * @param verts
    */
@@ -142,7 +106,7 @@ public:
    * @param vert3
    * @param vert4
    */
-  void getVertexCoordsForFace(usize faceId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const;
+  void getVertexCoordsForFace(usize faceId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3, Point3D<float32>& vert4) const;
 
   /**
    * @brief Returns the number of quads in the geometry. If the quad list has
@@ -150,11 +114,6 @@ public:
    * @return usize
    */
   usize getNumberOfQuads() const;
-
-  /**
-   * @brief
-   */
-  void initializeWithZeros() override;
 
   /**
    * @brief
@@ -170,31 +129,9 @@ public:
 
   /**
    * @brief
-   * @return std::shared_ptr<Float32Array>
-   */
-  const Float32Array* getElementSizes() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementSizes() override;
-
-  /**
-   * @brief
    * @return StatusCode
    */
   StatusCode findElementsContainingVert() override;
-
-  /**
-   * @brief
-   * @return std::shared_ptr<ElementDynamicList>
-   */
-  const ElementDynamicList* getElementsContainingVert() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementsContainingVert() override;
 
   /**
    * @brief
@@ -204,58 +141,22 @@ public:
 
   /**
    * @brief
-   * @return std::shared_ptr<ElementDynamicList>
-   */
-  const ElementDynamicList* getElementNeighbors() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementNeighbors() override;
-
-  /**
-   * @brief
    * @return StatusCode
    */
   StatusCode findElementCentroids() override;
 
   /**
    * @brief
-   * @return std::shared_ptr<Float32Array>
+   * @return Point3D<float64>
    */
-  const Float32Array* getElementCentroids() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementCentroids() override;
-
-  /**
-   * @brief
-   * @return complex::Point3D<float64>
-   */
-  complex::Point3D<float64> getParametricCenter() const override;
+  Point3D<float64> getParametricCenter() const override;
 
   /**
    * @brief
    * @param pCoords
    * @param shape
    */
-  void getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const override;
-
-  /**
-   * @brief
-   * @param field
-   * @param derivatives
-   * @param observable
-   */
-  void findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable = nullptr) const override;
-
-  /**
-   * @brief
-   * @return complex::TooltipGenerator
-   */
-  complex::TooltipGenerator getTooltipGenerator() const override;
+  void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
 
   /**
    * @brief
@@ -273,23 +174,11 @@ public:
 
   /**
    * @brief
-   * @return usize
-   */
-  usize getNumberOfVertices() const override;
-
-  /**
-   * @brief
-   * @param numEdges
-   */
-  void resizeEdgeList(usize numEdges) override;
-
-  /**
-   * @brief
    * @param edgeId
    * @param vert1
    * @param vert2
    */
-  void getVertCoordsAtEdge(usize edgeId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2) const override;
+  void getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const override;
 
   /**
    * @brief
@@ -302,12 +191,6 @@ public:
    * @return StatusCode
    */
   StatusCode findUnsharedEdges() override;
-
-  /**
-   * @brief
-   * @return uint32
-   */
-  uint32 getXdmfGridType() const override;
 
   /**
    * @brief Reads values from HDF5
@@ -341,61 +224,5 @@ protected:
    * @param importId
    */
   QuadGeom(DataStructure& ds, std::string name, IdType importId);
-
-  /**
-   * @brief
-   * @param ds
-   * @param name
-   * @param numQuads
-   * @param vertices
-   * @param allocate
-   */
-  // QuadGeom(DataStructure& ds, std::string name, usize numQuads, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
-
-  /**
-   * @brief
-   * @param ds
-   * @param name
-   * @param quads
-   * @param vertices
-   */
-  // QuadGeom(DataStructure& ds, std::string name, const std::shared_ptr<SharedQuadList>& quads, const std::shared_ptr<SharedVertexList>& vertices);
-
-  /**
-   * @brief
-   * @param elementsContainingVert
-   */
-  void setElementsContainingVert(const ElementDynamicList* elementsContainingVert) override;
-
-  /**
-   * @brief
-   * @param elementNeighbors
-   */
-  void setElementNeighbors(const ElementDynamicList* elementNeighbors) override;
-
-  /**
-   * @brief
-   * @param elementCentroids
-   */
-  void setElementCentroids(const Float32Array* elementCentroids) override;
-
-  /**
-   * @brief
-   * @param elementSizes
-   */
-  void setElementSizes(const Float32Array* elementSizes) override;
-
-  /**
-   * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
-   * @param updatedIds
-   */
-  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
-
-private:
-  std::optional<IdType> m_QuadListId;
-  std::optional<IdType> m_QuadsContainingVertId;
-  std::optional<IdType> m_QuadNeighborsId;
-  std::optional<IdType> m_QuadCentroidsId;
-  std::optional<IdType> m_QuadSizesId;
 };
 } // namespace complex

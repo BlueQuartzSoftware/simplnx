@@ -1,6 +1,6 @@
 #pragma once
 
-#include "complex/DataStructure/Geometry/AbstractGeometry3D.hpp"
+#include "complex/DataStructure/Geometry/INodeGeometry3D.hpp"
 
 #include "complex/complex_export.hpp"
 
@@ -10,7 +10,7 @@ namespace complex
  * @class HexahedralGeom
  * @brief
  */
-class COMPLEX_EXPORT HexahedralGeom : public AbstractGeometry3D
+class COMPLEX_EXPORT HexahedralGeom : public INodeGeometry3D
 {
 public:
   friend class DataStructure;
@@ -46,7 +46,7 @@ public:
    */
   HexahedralGeom(HexahedralGeom&& other) noexcept;
 
-  ~HexahedralGeom() override;
+  ~HexahedralGeom() noexcept override;
 
   HexahedralGeom& operator=(const HexahedralGeom&) = delete;
   HexahedralGeom& operator=(HexahedralGeom&&) noexcept = delete;
@@ -55,7 +55,7 @@ public:
    * @brief Returns the type of geometry.
    * @return
    */
-  AbstractGeometry::Type getGeomType() const override;
+  IGeometry::Type getGeomType() const override;
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
@@ -82,41 +82,11 @@ public:
   DataObject* deepCopy() override;
 
   /**
-   * @brief
-   * @return std::string
-   */
-  std::string getGeometryTypeAsString() const override;
-
-  /**
    * @brief Returns the number of quads in the geometry. Returns 0 if there is
    * no quads array stored in the geometry.
    * @return usize
    */
   usize getNumberOfQuads() const;
-
-  /**
-   * @brief Resizes the quads array to contain the specified number of items.
-   * @param numQuads
-   */
-  void resizeQuadList(usize numQuads);
-
-  /**
-   * @brief
-   * @param quads
-   */
-  void setQuads(const SharedQuadList* quads);
-
-  /**
-   * @brief
-   * @return SharedQuadList*
-   */
-  SharedQuadList* getQuads();
-
-  /**
-   * @brief
-   * @return const SharedQuadList*
-   */
-  const SharedQuadList* getQuads() const;
 
   /**
    * @brief
@@ -144,30 +114,6 @@ public:
 
   /**
    * @brief
-   * @param numHexas
-   */
-  void resizeHexList(usize numHexas);
-
-  /**
-   * @brief
-   * @param hexas
-   */
-  void setHexahedra(const SharedHexList* hexas);
-
-  /**
-   * @brief
-   * @return SharedHexList*
-   */
-  SharedHexList* getHexahedrals();
-
-  /**
-   * @brief
-   * @return const SharedHexList*
-   */
-  const SharedHexList* getHexahedrals() const;
-
-  /**
-   * @brief
    * @param hexId
    * @param verts
    */
@@ -192,19 +138,14 @@ public:
    * @param vert7
    * @param vert8
    */
-  void getVertCoordsAtHex(usize hexId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4,
-                          complex::Point3D<float32>& vert5, complex::Point3D<float32>& vert6, complex::Point3D<float32>& vert7, complex::Point3D<float32>& vert8) const;
+  void getVertCoordsAtHex(usize hexId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3, Point3D<float32>& vert4, Point3D<float32>& vert5, Point3D<float32>& vert6,
+                          Point3D<float32>& vert7, Point3D<float32>& vert8) const;
 
   /**
    * @brief
    * @return usize
    */
   usize getNumberOfHexas() const;
-
-  /**
-   * @brief
-   */
-  void initializeWithZeros() override;
 
   /**
    * @brief
@@ -220,48 +161,15 @@ public:
 
   /**
    * @brief
-   * @return const Float32Array*
-   */
-  const Float32Array* getElementSizes() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementSizes() override;
-
-  /**
-   * @brief
    * @return StatusCode
    */
   StatusCode findElementsContainingVert() override;
 
   /**
    * @brief
-   * @return const ElementDynamicList*
-   */
-  const ElementDynamicList* getElementsContainingVert() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementsContainingVert() override;
-
-  /**
-   * @brief
    * @return StatusCode
    */
   StatusCode findElementNeighbors() override;
-
-  /**
-   * @brief
-   * @return const ElementDynamicList*
-   */
-  const ElementDynamicList* getElementNeighbors() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementNeighbors() override;
 
   /**
    * @return StatusCode
@@ -272,39 +180,14 @@ public:
    * @brief
    * @return
    */
-  const Float32Array* getElementCentroids() const override;
+  Point3D<float64> getParametricCenter() const override;
 
   /**
    * @brief
+   * @param pCoords
+   * @param shape
    */
-  void deleteElementCentroids() override;
-
-  /**
-   * @brief
-   * @return
-   */
-  complex::Point3D<float64> getParametricCenter() const override;
-
-  /**
-   * @brief
-   * @param  pCoords
-   * @param  shape
-   */
-  void getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const override;
-
-  /**
-   * @brief
-   * @param field
-   * @param derivatives
-   * @param observable
-   */
-  void findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable = nullptr) const override;
-
-  /**
-   * @brief
-   * @return complex::TooltipGenerator
-   */
-  complex::TooltipGenerator getTooltipGenerator() const override;
+  void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
 
   /**
    * @brief
@@ -329,12 +212,6 @@ public:
    * @return StatusCode
    */
   StatusCode findUnsharedFaces() override;
-
-  /**
-   * @brief
-   * @return uint32
-   */
-  uint32 getXdmfGridType() const override;
 
   /**
    * @brief Reads values from HDF5
@@ -368,61 +245,5 @@ protected:
    * @param importId
    */
   HexahedralGeom(DataStructure& ds, std::string name, IdType importId);
-
-  /**
-   * @brief
-   * @param ds
-   * @param name
-   * @param numHexas
-   * @param vertices
-   * @param allocate
-   */
-  // HexahedralGeom(DataStructure& ds, std::string name, usize numHexas, const std::shared_ptr<SharedVertexList>& vertices, bool allocate = true);
-
-  /**
-   * @brief
-   * @param ds
-   * @param name
-   * @param hexas
-   * @param vertices
-   */
-  // HexahedralGeom(DataStructure& ds, std::string name, const std::shared_ptr<SharedHexList>& hexas, const std::shared_ptr<SharedVertexList>& vertices);
-
-  /**
-   * @brief
-   * @param elementsContainingVert
-   */
-  void setElementsContainingVert(const ElementDynamicList* elementsContainingVert) override;
-
-  /**
-   * @brief
-   * @param elementNeighbors
-   */
-  void setElementNeighbors(const ElementDynamicList* elementNeighbors) override;
-
-  /**
-   * @brief
-   * @param elementCentroids
-   */
-  void setElementCentroids(const Float32Array* elementCentroids) override;
-
-  /**
-   * @brief
-   * @param elementSizes
-   */
-  void setElementSizes(const Float32Array* elementSizes) override;
-
-  /**
-   * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
-   * @param updatedIds
-   */
-  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
-
-private:
-  std::optional<IdType> m_HexListId;
-  std::optional<IdType> m_HexasContainingVertId;
-  std::optional<IdType> m_HexNeighborsId;
-  std::optional<IdType> m_HexCentroidsId;
-  std::optional<IdType> m_HexSizesId;
 };
 } // namespace complex

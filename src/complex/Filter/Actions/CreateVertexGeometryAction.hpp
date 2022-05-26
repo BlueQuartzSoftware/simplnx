@@ -3,7 +3,7 @@
 #include "complex/Common/Array.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Filter/Output.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
@@ -24,7 +24,7 @@ class CreateVertexGeometryAction : public IDataCreationAction
 public:
   CreateVertexGeometryAction() = delete;
 
-  CreateVertexGeometryAction(const DataPath& geometryPath, AbstractGeometry::MeshIndexType numVertices)
+  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices)
   : IDataCreationAction(geometryPath)
   , m_NumVertices(numVertices)
   {
@@ -78,7 +78,7 @@ public:
     // Create the VertexGeom
     VertexGeom* geometry2d = VertexGeom::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath).value());
 
-    using MeshIndexType = AbstractGeometry::MeshIndexType;
+    using MeshIndexType = IGeometry::MeshIndexType;
 
     // Create the Vertex Array with a component size of 3
     DataPath vertexPath = getCreatedPath().createChildPath(k_VertexDataName);
@@ -91,7 +91,7 @@ public:
       return result;
     }
     Float32Array* vertexArray = complex::ArrayFromPath<float>(dataStructure, vertexPath);
-    geometry2d->setVertices(vertexArray);
+    geometry2d->setVertices(*vertexArray);
 
     return {};
   }
@@ -107,15 +107,15 @@ public:
 
   /**
    * @brief Returns the number of vertices (estimated in some circumstances)
-   * @return AbstractGeometry::MeshIndexType
+   * @return IGeometry::MeshIndexType
    */
-  AbstractGeometry::MeshIndexType numVertices() const
+  IGeometry::MeshIndexType numVertices() const
   {
     return m_NumVertices;
   }
 
 private:
-  AbstractGeometry::MeshIndexType m_NumVertices;
+  IGeometry::MeshIndexType m_NumVertices;
 };
 
 } // namespace complex

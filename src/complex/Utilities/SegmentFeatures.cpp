@@ -1,6 +1,6 @@
 #include "SegmentFeatures.hpp"
 
-#include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
+#include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 
 using namespace complex;
 
@@ -16,7 +16,7 @@ SegmentFeatures::SegmentFeatures(DataStructure& data, const std::atomic_bool& sh
 SegmentFeatures::~SegmentFeatures() = default;
 
 // -----------------------------------------------------------------------------
-Result<> SegmentFeatures::execute(AbstractGeometryGrid* gridGeom)
+Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 {
 
   SizeVec3 udims = gridGeom->getDimensions();
