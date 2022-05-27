@@ -29,6 +29,7 @@ set(FilterList
   ReadH5EbsdFilter
   RotateEulerRefFrameFilter
   EBSDSegmentFeaturesFilter
+  FindAvgOrientationsFilter
   )
   
 set(STUB_FILTERS
@@ -41,7 +42,7 @@ set(STUB_FILTERS
   #EbsdToH5Ebsd # MISSING 1 or more Parameter Implementations
   EnsembleInfoReader
   FindAvgCAxes
-  FindAvgOrientations
+  
   FindBoundaryStrengths
   FindCAxisLocations
   FindDistsToCharactGBs
@@ -78,10 +79,6 @@ set(STUB_FILTERS
   WriteStatsGenOdfAngleFile
 )
 
-set(Parameter_List
-  H5EbsdReaderParameter
-)
-
 create_complex_plugin(NAME ${PLUGIN_NAME}
                       FILTER_LIST ${FilterList}
                       DESCRIPTION "Plugin for ${PLUGIN_NAME}"
@@ -93,10 +90,18 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 # Add in all the parameters.
 # This should be integrated with the `create_complex_plugin` function call
 #------------------------------------------------------------------------------
+set(Parameter_List
+  H5EbsdReaderParameter
+)
+
 foreach(source ${Parameter_List})
   target_sources(${PLUGIN_NAME} PRIVATE
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/H5EbsdReaderParameter.h
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/H5EbsdReaderParameter.cpp)
+
+    source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} 
+                 FILES    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/H5EbsdReaderParameter.h
+                          ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/H5EbsdReaderParameter.cpp)
 endforeach()
 
 
@@ -121,11 +126,13 @@ source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLU
 
 #------------------------------------------------------------------------------
 # Algorithms
+# This should be integrated with the `create_complex_plugin` function call
 #------------------------------------------------------------------------------
 set(filter_algorithms
   ReadH5Ebsd
   RotateEulerRefFrame
   EBSDSegmentFeatures
+  FindAvgOrientations
 )
 
 foreach(algorithm ${filter_algorithms})

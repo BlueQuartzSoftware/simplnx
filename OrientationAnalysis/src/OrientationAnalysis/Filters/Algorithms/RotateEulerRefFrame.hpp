@@ -21,7 +21,7 @@ struct ORIENTATIONANALYSIS_EXPORT RotateEulerRefFrameInputValues
 /**
  * @brief The RotateEulerRefFrame class
  */
-class RotateEulerRefFrame
+class ORIENTATIONANALYSIS_EXPORT RotateEulerRefFrame
 {
 public:
   RotateEulerRefFrame(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel);

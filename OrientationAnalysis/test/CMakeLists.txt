@@ -9,7 +9,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ConvertOrientationsTest.cpp
   GenerateFZQuaternionsTest.cpp
   EBSDSegmentFeaturesFilterTest.cpp
-)
+  FindAvgOrientationsTest.cpp
+  )
 set(DISABLED_TESTS
     BadDataNeighborOrientationCheckTest.cpp
     #ConvertHexGridToSquareGridTest.cpp    # MISSING 1 or more Parameter Implementations
@@ -20,7 +21,6 @@ set(DISABLED_TESTS
     #EbsdToH5EbsdTest.cpp    # MISSING 1 or more Parameter Implementations
     EnsembleInfoReaderTest.cpp
     FindAvgCAxesTest.cpp
-    FindAvgOrientationsTest.cpp
     FindBoundaryStrengthsTest.cpp
     FindCAxisLocationsTest.cpp
     FindDistsToCharactGBsTest.cpp

@@ -8,25 +8,25 @@
 namespace complex
 {
 /**
- * @class FindAvgOrientations
+ * @class FindAvgOrientationsFilter
  * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT FindAvgOrientations : public IFilter
+class ORIENTATIONANALYSIS_EXPORT FindAvgOrientationsFilter : public IFilter
 {
 public:
-  FindAvgOrientations() = default;
-  ~FindAvgOrientations() noexcept override = default;
+  FindAvgOrientationsFilter() = default;
+  ~FindAvgOrientationsFilter() noexcept override = default;
 
-  FindAvgOrientations(const FindAvgOrientations&) = delete;
-  FindAvgOrientations(FindAvgOrientations&&) noexcept = delete;
+  FindAvgOrientationsFilter(const FindAvgOrientationsFilter&) = delete;
+  FindAvgOrientationsFilter(FindAvgOrientationsFilter&&) noexcept = delete;
 
-  FindAvgOrientations& operator=(const FindAvgOrientations&) = delete;
-  FindAvgOrientations& operator=(FindAvgOrientations&&) noexcept = delete;
+  FindAvgOrientationsFilter& operator=(const FindAvgOrientationsFilter&) = delete;
+  FindAvgOrientationsFilter& operator=(FindAvgOrientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "CellFeatureIdsArrayPath";
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
+  static inline constexpr StringLiteral k_CellQuatsArrayPath_Key = "CellQuatsArrayPath";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
   static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "AvgQuatsArrayPath";
   static inline constexpr StringLiteral k_AvgEulerAnglesArrayPath_Key = "AvgEulerAnglesArrayPath";
@@ -78,12 +78,12 @@ protected:
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
    * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.
    * Some parts of the actions may not be completely filled out if all the required information is not available at preflight time.
-   * @param ds The input DataStructure instance
+   * @param dataStructure The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  PreflightResult preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
@@ -97,4 +97,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindAvgOrientations, "bf7036d8-25bd-540e-b6de-3a5ab0e42c5f");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindAvgOrientationsFilter, "bf7036d8-25bd-540e-b6de-3a5ab0e42c5f");
