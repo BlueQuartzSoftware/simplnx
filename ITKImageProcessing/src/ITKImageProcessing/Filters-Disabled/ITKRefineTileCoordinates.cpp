@@ -1,7 +1,6 @@
 #include "ITKRefineTileCoordinates.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/MultiDataContainerSelectionFilterParameter.hpp"

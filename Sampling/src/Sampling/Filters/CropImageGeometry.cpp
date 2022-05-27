@@ -2,7 +2,6 @@
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
