@@ -8,7 +8,6 @@
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Filter/IFilter.hpp"
 
-#include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <vector>
 

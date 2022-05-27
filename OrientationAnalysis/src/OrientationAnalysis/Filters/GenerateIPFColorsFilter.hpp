@@ -8,27 +8,27 @@
 namespace complex
 {
 /**
- * @class GenerateIPFColors
+ * @class GenerateIPFColorsFilter
  * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT GenerateIPFColors : public IFilter
+class ORIENTATIONANALYSIS_EXPORT GenerateIPFColorsFilter : public IFilter
 {
 public:
-  GenerateIPFColors() = default;
-  ~GenerateIPFColors() noexcept override = default;
+  GenerateIPFColorsFilter() = default;
+  ~GenerateIPFColorsFilter() noexcept override = default;
 
-  GenerateIPFColors(const GenerateIPFColors&) = delete;
-  GenerateIPFColors(GenerateIPFColors&&) noexcept = delete;
+  GenerateIPFColorsFilter(const GenerateIPFColorsFilter&) = delete;
+  GenerateIPFColorsFilter(GenerateIPFColorsFilter&&) noexcept = delete;
 
-  GenerateIPFColors& operator=(const GenerateIPFColors&) = delete;
-  GenerateIPFColors& operator=(GenerateIPFColors&&) noexcept = delete;
+  GenerateIPFColorsFilter& operator=(const GenerateIPFColorsFilter&) = delete;
+  GenerateIPFColorsFilter& operator=(GenerateIPFColorsFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_ReferenceDir_Key = "ReferenceDir";
   static inline constexpr StringLiteral k_UseGoodVoxels_Key = "UseGoodVoxels";
   static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "CellEulerAnglesArrayPath";
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "GoodVoxelsArrayPath";
+  static inline constexpr StringLiteral k_GoodVoxelsPath_Key = "GoodVoxelsArrayPath";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
   static inline constexpr StringLiteral k_CellIPFColorsArrayName_Key = "CellIPFColorsArrayName";
 
@@ -98,4 +98,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, GenerateIPFColors, "a50e6532-8075-5de5-ab63-945feb0de7f7");
+COMPLEX_DEF_FILTER_TRAITS(complex, GenerateIPFColorsFilter, "a50e6532-8075-5de5-ab63-945feb0de7f7");
