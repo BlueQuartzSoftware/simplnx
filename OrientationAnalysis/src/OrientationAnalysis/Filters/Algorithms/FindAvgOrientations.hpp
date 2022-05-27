@@ -10,7 +10,6 @@
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-
 #include <vector>
 
 namespace complex
@@ -35,9 +34,7 @@ struct ORIENTATIONANALYSIS_EXPORT FindAvgOrientationsInputValues
 class ORIENTATIONANALYSIS_EXPORT FindAvgOrientations
 {
 public:
-
-  FindAvgOrientations(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel,
-                      FindAvgOrientationsInputValues* inputValues);
+  FindAvgOrientations(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, FindAvgOrientationsInputValues* inputValues);
   ~FindAvgOrientations() noexcept;
 
   FindAvgOrientations(const FindAvgOrientations&) = delete;            // Copy Constructor Not Implemented
@@ -48,14 +45,11 @@ public:
   Result<> operator()();
 
 protected:
-
-
 private:
   DataStructure& m_DataStructure;
   const IFilter::MessageHandler& m_MessageHandler;
   const std::atomic_bool& m_ShouldCancel;
   const FindAvgOrientationsInputValues* m_InputValues = nullptr;
-
 };
 
 } // namespace complex

@@ -126,7 +126,6 @@ IFilter::PreflightResult FindAvgOrientationsFilter::preflightImpl(const DataStru
     return {nonstd::make_unexpected(std::vector<Error>{Error{-651, fmt::format("Input arrays do have matching tuple counts.")}})};
   }
 
-
   // Create output DataStructure Items
   auto createAvgQuatAction = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{1}, std::vector<usize>{4}, pAvgQuatsArrayPathValue);
   auto createAvgEulerAction = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{1}, std::vector<usize>{3}, pAvgEulerAnglesArrayPathValue);

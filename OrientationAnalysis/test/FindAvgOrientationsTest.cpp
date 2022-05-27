@@ -2,8 +2,6 @@
 
 #include <catch2/catch.hpp>
 
-
-
 #include "OrientationAnalysis/Filters/FindAvgOrientationsFilter.hpp"
 
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
