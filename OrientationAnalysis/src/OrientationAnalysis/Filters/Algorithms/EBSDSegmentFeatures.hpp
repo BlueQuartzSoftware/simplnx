@@ -9,6 +9,8 @@
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Utilities/SegmentFeatures.hpp"
 
+#include "EbsdLib/LaueOps/LaueOps.h"
+
 #include <random>
 #include <vector>
 
@@ -20,8 +22,10 @@ namespace complex
  */
 struct ORIENTATIONANALYSIS_EXPORT EBSDSegmentFeaturesInputValues
 {
-  float32 pMisorientationTolerance;
+  float32 misorientationTolerance;
   bool useGoodVoxels;
+  bool shouldRandomizeFeatureIds;
+  DataPath gridGeomPath;
   DataPath quatsArrayPath;
   DataPath cellPhasesArrayPath;
   DataPath goodVoxelsArrayPath;
@@ -52,10 +56,38 @@ public:
 
   Result<> operator()();
 
+protected:
+  /**
+   * @brief
+   * @param data
+   * @param args
+   * @param gnum
+   * @param nextSeed
+   * @return int64
+   */
+  int64_t getSeed(int32 gnum, int64 nextSeed) const override;
+
+  /**
+   * @brief
+   * @param data
+   * @param args
+   * @param referencepoint
+   * @param neighborpoint
+   * @param gnum
+   * @return bool
+   */
+  bool determineGrouping(int64 referencePoint, int64 neighborPoint, int32 gnum) const override;
+
 private:
   const EBSDSegmentFeaturesInputValues* m_InputValues = nullptr;
-  FeatureIdsArrayType* m_FeatureIdsArray = nullptr;
+  Float32Array* m_QuatsArray = nullptr;
+  FeatureIdsArrayType* m_CellPhases = nullptr;
   GoodVoxelsArrayType* m_GoodVoxelsArray = nullptr;
+  FeatureIdsArrayType* m_CrystalStructures = nullptr;
+
+  FeatureIdsArrayType* m_FeatureIdsArray = nullptr;
+
+  std::vector<LaueOps::Pointer> m_OrientationOps;
 };
 
 } // namespace complex

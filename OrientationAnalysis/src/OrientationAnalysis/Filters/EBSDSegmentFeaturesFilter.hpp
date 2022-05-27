@@ -34,7 +34,7 @@ public:
   static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "FeatureIdsArrayName";
   static inline constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "CellFeatureAttributeMatrixName";
   static inline constexpr StringLiteral k_ActiveArrayName_Key = "ActiveArrayName";
-
+  static inline constexpr StringLiteral k_RandomizeFeatures_Key = "RandomizeFeatures";
   /**
    * @brief Returns the name of the filter.
    * @return
