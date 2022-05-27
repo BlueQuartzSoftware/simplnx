@@ -1,7 +1,6 @@
 #include "CreateGridMontage.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 
 using namespace complex;
 

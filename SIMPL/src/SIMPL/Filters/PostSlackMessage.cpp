@@ -1,7 +1,6 @@
 #include "PostSlackMessage.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 

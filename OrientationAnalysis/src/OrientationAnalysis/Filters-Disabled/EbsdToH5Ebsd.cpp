@@ -1,7 +1,6 @@
 #include "EbsdToH5Ebsd.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/EbsdToH5EbsdFilterParameter.hpp"
 
 using namespace complex;

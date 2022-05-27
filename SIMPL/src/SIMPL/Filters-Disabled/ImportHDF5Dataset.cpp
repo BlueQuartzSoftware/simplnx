@@ -1,7 +1,6 @@
 #include "ImportHDF5Dataset.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/ImportHDF5DatasetFilterParameter.hpp"
 

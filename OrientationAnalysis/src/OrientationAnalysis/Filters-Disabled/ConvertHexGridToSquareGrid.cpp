@@ -1,7 +1,6 @@
 #include "ConvertHexGridToSquareGrid.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ConvertHexGridToSquareGridFilterParameter.hpp"
 
 using namespace complex;

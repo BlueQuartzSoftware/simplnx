@@ -1,7 +1,6 @@
 #include "OrientationUtility.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/OrientationUtilityFilterParameter.hpp"
 
 using namespace complex;
