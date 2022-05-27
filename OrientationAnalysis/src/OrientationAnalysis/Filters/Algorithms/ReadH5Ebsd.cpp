@@ -85,7 +85,7 @@ complex::Result<> LoadInfo(const complex::ReadH5EbsdInputValues* m_InputValues, 
   complex::DataPath cellEnsembleMatrixPath = m_InputValues->cellEnsembleMatrixPath;
 
   complex::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
-  complex::Int32Array& xtalData = m_DataStructure.getDataRefAs<complex::Int32Array>(xtalDataPath);
+  complex::UInt32Array& xtalData = m_DataStructure.getDataRefAs<complex::UInt32Array>(xtalDataPath);
   xtalData.getIDataStore()->reshapeTuples(tDims);
 
   complex::DataPath latticeDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::LatticeConstants);
@@ -208,7 +208,7 @@ complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* m_InputValu
   // Get the Crystal Structure data which should have already been read from the file and copied to the array
   complex::DataPath cellEnsembleMatrixPath = m_InputValues->cellEnsembleMatrixPath;
   complex::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
-  complex::Int32Array& xtalData = dataStructure.getDataRefAs<complex::Int32Array>(xtalDataPath);
+  complex::UInt32Array& xtalData = dataStructure.getDataRefAs<complex::UInt32Array>(xtalDataPath);
 
   // Copy the Phase Values from the EBSDReader to the DataStructure
   auto* phasePtr = reinterpret_cast<int32_t*>(ebsdReader->getPointerByName(eulerNames[3]));           // get the phase data from the EbsdReader
