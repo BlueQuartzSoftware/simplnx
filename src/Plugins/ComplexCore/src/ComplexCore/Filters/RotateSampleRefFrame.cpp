@@ -477,7 +477,7 @@ IFilter::PreflightResult RotateSampleRefFrame::preflightImpl(const DataStructure
 
   SizeVec3 originalImageDims = selectedImageGeom.getDimensions();
   usize originalImageSize = std::accumulate(originalImageDims.begin(), originalImageDims.end(), static_cast<usize>(1), std::multiplies<>{});
-
+  bool createGroup = true;
   for(const auto& cellArrayPath : selectedCellArrays)
   {
     const auto& cellArray = dataStructure.getDataRefAs<IDataArray>(cellArrayPath);
@@ -487,19 +487,16 @@ IFilter::PreflightResult RotateSampleRefFrame::preflightImpl(const DataStructure
       return {MakeErrorResult<OutputActions>(
           -1, fmt::format("Selected Array '{}' was size {}, but Image Geometry '{}' expects size {}", cellArray.getName(), arraySize, selectedImageGeom.getName(), originalImageSize))};
     }
-<<<<<<< HEAD
-    DataPath createdArrayPath = createdImageGeomPath.createChildPath(cellArray.getName());
-=======
+
     std::string aPath = cellArrayPath.toString();
     aPath = complex::StringUtilities::replace(aPath, selectedImageGeomPath.toString(), createdImageGeomPath.toString());
-    DataPath createdArrayPath = DataPath::FromString(aPath).value(); // createdImageGeomPath.createChildPath(cellArray.getName());
+    DataPath createdArrayPath = DataPath::FromString(aPath).value();
 
     if(createGroup)
     {
       actions.actions.push_back(std::make_unique<CreateDataGroupAction>(createdArrayPath.getParent()));
       createGroup = false;
     }
->>>>>>> 98c27548 (Move SegmentFeatures algorithm base class into complex.)
     actions.actions.push_back(std::make_unique<CreateArrayAction>(cellArray.getDataType(), cellArrayDims, cellArray.getIDataStoreRef().getComponentShape(), createdArrayPath));
   }
 
