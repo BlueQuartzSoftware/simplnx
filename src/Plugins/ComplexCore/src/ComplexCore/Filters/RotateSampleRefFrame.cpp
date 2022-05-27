@@ -44,6 +44,9 @@ const Eigen::Vector3f k_XAxis = Eigen::Vector3f::UnitX();
 const Eigen::Vector3f k_YAxis = Eigen::Vector3f::UnitY();
 const Eigen::Vector3f k_ZAxis = Eigen::Vector3f::UnitZ();
 
+/**
+ * @brief Internal struct to pass around the arguments
+ */
 struct RotateArgs
 {
   int64 xp = 0;
@@ -63,6 +66,9 @@ struct RotateArgs
   float32 zMinNew = 0.0f;
 };
 
+/**
+ * @brief Class that implements the actual rotation
+ */
 class SampleRefFrameRotator
 {
 public:
