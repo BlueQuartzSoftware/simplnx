@@ -75,9 +75,9 @@ public:
       if(phase < m_NumPhases && calcIPF && m_CrystalStructures[phase] < EbsdLib::CrystalStructure::LaueGroupEnd)
       {
         argb = ops[m_CrystalStructures[phase]]->generateIPFColor(dEuler.data(), refDir.data(), false);
-        m_CellIPFColors[index] = static_cast<uint8_t>(RgbColor::dRed(argb));
-        m_CellIPFColors[index + 1] = static_cast<uint8_t>(RgbColor::dGreen(argb));
-        m_CellIPFColors[index + 2] = static_cast<uint8_t>(RgbColor::dBlue(argb));
+        m_CellIPFColors[index] = static_cast<uint8_t>(complex::RgbColor::dRed(argb));
+        m_CellIPFColors[index + 1] = static_cast<uint8_t>(complex::RgbColor::dGreen(argb));
+        m_CellIPFColors[index + 2] = static_cast<uint8_t>(complex::RgbColor::dBlue(argb));
       }
     }
   }
