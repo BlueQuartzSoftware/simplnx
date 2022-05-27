@@ -1,5 +1,6 @@
 #include "EBSDSegmentFeaturesFilter.hpp"
 
+#include "complex/Common/Numbers.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
@@ -10,7 +11,6 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Common/Numbers.hpp"
 
 #include "OrientationAnalysis/Filters/Algorithms/EBSDSegmentFeatures.hpp"
 
@@ -197,7 +197,7 @@ Result<> EBSDSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, co
   EBSDSegmentFeaturesInputValues inputValues;
 
   // Store the misorientation tolerance as radians
-  inputValues.misorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key) * static_cast<float>(complex::numbers::pi / 180.0f) ;
+  inputValues.misorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key) * static_cast<float>(complex::numbers::pi / 180.0f);
   inputValues.useGoodVoxels = filterArgs.value<bool>(k_UseGoodVoxels_Key);
   inputValues.shouldRandomizeFeatureIds = filterArgs.value<bool>(k_RandomizeFeatures_Key);
   inputValues.gridGeomPath = filterArgs.value<DataPath>(k_GridGeomPath_Key);

@@ -1,8 +1,7 @@
 #include "EBSDSegmentFeatures.hpp"
 
-#include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
 #include "complex/DataStructure/DataStore.hpp"
-
+#include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
 
 #include <chrono>
 
@@ -30,7 +29,6 @@ Result<> EBSDSegmentFeatures::operator()()
   }
 
   auto gridGeom = m_DataStructure.getDataAs<AbstractGeometryGrid>(m_InputValues->gridGeomPath);
-
 
   m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->quatsArrayPath);
   m_CellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
