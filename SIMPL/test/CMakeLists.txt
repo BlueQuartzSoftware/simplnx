@@ -50,7 +50,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     RenameDataContainerTest.cpp
     ReplaceValueInArrayTest.cpp
     RequiredZThicknessTest.cpp
-    #RotateSampleRefFrameTest.cpp    # MISSING 1 or more Parameter Implementations
     ScaleVolumeTest.cpp
     SplitAttributeArrayTest.cpp
     WriteASCIIDataTest.cpp
