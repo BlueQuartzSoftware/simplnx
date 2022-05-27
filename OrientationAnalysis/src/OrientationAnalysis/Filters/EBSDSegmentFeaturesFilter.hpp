@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Reconstruction/Reconstruction_export.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,27 +8,28 @@
 namespace complex
 {
 /**
- * @class EBSDSegmentFeatures
+ * @class EBSDSegmentFeaturesFilter
  * @brief This filter will ....
  */
-class RECONSTRUCTION_EXPORT EBSDSegmentFeatures : public IFilter
+class ORIENTATIONANALYSIS_EXPORT EBSDSegmentFeaturesFilter : public IFilter
 {
 public:
-  EBSDSegmentFeatures() = default;
-  ~EBSDSegmentFeatures() noexcept override = default;
+  EBSDSegmentFeaturesFilter() = default;
+  ~EBSDSegmentFeaturesFilter() noexcept override = default;
 
-  EBSDSegmentFeatures(const EBSDSegmentFeatures&) = delete;
-  EBSDSegmentFeatures(EBSDSegmentFeatures&&) noexcept = delete;
+  EBSDSegmentFeaturesFilter(const EBSDSegmentFeaturesFilter&) = delete;
+  EBSDSegmentFeaturesFilter(EBSDSegmentFeaturesFilter&&) noexcept = delete;
 
-  EBSDSegmentFeatures& operator=(const EBSDSegmentFeatures&) = delete;
-  EBSDSegmentFeatures& operator=(EBSDSegmentFeatures&&) noexcept = delete;
+  EBSDSegmentFeaturesFilter& operator=(const EBSDSegmentFeaturesFilter&) = delete;
+  EBSDSegmentFeaturesFilter& operator=(EBSDSegmentFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_GridGeomPath_Key = "grid_geometry_path";
   static inline constexpr StringLiteral k_MisorientationTolerance_Key = "MisorientationTolerance";
   static inline constexpr StringLiteral k_UseGoodVoxels_Key = "UseGoodVoxels";
   static inline constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "GoodVoxelsArrayPath";
+  static inline constexpr StringLiteral k_GoodVoxelsPath_Key = "GoodVoxelsArrayPath";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
   static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "FeatureIdsArrayName";
   static inline constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "CellFeatureAttributeMatrixName";
@@ -100,4 +101,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, EBSDSegmentFeatures, "7861c691-b821-537b-bd25-dc195578e0ea");
+COMPLEX_DEF_FILTER_TRAITS(complex, EBSDSegmentFeaturesFilter, "7861c691-b821-537b-bd25-dc195578e0ea");

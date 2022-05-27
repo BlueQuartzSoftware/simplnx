@@ -16,7 +16,6 @@ set(STUB_FILTERS
   AlignSectionsMutualInformation
   CAxisSegmentFeatures
   ComputeFeatureRect
-  EBSDSegmentFeatures
   MergeColonies
   MergeTwins
 

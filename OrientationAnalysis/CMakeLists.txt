@@ -28,6 +28,7 @@ set(FilterList
   ConvertOrientations
   ReadH5EbsdFilter
   RotateEulerRefFrameFilter
+  EBSDSegmentFeaturesFilter
   )
   
 set(STUB_FILTERS
@@ -124,6 +125,7 @@ source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLU
 set(filter_algorithms
   ReadH5Ebsd
   RotateEulerRefFrame
+  EBSDSegmentFeatures
 )
 
 foreach(algorithm ${filter_algorithms})

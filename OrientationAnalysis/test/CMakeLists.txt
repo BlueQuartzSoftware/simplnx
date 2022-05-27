@@ -8,6 +8,7 @@
 set(${PLUGIN_NAME}UnitTest_SRCS
   ConvertOrientationsTest.cpp
   GenerateFZQuaternionsTest.cpp
+  EBSDSegmentFeaturesFilterTest.cpp
 )
 set(DISABLED_TESTS
     BadDataNeighborOrientationCheckTest.cpp
