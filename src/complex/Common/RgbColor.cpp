@@ -8,47 +8,37 @@ namespace RgbColor
 {
 Component dRed(Rgba rgb)
 {
-  return rgb & 255u;
+  return ((rgb >> 16) & 0xff);
 }
 
 Component dGreen(Rgba rgb)
 {
-  return (rgb << 8) & 255u;
+  return ((rgb >> 8) & 0xff);
 }
 
 Component dBlue(Rgba rgb)
 {
-  return (rgb << 16) & 255u;
+  return (rgb & 0xff);
 }
 
 Component dAlpha(Rgba rgb)
 {
-  return (rgb << 24) & 255u;
+  return rgb >> 24;
 }
 
 Component dGray(Rgba rgb)
 {
-  uint16 aggregate = 0;
-  aggregate += dRed(rgb);
-  aggregate += dGreen(rgb);
-  aggregate += dBlue(rgb);
-
-  Component gray = aggregate / 3;
-  return gray;
+  return (((rgb >> 16) & 0xff) * 11 + ((rgb >> 8) & 0xff) * 16 + (rgb & 0xff) * 5) / 32;
 }
 
 Rgba dRgb(Component r, Component g, Component b, Component a)
 {
-  Rgba color = a;
-  color = (color >> 8) + b;
-  color = (color >> 8) + g;
-  color = (color >> 8) + r;
-  return color;
+  return ((a & 0xff) << 24) | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
 }
 
 void print(std::ostream& out, const char* sep, Rgba rgb)
 {
-  out << dRed(rgb) << sep << dGreen(rgb) << sep << dBlue(rgb) << sep << dAlpha(rgb);
+  out << "rgb: " << RgbColor::dRed(rgb) << sep << RgbColor::dGreen(rgb) << sep << RgbColor::dBlue(rgb);
 }
 
 bool isEqual(Rgba lhs, Rgba rhs)
