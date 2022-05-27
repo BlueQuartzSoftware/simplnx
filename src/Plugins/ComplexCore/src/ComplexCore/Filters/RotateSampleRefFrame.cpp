@@ -539,13 +539,10 @@ Result<> RotateSampleRefFrame::executeImpl(DataStructure& dataStructure, const A
     }
 
     const auto& oldCellArray = dataStructure.getDataRefAs<IDataArray>(cellArrayPath);
-<<<<<<< HEAD
-    DataPath createdArrayPath = createdImageGeomPath.createChildPath(oldCellArray.getName());
-=======
+
     std::string aPath = cellArrayPath.toString();
     aPath = complex::StringUtilities::replace(aPath, selectedImageGeomPath.toString(), createdImageGeomPath.toString());
     DataPath createdArrayPath = DataPath::FromString(aPath).value(); // createdImageGeomPath.createChildPath(cellArray.getName());
->>>>>>> 98c27548 (Move SegmentFeatures algorithm base class into complex.)
     auto& newCellArray = dataStructure.getDataRefAs<IDataArray>(createdArrayPath);
 
     DataType type = oldCellArray.getDataType();
