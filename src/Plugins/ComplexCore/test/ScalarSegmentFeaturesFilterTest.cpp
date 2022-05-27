@@ -106,7 +106,7 @@ TEST_CASE("Reconstruction::ScalarSegmentFeatures", "[Reconstruction][ScalarSegme
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_FeatureIdsPathKey, std::make_any<DataPath>(outputFeatureIds));
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayPathKey, std::make_any<DataPath>(activeArrayDataPath));
     // Are we going to randomize the featureIds when completed.
-    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeaturesKey, std::make_any<bool>(false));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(false));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);

@@ -2,9 +2,14 @@
 
 #include "complex/complex_export.hpp"
 
+#include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Filter/IFilter.hpp"
+
+#include <random>
+#include <vector>
 
 namespace complex
 {
@@ -15,6 +20,9 @@ class COMPLEX_EXPORT SegmentFeatures
 {
 
 public:
+  using SeedGenerator = std::mt19937_64;
+  using Int64Distribution = std::uniform_int_distribution<int64>;
+
   SegmentFeatures(DataStructure& data, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
 
   virtual ~SegmentFeatures();
@@ -51,6 +59,24 @@ public:
    * @return bool
    */
   virtual bool determineGrouping(int64_t referencePoint, int64_t neighborPoint, int32_t gnum) const;
+
+  /**
+   * @brief
+   * @param featureIds
+   * @param totalPoints
+   * @param totalFeatures
+   * @param distribution
+   */
+  virtual void randomizeFeatureIds(Int32Array* featureIds, uint64 totalPoints, uint64 totalFeatures, Int64Distribution& distribution) const;
+
+  /**
+   * @brief
+   * @param distribution
+   * @param rangeMin
+   * @param rangeMax
+   * @return
+   */
+  virtual SeedGenerator initializeVoxelSeedGenerator(Int64Distribution& distribution, const int64 rangeMin, const int64 rangeMax) const;
 
   /* from http://www.newty.de/fpt/functor.html */
   /**

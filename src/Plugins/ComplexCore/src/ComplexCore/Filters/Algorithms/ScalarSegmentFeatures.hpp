@@ -51,16 +51,6 @@ public:
 protected:
   /**
    * @brief
-   * @param featureIds
-   * @param totalPoints
-   * @param totalFeatures
-   * @param distribution
-   * @param generator
-   */
-  void randomizeFeatureIds(Int32Array* featureIds, uint64 totalPoints, uint64 totalFeatures, Int64Distribution& distribution) const;
-
-  /**
-   * @brief
    * @param data
    * @param args
    * @param gnum
@@ -79,15 +69,6 @@ protected:
    * @return bool
    */
   bool determineGrouping(int64 referencePoint, int64 neighborPoint, int32 gnum) const override;
-
-  /**
-   * @brief
-   * @param distribution
-   * @param rangeMin
-   * @param rangeMax
-   * @return SeedGenerator
-   */
-  SeedGenerator initializeVoxelSeedGenerator(Int64Distribution& distribution, const int64 rangeMin, const int64 rangeMax) const;
 
 private:
   const ScalarSegmentFeaturesInputValues* m_InputValues = nullptr;

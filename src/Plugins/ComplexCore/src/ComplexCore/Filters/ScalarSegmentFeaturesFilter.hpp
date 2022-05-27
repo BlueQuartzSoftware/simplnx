@@ -8,7 +8,6 @@
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 
-
 namespace complex
 {
 
@@ -37,7 +36,7 @@ public:
   static inline constexpr StringLiteral k_FeatureIdsPathKey = "feature ids path";
   // static inline constexpr StringLiteral k_CellFeaturePathKey = "cell feature group path";
   static inline constexpr StringLiteral k_ActiveArrayPathKey = "active array path";
-  static inline constexpr StringLiteral k_RandomizeFeaturesKey = "randomize features";
+  static inline constexpr StringLiteral k_RandomizeFeatures_Key = "randomize features";
 
   /**
    * @brief Returns the filter's name.
@@ -84,12 +83,12 @@ public:
 protected:
   /**
    * @brief
-   * @param data
+   * @param dataStructure
    * @param args
    * @param messageHandler
    * @return PreflightResult
    */
-  PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief
