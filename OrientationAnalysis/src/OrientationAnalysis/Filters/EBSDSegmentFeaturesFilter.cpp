@@ -79,7 +79,7 @@ Parameters EBSDSegmentFeaturesFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Quaternions", "", DataPath{}, std::set<complex::DataType>({complex::DataType::float32})));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "", DataPath{}, std::set<complex::DataType>({complex::DataType::int32})));
   params.insertSeparator(Parameters::Separator{"Required Input Cell Ensemble Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath{}, std::set<complex::DataType>({complex::DataType::int32})));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath{}, std::set<complex::DataType>({complex::DataType::uint32})));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsArrayName_Key, "Cell Feature Ids", "", DataPath({"FeatureIds"})));
@@ -104,7 +104,7 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
   //  auto pMisorientationToleranceValue = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   auto pQuatsArrayPathValue = args.value<DataPath>(k_QuatsArrayPath_Key);
   auto pCellPhasesArrayPathValue = args.value<DataPath>(k_CellPhasesArrayPath_Key);
-  //  auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  auto pCrystalStructuresArrayPathValue = args.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   //  auto pFeatureIdsArrayNameValue = filterArgs.value<DataPath>(k_FeatureIdsArrayName_Key);
   auto pCellFeatureAttributeMatrixNameValue = args.value<DataPath>(k_CellFeatureAttributeMatrixName_Key);
   //  auto pActiveArrayNameValue = filterArgs.value<DataPath>(k_ActiveArrayName_Key);
@@ -114,6 +114,13 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
   if(tolerance == 0.0F)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{-655, fmt::format("Misorientation Tolerance cannot equal ZERO.", humanName())}})};
+  }
+
+  // Validate the Crystal Structures array
+  const UInt32Array& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue);
+  if(crystalStructures.getNumberOfComponents() != 1)
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Crystal Structures Input Array must be a 1 component Int32 array"}})};
   }
 
   auto featureIdsPath = args.value<DataPath>(k_FeatureIdsArrayName_Key);
