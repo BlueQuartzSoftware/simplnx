@@ -1,77 +1,84 @@
-#include "EBSDSegmentFeatures.hpp"
+#include "EBSDSegmentFeaturesFilter.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Parameters/DataPathSelectionParameter.hpp"
 
 using namespace complex;
 
 namespace complex
 {
 //------------------------------------------------------------------------------
-std::string EBSDSegmentFeatures::name() const
+std::string EBSDSegmentFeaturesFilter::name() const
 {
-  return FilterTraits<EBSDSegmentFeatures>::name.str();
+  return FilterTraits<EBSDSegmentFeaturesFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string EBSDSegmentFeatures::className() const
+std::string EBSDSegmentFeaturesFilter::className() const
 {
-  return FilterTraits<EBSDSegmentFeatures>::className;
+  return FilterTraits<EBSDSegmentFeaturesFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid EBSDSegmentFeatures::uuid() const
+Uuid EBSDSegmentFeaturesFilter::uuid() const
 {
-  return FilterTraits<EBSDSegmentFeatures>::uuid;
+  return FilterTraits<EBSDSegmentFeaturesFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string EBSDSegmentFeatures::humanName() const
+std::string EBSDSegmentFeaturesFilter::humanName() const
 {
   return "Segment Features (Misorientation)";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> EBSDSegmentFeatures::defaultTags() const
+std::vector<std::string> EBSDSegmentFeaturesFilter::defaultTags() const
 {
   return {"#Reconstruction", "#Segmentation"};
 }
 
 //------------------------------------------------------------------------------
-Parameters EBSDSegmentFeatures::parameters() const
+Parameters EBSDSegmentFeaturesFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<Float32Parameter>(k_MisorientationTolerance_Key, "Misorientation Tolerance (Degrees)", "", 1.23345f));
+
+  params.insertSeparator(Parameters::Separator{"Segmentation Parameters"});
+  params.insert(std::make_unique<Float32Parameter>(k_MisorientationTolerance_Key, "Misorientation Tolerance (Degrees)", "", 5.0f));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseGoodVoxels_Key, "Use Mask Array", "", false));
-  params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Quaternions", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsArrayPath_Key, "Mask", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
-  params.insertSeparator(Parameters::Separator{"Cell Ensemble Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
-  params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsArrayName_Key, "Cell Feature Ids", "", DataPath{}));
-  params.insertSeparator(Parameters::Separator{"Cell Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CellFeatureAttributeMatrixName_Key, "Cell Feature Attribute Matrix", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_ActiveArrayName_Key, "Active", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsPath_Key, "Mask", "Path to the DataArray Mask", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_UseGoodVoxels_Key, k_GoodVoxelsArrayPath_Key, true);
+  params.linkParameters(k_UseGoodVoxels_Key, k_GoodVoxelsPath_Key, true);
+
+  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_GridGeomPath_Key, "Grid Geometry", "DataPath to target Grid Geometry", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Quaternions", "", DataPath{}, std::set<complex::DataType>({complex::DataType::float32})));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "", DataPath{}, std::set<complex::DataType>({complex::DataType::int32})));
+  params.insertSeparator(Parameters::Separator{"Required Input Cell Ensemble Data"});
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath{}, std::set<complex::DataType>({complex::DataType::int32})));
+
+  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsArrayName_Key, "Cell Feature Ids", "", DataPath({"FeatureIds"})));
+  params.insertSeparator(Parameters::Separator{"Created Cell Feature Data"});
+  params.insert(std::make_unique<ArrayCreationParameter>(k_CellFeatureAttributeMatrixName_Key, "Cell Feature Attribute Matrix", "", DataPath({"CellFeatureData"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_ActiveArrayName_Key, "Active", "", DataPath({"Active"})));
+
 
   return params;
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer EBSDSegmentFeatures::clone() const
+IFilter::UniquePointer EBSDSegmentFeaturesFilter::clone() const
 {
-  return std::make_unique<EBSDSegmentFeatures>();
+  return std::make_unique<EBSDSegmentFeaturesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult EBSDSegmentFeatures::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                             const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
@@ -87,7 +94,7 @@ IFilter::PreflightResult EBSDSegmentFeatures::preflightImpl(const DataStructure&
   auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseGoodVoxels_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key);
+  auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_GoodVoxelsPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   auto pFeatureIdsArrayNameValue = filterArgs.value<DataPath>(k_FeatureIdsArrayName_Key);
   auto pCellFeatureAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixName_Key);
@@ -136,7 +143,7 @@ IFilter::PreflightResult EBSDSegmentFeatures::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> EBSDSegmentFeatures::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> EBSDSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                           const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
@@ -146,7 +153,7 @@ Result<> EBSDSegmentFeatures::executeImpl(DataStructure& dataStructure, const Ar
   auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseGoodVoxels_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key);
+  auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_GoodVoxelsPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   auto pFeatureIdsArrayNameValue = filterArgs.value<DataPath>(k_FeatureIdsArrayName_Key);
   auto pCellFeatureAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixName_Key);

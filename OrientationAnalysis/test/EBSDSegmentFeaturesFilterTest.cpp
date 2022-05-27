@@ -27,28 +27,28 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
-#include "Reconstruction/Filters/EBSDSegmentFeatures.hpp"
-#include "Reconstruction/Reconstruction_test_dirs.hpp"
+#include "OrientationAnalysis/Filters/EBSDSegmentFeaturesFilter.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 using namespace complex;
 
 TEST_CASE("Reconstruction::EBSDSegmentFeatures: Instantiation and Parameter Check", "[Reconstruction][EBSDSegmentFeatures][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  EBSDSegmentFeatures filter;
+  EBSDSegmentFeaturesFilter filter;
   DataStructure ds;
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(EBSDSegmentFeatures::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
-  args.insertOrAssign(EBSDSegmentFeatures::k_UseGoodVoxels_Key, std::make_any<bool>(false));
-  args.insertOrAssign(EBSDSegmentFeatures::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(EBSDSegmentFeatures::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(EBSDSegmentFeatures::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(EBSDSegmentFeatures::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(EBSDSegmentFeatures::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(EBSDSegmentFeatures::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(EBSDSegmentFeatures::k_ActiveArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(1.23345f));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_GoodVoxelsPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
