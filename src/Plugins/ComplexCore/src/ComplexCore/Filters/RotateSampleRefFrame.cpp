@@ -5,6 +5,7 @@
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
@@ -17,7 +18,6 @@
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelData3DAlgorithm.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 
 #include <Eigen/Dense>
 
@@ -489,7 +489,7 @@ IFilter::PreflightResult RotateSampleRefFrame::preflightImpl(const DataStructure
     }
     std::string aPath = cellArrayPath.toString();
     aPath = complex::StringUtilities::replace(aPath, selectedImageGeomPath.toString(), createdImageGeomPath.toString());
-    DataPath createdArrayPath = DataPath::FromString(aPath).value(); //createdImageGeomPath.createChildPath(cellArray.getName());
+    DataPath createdArrayPath = DataPath::FromString(aPath).value(); // createdImageGeomPath.createChildPath(cellArray.getName());
 
     if(createGroup)
     {
@@ -540,7 +540,7 @@ Result<> RotateSampleRefFrame::executeImpl(DataStructure& dataStructure, const A
     const auto& oldCellArray = dataStructure.getDataRefAs<IDataArray>(cellArrayPath);
     std::string aPath = cellArrayPath.toString();
     aPath = complex::StringUtilities::replace(aPath, selectedImageGeomPath.toString(), createdImageGeomPath.toString());
-    DataPath createdArrayPath = DataPath::FromString(aPath).value(); //createdImageGeomPath.createChildPath(cellArray.getName());
+    DataPath createdArrayPath = DataPath::FromString(aPath).value(); // createdImageGeomPath.createChildPath(cellArray.getName());
     auto& newCellArray = dataStructure.getDataRefAs<IDataArray>(createdArrayPath);
 
     DataType type = oldCellArray.getDataType();

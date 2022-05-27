@@ -9,11 +9,11 @@
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 #include <Eigen/Dense>
 
