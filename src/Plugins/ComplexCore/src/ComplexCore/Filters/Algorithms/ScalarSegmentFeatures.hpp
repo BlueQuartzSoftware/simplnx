@@ -1,13 +1,13 @@
 #pragma once
 
 #include "ComplexCore/ComplexCore_export.hpp"
-#include "ComplexCore/Filters/Algorithms/SegmentFeatures.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/Utilities/SegmentFeatures.hpp"
 
 #include <random>
 #include <vector>

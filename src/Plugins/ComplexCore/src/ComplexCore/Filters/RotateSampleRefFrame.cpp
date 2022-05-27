@@ -5,6 +5,7 @@
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
@@ -16,6 +17,7 @@
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelData3DAlgorithm.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 #include <Eigen/Dense>
 
@@ -485,7 +487,19 @@ IFilter::PreflightResult RotateSampleRefFrame::preflightImpl(const DataStructure
       return {MakeErrorResult<OutputActions>(
           -1, fmt::format("Selected Array '{}' was size {}, but Image Geometry '{}' expects size {}", cellArray.getName(), arraySize, selectedImageGeom.getName(), originalImageSize))};
     }
+<<<<<<< HEAD
     DataPath createdArrayPath = createdImageGeomPath.createChildPath(cellArray.getName());
+=======
+    std::string aPath = cellArrayPath.toString();
+    aPath = complex::StringUtilities::replace(aPath, selectedImageGeomPath.toString(), createdImageGeomPath.toString());
+    DataPath createdArrayPath = DataPath::FromString(aPath).value(); // createdImageGeomPath.createChildPath(cellArray.getName());
+
+    if(createGroup)
+    {
+      actions.actions.push_back(std::make_unique<CreateDataGroupAction>(createdArrayPath.getParent()));
+      createGroup = false;
+    }
+>>>>>>> 98c27548 (Move SegmentFeatures algorithm base class into complex.)
     actions.actions.push_back(std::make_unique<CreateArrayAction>(cellArray.getDataType(), cellArrayDims, cellArray.getIDataStoreRef().getComponentShape(), createdArrayPath));
   }
 
@@ -528,7 +542,13 @@ Result<> RotateSampleRefFrame::executeImpl(DataStructure& dataStructure, const A
     }
 
     const auto& oldCellArray = dataStructure.getDataRefAs<IDataArray>(cellArrayPath);
+<<<<<<< HEAD
     DataPath createdArrayPath = createdImageGeomPath.createChildPath(oldCellArray.getName());
+=======
+    std::string aPath = cellArrayPath.toString();
+    aPath = complex::StringUtilities::replace(aPath, selectedImageGeomPath.toString(), createdImageGeomPath.toString());
+    DataPath createdArrayPath = DataPath::FromString(aPath).value(); // createdImageGeomPath.createChildPath(cellArray.getName());
+>>>>>>> 98c27548 (Move SegmentFeatures algorithm base class into complex.)
     auto& newCellArray = dataStructure.getDataRefAs<IDataArray>(createdArrayPath);
 
     DataType type = oldCellArray.getDataType();

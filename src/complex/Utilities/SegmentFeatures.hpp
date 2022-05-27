@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ComplexCore/ComplexCore_export.hpp"
+#include "complex/complex_export.hpp"
 
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/Arguments.hpp"
@@ -11,7 +11,7 @@ namespace complex
 
 class AbstractGeometryGrid;
 
-class COMPLEXCORE_EXPORT SegmentFeatures
+class COMPLEX_EXPORT SegmentFeatures
 {
 
 public:

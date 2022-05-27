@@ -1,11 +1,11 @@
 #include "ScalarSegmentFeatures.hpp"
 
-#include "ComplexCore/Filters/Algorithms/SegmentFeatures.hpp"
 
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+
 
 #include <chrono>
 
@@ -129,7 +129,6 @@ ScalarSegmentFeatures::ScalarSegmentFeatures(DataStructure& dataStructure, Scala
                                              const IFilter::MessageHandler& mesgHandler)
 : SegmentFeatures(dataStructure, shouldCancel, mesgHandler)
 , m_InputValues(inputValues)
-
 {
 }
 

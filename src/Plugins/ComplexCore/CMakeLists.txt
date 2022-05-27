@@ -51,7 +51,6 @@ set(FilterList
   RobustAutomaticThreshold
   RotateSampleRefFrame
   ScalarSegmentFeaturesFilter
-  SegmentFeaturesFilter
   SetImageGeomOriginScalingFilter
   StlFileReaderFilter
 )
@@ -67,7 +66,6 @@ set(AlgorithmList
   PointSampleTriangleGeometry
   TupleTransfer
   RawBinaryReader
-  SegmentFeatures
   ScalarSegmentFeatures
   )
 

@@ -1,12 +1,13 @@
 #pragma once
 
+#include "ComplexCore/ComplexCore_export.hpp"
+
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 
-#include "ComplexCore/Filters/SegmentFeaturesFilter.hpp"
 
 namespace complex
 {
@@ -32,7 +33,7 @@ public:
   static inline constexpr StringLiteral k_ScalarToleranceKey = "scalar tolerance";
   static inline constexpr StringLiteral k_InputArrayPathKey = "input array path";
   static inline constexpr StringLiteral k_UseGoodVoxelsKey = "use mask";
-  static inline constexpr StringLiteral k_GoodVoxelsPathKey = "mask path";
+  static inline constexpr StringLiteral k_GoodVoxelsPath_Key = "mask path";
   static inline constexpr StringLiteral k_FeatureIdsPathKey = "feature ids path";
   // static inline constexpr StringLiteral k_CellFeaturePathKey = "cell feature group path";
   static inline constexpr StringLiteral k_ActiveArrayPathKey = "active array path";
