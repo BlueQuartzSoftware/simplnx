@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/RotateSampleRefFrame.hpp"
 
 #include "complex/Common/Numbers.hpp"
@@ -11,9 +12,7 @@
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
-
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-
+#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <Eigen/Dense>
@@ -177,7 +176,7 @@ TEST_CASE("ComplexCore::RotateSampleRefFrame", "[RotateSampleRefFrame]")
 
     REQUIRE(AreImageGeomsEqual(*testAxisAngleGeom, *expectedImageGeom));
 
-    DataPath testAxisAngleArrayPath = testAxisAngleGeomPath.createChildPath(k_OriginalCellArrayPath.getTargetName());
+    DataPath testAxisAngleArrayPath = testAxisAngleGeomPath.createChildPath("CellData").createChildPath(k_OriginalCellArrayPath.getTargetName());
     auto* testAxisAngleArray = dataStructure.getDataAs<IDataArray>(testAxisAngleArrayPath);
     REQUIRE(testAxisAngleArray != nullptr);
 
@@ -210,7 +209,7 @@ TEST_CASE("ComplexCore::RotateSampleRefFrame", "[RotateSampleRefFrame]")
 
     REQUIRE(AreImageGeomsEqual(*testRotationMatrixGeom, *expectedImageGeom));
 
-    DataPath testRotationMatrixArrayPath = testRotationMatrixGeomPath.createChildPath(k_OriginalCellArrayPath.getTargetName());
+    DataPath testRotationMatrixArrayPath = testRotationMatrixGeomPath.createChildPath("CellData").createChildPath(k_OriginalCellArrayPath.getTargetName());
     auto* testRotationMatrixArray = dataStructure.getDataAs<IDataArray>(testRotationMatrixArrayPath);
     REQUIRE(testRotationMatrixArray != nullptr);
 
