@@ -14,7 +14,6 @@
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
-
 #include "EbsdLib/Core/EbsdLibConstants.h"
 #include "EbsdLib/Core/EbsdMacros.h"
 #include "EbsdLib/IO/H5EbsdVolumeInfo.h"
@@ -48,14 +47,13 @@ namespace RenameDataObject
 {
 static inline constexpr complex::StringLiteral k_DataObject_Key = "data_object";
 static inline constexpr complex::StringLiteral k_NewName_Key = "new_name";
-}
+} // namespace RenameDataObject
 
 namespace DeleteData
 {
 static inline constexpr complex::StringLiteral k_DataPath_Key = "removed_data_path";
 
 }
-
 
 namespace
 {
@@ -125,13 +123,9 @@ complex::Result<> LoadInfo(const complex::ReadH5EbsdInputValues* m_InputValues, 
   return {};
 }
 
-template<typename H5EbsdReaderType, typename T>
-void CopyData(complex::DataStructure& dataStructure,
-               H5EbsdReaderType* ebsdReader,
-               const std::vector<std::string>& arrayNames,
-               std::set<std::string> selectedArrayNames,
-               complex::DataPath cellAttributeMatrixPath,
-               size_t totalPoints)
+template <typename H5EbsdReaderType, typename T>
+void CopyData(complex::DataStructure& dataStructure, H5EbsdReaderType* ebsdReader, const std::vector<std::string>& arrayNames, std::set<std::string> selectedArrayNames,
+              complex::DataPath cellAttributeMatrixPath, size_t totalPoints)
 {
   using DataArrayType = complex::DataArray<T>;
   for(const auto& arrayName : arrayNames)
@@ -471,7 +465,7 @@ Result<> ReadH5Ebsd::operator()()
       /*************************************************************************
        * Delete the original Geometry
        ************************************************************************/
-       DataPath nonRotatedDataGroup = DataPath({RotateSampleRefFrame::k_RotatedGeometryName});
+      DataPath nonRotatedDataGroup = DataPath({RotateSampleRefFrame::k_RotatedGeometryName});
       // First set the final DataContainer Object as a parent of the Ensemble Data otherwise
       // that will get deleted.
       DataObject* dataContainerObject = m_DataStructure.getData(m_InputValues->dataContainerPath);
@@ -506,7 +500,6 @@ Result<> ReadH5Ebsd::operator()()
       if(executeResult.result.invalid())
       {
       }
-
     }
   }
 
