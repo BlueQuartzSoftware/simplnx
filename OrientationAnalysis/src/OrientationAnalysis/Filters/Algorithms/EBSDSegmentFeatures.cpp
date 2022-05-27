@@ -1,8 +1,6 @@
 #include "EBSDSegmentFeatures.hpp"
 
-
 #include <chrono>
-
 
 using namespace complex;
 
@@ -19,7 +17,6 @@ EBSDSegmentFeatures::~EBSDSegmentFeatures() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> EBSDSegmentFeatures::operator()()
 {
-
 
   return {};
 }

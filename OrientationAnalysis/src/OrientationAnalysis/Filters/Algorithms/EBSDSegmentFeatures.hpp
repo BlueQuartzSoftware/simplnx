@@ -9,7 +9,6 @@
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Utilities/SegmentFeatures.hpp"
 
-
 #include <random>
 #include <vector>
 
@@ -21,6 +20,15 @@ namespace complex
  */
 struct ORIENTATIONANALYSIS_EXPORT EBSDSegmentFeaturesInputValues
 {
+  float32 pMisorientationTolerance;
+  bool useGoodVoxels;
+  DataPath quatsArrayPath;
+  DataPath cellPhasesArrayPath;
+  DataPath goodVoxelsArrayPath;
+  DataPath crystalStructuresArrayPath;
+  DataPath featureIdsArrayPath;
+  DataPath cellFeatureAttributeMatrixPath;
+  DataPath activeArrayPath;
 };
 
 /**
