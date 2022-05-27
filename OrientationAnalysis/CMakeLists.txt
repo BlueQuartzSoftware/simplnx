@@ -30,6 +30,7 @@ set(FilterList
   RotateEulerRefFrameFilter
   EBSDSegmentFeaturesFilter
   FindAvgOrientationsFilter
+  GenerateIPFColorsFilter
   )
   
 set(STUB_FILTERS
@@ -60,7 +61,6 @@ set(STUB_FILTERS
   FindTwinBoundarySchmidFactors
   GenerateFaceIPFColoring
   GenerateFaceMisorientationColoring
-  GenerateIPFColors
   GenerateOrientationMatrixTranspose
   GenerateQuaternionConjugate
   INLWriter
@@ -133,6 +133,7 @@ set(filter_algorithms
   RotateEulerRefFrame
   EBSDSegmentFeatures
   FindAvgOrientations
+  GenerateIPFColors
 )
 
 foreach(algorithm ${filter_algorithms})

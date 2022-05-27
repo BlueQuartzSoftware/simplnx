@@ -10,6 +10,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   GenerateFZQuaternionsTest.cpp
   EBSDSegmentFeaturesFilterTest.cpp
   FindAvgOrientationsTest.cpp
+  GenerateIPFColorsTest.cpp
   )
 set(DISABLED_TESTS
     BadDataNeighborOrientationCheckTest.cpp
@@ -38,7 +39,6 @@ set(DISABLED_TESTS
     FindTwinBoundarySchmidFactorsTest.cpp
     GenerateFaceIPFColoringTest.cpp
     GenerateFaceMisorientationColoringTest.cpp
-    GenerateIPFColorsTest.cpp
     GenerateOrientationMatrixTransposeTest.cpp
     GenerateQuaternionConjugateTest.cpp
     INLWriterTest.cpp

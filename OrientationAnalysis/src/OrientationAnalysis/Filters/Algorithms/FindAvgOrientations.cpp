@@ -2,6 +2,9 @@
 
 #include "complex/DataStructure/DataStore.hpp"
 
+#include "EbsdLib/LaueOps/LaueOps.h"
+
+
 using namespace complex;
 
 // -----------------------------------------------------------------------------
