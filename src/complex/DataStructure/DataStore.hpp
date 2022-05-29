@@ -49,6 +49,9 @@ public:
   DataStore(usize numTuples, std::optional<T> initValue)
   : DataStore({numTuples}, {1}, initValue)
   {
+    m_NumComponents = std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+    m_NumTuples = std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+    m_Size = m_NumTuples * m_NumComponents;
   }
 
   /**
@@ -60,6 +63,9 @@ public:
   DataStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::optional<T> initValue)
   : m_ComponentShape(componentShape)
   , m_TupleShape(tupleShape)
+  , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_Size(m_NumTuples * m_NumComponents)
   {
     reshapeTuples(m_TupleShape);
     if(initValue.has_value())
@@ -78,6 +84,9 @@ public:
   : m_ComponentShape(std::move(componentShape))
   , m_TupleShape(std::move(tupleShape))
   , m_Data(std::move(buffer))
+  , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_Size(m_NumTuples * m_NumComponents)
   {
   }
 
@@ -88,6 +97,9 @@ public:
   DataStore(const DataStore& other)
   : m_ComponentShape(other.m_ComponentShape)
   , m_TupleShape(other.m_TupleShape)
+  , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_Size(m_NumTuples * m_NumComponents)
   {
     const usize count = other.getSize();
     auto data = new value_type[count];
@@ -103,6 +115,9 @@ public:
   : m_TupleShape(std::move(other.m_TupleShape))
   , m_ComponentShape(std::move(other.m_ComponentShape))
   , m_Data(std::move(other.m_Data))
+  , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_Size(m_NumTuples * m_NumComponents)
   {
   }
 
@@ -128,7 +143,7 @@ public:
    */
   usize getNumberOfTuples() const override
   {
-    return std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+    return m_NumTuples;
   }
 
   /**
@@ -155,13 +170,7 @@ public:
    */
   usize getNumberOfComponents() const override
   {
-    usize numComponents = 1;
-    const usize count = m_ComponentShape.size();
-    for(usize i = 0; i < count; i++)
-    {
-      numComponents *= m_ComponentShape[i];
-    }
-    return numComponents;
+    return m_NumComponents;
   }
 
   /**
@@ -199,8 +208,10 @@ public:
   {
     auto oldSize = this->getSize();
     // Calculate the total number of values in the new array
-    usize newSize = getNumberOfComponents() * std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
     m_TupleShape = tupleShape;
+    m_NumTuples = std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+
+    usize newSize = getNumberOfComponents() * m_NumTuples;
 
     if(m_Data.get() == nullptr) // Data was never allocated
     {
@@ -380,6 +391,9 @@ private:
   ShapeType m_ComponentShape;
   ShapeType m_TupleShape;
   std::unique_ptr<value_type[]> m_Data = nullptr;
+  size_t m_NumComponents = {0};
+  size_t m_NumTuples = {0};
+  size_t m_Size = {0};
 };
 
 // Declare aliases

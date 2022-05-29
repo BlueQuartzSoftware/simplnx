@@ -43,6 +43,9 @@ public:
   EmptyDataStore(const ShapeType& tupleShape, const ShapeType& componentShape)
   : m_ComponentShape(componentShape)
   , m_TupleShape(tupleShape)
+  , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_Size(m_NumTuples * m_NumComponents)
   {
   }
 
@@ -53,6 +56,9 @@ public:
   EmptyDataStore(const EmptyDataStore& other)
   : m_TupleShape(other.m_TupleShape)
   , m_ComponentShape(other.m_ComponentShape)
+  , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_Size(m_NumTuples * m_NumComponents)
   {
   }
 
@@ -63,6 +69,9 @@ public:
   EmptyDataStore(EmptyDataStore&& other) noexcept
   : m_TupleShape(std::move(other.m_TupleShape))
   , m_ComponentShape(std::move(other.m_ComponentShape))
+  , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_Size(m_NumTuples * m_NumComponents)
   {
   }
 
@@ -74,7 +83,7 @@ public:
    */
   usize getNumberOfTuples() const override
   {
-    return std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+    return m_NumTuples;
   }
 
   /**
@@ -83,7 +92,7 @@ public:
    */
   size_t getNumberOfComponents() const override
   {
-    return std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+    return m_NumComponents;
   }
 
   /**
@@ -224,5 +233,8 @@ public:
 private:
   ShapeType m_ComponentShape;
   ShapeType m_TupleShape;
+  size_t m_NumComponents = {0};
+  size_t m_NumTuples = {0};
+  size_t m_Size = {0};
 };
 } // namespace complex
