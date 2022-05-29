@@ -8,7 +8,6 @@
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Filter/IFilter.hpp"
 
-
 #include <vector>
 
 namespace complex
@@ -26,7 +25,6 @@ struct ORIENTATIONANALYSIS_EXPORT GenerateIPFColorsInputValues
   DataPath cellEulerAnglesArrayPath;
   DataPath crystalStructuresArrayPath;
   DataPath cellIpfColorsArrayPath;
-
 };
 
 /**
@@ -45,15 +43,12 @@ public:
 
   Result<> operator()();
 
-
   /**
    * @brief incrementPhaseWarningCount
    */
   void incrementPhaseWarningCount();
 
 protected:
-
-
 private:
   DataStructure& m_DataStructure;
   const IFilter::MessageHandler& m_MessageHandler;
@@ -61,7 +56,6 @@ private:
   const GenerateIPFColorsInputValues* m_InputValues = nullptr;
 
   int32_t m_PhaseWarningCount = 0;
-
 };
 
 } // namespace complex

@@ -4,7 +4,6 @@
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-
 using namespace complex;
 
 // -----------------------------------------------------------------------------
