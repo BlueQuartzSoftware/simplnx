@@ -28,10 +28,10 @@ namespace RotateSampleRefFrame
 static inline constexpr complex::StringLiteral k_RotationRepresentation_Key = "rotation_representation";
 static inline constexpr complex::StringLiteral k_RotationAngle_Key = "rotation_angle";
 static inline constexpr complex::StringLiteral k_RotationAxis_Key = "rotation_axis";
-static inline constexpr complex::StringLiteral k_RotationMatrix_Key = "rotation_matrix";
 static inline constexpr complex::StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
 static inline constexpr complex::StringLiteral k_SelectedCellArrays_Key = "selected_cell_arrays";
 static inline constexpr complex::StringLiteral k_CreatedImageGeometry_Key = "created_image_geometry";
+static inline constexpr complex::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
 
 static inline constexpr complex::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
 
@@ -442,6 +442,7 @@ Result<> ReadH5Ebsd::operator()()
       args.insertOrAssign(RotateSampleRefFrame::k_SelectedCellArrays_Key, std::make_any<std::vector<DataPath>>(rotatedDataPaths));
       args.insertOrAssign(RotateSampleRefFrame::k_RotationAngle_Key, std::make_any<Float32Parameter::ValueType>(sampleTransAngle));
       args.insertOrAssign(RotateSampleRefFrame::k_RotationAxis_Key, std::make_any<VectorFloat32Parameter::ValueType>({sampleTransAxis[0], sampleTransAxis[1], sampleTransAxis[2]}));
+      args.insertOrAssign(RotateSampleRefFrame::k_RotateSliceBySlice_Key, std::make_any<bool>(true));
 
       // Preflight the filter and check result
       m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Preflighting {}...", filter->humanName())});

@@ -1,6 +1,5 @@
 #include <catch2/catch.hpp>
 
-
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
