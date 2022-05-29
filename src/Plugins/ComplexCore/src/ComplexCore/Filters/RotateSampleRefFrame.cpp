@@ -1,5 +1,6 @@
 #include "RotateSampleRefFrame.hpp"
 
+#include "complex/Common/ComplexRange.hpp"
 #include "complex/Common/ComplexRange3D.hpp"
 #include "complex/Common/Numbers.hpp"
 #include "complex/Common/TypeTraits.hpp"
@@ -7,6 +8,7 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
@@ -83,8 +85,12 @@ public:
     // Raw array is faster than Eigen
     Eigen::Map<Matrix3fR>(&m_RotMatrixInv[0][0], transpose.rows(), transpose.cols()) = transpose;
   }
-
   ~SampleRefFrameRotator() = default;
+
+  SampleRefFrameRotator(const SampleRefFrameRotator&) = default;
+  SampleRefFrameRotator(SampleRefFrameRotator&&) noexcept = delete;
+  SampleRefFrameRotator& operator=(const SampleRefFrameRotator&) = delete;
+  SampleRefFrameRotator& operator=(SampleRefFrameRotator&&) noexcept = delete;
 
   void convert(int64 zStart, int64 zEnd, int64 yStart, int64 yEnd, int64 xStart, int64 xEnd) const
   {
@@ -108,9 +114,9 @@ public:
 
           MatrixMath::Multiply3x3with3x1(m_RotMatrixInv, coords.data(), coordsNew.data());
 
-          int64 colOld = static_cast<int64>(std::nearbyint(coordsNew[0] / m_Params.xRes));
-          int64 rowOld = static_cast<int64>(std::nearbyint(coordsNew[1] / m_Params.yRes));
-          int64 planeOld = static_cast<int64>(std::nearbyint(coordsNew[2] / m_Params.zRes));
+          auto colOld = static_cast<int64>(std::nearbyint(coordsNew[0] / m_Params.xRes));
+          auto rowOld = static_cast<int64>(std::nearbyint(coordsNew[1] / m_Params.yRes));
+          auto planeOld = static_cast<int64>(std::nearbyint(coordsNew[2] / m_Params.zRes));
 
           if(m_SliceBySlice)
           {
@@ -155,17 +161,17 @@ void DetermineMinMax(const Matrix3fR& rotationMatrix, const FloatVec3& spacing, 
   zMax = std::max(newCoords[2], zMax);
 }
 
-float32 CosBetweenVectors(const Eigen::Vector3f& a, const Eigen::Vector3f& b)
+float32 CosBetweenVectors(const Eigen::Vector3f& vectorA, const Eigen::Vector3f& vectorB)
 {
-  float32 normA = a.norm();
-  float32 normB = b.norm();
+  float32 normA = vectorA.norm();
+  float32 normB = vectorB.norm();
 
   if(normA == 0.0f || normB == 0.0f)
   {
     return 1.0f;
   }
 
-  return a.dot(b) / (normA * normB);
+  return vectorA.dot(vectorB) / (normA * normB);
 }
 
 float32 DetermineSpacing(const FloatVec3& spacing, const Eigen::Vector3f& axisNew)
@@ -176,7 +182,7 @@ float32 DetermineSpacing(const FloatVec3& spacing, const Eigen::Vector3f& axisNe
 
   std::array<float32, 3> axes = {xAngle, yAngle, zAngle};
 
-  auto iter = std::max_element(axes.cbegin(), axes.cend());
+  const auto* iter = std::max_element(axes.cbegin(), axes.cend());
 
   usize index = std::distance(axes.cbegin(), iter);
 
@@ -223,20 +229,20 @@ RotateArgs CreateRotateArgs(const ImageGeom& imageGeom, const Matrix3fR& rotatio
 
   RotateArgs params;
 
-  params.xp = origDims[0];
+  params.xp = static_cast<int64>(origDims[0]);
   params.xRes = spacing[0];
-  params.yp = origDims[1];
+  params.yp = static_cast<int64>(origDims[1]);
   params.yRes = spacing[1];
-  params.zp = origDims[2];
+  params.zp = static_cast<int64>(origDims[2]);
   params.zRes = spacing[2];
 
-  params.xpNew = xpNew;
+  params.xpNew = static_cast<int64>(xpNew);
   params.xResNew = xResNew;
   params.xMinNew = xMin;
-  params.ypNew = ypNew;
+  params.ypNew = static_cast<int64>(ypNew);
   params.yResNew = yResNew;
   params.yMinNew = yMin;
-  params.zpNew = zpNew;
+  params.zpNew = static_cast<int64>(zpNew);
   params.zResNew = zResNew;
   params.zMinNew = zMin;
 
@@ -390,6 +396,61 @@ struct CopyDataFunctor
     return {};
   }
 };
+
+template <typename T>
+class CopyDataImpl
+{
+public:
+  CopyDataImpl(const IDataArray& oldCellArray, IDataArray& newCellArray, nonstd::span<const int64> newIndices)
+  : m_OldCellArray(oldCellArray)
+  , m_NewCellArray(newCellArray)
+  , m_NewIndices(newIndices)
+  {
+  }
+  ~CopyDataImpl() = default;
+
+  CopyDataImpl(const CopyDataImpl&) = default;
+  CopyDataImpl(CopyDataImpl&&) noexcept = default;
+  CopyDataImpl& operator=(const CopyDataImpl&) = delete;
+  CopyDataImpl& operator=(CopyDataImpl&&) noexcept = delete;
+
+  void convert(size_t start, size_t end) const
+  {
+    const auto& oldDataStore = m_OldCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& newDataStore = m_NewCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
+
+    for(usize i = start; i < end; i++)
+    {
+      int64 newIndicies_I = m_NewIndices[i];
+      if(newIndicies_I >= 0)
+      {
+        if(!newDataStore.copyFrom(i, oldDataStore, newIndicies_I, 1))
+        {
+          // return MakeErrorResult(-45102,
+
+          std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_OldCellArray.getName(), newIndicies_I, i)
+                    << std::endl;
+          break;
+        }
+      }
+      else
+      {
+        newDataStore.fillTuple(i, 0);
+      }
+    }
+  }
+
+  void operator()() const
+  {
+    convert(0, m_NewIndices.size());
+  }
+
+private:
+  const IDataArray& m_OldCellArray;
+  IDataArray& m_NewCellArray;
+  nonstd::span<const int64> m_NewIndices;
+};
+
 } // namespace
 
 namespace complex
@@ -417,23 +478,26 @@ std::string RotateSampleRefFrame::humanName() const
 Parameters RotateSampleRefFrame::parameters() const
 {
   Parameters params;
+
+  params.insertSeparator({"Filter Parameters"});
+  params.insert(std::make_unique<BoolParameter>(k_RotateSliceBySlice_Key, "Perform Slice By Slice Rotation", "This option is specific to EBSD Data and is not generally used.", false));
+
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_RotationRepresentation_Key, "Rotation Representation", "", to_underlying(RotationRepresentation::AxisAngle),
                                                                     ChoicesParameter::Choices{"Axis Angle", "Rotation Matrix"}));
-
   params.insert(std::make_unique<Float32Parameter>(k_RotationAngle_Key, "Rotation Angle (Degrees)", "", 0.0f));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationAxis_Key, "Rotation Axis (ijk)", "", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 0.0f}));
-
   params.insert(std::make_unique<DynamicTableParameter>(k_RotationMatrix_Key, "Rotation Matrix", "", DynamicTableParameter::ValueType{}));
+  params.linkParameters(k_RotationRepresentation_Key, k_RotationAngle_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::AxisAngle)));
+  params.linkParameters(k_RotationRepresentation_Key, k_RotationAxis_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::AxisAngle)));
+  params.linkParameters(k_RotationRepresentation_Key, k_RotationMatrix_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::RotationMatrix)));
 
+  params.insertSeparator({"Input Geometry and Data"});
   params.insert(
       std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedCellArrays_Key, "Cell Arrays", "", MultiArraySelectionParameter::ValueType{}, GetAllDataTypes()));
+
+  params.insertSeparator({"Output Geometry and Data"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "", DataPath{}));
-
-  params.linkParameters(k_RotationRepresentation_Key, k_RotationAngle_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::AxisAngle)));
-  params.linkParameters(k_RotationRepresentation_Key, k_RotationAxis_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::AxisAngle)));
-
-  params.linkParameters(k_RotationRepresentation_Key, k_RotationMatrix_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::RotationMatrix)));
 
   return params;
 }
@@ -443,8 +507,7 @@ IFilter::UniquePointer RotateSampleRefFrame::clone() const
   return std::make_unique<RotateSampleRefFrame>();
 }
 
-IFilter::PreflightResult RotateSampleRefFrame::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult RotateSampleRefFrame::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&, const std::atomic_bool&) const
 {
   Result<Matrix3fR> matrixResult = ComputeRotationMatrix(filterArgs);
 
@@ -466,14 +529,14 @@ IFilter::PreflightResult RotateSampleRefFrame::preflightImpl(const DataStructure
 
   std::vector<float32> spacing = {rotateArgs.xResNew, rotateArgs.yResNew, rotateArgs.zResNew};
 
-  std::vector<float32> origin = selectedImageGeom.getOrigin().toContainer<std::vector<float32>>();
+  auto origin = selectedImageGeom.getOrigin().toContainer<std::vector<float32>>();
   origin[0] += rotateArgs.xMinNew;
   origin[1] += rotateArgs.yMinNew;
   origin[2] += rotateArgs.zMinNew;
 
   OutputActions actions;
 
-  DataPath createdImageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
+  auto createdImageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
 
   actions.actions.push_back(std::make_unique<CreateImageGeometryAction>(createdImageGeomPath, dims, origin, spacing));
 
@@ -513,6 +576,7 @@ Result<> RotateSampleRefFrame::executeImpl(DataStructure& dataStructure, const A
 {
   auto selectedImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
   const auto& selectedImageGeom = dataStructure.getDataRefAs<ImageGeom>(selectedImageGeomPath);
+  auto sliceBySlice = filterArgs.value<bool>(k_RotateSliceBySlice_Key);
 
   Result<Matrix3fR> matrixResult = ComputeRotationMatrix(filterArgs);
 
@@ -522,19 +586,24 @@ Result<> RotateSampleRefFrame::executeImpl(DataStructure& dataStructure, const A
 
   int64 newNumCellTuples = rotateArgs.xpNew * rotateArgs.ypNew * rotateArgs.zpNew;
 
+  // Compute the mapping of old indices from the original geometry to the new indices in the new geometry.
   std::vector<int64> newIndices(newNumCellTuples, -1);
-
-  bool sliceBySlice = false;
 
   ParallelData3DAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(ComplexRange3D(0, rotateArgs.xpNew, 0, rotateArgs.ypNew, 0, rotateArgs.zpNew));
   parallelAlgorithm.setParallelizationEnabled(true);
-
   parallelAlgorithm.execute(SampleRefFrameRotator(newIndices, rotateArgs, rotationMatrix, sliceBySlice));
 
   auto selectedCellArrays = filterArgs.value<std::vector<DataPath>>(k_SelectedCellArrays_Key);
 
-  DataPath createdImageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
+  auto createdImageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
+
+#ifdef COMPLEX_ENABLE_MULTICORE
+  std::shared_ptr<tbb::task_group> g(new tbb::task_group);
+  // C++11 RIGHT HERE....
+  int32_t nthreads = static_cast<int32_t>(std::thread::hardware_concurrency()); // Returns ZERO if not defined on this platform
+  int32_t threadCount = 0;
+#endif
 
   for(const auto& cellArrayPath : selectedCellArrays)
   {
@@ -543,20 +612,89 @@ Result<> RotateSampleRefFrame::executeImpl(DataStructure& dataStructure, const A
       return {};
     }
 
+    messageHandler(fmt::format("Rotating {}", cellArrayPath.toString()));
     const auto& oldCellArray = dataStructure.getDataRefAs<IDataArray>(cellArrayPath);
     std::string aPath = cellArrayPath.toString();
     aPath = complex::StringUtilities::replace(aPath, selectedImageGeomPath.toString(), createdImageGeomPath.toString());
     DataPath createdArrayPath = DataPath::FromString(aPath).value(); // createdImageGeomPath.createChildPath(cellArray.getName());
     auto& newCellArray = dataStructure.getDataRefAs<IDataArray>(createdArrayPath);
-
     DataType type = oldCellArray.getDataType();
 
-    Result<> result = ExecuteDataFunction(CopyDataFunctor{}, type, oldCellArray, newCellArray, newIndices);
-    if(result.invalid())
+#ifdef COMPLEX_ENABLE_MULTICORE
+
+    //    Result<> result = ExecuteDataFunction(CopyDataFunctor{}, type, oldCellArray, newCellArray, newIndices);
+    //    if(result.invalid())
+    //    {
+    //      return result;
+    //    }
+
+    switch(type)
     {
-      return result;
+    case DataType::boolean: {
+      g->run(CopyDataImpl<bool>(oldCellArray, newCellArray, newIndices));
+      break;
     }
+    case DataType::int8: {
+      g->run(CopyDataImpl<int8>(oldCellArray, newCellArray, newIndices));
+      break;
+    }
+    case DataType::int16: {
+      g->run(CopyDataImpl<int16>(oldCellArray, newCellArray, newIndices));
+      break;
+    }
+    case DataType::int32: {
+      g->run(CopyDataImpl<int32>(oldCellArray, newCellArray, newIndices));
+      break;
+    }
+    case DataType::int64: {
+      g->run(CopyDataImpl<int64>(oldCellArray, newCellArray, newIndices));
+      break;
+    }
+    case DataType::uint8: {
+      g->run(CopyDataImpl<uint8>(oldCellArray, newCellArray, newIndices));
+      break;
+    }
+    case DataType::uint16: {
+      g->run(CopyDataImpl<uint16>(oldCellArray, newCellArray, newIndices));
+      break;
+    }
+    case DataType::uint32: {
+      g->run(CopyDataImpl<uint32>(oldCellArray, newCellArray, newIndices));
+      break;
+    }
+    case DataType::uint64: {
+      g->run(CopyDataImpl<uint64>(oldCellArray, newCellArray, newIndices));
+      break;
+    }
+    case DataType::float32: {
+      g->run(CopyDataImpl<float32>(oldCellArray, newCellArray, newIndices));
+      break;
+    }
+    case DataType::float64: {
+      g->run(CopyDataImpl<float64>(oldCellArray, newCellArray, newIndices));
+      break;
+    }
+    default: {
+      throw std::runtime_error("Invalid DataType");
+    }
+    }
+
+    threadCount++;
+    if(threadCount == nthreads)
+    {
+      g->wait();
+      threadCount = 0;
+    }
+
+#else
+
+#endif
   }
+
+#ifdef COMPLEX_ENABLE_MULTICORE
+  // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
+  g->wait();
+#endif
 
   return {};
 }
