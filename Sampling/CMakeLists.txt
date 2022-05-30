@@ -15,7 +15,6 @@ set(STUB_FILTERS
   NearestPointFuseRegularGrids
   RegularGridSampleSurfaceMesh
   RegularizeZSpacing
-  ResampleImageGeom
   ResampleRectGridToImageGeom
   SampleSurfaceMeshSpecifiedPoints
   UncertainRegularGridSampleSurfaceMesh
