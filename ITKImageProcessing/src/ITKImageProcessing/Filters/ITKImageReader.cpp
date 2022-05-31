@@ -9,6 +9,9 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
+
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
@@ -213,7 +216,7 @@ Result<> ReadImageExecute(const std::string& fileName, ArgsT&&... args)
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath imageGeomPath, DataPath arrayPath)
+Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath imageGeomPath, DataPath cellDataPath, DataPath arrayPath)
 {
   OutputActions actions;
 
@@ -257,7 +260,9 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
     std::vector<usize> cDims = {nComponents};
 
     actions.actions.push_back(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), std::move(origin), std::move(spacing)));
+    actions.actions.push_back(std::make_unique<CreateDataGroupAction>(cellDataPath));
     actions.actions.push_back(std::make_unique<CreateArrayAction>(*numericType, std::move(arrayDims), std::move(cDims), std::move(arrayPath)));
+
   } catch(const itk::ExceptionObject& err)
   {
     return MakeErrorResult<OutputActions>(-55557, fmt::format("ITK exception was thrown while processing input file: {}", err.what()));
@@ -304,7 +309,7 @@ std::vector<std::string> ITKImageReader::defaultTags() const
 Parameters ITKImageReader::parameters() const
 {
   Parameters params;
-
+  params.insertSeparator(Parameters::Separator{"Filter Parameters"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_FileName_Key, "File", "Input image file", fs::path(""),
                                                           FileSystemPathParameter::ExtensionsType{
                                                               {".png"},
@@ -315,10 +320,16 @@ Parameters ITKImageReader::parameters() const
                                                               {".jpg"},
                                                           },
                                                           FileSystemPathParameter::PathType::InputFile, false));
+
+  params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry Path", "The 'DataPath' within the 'DataStructure' to store the created Image Geometry",
-                                                             DataPath{}));
-  params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayPath_Key, "Imported Image DataPath", "The 'DataPath' within the 'DataStructure' to store the imported image", DataPath{}));
+                                                            complex::DataPath({"Image Geometry"})));
+
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CellDataPath_Key, "Created Cell Data Path", "The 'DataPath' within the 'DataStructure' to store the imported image data",
+                                                             DataPath({"Image Geometry", "Cell Data"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayPath_Key, "Created Image Data", "The 'DataPath' within the 'DataStructure' to store the imported image",
+                                                         DataPath({"Image Geometry", "Cell Data", "Image Data" })));
+
 
   return params;
 }
@@ -335,6 +346,7 @@ IFilter::PreflightResult ITKImageReader::preflightImpl(const DataStructure& data
 {
   auto fileName = filterArgs.value<fs::path>(k_FileName_Key);
   auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  auto cellDataGroupPath = filterArgs.value<DataPath>(k_CellDataPath_Key);
   auto imageDataArrayPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
 
   std::string fileNameString = fileName.string();
@@ -345,7 +357,7 @@ IFilter::PreflightResult ITKImageReader::preflightImpl(const DataStructure& data
     return {ConvertResultTo<OutputActions>(std::move(check), {})};
   }
 
-  return {ReadImagePreflight(fileNameString, imageGeometryPath, imageDataArrayPath)};
+  return {ReadImagePreflight(fileNameString, imageGeometryPath, cellDataGroupPath, imageDataArrayPath)};
 }
 
 //------------------------------------------------------------------------------
@@ -354,6 +366,7 @@ Result<> ITKImageReader::executeImpl(DataStructure& dataStructure, const Argumen
 {
   auto fileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_FileName_Key);
   auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  auto cellDataGroupPath = filterArgs.value<DataPath>(k_CellDataPath_Key);
   auto imageDataArrayPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
 
   std::string fileNameString = fileName.string();
