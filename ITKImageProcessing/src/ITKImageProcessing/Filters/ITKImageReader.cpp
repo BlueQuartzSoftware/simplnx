@@ -4,14 +4,13 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
-
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
@@ -323,13 +322,12 @@ Parameters ITKImageReader::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry Path", "The 'DataPath' within the 'DataStructure' to store the created Image Geometry",
-                                                            complex::DataPath({"Image Geometry"})));
+                                                             complex::DataPath({"Image Geometry"})));
 
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CellDataPath_Key, "Created Cell Data Path", "The 'DataPath' within the 'DataStructure' to store the imported image data",
                                                              DataPath({"Image Geometry", "Cell Data"})));
   params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayPath_Key, "Created Image Data", "The 'DataPath' within the 'DataStructure' to store the imported image",
-                                                         DataPath({"Image Geometry", "Cell Data", "Image Data" })));
-
+                                                         DataPath({"Image Geometry", "Cell Data", "Image Data"})));
 
   return params;
 }
