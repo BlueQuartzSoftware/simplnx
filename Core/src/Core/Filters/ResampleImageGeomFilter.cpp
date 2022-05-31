@@ -12,7 +12,6 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
 #include "Core/Filters/Algorithms/ResampleImageGeom.hpp"
@@ -25,12 +24,12 @@ namespace
 {
 std::string GenerateGeometryInfo(const complex::SizeVec3& dims, const complex::FloatVec3& spacing, const complex::FloatVec3& origin)
 {
-  std::stringstream ss;
+  std::stringstream description;
 
-  ss << "X Range: " << origin[0] << " to " << (origin[0] + (dims[0] * spacing[0])) << " (Delta: " << (dims[0] * spacing[0]) << ") " << 0 << "-" << dims[0] - 1 << " Voxels\n";
-  ss << "Y Range: " << origin[1] << " to " << (origin[1] + (dims[1] * spacing[1])) << " (Delta: " << (dims[1] * spacing[1]) << ") " << 0 << "-" << dims[1] - 1 << " Voxels\n";
-  ss << "Z Range: " << origin[2] << " to " << (origin[2] + (dims[2] * spacing[2])) << " (Delta: " << (dims[2] * spacing[2]) << ") " << 0 << "-" << dims[2] - 1 << " Voxels\n";
-  return ss.str();
+  description << "X Range: " << origin[0] << " to " << (origin[0] + (dims[0] * spacing[0])) << " (Delta: " << (dims[0] * spacing[0]) << ") " << 0 << "-" << dims[0] - 1 << " Voxels\n";
+  description << "Y Range: " << origin[1] << " to " << (origin[1] + (dims[1] * spacing[1])) << " (Delta: " << (dims[1] * spacing[1]) << ") " << 0 << "-" << dims[1] - 1 << " Voxels\n";
+  description << "Z Range: " << origin[2] << " to " << (origin[2] + (dims[2] * spacing[2])) << " (Delta: " << (dims[2] * spacing[2]) << ") " << 0 << "-" << dims[2] - 1 << " Voxels\n";
+  return description.str();
 }
 } // namespace
 
@@ -74,7 +73,6 @@ Parameters ResampleImageGeomFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "New Spacing", "", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>(3)));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Renumber feature Ids to ensure continuous values starting at 0.", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Remove Original Image Geometry Group", "", true));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
@@ -83,16 +81,17 @@ Parameters ResampleImageGeomFilter::parameters() const
 
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedCellDataGroup_Key, "Cell Data Group", "Data Group that contains *only* cell data", DataPath{}));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insertSeparator(Parameters::Separator{"Input Cell Feature Data"});
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Cell Feature Attribute Matrix", "", DataPath({"Cell Feature Data"})));
-
-  params.insertSeparator(Parameters::Separator{"Created Image Geometry"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewDataContainerPath_Key, "New Image Geometry", "", DataPath({"Image Geometry"})));
-
+  params.insertSeparator(Parameters::Separator{"Renumber Features Input Parameters"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Renumber feature Ids to ensure continuous values starting at 0.", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Cell Feature Data Group", "", DataPath({"Cell Feature Data"})));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureAttributeMatrixPath_Key, true);
   params.linkParameters(k_RenumberFeatures_Key, k_FeatureIdsArrayPath_Key, true);
+
+
+  params.insertSeparator(Parameters::Separator{"Created Image Geometry"});
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewDataContainerPath_Key, "Resampled Image Geometry", "Location to store the resampled image geometry", DataPath({"Resampled Image Geometry"})));
 
   return params;
 }
@@ -104,8 +103,8 @@ IFilter::UniquePointer ResampleImageGeomFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&,
+                                                                const std::atomic_bool&) const
 {
   auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
 
@@ -123,6 +122,14 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   if(pSpacingValue[0] < 0.0F || pSpacingValue[1] < 0.0F || pSpacingValue[2] < 0.0F)
   {
     return {MakeErrorResult<OutputActions>(-11500, fmt::format("Input Spacing has a negative value. {}, {}, {}", pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]))};
+  }
+  if(pRenumberFeaturesValue)
+  {
+    const auto* featureIdsArray = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
+    if(featureIdsArray == nullptr)
+    {
+      return {MakeErrorResult<OutputActions>(-11502, fmt::format("FeatureIds array is not of type Int32"))};
+    }
   }
 
   // Declare the preflightResult variable that will be populated with the results
@@ -144,9 +151,9 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   complex::FloatVec3 oldSpacing = selectedImageGeom.getSpacing();
   complex::FloatVec3 oldOrigin = selectedImageGeom.getOrigin();
 
-  size_t m_XP = static_cast<size_t>(((oldSpacing[0] * static_cast<float>(oldDims[0])) / pSpacingValue[0]));
-  size_t m_YP = static_cast<size_t>(((oldSpacing[1] * static_cast<float>(oldDims[1])) / pSpacingValue[1]));
-  size_t m_ZP = static_cast<size_t>(((oldSpacing[2] * static_cast<float>(oldDims[2])) / pSpacingValue[2]));
+  auto m_XP = static_cast<size_t>(((oldSpacing[0] * static_cast<float>(oldDims[0])) / pSpacingValue[0]));
+  auto m_YP = static_cast<size_t>(((oldSpacing[1] * static_cast<float>(oldDims[1])) / pSpacingValue[1]));
+  auto m_ZP = static_cast<size_t>(((oldSpacing[2] * static_cast<float>(oldDims[2])) / pSpacingValue[2]));
   if(m_XP == 0)
   {
     m_XP = 1;
@@ -171,7 +178,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   preflightUpdatedValues.push_back({"Input Geometry Info", ::GenerateGeometryInfo(oldDims, oldSpacing, oldOrigin)});
   preflightUpdatedValues.push_back(
       {"Created Image Geometry Info", ::GenerateGeometryInfo(complex::SizeVec3(m_XP, m_YP, m_ZP), complex::FloatVec3(pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]), oldOrigin)});
-  auto* cellDataGroup = dataStructure.getDataAs<DataGroup>(cellDataGroupPath);
+  const auto* cellDataGroup = dataStructure.getDataAs<DataGroup>(cellDataGroupPath);
   std::vector<std::string> cellDataArrayNames = cellDataGroup->getDataMap().getNames();
 
   usize originalImageSize = std::accumulate(oldDims.begin(), oldDims.end(), static_cast<usize>(1), std::multiplies<>{});
@@ -216,7 +223,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* , const MessageHandler& messageHandler,
                                               const std::atomic_bool& shouldCancel) const
 {
   ResampleImageGeomInputValues inputValues;
