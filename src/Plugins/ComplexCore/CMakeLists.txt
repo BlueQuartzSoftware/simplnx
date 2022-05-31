@@ -54,6 +54,7 @@ set(FilterList
   SegmentFeaturesFilter
   SetImageGeomOriginScalingFilter
   StlFileReaderFilter
+  ResampleImageGeomFilter
 )
 
 set(ActionList
@@ -69,6 +70,7 @@ set(AlgorithmList
   RawBinaryReader
   SegmentFeatures
   ScalarSegmentFeatures
+  ResampleImageGeom
   )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}

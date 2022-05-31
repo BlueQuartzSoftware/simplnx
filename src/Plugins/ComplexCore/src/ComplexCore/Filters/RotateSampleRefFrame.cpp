@@ -16,6 +16,7 @@
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelData3DAlgorithm.hpp"
@@ -32,6 +33,12 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+
+#ifdef COMPLEX_ENABLE_MULTICORE
+#define RUN_TASK g->run
+#else
+#define RUN_TASK
+#endif
 
 using namespace complex;
 
@@ -368,89 +375,6 @@ Result<Matrix3fR> ComputeRotationMatrix(const Arguments& args)
   }
 }
 
-struct CopyDataFunctor
-{
-  template <class T>
-  Result<> operator()(const IDataArray& oldCellArray, IDataArray& newCellArray, nonstd::span<const int64> newIndices) const
-  {
-    const auto& oldDataStore = oldCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& newDataStore = newCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
-
-    for(usize i = 0; i < newIndices.size(); i++)
-    {
-      int64 newIndicies_I = newIndices[i];
-      if(newIndicies_I >= 0)
-      {
-        if(!newDataStore.copyFrom(i, oldDataStore, newIndicies_I, 1))
-        {
-          return MakeErrorResult(-45102, fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", oldCellArray.getName(),
-                                                     newIndicies_I, newCellArray.getName(), i));
-        }
-      }
-      else
-      {
-        newDataStore.fillTuple(i, 0);
-      }
-    }
-
-    return {};
-  }
-};
-
-template <typename T>
-class CopyDataImpl
-{
-public:
-  CopyDataImpl(const IDataArray& oldCellArray, IDataArray& newCellArray, nonstd::span<const int64> newIndices)
-  : m_OldCellArray(oldCellArray)
-  , m_NewCellArray(newCellArray)
-  , m_NewIndices(newIndices)
-  {
-  }
-  ~CopyDataImpl() = default;
-
-  CopyDataImpl(const CopyDataImpl&) = default;
-  CopyDataImpl(CopyDataImpl&&) noexcept = default;
-  CopyDataImpl& operator=(const CopyDataImpl&) = delete;
-  CopyDataImpl& operator=(CopyDataImpl&&) noexcept = delete;
-
-  void convert(size_t start, size_t end) const
-  {
-    const auto& oldDataStore = m_OldCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& newDataStore = m_NewCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
-
-    for(usize i = start; i < end; i++)
-    {
-      int64 newIndicies_I = m_NewIndices[i];
-      if(newIndicies_I >= 0)
-      {
-        if(!newDataStore.copyFrom(i, oldDataStore, newIndicies_I, 1))
-        {
-          // return MakeErrorResult(-45102,
-
-          std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_OldCellArray.getName(), newIndicies_I, i)
-                    << std::endl;
-          break;
-        }
-      }
-      else
-      {
-        newDataStore.fillTuple(i, 0);
-      }
-    }
-  }
-
-  void operator()() const
-  {
-    convert(0, m_NewIndices.size());
-  }
-
-private:
-  const IDataArray& m_OldCellArray;
-  IDataArray& m_NewCellArray;
-  nonstd::span<const int64> m_NewIndices;
-};
-
 } // namespace
 
 namespace complex
@@ -620,72 +544,63 @@ Result<> RotateSampleRefFrame::executeImpl(DataStructure& dataStructure, const A
     auto& newCellArray = dataStructure.getDataRefAs<IDataArray>(createdArrayPath);
     DataType type = oldCellArray.getDataType();
 
-#ifdef COMPLEX_ENABLE_MULTICORE
-
-    //    Result<> result = ExecuteDataFunction(CopyDataFunctor{}, type, oldCellArray, newCellArray, newIndices);
-    //    if(result.invalid())
-    //    {
-    //      return result;
-    //    }
-
     switch(type)
     {
     case DataType::boolean: {
-      g->run(CopyDataImpl<bool>(oldCellArray, newCellArray, newIndices));
+      RUN_TASK(CopyTupleUsingIndexList<bool>(oldCellArray, newCellArray, newIndices));
       break;
     }
     case DataType::int8: {
-      g->run(CopyDataImpl<int8>(oldCellArray, newCellArray, newIndices));
+      RUN_TASK(CopyTupleUsingIndexList<int8>(oldCellArray, newCellArray, newIndices));
       break;
     }
     case DataType::int16: {
-      g->run(CopyDataImpl<int16>(oldCellArray, newCellArray, newIndices));
+      RUN_TASK(CopyTupleUsingIndexList<int16>(oldCellArray, newCellArray, newIndices));
       break;
     }
     case DataType::int32: {
-      g->run(CopyDataImpl<int32>(oldCellArray, newCellArray, newIndices));
+      RUN_TASK(CopyTupleUsingIndexList<int32>(oldCellArray, newCellArray, newIndices));
       break;
     }
     case DataType::int64: {
-      g->run(CopyDataImpl<int64>(oldCellArray, newCellArray, newIndices));
+      RUN_TASK(CopyTupleUsingIndexList<int64>(oldCellArray, newCellArray, newIndices));
       break;
     }
     case DataType::uint8: {
-      g->run(CopyDataImpl<uint8>(oldCellArray, newCellArray, newIndices));
+      RUN_TASK(CopyTupleUsingIndexList<uint8>(oldCellArray, newCellArray, newIndices));
       break;
     }
     case DataType::uint16: {
-      g->run(CopyDataImpl<uint16>(oldCellArray, newCellArray, newIndices));
+      RUN_TASK(CopyTupleUsingIndexList<uint16>(oldCellArray, newCellArray, newIndices));
       break;
     }
     case DataType::uint32: {
-      g->run(CopyDataImpl<uint32>(oldCellArray, newCellArray, newIndices));
+      RUN_TASK(CopyTupleUsingIndexList<uint32>(oldCellArray, newCellArray, newIndices));
       break;
     }
     case DataType::uint64: {
-      g->run(CopyDataImpl<uint64>(oldCellArray, newCellArray, newIndices));
+      RUN_TASK(CopyTupleUsingIndexList<uint64>(oldCellArray, newCellArray, newIndices));
       break;
     }
     case DataType::float32: {
-      g->run(CopyDataImpl<float32>(oldCellArray, newCellArray, newIndices));
+      RUN_TASK(CopyTupleUsingIndexList<float32>(oldCellArray, newCellArray, newIndices));
       break;
     }
     case DataType::float64: {
-      g->run(CopyDataImpl<float64>(oldCellArray, newCellArray, newIndices));
+      RUN_TASK(CopyTupleUsingIndexList<float64>(oldCellArray, newCellArray, newIndices));
       break;
     }
     default: {
       throw std::runtime_error("Invalid DataType");
     }
     }
-
+#ifdef COMPLEX_ENABLE_MULTICORE
     threadCount++;
     if(threadCount == nthreads)
     {
       g->wait();
       threadCount = 0;
     }
-
 #else
 
 #endif
