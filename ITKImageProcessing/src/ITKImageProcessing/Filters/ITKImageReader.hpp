@@ -29,7 +29,6 @@ public:
   static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "ImageDataArrayPath";
   static inline constexpr StringLiteral k_CellDataPath_Key = "Cell_Data_Group_Path";
 
-
   /**
    * @brief Returns the name of the filter.
    * @return

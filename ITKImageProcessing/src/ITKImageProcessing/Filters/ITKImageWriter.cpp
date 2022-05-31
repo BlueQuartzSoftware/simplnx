@@ -190,9 +190,13 @@ Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const Im
   std::stringstream ss;
   ss << fs::absolute(filePath).parent_path().string() << "/" << filePath.stem().string();
 
-  if(!fs::create_directories(fs::absolute(filePath).parent_path()))
+  //If the parent path does not exist then try to create it.
+  if(!fs::exists(fs::absolute(filePath).parent_path()))
   {
-    return {MakeErrorResult(-19000, fmt::format("Error Creating output path for image '{}'", fs::absolute(filePath).string()))};
+    if(!fs::create_directories(fs::absolute(filePath).parent_path()))
+    {
+      return {MakeErrorResult(-19000, fmt::format("Error Creating output path for image '{}'", fs::absolute(filePath).string()))};
+    }
   }
 
   int32 totalDigits = static_cast<int32>(std::log10(maxSlice) + 1);
