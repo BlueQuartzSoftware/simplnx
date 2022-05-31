@@ -24,30 +24,28 @@
 
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
-#include "Sampling/Filters/ResampleImageGeom.hpp"
-#include "Sampling/Sampling_test_dirs.hpp"
+#include "Core/Filters/ResampleImageGeomFilter.hpp"
+#include "Core/Core_test_dirs.hpp"
 
 using namespace complex;
 
 TEST_CASE("Sampling::ResampleImageGeom: Instantiation and Parameter Check", "[Sampling][ResampleImageGeom][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  ResampleImageGeom filter;
+  ResampleImageGeomFilter filter;
   DataStructure ds;
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ResampleImageGeom::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insertOrAssign(ResampleImageGeom::k_RenumberFeatures_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ResampleImageGeom::k_SaveAsNewDataContainer_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ResampleImageGeom::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ResampleImageGeom::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ResampleImageGeom::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ResampleImageGeom::k_NewDataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+  args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ResampleImageGeomFilter::k_SelectedCellDataGroup_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_NewDataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
