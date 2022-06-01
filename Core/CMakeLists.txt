@@ -5,7 +5,7 @@ set(PLUGIN_NAME "Core")
 # These are all the filters in the plugin. All filters should be kept in the
 # Core/src/Core/Filters/ directory.
 set(FilterList
-  RotateSampleRefFrame
+  RotateSampleRefFrameFilter
   ResampleImageGeomFilter
 )
 

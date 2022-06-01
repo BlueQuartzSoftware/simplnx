@@ -9,20 +9,20 @@
 namespace complex
 {
 /**
- * @class RotateSampleRefFrame
+ * @class RotateSampleRefFrameFilter
  * @brief
  */
-class CORE_EXPORT RotateSampleRefFrame : public IFilter
+class CORE_EXPORT RotateSampleRefFrameFilter : public IFilter
 {
 public:
-  RotateSampleRefFrame() = default;
-  ~RotateSampleRefFrame() noexcept override = default;
+  RotateSampleRefFrameFilter() = default;
+  ~RotateSampleRefFrameFilter() noexcept override = default;
 
-  RotateSampleRefFrame(const RotateSampleRefFrame&) = delete;
-  RotateSampleRefFrame(RotateSampleRefFrame&&) noexcept = delete;
+  RotateSampleRefFrameFilter(const RotateSampleRefFrameFilter&) = delete;
+  RotateSampleRefFrameFilter(RotateSampleRefFrameFilter&&) noexcept = delete;
 
-  RotateSampleRefFrame& operator=(const RotateSampleRefFrame&) = delete;
-  RotateSampleRefFrame& operator=(RotateSampleRefFrame&&) noexcept = delete;
+  RotateSampleRefFrameFilter& operator=(const RotateSampleRefFrameFilter&) = delete;
+  RotateSampleRefFrameFilter& operator=(RotateSampleRefFrameFilter&&) noexcept = delete;
 
   enum class RotationRepresentation : uint64
   {
@@ -101,4 +101,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, RotateSampleRefFrame, "5efdf395-33fb-4dc0-986e-0dc0ae990f6a");
+COMPLEX_DEF_FILTER_TRAITS(complex, RotateSampleRefFrameFilter, "5efdf395-33fb-4dc0-986e-0dc0ae990f6a");
