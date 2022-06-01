@@ -7,13 +7,10 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/ParallelData3DAlgorithm.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/SamplingUtils.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
-
-
 
 #ifdef COMPLEX_ENABLE_MULTICORE
 #define RUN_TASK g->run
@@ -33,10 +30,10 @@ public:
   ChangeResolutionImpl(ResampleImageGeom* filter, std::vector<int64>& newindices, std::vector<float> spacing, FloatVec3 sourceSpacing, SizeVec3 sourceDims, SizeVec3 destDims)
   : m_Filter(filter)
   , m_NewIndices(newindices)
-  , m_Spacing(spacing)
-  , m_OrigSpacing(sourceSpacing)
-  , m_OrigDims(sourceDims)
-  , m_CopyDims(destDims)
+  , m_Spacing(std::move(spacing))
+  , m_OrigSpacing(std::move(sourceSpacing))
+  , m_OrigDims(std::move(sourceDims))
+  , m_CopyDims(std::move(destDims))
   {
   }
   ~ChangeResolutionImpl() = default;
@@ -62,7 +59,7 @@ public:
           int64 row = static_cast<int64>(y / m_OrigSpacing[1]);
           int64 plane = static_cast<int64>(z / m_OrigSpacing[2]);
           int64 index_old = (plane * m_OrigDims[1] * m_OrigDims[0]) + (row * m_OrigDims[0]) + col;
-          size_t index = static_cast<int64>((i * m_CopyDims[0] * m_CopyDims[1]) + (j * m_CopyDims[0]) + k);
+          size_t index = static_cast<size_t>((i * m_CopyDims[0] * m_CopyDims[1]) + (j * m_CopyDims[0]) + k);
           m_NewIndices[index] = index_old;
         }
       }

@@ -91,7 +91,6 @@ Parameters ResampleImageGeomFilter::parameters() const
   params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureAttributeMatrixPath_Key, true);
   params.linkParameters(k_RenumberFeatures_Key, k_FeatureIdsArrayPath_Key, true);
 
-
   params.insertSeparator(Parameters::Separator{"Created Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewDataContainerPath_Key, "Resampled Image Geometry", "Location to store the resampled image geometry", DataPath({"Resampled Image Geometry"})));
   params.insert(std::make_unique<StringParameter>(k_NewFeaturesName_Key, "New Cell Features Group Name", "Name of the new DataGroup containing updated Voxel Arrays", "Cell Features"));
@@ -106,8 +105,7 @@ IFilter::UniquePointer ResampleImageGeomFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&,
-                                                                const std::atomic_bool&) const
+IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&, const std::atomic_bool&) const
 {
   auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
 
@@ -226,7 +224,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* , const MessageHandler& messageHandler,
+Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*, const MessageHandler& messageHandler,
                                               const std::atomic_bool& shouldCancel) const
 {
   ResampleImageGeomInputValues inputValues;

@@ -6,8 +6,7 @@ using namespace complex;
 namespace
 {
 // This maps previous filters from DREAM.3D Version 6.x to DREAM.3D Version 7.x
-std::map<complex::Uuid, complex::Uuid> k_CoreToComplexFilterMapping = {
-};
+std::map<complex::Uuid, complex::Uuid> k_CoreToComplexFilterMapping = {};
 // Plugin Uuid
 constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("65a0a3fc-8c93-5405-8ac6-182e7f313a69");
 } // namespace

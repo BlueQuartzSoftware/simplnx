@@ -7,6 +7,7 @@ set(PLUGIN_NAME "Core")
 set(FilterList
   RotateSampleRefFrameFilter
   ResampleImageGeomFilter
+  FillBadDataFilter
 )
 
 set(STUB_FILTERS
@@ -66,6 +67,7 @@ source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLU
 #------------------------------------------------------------------------------
 set(filter_algorithms
   ResampleImageGeom
+  FillBadData
 )
 
 foreach(algorithm ${filter_algorithms})

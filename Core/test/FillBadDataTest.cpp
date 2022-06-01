@@ -27,24 +27,25 @@
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
-#include "Processing/Filters/FillBadData.hpp"
-#include "Processing/Processing_test_dirs.hpp"
+#include "Core/Core_test_dirs.hpp"
+#include "Core/Filters/FillBadDataFilter.hpp"
 
 using namespace complex;
 
 TEST_CASE("Processing::FillBadData: Instantiation and Parameter Check", "[Processing][FillBadData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  FillBadData filter;
+  FillBadDataFilter filter;
   DataStructure ds;
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(FillBadData::k_MinAllowedDefectSize_Key, std::make_any<int32>(1234356));
-  args.insertOrAssign(FillBadData::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FillBadData::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FillBadData::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FillBadData::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

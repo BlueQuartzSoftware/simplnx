@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
-#include "Core/Filters/RotateSampleRefFrameFilter.hpp"
 #include "Core/Core_test_dirs.hpp"
+#include "Core/Filters/RotateSampleRefFrameFilter.hpp"
 
 #include "complex/Common/Numbers.hpp"
 #include "complex/Common/TypeTraits.hpp"
@@ -9,10 +9,10 @@
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <Eigen/Dense>
 
@@ -130,7 +130,8 @@ TEST_CASE("ComplexCore::RotateSampleRefFrameFilter", "[RotateSampleRefFrameFilte
   for(auto* dc : dataContainers)
   {
     Arguments args;
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrameFilter::RotationRepresentation::AxisAngle)));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
+                        std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrameFilter::RotationRepresentation::AxisAngle)));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_OriginalGeomPath));
 
     REQUIRE(dc != nullptr);
@@ -193,7 +194,8 @@ TEST_CASE("ComplexCore::RotateSampleRefFrameFilter", "[RotateSampleRefFrameFilte
 
     DataPath testRotationMatrixGeomPath({fmt::format("{}_Test_RotationMatrix", name)});
 
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrameFilter::RotationRepresentation::RotationMatrix)));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
+                        std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrameFilter::RotationRepresentation::RotationMatrix)));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(tableData));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(testRotationMatrixGeomPath));
 

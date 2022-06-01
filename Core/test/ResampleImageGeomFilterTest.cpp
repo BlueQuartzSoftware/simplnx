@@ -26,8 +26,8 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
-#include "Core/Filters/ResampleImageGeomFilter.hpp"
 #include "Core/Core_test_dirs.hpp"
+#include "Core/Filters/ResampleImageGeomFilter.hpp"
 
 using namespace complex;
 

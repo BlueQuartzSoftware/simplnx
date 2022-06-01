@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Processing/Processing_export.hpp"
+#include "Core/Core_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,20 +8,20 @@
 namespace complex
 {
 /**
- * @class FillBadData
+ * @class FillBadDataFilter
  * @brief This filter will ....
  */
-class PROCESSING_EXPORT FillBadData : public IFilter
+class CORE_EXPORT FillBadDataFilter : public IFilter
 {
 public:
-  FillBadData() = default;
-  ~FillBadData() noexcept override = default;
+  FillBadDataFilter() = default;
+  ~FillBadDataFilter() noexcept override = default;
 
-  FillBadData(const FillBadData&) = delete;
-  FillBadData(FillBadData&&) noexcept = delete;
+  FillBadDataFilter(const FillBadDataFilter&) = delete;
+  FillBadDataFilter(FillBadDataFilter&&) noexcept = delete;
 
-  FillBadData& operator=(const FillBadData&) = delete;
-  FillBadData& operator=(FillBadData&&) noexcept = delete;
+  FillBadDataFilter& operator=(const FillBadDataFilter&) = delete;
+  FillBadDataFilter& operator=(FillBadDataFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_MinAllowedDefectSize_Key = "MinAllowedDefectSize";
@@ -29,6 +29,8 @@ public:
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
   static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "IgnoredDataArrayPaths";
+  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
+  static inline constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_group";
 
   /**
    * @brief Returns the name of the filter.
@@ -77,23 +79,24 @@ protected:
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
    * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.
    * Some parts of the actions may not be completely filled out if all the required information is not available at preflight time.
-   * @param ds The input DataStructure instance
+   * @param dataStructure The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  PreflightResult preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
    * On failure, there is no guarantee that the DataStructure is in a correct state.
-   * @param ds The input DataStructure instance
+   * @param dataStructure The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FillBadData, "30ae0a1e-3d94-5dab-b279-c5727ab5d7ff");
+COMPLEX_DEF_FILTER_TRAITS(complex, FillBadDataFilter, "30ae0a1e-3d94-5dab-b279-c5727ab5d7ff");
