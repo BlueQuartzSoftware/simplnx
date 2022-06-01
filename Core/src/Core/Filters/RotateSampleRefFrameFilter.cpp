@@ -1,4 +1,4 @@
-#include "RotateSampleRefFrame.hpp"
+#include "RotateSampleRefFrameFilter.hpp"
 
 #include "Core/Utilities/CoreUtilities.hpp"
 
@@ -45,7 +45,7 @@ using namespace complex;
 
 namespace
 {
-using RotationRepresentation = RotateSampleRefFrame::RotationRepresentation;
+using RotationRepresentation = RotateSampleRefFrameFilter::RotationRepresentation;
 using Matrix3fR = Eigen::Matrix<float32, 3, 3, Eigen::RowMajor>;
 
 constexpr float32 k_Threshold = 0.01f;
@@ -291,7 +291,7 @@ constexpr RotationRepresentation CastIndexToRotationRepresentation(uint64 index)
     return RotationRepresentation::RotationMatrix;
   }
   default: {
-    throw std::runtime_error(fmt::format("RotateSampleRefFrame: Failed to cast index {} to RotationRepresentation", index));
+    throw std::runtime_error(fmt::format("RotateSampleRefFrameFilter: Failed to cast index {} to RotationRepresentation", index));
   }
   }
 }
@@ -352,26 +352,26 @@ Result<Matrix3fR> ConvertRotationTableToRotationMatrix(const std::vector<std::ve
 
 Result<Matrix3fR> ComputeRotationMatrix(const Arguments& args)
 {
-  auto rotationRepresentationIndex = args.value<uint64>(RotateSampleRefFrame::k_RotationRepresentation_Key);
+  auto rotationRepresentationIndex = args.value<uint64>(RotateSampleRefFrameFilter::k_RotationRepresentation_Key);
 
   RotationRepresentation rotationRepresentation = CastIndexToRotationRepresentation(rotationRepresentationIndex);
 
   switch(rotationRepresentation)
   {
   case RotationRepresentation::AxisAngle: {
-    auto rotationAxisVec = args.value<std::vector<float32>>(RotateSampleRefFrame::k_RotationAxis_Key);
-    auto rotationAngle = args.value<float32>(RotateSampleRefFrame::k_RotationAngle_Key);
+    auto rotationAxisVec = args.value<std::vector<float32>>(RotateSampleRefFrameFilter::k_RotationAxis_Key);
+    auto rotationAngle = args.value<float32>(RotateSampleRefFrameFilter::k_RotationAngle_Key);
 
     return ConvertAxisAngleToRotationMatrix(rotationAxisVec, rotationAngle);
   }
   case RotationRepresentation::RotationMatrix: {
-    auto rotationMatrixTableData = args.value<DynamicTableData>(RotateSampleRefFrame::k_RotationMatrix_Key);
+    auto rotationMatrixTableData = args.value<DynamicTableData>(RotateSampleRefFrameFilter::k_RotationMatrix_Key);
     auto rotationMatrixTable = rotationMatrixTableData.getTableData();
 
     return ConvertRotationTableToRotationMatrix(rotationMatrixTable);
   }
   default: {
-    throw std::runtime_error("RotateSampleRefFrame: Unsupported RotationRepresentation");
+    throw std::runtime_error("RotateSampleRefFrameFilter: Unsupported RotationRepresentation");
   }
   }
 }
@@ -380,27 +380,27 @@ Result<Matrix3fR> ComputeRotationMatrix(const Arguments& args)
 
 namespace complex
 {
-std::string RotateSampleRefFrame::name() const
+std::string RotateSampleRefFrameFilter::name() const
 {
-  return FilterTraits<RotateSampleRefFrame>::name;
+  return FilterTraits<RotateSampleRefFrameFilter>::name;
 }
 
-std::string RotateSampleRefFrame::className() const
+std::string RotateSampleRefFrameFilter::className() const
 {
-  return FilterTraits<RotateSampleRefFrame>::className;
+  return FilterTraits<RotateSampleRefFrameFilter>::className;
 }
 
-Uuid RotateSampleRefFrame::uuid() const
+Uuid RotateSampleRefFrameFilter::uuid() const
 {
-  return FilterTraits<RotateSampleRefFrame>::uuid;
+  return FilterTraits<RotateSampleRefFrameFilter>::uuid;
 }
 
-std::string RotateSampleRefFrame::humanName() const
+std::string RotateSampleRefFrameFilter::humanName() const
 {
   return "Rotate Sample Reference Frame";
 }
 
-Parameters RotateSampleRefFrame::parameters() const
+Parameters RotateSampleRefFrameFilter::parameters() const
 {
   Parameters params;
 
@@ -427,12 +427,12 @@ Parameters RotateSampleRefFrame::parameters() const
   return params;
 }
 
-IFilter::UniquePointer RotateSampleRefFrame::clone() const
+IFilter::UniquePointer RotateSampleRefFrameFilter::clone() const
 {
-  return std::make_unique<RotateSampleRefFrame>();
+  return std::make_unique<RotateSampleRefFrameFilter>();
 }
 
-IFilter::PreflightResult RotateSampleRefFrame::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&, const std::atomic_bool&) const
+IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&, const std::atomic_bool&) const
 {
   Result<Matrix3fR> matrixResult = ComputeRotationMatrix(filterArgs);
 
@@ -496,7 +496,7 @@ IFilter::PreflightResult RotateSampleRefFrame::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
-Result<> RotateSampleRefFrame::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel) const
 {
   auto selectedImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
