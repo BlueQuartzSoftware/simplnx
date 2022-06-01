@@ -83,7 +83,7 @@ private:
   Float32Array* m_QuatsArray = nullptr;
   FeatureIdsArrayType* m_CellPhases = nullptr;
   GoodVoxelsArrayType* m_GoodVoxelsArray = nullptr;
-  FeatureIdsArrayType* m_CrystalStructures = nullptr;
+  DataArray<uint32>* m_CrystalStructures = nullptr;
 
   FeatureIdsArrayType* m_FeatureIdsArray = nullptr;
 

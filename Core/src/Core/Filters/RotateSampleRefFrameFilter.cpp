@@ -497,7 +497,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
 }
 
 Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                                 const std::atomic_bool& shouldCancel) const
 {
   auto selectedImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
   const auto& selectedImageGeom = dataStructure.getDataRefAs<ImageGeom>(selectedImageGeomPath);

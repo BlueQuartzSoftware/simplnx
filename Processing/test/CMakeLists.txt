@@ -10,7 +10,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     ErodeDilateBadDataTest.cpp
     ErodeDilateCoordinationNumberTest.cpp
     ErodeDilateMaskTest.cpp
-    FillBadDataTest.cpp
     FindProjectedImageStatisticsTest.cpp
     FindRelativeMotionBetweenSlicesTest.cpp
     IdentifySampleTest.cpp

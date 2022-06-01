@@ -59,5 +59,4 @@ private:
   nonstd::span<const int64> m_NewIndices;
 };
 
-
-    }
+} // namespace complex

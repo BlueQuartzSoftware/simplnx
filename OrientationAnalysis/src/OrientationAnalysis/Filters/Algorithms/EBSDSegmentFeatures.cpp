@@ -33,7 +33,7 @@ Result<> EBSDSegmentFeatures::operator()()
   m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->quatsArrayPath);
   m_CellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
   m_GoodVoxelsArray = m_DataStructure.getDataAs<BoolArray>(m_InputValues->goodVoxelsArrayPath);
-  m_CrystalStructures = m_DataStructure.getDataAs<Int32Array>(m_InputValues->crystalStructuresArrayPath);
+  m_CrystalStructures = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
 
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->featureIdsArrayPath);
   m_FeatureIdsArray->fill(0); // initialize the output array with zeros

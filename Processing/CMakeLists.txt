@@ -13,7 +13,6 @@ set(STUB_FILTERS
   ErodeDilateBadData
   ErodeDilateCoordinationNumber
   ErodeDilateMask
-  FillBadData
   FindProjectedImageStatistics
   FindRelativeMotionBetweenSlices
   IdentifySample
