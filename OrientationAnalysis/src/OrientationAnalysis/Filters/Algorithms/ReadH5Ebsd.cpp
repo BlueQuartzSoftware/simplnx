@@ -380,14 +380,15 @@ Result<> ReadH5Ebsd::operator()()
 
     if(sampleTransAngle > 0)
     {
-      const Uuid k_CorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+      const Uuid k_CorePluginId = *Uuid::FromString("65a0a3fc-8c93-5405-8ac6-182e7f313a69");
+      const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
       auto* filterList = Application::Instance()->getFilterList();
 
       /*************************************************************************
        * First rename the entire Generated Image Geometry to a temp name
        ************************************************************************/
       const Uuid k_RenameDataObjectFilterId = *Uuid::FromString("d53c808f-004d-5fac-b125-0fffc8cc78d6");
-      const FilterHandle k_RenameDataObjectFilterHandle(k_RenameDataObjectFilterId, k_CorePluginId);
+      const FilterHandle k_RenameDataObjectFilterHandle(k_RenameDataObjectFilterId, k_ComplexCorePluginId);
       auto filter = filterList->createFilter(k_RenameDataObjectFilterHandle);
       if(nullptr == filter)
       {
@@ -413,6 +414,7 @@ Result<> ReadH5Ebsd::operator()()
       auto executeResult = filter->execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
       if(executeResult.result.invalid())
       {
+        return {MakeErrorResult(-50011, fmt::format("Error executing {}", filter->humanName()))};
       }
 
       /*************************************************************************
@@ -453,7 +455,7 @@ Result<> ReadH5Ebsd::operator()()
         {
           std::cout << error.code << ": " << error.message << std::endl;
         }
-        return {MakeErrorResult(-50010, fmt::format("Error preflighting {}", filter->humanName()))};
+        return {MakeErrorResult(-50012, fmt::format("Error preflighting {}", filter->humanName()))};
       }
 
       // Execute the filter and check the result
@@ -461,6 +463,7 @@ Result<> ReadH5Ebsd::operator()()
       executeResult = filter->execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
       if(executeResult.result.invalid())
       {
+        return {MakeErrorResult(-50013, fmt::format("Error executing {}", filter->humanName()))};
       }
 
       /*************************************************************************
@@ -474,11 +477,11 @@ Result<> ReadH5Ebsd::operator()()
       m_DataStructure.setAdditionalParent(ensembleObject->getId(), dataContainerObject->getId());
 
       const Uuid k_DeleteDataFilterId = *Uuid::FromString("bf286740-e987-49fe-a7c8-6e566e3a0606");
-      const FilterHandle k_DeleteDataFilterHandle(k_DeleteDataFilterId, k_CorePluginId);
+      const FilterHandle k_DeleteDataFilterHandle(k_DeleteDataFilterId, k_ComplexCorePluginId);
       filter = filterList->createFilter(k_DeleteDataFilterHandle);
       if(nullptr == filter)
       {
-        return {MakeErrorResult(-50010, fmt::format("Error creating 'Delete Data Object' filter"))};
+        return {MakeErrorResult(-50014, fmt::format("Error creating 'Delete Data Object' filter"))};
       }
       args = Arguments();
       args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(nonRotatedDataGroup));
@@ -492,7 +495,7 @@ Result<> ReadH5Ebsd::operator()()
         {
           std::cout << error.code << ": " << error.message << std::endl;
         }
-        return {MakeErrorResult(-50010, fmt::format("Error preflighting {}", filter->humanName()))};
+        return {MakeErrorResult(-50015, fmt::format("Error preflighting {}", filter->humanName()))};
       }
 
       // Execute the filter and check the result
@@ -500,6 +503,7 @@ Result<> ReadH5Ebsd::operator()()
       executeResult = filter->execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
       if(executeResult.result.invalid())
       {
+        return {MakeErrorResult(-50016, fmt::format("Error executing {}", filter->humanName()))};
       }
     }
   }
