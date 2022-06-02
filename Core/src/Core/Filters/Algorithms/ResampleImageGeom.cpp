@@ -10,6 +10,7 @@
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/ParallelData3DAlgorithm.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
+#include "complex/Utilities/SamplingUtils.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 
@@ -224,21 +225,21 @@ Result<> ResampleImageGeom::operator()()
   g->wait();
 #endif
 
-#if 0
   if(m_InputValues->renumberFeatures)
   {
-    m_MessageHandler(IFilter::Message::Type::Info, "Renumber Features .....");
-
-    Sampling::RenumberFeatures(this, getNewDataContainerPath(), getCellAttributeMatrixPath(), getCellFeatureAttributeMatrixPath(), getFeatureIdsArrayPath(), getSaveAsNewDataContainer());
+    //      DataPath destCellFeaturesPath = destImagePath.createChildPath(newFeaturesName);
+    //      auto result = Sampling::RenumberFeatures(m_DataStructure, destImagePath, destCellFeaturesPath, featureIdsArrayPath, shouldCancel);
+    //      if(result.invalid())
+    //      {
+    //        return result;
+    //      }
+    return MakeErrorResult(-23500, "Renumber Features is NOT Implemented.");
   }
 
-
-  m_MessageHandler(IFilter::Message::Type::Info, "Cleanup .....");
-
-  if(!getSaveAsNewDataContainer())
+  if(m_InputValues->removeOriginalImageGeom)
   {
-    m_PreviousDataContainer = DataContainer::NullPointer();
+    return MakeErrorResult(-23500, "Removing Original Geometry Group is not Implemented.");
   }
-#endif
+
   return {};
 }
