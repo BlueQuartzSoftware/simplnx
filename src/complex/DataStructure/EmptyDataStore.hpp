@@ -31,9 +31,8 @@ public:
   /**
    * @brief Constructs an empty data store with a tuple getSize and count of 0.
    */
-  EmptyDataStore()
-  {
-  }
+  EmptyDataStore() = default;
+
 
   /**
    * @brief Constructs an empty data store with the specified tupleSize and tupleCount.
@@ -54,11 +53,11 @@ public:
    * @param other
    */
   EmptyDataStore(const EmptyDataStore& other)
-  : m_TupleShape(other.m_TupleShape)
-  , m_ComponentShape(other.m_ComponentShape)
-  , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
-  , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
-  , m_Size(m_NumTuples * m_NumComponents)
+  : m_ComponentShape(other.m_ComponentShape)
+  , m_TupleShape(other.m_TupleShape)
+  , m_NumComponents(other.m_NumComponents)
+  , m_NumTuples(other.m_NumTuples)
+  , m_Size(other.m_Size)
   {
   }
 
@@ -67,11 +66,11 @@ public:
    * @param other
    */
   EmptyDataStore(EmptyDataStore&& other) noexcept
-  : m_TupleShape(std::move(other.m_TupleShape))
-  , m_ComponentShape(std::move(other.m_ComponentShape))
-  , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
-  , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
-  , m_Size(m_NumTuples * m_NumComponents)
+  : m_ComponentShape(std::move(other.m_ComponentShape))
+  , m_TupleShape(std::move(other.m_TupleShape))
+  , m_NumComponents(std::move(other.m_NumComponents))
+  , m_NumTuples(std::move(other.m_NumTuples))
+  , m_Size(std::move(other.m_Size))
   {
   }
 

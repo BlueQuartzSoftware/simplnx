@@ -49,9 +49,6 @@ public:
   DataStore(usize numTuples, std::optional<T> initValue)
   : DataStore({numTuples}, {1}, initValue)
   {
-    m_NumComponents = std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>());
-    m_NumTuples = std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
-    m_Size = m_NumTuples * m_NumComponents;
   }
 
   /**
@@ -97,9 +94,9 @@ public:
   DataStore(const DataStore& other)
   : m_ComponentShape(other.m_ComponentShape)
   , m_TupleShape(other.m_TupleShape)
-  , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
-  , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
-  , m_Size(m_NumTuples * m_NumComponents)
+  , m_NumComponents(other.m_NumComponents)
+  , m_NumTuples(other.m_NumTuples)
+  , m_Size(other.m_Size)
   {
     const usize count = other.getSize();
     auto data = new value_type[count];
@@ -112,12 +109,12 @@ public:
    * @param other
    */
   DataStore(DataStore&& other) noexcept
-  : m_TupleShape(std::move(other.m_TupleShape))
-  , m_ComponentShape(std::move(other.m_ComponentShape))
+  : m_ComponentShape(std::move(other.m_ComponentShape))
+  , m_TupleShape(std::move(other.m_TupleShape))
   , m_Data(std::move(other.m_Data))
-  , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
-  , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
-  , m_Size(m_NumTuples * m_NumComponents)
+  , m_NumComponents(std::move(other.m_NumComponents))
+  , m_NumTuples(std::move(other.m_NumTuples))
+  , m_Size(std::move(other.m_Size))
   {
   }
 
