@@ -16,8 +16,8 @@ namespace complex
 using Rgba = uint32;
 
 /**
- * @brief The RgbColor namespace stores calculations on or for Rgba values.
- * Calculations range from extracting color components to creating new Rgba
+ * @brief The RgbColor namespace stores calculations on or for ARGB values.
+ * Calculations range from extracting color components to creating new ARGB
  * values to printing values to an output stream.
  */
 namespace RgbColor
