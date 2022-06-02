@@ -190,7 +190,7 @@ Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const Im
   std::stringstream ss;
   ss << fs::absolute(filePath).parent_path().string() << "/" << filePath.stem().string();
 
-  //If the parent path does not exist then try to create it.
+  // If the parent path does not exist then try to create it.
   if(!fs::exists(fs::absolute(filePath).parent_path()))
   {
     if(!fs::create_directories(fs::absolute(filePath).parent_path()))
