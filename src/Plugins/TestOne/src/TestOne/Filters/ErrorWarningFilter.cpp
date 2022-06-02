@@ -60,8 +60,10 @@ complex::Parameters ErrorWarningFilter::parameters() const
   Parameters params;
   params.insert(std::make_unique<BoolParameter>(k_PreflightWarning_Key, "Preflight Warning", "Preflight warning parameter", false));
   params.insert(std::make_unique<BoolParameter>(k_PreflightError_Key, "Preflight Error", "Preflight error parameter", false));
+  params.insert(std::make_unique<BoolParameter>(k_PreflightException_Key, "Preflight Exception", "Preflight exception parameter", false));
   params.insert(std::make_unique<BoolParameter>(k_ExecuteWarning_Key, "Execute Warning", "Execute warning parameter", false));
   params.insert(std::make_unique<BoolParameter>(k_ExecuteError_Key, "Execute Error", "Execute error parameter", false));
+  params.insert(std::make_unique<BoolParameter>(k_ExecuteException_Key, "Execute Exception", "Execute exception parameter", false));
   return params;
 }
 
@@ -74,6 +76,7 @@ complex::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataSt
 {
   auto preflightWarning = args.value<bool>(k_PreflightWarning_Key);
   auto preflightError = args.value<bool>(k_PreflightError_Key);
+  auto preflightException = args.value<bool>(k_PreflightException_Key);
 
   complex::Result<OutputActions> resultOutputActions;
 
@@ -85,6 +88,10 @@ complex::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataSt
   {
     return {MakeErrorResult<OutputActions>(-666001, "Intentional preflight error generated")};
   }
+  if(preflightException)
+  {
+    throw std::runtime_error("Intentional preflight runtime excption generated");
+  }
 
   return {std::move(resultOutputActions)};
 }
@@ -94,6 +101,7 @@ complex::Result<> ErrorWarningFilter::executeImpl(DataStructure& data, const Arg
 {
   auto executeWarning = args.value<bool>(k_ExecuteWarning_Key);
   auto executeError = args.value<bool>(k_ExecuteError_Key);
+  auto executeException = args.value<bool>(k_ExecuteException_Key);
 
   complex::Result<> resultActions;
 
@@ -104,6 +112,10 @@ complex::Result<> ErrorWarningFilter::executeImpl(DataStructure& data, const Arg
   if(executeError)
   {
     return {MakeErrorResult(-666001, "Intentional execute error generated")};
+  }
+  if(executeException)
+  {
+    throw std::runtime_error("Intentional execute runtime excption generated");
   }
 
   return std::move(resultActions);
