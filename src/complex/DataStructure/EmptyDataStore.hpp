@@ -33,7 +33,6 @@ public:
    */
   EmptyDataStore() = default;
 
-
   /**
    * @brief Constructs an empty data store with the specified tupleSize and tupleCount.
    * @param tupleSize
