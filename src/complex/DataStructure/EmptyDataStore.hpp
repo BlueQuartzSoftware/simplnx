@@ -43,7 +43,6 @@ public:
   , m_TupleShape(tupleShape)
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
-  , m_Size(m_NumTuples * m_NumComponents)
   {
   }
 
@@ -56,7 +55,6 @@ public:
   , m_TupleShape(other.m_TupleShape)
   , m_NumComponents(other.m_NumComponents)
   , m_NumTuples(other.m_NumTuples)
-  , m_Size(other.m_Size)
   {
   }
 
@@ -69,7 +67,6 @@ public:
   , m_TupleShape(std::move(other.m_TupleShape))
   , m_NumComponents(std::move(other.m_NumComponents))
   , m_NumTuples(std::move(other.m_NumTuples))
-  , m_Size(std::move(other.m_Size))
   {
   }
 
@@ -233,6 +230,5 @@ private:
   ShapeType m_TupleShape;
   size_t m_NumComponents = {0};
   size_t m_NumTuples = {0};
-  size_t m_Size = {0};
 };
 } // namespace complex
