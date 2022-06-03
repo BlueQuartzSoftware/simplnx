@@ -31,9 +31,7 @@ public:
   /**
    * @brief Constructs an empty data store with a tuple getSize and count of 0.
    */
-  EmptyDataStore()
-  {
-  }
+  EmptyDataStore() = default;
 
   /**
    * @brief Constructs an empty data store with the specified tupleSize and tupleCount.
@@ -43,6 +41,8 @@ public:
   EmptyDataStore(const ShapeType& tupleShape, const ShapeType& componentShape)
   : m_ComponentShape(componentShape)
   , m_TupleShape(tupleShape)
+  , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   {
   }
 
@@ -51,8 +51,10 @@ public:
    * @param other
    */
   EmptyDataStore(const EmptyDataStore& other)
-  : m_TupleShape(other.m_TupleShape)
-  , m_ComponentShape(other.m_ComponentShape)
+  : m_ComponentShape(other.m_ComponentShape)
+  , m_TupleShape(other.m_TupleShape)
+  , m_NumComponents(other.m_NumComponents)
+  , m_NumTuples(other.m_NumTuples)
   {
   }
 
@@ -61,8 +63,10 @@ public:
    * @param other
    */
   EmptyDataStore(EmptyDataStore&& other) noexcept
-  : m_TupleShape(std::move(other.m_TupleShape))
-  , m_ComponentShape(std::move(other.m_ComponentShape))
+  : m_ComponentShape(std::move(other.m_ComponentShape))
+  , m_TupleShape(std::move(other.m_TupleShape))
+  , m_NumComponents(std::move(other.m_NumComponents))
+  , m_NumTuples(std::move(other.m_NumTuples))
   {
   }
 
@@ -74,7 +78,7 @@ public:
    */
   usize getNumberOfTuples() const override
   {
-    return std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+    return m_NumTuples;
   }
 
   /**
@@ -83,7 +87,7 @@ public:
    */
   size_t getNumberOfComponents() const override
   {
-    return std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+    return m_NumComponents;
   }
 
   /**
@@ -224,5 +228,7 @@ public:
 private:
   ShapeType m_ComponentShape;
   ShapeType m_TupleShape;
+  size_t m_NumComponents = {0};
+  size_t m_NumTuples = {0};
 };
 } // namespace complex
