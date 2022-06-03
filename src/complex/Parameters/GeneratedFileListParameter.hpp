@@ -31,7 +31,7 @@ public:
 
     std::pair<std::vector<std::string>, bool> generate() const
     {
-      return FilePathGenerator::GenerateFileList(startIndex, endIndex, incrementIndex, ordering, inputPath, filePrefix, fileSuffix, fileExtension, paddingDigits);
+      return FilePathGenerator::GenerateAndValidateFileList(startIndex, endIndex, incrementIndex, ordering, inputPath, filePrefix, fileSuffix, fileExtension, paddingDigits);
     }
   };
 

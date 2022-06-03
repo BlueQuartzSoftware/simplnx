@@ -18,7 +18,7 @@ enum class Ordering : uint8
 };
 
 /**
- * @brief generateFileList This method will generate a file list in the correct order of the files that should
+ * @brief GenerateAndValidateFileList This method will generate a file list in the correct order of the files that should
  * be imported to an h5ebsd file. Also returns if there are missing files.
  * @param start Z Slice Start
  * @param end S Slice End
@@ -31,7 +31,7 @@ enum class Ordering : uint8
  * @param paddingDigits the number of padding digits to use when generating the integer index value
  * @return
  */
-COMPLEX_EXPORT std::pair<std::vector<std::string>, bool> GenerateFileList(int32 start, int32 end, int32 increment, Ordering order, std::string_view inputPath, std::string_view filePrefix,
-                                                                          std::string_view fileSuffix, std::string_view fileExtension, int32 paddingDigits);
+COMPLEX_EXPORT std::pair<std::vector<std::string>, bool> GenerateAndValidateFileList(int32 start, int32 end, int32 increment, Ordering order, std::string_view inputPath, std::string_view filePrefix,
+                                                                                     std::string_view fileSuffix, std::string_view fileExtension, int32 paddingDigits);
 } // namespace FilePathGenerator
 } // namespace complex

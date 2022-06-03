@@ -12,8 +12,8 @@ namespace complex
 namespace FilePathGenerator
 {
 // -----------------------------------------------------------------------------
-std::pair<std::vector<std::string>, bool> GenerateFileList(int32 start, int32 end, int32 increment, Ordering order, std::string_view inputPath, std::string_view filePrefix,
-                                                           std::string_view fileSuffix, std::string_view fileExtension, int32 paddingDigits)
+std::pair<std::vector<std::string>, bool> GenerateAndValidateFileList(int32 start, int32 end, int32 increment, Ordering order, std::string_view inputPath, std::string_view filePrefix,
+                                                                      std::string_view fileSuffix, std::string_view fileExtension, int32 paddingDigits)
 {
   std::vector<std::string> fileList;
 
