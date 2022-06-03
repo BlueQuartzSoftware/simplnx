@@ -156,7 +156,7 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
 
   if(!dataStructure.validateNumberOfTuples(dataPaths))
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-651, fmt::format("Input arrays do have matching tuple counts.")}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-651, fmt::format("Input arrays do not have matching tuple counts.")}})};
   }
 
   // Create output DataStructure Items
