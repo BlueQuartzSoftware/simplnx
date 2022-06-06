@@ -1,4 +1,28 @@
+/*
+ # Test Plan #
 
+Input Files:
+DREAM3D_Data/Data/ASCII_Data/FeatureIds.csv
+DREAM3D_Data/Data/ASCII_Data/Quats.csv
+DREAM3D_Data/Data/ASCII_Data/Phases.csv
+
+Output DataArrays:
+ AvgEulerAngles
+ AvgQuats
+
+Comparison Files:
+DREAM3D_Data/Data/ASCII_Data/AvgEulerAngles.csv
+DREAM3D_Data/Data/ASCII_Data/AvgQuats.csv
+
+You will need to create a UInt32 DataArray with 2 values in it: [ 999, 1 ]. This will
+ be the input 'k_CrystalStructuresArrayPath_Key' path and data.
+
+
+Compare the data sets. Due to going back and forth between ASCII and Binary you will
+probably have to compare using a tolerance of about .0001. Look at the 'ConvertOrientationsTest' at the bottom for an example
+ of doing that.
+
+*/
 
 #include <catch2/catch.hpp>
 
