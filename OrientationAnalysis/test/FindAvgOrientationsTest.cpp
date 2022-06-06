@@ -49,11 +49,11 @@ TEST_CASE("OrientationAnalysis::FindAvgOrientations: Invalid preflight", "[Orien
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  REQUIRE(preflightResult.outputActions.invalid());
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
+  REQUIRE(executeResult.result.invalid());
 }
 
 // TEST_CASE("OrientationAnalysis::FindAvgOrientations: Valid filter execution")
