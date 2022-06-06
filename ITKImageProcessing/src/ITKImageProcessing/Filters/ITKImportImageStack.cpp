@@ -189,11 +189,11 @@ IFilter::PreflightResult ITKImportImageStack::preflightImpl(const DataStructure&
   }
 
   // The second action should be the array creation
-  const IDataAction* action1 = imageReaderResult.outputActions.value().actions.at(1).get();
+  const IDataAction* action1 = imageReaderResult.outputActions.value().actions.at(2).get();
   const auto* createArrayAction = dynamic_cast<const CreateArrayAction*>(action1);
   if(createArrayAction == nullptr)
   {
-    throw std::runtime_error("ITKImportImageStack: Expected CreateArrayAction at index 1");
+    throw std::runtime_error("ITKImportImageStack: Expected CreateArrayAction at index 2");
   }
 
   // X Y Z

@@ -25,10 +25,11 @@ TEST_CASE("ITKRelabelComponentImageFilter(default)", "[ITKImageProcessing][ITKRe
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
-  DataPath outputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_OutputDataPath);
+  DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  DataPath outputDataPath = cellDataPath.createChildPath(ITKTestBase::k_OutputDataPath);
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/2th_cthead1.png";
-  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, inputDataPath);
+  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
   COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
 
   Arguments args;
@@ -53,10 +54,11 @@ TEST_CASE("ITKRelabelComponentImageFilter(no_sorting)", "[ITKImageProcessing][IT
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
-  DataPath outputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_OutputDataPath);
+  DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  DataPath outputDataPath = cellDataPath.createChildPath(ITKTestBase::k_OutputDataPath);
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/simple-label-d.png";
-  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, inputDataPath);
+  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
   COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
 
   Arguments args;
@@ -82,10 +84,11 @@ TEST_CASE("ITKRelabelComponentImageFilter(no_sorting2)", "[ITKImageProcessing][I
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
-  DataPath outputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_OutputDataPath);
+  DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  DataPath outputDataPath = cellDataPath.createChildPath(ITKTestBase::k_OutputDataPath);
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/simple-label-d.png";
-  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, inputDataPath);
+  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
   COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
 
   Arguments args;

@@ -23,14 +23,16 @@ namespace complex
 namespace ITKTestBase
 {
 inline constexpr StringLiteral k_ImageGeometryPath = "[ImageGeometry]";
+inline constexpr StringLiteral k_ImageCellDataPath = "Cell Data";
 inline constexpr StringLiteral k_MaskGeometryPath = "[MaskGeometry]";
 inline constexpr StringLiteral k_BaselineGeometryPath = "[BaselineGeometry]";
 inline constexpr StringLiteral k_InputDataPath = "Input";
 inline constexpr StringLiteral k_OutputDataPath = "Output";
 inline constexpr StringLiteral k_MaskDataPath = "Mask";
+
 inline constexpr StringLiteral k_BaselineDataPath = "Baseline";
 
-Result<> ReadImage(DataStructure& ds, const fs::path& filePath, const DataPath& geometryPath, const DataPath& imagePath);
+Result<> ReadImage(DataStructure& ds, const fs::path& filePath, const DataPath& geometryPath, const DataPath& cellDataPath, const DataPath& imagePath);
 
 Result<> WriteImage(DataStructure& ds, const fs::path& filePath, const DataPath& geometryPath, const DataPath& imagePath);
 

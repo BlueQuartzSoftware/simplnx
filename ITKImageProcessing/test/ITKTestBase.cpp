@@ -167,12 +167,13 @@ std::string ComputeMd5Hash(DataStructure& ds, const DataPath& outputDataPath)
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadImage(DataStructure& ds, const fs::path& filePath, const DataPath& geometryPath, const DataPath& imagePath)
+Result<> ReadImage(DataStructure& ds, const fs::path& filePath, const DataPath& geometryPath, const DataPath& cellDataPath, const DataPath& imagePath)
 {
   ITKImageReader filter;
   Arguments args;
   args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
   args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, geometryPath);
+  args.insertOrAssign(ITKImageReader::k_CellDataPath_Key, cellDataPath);
   args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, imagePath);
   auto executeResult = filter.execute(ds, args);
   return executeResult.result;
