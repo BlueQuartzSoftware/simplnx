@@ -188,7 +188,7 @@ IFilter::PreflightResult ITKImportImageStack::preflightImpl(const DataStructure&
     throw std::runtime_error("ITKImportImageStack: Expected CreateImageGeometryAction at index 0");
   }
 
-  // The second action should be the array creation
+  // The third action should be the array creation
   const IDataAction* action1 = imageReaderResult.outputActions.value().actions.at(2).get();
   const auto* createArrayAction = dynamic_cast<const CreateArrayAction*>(action1);
   if(createArrayAction == nullptr)
