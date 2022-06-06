@@ -38,7 +38,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   RemoveFlaggedVerticesTest.cpp
   RenameDataObjectTest.cpp
   RobustAutomaticThresholdTest.cpp
-  RotateSampleRefFrameTest.cpp
   RawBinaryReaderTest.cpp
   ScalarSegmentFeaturesFilterTest.cpp
   SetImageGeomOriginScalingFilterTest.cpp
