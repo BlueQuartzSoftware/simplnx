@@ -24,10 +24,11 @@ TEST_CASE("ITKLaplacianSharpeningImageFilter(default)", "[ITKImageProcessing][IT
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
-  DataPath outputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_OutputDataPath);
+  DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  DataPath outputDataPath = cellDataPath.createChildPath(ITKTestBase::k_OutputDataPath);
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Float.nrrd";
-  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, inputDataPath);
+  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
   COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
 
   Arguments args;
@@ -43,8 +44,9 @@ TEST_CASE("ITKLaplacianSharpeningImageFilter(default)", "[ITKImageProcessing][IT
 
   fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.view() / "JSONFilters/Baseline/BasicFilters_LaplacianSharpeningImageFilter_default.nrrd";
   DataPath baselineGeometryPath({ITKTestBase::k_BaselineGeometryPath});
-  DataPath baselineDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_BaselineDataPath);
-  Result<> readBaselineResult = ITKTestBase::ReadImage(ds, baselineFilePath, baselineGeometryPath, baselineDataPath);
+  DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);
+  Result<> readBaselineResult = ITKTestBase::ReadImage(ds, baselineFilePath, baselineGeometryPath, baseLineCellDataPath, baselineDataPath);
   Result<> compareResult = ITKTestBase::CompareImages(ds, baselineGeometryPath, baselineDataPath, inputGeometryPath, outputDataPath, 0.0001);
   COMPLEX_RESULT_REQUIRE_VALID(compareResult);
 }
@@ -56,10 +58,11 @@ TEST_CASE("ITKLaplacianSharpeningImageFilter(shortdefault)", "[ITKImageProcessin
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
-  DataPath outputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_OutputDataPath);
+  DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  DataPath outputDataPath = cellDataPath.createChildPath(ITKTestBase::k_OutputDataPath);
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
-  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, inputDataPath);
+  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
   COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
 
   Arguments args;
@@ -84,10 +87,11 @@ TEST_CASE("ITKLaplacianSharpeningImageFilter(vectordefault)", "[.][ITKImageProce
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
-  DataPath outputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_OutputDataPath);
+  DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  DataPath outputDataPath = cellDataPath.createChildPath(ITKTestBase::k_OutputDataPath);
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/fruit.png";
-  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, inputDataPath);
+  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
   COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
 
   Arguments args;

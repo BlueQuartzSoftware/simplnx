@@ -26,10 +26,11 @@ TEST_CASE("ITKBinaryMorphologicalOpeningImageFilter(BinaryMorphologicalOpening)"
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
-  DataPath outputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_OutputDataPath);
+  DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  DataPath outputDataPath = cellDataPath.createChildPath(ITKTestBase::k_OutputDataPath);
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/STAPLE1.png";
-  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, inputDataPath);
+  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
   COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
 
   Arguments args;

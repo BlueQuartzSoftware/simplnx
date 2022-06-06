@@ -24,17 +24,19 @@ TEST_CASE("ITKMaskImageFilter(2d)", "[ITKImageProcessing][ITKMaskImage][2d]")
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
-  DataPath outputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_OutputDataPath);
+  DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  DataPath outputDataPath = cellDataPath.createChildPath(ITKTestBase::k_OutputDataPath);
 
   DataPath maskGeometryPath({ITKTestBase::k_MaskGeometryPath});
-  DataPath maskDataPath = maskGeometryPath.createChildPath(ITKTestBase::k_MaskDataPath);
+  DataPath maskCellDataPath = maskGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  DataPath maskDataPath = maskCellDataPath.createChildPath(ITKTestBase::k_MaskDataPath);
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/STAPLE1.png";
-  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, inputDataPath);
+  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
   COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
 
   fs::path maskInputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/STAPLE2.png";
-  Result<> maskImageReadResult = ITKTestBase::ReadImage(ds, maskInputFilePath, maskGeometryPath, maskDataPath);
+  Result<> maskImageReadResult = ITKTestBase::ReadImage(ds, maskInputFilePath, maskGeometryPath, maskCellDataPath, maskDataPath);
   COMPLEX_RESULT_REQUIRE_VALID(maskImageReadResult);
 
   const auto& inputGeom = ds.getDataRefAs<ImageGeom>(inputGeometryPath);
@@ -65,17 +67,19 @@ TEST_CASE("ITKMaskImageFilter(cthead1)", "[ITKImageProcessing][ITKMaskImage][cth
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
-  DataPath outputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_OutputDataPath);
+  DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  DataPath outputDataPath = cellDataPath.createChildPath(ITKTestBase::k_OutputDataPath);
 
   DataPath maskGeometryPath({ITKTestBase::k_MaskGeometryPath});
-  DataPath maskDataPath = maskGeometryPath.createChildPath(ITKTestBase::k_MaskDataPath);
+  DataPath maskCellDataPath = maskGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  DataPath maskDataPath = maskCellDataPath.createChildPath(ITKTestBase::k_MaskDataPath);
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1-Float.mha";
-  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, inputDataPath);
+  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
   COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
 
   fs::path maskInputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1-mask.png";
-  Result<> maskImageReadResult = ITKTestBase::ReadImage(ds, maskInputFilePath, maskGeometryPath, maskDataPath);
+  Result<> maskImageReadResult = ITKTestBase::ReadImage(ds, maskInputFilePath, maskGeometryPath, maskCellDataPath, maskDataPath);
   COMPLEX_RESULT_REQUIRE_VALID(maskImageReadResult);
 
   const auto& inputGeom = ds.getDataRefAs<ImageGeom>(inputGeometryPath);
@@ -106,17 +110,19 @@ TEST_CASE("ITKMaskImageFilter(rgb)", "[ITKImageProcessing][ITKMaskImage][rgb]")
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
-  DataPath outputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_OutputDataPath);
+  DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  DataPath outputDataPath = cellDataPath.createChildPath(ITKTestBase::k_OutputDataPath);
 
   DataPath maskGeometryPath({ITKTestBase::k_MaskGeometryPath});
-  DataPath maskDataPath = maskGeometryPath.createChildPath(ITKTestBase::k_MaskDataPath);
+  DataPath maskCellDataPath = maskGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  DataPath maskDataPath = maskCellDataPath.createChildPath(ITKTestBase::k_MaskDataPath);
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/VM1111Shrink-RGB.png";
-  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, inputDataPath);
+  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
   COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
 
   fs::path maskInputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/VM1111Shrink-mask.png";
-  Result<> maskImageReadResult = ITKTestBase::ReadImage(ds, maskInputFilePath, maskGeometryPath, maskDataPath);
+  Result<> maskImageReadResult = ITKTestBase::ReadImage(ds, maskInputFilePath, maskGeometryPath, maskCellDataPath, maskDataPath);
   COMPLEX_RESULT_REQUIRE_VALID(maskImageReadResult);
 
   const auto& inputGeom = ds.getDataRefAs<ImageGeom>(inputGeometryPath);
@@ -150,13 +156,14 @@ TEST_CASE("ITKMaskImageFilter(cthead1_maskvalue)", "[ITKImageProcessing][ITKMask
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
-  DataPath outputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_OutputDataPath);
+  DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  DataPath outputDataPath = cellDataPath.createChildPath(ITKTestBase::k_OutputDataPath);
 
   DataPath maskGeometryPath({ITKTestBase::k_MaskGeometryPath});
   DataPath maskDataPath = maskGeometryPath.createChildPath(ITKTestBase::k_MaskDataPath);
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1.png";
-  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, inputDataPath);
+  Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
   COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
 
   fs::path maskInputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/2th_cthead1.mha";
