@@ -45,16 +45,6 @@ TEST_CASE("ITKNormalizeImageFilter(defaults)", "[ITKImageProcessing][ITKNormaliz
   DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
   DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);
   Result<> readBaselineResult = ITKTestBase::ReadImage(ds, baselineFilePath, baselineGeometryPath, baseLineCellDataPath, baselineDataPath);
-
-  {
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ITKNormalizeImageFilter_Defaults.dream3d", unit_test::k_BinaryDir));
-    H5::FileWriter fileWriter = std::move(result.value());
-
-    herr_t err = ds.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
-  }
-
-
   Result<> compareResult = ITKTestBase::CompareImages(ds, baselineGeometryPath, baselineDataPath, inputGeometryPath, outputDataPath, 0.0001);
 
   COMPLEX_RESULT_REQUIRE_VALID(compareResult);
