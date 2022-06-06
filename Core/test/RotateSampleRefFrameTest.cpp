@@ -115,7 +115,7 @@ TEST_CASE("ComplexCore::RotateSampleRefFrameFilter", "[RotateSampleRefFrameFilte
   const DataPath k_OriginalGeomPath({"Original"});
   const DataPath k_OriginalCellArrayPath = k_OriginalGeomPath.createChildPath("CellData").createChildPath("Data");
 
-  Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(fs::path(unit_test::k_TestDataSourceDir.view()) / "RotateSampleRefFrameTest.dream3d");
+  Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(fs::path(fmt::format("{}/src/Plugins/ComplexCore/data/RotateSampleRefFrameTest.dream3d", complex::unit_test::k_ComplexSourceDir)));
   COMPLEX_RESULT_REQUIRE_VALID(dataStructureResult);
 
   DataStructure dataStructure = std::move(dataStructureResult.value());
@@ -176,7 +176,7 @@ TEST_CASE("ComplexCore::RotateSampleRefFrameFilter", "[RotateSampleRefFrameFilte
 
     REQUIRE(AreImageGeomsEqual(*testAxisAngleGeom, *expectedImageGeom));
 
-    DataPath testAxisAngleArrayPath = testAxisAngleGeomPath.createChildPath(k_OriginalCellArrayPath.getTargetName());
+    DataPath testAxisAngleArrayPath = testAxisAngleGeomPath.createChildPath("CellData").createChildPath(k_OriginalCellArrayPath.getTargetName());
     auto* testAxisAngleArray = dataStructure.getDataAs<IDataArray>(testAxisAngleArrayPath);
     REQUIRE(testAxisAngleArray != nullptr);
 
@@ -210,7 +210,7 @@ TEST_CASE("ComplexCore::RotateSampleRefFrameFilter", "[RotateSampleRefFrameFilte
 
     REQUIRE(AreImageGeomsEqual(*testRotationMatrixGeom, *expectedImageGeom));
 
-    DataPath testRotationMatrixArrayPath = testRotationMatrixGeomPath.createChildPath(k_OriginalCellArrayPath.getTargetName());
+    DataPath testRotationMatrixArrayPath = testRotationMatrixGeomPath.createChildPath("CellData").createChildPath(k_OriginalCellArrayPath.getTargetName());
     auto* testRotationMatrixArray = dataStructure.getDataAs<IDataArray>(testRotationMatrixArrayPath);
     REQUIRE(testRotationMatrixArray != nullptr);
 

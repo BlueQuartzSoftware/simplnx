@@ -7,8 +7,8 @@
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
   RotateSampleRefFrameTest.cpp
-  ResampleImageGeomFilterTest.cpp
-  FillBadDataTest.cpp
+  ResampleImageGeomFilterTest.cpp   # NEEDS TEST IMPLEMENTED
+  FillBadDataTest.cpp               # NEEDS TEST IMPLEMENTED
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
