@@ -190,9 +190,9 @@ float32 DetermineSpacing(const FloatVec3& spacing, const Eigen::Vector3f& axisNe
 
   std::array<float32, 3> axes = {xAngle, yAngle, zAngle};
 
-  const auto* iter = std::max_element(axes.cbegin(), axes.cend());
+  auto result = std::max_element(axes.cbegin(), axes.cend());
 
-  usize index = std::distance(axes.cbegin(), iter);
+  usize index = std::distance(axes.cbegin(), result);
 
   return spacing[index];
 }
