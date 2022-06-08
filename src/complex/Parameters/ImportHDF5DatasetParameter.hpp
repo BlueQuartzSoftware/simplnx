@@ -88,7 +88,8 @@ public:
     }
   };
 
-  using ValueType = std::list<DatasetImportInfo>;
+  using InputFile = std::string;
+  using ValueType = std::pair<InputFile, std::list<DatasetImportInfo>>;
 
   ImportHDF5DatasetParameter() = delete;
   ImportHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);

@@ -34,6 +34,7 @@ using namespace complex;
 namespace
 {
 constexpr StringLiteral k_DataPathsKey = "datapaths";
+constexpr StringLiteral k_InputFileKey = "inputfile";
 } // namespace
 
 namespace complex
@@ -63,10 +64,11 @@ nlohmann::json ImportHDF5DatasetParameter::toJson(const std::any& value) const
   const auto& datasetImportInfo = GetAnyRef<ValueType>(value);
   nlohmann::json json;
   nlohmann::json dataPathsJson = nlohmann::json::array();
-  for(const auto& importInfo : datasetImportInfo)
+  for(const auto& importInfo : datasetImportInfo.second)
   {
     dataPathsJson.push_back(importInfo.writeJson());
   }
+  json[k_InputFileKey.str()] = datasetImportInfo.first;
   json[k_DataPathsKey.str()] = std::move(dataPathsJson);
   return json;
 }
@@ -85,13 +87,19 @@ Result<std::any> ImportHDF5DatasetParameter::fromJson(const nlohmann::json& json
     return MakeErrorResult<std::any>(-781, fmt::format("{}JSON does not contain key '{} / {}'", prefix, name(), k_DataPathsKey.view()));
   }
 
+  if(!json.contains(k_InputFileKey.view()))
+  {
+    return MakeErrorResult<std::any>(-782, fmt::format("{}JSON does not contain key '{} / {}'", prefix, name(), k_InputFileKey.view()));
+  }
+
   ValueType importData;
+  importData.first = json[k_InputFileKey.str()];
   const auto& jsonDataPaths = json[k_DataPathsKey.str()];
   if(!jsonDataPaths.is_null())
   {
     if(!jsonDataPaths.is_array())
     {
-      return MakeErrorResult<std::any>(-782, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name()));
+      return MakeErrorResult<std::any>(-783, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name()));
     }
     std::vector<Error> errors;
     for(const auto& jsonImportInfo : jsonDataPaths)
@@ -101,7 +109,7 @@ Result<std::any> ImportHDF5DatasetParameter::fromJson(const nlohmann::json& json
       {
         return {{nonstd::make_unexpected(std::move(importInfo.errors()))}};
       }
-      importData.push_back(std::move(importInfo.value()));
+      importData.second.push_back(std::move(importInfo.value()));
     }
   }
 
