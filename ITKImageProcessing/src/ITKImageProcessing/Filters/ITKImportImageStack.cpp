@@ -158,7 +158,7 @@ IFilter::PreflightResult ITKImportImageStack::preflightImpl(const DataStructure&
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto imageDataPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
 
-  std::vector<std::string> files = inputFileListInfo.generate().first;
+  std::vector<std::string> files = inputFileListInfo.generate();
 
   if(files.empty())
   {
@@ -220,7 +220,7 @@ Result<> ITKImportImageStack::executeImpl(DataStructure& dataStructure, const Ar
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto imageDataPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
 
-  std::vector<std::string> files = inputFileListInfo.generate().first;
+  std::vector<std::string> files = inputFileListInfo.generate();
 
   const std::string& firstFile = files.at(0);
 
