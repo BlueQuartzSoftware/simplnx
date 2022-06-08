@@ -151,7 +151,7 @@ Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
     return MakeErrorResult(-1, "startIndex must be less than endIndex");
   }
   // Generate the file lsit
-  auto&& fileList = value.generate();
+  auto fileList = value.generate();
   // Validate that they all exist
   std::vector<Error> errors;
   for(const auto& currentFilePath : fileList)

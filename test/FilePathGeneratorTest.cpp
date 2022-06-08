@@ -23,6 +23,6 @@ TEST_CASE("FilePathGenerator")
 
   // Generate the file list but do *NOT* validate the paths. this is a test after all
 
-  auto&& fileList = value.generate();
+  auto fileList = value.generate();
   REQUIRE(fileList.size() == 2);
 }
