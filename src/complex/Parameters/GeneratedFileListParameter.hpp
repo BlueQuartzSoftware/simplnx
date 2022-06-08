@@ -29,9 +29,13 @@ public:
     std::string fileSuffix;
     std::string fileExtension;
 
-    std::pair<std::vector<std::string>, bool> generate() const
+    std::vector<std::string> generate() const
     {
       return FilePathGenerator::GenerateFileList(startIndex, endIndex, incrementIndex, ordering, inputPath, filePrefix, fileSuffix, fileExtension, paddingDigits);
+    }
+    std::pair<std::vector<std::string>, bool> generateAndValidate(bool failFast) const
+    {
+      return FilePathGenerator::GenerateAndValidateFileList(startIndex, endIndex, incrementIndex, ordering, inputPath, filePrefix, fileSuffix, fileExtension, paddingDigits, failFast);
     }
   };
 
