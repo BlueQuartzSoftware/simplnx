@@ -82,7 +82,8 @@ TEST_CASE("ITKApproximateSignedDistanceMapImageFilter(modified_parms)", "[ITKIma
   auto executeResult = filter.execute(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.view() / "JSONFilters/Baseline/BasicFilters_ApproximateSignedDistanceMapImageFilter_modified_parms.nrrd";
+  fs::path baselineFilePath =
+      fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.view() / "JSONFilters/Baseline/BasicFilters_ApproximateSignedDistanceMapImageFilter_modified_parms.nrrd";
   DataPath baselineGeometryPath({ITKTestBase::k_BaselineGeometryPath});
   DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
   DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);

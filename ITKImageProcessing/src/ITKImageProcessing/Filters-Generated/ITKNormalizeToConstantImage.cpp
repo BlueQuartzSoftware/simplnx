@@ -15,8 +15,8 @@ using namespace complex;
 namespace cxITKNormalizeToConstantImage
 {
 using ArrayOptionsT = ITK::ScalarPixelIdTypeList;
-  //VectorPixelIDTypeList;
-template<class PixelT>
+// VectorPixelIDTypeList;
+template <class PixelT>
 using FilterOutputT = double;
 
 struct ITKNormalizeToConstantImageFunctor
@@ -32,7 +32,7 @@ struct ITKNormalizeToConstantImageFunctor
     return filter;
   }
 };
-} // namespace
+} // namespace cxITKNormalizeToConstantImage
 
 namespace complex
 {
@@ -74,8 +74,10 @@ Parameters ITKNormalizeToConstantImage::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_Constant_Key, "Constant", "", 1.0));
 
   params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}), GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, complex::ITK::GetScalarPixelAllowedTypes()));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
+                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
+                                                          complex::ITK::GetScalarPixelAllowedTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", DataPath{}));
@@ -91,35 +93,36 @@ IFilter::UniquePointer ITKNormalizeToConstantImage::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKNormalizeToConstantImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                                    const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
   auto constant = filterArgs.value<float64>(k_Constant_Key);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKNormalizeToConstantImage::ArrayOptionsT, cxITKNormalizeToConstantImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions =
+      ITK::DataCheck<cxITKNormalizeToConstantImage::ArrayOptionsT, cxITKNormalizeToConstantImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
 Result<> ITKNormalizeToConstantImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                                  const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
-  
+
   auto constant = filterArgs.value<float64>(k_Constant_Key);
 
   cxITKNormalizeToConstantImage::ITKNormalizeToConstantImageFunctor itkFunctor = {constant};
 
-// LINK GEOMETRY OUTPUT START
+  // LINK GEOMETRY OUTPUT START
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath); 
-// LINK GEOMETRY OUTPUT STOP
-  
+  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
+  // LINK GEOMETRY OUTPUT STOP
+
   return ITK::Execute<cxITKNormalizeToConstantImage::ArrayOptionsT, cxITKNormalizeToConstantImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
 }
 } // namespace complex

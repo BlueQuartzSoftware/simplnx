@@ -38,7 +38,7 @@ struct ITKBinaryThresholdImageFunctor
     return filter;
   }
 };
-} // namespace
+} // namespace cxITKBinaryThresholdImage
 
 namespace complex
 {
@@ -107,7 +107,8 @@ IFilter::PreflightResult ITKBinaryThresholdImage::preflightImpl(const DataStruct
   auto insideValue = filterArgs.value<uint8>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKBinaryThresholdImage::ArrayOptionsT, cxITKBinaryThresholdImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions =
+      ITK::DataCheck<cxITKBinaryThresholdImage::ArrayOptionsT, cxITKBinaryThresholdImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }

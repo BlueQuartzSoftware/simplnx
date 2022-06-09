@@ -15,7 +15,7 @@ using namespace complex;
 namespace cxITKThresholdMaximumConnectedComponentsImage
 {
 using ArrayOptionsT = ITK::ScalarPixelIdTypeList;
-template<class PixelT>
+template <class PixelT>
 using FilterOutputT = uint8;
 
 struct ITKThresholdMaximumConnectedComponentsImageFunctor
@@ -37,7 +37,7 @@ struct ITKThresholdMaximumConnectedComponentsImageFunctor
     return filter;
   }
 };
-} // namespace
+} // namespace cxITKThresholdMaximumConnectedComponentsImage
 
 namespace complex
 {
@@ -82,8 +82,10 @@ Parameters ITKThresholdMaximumConnectedComponentsImage::parameters() const
   params.insert(std::make_unique<UInt8Parameter>(k_OutsideValue_Key, "OutsideValue", "", 0u));
 
   params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}), GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, complex::ITK::GetScalarPixelAllowedTypes()));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
+                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
+                                                          complex::ITK::GetScalarPixelAllowedTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", DataPath{}));
@@ -99,7 +101,7 @@ IFilter::UniquePointer ITKThresholdMaximumConnectedComponentsImage::clone() cons
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKThresholdMaximumConnectedComponentsImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                                                    const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
@@ -109,19 +111,20 @@ IFilter::PreflightResult ITKThresholdMaximumConnectedComponentsImage::preflightI
   auto insideValue = filterArgs.value<uint8>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKThresholdMaximumConnectedComponentsImage::ArrayOptionsT, cxITKThresholdMaximumConnectedComponentsImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKThresholdMaximumConnectedComponentsImage::ArrayOptionsT, cxITKThresholdMaximumConnectedComponentsImage::FilterOutputT>(
+      dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
 Result<> ITKThresholdMaximumConnectedComponentsImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
-  
+
   auto minimumObjectSizeInPixels = filterArgs.value<uint32>(k_MinimumObjectSizeInPixels_Key);
   auto upperBoundary = filterArgs.value<float64>(k_UpperBoundary_Key);
   auto insideValue = filterArgs.value<uint8>(k_InsideValue_Key);
@@ -129,11 +132,12 @@ Result<> ITKThresholdMaximumConnectedComponentsImage::executeImpl(DataStructure&
 
   cxITKThresholdMaximumConnectedComponentsImage::ITKThresholdMaximumConnectedComponentsImageFunctor itkFunctor = {minimumObjectSizeInPixels, upperBoundary, insideValue, outsideValue};
 
-// LINK GEOMETRY OUTPUT START
+  // LINK GEOMETRY OUTPUT START
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath); 
-// LINK GEOMETRY OUTPUT STOP
-  
-  return ITK::Execute<cxITKThresholdMaximumConnectedComponentsImage::ArrayOptionsT, cxITKThresholdMaximumConnectedComponentsImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
+  // LINK GEOMETRY OUTPUT STOP
+
+  return ITK::Execute<cxITKThresholdMaximumConnectedComponentsImage::ArrayOptionsT, cxITKThresholdMaximumConnectedComponentsImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath,
+                                                                                                                                                  outputArrayPath, itkFunctor);
 }
 } // namespace complex

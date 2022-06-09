@@ -3,8 +3,8 @@
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
-#include "ITKImageProcessing/Filters/ITKNormalizeImage.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
+#include "ITKImageProcessing/Filters/ITKNormalizeImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -22,7 +22,8 @@ TEST_CASE("ITKNormalizeImageFilter(defaults)", "[ITKImageProcessing][ITKNormaliz
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
   DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
-  DataPath outputDataPath = cellDataPath.createChildPath(ITKTestBase::k_OutputDataPath);;
+  DataPath outputDataPath = cellDataPath.createChildPath(ITKTestBase::k_OutputDataPath);
+  ;
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/Ramp-Up-Short.nrrd";
   Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
@@ -38,7 +39,6 @@ TEST_CASE("ITKNormalizeImageFilter(defaults)", "[ITKImageProcessing][ITKNormaliz
 
   auto executeResult = filter.execute(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
-
 
   fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.view() / "JSONFilters/Baseline/BasicFilters_NormalizeImageFilter_defaults.nrrd";
   DataPath baselineGeometryPath({ITKTestBase::k_BaselineGeometryPath});
@@ -62,7 +62,6 @@ TEST_CASE("ITKNormalizeImageFilter(vector)", "[.][ITKImageProcessing][ITKNormali
   DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
   DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
   DataPath outputDataPath = cellDataPath.createChildPath(ITKTestBase::k_OutputDataPath);
-
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/VM1111Shrink-RGB.png";
   Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);

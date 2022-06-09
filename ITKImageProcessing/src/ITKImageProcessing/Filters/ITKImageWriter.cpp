@@ -211,7 +211,7 @@ Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const Im
 
   return ITK::ArraySwitchFunc<WriteImageFunctor, ArrayOptionsType>(sliceData, imageGeom, -21010, sliceData, imageGeom, fileName, indexOffset);
 }
-} // namespace
+} // namespace cxITKImageWriter
 
 namespace complex
 {

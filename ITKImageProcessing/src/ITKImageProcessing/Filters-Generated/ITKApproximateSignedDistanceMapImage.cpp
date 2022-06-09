@@ -15,7 +15,7 @@ using namespace complex;
 namespace cxITKApproximateSignedDistanceMapImage
 {
 using ArrayOptionsT = ITK::IntegerScalarPixelIdTypeList;
-template<class PixelT>
+template <class PixelT>
 using FilterOutputT = float32;
 
 struct ITKApproximateSignedDistanceMapImageFunctor
@@ -33,7 +33,7 @@ struct ITKApproximateSignedDistanceMapImageFunctor
     return filter;
   }
 };
-} // namespace
+} // namespace cxITKApproximateSignedDistanceMapImage
 
 namespace complex
 {
@@ -76,8 +76,10 @@ Parameters ITKApproximateSignedDistanceMapImage::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_OutsideValue_Key, "OutsideValue", "", 0u));
 
   params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}), GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, complex::ITK::GetIntegerScalarPixelAllowedTypes()));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
+                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
+                                                          complex::ITK::GetIntegerScalarPixelAllowedTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", DataPath{}));
@@ -93,7 +95,7 @@ IFilter::UniquePointer ITKApproximateSignedDistanceMapImage::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKApproximateSignedDistanceMapImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                                             const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
@@ -101,29 +103,31 @@ IFilter::PreflightResult ITKApproximateSignedDistanceMapImage::preflightImpl(con
   auto insideValue = filterArgs.value<float64>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<float64>(k_OutsideValue_Key);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKApproximateSignedDistanceMapImage::ArrayOptionsT, cxITKApproximateSignedDistanceMapImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions =
+      ITK::DataCheck<cxITKApproximateSignedDistanceMapImage::ArrayOptionsT, cxITKApproximateSignedDistanceMapImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
 Result<> ITKApproximateSignedDistanceMapImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                                           const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
-  
+
   auto insideValue = filterArgs.value<float64>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<float64>(k_OutsideValue_Key);
 
   cxITKApproximateSignedDistanceMapImage::ITKApproximateSignedDistanceMapImageFunctor itkFunctor = {insideValue, outsideValue};
 
-// LINK GEOMETRY OUTPUT START
+  // LINK GEOMETRY OUTPUT START
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath); 
-// LINK GEOMETRY OUTPUT STOP
-  
-  return ITK::Execute<cxITKApproximateSignedDistanceMapImage::ArrayOptionsT, cxITKApproximateSignedDistanceMapImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
+  // LINK GEOMETRY OUTPUT STOP
+
+  return ITK::Execute<cxITKApproximateSignedDistanceMapImage::ArrayOptionsT, cxITKApproximateSignedDistanceMapImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+                                                                                                                                    itkFunctor);
 }
 } // namespace complex

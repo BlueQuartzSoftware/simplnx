@@ -16,7 +16,7 @@ using namespace complex;
 namespace cxITKRegionalMaximaImage
 {
 using ArrayOptionsT = ITK::ScalarPixelIdTypeList;
-template<class PixelT>
+template <class PixelT>
 using FilterOutputT = uint32;
 
 struct ITKRegionalMaximaImageFunctor
@@ -38,7 +38,7 @@ struct ITKRegionalMaximaImageFunctor
     return filter;
   }
 };
-} // namespace
+} // namespace cxITKRegionalMaximaImage
 
 namespace complex
 {
@@ -83,8 +83,10 @@ Parameters ITKRegionalMaximaImage::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_FlatIsMaxima_Key, "FlatIsMaxima", "", true));
 
   params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}), GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, complex::ITK::GetScalarPixelAllowedTypes()));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
+                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
+                                                          complex::ITK::GetScalarPixelAllowedTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", DataPath{}));
@@ -100,7 +102,7 @@ IFilter::UniquePointer ITKRegionalMaximaImage::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKRegionalMaximaImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                               const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
@@ -110,19 +112,20 @@ IFilter::PreflightResult ITKRegionalMaximaImage::preflightImpl(const DataStructu
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
   auto flatIsMaxima = filterArgs.value<bool>(k_FlatIsMaxima_Key);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKRegionalMaximaImage::ArrayOptionsT, cxITKRegionalMaximaImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions =
+      ITK::DataCheck<cxITKRegionalMaximaImage::ArrayOptionsT, cxITKRegionalMaximaImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
 Result<> ITKRegionalMaximaImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                             const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
-  
+
   auto backgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   auto foregroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
@@ -130,11 +133,11 @@ Result<> ITKRegionalMaximaImage::executeImpl(DataStructure& dataStructure, const
 
   cxITKRegionalMaximaImage::ITKRegionalMaximaImageFunctor itkFunctor = {backgroundValue, foregroundValue, fullyConnected, flatIsMaxima};
 
-// LINK GEOMETRY OUTPUT START
+  // LINK GEOMETRY OUTPUT START
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath); 
-// LINK GEOMETRY OUTPUT STOP
-  
+  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
+  // LINK GEOMETRY OUTPUT STOP
+
   return ITK::Execute<cxITKRegionalMaximaImage::ArrayOptionsT, cxITKRegionalMaximaImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
 }
 } // namespace complex

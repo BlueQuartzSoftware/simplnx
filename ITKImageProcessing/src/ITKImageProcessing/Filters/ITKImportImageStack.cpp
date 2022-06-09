@@ -92,7 +92,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
 
   return {};
 }
-} // namespace
+} // namespace cxITKImportImageStack
 
 namespace complex
 {

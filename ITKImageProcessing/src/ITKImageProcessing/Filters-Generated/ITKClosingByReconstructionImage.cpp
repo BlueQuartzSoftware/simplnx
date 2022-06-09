@@ -28,7 +28,7 @@ struct ITKClosingByReconstructionImageFunctor
   template <class InputImageT, class OutputImageT, uint32 Dimension>
   auto createFilter() const
   {
-    using FilterT = itk::ClosingByReconstructionImageFilter<InputImageT, OutputImageT, itk::FlatStructuringElement< InputImageT::ImageDimension > >;
+    using FilterT = itk::ClosingByReconstructionImageFilter<InputImageT, OutputImageT, itk::FlatStructuringElement<InputImageT::ImageDimension>>;
     auto filter = FilterT::New();
     auto kernel = itk::simple::CreateKernel<Dimension>(kernelType, kernelRadius);
     filter->SetKernel(kernel);
@@ -37,7 +37,7 @@ struct ITKClosingByReconstructionImageFunctor
     return filter;
   }
 };
-} // namespace
+} // namespace cxITKClosingByReconstructionImage
 
 namespace complex
 {
@@ -82,8 +82,10 @@ Parameters ITKClosingByReconstructionImage::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_PreserveIntensities_Key, "PreserveIntensities", "", false));
 
   params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}), GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, complex::ITK::GetScalarPixelAllowedTypes()));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
+                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
+                                                          complex::ITK::GetScalarPixelAllowedTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", DataPath{}));
@@ -99,7 +101,7 @@ IFilter::UniquePointer ITKClosingByReconstructionImage::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKClosingByReconstructionImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                                        const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
@@ -116,12 +118,12 @@ IFilter::PreflightResult ITKClosingByReconstructionImage::preflightImpl(const Da
 
 //------------------------------------------------------------------------------
 Result<> ITKClosingByReconstructionImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                                      const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
-  
+
   auto kernelRadius = filterArgs.value<VectorParameter<uint32>::ValueType>(k_KernelRadius_Key);
   auto kernelType = static_cast<itk::simple::KernelEnum>(filterArgs.value<uint64>(k_KernelType_Key));
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
@@ -129,11 +131,11 @@ Result<> ITKClosingByReconstructionImage::executeImpl(DataStructure& dataStructu
 
   cxITKClosingByReconstructionImage::ITKClosingByReconstructionImageFunctor itkFunctor = {kernelRadius, kernelType, fullyConnected, preserveIntensities};
 
-// LINK GEOMETRY OUTPUT START
+  // LINK GEOMETRY OUTPUT START
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath); 
-// LINK GEOMETRY OUTPUT STOP
-  
+  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
+  // LINK GEOMETRY OUTPUT STOP
+
   return ITK::Execute<cxITKClosingByReconstructionImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
 }
 } // namespace complex

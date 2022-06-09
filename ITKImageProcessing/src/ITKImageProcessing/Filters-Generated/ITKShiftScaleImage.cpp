@@ -16,7 +16,7 @@ using namespace complex;
 namespace cxITKShiftScaleImage
 {
 using ArrayOptionsT = ITK::ScalarPixelIdTypeList;
-  //VectorPixelIDTypeList;
+// VectorPixelIDTypeList;
 
 struct ITKShiftScaleImageFunctor
 {
@@ -36,7 +36,7 @@ struct ITKShiftScaleImageFunctor
     return filter;
   }
 };
-} // namespace
+} // namespace cxITKShiftScaleImage
 
 namespace complex
 {
@@ -80,8 +80,10 @@ Parameters ITKShiftScaleImage::parameters() const
   params.insert(std::make_unique<VectorParameter<uint32>>(k_OutputPixelType_Key, "KernelRadius", "", itk::simple::sitkUnknown, std::vector<std::string>(3)));
 
   params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}), GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, complex::ITK::GetScalarPixelAllowedTypes()));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
+                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
+                                                          complex::ITK::GetScalarPixelAllowedTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", DataPath{}));
@@ -97,7 +99,7 @@ IFilter::UniquePointer ITKShiftScaleImage::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKShiftScaleImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                           const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
@@ -113,23 +115,23 @@ IFilter::PreflightResult ITKShiftScaleImage::preflightImpl(const DataStructure& 
 
 //------------------------------------------------------------------------------
 Result<> ITKShiftScaleImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                         const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
-  
+
   auto shift = filterArgs.value<float64>(k_Shift_Key);
   auto scale = filterArgs.value<float64>(k_Scale_Key);
   auto outputPixelType = filterArgs.value<VectorParameter<uint32>::ValueType>(k_OutputPixelType_Key);
 
   cxITKShiftScaleImage::ITKShiftScaleImageFunctor itkFunctor = {shift, scale, outputPixelType};
 
-// LINK GEOMETRY OUTPUT START
+  // LINK GEOMETRY OUTPUT START
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath); 
-// LINK GEOMETRY OUTPUT STOP
-  
+  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
+  // LINK GEOMETRY OUTPUT STOP
+
   return ITK::Execute<cxITKShiftScaleImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
 }
 } // namespace complex

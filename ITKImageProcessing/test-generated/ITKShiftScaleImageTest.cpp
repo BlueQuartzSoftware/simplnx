@@ -104,7 +104,8 @@ TEST_CASE("ITKShiftScaleImageFilter(OutputPixel)", "[ITKImageProcessing][ITKShif
   args.insertOrAssign(ITKShiftScaleImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
   args.insertOrAssign(ITKShiftScaleImage::k_Shift_Key, std::make_any<Float64Parameter::ValueType>(32769));
   args.insertOrAssign(ITKShiftScaleImage::k_Scale_Key, std::make_any<Float64Parameter::ValueType>(0.00389099121));
-  args.insertOrAssign(ITKShiftScaleImage::k_OutputPixelType_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{itk::simple::sitkUInt8, itk::simple::sitkUInt8, itk::simple::sitkUInt8}));
+  args.insertOrAssign(ITKShiftScaleImage::k_OutputPixelType_Key,
+                      std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{itk::simple::sitkUInt8, itk::simple::sitkUInt8, itk::simple::sitkUInt8}));
 
   auto preflightResult = filter.preflight(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -138,7 +139,8 @@ TEST_CASE("ITKShiftScaleImageFilter(OutputOverflow)", "[ITKImageProcessing][ITKS
   args.insertOrAssign(ITKShiftScaleImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
   args.insertOrAssign(ITKShiftScaleImage::k_Shift_Key, std::make_any<Float64Parameter::ValueType>(-1000));
   args.insertOrAssign(ITKShiftScaleImage::k_Scale_Key, std::make_any<Float64Parameter::ValueType>(2));
-  args.insertOrAssign(ITKShiftScaleImage::k_OutputPixelType_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{itk::simple::sitkInt8, itk::simple::sitkInt8, itk::simple::sitkInt8}));
+  args.insertOrAssign(ITKShiftScaleImage::k_OutputPixelType_Key,
+                      std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{itk::simple::sitkInt8, itk::simple::sitkInt8, itk::simple::sitkInt8}));
 
   auto preflightResult = filter.preflight(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);

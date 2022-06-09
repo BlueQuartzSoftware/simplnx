@@ -74,7 +74,11 @@ TEST_CASE("ITKSmoothingRecursiveGaussianImageFilter(rgb_image)", "[ITKImageProce
   args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
-  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_Sigma_Key, std::make_any<VectorUInt32Parameter::ValueType>(VectorUInt32Parameter::ValueType{5.0,5.0,5.0,}));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_Sigma_Key, std::make_any<VectorUInt32Parameter::ValueType>(VectorUInt32Parameter::ValueType{
+                                                                           5.0,
+                                                                           5.0,
+                                                                           5.0,
+                                                                       }));
 
   auto preflightResult = filter.preflight(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);

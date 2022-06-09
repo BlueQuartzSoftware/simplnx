@@ -31,7 +31,7 @@ struct ITKMedianImageFunctor
     return filter;
   }
 };
-} // namespace
+} // namespace cxITKMedianImage
 
 namespace complex
 {

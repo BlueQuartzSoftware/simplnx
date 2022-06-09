@@ -11,8 +11,8 @@ namespace complex
  * @class ITKOpeningByReconstructionImage
  * @brief Opening by reconstruction of an image.
  *
- * This filter preserves regions, in the foreground, that can completely contain the structuring element. At the same time, this filter eliminates all other regions of foreground pixels. Contrary to the
- * morphological opening, the opening by reconstruction preserves the shape of the components that are not removed by erosion. The opening by reconstruction of an image "f" is defined as:
+ * This filter preserves regions, in the foreground, that can completely contain the structuring element. At the same time, this filter eliminates all other regions of foreground pixels. Contrary to
+ * the morphological opening, the opening by reconstruction preserves the shape of the components that are not removed by erosion. The opening by reconstruction of an image "f" is defined as:
  *
  * OpeningByReconstruction(f) = DilationByRecontruction(f, Erosion(f)).
  *

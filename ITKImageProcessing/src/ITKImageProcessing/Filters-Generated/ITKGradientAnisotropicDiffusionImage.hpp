@@ -9,7 +9,7 @@ namespace complex
 {
 /**
  * @class ITKGradientAnisotropicDiffusionImage
- * @brief 
+ * @brief
  *
  * This filter performs anisotropic diffusion on a scalar itk::Image using the classic Perona-Malik, gradient magnitude based equation implemented in itkGradientNDAnisotropicDiffusionFunction. For
  * detailed information on anisotropic diffusion, see itkAnisotropicDiffusionFunction and itkGradientNDAnisotropicDiffusionFunction.

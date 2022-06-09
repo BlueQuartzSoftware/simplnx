@@ -11,7 +11,7 @@ namespace complex
  * @class ITKLogImage
  * @brief Computes the log() of each pixel.
  *
- * 
+ *
  *
  * ITK Module: ITKImageIntensity
  * ITK Group: ImageIntensity

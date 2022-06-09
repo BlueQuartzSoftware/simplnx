@@ -74,7 +74,7 @@ TEST_CASE("ITKBinaryDilateImageFilter(BinaryDilateVectorRadius)", "[ITKImageProc
   args.insertOrAssign(ITKBinaryDilateImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKBinaryDilateImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKBinaryDilateImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
-  args.insertOrAssign(ITKBinaryDilateImage::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{[20, 1], [20, 1], [20, 1]}));
+  args.insertOrAssign(ITKBinaryDilateImage::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{[20, 1], [ 20, 1 ], [ 20, 1 ]}));
   args.insertOrAssign(ITKBinaryDilateImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBox));
   args.insertOrAssign(ITKBinaryDilateImage::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(255));
 
