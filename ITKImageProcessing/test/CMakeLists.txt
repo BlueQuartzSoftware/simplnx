@@ -5,9 +5,9 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ITKImageWriterTest.cpp
 
   ITKAbsImageTest.cpp
-  # ITKAcosImageTest.cpp
-  # ITKAsinImageTest.cpp
-  # ITKAtanImageTest.cpp
+   ITKAcosImageTest.cpp
+   ITKAsinImageTest.cpp
+   ITKAtanImageTest.cpp
   # ITKBilateralImageTest.cpp
   # ITKBinaryClosingByReconstructionImageTest.cpp
   # ITKBinaryContourImageTest.cpp
@@ -21,7 +21,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   # ITKBinomialBlurImageTest.cpp
   # ITKBlackTopHatImageTest.cpp
   # ITKClosingByReconstructionImageTest.cpp
-  # ITKCosImageTest.cpp
+  ITKCosImageTest.cpp
   # ITKDilateObjectMorphologyImageTest.cpp
   # ITKErodeObjectMorphologyImageTest.cpp
   # ITKExpImageTest.cpp
@@ -39,8 +39,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   # ITKInvertIntensityImageTest.cpp
   # ITKLabelContourImageTest.cpp
   # ITKLaplacianSharpeningImageTest.cpp
-  # ITKLog10ImageTest.cpp
-  # ITKLogImageTest.cpp
+   ITKLog10ImageTest.cpp
+   ITKLogImageTest.cpp
   # ITKMaximumProjectionImageTest.cpp
   # ITKMedianProjectionImageTest.cpp
   # ITKMinimumProjectionImageTest.cpp
@@ -53,11 +53,11 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   # ITKShiftScaleImageTest.cpp
   # ITKShotNoiseImageTest.cpp
   # ITKSigmoidImageTest.cpp
-  # ITKSinImageTest.cpp
+   ITKSinImageTest.cpp
   # ITKSpeckleNoiseImageTest.cpp
-  # ITKSqrtImageTest.cpp
+   ITKSqrtImageTest.cpp
   # ITKSquareImageTest.cpp
-  # ITKTanImageTest.cpp
+   ITKTanImageTest.cpp
   # ITKThresholdImageTest.cpp
   # ITKValuedRegionalMaximaImageTest.cpp
   # ITKValuedRegionalMinimaImageTest.cpp

@@ -48,9 +48,9 @@ set(FilterList
   ITKImportImageStack
 
   ITKAbsImage
-  # ITKAcosImage
-  # ITKAsinImage
-  # ITKAtanImage
+   ITKAcosImage
+   ITKAsinImage
+   ITKAtanImage
   # ITKBilateralImage
   # ITKBinaryClosingByReconstructionImage
   # ITKBinaryContourImage
@@ -64,7 +64,7 @@ set(FilterList
   # ITKBinomialBlurImage
   # ITKBlackTopHatImage
   # ITKClosingByReconstructionImage
-  # ITKCosImage
+   ITKCosImage
   # ITKDilateObjectMorphologyImage
   # ITKErodeObjectMorphologyImage
   # ITKExpImage
@@ -82,8 +82,8 @@ set(FilterList
   # ITKInvertIntensityImage
   # ITKLabelContourImage
   # ITKLaplacianSharpeningImage
-  # ITKLog10Image
-  # ITKLogImage
+   ITKLog10Image
+   ITKLogImage
   # ITKMaximumProjectionImage
   # ITKMedianProjectionImage
   # ITKMinimumProjectionImage
@@ -96,11 +96,11 @@ set(FilterList
   # ITKShiftScaleImage
   # ITKShotNoiseImage
   # ITKSigmoidImage
-  # ITKSinImage
+   ITKSinImage
   # ITKSpeckleNoiseImage
-  # ITKSqrtImage
+   ITKSqrtImage
   # ITKSquareImage
-  # ITKTanImage
+   ITKTanImage
   # ITKThresholdImage
   # ITKValuedRegionalMaximaImage
   # ITKValuedRegionalMinimaImage
