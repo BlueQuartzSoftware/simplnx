@@ -47,7 +47,7 @@ set(FilterList
   ITKImageWriter
   ITKImportImageStack
 
-  # ITKAbsImage
+  ITKAbsImage
   # ITKAcosImage
   # ITKAsinImage
   # ITKAtanImage
