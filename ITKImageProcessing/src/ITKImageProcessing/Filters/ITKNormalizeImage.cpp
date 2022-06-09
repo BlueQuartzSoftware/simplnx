@@ -28,7 +28,7 @@ struct ITKNormalizeImageFunctor
     return filter;
   }
 };
-} // namespace
+} // namespace cxITKNormalizeImage
 
 namespace complex
 {

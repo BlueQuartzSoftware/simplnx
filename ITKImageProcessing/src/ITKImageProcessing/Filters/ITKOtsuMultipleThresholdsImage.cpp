@@ -41,7 +41,7 @@ struct ITKOtsuMultipleThresholdsImageFunctor
     return filter;
   }
 };
-} // namespace
+} // namespace cxITKOtsuMultipleThresholdsImage
 
 namespace complex
 {
@@ -112,7 +112,8 @@ IFilter::PreflightResult ITKOtsuMultipleThresholdsImage::preflightImpl(const Dat
   auto valleyEmphasis = filterArgs.value<bool>(k_ValleyEmphasis_Key);
   auto returnBinMidpoint = filterArgs.value<bool>(k_ReturnBinMidpoint_Key);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKOtsuMultipleThresholdsImage::ArrayOptionsT, cxITKOtsuMultipleThresholdsImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions =
+      ITK::DataCheck<cxITKOtsuMultipleThresholdsImage::ArrayOptionsT, cxITKOtsuMultipleThresholdsImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }

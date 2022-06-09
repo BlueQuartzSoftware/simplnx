@@ -32,7 +32,7 @@ struct ITKGradientMagnitudeImageFunctor
     return filter;
   }
 };
-} // namespace
+} // namespace cxITKGradientMagnitudeImage
 
 namespace complex
 {
@@ -96,7 +96,8 @@ IFilter::PreflightResult ITKGradientMagnitudeImage::preflightImpl(const DataStru
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
   auto useImageSpacing = filterArgs.value<bool>(k_UseImageSpacing_Key);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKGradientMagnitudeImage::ArrayOptionsT, cxITKGradientMagnitudeImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions =
+      ITK::DataCheck<cxITKGradientMagnitudeImage::ArrayOptionsT, cxITKGradientMagnitudeImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }

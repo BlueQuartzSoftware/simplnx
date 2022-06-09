@@ -15,7 +15,7 @@ using namespace complex;
 namespace cxITKZeroCrossingImage
 {
 using ArrayOptionsT = ITK::SignedIntegerScalarPixelIdTypeList;
-template<class PixelT>
+template <class PixelT>
 using FilterOutputT = uint8;
 
 struct ITKZeroCrossingImageFunctor
@@ -33,7 +33,7 @@ struct ITKZeroCrossingImageFunctor
     return filter;
   }
 };
-} // namespace
+} // namespace cxITKZeroCrossingImage
 
 namespace complex
 {
@@ -76,8 +76,10 @@ Parameters ITKZeroCrossingImage::parameters() const
   params.insert(std::make_unique<UInt8Parameter>(k_BackgroundValue_Key, "BackgroundValue", "", 0u));
 
   params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}), GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, complex::ITK::GetSignedIntegerScalarPixelAllowedTypes()));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
+                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
+                                                          complex::ITK::GetSignedIntegerScalarPixelAllowedTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", DataPath{}));
@@ -101,7 +103,8 @@ IFilter::PreflightResult ITKZeroCrossingImage::preflightImpl(const DataStructure
   auto foregroundValue = filterArgs.value<uint8>(k_ForegroundValue_Key);
   auto backgroundValue = filterArgs.value<uint8>(k_BackgroundValue_Key);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKZeroCrossingImage::ArrayOptionsT, cxITKZeroCrossingImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions =
+      ITK::DataCheck<cxITKZeroCrossingImage::ArrayOptionsT, cxITKZeroCrossingImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
@@ -113,17 +116,17 @@ Result<> ITKZeroCrossingImage::executeImpl(DataStructure& dataStructure, const A
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
-  
+
   auto foregroundValue = filterArgs.value<uint8>(k_ForegroundValue_Key);
   auto backgroundValue = filterArgs.value<uint8>(k_BackgroundValue_Key);
 
   cxITKZeroCrossingImage::ITKZeroCrossingImageFunctor itkFunctor = {foregroundValue, backgroundValue};
 
-// LINK GEOMETRY OUTPUT START
+  // LINK GEOMETRY OUTPUT START
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath); 
-// LINK GEOMETRY OUTPUT STOP
-  
+  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
+  // LINK GEOMETRY OUTPUT STOP
+
   return ITK::Execute<cxITKZeroCrossingImage::ArrayOptionsT, cxITKZeroCrossingImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
 }
 } // namespace complex

@@ -9,7 +9,7 @@ namespace complex
 {
 /**
  * @class ITKSignedDanielssonDistanceMapImage
- * @brief 
+ * @brief
  *
  * This class is parameterized over the type of the input image and the type of the output image.
  *

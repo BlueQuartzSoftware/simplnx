@@ -11,7 +11,7 @@ namespace complex
  * @class ITKSquareImage
  * @brief Computes the square of the intensity values pixel-wise.
  *
- * 
+ *
  *
  * ITK Module: ITKImageIntensity
  * ITK Group: ImageIntensity

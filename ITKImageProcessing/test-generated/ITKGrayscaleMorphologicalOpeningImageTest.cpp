@@ -52,7 +52,8 @@ TEST_CASE("ITKGrayscaleMorphologicalOpeningImageFilter(GrayscaleMorphologicalOpe
   REQUIRE(md5Hash == "867de5ed8cf49c4657e1545bd57f2c23");
 }
 
-TEST_CASE("ITKGrayscaleMorphologicalOpeningImageFilter(GrayscaleMorphologicalOpeningVectorRadius1)", "[ITKImageProcessing][ITKGrayscaleMorphologicalOpeningImage][GrayscaleMorphologicalOpeningVectorRadius1]")
+TEST_CASE("ITKGrayscaleMorphologicalOpeningImageFilter(GrayscaleMorphologicalOpeningVectorRadius1)",
+          "[ITKImageProcessing][ITKGrayscaleMorphologicalOpeningImage][GrayscaleMorphologicalOpeningVectorRadius1]")
 {
   DataStructure ds;
   ITKGrayscaleMorphologicalOpeningImage filter;
@@ -72,7 +73,7 @@ TEST_CASE("ITKGrayscaleMorphologicalOpeningImageFilter(GrayscaleMorphologicalOpe
   args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
-  args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{[20, 5, 2], [20, 5, 2], [20, 5, 2]}));
+  args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{[20, 5, 2], [ 20, 5, 2 ], [ 20, 5, 2 ]}));
   args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkCross));
 
   auto preflightResult = filter.preflight(ds, args);
@@ -85,7 +86,8 @@ TEST_CASE("ITKGrayscaleMorphologicalOpeningImageFilter(GrayscaleMorphologicalOpe
   REQUIRE(md5Hash == "5651a92320cfd9f01be4463131a4e573");
 }
 
-TEST_CASE("ITKGrayscaleMorphologicalOpeningImageFilter(GrayscaleMorphologicalOpeningVectorRadius2)", "[ITKImageProcessing][ITKGrayscaleMorphologicalOpeningImage][GrayscaleMorphologicalOpeningVectorRadius2]")
+TEST_CASE("ITKGrayscaleMorphologicalOpeningImageFilter(GrayscaleMorphologicalOpeningVectorRadius2)",
+          "[ITKImageProcessing][ITKGrayscaleMorphologicalOpeningImage][GrayscaleMorphologicalOpeningVectorRadius2]")
 {
   DataStructure ds;
   ITKGrayscaleMorphologicalOpeningImage filter;
@@ -105,7 +107,7 @@ TEST_CASE("ITKGrayscaleMorphologicalOpeningImageFilter(GrayscaleMorphologicalOpe
   args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
-  args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{[20, 5], [20, 5], [20, 5]}));
+  args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{[20, 5], [ 20, 5 ], [ 20, 5 ]}));
   args.insertOrAssign(ITKGrayscaleMorphologicalOpeningImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBox));
 
   auto preflightResult = filter.preflight(ds, args);

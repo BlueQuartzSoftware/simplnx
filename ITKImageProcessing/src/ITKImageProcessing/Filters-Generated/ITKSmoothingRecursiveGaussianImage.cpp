@@ -20,7 +20,7 @@ using ArrayOptionsT = ITK::UNKNOWN PIXEL TYPE;
 struct ITKSmoothingRecursiveGaussianImageFunctor
 {
   using InputRadiusType = std::vector<float64>;
-  InputRadiusType sigma = std::vector<double>(3,1.0);
+  InputRadiusType sigma = std::vector<double>(3, 1.0);
   bool normalizeAcrossScale = false;
 
   template <class InputImageT, class OutputImageT, uint32 Dimension>
@@ -36,7 +36,7 @@ struct ITKSmoothingRecursiveGaussianImageFunctor
     return filter;
   }
 };
-} // namespace
+} // namespace cxITKSmoothingRecursiveGaussianImage
 
 namespace complex
 {
@@ -75,13 +75,15 @@ Parameters ITKSmoothingRecursiveGaussianImage::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Filter Parameters"});
-  params.insert(std::make_unique<VectorUInt32Parameter>(k_Radius_Key, "Radius", "Radius Dimensions XYZ", std::vector<double>(3,1.0), std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorUInt32Parameter>(k_Radius_Key, "Radius", "Radius Dimensions XYZ", std::vector<double>(3, 1.0), std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insert(std::make_unique<BoolParameter>(k_NormalizeAcrossScale_Key, "NormalizeAcrossScale", "", false));
 
   params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}), GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, UNKNOWN INPUT PIXEL TYPE));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
+                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, UNKNOWN INPUT PIXEL TYPE));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", DataPath{}));
@@ -97,7 +99,7 @@ IFilter::UniquePointer ITKSmoothingRecursiveGaussianImage::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKSmoothingRecursiveGaussianImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                                           const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
@@ -113,23 +115,23 @@ IFilter::PreflightResult ITKSmoothingRecursiveGaussianImage::preflightImpl(const
 
 //------------------------------------------------------------------------------
 Result<> ITKSmoothingRecursiveGaussianImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                                         const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
-  
+
   auto sigma = filterArgs.value<VectorUInt32Parameter::ValueType>(k_Radius_Key);
 
   auto normalizeAcrossScale = filterArgs.value<bool>(k_NormalizeAcrossScale_Key);
 
   cxITKSmoothingRecursiveGaussianImage::ITKSmoothingRecursiveGaussianImageFunctor itkFunctor = {sigma, normalizeAcrossScale};
 
-// LINK GEOMETRY OUTPUT START
+  // LINK GEOMETRY OUTPUT START
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath); 
-// LINK GEOMETRY OUTPUT STOP
-  
+  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
+  // LINK GEOMETRY OUTPUT STOP
+
   return ITK::Execute<cxITKSmoothingRecursiveGaussianImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
 }
 } // namespace complex

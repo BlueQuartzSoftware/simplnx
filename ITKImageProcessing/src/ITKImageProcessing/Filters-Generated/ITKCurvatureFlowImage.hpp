@@ -11,8 +11,8 @@ namespace complex
  * @class ITKCurvatureFlowImage
  * @brief Denoise an image using curvature driven flow.
  *
- * CurvatureFlowImageFilter implements a curvature driven image denoising algorithm. Iso-brightness contours in the grayscale input image are viewed as a level set. The level set is then evolved using a
- * curvature-based speed function:
+ * CurvatureFlowImageFilter implements a curvature driven image denoising algorithm. Iso-brightness contours in the grayscale input image are viewed as a level set. The level set is then evolved using
+ * a curvature-based speed function:
  *
  *  \f[ I_t = \kappa |\nabla I| \f] where \f$ \kappa \f$ is the curvature.
  *

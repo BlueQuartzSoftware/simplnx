@@ -11,8 +11,8 @@ namespace complex
  * @class ITKBinaryErodeImage
  * @brief Fast binary erosion of a single intensity value in the image.
  *
- * BinaryErodeImageFilter is a binary erosion morphologic operation on the foreground of an image. Only the value designated by the intensity value "SetForegroundValue()" (alias as SetErodeValue() ) is
- * considered as foreground, and other intensity values are considered background.
+ * BinaryErodeImageFilter is a binary erosion morphologic operation on the foreground of an image. Only the value designated by the intensity value "SetForegroundValue()" (alias as SetErodeValue() )
+ * is considered as foreground, and other intensity values are considered background.
  *
  * Gray scale images can be processed as binary images by selecting a "ForegroundValue" (alias "ErodeValue"). Pixel values matching the erode value are considered the "foreground" and all other pixels
  * are "background". This is useful in processing segmented images where all pixels in segment #1 have value 1 and pixels in segment #2 have value 2, etc. A particular "segment number" can be

@@ -102,7 +102,7 @@ struct ITKMaskImageFunctor
     return filter;
   }
 };
-} // namespace
+} // namespace cxITKMaskImage
 
 namespace complex
 {

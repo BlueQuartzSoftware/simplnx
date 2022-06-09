@@ -9,7 +9,8 @@ namespace complex
 {
 /**
  * @class ITKLaplacianSharpeningImage
- * @brief This filter sharpens an image using a Laplacian. LaplacianSharpening highlights regions of rapid intensity change and therefore highlights or enhances the edges. The result is an image that appears more in focus.
+ * @brief This filter sharpens an image using a Laplacian. LaplacianSharpening highlights regions of rapid intensity change and therefore highlights or enhances the edges. The result is an image that
+ * appears more in focus.
  *
  * \par The LaplacianSharpening at each pixel location is computed by
  * convolution with the itk::LaplacianOperator .

@@ -29,7 +29,7 @@ struct ITKGrayscaleFillholeImageFunctor
     return filter;
   }
 };
-} // namespace
+} // namespace cxITKGrayscaleFillholeImage
 
 namespace complex
 {

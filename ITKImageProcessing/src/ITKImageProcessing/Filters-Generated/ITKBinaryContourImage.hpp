@@ -11,8 +11,8 @@ namespace complex
  * @class ITKBinaryContourImage
  * @brief Labels the pixels on the border of the objects in a binary image.
  *
- * BinaryContourImageFilter takes a binary image as input, where the pixels in the objects are the pixels with a value equal to ForegroundValue. Only the pixels on the contours of the objects are kept.
- * The pixels not on the border are changed to BackgroundValue.
+ * BinaryContourImageFilter takes a binary image as input, where the pixels in the objects are the pixels with a value equal to ForegroundValue. Only the pixels on the contours of the objects are
+ * kept. The pixels not on the border are changed to BackgroundValue.
  *
  * The connectivity can be changed to minimum or maximum connectivity with SetFullyConnected() . Full connectivity produces thicker contours.
  *
