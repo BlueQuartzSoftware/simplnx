@@ -4,7 +4,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ITKImageReaderTest.cpp
   ITKImageWriterTest.cpp
 
-  # ITKAbsImageTest.cpp
+  ITKAbsImageTest.cpp
   # ITKAcosImageTest.cpp
   # ITKAsinImageTest.cpp
   # ITKAtanImageTest.cpp
