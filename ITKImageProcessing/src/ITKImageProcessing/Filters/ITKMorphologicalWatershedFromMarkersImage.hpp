@@ -61,7 +61,8 @@ public:
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_MarkWatershedLine_Key = "MarkWatershedLine";
   static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
-  static inline constexpr StringLiteral k_MarkerImageDataPath_Key = "MarkerImageDataPath";
+  static inline constexpr StringLiteral k_ImageDataPath_Key = "ImageDataPath";
+  static inline constexpr StringLiteral k_MarkerImage_Key = "MarkerImage";
 
   /**
    * @brief Returns the name of the filter.
@@ -113,6 +114,7 @@ protected:
    * @param ds The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
+   * @param shouldCancel Boolean that gets set if the filter should stop executing and return
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   PreflightResult preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
@@ -123,6 +125,7 @@ protected:
    * @param ds The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
+   * @param shouldCancel Boolean that gets set if the filter should stop executing and return
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;

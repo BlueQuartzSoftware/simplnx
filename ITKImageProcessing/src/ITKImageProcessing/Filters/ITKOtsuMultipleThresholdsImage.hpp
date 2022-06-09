@@ -12,8 +12,8 @@ namespace complex
  * @brief Threshold an image using multiple Otsu Thresholds.
  *
  * This filter creates a labeled image that separates the input image into various classes. The filter computes the thresholds using the OtsuMultipleThresholdsCalculator and applies those thresholds
- * to the input image using the ThresholdLabelerImageFilter. The NumberOfHistogramBins and NumberOfThresholds can be set for the Calculator. The LabelOffset can be set for the
- * ThresholdLabelerImageFilter.
+ * to the input image using the ThresholdLabelerImageFilter . The NumberOfHistogramBins and NumberOfThresholds can be set for the Calculator. The LabelOffset can be set for the
+ * ThresholdLabelerImageFilter .
  *
  * This filter also includes an option to use the valley emphasis algorithm from H.F. Ng, "Automatic thresholding for defect detection", Pattern Recognition Letters, (27): 1644-1649, 2006. The valley
  * emphasis algorithm is particularly effective when the object to be thresholded is small. See the following tests for examples: itkOtsuMultipleThresholdsImageFilterTest3 and
@@ -102,6 +102,7 @@ protected:
    * @param ds The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
+   * @param shouldCancel Boolean that gets set if the filter should stop executing and return
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   PreflightResult preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
@@ -112,6 +113,7 @@ protected:
    * @param ds The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
+   * @param shouldCancel Boolean that gets set if the filter should stop executing and return
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;

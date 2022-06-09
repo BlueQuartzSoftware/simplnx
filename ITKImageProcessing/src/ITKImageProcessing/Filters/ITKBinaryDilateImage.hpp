@@ -11,8 +11,8 @@ namespace complex
  * @class ITKBinaryDilateImage
  * @brief Fast binary dilation of a single intensity value in the image.
  *
- * BinaryDilateImageFilter is a binary dilation morphologic operation on the foreground of an image. Only the value designated by the intensity value "SetForegroundValue()" (alias as SetDilateValue())
- * is considered as foreground, and other intensity values are considered background.
+ * BinaryDilateImageFilter is a binary dilation morphologic operation on the foreground of an image. Only the value designated by the intensity value "SetForegroundValue()" (alias as SetDilateValue()
+ * ) is considered as foreground, and other intensity values are considered background.
  *
  * Gray scale images can be processed as binary images by selecting a "ForegroundValue" (alias "DilateValue"). Pixel values matching the dilate value are considered the "foreground" and all other
  * pixels are "background". This is useful in processing segmented images where all pixels in segment #1 have value 1 and pixels in segment #2 have value 2, etc. A particular "segment number" can be
@@ -106,6 +106,7 @@ protected:
    * @param ds The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
+   * @param shouldCancel Boolean that gets set if the filter should stop executing and return
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   PreflightResult preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
@@ -116,6 +117,7 @@ protected:
    * @param ds The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
+   * @param shouldCancel Boolean that gets set if the filter should stop executing and return
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
