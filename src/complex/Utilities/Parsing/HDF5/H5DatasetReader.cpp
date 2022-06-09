@@ -47,6 +47,48 @@ H5::Type H5::DatasetReader::getType() const
   return H5::getTypeFromId(typeId);
 }
 
+Result<DataType> H5::DatasetReader::getDataType() const
+{
+  DataType datasetType;
+  switch(getType())
+  {
+  case H5::Type::float32:
+    datasetType = DataType::float32;
+    break;
+  case H5::Type::float64:
+    datasetType = DataType::float64;
+    break;
+  case H5::Type::int8:
+    datasetType = DataType::int8;
+    break;
+  case H5::Type::int16:
+    datasetType = DataType::int16;
+    break;
+  case H5::Type::int32:
+    datasetType = DataType::int32;
+    break;
+  case H5::Type::int64:
+    datasetType = DataType::int64;
+    break;
+  case H5::Type::uint8:
+    datasetType = DataType::uint8;
+    break;
+  case H5::Type::uint16:
+    datasetType = DataType::uint16;
+    break;
+  case H5::Type::uint32:
+    datasetType = DataType::uint32;
+    break;
+  case H5::Type::uint64:
+    datasetType = DataType::uint64;
+    break;
+  default:
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-20012, "The selected datatset is not a supported type for importing. Please select a different data set"}})};
+  }
+
+  return {std::move(datasetType)};
+}
+
 H5::IdType H5::DatasetReader::getTypeId() const
 {
   auto id = getId();

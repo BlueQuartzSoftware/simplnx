@@ -5,6 +5,7 @@
 
 #include <nonstd/span.hpp>
 
+#include "complex/Common/Result.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5ObjectReader.hpp"
 
 namespace complex
@@ -50,6 +51,12 @@ public:
    * @return H5::Type
    */
   H5::Type getType() const;
+
+  /**
+   * @brief Returns a complex::DataType enum representation of the attribute's type.
+   * @return H5::Type
+   */
+  Result<DataType> getDataType() const;
 
   /**
    * @brief Returns an HDF5 type ID for the target data type. Returns 0 if the
