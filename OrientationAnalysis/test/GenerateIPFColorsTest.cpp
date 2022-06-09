@@ -19,8 +19,6 @@ Compare the data sets. The values should be exactly the same.
 
 */
 
-
-
 #include <catch2/catch.hpp>
 
 #include "complex/Parameters/BoolParameter.hpp"

@@ -115,7 +115,8 @@ TEST_CASE("ComplexCore::RotateSampleRefFrameFilter", "[RotateSampleRefFrameFilte
   const DataPath k_OriginalGeomPath({"Original"});
   const DataPath k_OriginalCellArrayPath = k_OriginalGeomPath.createChildPath("CellData").createChildPath("Data");
 
-  Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(fs::path(fmt::format("{}/src/Plugins/ComplexCore/data/RotateSampleRefFrameTest.dream3d", complex::unit_test::k_ComplexSourceDir)));
+  Result<DataStructure> dataStructureResult =
+      DREAM3D::ImportDataStructureFromFile(fs::path(fmt::format("{}/src/Plugins/ComplexCore/data/RotateSampleRefFrameTest.dream3d", complex::unit_test::k_ComplexSourceDir)));
   COMPLEX_RESULT_REQUIRE_VALID(dataStructureResult);
 
   DataStructure dataStructure = std::move(dataStructureResult.value());
