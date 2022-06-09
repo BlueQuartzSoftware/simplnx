@@ -11,7 +11,7 @@
 
 using namespace complex;
 
-namespace
+namespace cxITKNormalizeImage
 {
 using ArrayOptionsT = ITK::ScalarPixelIdTypeList;
 
@@ -89,7 +89,7 @@ IFilter::PreflightResult ITKNormalizeImage::preflightImpl(const DataStructure& d
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<ArrayOptionsT, FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKNormalizeImage::ArrayOptionsT, cxITKNormalizeImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
@@ -102,11 +102,11 @@ Result<> ITKNormalizeImage::executeImpl(DataStructure& dataStructure, const Argu
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
 
-  ITKNormalizeImageFunctor itkFunctor = {};
+  cxITKNormalizeImage::ITKNormalizeImageFunctor itkFunctor = {};
 
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
-  return ITK::Execute<ArrayOptionsT, FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKNormalizeImage::ArrayOptionsT, cxITKNormalizeImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
 }
 } // namespace complex

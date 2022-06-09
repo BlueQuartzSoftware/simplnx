@@ -12,7 +12,7 @@
 
 using namespace complex;
 
-namespace
+namespace cxITKGrayscaleFillholeImage
 {
 using ArrayOptionsT = ITK::ScalarPixelIdTypeList;
 
@@ -91,7 +91,7 @@ IFilter::PreflightResult ITKGrayscaleFillholeImage::preflightImpl(const DataStru
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKGrayscaleFillholeImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
@@ -105,11 +105,11 @@ Result<> ITKGrayscaleFillholeImage::executeImpl(DataStructure& dataStructure, co
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
 
-  ITKGrayscaleFillholeImageFunctor itkFunctor = {fullyConnected};
+  cxITKGrayscaleFillholeImage::ITKGrayscaleFillholeImageFunctor itkFunctor = {fullyConnected};
 
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
-  return ITK::Execute<ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKGrayscaleFillholeImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
 }
 } // namespace complex

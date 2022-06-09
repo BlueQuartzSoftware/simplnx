@@ -20,7 +20,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-namespace
+namespace cxITKImportImageStack
 {
 template <class T>
 Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& imageDataPath, const std::vector<std::string>& files,
@@ -239,34 +239,34 @@ Result<> ITKImportImageStack::executeImpl(DataStructure& dataStructure, const Ar
   switch(*numericType)
   {
   case NumericType::uint8: {
-    return ReadImageStack<uint8>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<uint8>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
   }
   case NumericType::int8: {
-    return ReadImageStack<int8>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<int8>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
   }
   case NumericType::uint16: {
-    return ReadImageStack<uint16>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<uint16>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
   }
   case NumericType::int16: {
-    return ReadImageStack<int16>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<int16>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
   }
   case NumericType::uint32: {
-    return ReadImageStack<uint32>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<uint32>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
   }
   case NumericType::int32: {
-    return ReadImageStack<int32>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<int32>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
   }
   case NumericType::uint64: {
-    return ReadImageStack<uint64>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<uint64>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
   }
   case NumericType::int64: {
-    return ReadImageStack<int64>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<int64>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
   }
   case NumericType::float32: {
-    return ReadImageStack<float32>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<float32>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
   }
   case NumericType::float64: {
-    return ReadImageStack<float64>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<float64>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
   }
   default: {
     throw std::runtime_error("Unsupported array type");
