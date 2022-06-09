@@ -12,7 +12,7 @@
 
 using namespace complex;
 
-namespace
+namespace cxITKGradientMagnitudeImage
 {
 using ArrayOptionsT = ITK::ScalarPixelIdTypeList;
 
@@ -96,7 +96,7 @@ IFilter::PreflightResult ITKGradientMagnitudeImage::preflightImpl(const DataStru
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
   auto useImageSpacing = filterArgs.value<bool>(k_UseImageSpacing_Key);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<ArrayOptionsT, FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKGradientMagnitudeImage::ArrayOptionsT, cxITKGradientMagnitudeImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
@@ -110,11 +110,11 @@ Result<> ITKGradientMagnitudeImage::executeImpl(DataStructure& dataStructure, co
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
   auto useImageSpacing = filterArgs.value<bool>(k_UseImageSpacing_Key);
 
-  ITKGradientMagnitudeImageFunctor itkFunctor = {useImageSpacing};
+  cxITKGradientMagnitudeImage::ITKGradientMagnitudeImageFunctor itkFunctor = {useImageSpacing};
 
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
-  return ITK::Execute<ArrayOptionsT, FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKGradientMagnitudeImage::ArrayOptionsT, cxITKGradientMagnitudeImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
 }
 } // namespace complex

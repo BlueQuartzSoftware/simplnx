@@ -22,7 +22,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-namespace
+namespace cxItkImageReader
 {
 // This functor is a dummy that will return a valid Result<> if the ImageIOBase is a supported type, dimension, etc.
 struct PreflightFunctor
@@ -349,13 +349,13 @@ IFilter::PreflightResult ITKImageReader::preflightImpl(const DataStructure& data
 
   std::string fileNameString = fileName.string();
 
-  Result<> check = ReadImageExecute<PreflightFunctor>(fileNameString);
+  Result<> check = cxItkImageReader::ReadImageExecute<cxItkImageReader::PreflightFunctor>(fileNameString);
   if(check.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(check), {})};
   }
 
-  return {ReadImagePreflight(fileNameString, imageGeometryPath, cellDataGroupPath, imageDataArrayPath)};
+  return {cxItkImageReader::ReadImagePreflight(fileNameString, imageGeometryPath, cellDataGroupPath, imageDataArrayPath)};
 }
 
 //------------------------------------------------------------------------------
@@ -372,6 +372,6 @@ Result<> ITKImageReader::executeImpl(DataStructure& dataStructure, const Argumen
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
   imageGeom.getLinkedGeometryData().addCellData(imageDataArrayPath);
 
-  return ReadImageExecute<ReadImageIntoArrayFunctor>(fileNameString, dataStructure, imageDataArrayPath, fileNameString);
+  return cxItkImageReader::ReadImageExecute<cxItkImageReader::ReadImageIntoArrayFunctor>(fileNameString, dataStructure, imageDataArrayPath, fileNameString);
 }
 } // namespace complex

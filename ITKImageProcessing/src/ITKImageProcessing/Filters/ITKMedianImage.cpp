@@ -12,7 +12,7 @@
 
 using namespace complex;
 
-namespace
+namespace cxITKMedianImage
 {
 using ArrayOptionsT = ITK::ScalarPixelIdTypeList;
 
@@ -99,7 +99,7 @@ IFilter::PreflightResult ITKMedianImage::preflightImpl(const DataStructure& data
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
   auto radius = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Radius_Key);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKMedianImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
@@ -113,11 +113,11 @@ Result<> ITKMedianImage::executeImpl(DataStructure& dataStructure, const Argumen
   auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
   auto radius = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Radius_Key);
 
-  ITKMedianImageFunctor itkFunctor = {radius};
+  cxITKMedianImage::ITKMedianImageFunctor itkFunctor = {radius};
 
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
-  return ITK::Execute<ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKMedianImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
 }
 } // namespace complex

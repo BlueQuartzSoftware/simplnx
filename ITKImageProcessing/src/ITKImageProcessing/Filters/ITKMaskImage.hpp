@@ -56,9 +56,7 @@ public:
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
   static inline constexpr StringLiteral k_OutsideValue_Key = "OutsideValue";
-  static inline constexpr StringLiteral k_MaskingValue_Key = "MaskingValue";
-  static inline constexpr StringLiteral k_ImageDataPath_Key = "ImageDataPath";
-  static inline constexpr StringLiteral k_MaskImage_Key = "MaskImage";
+  static inline constexpr StringLiteral k_MaskImageDataPath_Key = "MaskImageDataPath";
 
   /**
    * @brief Returns the name of the filter.

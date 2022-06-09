@@ -31,7 +31,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-namespace
+namespace cxITKImageWriter
 {
 using ArrayOptionsType = ITK::ScalarVectorPixelIdTypeList;
 
@@ -329,10 +329,10 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
         for(usize axisB = 0; axisB < dB; ++axisB)
         {
           usize index = (slice * dA * dB) + (axisA * dB) + axisB;
-          CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
+          cxITKImageWriter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
         }
       }
-      Result<> result = SaveImageData(filePath, *sliceData, imageGeom, slice + indexOffset, dims.getZ(), indexOffset);
+      Result<> result = cxITKImageWriter::SaveImageData(filePath, *sliceData, imageGeom, slice + indexOffset, dims.getZ(), indexOffset);
       if(result.invalid())
       {
         return result;
@@ -351,10 +351,10 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
         for(usize axisB = 0; axisB < dB; ++axisB)
         {
           usize index = (dims.getY() * axisA * dB) + (slice * dB) + axisB;
-          CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
+          cxITKImageWriter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
         }
       }
-      Result<> result = SaveImageData(filePath, *sliceData, imageGeom, slice, dims.getY(), indexOffset);
+      Result<> result = cxITKImageWriter::SaveImageData(filePath, *sliceData, imageGeom, slice, dims.getY(), indexOffset);
       if(result.invalid())
       {
         return result;
@@ -373,10 +373,10 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
         for(usize axisB = 0; axisB < dB; ++axisB)
         {
           usize index = (dims.getX() * axisA * dB) + (axisB * dims.getX()) + slice;
-          CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
+          cxITKImageWriter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
         }
       }
-      Result<> result = SaveImageData(filePath, *sliceData, imageGeom, slice, dims.getX(), indexOffset);
+      Result<> result = cxITKImageWriter::SaveImageData(filePath, *sliceData, imageGeom, slice, dims.getX(), indexOffset);
       if(result.invalid())
       {
         return result;

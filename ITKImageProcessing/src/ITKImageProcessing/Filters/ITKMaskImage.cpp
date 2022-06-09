@@ -16,7 +16,7 @@
 
 using namespace complex;
 
-namespace
+namespace cxITKMaskImage
 {
 template <uint32 Dimension>
 using MaskImageT = itk::Image<uint32, Dimension>;
@@ -173,7 +173,7 @@ IFilter::PreflightResult ITKMaskImage::preflightImpl(const DataStructure& dataSt
     return {ConvertResultTo<OutputActions>(std::move(result), {})};
   }
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKMaskImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
@@ -192,10 +192,10 @@ Result<> ITKMaskImage::executeImpl(DataStructure& dataStructure, const Arguments
   IDataArray& maskArray = dataStructure.getDataRefAs<IDataArray>(maskArrayPath);
   IDataStore& maskStore = maskArray.getIDataStoreRef();
 
-  ITKMaskImageFunctor itkFunctor = {outsideValue, imageGeom, maskStore};
+  cxITKMaskImage::ITKMaskImageFunctor itkFunctor = {outsideValue, imageGeom, maskStore};
 
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
-  return ITK::Execute<ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKMaskImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
 }
 } // namespace complex

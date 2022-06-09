@@ -13,7 +13,7 @@
 
 using namespace complex;
 
-namespace
+namespace cxITKOtsuMultipleThresholdsImage
 {
 using ArrayOptionsT = ITK::ScalarPixelIdTypeList;
 
@@ -112,7 +112,7 @@ IFilter::PreflightResult ITKOtsuMultipleThresholdsImage::preflightImpl(const Dat
   auto valleyEmphasis = filterArgs.value<bool>(k_ValleyEmphasis_Key);
   auto returnBinMidpoint = filterArgs.value<bool>(k_ReturnBinMidpoint_Key);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<ArrayOptionsT, FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKOtsuMultipleThresholdsImage::ArrayOptionsT, cxITKOtsuMultipleThresholdsImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
@@ -130,11 +130,11 @@ Result<> ITKOtsuMultipleThresholdsImage::executeImpl(DataStructure& dataStructur
   auto valleyEmphasis = filterArgs.value<bool>(k_ValleyEmphasis_Key);
   auto returnBinMidpoint = filterArgs.value<bool>(k_ReturnBinMidpoint_Key);
 
-  ITKOtsuMultipleThresholdsImageFunctor itkFunctor = {numberOfThresholds, labelOffset, numberOfHistogramBins, valleyEmphasis, returnBinMidpoint};
+  cxITKOtsuMultipleThresholdsImage::ITKOtsuMultipleThresholdsImageFunctor itkFunctor = {numberOfThresholds, labelOffset, numberOfHistogramBins, valleyEmphasis, returnBinMidpoint};
 
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
-  return ITK::Execute<ArrayOptionsT, FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKOtsuMultipleThresholdsImage::ArrayOptionsT, cxITKOtsuMultipleThresholdsImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
 }
 } // namespace complex
