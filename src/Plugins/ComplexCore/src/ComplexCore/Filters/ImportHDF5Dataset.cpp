@@ -134,12 +134,12 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
   std::string ext = inputFilePath.extension().string();
   if(ext != ".h5" && ext != ".hdf5" && ext != ".dream3d")
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-20002, fmt::format("The selected file '{}' is not an HDF5 file.", inputFilePath.filename())}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-20002, fmt::format("The selected file '{}' is not an HDF5 file.", inputFilePath.filename().string())}})};
   }
 
   if(!fs::exists(hdf5File))
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-20003, fmt::format("The selected file '{}' does not exist.", inputFilePath.filename())}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-20003, fmt::format("The selected file '{}' does not exist.", inputFilePath.filename().string())}})};
   }
 
   if(datasetImportInfoList.empty())
@@ -150,7 +150,7 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
   auto selectedDataGroup = dataStructure.getDataAs<DataGroup>(pSelectedAttributeMatrixValue);
   if(selectedDataGroup == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-20005, fmt::format("The selected data group '{}' does not exist.", pSelectedAttributeMatrixValue)}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-20005, fmt::format("The selected data group '{}' does not exist.", pSelectedAttributeMatrixValue.toString())}})};
   }
 
   int err = 0;
