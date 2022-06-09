@@ -28,6 +28,56 @@ namespace complex
 namespace ITK
 {
 
+inline const std::set<DataType>& GetScalarPixelAllowedTypes()
+{
+  static const std::set<DataType> dataTypes = {complex::DataType::int8,   complex::DataType::uint8, complex::DataType::int16,  complex::DataType::uint16,  complex::DataType::int32,
+                                               complex::DataType::uint32, complex::DataType::int64, complex::DataType::uint64, complex::DataType::float32, complex::DataType::float64};
+  return dataTypes;
+}
+
+inline const std::set<DataType>& GetIntegerScalarPixelAllowedTypes()
+{
+  static const std::set<DataType> dataTypes = {complex::DataType::int8,  complex::DataType::uint8,  complex::DataType::int16, complex::DataType::uint16,
+                                               complex::DataType::int32, complex::DataType::uint32, complex::DataType::int64, complex::DataType::uint64};
+  return dataTypes;
+}
+
+inline const std::set<DataType>& GetFloatingScalarPixelAllowedTypes()
+{
+  static const std::set<DataType> dataTypes = {complex::DataType::float32, complex::DataType::float64};
+  return dataTypes;
+}
+
+inline const std::set<DataType>& GetNonLabelPixelAllowedTypes()
+{
+  static const std::set<DataType> dataTypes = {complex::DataType::int8,   complex::DataType::uint8, complex::DataType::int16,  complex::DataType::uint16,  complex::DataType::int32,
+                                               complex::DataType::uint32, complex::DataType::int64, complex::DataType::uint64, complex::DataType::float32, complex::DataType::float64};
+  return dataTypes;
+}
+
+inline const std::set<DataType>& GetScalarVectorPixelAllowedTypes()
+{
+  static const std::set<DataType> dataTypes = {};
+  return dataTypes;
+}
+
+inline const std::set<DataType>& GetFloatingVectorPixelAllowedTypes()
+{
+  static const std::set<DataType> dataTypes = {complex::DataType::float32, complex::DataType::float64};
+  return dataTypes;
+}
+
+inline const std::set<DataType>& GetSignedIntegerScalarPixelAllowedTypes()
+{
+  static const std::set<DataType> dataTypes = {
+      complex::DataType::int8,
+      complex::DataType::int16,
+      complex::DataType::int32,
+      complex::DataType::int64,
+  };
+  return dataTypes;
+}
+
 namespace Constants
 {
 inline constexpr int32 k_ImageGeometryDimensionMismatch = -2000;
