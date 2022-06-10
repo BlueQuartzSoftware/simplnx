@@ -10,9 +10,11 @@ using namespace H5Support;
 
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataPath.hpp"
+#include "complex/DataStructure/DataStore.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/ImportHDF5DatasetParameter.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
@@ -353,15 +355,110 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
 Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                         const std::atomic_bool& shouldCancel) const
 {
-  /****************************************************************************
-   * Extract the actual input values from the 'filterArgs' object
-   ***************************************************************************/
   auto pImportHDF5FileValue = filterArgs.value<ImportHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
   auto pSelectedAttributeMatrixValue = filterArgs.value<DataPath>(k_SelectedAttributeMatrix_Key);
+  auto inputFile = pImportHDF5FileValue.first;
+  fs::path inputFilePath(inputFile);
+  auto datasetImportInfoList = pImportHDF5FileValue.second;
+  auto selectedDataGroup = dataStructure.getDataAs<DataGroup>(pSelectedAttributeMatrixValue);
 
-  /****************************************************************************
-   * Write your algorithm implementation in this function
-   ***************************************************************************/
+  int err = 0;
+  hid_t fileId = H5::FileReader(inputFilePath).getId();
+  if(fileId < 0)
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-20006, fmt::format("Error Reading HDF5 file: '{}'", inputFile)}})};
+  }
+  H5ScopedFileSentinel sentinel(fileId, true);
+
+  std::map<std::string, hid_t> openedParentPathsMap;
+  for(const auto& datasetImportInfo : datasetImportInfoList)
+  {
+    std::string datasetPath = datasetImportInfo.dataSetPath;
+    std::string objectName = H5Utilities::getObjectNameFromPath(datasetPath);
+
+    std::string parentPath = H5Utilities::getParentPath(datasetPath);
+    hid_t parentId;
+    if(parentPath.empty())
+    {
+      parentId = fileId;
+    }
+    else
+    {
+      if(openedParentPathsMap.find(parentPath) == openedParentPathsMap.end())
+      {
+        parentId = H5Utilities::openHDF5Object(fileId, parentPath);
+        sentinel.addGroupId(parentId);
+        openedParentPathsMap[parentPath] = parentId;
+      }
+      else
+      {
+        parentId = openedParentPathsMap[parentPath];
+      }
+    }
+
+    // Read dataset into DREAM.3D structure
+    DataPath dataArrayPath = pSelectedAttributeMatrixValue.createChildPath(objectName);
+    H5::DatasetReader datasetReader(parentId, objectName);
+    auto type = datasetReader.getType();
+    switch(type)
+    {
+    case H5::Type::float32: {
+      auto dataStore = Float32DataStore::ReadHdf5(datasetReader);
+      Float32Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      break;
+    }
+    case H5::Type::float64: {
+      auto dataStore = Float64DataStore::ReadHdf5(datasetReader);
+      Float64Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      break;
+    }
+    case H5::Type::int8: {
+      auto dataStore = Int8DataStore::ReadHdf5(datasetReader);
+      Int8Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      break;
+    }
+    case H5::Type::int16: {
+      auto dataStore = Int16DataStore::ReadHdf5(datasetReader);
+      Int16Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      break;
+    }
+    case H5::Type::int32: {
+      auto dataStore = Int32DataStore::ReadHdf5(datasetReader);
+      Int32Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      break;
+    }
+    case H5::Type::int64: {
+      auto dataStore = Int64DataStore::ReadHdf5(datasetReader);
+      Int64Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      break;
+    }
+    case H5::Type::uint8: {
+      auto dataStore = UInt8DataStore::ReadHdf5(datasetReader);
+      UInt8Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      break;
+    }
+    case H5::Type::uint16: {
+      auto dataStore = UInt16DataStore::ReadHdf5(datasetReader);
+      UInt16Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      break;
+    }
+    case H5::Type::uint32: {
+      auto dataStore = UInt32DataStore::ReadHdf5(datasetReader);
+      UInt32Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      break;
+    }
+    case H5::Type::uint64: {
+      auto dataStore = UInt64DataStore::ReadHdf5(datasetReader);
+      UInt64Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      break;
+    }
+    default:
+      return {
+          nonstd::make_unexpected(std::vector<Error>{Error{-20012, fmt::format("The selected datatset '{}' is not a supported type for importing. Please select a different data set", datasetPath)}})};
+    }
+  } // End For Loop over dataset imoprt info list
+
+  // The sentinel will close the HDF5 File and any groups that were open.
 
   return {};
 }
