@@ -10,7 +10,6 @@ using namespace H5Support;
 
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStore.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/ImportHDF5DatasetParameter.hpp"
@@ -396,6 +395,27 @@ Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argu
       }
     }
 
+    std::vector<hsize_t> dims;
+    H5T_class_t type_class;
+    size_t type_size;
+    err = H5Lite::getDatasetInfo(parentId, objectName, dims, type_class, type_size);
+    std::string cDimsStr = datasetImportInfo.componentDimensions;
+    std::multiset<size_t> cDimsSet = createComponentDimensions(cDimsStr);
+    std::vector<size_t> tDims;
+    std::vector<size_t> cDims;
+    for(int i = 0; i < dims.size(); i++)
+    {
+      auto cDimIt = cDimsSet.find(dims[i]);
+      if(cDimIt != cDimsSet.end())
+      {
+        cDims.push_back(dims[i]);
+      }
+      else
+      {
+        tDims.push_back(dims[i]);
+      }
+    }
+
     // Read dataset into DREAM.3D structure
     DataPath dataArrayPath = pSelectedAttributeMatrixValue.createChildPath(objectName);
     H5::DatasetReader datasetReader(parentId, objectName);
@@ -403,53 +423,43 @@ Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argu
     switch(type)
     {
     case H5::Type::float32: {
-      auto dataStore = Float32DataStore::ReadHdf5(datasetReader);
-      Float32Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      Float32Array::CreateWithStore<Float32DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
       break;
     }
     case H5::Type::float64: {
-      auto dataStore = Float64DataStore::ReadHdf5(datasetReader);
-      Float64Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      Float64Array::CreateWithStore<Float64DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
       break;
     }
     case H5::Type::int8: {
-      auto dataStore = Int8DataStore::ReadHdf5(datasetReader);
-      Int8Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      Int8Array::CreateWithStore<Int8DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
       break;
     }
     case H5::Type::int16: {
-      auto dataStore = Int16DataStore::ReadHdf5(datasetReader);
-      Int16Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      Int16Array::CreateWithStore<Int16DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
       break;
     }
     case H5::Type::int32: {
-      auto dataStore = Int32DataStore::ReadHdf5(datasetReader);
-      Int32Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      Int32Array::CreateWithStore<Int32DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
       break;
     }
     case H5::Type::int64: {
-      auto dataStore = Int64DataStore::ReadHdf5(datasetReader);
-      Int64Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      Int64Array::CreateWithStore<Int64DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
       break;
     }
     case H5::Type::uint8: {
-      auto dataStore = UInt8DataStore::ReadHdf5(datasetReader);
-      UInt8Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      UInt8Array::CreateWithStore<UInt8DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
       break;
     }
     case H5::Type::uint16: {
-      auto dataStore = UInt16DataStore::ReadHdf5(datasetReader);
-      UInt16Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      UInt16Array::CreateWithStore<UInt16DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
       break;
     }
     case H5::Type::uint32: {
-      auto dataStore = UInt32DataStore::ReadHdf5(datasetReader);
-      UInt32Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
       break;
     }
     case H5::Type::uint64: {
-      auto dataStore = UInt64DataStore::ReadHdf5(datasetReader);
-      UInt64Array::Create(dataStructure, objectName, std::move(dataStore), selectedDataGroup->getId());
+      UInt64Array::CreateWithStore<UInt64DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
       break;
     }
     default:
