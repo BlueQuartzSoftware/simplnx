@@ -48,9 +48,11 @@ public:
   {
     std::string dataSetPath;
     std::string componentDimensions;
+    std::string tupleDimensions;
 
     static inline constexpr StringLiteral k_DatasetPath_Key = "Dataset Path";
     static inline constexpr StringLiteral k_ComponentDimensions_Key = "Component Dimensions";
+    static inline constexpr StringLiteral k_TupleDimensions_Key = "Tuple Dimensions";
 
     static Result<DatasetImportInfo> ReadJson(const nlohmann::json& json)
     {
@@ -76,6 +78,18 @@ public:
             -503, fmt::format("ImportHDF5DatasetParameter ValueType: 'Component Dimensions' value is of type {} and is not a string.", json[k_ComponentDimensions_Key].type_name()));
       }
       data.componentDimensions = json[k_ComponentDimensions_Key.str()];
+
+      if(!json.contains(k_TupleDimensions_Key.view()))
+      {
+        return MakeErrorResult<DatasetImportInfo>(-502, fmt::format("ImportHDF5DatasetParameter ValueType: Cannot find the key \"{}\" in the ValueType json object.", k_TupleDimensions_Key));
+      }
+      else if(!json[k_TupleDimensions_Key.str()].is_string())
+      {
+        return MakeErrorResult<DatasetImportInfo>(
+            -503, fmt::format("ImportHDF5DatasetParameter ValueType: 'Tuple Dimensions' value is of type {} and is not a string.", json[k_TupleDimensions_Key].type_name()));
+      }
+      data.tupleDimensions = json[k_TupleDimensions_Key.str()];
+
       return {data};
     }
 
@@ -84,6 +98,7 @@ public:
       nlohmann::json json;
       json[k_DatasetPath_Key.str()] = dataSetPath;
       json[k_ComponentDimensions_Key.str()] = componentDimensions;
+      json[k_TupleDimensions_Key.str()] = tupleDimensions;
       return json;
     }
   };
