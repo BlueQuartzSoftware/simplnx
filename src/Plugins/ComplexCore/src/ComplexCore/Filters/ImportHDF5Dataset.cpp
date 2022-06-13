@@ -6,8 +6,6 @@
 #include "H5Support/H5ScopedSentinel.h"
 #include "H5Support/H5Utilities.h"
 
-using namespace H5Support;
-
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
@@ -18,15 +16,16 @@ using namespace H5Support;
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
+using namespace H5Support;
 using namespace complex;
 namespace fs = std::filesystem;
 
 namespace
 {
 // -----------------------------------------------------------------------------
-std::multiset<size_t> createComponentDimensions(const std::string& cDimsStr)
+std::vector<size_t> createDimensionVector(const std::string& cDimsStr)
 {
-  std::multiset<size_t> cDims;
+  std::vector<size_t> cDims;
   std::vector<std::string> dimsStrVec = StringUtilities::split(cDimsStr, std::vector<char>{','}, true);
   for(int i = 0; i < dimsStrVec.size(); i++)
   {
@@ -36,13 +35,13 @@ std::multiset<size_t> createComponentDimensions(const std::string& cDimsStr)
     try
     {
       int val = std::stoi(dimsStr);
-      cDims.insert(val);
+      cDims.push_back(val);
     } catch(std::invalid_argument const& e)
     {
-      return std::multiset<size_t>();
+      return std::vector<size_t>();
     } catch(std::out_of_range const& e)
     {
-      return std::multiset<size_t>();
+      return std::vector<size_t>();
     }
   }
 
@@ -130,7 +129,6 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
     return {nonstd::make_unexpected(std::vector<Error>{Error{-20001, "The HDF5 file path is empty.  Please select an HDF5 file."}})};
   }
 
-  fs::path hdf5File(inputFile);
   fs::path inputFilePath(inputFile);
   std::string ext = inputFilePath.extension().string();
   if(ext != ".h5" && ext != ".hdf5" && ext != ".dream3d")
@@ -138,7 +136,7 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
     return {nonstd::make_unexpected(std::vector<Error>{Error{-20002, fmt::format("The selected file '{}' is not an HDF5 file.", inputFilePath.filename().string())}})};
   }
 
-  if(!fs::exists(hdf5File))
+  if(!fs::exists(inputFilePath))
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{-20003, fmt::format("The selected file '{}' does not exist.", inputFilePath.filename().string())}})};
   }
@@ -166,6 +164,10 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
   for(const auto& datasetImportInfo : datasetImportInfoList)
   {
     std::string datasetPath = datasetImportInfo.dataSetPath;
+    if(datasetPath.empty())
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-20007, "Cannot import empty dataset path"}})};
+    }
 
     std::string parentPath = H5Utilities::getParentPath(datasetPath);
     hid_t parentId;
@@ -196,22 +198,37 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
     err = H5Lite::getDatasetInfo(parentId, objectName, dims, type_class, type_size);
     if(err < 0)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-20007, fmt::format("Error reading type info from dataset with path '{}'", datasetPath)}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-20008, fmt::format("Error reading type info from dataset with path '{}'", datasetPath)}})};
     }
 
     std::string cDimsStr = datasetImportInfo.componentDimensions;
     if(cDimsStr.empty())
     {
       return {nonstd::make_unexpected(std::vector<Error>{
-          Error{-20008, fmt::format("The component dimensions are empty for dataset with path '{}'.  Please enter the component dimensions, using comma-separated values (ex: 4x2 would be '4, 2').",
+          Error{-20009, fmt::format("The component dimensions are empty for dataset with path '{}'.  Please enter the component dimensions, using comma-separated values (ex: 4x2 would be '4, 2').",
                                     datasetPath)}})};
     }
 
-    std::multiset<size_t> cDimsSet = createComponentDimensions(cDimsStr);
-    if(cDimsSet.empty())
+    std::vector<size_t> cDims = createDimensionVector(cDimsStr);
+    if(cDims.empty())
     {
       return {nonstd::make_unexpected(std::vector<Error>{
-          Error{-20009, fmt::format("Component Dimensions are not in the right format for dataset with path '{}'. Use comma-separated values (ex: 4x2 would be '4, 2').", datasetPath)}})};
+          Error{-20010, fmt::format("Component Dimensions are not in the right format for dataset with path '{}'. Use comma-separated values (ex: 4x2 would be '4, 2').", datasetPath)}})};
+    }
+
+    std::string tDimsStr = datasetImportInfo.tupleDimensions;
+    if(tDimsStr.empty())
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{
+          Error{-20011,
+                fmt::format("The tuple dimensions are empty for dataset with path '{}'.  Please enter the tuple dimensions, using comma-separated values (ex: 4x2 would be '4, 2').", datasetPath)}})};
+    }
+
+    std::vector<size_t> tDims = createDimensionVector(tDimsStr);
+    if(tDims.empty())
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{
+          Error{-20012, fmt::format("Tuple Dimensions are not in the right format for dataset with path '{}'. Use comma-separated values (ex: 4x2 would be '4, 2').", datasetPath)}})};
     }
 
     // Calculate the product of the dataset dimensions and the product of the component dimensions.
@@ -226,8 +243,6 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
     size_t hdf5TotalElements = 1;
     stream << "    No. of Dimension(s): " << StringUtilities::number(dims.size()) << "\n";
     stream << "    Dimension Size(s): ";
-    std::vector<size_t> cDims;
-    std::vector<size_t> tupleDims;
     for(int i = 0; i < dims.size(); i++)
     {
       stream << StringUtilities::number(dims[i]);
@@ -236,110 +251,85 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
       {
         stream << " x ";
       }
-
-      auto cDimIt = cDimsSet.find(dims[i]);
-      if(cDimIt != cDimsSet.end())
-      {
-        cDims.push_back(dims[i]);
-        cDimsSet.erase(cDimIt);
-      }
-      else
-      {
-        tupleDims.push_back(dims[i]);
-      }
-    }
-    stream << "No. of Component Dimension(s): " << StringUtilities::number(static_cast<uint64>(cDims.size())) << "\n";
-    // For now, we will just make sure the component dimnesions entered by the user exist in the dataset from the file
-    if(!cDimsSet.empty())
-    {
-      stream << fmt::format("The dataset with path '{}' cannot be read because the following component dimensions entered don't exist in the dataset's list of dimension sizes: ", inputFile);
-      for(const auto& cdim : cDimsSet)
-      {
-        stream << cdim << " ";
-      }
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-20010, stream.str()}})};
     }
 
-    // NOTE: When complex implements the “AttributeMatrix” this may become a requirement to check the tuple dimensions.
+    // NOTE: When complex implements the “AttributeMatrix” the user entered tuple dimensions should be optional in lieu of an attribute matrix as the selected data path/parent.
     stream << "\n";
     stream << "    Total HDF5 Dataset Element Count: " << hdf5TotalElements << "\n";
-    // stream << "-------------------------------------------\n";
+    stream << "-------------------------------------------\n";
     // stream << "Current Data Structure Information: \n";
-    //
     // stream << fmt::format("Attribute Matrix Path: '{}'\n", pSelectedAttributeMatrixValue.toString());
-    //
-    // size_t userEnteredTotalElements = 1;
-    // std::vector<size_t> amTupleDims = selectedDataGroup->getTupleDimensions();
+
+    // std::vector<size_t> amTupleDims = am->getTupleDimensions();
     // stream << "No. of Attribute Matrix Dimension(s): " << StringUtilities::number(static_cast<uint64>(amTupleDims.size())) << "\n";
     // stream << "Attribute Matrix Dimension(s): ";
-    // for(int i = 0; i < amTupleDims.size(); i++)
-    //{
-    //  userEnteredTotalElements = userEnteredTotalElements * amTupleDims[i];
-    //  int d = amTupleDims[i];
-    //  stream << StringUtilities::number(d);
-    //  if(i != amTupleDims.size() - 1)
-    //  {
-    //    stream << " x ";
-    //  }
-    //}
-    // stream << "\n";
-    //
-    // int numOfAMTuples = selectedDataGroup->getNumberOfTuples();
-    // stream << fmt::format("Total Attribute Matrix Tuple Count: '{}'\n", StringUtilities::number(numOfAMTuples));
-    //
-    // stream << "No. of Component Dimension(s): " << StringUtilities::number(static_cast<uint64>(cDims.size())) << "\n";
-    // stream << "Component Dimension(s): ";
-    //
-    // int totalComponents = 1;
-    // for(int i = 0; i < cDims.size(); i++)
-    //{
-    // userEnteredTotalElements = userEnteredTotalElements * cDims[i];
-    //  totalComponents = totalComponents * cDims[i];
-    //  int d = cDims[i];
-    //  stream << StringUtilities::number(d);
-    //  if(i != cDims.size() - 1)
-    //  {
-    //    stream << " x ";
-    //  }
-    //}
-    //
-    // stream << "\n";
-    // stream << fmt::format("Total Component Count: '{}'\n", StringUtilities::number(totalComponents));
-    //
-    // stream << "\n";
-    //
-    // auto totalTuples = hdf5TotalElements / totalComponents;
-    // if(hdf5TotalElements != userEnteredTotalElements)
-    //{
-    //  stream << fmt::format("The dataset with path '{}' cannot be read into attribute matrix '{}' because '{}' "
-    //                        "attribute matrix tuples and '{}' components per tuple equals '{}' total elements, and"
-    //                        " that does not match the total HDF5 dataset element count of '{}'.\n"
-    //                        "'{}' =/= '{}'",
-    //                        datasetPath, pSelectedAttributeMatrixValue.getTargetName(), StringUtilities::number(numOfAMTuples), StringUtilities::number(totalComponents),
-    //                        StringUtilities::number(numOfAMTuples * totalComponents), StringUtilities::number(static_cast<ulonglong>(hdf5TotalElements)),
-    //                        StringUtilities::number(numOfAMTuples * totalComponents), StringUtilities::number(static_cast<ulonglong>(hdf5TotalElements)));
-    //
-    //
-    // return {nonstd::make_unexpected(std::vector<Error>{Error{-20010, stream.str()}})};
-    //}
+    stream << "No. of Tuple Dimension(s): " << StringUtilities::number(static_cast<uint64>(tDims.size())) << "\n";
+    stream << "Tuple Dimension(s): ";
+    size_t userEnteredTotalElements = 1;
+    for(int i = 0; i < tDims.size(); i++)
+    {
+      userEnteredTotalElements = userEnteredTotalElements * tDims[i];
+      int d = tDims[i];
+      stream << StringUtilities::number(d);
+      if(i != tDims.size() - 1)
+      {
+        stream << " x ";
+      }
+    }
+    stream << "\n";
+
+    // int numOfAMTuples = am->getNumberOfTuples();
+    int numOfTuples = userEnteredTotalElements;
+    stream << fmt::format("Total Attribute Matrix Tuple Count: '{}'\n", StringUtilities::number(numOfTuples));
+
+    stream << "No. of Component Dimension(s): " << StringUtilities::number(static_cast<uint64>(cDims.size())) << "\n";
+    stream << "Component Dimension(s): ";
+    int totalComponents = 1;
+    for(int i = 0; i < cDims.size(); i++)
+    {
+      userEnteredTotalElements = userEnteredTotalElements * cDims[i];
+      totalComponents = totalComponents * cDims[i];
+      int d = cDims[i];
+      stream << StringUtilities::number(d);
+      if(i != cDims.size() - 1)
+      {
+        stream << " x ";
+      }
+    }
+
+    stream << "\n";
+    stream << fmt::format("Total Component Count: '{}'\n", StringUtilities::number(totalComponents));
+    stream << "\n";
+
+    if(hdf5TotalElements != userEnteredTotalElements)
+    {
+      stream << fmt::format("The dataset with path '{}' cannot be read into attribute matrix '{}' because '{}' "
+                            "tuples and '{}' components per tuple equals '{}' total elements, and"
+                            " that does not match the total HDF5 dataset element count of '{}'.\n"
+                            "'{}' =/= '{}'",
+                            datasetPath, pSelectedAttributeMatrixValue.getTargetName(), StringUtilities::number(numOfTuples), StringUtilities::number(totalComponents),
+                            StringUtilities::number(numOfTuples * totalComponents), StringUtilities::number(hdf5TotalElements), StringUtilities::number(numOfTuples * totalComponents),
+                            StringUtilities::number(hdf5TotalElements));
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-20013, stream.str()}})};
+    }
 
     if(selectedDataGroup->contains(objectName))
     {
       stream.clear();
       stream << "The selected dataset '" << pSelectedAttributeMatrixValue.toString() << "/" << objectName << "' already exists.";
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-20011, stream.str()}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-20014, stream.str()}})};
     }
     else
     {
       DataPath dataArrayPath = pSelectedAttributeMatrixValue.createChildPath(objectName);
       H5::DatasetReader datasetReader(parentId, objectName);
       auto type = datasetReader.getDataType();
-      if(!type.errors().empty())
+      if(type.invalid())
       {
         return {nonstd::make_unexpected(
-            std::vector<Error>{Error{-20012, fmt::format("The selected datatset '{}' is not a supported type for importing. Please select a different data set", datasetPath)}})};
+            std::vector<Error>{Error{-20015, fmt::format("The selected datatset '{}' is not a supported type for importing. Please select a different data set", datasetPath)}})};
       }
-      auto action = std::make_unique<CreateArrayAction>(type.value(), tupleDims, cDims, dataArrayPath);
+      auto action = std::make_unique<CreateArrayAction>(type.value(), tDims, cDims, dataArrayPath);
       resultOutputActions.value().actions.push_back(std::move(action));
     }
   } // End For Loop over dataset imoprt info list
@@ -395,26 +385,11 @@ Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argu
       }
     }
 
-    std::vector<hsize_t> dims;
-    H5T_class_t type_class;
-    size_t type_size;
-    err = H5Lite::getDatasetInfo(parentId, objectName, dims, type_class, type_size);
+    // NOTE: When complex implements the “AttributeMatrix” the user entered tuple dimensions should be optional in lieu of an attribute matrix as the selected data path/parent.
     std::string cDimsStr = datasetImportInfo.componentDimensions;
-    std::multiset<size_t> cDimsSet = createComponentDimensions(cDimsStr);
-    std::vector<size_t> tDims;
-    std::vector<size_t> cDims;
-    for(int i = 0; i < dims.size(); i++)
-    {
-      auto cDimIt = cDimsSet.find(dims[i]);
-      if(cDimIt != cDimsSet.end())
-      {
-        cDims.push_back(dims[i]);
-      }
-      else
-      {
-        tDims.push_back(dims[i]);
-      }
-    }
+    std::vector<size_t> cDims = createDimensionVector(cDimsStr);
+    std::string tDimsStr = datasetImportInfo.tupleDimensions;
+    std::vector<size_t> tDims = createDimensionVector(tDimsStr);
 
     // Read dataset into DREAM.3D structure
     DataPath dataArrayPath = pSelectedAttributeMatrixValue.createChildPath(objectName);
