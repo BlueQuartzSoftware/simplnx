@@ -2,6 +2,8 @@
 
 #include <set>
 
+#include <nonstd/span.hpp>
+
 #include "H5Support/H5Lite.h"
 #include "H5Support/H5ScopedSentinel.h"
 #include "H5Support/H5Utilities.h"
@@ -46,6 +48,19 @@ std::vector<size_t> createDimensionVector(const std::string& cDimsStr)
   }
 
   return cDims;
+}
+
+template <typename T>
+bool fillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const H5::DatasetReader& datasetReader)
+{
+  auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);
+  auto& absDataStore = dataArray.getDataStoreRef();
+  auto& dataStore = dynamic_cast<DataStore<T>&>(absDataStore);
+  if(!datasetReader.readIntoSpan<T>(dataStore.createSpan()))
+  {
+    return false;
+  }
+  return true;
 }
 } // namespace
 
@@ -166,7 +181,7 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
     std::string datasetPath = datasetImportInfo.dataSetPath;
     if(datasetPath.empty())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-20007, "Cannot import empty dataset path"}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-20007, "Cannot import an empty dataset path"}})};
     }
 
     std::string parentPath = H5Utilities::getParentPath(datasetPath);
@@ -253,16 +268,10 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
       }
     }
 
-    // NOTE: When complex implements the “AttributeMatrix” the user entered tuple dimensions should be optional in lieu of an attribute matrix as the selected data path/parent.
+    // NOTE: When complex implements the AttributeMatrix, the user entered tuple dimensions should be optional in lieu of an attribute matrix as the selected data path/parent.
     stream << "\n";
     stream << "    Total HDF5 Dataset Element Count: " << hdf5TotalElements << "\n";
     stream << "-------------------------------------------\n";
-    // stream << "Current Data Structure Information: \n";
-    // stream << fmt::format("Attribute Matrix Path: '{}'\n", pSelectedAttributeMatrixValue.toString());
-
-    // std::vector<size_t> amTupleDims = am->getTupleDimensions();
-    // stream << "No. of Attribute Matrix Dimension(s): " << StringUtilities::number(static_cast<uint64>(amTupleDims.size())) << "\n";
-    // stream << "Attribute Matrix Dimension(s): ";
     stream << "No. of Tuple Dimension(s): " << StringUtilities::number(static_cast<uint64>(tDims.size())) << "\n";
     stream << "Tuple Dimension(s): ";
     size_t userEnteredTotalElements = 1;
@@ -355,7 +364,7 @@ Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argu
   hid_t fileId = H5::FileReader(inputFilePath).getId();
   if(fileId < 0)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-20006, fmt::format("Error Reading HDF5 file: '{}'", inputFile)}})};
+    return {MakeErrorResult(-21000, fmt::format("Error Reading HDF5 file: '{}'", inputFile))};
   }
   H5ScopedFileSentinel sentinel(fileId, true);
 
@@ -385,61 +394,59 @@ Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argu
       }
     }
 
-    // NOTE: When complex implements the “AttributeMatrix” the user entered tuple dimensions should be optional in lieu of an attribute matrix as the selected data path/parent.
-    std::string cDimsStr = datasetImportInfo.componentDimensions;
-    std::vector<size_t> cDims = createDimensionVector(cDimsStr);
-    std::string tDimsStr = datasetImportInfo.tupleDimensions;
-    std::vector<size_t> tDims = createDimensionVector(tDimsStr);
-
     // Read dataset into DREAM.3D structure
     DataPath dataArrayPath = pSelectedAttributeMatrixValue.createChildPath(objectName);
     H5::DatasetReader datasetReader(parentId, objectName);
+    bool fillArrayResults;
     auto type = datasetReader.getType();
     switch(type)
     {
     case H5::Type::float32: {
-      Float32Array::CreateWithStore<Float32DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
+      fillArrayResults = fillDataArray<float32>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case H5::Type::float64: {
-      Float64Array::CreateWithStore<Float64DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
+      fillArrayResults = fillDataArray<float64>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case H5::Type::int8: {
-      Int8Array::CreateWithStore<Int8DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
+      fillArrayResults = fillDataArray<int8>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case H5::Type::int16: {
-      Int16Array::CreateWithStore<Int16DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
+      fillArrayResults = fillDataArray<int16>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case H5::Type::int32: {
-      Int32Array::CreateWithStore<Int32DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
+      fillArrayResults = fillDataArray<int32>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case H5::Type::int64: {
-      Int64Array::CreateWithStore<Int64DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
+      fillArrayResults = fillDataArray<int64>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case H5::Type::uint8: {
-      UInt8Array::CreateWithStore<UInt8DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
+      fillArrayResults = fillDataArray<uint8>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case H5::Type::uint16: {
-      UInt16Array::CreateWithStore<UInt16DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
+      fillArrayResults = fillDataArray<uint16>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case H5::Type::uint32: {
-      UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
+      fillArrayResults = fillDataArray<uint32>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case H5::Type::uint64: {
-      UInt64Array::CreateWithStore<UInt64DataStore>(dataStructure, objectName, tDims, cDims, selectedDataGroup->getId());
+      fillArrayResults = fillDataArray<uint64>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     default:
-      return {
-          nonstd::make_unexpected(std::vector<Error>{Error{-20012, fmt::format("The selected datatset '{}' is not a supported type for importing. Please select a different data set", datasetPath)}})};
+      return {MakeErrorResult(-21001, fmt::format("The selected datatset '{}' is not a supported type for importing. Please select a different data set", datasetPath))};
+    }
+    if(!fillArrayResults)
+    {
+      return {MakeErrorResult(-21002, fmt::format("Error reading dataset path '{}' into data store for data array at path '{}'", datasetPath, dataArrayPath.toString()))};
     }
   } // End For Loop over dataset imoprt info list
 

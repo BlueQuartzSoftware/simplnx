@@ -332,16 +332,16 @@ template std::vector<size_t> H5::DatasetReader::readAsVector<size_t>() const;
 template std::vector<float> H5::DatasetReader::readAsVector<float>() const;
 template std::vector<double> H5::DatasetReader::readAsVector<double>() const;
 
-template bool H5::DatasetReader::readIntoSpan<int8>(nonstd::span<int8>) const;
-template bool H5::DatasetReader::readIntoSpan<int16>(nonstd::span<int16>) const;
-template bool H5::DatasetReader::readIntoSpan<int32>(nonstd::span<int32>) const;
-template bool H5::DatasetReader::readIntoSpan<int64>(nonstd::span<int64>) const;
-template bool H5::DatasetReader::readIntoSpan<uint8>(nonstd::span<uint8>) const;
-template bool H5::DatasetReader::readIntoSpan<uint16>(nonstd::span<uint16>) const;
-template bool H5::DatasetReader::readIntoSpan<uint32>(nonstd::span<uint32>) const;
-template bool H5::DatasetReader::readIntoSpan<uint64>(nonstd::span<uint64>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<int8>(nonstd::span<int8>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<int16>(nonstd::span<int16>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<int32>(nonstd::span<int32>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<int64>(nonstd::span<int64>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<uint8>(nonstd::span<uint8>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<uint16>(nonstd::span<uint16>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<uint32>(nonstd::span<uint32>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<uint64>(nonstd::span<uint64>) const;
 #ifdef __APPLE__
-template bool H5::DatasetReader::readIntoSpan<usize>(nonstd::span<usize>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<usize>(nonstd::span<usize>) const;
 #endif
-template bool H5::DatasetReader::readIntoSpan<float32>(nonstd::span<float32>) const;
-template bool H5::DatasetReader::readIntoSpan<float64>(nonstd::span<float64>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<float32>(nonstd::span<float32>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<float64>(nonstd::span<float64>) const;

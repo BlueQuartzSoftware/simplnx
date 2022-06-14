@@ -121,5 +121,15 @@ protected:
 private:
   H5::IdType m_DatasetId = 0;
 };
+extern template bool DatasetReader::readIntoSpan<int8>(nonstd::span<int8>) const;
+extern template bool DatasetReader::readIntoSpan<int16>(nonstd::span<int16>) const;
+extern template bool DatasetReader::readIntoSpan<int32>(nonstd::span<int32>) const;
+extern template bool DatasetReader::readIntoSpan<int64>(nonstd::span<int64>) const;
+extern template bool DatasetReader::readIntoSpan<uint8>(nonstd::span<uint8>) const;
+extern template bool DatasetReader::readIntoSpan<uint16>(nonstd::span<uint16>) const;
+extern template bool DatasetReader::readIntoSpan<uint32>(nonstd::span<uint32>) const;
+extern template bool DatasetReader::readIntoSpan<uint64>(nonstd::span<uint64>) const;
+extern template bool DatasetReader::readIntoSpan<float32>(nonstd::span<float32>) const;
+extern template bool DatasetReader::readIntoSpan<float64>(nonstd::span<float64>) const;
 } // namespace H5
 } // namespace complex
