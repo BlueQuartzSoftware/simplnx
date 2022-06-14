@@ -51,16 +51,18 @@ std::vector<size_t> createDimensionVector(const std::string& cDimsStr)
 }
 
 template <typename T>
-bool fillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const H5::DatasetReader& datasetReader)
+Result<> fillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const H5::DatasetReader& datasetReader)
 {
   auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);
   auto& absDataStore = dataArray.getDataStoreRef();
   auto& dataStore = dynamic_cast<DataStore<T>&>(absDataStore);
   if(!datasetReader.readIntoSpan<T>(dataStore.createSpan()))
   {
-    return false;
+    return {MakeErrorResult(-21002, fmt::format("Error reading dataset '{}' with '{}' total elements into data store for data array '{}' with '{}' total elements ('{}' tuples and '{}' components)",
+                                                dataArrayPath.getTargetName(), datasetReader.getNumElements(), dataArrayPath.toString(), dataArray.getSize(), dataArray.getNumberOfTuples(),
+                                                dataArray.getNumberOfComponents()))};
   }
-  return true;
+  return {};
 }
 } // namespace
 
@@ -100,7 +102,6 @@ std::vector<std::string> ImportHDF5Dataset::defaultTags() const
 Parameters ImportHDF5Dataset::parameters() const
 {
   Parameters params;
-  // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<ImportHDF5DatasetParameter>(k_ImportHDF5File_Key, "Select HDF5 File", "", ImportHDF5DatasetParameter::ValueType{}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedAttributeMatrix_Key, "Attribute Matrix", "", DataPath{}));
 
@@ -122,21 +123,7 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
   auto inputFile = pImportHDF5FileValue.first;
   auto datasetImportInfoList = pImportHDF5FileValue.second;
 
-  // Declare the preflightResult variable that will be populated with the results
-  // of the preflight. The PreflightResult type contains the output Actions and
-  // any preflight updated values that you want to be displayed to the user, typically
-  // through a user interface (UI).
-  PreflightResult preflightResult;
-
-  // If your filter is making structural changes to the DataStructure then the filter
-  // is going to create OutputActions subclasses that need to be returned. This will
-  // store those actions.
   complex::Result<OutputActions> resultOutputActions;
-
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
   std::vector<PreflightValue> preflightUpdatedValues;
 
   if(inputFile.empty())
@@ -287,10 +274,8 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
     }
     stream << "\n";
 
-    // int numOfAMTuples = am->getNumberOfTuples();
     int numOfTuples = userEnteredTotalElements;
     stream << fmt::format("Total Attribute Matrix Tuple Count: '{}'\n", StringUtilities::number(numOfTuples));
-
     stream << "No. of Component Dimension(s): " << StringUtilities::number(static_cast<uint64>(cDims.size())) << "\n";
     stream << "Component Dimension(s): ";
     int totalComponents = 1;
@@ -335,8 +320,8 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
       auto type = datasetReader.getDataType();
       if(type.invalid())
       {
-        return {nonstd::make_unexpected(
-            std::vector<Error>{Error{-20015, fmt::format("The selected datatset '{}' is not a supported type for importing. Please select a different data set", datasetPath)}})};
+        return {nonstd::make_unexpected(std::vector<Error>{
+            Error{-20015, fmt::format("The selected datatset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath, datasetReader.getType())}})};
       }
       auto action = std::make_unique<CreateArrayAction>(type.value(), tDims, cDims, dataArrayPath);
       resultOutputActions.value().actions.push_back(std::move(action));
@@ -345,7 +330,6 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
 
   // The sentinel will close the HDF5 File and any groups that were open.
 
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
@@ -360,7 +344,6 @@ Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argu
   auto datasetImportInfoList = pImportHDF5FileValue.second;
   auto selectedDataGroup = dataStructure.getDataAs<DataGroup>(pSelectedAttributeMatrixValue);
 
-  int err = 0;
   hid_t fileId = H5::FileReader(inputFilePath).getId();
   if(fileId < 0)
   {
@@ -397,7 +380,7 @@ Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argu
     // Read dataset into DREAM.3D structure
     DataPath dataArrayPath = pSelectedAttributeMatrixValue.createChildPath(objectName);
     H5::DatasetReader datasetReader(parentId, objectName);
-    bool fillArrayResults;
+    Result<> fillArrayResults;
     auto type = datasetReader.getType();
     switch(type)
     {
@@ -441,12 +424,13 @@ Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argu
       fillArrayResults = fillDataArray<uint64>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    default:
-      return {MakeErrorResult(-21001, fmt::format("The selected datatset '{}' is not a supported type for importing. Please select a different data set", datasetPath))};
+    default: {
+      return {MakeErrorResult(-21001, fmt::format("The selected datatset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath, type))};
     }
-    if(!fillArrayResults)
+    }
+    if(fillArrayResults.invalid())
     {
-      return {MakeErrorResult(-21002, fmt::format("Error reading dataset path '{}' into data store for data array at path '{}'", datasetPath, dataArrayPath.toString()))};
+      return fillArrayResults;
     }
   } // End For Loop over dataset imoprt info list
 
