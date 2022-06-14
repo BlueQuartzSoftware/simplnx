@@ -53,8 +53,8 @@ public:
   H5::Type getType() const;
 
   /**
-   * @brief Returns a complex::DataType enum representation of the attribute's type.
-   * @return H5::Type
+   * @brief Returns a complex::DataType enum representation of the attribute's type or an error if there is no conversion.
+   * @return DataType
    */
   Result<DataType> getDataType() const;
 
