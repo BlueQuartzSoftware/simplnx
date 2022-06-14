@@ -29,6 +29,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   IterativeClosestPointTest.cpp
   InitializeDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
+  ImportHDF5DatasetTest.cpp
   LaplacianSmoothingFilterTest.cpp
   MapPointCloudToRegularGridTest.cpp
   MinNeighborsTest.cpp
