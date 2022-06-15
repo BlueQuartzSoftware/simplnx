@@ -36,7 +36,7 @@ Uuid ImportAxioVisionV4Montage::uuid() const
 //------------------------------------------------------------------------------
 std::string ImportAxioVisionV4Montage::humanName() const
 {
-  return "ITK::Zeiss AxioVision Import (V4)";
+  return "ITK Zeiss AxioVision Import (V4)";
 }
 
 //------------------------------------------------------------------------------

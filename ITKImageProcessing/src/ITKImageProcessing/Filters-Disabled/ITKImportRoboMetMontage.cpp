@@ -38,7 +38,7 @@ Uuid ITKImportRoboMetMontage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKImportRoboMetMontage::humanName() const
 {
-  return "ITK::Import RoboMet Montage";
+  return "ITK Import RoboMet Montage";
 }
 
 //------------------------------------------------------------------------------

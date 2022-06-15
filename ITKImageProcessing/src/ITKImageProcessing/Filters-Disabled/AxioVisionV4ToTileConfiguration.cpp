@@ -31,7 +31,7 @@ Uuid AxioVisionV4ToTileConfiguration::uuid() const
 //------------------------------------------------------------------------------
 std::string AxioVisionV4ToTileConfiguration::humanName() const
 {
-  return "ITK::Convert AxioVision To Tile Configuration file";
+  return "ITK Convert AxioVision To Tile Configuration file";
 }
 
 //------------------------------------------------------------------------------

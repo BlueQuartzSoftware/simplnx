@@ -57,7 +57,7 @@ Uuid IlluminationCorrection::uuid() const
 //------------------------------------------------------------------------------
 std::string IlluminationCorrection::humanName() const
 {
-  return "ITK::Illumination Correction";
+  return "ITK Illumination Correction";
 }
 
 //------------------------------------------------------------------------------

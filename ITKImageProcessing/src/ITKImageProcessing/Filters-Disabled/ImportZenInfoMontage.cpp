@@ -38,7 +38,7 @@ Uuid ImportZenInfoMontage::uuid() const
 //------------------------------------------------------------------------------
 std::string ImportZenInfoMontage::humanName() const
 {
-  return "ITK::Zeiss Zen Import";
+  return "ITK Zeiss Zen Import";
 }
 
 //------------------------------------------------------------------------------
