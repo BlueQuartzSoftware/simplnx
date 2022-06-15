@@ -295,7 +295,7 @@ Uuid ITKImageReader::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKImageReader::humanName() const
 {
-  return "ITK::Image Reader";
+  return "ITK Image Reader";
 }
 
 //------------------------------------------------------------------------------

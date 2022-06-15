@@ -33,7 +33,7 @@ Uuid ITKRefineTileCoordinates::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKRefineTileCoordinates::humanName() const
 {
-  return "ITK::Refine Tile Coordinates";
+  return "ITK Refine Tile Coordinates";
 }
 
 //------------------------------------------------------------------------------

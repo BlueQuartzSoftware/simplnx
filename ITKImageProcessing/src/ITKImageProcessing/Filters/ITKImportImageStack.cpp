@@ -117,7 +117,7 @@ Uuid ITKImportImageStack::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKImportImageStack::humanName() const
 {
-  return "ITK::Import Images (3D Stack)";
+  return "ITK Import Images (3D Stack)";
 }
 
 //------------------------------------------------------------------------------

@@ -38,7 +38,7 @@ Uuid ITKImportFijiMontage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKImportFijiMontage::humanName() const
 {
-  return "ITK::Import Fiji Montage";
+  return "ITK Import Fiji Montage";
 }
 
 //------------------------------------------------------------------------------

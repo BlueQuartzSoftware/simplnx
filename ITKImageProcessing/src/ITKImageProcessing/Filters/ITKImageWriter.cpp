@@ -236,7 +236,7 @@ Uuid ITKImageWriter::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKImageWriter::humanName() const
 {
-  return "ITK::Image Export";
+  return "ITK Image Export";
 }
 
 //------------------------------------------------------------------------------
@@ -250,12 +250,16 @@ Parameters ITKImageWriter::parameters() const
 {
   Parameters params;
   using ExtensionListType = std::unordered_set<std::string>;
-
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<ChoicesParameter>(k_Plane_Key, "Plane", "", 0, ChoicesParameter::Choices{"XY", "XZ", "YZ"}));
   params.insert(std::make_unique<FileSystemPathParameter>(k_FileName_Key, "Output File", "", fs::path(), ExtensionListType{}, FileSystemPathParameter::PathType::OutputFile));
   params.insert(std::make_unique<UInt64Parameter>(k_IndexOffset_Key, "Index Offset", "", 0));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ImageArrayPath_Key, "Image", "", DataPath{}, complex::GetAllDataTypes()));
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "", DataPath{}, std::set<AbstractGeometry::Type>{AbstractGeometry::Type::Image}));
+
+  params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
+                                                             std::set<AbstractGeometry::Type>{AbstractGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ImageArrayPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
+                                                          complex::ITK::GetScalarPixelAllowedTypes()));
 
   return params;
 }

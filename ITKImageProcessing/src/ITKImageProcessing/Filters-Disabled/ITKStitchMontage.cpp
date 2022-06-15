@@ -46,7 +46,7 @@ Uuid ITKStitchMontage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKStitchMontage::humanName() const
 {
-  return "ITK::Stitch Montage";
+  return "ITK Stitch Montage";
 }
 
 //------------------------------------------------------------------------------
