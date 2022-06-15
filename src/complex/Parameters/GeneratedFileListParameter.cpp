@@ -146,7 +146,7 @@ std::any GeneratedFileListParameter::defaultValue() const
 Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
 {
   const auto& value = GetAnyRef<ValueType>(valueRef);
-  if(value.startIndex > value.endIndex)
+  if(value.startIndex >= value.endIndex)
   {
     return MakeErrorResult(-1, "startIndex must be less than endIndex");
   }
