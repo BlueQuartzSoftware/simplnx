@@ -87,9 +87,9 @@ FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const 
     {
       throw std::runtime_error("FileSystemPathParameter: One of the given extensions was empty. The filter is required to use non-emtpy extensions");
     }
-    if(ext.at(0) != '.')
+    if(ext.substr(0, 2) != "*.")
     {
-      validatedExtensions.insert('.' + complex::StringUtilities::toLower(ext));
+      validatedExtensions.insert("*." + complex::StringUtilities::toLower(ext));
     }
     else
     {

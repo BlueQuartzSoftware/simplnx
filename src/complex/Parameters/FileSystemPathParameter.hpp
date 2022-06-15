@@ -14,6 +14,11 @@ namespace complex
  * local file system. If your filter needs to gather a single input/output path, where
  * path can be a file or folder, this is the FilterParameter to use. The data is
  * held in a std::filesystem::path.
+ * To use this parameter the extension types must be in the format *.extensionName
+ * For example:
+ * FileSystemPathParameter("FileName", "File", "Input image file", fs::path(""),
+                           FileSystemPathParameter::ExtensionsType{{"*.png"}, {"*.tiff"}, {"*.tif"}, {"*.bmp"}, {"*.jpeg"}, {"*.jpg"}},
+                           FileSystemPathParameter::PathType::InputFile, false);
  */
 class COMPLEX_EXPORT FileSystemPathParameter : public ValueParameter
 {
