@@ -23,43 +23,96 @@ Compare the data sets. The values should be exactly the same.
 
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include "OrientationAnalysis/Filters/GenerateIPFColorsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 using namespace complex;
+using namespace complex::UnitTest;
+using namespace complex::Constants;
 
-TEST_CASE("OrientationAnalysis::GenerateIPFColors: Instantiation and Parameter Check", "[OrientationAnalysis][GenerateIPFColors][.][UNIMPLEMENTED][!mayfail]")
+#include <filesystem>
+namespace fs = std::filesystem;
+#include <cstdio>
+
+namespace complex::Constants
 {
+inline constexpr StringLiteral k_ImageDataContainer("ImageDataContainer");
+inline constexpr StringLiteral k_CellData("CellData");
+inline constexpr StringLiteral k_Mask("Mask");
+inline constexpr StringLiteral k_CrystalStructures("CrystalStructures");
+inline constexpr StringLiteral k_OutputIPFColors("IPF Colors_Test_Output");
+inline constexpr StringLiteral k_IPFColors("IPF Colors");
+inline constexpr StringLiteral k_CellEnsembleData("CellEnsembleData");
+} // namespace complex::Constants
+
+
+TEST_CASE("OrientationAnalysis::GenerateIPFColors", "[OrientationAnalysis][GenerateIPFColors]")
+{
+  // This test file was produced by SIMPL/DREAM3D. our results should match theirs
+  H5::ErrorType errorCode = 0;
+  H5::FileReader fileReader(fs::path(fmt::format("{}/TestFiles/so3_cubic_high_ipf_001.dream3d", complex::unit_test::k_DREAM3DDataDir)));
+  REQUIRE(fileReader.getId() > 1);
+
+  complex::DREAM3D::FileData fileData = DREAM3D::ReadFile(fileReader, errorCode);
+  DataStructure& dataStructure = fileData.second;
+  REQUIRE(errorCode >= 0);
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateIPFColorsFilter filter;
-  DataStructure ds;
   Arguments args;
 
+  DataPath cellEulerAnglesPath({Constants::k_ImageDataContainer, Constants::k_CellData, Constants::k_EulerAngles});
+  DataPath cellPhasesArrayPath({Constants::k_ImageDataContainer, Constants::k_CellData, Constants::k_Phases});
+  DataPath goodVoxelsPath({Constants::k_ImageDataContainer, Constants::k_CellData, Constants::k_Mask});
+  DataPath crystalStructuresArrayPath({Constants::k_ImageDataContainer, Constants::k_CellEnsembleData, Constants::k_CrystalStructures});
+  DataPath cellIPFColorsArrayName({Constants::k_ImageDataContainer, Constants::k_CellData, Constants::k_OutputIPFColors});
+
   // Create default Parameters for the filter.
-  args.insertOrAssign(GenerateIPFColorsFilter::k_ReferenceDir_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insertOrAssign(GenerateIPFColorsFilter::k_UseGoodVoxels_Key, std::make_any<bool>(false));
-  args.insertOrAssign(GenerateIPFColorsFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(GenerateIPFColorsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(GenerateIPFColorsFilter::k_GoodVoxelsPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(GenerateIPFColorsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(GenerateIPFColorsFilter::k_CellIPFColorsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateIPFColorsFilter::k_ReferenceDir_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0F, 0.0F, 1.0F}));
+  args.insertOrAssign(GenerateIPFColorsFilter::k_UseGoodVoxels_Key, std::make_any<bool>(true));
+  args.insertOrAssign(GenerateIPFColorsFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(cellEulerAnglesPath));
+  args.insertOrAssign(GenerateIPFColorsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(cellPhasesArrayPath));
+  args.insertOrAssign(GenerateIPFColorsFilter::k_GoodVoxelsPath_Key, std::make_any<DataPath>(goodVoxelsPath));
+  args.insertOrAssign(GenerateIPFColorsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresArrayPath));
+  args.insertOrAssign(GenerateIPFColorsFilter::k_CellIPFColorsArrayName_Key, std::make_any<DataPath>(cellIPFColorsArrayName));
+
+  REQUIRE(dataStructure.getData(goodVoxelsPath) != nullptr);
+  REQUIRE(dataStructure.getData(cellEulerAnglesPath) != nullptr);
+  REQUIRE(dataStructure.getData(cellPhasesArrayPath) != nullptr);
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
-  REQUIRE(executeResult.result.valid());
+  auto executeResult = filter.execute(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+  {
+    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/GenerateIPFColors_Test.dream3d", unit_test::k_BinaryDir));
+    H5::FileWriter fileWriter = std::move(result.value());
+    herr_t err = dataStructure.writeHdf5(fileWriter);
+    REQUIRE(err >= 0);
+  }
+
+  DataPath ipfColors({Constants::k_ImageDataContainer, Constants::k_CellData, Constants::k_IPFColors});
+
+  UInt8Array& exemplar = dataStructure.getDataRefAs<UInt8Array>(ipfColors);
+  UInt8Array& output = dataStructure.getDataRefAs<UInt8Array>(cellIPFColorsArrayName);
+
+  size_t totalElements = exemplar.getSize();
+  bool valid = true;
+  for(size_t i = 0; i < totalElements; i++)
+  {
+    if(exemplar[i] != output[i])
+    {
+      valid = false;
+      break;
+    }
+  }
+  REQUIRE(valid == true);
 }
-
-// TEST_CASE("OrientationAnalysis::GenerateIPFColors: Valid filter execution")
-//{
-//
-//}
-
-// TEST_CASE("OrientationAnalysis::GenerateIPFColors: InValid filter execution")
-//{
-//
-//}

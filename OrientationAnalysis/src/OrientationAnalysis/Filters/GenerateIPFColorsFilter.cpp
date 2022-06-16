@@ -62,7 +62,8 @@ Parameters GenerateIPFColorsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Parameters"});
   params.insert(std::make_unique<VectorFloat32Parameter>(k_ReferenceDir_Key, "Reference Direction", "", std::vector<float32>{0.0F, 0.0F, 1.0F}, std::vector<std::string>(3)));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseGoodVoxels_Key, "Use Mask Array", "", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsPath_Key, "Mask", "Path to the DataArray Mask", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_GoodVoxelsPath_Key, "Mask", "Path to the DataArray Mask", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseGoodVoxels_Key, k_GoodVoxelsPath_Key, true);
 
@@ -133,11 +134,11 @@ IFilter::PreflightResult GenerateIPFColorsFilter::preflightImpl(const DataStruct
     {
       return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", goodVoxelsPath.toString())}})};
     }
-    const GoodVoxelsArrayType* maskArray = dataStructure.getDataAs<GoodVoxelsArrayType>(goodVoxelsPath);
-    if(maskArray == nullptr)
+
+    if(goodVoxelsArray->getDataType() != DataType::boolean && goodVoxelsArray->getDataType() != DataType::uint8)
     {
       return {nonstd::make_unexpected(
-          std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array at path '{}' is not of the correct type. It must be Bool.", goodVoxelsPath.toString())}})};
+          std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array at path '{}' is not of the correct type. It must be Bool or UInt8", goodVoxelsPath.toString())}})};
     }
     dataPaths.push_back(goodVoxelsPath);
   }

@@ -26,7 +26,7 @@ class GenerateIPFColorsImpl
 {
 public:
   GenerateIPFColorsImpl(GenerateIPFColors* filter, FloatVec3Type referenceDir, complex::Float32Array& eulers, complex::Int32Array& phases, complex::UInt32Array& crystalStructures, int32_t numPhases,
-                        complex::BoolArray* goodVoxels, complex::UInt8Array& colors)
+                        const complex::IDataArray* goodVoxels, complex::UInt8Array& colors)
   : m_Filter(filter)
   , m_ReferenceDir(referenceDir)
   , m_CellEulerAngles(eulers)
@@ -40,8 +40,16 @@ public:
 
   virtual ~GenerateIPFColorsImpl() = default;
 
+  template <typename T>
   void convert(size_t start, size_t end) const
   {
+    using MaskArrayType = DataArray<T>;
+    const MaskArrayType* maskArray = nullptr;
+    if(nullptr != m_GoodVoxels)
+    {
+      maskArray = dynamic_cast<const MaskArrayType*>(m_GoodVoxels);
+    }
+
     std::vector<LaueOps::Pointer> ops = LaueOps::GetAllOrientationOps();
     std::array<double, 3> refDir = {m_ReferenceDir[0], m_ReferenceDir[1], m_ReferenceDir[2]};
     std::array<double, 3> dEuler = {0.0, 0.0, 0.0};
@@ -62,9 +70,9 @@ public:
 
       // Make sure we are using a valid Euler Angles with valid crystal symmetry
       calcIPF = true;
-      if(nullptr != m_GoodVoxels)
+      if(nullptr != maskArray)
       {
-        calcIPF = (*m_GoodVoxels)[i];
+        calcIPF = (*maskArray)[i];
       }
       // Sanity check the phase data to make sure we do not walk off the end of the array
       if(phase >= m_NumPhases)
@@ -82,9 +90,28 @@ public:
     }
   }
 
+  void run(size_t start, size_t end) const
+  {
+    if(m_GoodVoxels != nullptr)
+    {
+      if(m_GoodVoxels->getDataType() == DataType::boolean)
+      {
+        convert<bool>(start, end);
+      }
+      else if(m_GoodVoxels->getDataType() == DataType::uint8)
+      {
+        convert<uint8>(start, end);
+      }
+    }
+    else
+    {
+      convert<bool>(start, end);
+    }
+  }
+
   void operator()(const ComplexRange& range) const
   {
-    convert(range.min(), range.max());
+    run(range.min(), range.max());
   }
 
 private:
@@ -94,7 +121,7 @@ private:
   complex::Int32Array& m_CellPhases;
   complex::UInt32Array& m_CrystalStructures;
   int32_t m_NumPhases = 0;
-  complex::BoolArray* m_GoodVoxels = nullptr;
+  const complex::IDataArray* m_GoodVoxels = nullptr;
   complex::UInt8Array& m_CellIPFColors;
 };
 } // namespace
@@ -120,8 +147,6 @@ Result<> GenerateIPFColors::operator()()
   complex::Float32Array& eulers = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellEulerAnglesArrayPath);
   complex::Int32Array& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
 
-  auto* goodVoxelsArray = m_DataStructure.getDataAs<BoolArray>(m_InputValues->goodVoxelsArrayPath);
-
   complex::UInt32Array& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
 
   complex::UInt8Array& ipfColors = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->cellIpfColorsArrayPath);
@@ -135,6 +160,8 @@ Result<> GenerateIPFColors::operator()()
   FloatVec3Type normRefDir = m_InputValues->referenceDirection; // Make a copy of the reference Direction
 
   MatrixMath::Normalize3x1(normRefDir[0], normRefDir[1], normRefDir[2]);
+
+  const complex::IDataArray* goodVoxelsArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->goodVoxelsArrayPath);
 
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
