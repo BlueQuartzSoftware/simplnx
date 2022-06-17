@@ -148,7 +148,7 @@ Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
   const auto& value = GetAnyRef<ValueType>(valueRef);
   if(value.startIndex > value.endIndex)
   {
-    return MakeErrorResult(-1, "startIndex must be less than endIndex");
+    return MakeErrorResult(-1, "startIndex must be less than or equal to endIndex");
   }
   // Generate the file lsit
   auto fileList = value.generate();
