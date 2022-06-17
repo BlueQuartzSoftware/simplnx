@@ -49,44 +49,32 @@ H5::Type H5::DatasetReader::getType() const
 
 Result<DataType> H5::DatasetReader::getDataType() const
 {
-  DataType datasetType;
   switch(getType())
   {
   case H5::Type::float32:
-    datasetType = DataType::float32;
-    break;
+    return {DataType::float32};
   case H5::Type::float64:
-    datasetType = DataType::float64;
-    break;
+    return {DataType::float64};
   case H5::Type::int8:
-    datasetType = DataType::int8;
-    break;
+    return {DataType::int8};
   case H5::Type::int16:
-    datasetType = DataType::int16;
-    break;
+    return {DataType::int16};
   case H5::Type::int32:
-    datasetType = DataType::int32;
-    break;
+    return {DataType::int32};
   case H5::Type::int64:
-    datasetType = DataType::int64;
-    break;
+    return {DataType::int64};
   case H5::Type::uint8:
-    datasetType = DataType::uint8;
-    break;
+    return {DataType::uint8};
   case H5::Type::uint16:
-    datasetType = DataType::uint16;
-    break;
+    return {DataType::uint16};
   case H5::Type::uint32:
-    datasetType = DataType::uint32;
-    break;
+    return {DataType::uint32};
   case H5::Type::uint64:
-    datasetType = DataType::uint64;
-    break;
+    return {DataType::uint64};
   default:
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-20012, "The selected datatset is not a supported type for importing. Please select a different data set"}})};
+    break;
   }
-
-  return {std::move(datasetType)};
+  return {nonstd::make_unexpected(std::vector<Error>{Error{-20012, "The selected datatset is not a supported type for importing. Please select a different data set"}})};
 }
 
 H5::IdType H5::DatasetReader::getTypeId() const

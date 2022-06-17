@@ -20,8 +20,8 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace H5Support;
 
-#define COMPDIMPROD 72
-#define TUPLEDIMPROD 40
+constexpr hsize_t COMPDIMPROD = 72;
+constexpr hsize_t TUPLEDIMPROD = 40;
 fs::path m_FilePath(unit_test::k_ComplexTestDataSourceDir.str() + "/ImportHDF5DatasetTest.h5");
 
 // -----------------------------------------------------------------------------
@@ -149,7 +149,7 @@ void writeHDF5File()
 {
   if(fs::exists(m_FilePath))
   {
-    if(fs::remove(m_FilePath) == false)
+    if(!fs::remove(m_FilePath))
     {
       REQUIRE(0 == 1);
     }
@@ -422,23 +422,6 @@ void DatasetTest(ImportHDF5Dataset& filter, std::list<ImportHDF5DatasetParameter
 }
 
 // -----------------------------------------------------------------------------
-template <typename T>
-std::string joinVector(std::vector<T> vector, const std::string& separator)
-{
-  std::string cDimsStr = "";
-  for(int i = 0; i < vector.size(); i++)
-  {
-    cDimsStr.append(StringUtilities::number(vector[i]));
-    if(i < vector.size() - 1)
-    {
-      cDimsStr.append(" " + separator + " ");
-    }
-  }
-
-  return cDimsStr;
-}
-
-// -----------------------------------------------------------------------------
 TEST_CASE("ImportHDF5Dataset Filter")
 {
   writeHDF5File();
@@ -511,8 +494,8 @@ TEST_CASE("ImportHDF5Dataset Filter")
 
       std::list<ImportHDF5DatasetParameter::DatasetImportInfo> importInfoList;
       ImportHDF5DatasetParameter::DatasetImportInfo info;
-      info.componentDimensions = joinVector(cDims, ", ");
-      info.tupleDimensions = joinVector(tDims, ", ");
+      info.componentDimensions = fmt::format("{}", fmt::join(cDims, ", "));
+      info.tupleDimensions = fmt::format("{}", fmt::join(tDims, ", "));
 
       std::vector<std::string> dsetPaths;
       dsetPaths.push_back("/Pointer/Pointer1DArrayDataset<@TYPE_STRING@>");
@@ -666,7 +649,7 @@ TEST_CASE("ImportHDF5Dataset Filter")
 
   if(fs::exists(m_FilePath))
   {
-    if(fs::remove(m_FilePath) == false)
+    if(!fs::remove(m_FilePath))
     {
       REQUIRE(0 == 1);
     }
