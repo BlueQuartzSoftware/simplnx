@@ -108,7 +108,7 @@ namespace UnitTest
  */
 template <typename T>
 DataArray<T>* CreateTestDataArray(DataStructure& dataGraph, const std::string& name, typename DataStore<T>::ShapeType tupleShape, typename DataStore<T>::ShapeType componentShape,
-                                  DataObject::IdType parentId)
+                                  DataObject::IdType parentId = {})
 {
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
