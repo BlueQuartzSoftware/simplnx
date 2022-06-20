@@ -105,7 +105,7 @@ Result<std::any> ImportHDF5DatasetParameter::fromJson(const nlohmann::json& json
     for(const auto& jsonImportInfo : jsonDataPaths)
     {
       auto importInfo = DatasetImportInfo::ReadJson(jsonImportInfo);
-      if(!importInfo.errors().empty())
+      if(importInfo.invalid())
       {
         return {{nonstd::make_unexpected(std::move(importInfo.errors()))}};
       }
