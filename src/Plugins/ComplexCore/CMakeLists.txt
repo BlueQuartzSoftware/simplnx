@@ -32,6 +32,7 @@ set(FilterList
   FindSurfaceFeatures
   IdentifySample
   ImportDREAM3DFilter
+  ImportHDF5Dataset
   ImportTextFilter
   InitializeData
   InterpolatePointCloudToRegularGridFilter
