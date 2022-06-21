@@ -47,6 +47,36 @@ H5::Type H5::DatasetReader::getType() const
   return H5::getTypeFromId(typeId);
 }
 
+Result<DataType> H5::DatasetReader::getDataType() const
+{
+  switch(getType())
+  {
+  case H5::Type::float32:
+    return {DataType::float32};
+  case H5::Type::float64:
+    return {DataType::float64};
+  case H5::Type::int8:
+    return {DataType::int8};
+  case H5::Type::int16:
+    return {DataType::int16};
+  case H5::Type::int32:
+    return {DataType::int32};
+  case H5::Type::int64:
+    return {DataType::int64};
+  case H5::Type::uint8:
+    return {DataType::uint8};
+  case H5::Type::uint16:
+    return {DataType::uint16};
+  case H5::Type::uint32:
+    return {DataType::uint32};
+  case H5::Type::uint64:
+    return {DataType::uint64};
+  default:
+    break;
+  }
+  return {nonstd::make_unexpected(std::vector<Error>{Error{-20012, "The selected datatset is not a supported type for importing. Please select a different data set"}})};
+}
+
 H5::IdType H5::DatasetReader::getTypeId() const
 {
   auto id = getId();
@@ -290,16 +320,16 @@ template std::vector<size_t> H5::DatasetReader::readAsVector<size_t>() const;
 template std::vector<float> H5::DatasetReader::readAsVector<float>() const;
 template std::vector<double> H5::DatasetReader::readAsVector<double>() const;
 
-template bool H5::DatasetReader::readIntoSpan<int8>(nonstd::span<int8>) const;
-template bool H5::DatasetReader::readIntoSpan<int16>(nonstd::span<int16>) const;
-template bool H5::DatasetReader::readIntoSpan<int32>(nonstd::span<int32>) const;
-template bool H5::DatasetReader::readIntoSpan<int64>(nonstd::span<int64>) const;
-template bool H5::DatasetReader::readIntoSpan<uint8>(nonstd::span<uint8>) const;
-template bool H5::DatasetReader::readIntoSpan<uint16>(nonstd::span<uint16>) const;
-template bool H5::DatasetReader::readIntoSpan<uint32>(nonstd::span<uint32>) const;
-template bool H5::DatasetReader::readIntoSpan<uint64>(nonstd::span<uint64>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<int8>(nonstd::span<int8>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<int16>(nonstd::span<int16>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<int32>(nonstd::span<int32>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<int64>(nonstd::span<int64>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<uint8>(nonstd::span<uint8>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<uint16>(nonstd::span<uint16>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<uint32>(nonstd::span<uint32>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<uint64>(nonstd::span<uint64>) const;
 #ifdef __APPLE__
-template bool H5::DatasetReader::readIntoSpan<usize>(nonstd::span<usize>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<usize>(nonstd::span<usize>) const;
 #endif
-template bool H5::DatasetReader::readIntoSpan<float32>(nonstd::span<float32>) const;
-template bool H5::DatasetReader::readIntoSpan<float64>(nonstd::span<float64>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<float32>(nonstd::span<float32>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<float64>(nonstd::span<float64>) const;

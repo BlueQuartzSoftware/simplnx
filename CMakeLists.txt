@@ -138,6 +138,7 @@ set(CoreParameters
   NumberParameter
   NumericTypeParameter
   ImportCSVDataParameter
+  ImportHDF5DatasetParameter
   StringParameter
   VectorParameter
 )
