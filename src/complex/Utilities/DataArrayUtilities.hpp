@@ -537,4 +537,108 @@ COMPLEX_EXPORT Result<> CheckValueConverts(const std::string& value, NumericType
  */
 COMPLEX_EXPORT Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObject& inputDataArray);
 
+
+/**
+ * @brief These structs and functions are meant to make using a "mask array" or "Good Voxels Array" easier
+ * for the developer. There is virtual function call overhead with using these structs and functions.
+ *
+ * An example use of these functions would be the following:
+ * @code
+ *  std::shared_ptr<MaskCompare> maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->goodVoxelsArrayPath);
+ *  if(!maskCompare->bothTrue(arrayIndex, anotherArrayIndex))
+ *  {
+ *    // Do something based on the if statement...
+ *  }
+ * @endcode
+ */
+struct MaskCompare
+{
+  /**
+   * @brief Both of the values pointed to by the index *must* be `true` or non-zero. If either of the values or
+   * *both* of the values are false, this will return false.
+   * @param indexA First index
+   * @param indexB Second index
+   * @return
+   */
+  virtual bool bothTrue(size_t indexA, size_t indexB) const = 0;
+
+  /**
+   * @brief Both of the values pointed to by the index *must* be `false` or non-zero. If either of the values or
+   * *both* of the values are `true`, this will return `false`.
+   * @param indexA
+   * @param indexB
+   * @return
+   */
+  virtual bool bothFalse(size_t indexA, size_t indexB) const = 0;
+
+  /**
+   * @brief Returns `true` or `false` based on the value at the index
+   * @param index index to check
+   * @return
+   */
+  virtual bool isTrue(size_t index) const = 0;
+};
+
+struct BoolMaskCompare : public MaskCompare
+{
+  BoolMaskCompare(const BoolArray* array) :m_Array(array){}
+  const BoolArray* m_Array = nullptr;
+  bool bothTrue(size_t indexA, size_t indexB) const override
+  {
+    return m_Array->at(indexA) && m_Array->at(indexB);
+  }
+  bool bothFalse(size_t indexA, size_t indexB) const override
+  {
+    return !m_Array->at(indexA) && !m_Array->at(indexB);
+  }
+  bool isTrue(size_t index) const override
+  {
+    return m_Array->at(index);
+  }
+};
+
+struct UInt8MaskCompare : public MaskCompare
+{
+  UInt8MaskCompare(const UInt8Array* array) :m_Array(array){}
+  const UInt8Array* m_Array = nullptr;
+  bool bothTrue(size_t indexA, size_t indexB) const override
+  {
+    return m_Array->at(indexA) != 0 && m_Array->at(indexB) != 0;
+  }
+  bool bothFalse(size_t indexA, size_t indexB) const override
+  {
+    return m_Array->at(indexA) == 0 && m_Array->at(indexB) == 0;
+  }
+  bool isTrue(size_t index) const override
+  {
+    return m_Array->at(index) != 0;
+  }
+};
+
+/**
+ * @brief Convenience method to create an instance of the MaskCompare subclass.
+ *
+ * An example use of these functions would be the following:
+ * @code
+ *  std::shared_ptr<MaskCompare> maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->goodVoxelsArrayPath);
+ *  if(!maskCompare->bothTrue(arrayIndex, anotherArrayIndex))
+ *  {
+ *    // Do something based on the if statement...
+ *  }
+ * @endcode
+ * 
+ * @param dataStructure The DataStructure object to pull the DataArray from
+ * @param maskArrayPath The DataPath of the mask array.
+ * @return
+ */
+COMPLEX_EXPORT std::shared_ptr<MaskCompare> InstantiateMaskCompare(const DataStructure& dataStructure, const DataPath& maskArrayPath);
+
+/**
+ * @brief Convenience method to create an instance of the MaskCompare subclass
+ * @param maskArrayPtr A Pointer to the mask array which can be of either `bool` or `uint8` type.
+ * @return
+ */
+COMPLEX_EXPORT std::shared_ptr<MaskCompare> InstantiateMaskCompare(const complex::IDataArray* maskArrayPtr);
+
+
 } // namespace complex

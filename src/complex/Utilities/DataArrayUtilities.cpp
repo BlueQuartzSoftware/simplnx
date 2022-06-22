@@ -208,4 +208,42 @@ Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath&
 
   return MakeErrorResult(-401, fmt::format("The input array at DataPath '{}' was of an unsupported type", dataPath.toString()));
 }
+
+
+std::shared_ptr<MaskCompare> InstantiateMaskCompare(const DataStructure& dataStructure, const DataPath& maskArrayPath)
+{
+  const complex::IDataArray* maskArrayPtr = dataStructure.getDataAs<IDataArray>(maskArrayPath);
+
+  if(maskArrayPtr != nullptr)
+  {
+    if(maskArrayPtr->getDataType() == DataType::boolean)
+    {
+      return std::make_shared<BoolMaskCompare>(BoolMaskCompare(dataStructure.getDataAs<BoolArray>(maskArrayPath)));
+    }
+    if(maskArrayPtr->getDataType() == DataType::uint8)
+    {
+      return std::make_shared<UInt8MaskCompare>(UInt8MaskCompare(dataStructure.getDataAs<UInt8Array>(maskArrayPath)));
+    }
+  }
+  return std::make_shared<UInt8MaskCompare>(nullptr);
+}
+
+std::shared_ptr<MaskCompare> InstantiateMaskCompare(const complex::IDataArray* maskArrayPtr)
+{
+  if(maskArrayPtr != nullptr)
+  {
+    if(maskArrayPtr->getDataType() == DataType::boolean)
+    {
+      return std::make_shared<BoolMaskCompare>(BoolMaskCompare(dynamic_cast<const BoolArray*>(maskArrayPtr)));
+    }
+    if(maskArrayPtr->getDataType() == DataType::uint8)
+    {
+      return std::make_shared<UInt8MaskCompare>(UInt8MaskCompare(dynamic_cast<const UInt8Array*>(maskArrayPtr)));
+    }
+  }
+  return std::make_shared<UInt8MaskCompare>(nullptr);
+}
+
+
+
 } // namespace complex
