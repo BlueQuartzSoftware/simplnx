@@ -1,18 +1,21 @@
 #include "complex/Filter/FilterHandle.hpp"
+#include "complex/Filter/IFilter.hpp"
 
 namespace complex
 {
 FilterHandle::FilterHandle(const FilterIdType& filterId, const PluginIdType& pluginId)
-: m_FilterName("[Unknown]")
+: m_FilterName("[Unknown Filter]")
+, m_ClassName("[Unknown Class Name]")
 , m_FilterId(filterId)
 , m_PluginId(pluginId)
 {
 }
 
-FilterHandle::FilterHandle(const std::string& filterName, const std::string& className, const FilterIdType& filterId, const PluginIdType& pluginId)
-: m_FilterName(filterName)
-, m_ClassName(className)
-, m_FilterId(filterId)
+FilterHandle::FilterHandle(IFilter* filter, const PluginIdType& pluginId)
+: m_FilterName(filter->humanName())
+, m_ClassName(filter->className())
+, m_DefaultTags(filter->defaultTags())
+, m_FilterId(filter->uuid())
 , m_PluginId(pluginId)
 {
 }
@@ -35,6 +38,11 @@ std::string FilterHandle::getFilterName() const
 std::string FilterHandle::getClassName() const
 {
   return m_ClassName;
+}
+
+std::vector<std::string> FilterHandle::getDefaultTags() const
+{
+  return m_DefaultTags;
 }
 
 FilterHandle::FilterIdType FilterHandle::getFilterId() const

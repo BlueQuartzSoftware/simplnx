@@ -5,6 +5,7 @@
 
 #include "complex/Common/Uuid.hpp"
 #include "complex/complex_export.hpp"
+#include "complex/Filter/IFilter.hpp"
 
 namespace complex
 {
@@ -92,6 +93,12 @@ public:
    */
   std::string getClassName() const;
 
+    /**
+   * @brief Returns the Default Tags for the filter
+   * @return
+   */
+  std::vector<std::string> getDefaultTags() const;
+
   /**
    * @brief Returns the filter ID within the target plugin.
    * @return PluginIdType
@@ -112,11 +119,12 @@ protected:
    * @param filterId
    * @param pluginId
    */
-  FilterHandle(const std::string& filterHumanName, const std::string& className, const FilterIdType& filterId, const PluginIdType& pluginId);
+  FilterHandle(IFilter* filter, const PluginIdType& pluginId);
 
 private:
   std::string m_FilterName;
   std::string m_ClassName;
+  std::vector<std::string> m_DefaultTags;
   FilterIdType m_FilterId;
   PluginIdType m_PluginId;
 };
