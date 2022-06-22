@@ -61,6 +61,8 @@ Parameters GenerateIPFColorsFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Parameters"});
   params.insert(std::make_unique<VectorFloat32Parameter>(k_ReferenceDir_Key, "Reference Direction", "", std::vector<float32>{0.0F, 0.0F, 1.0F}, std::vector<std::string>(3)));
+
+  params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseGoodVoxels_Key, "Use Mask Array", "", false));
   params.insert(
       std::make_unique<ArraySelectionParameter>(k_GoodVoxelsPath_Key, "Mask", "Path to the DataArray Mask", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}));
