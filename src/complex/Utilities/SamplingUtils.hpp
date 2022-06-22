@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
@@ -56,6 +57,9 @@ inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& n
       return MakeErrorResult(-602, ss);
     }
   }
+
+  // destCellFeatureAttrMat->removeInactiveObjects(activeObjects, destFeatureIdsPtr.get());
+
   return {};
 }
 } // namespace Sampling
