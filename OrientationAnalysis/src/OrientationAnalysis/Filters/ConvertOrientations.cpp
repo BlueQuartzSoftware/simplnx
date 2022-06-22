@@ -16,6 +16,8 @@
 
 #include <fmt/format.h>
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "UnusedValue"
 using namespace complex;
 
 namespace
@@ -23,7 +25,7 @@ namespace
 
 // Error Code constants
 constexpr complex::int32 k_InputRepresentationTypeError = -67001;
-constexpr complex::int32 k_OuputRepresentationTypeError = -67002;
+constexpr complex::int32 k_OutputRepresentationTypeError = -67002;
 constexpr complex::int32 k_InputComponentDimensionError = -67003;
 constexpr complex::int32 k_InputComponentCountError = -67004;
 
@@ -35,127 +37,130 @@ const std::vector<size_t> RepresentationElementCount = {3, 9, 4, 4, 4, 3, 3};
 /**
  *
  */
-template <typename T, typename InputType, size_t InCompSize, typename OutputType, size_t OutCompSize, typename TransformFunc>
-class ConvertOrientationImpl
+template <typename T, typename TransformFunc, size_t InCompSize = 0, size_t OutCompSize = 0>
+class ConvertOrientation
 {
-
 public:
-  ConvertOrientationImpl(const DataArray<T>& inputArray, DataArray<T>& outputArray, TransformFunc transformFunc)
-  : m_InputArray(inputArray)
-  , m_OutputArray(outputArray)
-  , m_TransformFunc(transformFunc)
+  ConvertOrientation(const DataArray<T>& inputArray, DataArray<T>& outputArray, TransformFunc transformFunc)
+  : m_inputArray(inputArray)
+  , m_outputArray(outputArray)
+  , m_transformFunc(std::move(transformFunc))
   {
-  }
-  virtual ~ConvertOrientationImpl() = default;
-
-  void convert(size_t start, size_t end) const
-  {
-    auto& inDataStore = m_InputArray.getDataStoreRef();
-    auto& outDataStore = m_OutputArray.getDataStoreRef();
-    InputType input(InCompSize);
-    for(size_t t = start; t < end; t++)
-    {
-      for(size_t c = 0; c < InCompSize; c++)
-      {
-        input[c] = inDataStore.getValue(t * InCompSize + c);
-      }
-      OutputType output = m_TransformFunc(input); // Do the actual Conversion
-      for(size_t c = 0; c < OutCompSize; c++)
-      {
-        outDataStore.setValue(t * OutCompSize + c, output[c]);
-      }
-    }
   }
 
   void operator()(const ComplexRange& range) const
   {
-    convert(range.min(), range.max());
+    auto& inDataStore = m_inputArray.getDataStoreRef();
+    auto& outDataStore = m_outputArray.getDataStoreRef();
+
+    Orientation<T> input(InCompSize);
+    for(size_t tIndex = range.min(); tIndex < range.max(); tIndex++)
+    {
+
+      for(size_t cIndex = 0; cIndex < InCompSize; cIndex++)
+      {
+        input[cIndex] = inDataStore.getValue(tIndex * InCompSize + cIndex);
+      }
+      Orientation<T> output = m_transformFunc(input); // Do the actual Conversion
+      for(size_t cIndex = 0; cIndex < OutCompSize; cIndex++)
+      {
+        outDataStore.setValue(tIndex * OutCompSize + cIndex, output[cIndex]);
+      }
+    }
   }
 
 private:
-  const DataArray<T>& m_InputArray;
-  DataArray<T>& m_OutputArray;
-  TransformFunc m_TransformFunc;
+  const DataArray<T>& m_inputArray;
+  DataArray<T>& m_outputArray;
+  TransformFunc m_transformFunc;
 };
 
 /**
  *
  */
-template <typename T, size_t InCompSize = 0, size_t OutCompSize = 0, typename TransformFunc>
-void ConvertOrientation(const DataArray<T>& inputArray, DataArray<T>& outputArray, TransformFunc transformFunc)
+template <typename T, typename TransformFunc, size_t InCompSize = 0, size_t OutCompSize = 0>
+class ToQuaternion
 {
-  size_t numTuples = inputArray.getNumberOfTuples();
-  auto& inDataStore = inputArray.getDataStoreRef();
-  auto& outDataStore = outputArray.getDataStoreRef();
-
-  Orientation<T> input(InCompSize);
-  for(size_t t = 0; t < numTuples; t++)
+public:
+  ToQuaternion(const DataArray<T>& inputArray, DataArray<T>& outputArray, TransformFunc transformFunc, typename Quaternion<T>::Order layout)
+  : m_inputArray(inputArray)
+  , m_outputArray(outputArray)
+  , m_transformFunc(std::move(transformFunc))
+  , m_layout(layout)
   {
+  }
 
-    for(size_t c = 0; c < InCompSize; c++)
+  void operator()(const ComplexRange& range) const
+  {
+    using QuaterionType = Quaternion<float>;
+    size_t numTuples = m_inputArray.getNumberOfTuples();
+    auto& inDataStore = m_inputArray.getDataStoreRef();
+    auto& outDataStore = m_outputArray.getDataStoreRef();
+
+    Orientation<T> input(InCompSize);
+    for(size_t tIndex = range.min(); tIndex < range.max(); tIndex++)
     {
-      input[c] = inDataStore.getValue(t * InCompSize + c);
-    }
-    Orientation<T> output = transformFunc(input); // Do the actual Conversion
-    for(size_t c = 0; c < OutCompSize; c++)
-    {
-      outDataStore.setValue(t * OutCompSize + c, output[c]);
+      for(size_t cIndex = 0; cIndex < InCompSize; cIndex++)
+      {
+        input[cIndex] = inDataStore.getValue(tIndex * InCompSize + cIndex);
+      }
+      QuaterionType output = m_transformFunc(input, m_layout); // Do the actual Conversion
+      for(size_t cIndex = 0; cIndex < OutCompSize; cIndex++)
+      {
+        outDataStore.setValue(tIndex * OutCompSize + cIndex, output[cIndex]);
+      }
     }
   }
-}
+
+private:
+  const DataArray<T>& m_inputArray;
+  DataArray<T>& m_outputArray;
+  TransformFunc m_transformFunc;
+  typename Quaternion<T>::Order m_layout;
+};
 
 /**
  *
  */
-template <typename T, size_t InCompSize = 0, size_t OutCompSize = 0, typename TransformFunc>
-void ToQuaternion(const DataArray<T>& inputArray, DataArray<T>& outputArray, TransformFunc transformFunc, typename Quaternion<T>::Order layout)
+template <typename T, typename TransformFunc, size_t InCompSize = 0, size_t OutCompSize = 0>
+class FromQuaternion
 {
-  using QuaterionType = Quaternion<T>;
-
-  size_t numTuples = inputArray.getNumberOfTuples();
-  auto& inDataStore = inputArray.getDataStoreRef();
-  auto& outDataStore = outputArray.getDataStoreRef();
-
-  Orientation<T> input(InCompSize);
-  for(size_t t = 0; t < numTuples; t++)
+public:
+  FromQuaternion(const DataArray<T>& inputArray, DataArray<T>& outputArray, TransformFunc transformFunc, typename Quaternion<T>::Order layout)
+  : m_inputArray(inputArray)
+  , m_outputArray(outputArray)
+  , m_transformFunc(std::move(transformFunc))
+  , m_layout(layout)
   {
-    for(size_t c = 0; c < InCompSize; c++)
+  }
+
+  void operator()(const ComplexRange& range) const
+  {
+    using QuaterionType = Quaternion<T>;
+    auto& inDataStore = m_inputArray.getDataStoreRef();
+    auto& outDataStore = m_outputArray.getDataStoreRef();
+
+    QuaterionType input;
+    for(size_t tIndex = range.min(); tIndex < range.max(); tIndex++)
     {
-      input[c] = inDataStore.getValue(t * InCompSize + c);
-    }
-    QuaterionType output = transformFunc(input, layout); // Do the actual Conversion
-    for(size_t c = 0; c < OutCompSize; c++)
-    {
-      outDataStore.setValue(t * OutCompSize + c, output[c]);
+      for(size_t cIndex = 0; cIndex < InCompSize; cIndex++)
+      {
+        input[cIndex] = inDataStore.getValue(tIndex * InCompSize + cIndex);
+      }
+      Orientation<T> output = m_transformFunc(input, m_layout); // Do the actual Conversion
+      for(size_t cIndex = 0; cIndex < OutCompSize; cIndex++)
+      {
+        outDataStore.setValue(tIndex * OutCompSize + cIndex, output[cIndex]);
+      }
     }
   }
-}
 
-/**
- *
- */
-template <typename T, size_t InCompSize = 0, size_t OutCompSize = 0, typename TransformFunc>
-void FromQuaterion(const DataArray<T>& inputArray, DataArray<T>& outputArray, TransformFunc transformFunc, typename Quaternion<T>::Order layout)
-{
-  using QuaterionType = Quaternion<T>;
-  size_t numTuples = inputArray.getNumberOfTuples();
-  auto& inDataStore = inputArray.getDataStoreRef();
-  auto& outDataStore = outputArray.getDataStoreRef();
-
-  QuaterionType input;
-  for(size_t t = 0; t < numTuples; t++)
-  {
-    for(size_t c = 0; c < InCompSize; c++)
-    {
-      input[c] = inDataStore.getValue(t * InCompSize + c);
-    }
-    Orientation<T> output = transformFunc(input, layout); // Do the actual Conversion
-    for(size_t c = 0; c < OutCompSize; c++)
-    {
-      outDataStore.setValue(t * OutCompSize + c, output[c]);
-    }
-  }
-}
+private:
+  const DataArray<T>& m_inputArray;
+  DataArray<T>& m_outputArray;
+  TransformFunc m_transformFunc;
+  typename Quaternion<T>::Order m_layout;
+};
 
 } // namespace
 
@@ -226,23 +231,23 @@ IFilter::PreflightResult ConvertOrientations::preflightImpl(const DataStructure&
 
   if(static_cast<int>(outputType) < 0 || outputType >= OrientationRepresentation::Type::Unknown)
   {
-    return {MakeErrorResult<OutputActions>(::k_OuputRepresentationTypeError, fmt::format("Output Representation Type must be a value from 0 to 6. '{}'", outputType))};
+    return {MakeErrorResult<OutputActions>(::k_OutputRepresentationTypeError, fmt::format("Output Representation Type must be a value from 0 to 6. '{}'", outputType))};
   }
 
   auto pInputArrayPath = filterArgs.value<DataPath>(k_InputOrientationArrayPath_Key);
-  auto* inputArray = dataStructure.getDataAs<IDataArray>(pInputArrayPath);
+  const auto* inputArray = dataStructure.getDataAs<IDataArray>(pInputArrayPath);
   std::vector<size_t> inputCompShape = inputArray->getIDataStore()->getComponentShape();
 
   if(inputCompShape.size() > 1)
   {
-    return {MakeErrorResult<OutputActions>(::k_InputComponentDimensionError, fmt::format("Input Component Shape has mulitple dimensions. It can only have 1 dimension. '{}'", inputCompShape.size()))};
+    return {MakeErrorResult<OutputActions>(::k_InputComponentDimensionError, fmt::format("Input Component Shape has multiple dimensions. It can only have 1 dimension. '{}'", inputCompShape.size()))};
   }
   if(inputCompShape[0] != ::RepresentationElementCount[static_cast<size_t>(inputType)])
   {
-    std::stringstream ss;
-    ss << "Number of components for input array is not correct for input representation type. " << ::RepresentationNames[static_cast<size_t>(inputType)] << " should have "
-       << ::RepresentationElementCount[static_cast<size_t>(inputType)] << " components but the selected input array has " << inputCompShape[0];
-    return {MakeErrorResult<OutputActions>(::k_InputComponentCountError, ss.str())};
+    std::stringstream message;
+    message << "Number of components for input array is not correct for input representation type. " << ::RepresentationNames[static_cast<size_t>(inputType)] << " should have "
+            << ::RepresentationElementCount[static_cast<size_t>(inputType)] << " components but the selected input array has " << inputCompShape[0];
+    return {MakeErrorResult<OutputActions>(::k_InputComponentCountError, message.str())};
   }
   auto pOutputArrayPath = filterArgs.value<DataPath>(k_OutputOrientationArrayName_Key);
 
@@ -269,234 +274,279 @@ Result<> ConvertOrientations::executeImpl(DataStructure& dataStructure, const Ar
   auto pInputOrientationArrayPathValue = filterArgs.value<DataPath>(k_InputOrientationArrayPath_Key);
   auto pOutputOrientationArrayNameValue = filterArgs.value<DataPath>(k_OutputOrientationArrayName_Key);
 
-  Quaternion<float>::Order qLayout = Quaternion<float>::Order::VectorScalar;
+  // Quaternion<float>::Order qLayout = Quaternion<float>::Order::VectorScalar;
 
   using OutputType = Orientation<float>;
   using InputType = Orientation<float>;
   using QuaterionType = Quaternion<float>;
-  using QuaterionType = Quaternion<float>;
+  using QuaternionType = Quaternion<float>;
   using ConversionFunctionType = std::function<OutputType(InputType)>;
-  using ToQuaterionFunctionType = std::function<QuaterionType(InputType, Quaternion<float>::Order)>;
+  using ToQuaternionFunctionType = std::function<QuaterionType(InputType, Quaternion<float>::Order)>;
   using FromQuaternionFunctionType = std::function<InputType(QuaterionType, Quaternion<float>::Order)>;
 
-  const Float32Array& inputDataArray = dataStructure.getDataRefAs<Float32Array>(pInputOrientationArrayPathValue);
-  Float32Array& outputDataArray = dataStructure.getDataRefAs<Float32Array>(pOutputOrientationArrayNameValue);
+  const auto& inputDataArray = dataStructure.getDataRefAs<Float32Array>(pInputOrientationArrayPathValue);
+  auto& outputDataArray = dataStructure.getDataRefAs<Float32Array>(pOutputOrientationArrayNameValue);
+  size_t totalPoints = inputDataArray.getNumberOfTuples();
 
-  // Parallel algorithm to find duplicate nodes
-  //  ParallelDataAlgorithm dataAlg;
-  //  dataAlg.setRange(0ULL, static_cast<size_t>(inputDataArray.getNumberOfTuples()));
-
+  // Allow data-based parallelization
+  ParallelDataAlgorithm parallelAlgorithm;
+  parallelAlgorithm.setRange(0, totalPoints);
+  // This next block of code was generated from the ConvertOrientationsTest::_make_code() function.
   if(inputType == OrientationRepresentation::Type::Euler && outputType == OrientationRepresentation::Type::OrientationMatrix)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Euler to OrientationMatrix"});
     ConversionFunctionType eu2om = OrientationTransformation::eu2om<InputType, OutputType>;
-    ::ConvertOrientation<float, 3, 9>(inputDataArray, outputDataArray, eu2om);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 3, 9>(inputDataArray, outputDataArray, eu2om));
   }
   else if(inputType == OrientationRepresentation::Type::Euler && outputType == OrientationRepresentation::Type::Quaternion)
   {
-    ToQuaterionFunctionType eu2qu = OrientationTransformation::eu2qu<InputType, QuaterionType>;
-    ::ToQuaternion<float, 3, 4>(inputDataArray, outputDataArray, eu2qu, QuaterionType::Order::VectorScalar);
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Euler to Quaternion"});
+    ToQuaternionFunctionType eu2qu = OrientationTransformation::eu2qu<InputType, QuaternionType>;
+    parallelAlgorithm.execute(::ToQuaternion<float, ToQuaternionFunctionType, 3, 4>(inputDataArray, outputDataArray, eu2qu, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Euler && outputType == OrientationRepresentation::Type::AxisAngle)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Euler to AxisAngle"});
     ConversionFunctionType eu2ax = OrientationTransformation::eu2ax<InputType, OutputType>;
-    ::ConvertOrientation<float, 3, 4>(inputDataArray, outputDataArray, eu2ax);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 3, 4>(inputDataArray, outputDataArray, eu2ax));
   }
   else if(inputType == OrientationRepresentation::Type::Euler && outputType == OrientationRepresentation::Type::Rodrigues)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Euler to Rodrigues"});
     ConversionFunctionType eu2ro = OrientationTransformation::eu2ro<InputType, OutputType>;
-    ::ConvertOrientation<float, 3, 4>(inputDataArray, outputDataArray, eu2ro);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 3, 4>(inputDataArray, outputDataArray, eu2ro));
   }
   else if(inputType == OrientationRepresentation::Type::Euler && outputType == OrientationRepresentation::Type::Homochoric)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Euler to Homochoric"});
     ConversionFunctionType eu2ho = OrientationTransformation::eu2ho<InputType, OutputType>;
-    ::ConvertOrientation<float, 3, 3>(inputDataArray, outputDataArray, eu2ho);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 3, 3>(inputDataArray, outputDataArray, eu2ho));
   }
   else if(inputType == OrientationRepresentation::Type::Euler && outputType == OrientationRepresentation::Type::Cubochoric)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Euler to Cubochoric"});
     ConversionFunctionType eu2cu = OrientationTransformation::eu2cu<InputType, OutputType>;
-    ::ConvertOrientation<float, 3, 3>(inputDataArray, outputDataArray, eu2cu);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 3, 3>(inputDataArray, outputDataArray, eu2cu));
   }
   else if(inputType == OrientationRepresentation::Type::OrientationMatrix && outputType == OrientationRepresentation::Type::Euler)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting OrientationMatrix to Euler"});
     ConversionFunctionType om2eu = OrientationTransformation::om2eu<InputType, OutputType>;
-    ::ConvertOrientation<float, 9, 3>(inputDataArray, outputDataArray, om2eu);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 9, 3>(inputDataArray, outputDataArray, om2eu));
   }
   else if(inputType == OrientationRepresentation::Type::OrientationMatrix && outputType == OrientationRepresentation::Type::Quaternion)
   {
-    ToQuaterionFunctionType om2qu = OrientationTransformation::om2qu<InputType, QuaterionType>;
-    ::ToQuaternion<float, 9, 4>(inputDataArray, outputDataArray, om2qu, QuaterionType::Order::VectorScalar);
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting OrientationMatrix to Quaternion"});
+    ToQuaternionFunctionType om2qu = OrientationTransformation::om2qu<InputType, QuaternionType>;
+    parallelAlgorithm.execute(::ToQuaternion<float, ToQuaternionFunctionType, 9, 4>(inputDataArray, outputDataArray, om2qu, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::OrientationMatrix && outputType == OrientationRepresentation::Type::AxisAngle)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting OrientationMatrix to AxisAngle"});
     ConversionFunctionType om2ax = OrientationTransformation::om2ax<InputType, OutputType>;
-    ::ConvertOrientation<float, 9, 4>(inputDataArray, outputDataArray, om2ax);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 9, 4>(inputDataArray, outputDataArray, om2ax));
   }
   else if(inputType == OrientationRepresentation::Type::OrientationMatrix && outputType == OrientationRepresentation::Type::Rodrigues)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting OrientationMatrix to Rodrigues"});
     ConversionFunctionType om2ro = OrientationTransformation::om2ro<InputType, OutputType>;
-    ::ConvertOrientation<float, 9, 4>(inputDataArray, outputDataArray, om2ro);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 9, 4>(inputDataArray, outputDataArray, om2ro));
   }
   else if(inputType == OrientationRepresentation::Type::OrientationMatrix && outputType == OrientationRepresentation::Type::Homochoric)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting OrientationMatrix to Homochoric"});
     ConversionFunctionType om2ho = OrientationTransformation::om2ho<InputType, OutputType>;
-    ::ConvertOrientation<float, 9, 3>(inputDataArray, outputDataArray, om2ho);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 9, 3>(inputDataArray, outputDataArray, om2ho));
   }
   else if(inputType == OrientationRepresentation::Type::OrientationMatrix && outputType == OrientationRepresentation::Type::Cubochoric)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting OrientationMatrix to Cubochoric"});
     ConversionFunctionType om2cu = OrientationTransformation::om2cu<InputType, OutputType>;
-    ::ConvertOrientation<float, 9, 3>(inputDataArray, outputDataArray, om2cu);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 9, 3>(inputDataArray, outputDataArray, om2cu));
   }
   else if(inputType == OrientationRepresentation::Type::Quaternion && outputType == OrientationRepresentation::Type::Euler)
   {
-    FromQuaternionFunctionType qu2eu = OrientationTransformation::qu2eu<QuaterionType, OutputType>;
-    ::FromQuaterion<float, 4, 3>(inputDataArray, outputDataArray, qu2eu, QuaterionType::Order::VectorScalar);
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Quaternion to Euler"});
+    FromQuaternionFunctionType qu2eu = OrientationTransformation::qu2eu<QuaternionType, OutputType>;
+    parallelAlgorithm.execute(::FromQuaternion<float, FromQuaternionFunctionType, 4, 3>(inputDataArray, outputDataArray, qu2eu, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Quaternion && outputType == OrientationRepresentation::Type::OrientationMatrix)
   {
-    FromQuaternionFunctionType qu2om = OrientationTransformation::qu2om<QuaterionType, OutputType>;
-    ::FromQuaterion<float, 4, 9>(inputDataArray, outputDataArray, qu2om, QuaterionType::Order::VectorScalar);
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Quaternion to OrientationMatrix"});
+    FromQuaternionFunctionType qu2om = OrientationTransformation::qu2om<QuaternionType, OutputType>;
+    parallelAlgorithm.execute(::FromQuaternion<float, FromQuaternionFunctionType, 4, 9>(inputDataArray, outputDataArray, qu2om, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Quaternion && outputType == OrientationRepresentation::Type::AxisAngle)
   {
-    FromQuaternionFunctionType qu2ax = OrientationTransformation::qu2ax<QuaterionType, OutputType>;
-    ::FromQuaterion<float, 4, 4>(inputDataArray, outputDataArray, qu2ax, QuaterionType::Order::VectorScalar);
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Quaternion to AxisAngle"});
+    FromQuaternionFunctionType qu2ax = OrientationTransformation::qu2ax<QuaternionType, OutputType>;
+    parallelAlgorithm.execute(::FromQuaternion<float, FromQuaternionFunctionType, 4, 4>(inputDataArray, outputDataArray, qu2ax, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Quaternion && outputType == OrientationRepresentation::Type::Rodrigues)
   {
-    FromQuaternionFunctionType qu2ro = OrientationTransformation::qu2ro<QuaterionType, OutputType>;
-    ::FromQuaterion<float, 4, 4>(inputDataArray, outputDataArray, qu2ro, QuaterionType::Order::VectorScalar);
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Quaternion to Rodrigues"});
+    FromQuaternionFunctionType qu2ro = OrientationTransformation::qu2ro<QuaternionType, OutputType>;
+    parallelAlgorithm.execute(::FromQuaternion<float, FromQuaternionFunctionType, 4, 4>(inputDataArray, outputDataArray, qu2ro, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Quaternion && outputType == OrientationRepresentation::Type::Homochoric)
   {
-    FromQuaternionFunctionType qu2ho = OrientationTransformation::qu2ho<QuaterionType, OutputType>;
-    ::FromQuaterion<float, 4, 3>(inputDataArray, outputDataArray, qu2ho, QuaterionType::Order::VectorScalar);
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Quaternion to Homochoric"});
+    FromQuaternionFunctionType qu2ho = OrientationTransformation::qu2ho<QuaternionType, OutputType>;
+    parallelAlgorithm.execute(::FromQuaternion<float, FromQuaternionFunctionType, 4, 3>(inputDataArray, outputDataArray, qu2ho, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Quaternion && outputType == OrientationRepresentation::Type::Cubochoric)
   {
-    FromQuaternionFunctionType qu2cu = OrientationTransformation::qu2cu<QuaterionType, OutputType>;
-    ::FromQuaterion<float, 4, 3>(inputDataArray, outputDataArray, qu2cu, QuaterionType::Order::VectorScalar);
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Quaternion to Cubochoric"});
+    FromQuaternionFunctionType qu2cu = OrientationTransformation::qu2cu<QuaternionType, OutputType>;
+    parallelAlgorithm.execute(::FromQuaternion<float, FromQuaternionFunctionType, 4, 3>(inputDataArray, outputDataArray, qu2cu, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::AxisAngle && outputType == OrientationRepresentation::Type::Euler)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting AxisAngle to Euler"});
     ConversionFunctionType ax2eu = OrientationTransformation::ax2eu<InputType, OutputType>;
-    ::ConvertOrientation<float, 4, 3>(inputDataArray, outputDataArray, ax2eu);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 4, 3>(inputDataArray, outputDataArray, ax2eu));
   }
   else if(inputType == OrientationRepresentation::Type::AxisAngle && outputType == OrientationRepresentation::Type::OrientationMatrix)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting AxisAngle to OrientationMatrix"});
     ConversionFunctionType ax2om = OrientationTransformation::ax2om<InputType, OutputType>;
-    ::ConvertOrientation<float, 4, 9>(inputDataArray, outputDataArray, ax2om);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 4, 9>(inputDataArray, outputDataArray, ax2om));
   }
   else if(inputType == OrientationRepresentation::Type::AxisAngle && outputType == OrientationRepresentation::Type::Quaternion)
   {
-    ToQuaterionFunctionType ax2qu = OrientationTransformation::ax2qu<InputType, QuaterionType>;
-    ::ToQuaternion<float, 4, 4>(inputDataArray, outputDataArray, ax2qu, QuaterionType::Order::VectorScalar);
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting AxisAngle to Quaternion"});
+    ToQuaternionFunctionType ax2qu = OrientationTransformation::ax2qu<InputType, QuaternionType>;
+    parallelAlgorithm.execute(::ToQuaternion<float, ToQuaternionFunctionType, 4, 4>(inputDataArray, outputDataArray, ax2qu, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::AxisAngle && outputType == OrientationRepresentation::Type::Rodrigues)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting AxisAngle to Rodrigues"});
     ConversionFunctionType ax2ro = OrientationTransformation::ax2ro<InputType, OutputType>;
-    ::ConvertOrientation<float, 4, 4>(inputDataArray, outputDataArray, ax2ro);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 4, 4>(inputDataArray, outputDataArray, ax2ro));
   }
   else if(inputType == OrientationRepresentation::Type::AxisAngle && outputType == OrientationRepresentation::Type::Homochoric)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting AxisAngle to Homochoric"});
     ConversionFunctionType ax2ho = OrientationTransformation::ax2ho<InputType, OutputType>;
-    ::ConvertOrientation<float, 4, 3>(inputDataArray, outputDataArray, ax2ho);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 4, 3>(inputDataArray, outputDataArray, ax2ho));
   }
   else if(inputType == OrientationRepresentation::Type::AxisAngle && outputType == OrientationRepresentation::Type::Cubochoric)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting AxisAngle to Cubochoric"});
     ConversionFunctionType ax2cu = OrientationTransformation::ax2cu<InputType, OutputType>;
-    ::ConvertOrientation<float, 4, 3>(inputDataArray, outputDataArray, ax2cu);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 4, 3>(inputDataArray, outputDataArray, ax2cu));
   }
   else if(inputType == OrientationRepresentation::Type::Rodrigues && outputType == OrientationRepresentation::Type::Euler)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Rodrigues to Euler"});
     ConversionFunctionType ro2eu = OrientationTransformation::ro2eu<InputType, OutputType>;
-    ::ConvertOrientation<float, 4, 3>(inputDataArray, outputDataArray, ro2eu);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 4, 3>(inputDataArray, outputDataArray, ro2eu));
   }
   else if(inputType == OrientationRepresentation::Type::Rodrigues && outputType == OrientationRepresentation::Type::OrientationMatrix)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Rodrigues to OrientationMatrix"});
     ConversionFunctionType ro2om = OrientationTransformation::ro2om<InputType, OutputType>;
-    ::ConvertOrientation<float, 4, 9>(inputDataArray, outputDataArray, ro2om);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 4, 9>(inputDataArray, outputDataArray, ro2om));
   }
   else if(inputType == OrientationRepresentation::Type::Rodrigues && outputType == OrientationRepresentation::Type::Quaternion)
   {
-    ToQuaterionFunctionType ro2qu = OrientationTransformation::ro2qu<InputType, QuaterionType>;
-    ::ToQuaternion<float, 4, 4>(inputDataArray, outputDataArray, ro2qu, QuaterionType::Order::VectorScalar);
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Rodrigues to Quaternion"});
+    ToQuaternionFunctionType ro2qu = OrientationTransformation::ro2qu<InputType, QuaternionType>;
+    parallelAlgorithm.execute(::ToQuaternion<float, ToQuaternionFunctionType, 4, 4>(inputDataArray, outputDataArray, ro2qu, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Rodrigues && outputType == OrientationRepresentation::Type::AxisAngle)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Rodrigues to AxisAngle"});
     ConversionFunctionType ro2ax = OrientationTransformation::ro2ax<InputType, OutputType>;
-    ::ConvertOrientation<float, 4, 4>(inputDataArray, outputDataArray, ro2ax);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 4, 4>(inputDataArray, outputDataArray, ro2ax));
   }
   else if(inputType == OrientationRepresentation::Type::Rodrigues && outputType == OrientationRepresentation::Type::Homochoric)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Rodrigues to Homochoric"});
     ConversionFunctionType ro2ho = OrientationTransformation::ro2ho<InputType, OutputType>;
-    ::ConvertOrientation<float, 4, 3>(inputDataArray, outputDataArray, ro2ho);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 4, 3>(inputDataArray, outputDataArray, ro2ho));
   }
   else if(inputType == OrientationRepresentation::Type::Rodrigues && outputType == OrientationRepresentation::Type::Cubochoric)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Rodrigues to Cubochoric"});
     ConversionFunctionType ro2cu = OrientationTransformation::ro2cu<InputType, OutputType>;
-    ::ConvertOrientation<float, 4, 3>(inputDataArray, outputDataArray, ro2cu);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 4, 3>(inputDataArray, outputDataArray, ro2cu));
   }
   else if(inputType == OrientationRepresentation::Type::Homochoric && outputType == OrientationRepresentation::Type::Euler)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Homochoric to Euler"});
     ConversionFunctionType ho2eu = OrientationTransformation::ho2eu<InputType, OutputType>;
-    ::ConvertOrientation<float, 3, 3>(inputDataArray, outputDataArray, ho2eu);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 3, 3>(inputDataArray, outputDataArray, ho2eu));
   }
   else if(inputType == OrientationRepresentation::Type::Homochoric && outputType == OrientationRepresentation::Type::OrientationMatrix)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Homochoric to OrientationMatrix"});
     ConversionFunctionType ho2om = OrientationTransformation::ho2om<InputType, OutputType>;
-    ::ConvertOrientation<float, 3, 9>(inputDataArray, outputDataArray, ho2om);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 3, 9>(inputDataArray, outputDataArray, ho2om));
   }
   else if(inputType == OrientationRepresentation::Type::Homochoric && outputType == OrientationRepresentation::Type::Quaternion)
   {
-    ToQuaterionFunctionType ho2qu = OrientationTransformation::ho2qu<InputType, QuaterionType>;
-    ::ToQuaternion<float, 3, 4>(inputDataArray, outputDataArray, ho2qu, QuaterionType::Order::VectorScalar);
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Homochoric to Quaternion"});
+    ToQuaternionFunctionType ho2qu = OrientationTransformation::ho2qu<InputType, QuaternionType>;
+    parallelAlgorithm.execute(::ToQuaternion<float, ToQuaternionFunctionType, 3, 4>(inputDataArray, outputDataArray, ho2qu, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Homochoric && outputType == OrientationRepresentation::Type::AxisAngle)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Homochoric to AxisAngle"});
     ConversionFunctionType ho2ax = OrientationTransformation::ho2ax<InputType, OutputType>;
-    ::ConvertOrientation<float, 3, 4>(inputDataArray, outputDataArray, ho2ax);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 3, 4>(inputDataArray, outputDataArray, ho2ax));
   }
   else if(inputType == OrientationRepresentation::Type::Homochoric && outputType == OrientationRepresentation::Type::Rodrigues)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Homochoric to Rodrigues"});
     ConversionFunctionType ho2ro = OrientationTransformation::ho2ro<InputType, OutputType>;
-    ::ConvertOrientation<float, 3, 4>(inputDataArray, outputDataArray, ho2ro);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 3, 4>(inputDataArray, outputDataArray, ho2ro));
   }
   else if(inputType == OrientationRepresentation::Type::Homochoric && outputType == OrientationRepresentation::Type::Cubochoric)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Homochoric to Cubochoric"});
     ConversionFunctionType ho2cu = OrientationTransformation::ho2cu<InputType, OutputType>;
-    ::ConvertOrientation<float, 3, 3>(inputDataArray, outputDataArray, ho2cu);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 3, 3>(inputDataArray, outputDataArray, ho2cu));
   }
   else if(inputType == OrientationRepresentation::Type::Cubochoric && outputType == OrientationRepresentation::Type::Euler)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Cubochoric to Euler"});
     ConversionFunctionType cu2eu = OrientationTransformation::cu2eu<InputType, OutputType>;
-    ::ConvertOrientation<float, 3, 3>(inputDataArray, outputDataArray, cu2eu);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 3, 3>(inputDataArray, outputDataArray, cu2eu));
   }
   else if(inputType == OrientationRepresentation::Type::Cubochoric && outputType == OrientationRepresentation::Type::OrientationMatrix)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Cubochoric to OrientationMatrix"});
     ConversionFunctionType cu2om = OrientationTransformation::cu2om<InputType, OutputType>;
-    ::ConvertOrientation<float, 3, 9>(inputDataArray, outputDataArray, cu2om);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 3, 9>(inputDataArray, outputDataArray, cu2om));
   }
   else if(inputType == OrientationRepresentation::Type::Cubochoric && outputType == OrientationRepresentation::Type::Quaternion)
   {
-    ToQuaterionFunctionType cu2qu = OrientationTransformation::cu2qu<InputType, QuaterionType>;
-    ::ToQuaternion<float, 3, 4>(inputDataArray, outputDataArray, cu2qu, QuaterionType::Order::VectorScalar);
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Cubochoric to Quaternion"});
+    ToQuaternionFunctionType cu2qu = OrientationTransformation::cu2qu<InputType, QuaternionType>;
+    parallelAlgorithm.execute(::ToQuaternion<float, ToQuaternionFunctionType, 3, 4>(inputDataArray, outputDataArray, cu2qu, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Cubochoric && outputType == OrientationRepresentation::Type::AxisAngle)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Cubochoric to AxisAngle"});
     ConversionFunctionType cu2ax = OrientationTransformation::cu2ax<InputType, OutputType>;
-    ::ConvertOrientation<float, 3, 4>(inputDataArray, outputDataArray, cu2ax);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 3, 4>(inputDataArray, outputDataArray, cu2ax));
   }
   else if(inputType == OrientationRepresentation::Type::Cubochoric && outputType == OrientationRepresentation::Type::Rodrigues)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Cubochoric to Rodrigues"});
     ConversionFunctionType cu2ro = OrientationTransformation::cu2ro<InputType, OutputType>;
-    ::ConvertOrientation<float, 3, 4>(inputDataArray, outputDataArray, cu2ro);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 3, 4>(inputDataArray, outputDataArray, cu2ro));
   }
   else if(inputType == OrientationRepresentation::Type::Cubochoric && outputType == OrientationRepresentation::Type::Homochoric)
   {
+    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Cubochoric to Homochoric"});
     ConversionFunctionType cu2ho = OrientationTransformation::cu2ho<InputType, OutputType>;
-    ::ConvertOrientation<float, 3, 3>(inputDataArray, outputDataArray, cu2ho);
+    parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, 3, 3>(inputDataArray, outputDataArray, cu2ho));
   }
 
   return {};
 }
 } // namespace complex
+
+#pragma clang diagnostic pop
