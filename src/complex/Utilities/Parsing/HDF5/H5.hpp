@@ -73,6 +73,13 @@ std::string COMPLEX_EXPORT GetPathFromId(IdType id);
  */
 std::string COMPLEX_EXPORT GetNameFromId(IdType id);
 
+/**
+ * @brief Returns the path to an object's parent
+ * @param objectPath The HDF5 path to the object
+ * @return  The path to the object's parent
+ */
+std::string COMPLEX_EXPORT GetParentPath(const std::string& objectPath);
+
 inline constexpr StringLiteral k_DataTypeTag = "DataType";
 
 inline constexpr StringLiteral k_DataStoreTag = "DataStore";

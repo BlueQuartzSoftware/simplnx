@@ -1,5 +1,7 @@
 #include "H5.hpp"
 
+#include "complex/Utilities/StringUtilities.hpp"
+
 #include <stdexcept>
 #include <vector>
 
@@ -112,4 +114,9 @@ std::string H5::GetPathFromId(IdType id)
 std::string H5::GetNameFromId(IdType id)
 {
   return GetNameFromBuffer(GetPathFromId(id));
+}
+
+std::string GetParentPath(const std::string& objectPath)
+{
+  return StringUtilities::chop(objectPath, "/");
 }

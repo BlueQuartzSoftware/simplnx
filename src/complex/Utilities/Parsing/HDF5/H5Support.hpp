@@ -203,6 +203,79 @@ inline hid_t HdfTypeForPrimitive()
  */
 std::string COMPLEX_EXPORT HdfClassTypeAsStr(hid_t classType);
 
+/**
+ * @brief Returns the HDF Type as a string for a given primitive value.
+ * @return The H5 native type as a string for the value
+ */
+template <typename T>
+inline std::string HdfTypeForPrimitiveAsStr()
+{
+  if constexpr(std::is_same_v<T, float>)
+  {
+    return "H5T_NATIVE_FLOAT";
+  }
+  else if constexpr(std::is_same_v<T, double>)
+  {
+    return "H5T_NATIVE_DOUBLE";
+  }
+  else if constexpr(std::is_same_v<T, int8>)
+  {
+    return "H5T_NATIVE_INT8";
+  }
+  else if constexpr(std::is_same_v<T, uint8>)
+  {
+    return "H5T_NATIVE_UINT8";
+  }
+  else if constexpr(std::is_same_v<T, char>)
+  {
+    if constexpr(std::is_signed_v<char>)
+    {
+      return "H5T_NATIVE_INT8";
+    }
+    else
+    {
+      return "H5T_NATIVE_UINT8";
+    }
+  }
+  else if constexpr(std::is_same_v<T, int16>)
+  {
+    return "H5T_NATIVE_INT16";
+  }
+  else if constexpr(std::is_same_v<T, uint16>)
+  {
+    return "H5T_NATIVE_UINT16";
+  }
+  else if constexpr(std::is_same_v<T, int32>)
+  {
+    return "H5T_NATIVE_INT32";
+  }
+  else if constexpr(std::is_same_v<T, uint32>)
+  {
+    return "H5T_NATIVE_UINT32";
+  }
+  else if constexpr(std::is_same_v<T, int64>)
+  {
+    return "H5T_NATIVE_INT64";
+  }
+  else if constexpr(std::is_same_v<T, uint64>)
+  {
+    return "H5T_NATIVE_UINT64";
+  }
+  else if constexpr(std::is_same_v<T, bool>)
+  {
+    return "H5T_NATIVE_UINT8";
+  }
+  else if constexpr(std::is_same_v<T, usize>)
+  {
+    return "H5T_NATIVE_UINT64";
+  }
+  else
+  {
+    throw std::runtime_error("HdfTypeForPrimitive does not support this type");
+    return -1;
+  }
+}
+
 #if 0
 /**
  * @brief Returns the H5T value for a given dataset.
