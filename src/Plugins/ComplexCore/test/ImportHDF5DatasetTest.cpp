@@ -19,7 +19,7 @@ using namespace complex;
 
 constexpr hsize_t COMPDIMPROD = 72;
 constexpr hsize_t TUPLEDIMPROD = 40;
-fs::path m_FilePath(unit_test::k_ComplexTestDataSourceDir.str() + "/ImportHDF5DatasetTest.h5");
+fs::path m_FilePath(unit_test::k_BinaryDir.str() + "/ImportHDF5DatasetTest.h5");
 
 // -----------------------------------------------------------------------------
 //  Uses Raw Pointers to save data to the data file
