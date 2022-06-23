@@ -19,7 +19,7 @@ public:
 
   ImportH5ObjectPathsAction() = delete;
 
-  ImportH5ObjectPathsAction(const H5::FileReader& importObject, const PathsType& paths);
+  ImportH5ObjectPathsAction(const std::filesystem::path& importFile, const PathsType& paths);
 
   ~ImportH5ObjectPathsAction() noexcept override;
 
@@ -38,7 +38,7 @@ public:
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
 private:
-  H5::FileReader m_H5FileReader;
+  std::filesystem::path m_H5FilePath;
   PathsType m_Paths;
 };
 } // namespace complex
