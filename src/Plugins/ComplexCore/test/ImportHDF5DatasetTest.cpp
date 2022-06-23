@@ -655,11 +655,11 @@ TEST_CASE("ImportHDF5Dataset Filter")
     testFilterExecute(filter);
   }
 
-  // if(fs::exists(m_FilePath))
-  //{
-  //  if(!fs::remove(m_FilePath))
-  //  {
-  //    REQUIRE(0 == 1);
-  //  }
-  //}
+  if(fs::exists(m_FilePath))
+  {
+    if(!fs::remove(m_FilePath))
+    {
+      REQUIRE(0 == 1);
+    }
+  }
 }
