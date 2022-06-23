@@ -18,7 +18,10 @@ H5::FileReader::FileReader(H5::IdType fileId)
 {
 }
 
-H5::FileReader::~FileReader() = default;
+H5::FileReader::~FileReader()
+{
+  closeHdf5();
+}
 
 void H5::FileReader::closeHdf5()
 {

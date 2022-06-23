@@ -20,7 +20,10 @@ H5::DatasetReader::DatasetReader(H5::IdType parentId, const std::string& dataNam
   m_DatasetId = H5Dopen(parentId, dataName.c_str(), H5P_DEFAULT);
 }
 
-H5::DatasetReader::~DatasetReader() = default;
+H5::DatasetReader::~DatasetReader()
+{
+  closeHdf5();
+}
 
 void H5::DatasetReader::closeHdf5()
 {
