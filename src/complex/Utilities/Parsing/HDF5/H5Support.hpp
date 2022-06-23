@@ -272,7 +272,7 @@ inline std::string HdfTypeForPrimitiveAsStr()
   else
   {
     throw std::runtime_error("HdfTypeForPrimitive does not support this type");
-    return -1;
+    return "";
   }
 }
 
