@@ -209,7 +209,6 @@ Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath&
   return MakeErrorResult(-401, fmt::format("The input array at DataPath '{}' was of an unsupported type", dataPath.toString()));
 }
 
-
 std::shared_ptr<MaskCompare> InstantiateMaskCompare(const DataStructure& dataStructure, const DataPath& maskArrayPath)
 {
   const complex::IDataArray* maskArrayPtr = dataStructure.getDataAs<IDataArray>(maskArrayPath);
@@ -243,7 +242,5 @@ std::shared_ptr<MaskCompare> InstantiateMaskCompare(const complex::IDataArray* m
   }
   return std::make_shared<UInt8MaskCompare>(nullptr);
 }
-
-
 
 } // namespace complex

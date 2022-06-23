@@ -537,7 +537,6 @@ COMPLEX_EXPORT Result<> CheckValueConverts(const std::string& value, NumericType
  */
 COMPLEX_EXPORT Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObject& inputDataArray);
 
-
 /**
  * @brief These structs and functions are meant to make using a "mask array" or "Good Voxels Array" easier
  * for the developer. There is virtual function call overhead with using these structs and functions.
@@ -581,7 +580,10 @@ struct MaskCompare
 
 struct BoolMaskCompare : public MaskCompare
 {
-  BoolMaskCompare(const BoolArray* array) :m_Array(array){}
+  BoolMaskCompare(const BoolArray* array)
+  : m_Array(array)
+  {
+  }
   const BoolArray* m_Array = nullptr;
   bool bothTrue(size_t indexA, size_t indexB) const override
   {
@@ -599,7 +601,10 @@ struct BoolMaskCompare : public MaskCompare
 
 struct UInt8MaskCompare : public MaskCompare
 {
-  UInt8MaskCompare(const UInt8Array* array) :m_Array(array){}
+  UInt8MaskCompare(const UInt8Array* array)
+  : m_Array(array)
+  {
+  }
   const UInt8Array* m_Array = nullptr;
   bool bothTrue(size_t indexA, size_t indexB) const override
   {
@@ -626,7 +631,7 @@ struct UInt8MaskCompare : public MaskCompare
  *    // Do something based on the if statement...
  *  }
  * @endcode
- * 
+ *
  * @param dataStructure The DataStructure object to pull the DataArray from
  * @param maskArrayPath The DataPath of the mask array.
  * @return
@@ -639,6 +644,5 @@ COMPLEX_EXPORT std::shared_ptr<MaskCompare> InstantiateMaskCompare(const DataStr
  * @return
  */
 COMPLEX_EXPORT std::shared_ptr<MaskCompare> InstantiateMaskCompare(const complex::IDataArray* maskArrayPtr);
-
 
 } // namespace complex
