@@ -33,7 +33,7 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  void updateProgress(size_t progIncrement);
+  void updateProgress(const std::string& progMessage);
 
 protected:
   /**
@@ -49,9 +49,6 @@ private:
   DataStructure& m_DataStructure;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-
-  size_t m_Progress = 0;
-  size_t m_TotalProgress = 0;
 };
 
 } // namespace complex
