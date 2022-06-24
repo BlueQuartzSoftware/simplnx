@@ -187,6 +187,21 @@ inline std::string chop(std::string_view str, usize numElements)
 {
   return std::string(str.substr(0, str.size() - numElements));
 }
+inline std::string chop(std::string_view str, std::string_view chopFrom)
+{
+  if(str.empty())
+  {
+    return "";
+  }
+
+  std::string::size_type back = str.find_last_not_of(chopFrom);
+  if(back == std::string::npos)
+  {
+    return "";
+  }
+
+  return std::string(str.substr(0, back + 1));
+}
 
 inline std::string chopr(std::string_view str, usize numElements)
 {

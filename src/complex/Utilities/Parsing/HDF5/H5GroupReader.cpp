@@ -17,7 +17,10 @@ H5::GroupReader::GroupReader(H5::IdType parentId, const std::string& groupName)
   m_GroupId = H5Gopen(parentId, groupName.c_str(), H5P_DEFAULT);
 }
 
-H5::GroupReader::~GroupReader() = default;
+H5::GroupReader::~GroupReader()
+{
+  closeHdf5();
+}
 
 void H5::GroupReader::closeHdf5()
 {

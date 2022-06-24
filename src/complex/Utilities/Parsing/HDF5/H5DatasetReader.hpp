@@ -112,6 +112,12 @@ public:
   template <class T>
   bool readIntoSpan(nonstd::span<T> data) const;
 
+  /**
+   * @brief Returns a vector of the sizes of the dimensions for the dataset
+   * Returns empty vector if unable to read.
+   */
+  std::vector<hsize_t> getDimensions() const;
+
 protected:
   /**
    * @brief Closes the HDF5 ID and resets it to 0.

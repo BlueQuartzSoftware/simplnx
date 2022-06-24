@@ -4,10 +4,6 @@
 
 #include <nonstd/span.hpp>
 
-#include "H5Support/H5Lite.h"
-#include "H5Support/H5ScopedSentinel.h"
-#include "H5Support/H5Utilities.h"
-
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
@@ -18,7 +14,6 @@
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
-using namespace H5Support;
 using namespace complex;
 namespace fs = std::filesystem;
 
@@ -155,14 +150,13 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
   }
 
   int err = 0;
-  hid_t fileId = H5::FileReader(inputFilePath).getId();
+  H5::FileReader h5FileReader(inputFilePath);
+  hid_t fileId = h5FileReader.getId();
   if(fileId < 0)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{-20006, fmt::format("Error Reading HDF5 file: '{}'", inputFile)}})};
   }
-  H5ScopedFileSentinel sentinel(fileId, true);
 
-  std::map<std::string, hid_t> openedParentPathsMap;
   for(const auto& datasetImportInfo : datasetImportInfoList)
   {
     std::string datasetPath = datasetImportInfo.dataSetPath;
@@ -171,36 +165,14 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
       return {nonstd::make_unexpected(std::vector<Error>{Error{-20007, "Cannot import an empty dataset path"}})};
     }
 
-    std::string parentPath = H5Utilities::getParentPath(datasetPath);
-    hid_t parentId;
-    if(parentPath.empty())
-    {
-      parentId = fileId;
-    }
-    else
-    {
-      if(openedParentPathsMap.find(parentPath) == openedParentPathsMap.end())
-      {
-        parentId = H5Utilities::openHDF5Object(fileId, parentPath);
-        sentinel.addGroupId(parentId);
-        openedParentPathsMap[parentPath] = parentId;
-      }
-      else
-      {
-        parentId = openedParentPathsMap[parentPath];
-      }
-    }
-
     // Read dataset into DREAM.3D structure
-    std::string objectName = H5Utilities::getObjectNameFromPath(datasetPath);
+    H5::DatasetReader datasetReader = h5FileReader.openDataset(datasetPath);
+    std::vector<hsize_t> dims = datasetReader.getDimensions();
+    std::string objectName = datasetReader.getName();
 
-    std::vector<hsize_t> dims;
-    H5T_class_t type_class;
-    size_t type_size;
-    err = H5Lite::getDatasetInfo(parentId, objectName, dims, type_class, type_size);
-    if(err < 0)
+    if(dims.empty())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-20008, fmt::format("Error reading type info from dataset with path '{}'", datasetPath)}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-20008, fmt::format("Error reading dimensions from dataset with path '{}'", datasetPath)}})};
     }
 
     std::string cDimsStr = datasetImportInfo.componentDimensions;
@@ -316,7 +288,6 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
     else
     {
       DataPath dataArrayPath = pSelectedAttributeMatrixValue.createChildPath(objectName);
-      H5::DatasetReader datasetReader(parentId, objectName);
       auto type = datasetReader.getDataType();
       if(type.invalid())
       {
@@ -327,8 +298,6 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
       resultOutputActions.value().actions.push_back(std::move(action));
     }
   } // End For Loop over dataset imoprt info list
-
-  // The sentinel will close the HDF5 File and any groups that were open.
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -344,42 +313,22 @@ Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argu
   auto datasetImportInfoList = pImportHDF5FileValue.second;
   auto selectedDataGroup = dataStructure.getDataAs<DataGroup>(pSelectedAttributeMatrixValue);
 
-  hid_t fileId = H5::FileReader(inputFilePath).getId();
+  H5::FileReader h5FileReader(inputFilePath);
+  hid_t fileId = h5FileReader.getId();
   if(fileId < 0)
   {
     return {MakeErrorResult(-21000, fmt::format("Error Reading HDF5 file: '{}'", inputFile))};
   }
-  H5ScopedFileSentinel sentinel(fileId, true);
 
   std::map<std::string, hid_t> openedParentPathsMap;
   for(const auto& datasetImportInfo : datasetImportInfoList)
   {
     std::string datasetPath = datasetImportInfo.dataSetPath;
-    std::string objectName = H5Utilities::getObjectNameFromPath(datasetPath);
-
-    std::string parentPath = H5Utilities::getParentPath(datasetPath);
-    hid_t parentId;
-    if(parentPath.empty())
-    {
-      parentId = fileId;
-    }
-    else
-    {
-      if(openedParentPathsMap.find(parentPath) == openedParentPathsMap.end())
-      {
-        parentId = H5Utilities::openHDF5Object(fileId, parentPath);
-        sentinel.addGroupId(parentId);
-        openedParentPathsMap[parentPath] = parentId;
-      }
-      else
-      {
-        parentId = openedParentPathsMap[parentPath];
-      }
-    }
+    H5::DatasetReader datasetReader = h5FileReader.openDataset(datasetPath);
+    std::string objectName = datasetReader.getName();
 
     // Read dataset into DREAM.3D structure
     DataPath dataArrayPath = pSelectedAttributeMatrixValue.createChildPath(objectName);
-    H5::DatasetReader datasetReader(parentId, objectName);
     Result<> fillArrayResults;
     auto type = datasetReader.getType();
     switch(type)
@@ -433,8 +382,6 @@ Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argu
       return fillArrayResults;
     }
   } // End For Loop over dataset imoprt info list
-
-  // The sentinel will close the HDF5 File and any groups that were open.
 
   return {};
 }

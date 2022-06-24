@@ -31,8 +31,8 @@ std::vector<DataPath> getImportPaths(const DataStructure& importStructure, const
 
 namespace complex
 {
-ImportH5ObjectPathsAction::ImportH5ObjectPathsAction(const H5::FileReader& importObject, const PathsType& paths)
-: m_H5FileReader(importObject)
+ImportH5ObjectPathsAction::ImportH5ObjectPathsAction(const std::filesystem::path& importFile, const PathsType& paths)
+: m_H5FilePath(importFile)
 , m_Paths(paths)
 {
   if(m_Paths.has_value())
@@ -47,8 +47,9 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
 {
   bool preflighting = (mode == Mode::Preflight);
 
+  H5::FileReader fileReader(m_H5FilePath);
   H5::ErrorType errorCode;
-  const DREAM3D::FileData fileData = DREAM3D::ReadFile(m_H5FileReader, errorCode, preflighting);
+  const DREAM3D::FileData fileData = DREAM3D::ReadFile(fileReader, errorCode, preflighting);
   if(errorCode < 0)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, "Failed to import a DataStructure from the target HDF5 file."}})};

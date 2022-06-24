@@ -2,13 +2,11 @@
 
 #include <fstream>
 
-#include "H5Support/H5Lite.h"
-#include "H5Support/H5ScopedSentinel.h"
-#include "H5Support/H5Utilities.h"
-
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/ImportHDF5DatasetParameter.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/ImportHDF5Dataset.hpp"
@@ -18,35 +16,35 @@
 
 namespace fs = std::filesystem;
 using namespace complex;
-using namespace H5Support;
 
 constexpr hsize_t COMPDIMPROD = 72;
 constexpr hsize_t TUPLEDIMPROD = 40;
-fs::path m_FilePath(unit_test::k_ComplexTestDataSourceDir.str() + "/ImportHDF5DatasetTest.h5");
+std::string m_FilePath = unit_test::k_BinaryDir.str() + "/ImportHDF5DatasetTest.h5";
 
 // -----------------------------------------------------------------------------
 //  Uses Raw Pointers to save data to the data file
 // -----------------------------------------------------------------------------
 template <typename T>
-herr_t writePointer1DArrayDataset(hid_t loc_id)
+H5::ErrorType writePointer1DArrayDataset(H5::GroupWriter& ptrGroupWriter)
 {
-  herr_t err = 1;
-  int32_t rank = 1;
+  H5::ErrorType err = 1;
+
   // Create the Dimensions
-  hsize_t dims[1];
+  std::vector<hsize_t> dims(1);
   dims[0] = COMPDIMPROD * TUPLEDIMPROD;
 
   /* Make dataset char */
-  int32_t tSize = dims[0];
+  hsize_t tSize = dims[0];
   std::vector<T> data(tSize);
-  for(int32_t i = 0; i < tSize; ++i)
+  for(hsize_t i = 0; i < tSize; ++i)
   {
     data[i] = static_cast<T>(i * 5);
   }
 
-  std::string dsetName = H5Lite::HDFTypeForPrimitiveAsStr<T>();
+  std::string dsetName = H5::Support::HdfTypeForPrimitiveAsStr<T>();
   dsetName = "Pointer1DArrayDataset<" + dsetName + ">";
-  err = H5Lite::writePointerDataset(loc_id, dsetName, rank, dims, &(data.front()));
+  H5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
+  err = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
   REQUIRE(err >= 0);
 
   return err;
@@ -56,26 +54,27 @@ herr_t writePointer1DArrayDataset(hid_t loc_id)
 //  Uses Raw Pointers to save data to the data file
 // -----------------------------------------------------------------------------
 template <typename T>
-herr_t writePointer2DArrayDataset(hid_t loc_id)
+H5::ErrorType writePointer2DArrayDataset(H5::GroupWriter& ptrGroupWriter)
 {
-  herr_t err = 1;
-  int32_t rank = 2;
+  H5::ErrorType err = 1;
+
   // Create the Dimensions
-  hsize_t dims[2];
+  std::vector<hsize_t> dims(2);
   dims[0] = 10;
   dims[1] = (COMPDIMPROD * TUPLEDIMPROD) / 10;
 
   /* Make dataset char */
-  int32_t tSize = dims[0] * dims[1];
+  hsize_t tSize = dims[0] * dims[1];
   std::vector<T> data(tSize);
-  for(int32_t i = 0; i < tSize; ++i)
+  for(hsize_t i = 0; i < tSize; ++i)
   {
     data[i] = static_cast<T>(i * 5);
   }
 
-  std::string dsetName = H5Lite::HDFTypeForPrimitiveAsStr<T>();
+  std::string dsetName = H5::Support::HdfTypeForPrimitiveAsStr<T>();
   dsetName = "Pointer2DArrayDataset<" + dsetName + ">";
-  err = H5Lite::writePointerDataset(loc_id, dsetName, rank, dims, &(data.front()));
+  H5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
+  err = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
   REQUIRE(err >= 0);
 
   return err;
@@ -85,28 +84,28 @@ herr_t writePointer2DArrayDataset(hid_t loc_id)
 //  Uses Raw Pointers to save data to the data file
 // -----------------------------------------------------------------------------
 template <typename T>
-herr_t writePointer3DArrayDataset(hid_t loc_id)
+H5::ErrorType writePointer3DArrayDataset(H5::GroupWriter& ptrGroupWriter)
 {
-  herr_t err = 1;
-  int32_t rank = 3;
+  H5::ErrorType err = 1;
+
   // Create the Dimensions
-  hsize_t dims[3];
+  std::vector<hsize_t> dims(3);
   dims[0] = 10;
   dims[1] = 8;
   dims[2] = (COMPDIMPROD * TUPLEDIMPROD) / 10 / 8;
 
   /* Make dataset char */
-  int32_t tSize = dims[0] * dims[1] * dims[2];
-  // T data[dimx*dimy];
+  hsize_t tSize = dims[0] * dims[1] * dims[2];
   std::vector<T> data(tSize);
-  for(int32_t i = 0; i < tSize; ++i)
+  for(hsize_t i = 0; i < tSize; ++i)
   {
     data[i] = static_cast<T>(i * 5);
   }
 
-  std::string dsetName = H5Lite::HDFTypeForPrimitiveAsStr<T>();
+  std::string dsetName = H5::Support::HdfTypeForPrimitiveAsStr<T>();
   dsetName = "Pointer3DArrayDataset<" + dsetName + ">";
-  err = H5Lite::writePointerDataset(loc_id, dsetName, rank, dims, &(data.front()));
+  H5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
+  err = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
   REQUIRE(err >= 0);
 
   return err;
@@ -116,29 +115,29 @@ herr_t writePointer3DArrayDataset(hid_t loc_id)
 //  Uses Raw Pointers to save data to the data file
 // -----------------------------------------------------------------------------
 template <typename T>
-herr_t writePointer4DArrayDataset(hid_t loc_id)
+H5::ErrorType writePointer4DArrayDataset(H5::GroupWriter& ptrGroupWriter)
 {
-  herr_t err = 1;
-  int32_t rank = 4;
+  H5::ErrorType err = 1;
+
   // Create the Dimensions
-  hsize_t dims[4];
+  std::vector<hsize_t> dims(4);
   dims[0] = 10;
   dims[1] = 8;
   dims[2] = 6;
   dims[3] = (COMPDIMPROD * TUPLEDIMPROD) / 10 / 8 / 6;
 
   /* Make dataset char */
-  int32_t tSize = dims[0] * dims[1] * dims[2] * dims[3];
-  // T data[dimx*dimy];
+  hsize_t tSize = dims[0] * dims[1] * dims[2] * dims[3];
   std::vector<T> data(tSize);
-  for(int32_t i = 0; i < tSize; ++i)
+  for(hsize_t i = 0; i < tSize; ++i)
   {
     data[i] = static_cast<T>(i * 5);
   }
 
-  std::string dsetName = H5Lite::HDFTypeForPrimitiveAsStr<T>();
+  std::string dsetName = H5::Support::HdfTypeForPrimitiveAsStr<T>();
   dsetName = "Pointer4DArrayDataset<" + dsetName + ">";
-  err = H5Lite::writePointerDataset(loc_id, dsetName, rank, dims, &(data.front()));
+  H5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
+  err = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
   REQUIRE(err >= 0);
 
   return err;
@@ -155,58 +154,60 @@ void writeHDF5File()
     }
   }
 
-  hid_t file_id = H5Utilities::createFile(m_FilePath.string());
+  auto writerResults = H5::FileWriter::CreateFile(m_FilePath);
+  REQUIRE(writerResults.valid());
+  H5::FileWriter fileWriter = std::move(writerResults.value());
+  hid_t file_id = fileWriter.getId();
   REQUIRE(file_id > 0);
-  H5ScopedFileSentinel sentinel(file_id, false);
 
   // Create the Pointer group
-  hid_t ptrId = H5Utilities::createGroup(file_id, "Pointer");
-  sentinel.addGroupId(ptrId);
+  H5::GroupWriter ptrGroupWriter = fileWriter.createGroupWriter("Pointer");
+  hid_t ptrId = ptrGroupWriter.getId();
   REQUIRE(ptrId > 0);
 
-  REQUIRE(writePointer1DArrayDataset<int8_t>(ptrId) >= 0);
-  REQUIRE(writePointer1DArrayDataset<uint8_t>(ptrId) >= 0);
-  REQUIRE(writePointer1DArrayDataset<int16_t>(ptrId) >= 0);
-  REQUIRE(writePointer1DArrayDataset<uint16_t>(ptrId) >= 0);
-  REQUIRE(writePointer1DArrayDataset<int32_t>(ptrId) >= 0);
-  REQUIRE(writePointer1DArrayDataset<uint32_t>(ptrId) >= 0);
-  REQUIRE(writePointer1DArrayDataset<int64_t>(ptrId) >= 0);
-  REQUIRE(writePointer1DArrayDataset<uint64_t>(ptrId) >= 0);
-  REQUIRE(writePointer1DArrayDataset<float32>(ptrId) >= 0);
-  REQUIRE(writePointer1DArrayDataset<float64>(ptrId) >= 0);
+  REQUIRE(writePointer1DArrayDataset<int8_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer1DArrayDataset<uint8_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer1DArrayDataset<int16_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer1DArrayDataset<uint16_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer1DArrayDataset<int32_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer1DArrayDataset<uint32_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer1DArrayDataset<int64_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer1DArrayDataset<uint64_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer1DArrayDataset<float32>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer1DArrayDataset<float64>(ptrGroupWriter) >= 0);
 
-  REQUIRE(writePointer2DArrayDataset<int8_t>(ptrId) >= 0);
-  REQUIRE(writePointer2DArrayDataset<uint8_t>(ptrId) >= 0);
-  REQUIRE(writePointer2DArrayDataset<int16_t>(ptrId) >= 0);
-  REQUIRE(writePointer2DArrayDataset<uint16_t>(ptrId) >= 0);
-  REQUIRE(writePointer2DArrayDataset<int32_t>(ptrId) >= 0);
-  REQUIRE(writePointer2DArrayDataset<uint32_t>(ptrId) >= 0);
-  REQUIRE(writePointer2DArrayDataset<int64_t>(ptrId) >= 0);
-  REQUIRE(writePointer2DArrayDataset<uint64_t>(ptrId) >= 0);
-  REQUIRE(writePointer2DArrayDataset<float32>(ptrId) >= 0);
-  REQUIRE(writePointer2DArrayDataset<float64>(ptrId) >= 0);
+  REQUIRE(writePointer2DArrayDataset<int8_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer2DArrayDataset<uint8_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer2DArrayDataset<int16_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer2DArrayDataset<uint16_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer2DArrayDataset<int32_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer2DArrayDataset<uint32_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer2DArrayDataset<int64_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer2DArrayDataset<uint64_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer2DArrayDataset<float32>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer2DArrayDataset<float64>(ptrGroupWriter) >= 0);
 
-  REQUIRE(writePointer3DArrayDataset<int8_t>(ptrId) >= 0);
-  REQUIRE(writePointer3DArrayDataset<uint8_t>(ptrId) >= 0);
-  REQUIRE(writePointer3DArrayDataset<int16_t>(ptrId) >= 0);
-  REQUIRE(writePointer3DArrayDataset<uint16_t>(ptrId) >= 0);
-  REQUIRE(writePointer3DArrayDataset<int32_t>(ptrId) >= 0);
-  REQUIRE(writePointer3DArrayDataset<uint32_t>(ptrId) >= 0);
-  REQUIRE(writePointer3DArrayDataset<int64_t>(ptrId) >= 0);
-  REQUIRE(writePointer3DArrayDataset<uint64_t>(ptrId) >= 0);
-  REQUIRE(writePointer3DArrayDataset<float32>(ptrId) >= 0);
-  REQUIRE(writePointer3DArrayDataset<float64>(ptrId) >= 0);
+  REQUIRE(writePointer3DArrayDataset<int8_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer3DArrayDataset<uint8_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer3DArrayDataset<int16_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer3DArrayDataset<uint16_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer3DArrayDataset<int32_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer3DArrayDataset<uint32_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer3DArrayDataset<int64_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer3DArrayDataset<uint64_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer3DArrayDataset<float32>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer3DArrayDataset<float64>(ptrGroupWriter) >= 0);
 
-  REQUIRE(writePointer4DArrayDataset<int8_t>(ptrId) >= 0);
-  REQUIRE(writePointer4DArrayDataset<uint8_t>(ptrId) >= 0);
-  REQUIRE(writePointer4DArrayDataset<int16_t>(ptrId) >= 0);
-  REQUIRE(writePointer4DArrayDataset<uint16_t>(ptrId) >= 0);
-  REQUIRE(writePointer4DArrayDataset<int32_t>(ptrId) >= 0);
-  REQUIRE(writePointer4DArrayDataset<uint32_t>(ptrId) >= 0);
-  REQUIRE(writePointer4DArrayDataset<int64_t>(ptrId) >= 0);
-  REQUIRE(writePointer4DArrayDataset<uint64_t>(ptrId) >= 0);
-  REQUIRE(writePointer4DArrayDataset<float32>(ptrId) >= 0);
-  REQUIRE(writePointer4DArrayDataset<float64>(ptrId) >= 0);
+  REQUIRE(writePointer4DArrayDataset<int8_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer4DArrayDataset<uint8_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer4DArrayDataset<int16_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer4DArrayDataset<uint16_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer4DArrayDataset<int32_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer4DArrayDataset<uint32_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer4DArrayDataset<int64_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer4DArrayDataset<uint64_t>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer4DArrayDataset<float32>(ptrGroupWriter) >= 0);
+  REQUIRE(writePointer4DArrayDataset<float64>(ptrGroupWriter) >= 0);
 }
 
 // -----------------------------------------------------------------------------
@@ -239,7 +240,7 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
   REQUIRE(!results.outputActions.valid());
 
   // Put in the correct file path
-  val = {m_FilePath.string(), {}};
+  val = {m_FilePath, {}};
   args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
 
   // Check no datasets checked error
@@ -253,7 +254,7 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
   importInfo.tupleDimensions = "";
   importInfo.dataSetPath = "";
   importInfoList.push_back(importInfo);
-  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath.string(), importInfoList));
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath, importInfoList));
 
   results = filter.preflight(dataStructure, args);
   REQUIRE(!results.outputActions.valid());
@@ -262,17 +263,17 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
   importInfoList.clear();
   importInfo.dataSetPath = "/Foo";
   importInfoList.push_back(importInfo);
-  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath.string(), importInfoList));
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath, importInfoList));
 
   results = filter.preflight(dataStructure, args);
   REQUIRE(!results.outputActions.valid());
 
   // Fill in Dataset Path with a valid path so that we can continue our error checks
   importInfoList.clear();
-  std::string typeStr = H5Lite::HDFTypeForPrimitiveAsStr<int8_t>();
+  std::string typeStr = H5::Support::HdfTypeForPrimitiveAsStr<int8_t>();
   importInfo.dataSetPath = "Pointer/Pointer1DArrayDataset<" + typeStr + ">";
   importInfoList.push_back(importInfo);
-  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath.string(), importInfoList));
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath, importInfoList));
 
   // Check empty component dimensions
   results = filter.preflight(dataStructure, args);
@@ -282,7 +283,7 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
   importInfoList.clear();
   importInfo.componentDimensions = "(abcdg 635w";
   importInfoList.push_back(importInfo);
-  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath.string(), importInfoList));
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath, importInfoList));
 
   results = filter.preflight(dataStructure, args);
   REQUIRE(!results.outputActions.valid());
@@ -291,7 +292,7 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
   importInfoList.clear();
   importInfo.componentDimensions = "12, 6";
   importInfoList.push_back(importInfo);
-  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath.string(), importInfoList));
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath, importInfoList));
   results = filter.preflight(dataStructure, args);
   REQUIRE(!results.outputActions.valid());
 
@@ -299,7 +300,7 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
   importInfoList.clear();
   importInfo.tupleDimensions = "(abcdg 635w";
   importInfoList.push_back(importInfo);
-  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath.string(), importInfoList));
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath, importInfoList));
 
   results = filter.preflight(dataStructure, args);
   REQUIRE(!results.outputActions.valid());
@@ -331,7 +332,7 @@ void DatasetTest(ImportHDF5Dataset& filter, std::list<ImportHDF5DatasetParameter
     return;
   }
 
-  std::string typeStr = H5Lite::HDFTypeForPrimitiveAsStr<T>();
+  std::string typeStr = H5::Support::HdfTypeForPrimitiveAsStr<T>();
 
   DataStructure dataStructure;
   DataGroup* levelZeroGroup = DataGroup::Create(dataStructure, Constants::k_LevelZero);
@@ -343,7 +344,7 @@ void DatasetTest(ImportHDF5Dataset& filter, std::list<ImportHDF5DatasetParameter
   }
 
   Arguments args;
-  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath.string(), dsetInfoList));
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath, dsetInfoList));
   args.insertOrAssign(ImportHDF5Dataset::k_SelectedAttributeMatrix_Key.str(), std::make_any<DataPath>(DataPath::FromString(Constants::k_LevelZero).value()));
 
   // Execute Dataset Test
@@ -422,10 +423,8 @@ void DatasetTest(ImportHDF5Dataset& filter, std::list<ImportHDF5DatasetParameter
 }
 
 // -----------------------------------------------------------------------------
-TEST_CASE("ImportHDF5Dataset Filter")
+void testFilterExecute(ImportHDF5Dataset& filter)
 {
-  writeHDF5File();
-
   //  // ******************* Test Reading Data *************************************
 
   // Create tuple and component dimensions for all tests
@@ -461,9 +460,6 @@ TEST_CASE("ImportHDF5Dataset Filter")
 
   tDimsVector.push_back(std::vector<size_t>(4) = {TUPLEDIMPROD - 1, 98, 12, 45});
   cDimsVector.push_back(std::vector<size_t>(4) = {COMPDIMPROD - 1, 43, 12, 53});
-
-  ImportHDF5Dataset filter;
-  testFilterPreflight(filter);
 
   // Execute all combinations of tests
   for(int i = 0; i < tDimsVector.size(); i++)
@@ -645,6 +641,18 @@ TEST_CASE("ImportHDF5Dataset Filter")
       DatasetTest<float32>(filter, importInfoList, resultsValid);
       DatasetTest<float64>(filter, importInfoList, resultsValid);
     }
+  }
+}
+
+// -----------------------------------------------------------------------------
+TEST_CASE("ImportHDF5Dataset Filter")
+{
+  {
+    writeHDF5File();
+
+    ImportHDF5Dataset filter;
+    testFilterPreflight(filter);
+    testFilterExecute(filter);
   }
 
   if(fs::exists(m_FilePath))
