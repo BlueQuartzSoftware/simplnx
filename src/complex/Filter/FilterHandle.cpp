@@ -11,11 +11,11 @@ FilterHandle::FilterHandle(const FilterIdType& filterId, const PluginIdType& plu
 {
 }
 
-FilterHandle::FilterHandle(IFilter* filter, const PluginIdType& pluginId)
-: m_FilterName(filter->humanName())
-, m_ClassName(filter->className())
-, m_DefaultTags(filter->defaultTags())
-, m_FilterId(filter->uuid())
+FilterHandle::FilterHandle(const IFilter& filter, const PluginIdType& pluginId)
+: m_FilterName(filter.humanName())
+, m_ClassName(filter.className())
+, m_DefaultTags(filter.defaultTags())
+, m_FilterId(filter.uuid())
 , m_PluginId(pluginId)
 {
 }

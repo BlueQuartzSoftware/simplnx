@@ -119,7 +119,7 @@ protected:
    * @param filterId
    * @param pluginId
    */
-  FilterHandle(IFilter* filter, const PluginIdType& pluginId);
+  FilterHandle(const IFilter& filter, const PluginIdType& pluginId);
 
 private:
   std::string m_FilterName;

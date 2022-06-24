@@ -81,6 +81,6 @@ void AbstractPlugin::addFilter(FilterCreationFunc filterFunc)
         fmt::format("Attempted to add filter '{}' with uuid '{}' in plugin '{}', but filter '{}' already exists with that uuid", filter->name(), uuid.str(), getName(), existingFilter->name()));
   }
 
-  m_FilterHandles.insert(FilterHandle(filter.get(), getId()));
+  m_FilterHandles.insert(FilterHandle(*filter, getId()));
   m_InitializerMap[uuid] = filterFunc;
 }
