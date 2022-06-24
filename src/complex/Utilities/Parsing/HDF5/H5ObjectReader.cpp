@@ -84,11 +84,11 @@ size_t H5::ObjectReader::getNumAttributes() const
 
 std::vector<std::string> H5::ObjectReader::getAttributeNames() const
 {
-  std::vector<std::string> attributeNames;
   auto numAttributes = getNumAttributes();
+  std::vector<std::string> attributeNames(numAttributes);
   for(size_t i = 0; i < numAttributes; i++)
   {
-    getAttributeByIdx(i);
+    attributeNames[i] = getAttributeByIdx(i).getName();
   }
 
   return attributeNames;
