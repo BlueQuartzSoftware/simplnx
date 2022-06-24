@@ -116,7 +116,7 @@ protected:
    * @brief Constructs a FilterHandle for the target filter and plugin ID.
    * The filter name is assigned for human readability.
    * @param filterName
-   * @param filterId
+   * @param filter The IFilter object that the handle wraps
    * @param pluginId
    */
   FilterHandle(const IFilter& filter, const PluginIdType& pluginId);
