@@ -50,6 +50,12 @@ H5::Type H5::DatasetReader::getType() const
   return H5::getTypeFromId(typeId);
 }
 
+H5::IdType H5::DatasetReader::getClassType() const
+{
+  auto typeId = getTypeId();
+  return H5Tget_class(typeId);
+}
+
 Result<DataType> H5::DatasetReader::getDataType() const
 {
   switch(getType())
