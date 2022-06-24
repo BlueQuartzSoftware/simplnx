@@ -43,6 +43,18 @@ H5::IdType H5::ObjectReader::getParentId() const
   return m_ParentId;
 }
 
+size_t H5::ObjectReader::getObjectId() const
+{
+  if(!isValid())
+  {
+    return 0;
+  }
+
+  H5O_info1_t info;
+  H5Oget_info(m_ObjectId, &info);
+  return info.addr;
+}
+
 H5::IdType H5::ObjectReader::getId() const
 {
   return m_ObjectId;

@@ -46,6 +46,12 @@ public:
   H5::IdType getParentId() const;
 
   /**
+   * @brief Returns the object's address ID. Returns 0 if the object is invalid.
+   * @return H5::IdType
+   */
+  size_t getObjectId() const;
+
+  /**
    * @brief Returns the object's HDF5 ID. Returns 0 if the object is invalid.
    * @return H5::IdType
    */
