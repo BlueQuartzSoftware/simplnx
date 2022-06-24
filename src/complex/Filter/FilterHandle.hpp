@@ -4,8 +4,8 @@
 #include <string>
 
 #include "complex/Common/Uuid.hpp"
-#include "complex/complex_export.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -93,7 +93,7 @@ public:
    */
   std::string getClassName() const;
 
-    /**
+  /**
    * @brief Returns the Default Tags for the filter
    * @return
    */
