@@ -293,7 +293,7 @@ std::vector<hsize_t> H5::DatasetReader::getDimensions() const
   auto dataspaceId = getDataspaceId();
   if(dataspaceId >= 0)
   {
-    if(getType() == Type::string)
+    if(getClassType() == H5T_STRING)
     {
       auto typeId = getTypeId();
       size_t typeSize = H5Tget_size(typeId);
