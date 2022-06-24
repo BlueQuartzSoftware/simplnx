@@ -20,7 +20,10 @@ H5::DatasetReader::DatasetReader(H5::IdType parentId, const std::string& dataNam
   m_DatasetId = H5Dopen(parentId, dataName.c_str(), H5P_DEFAULT);
 }
 
-H5::DatasetReader::~DatasetReader() = default;
+H5::DatasetReader::~DatasetReader()
+{
+  closeHdf5();
+}
 
 void H5::DatasetReader::closeHdf5()
 {
@@ -90,34 +93,7 @@ size_t H5::DatasetReader::getTypeSize() const
 
 size_t H5::DatasetReader::getNumElements() const
 {
-  std::vector<hsize_t> dims;
-  auto dataspaceId = getDataspaceId();
-  if(dataspaceId >= 0)
-  {
-    if(getType() == Type::string)
-    {
-      auto typeId = getTypeId();
-      size_t typeSize = H5Tget_size(typeId);
-      dims = {typeSize};
-    }
-    else
-    {
-      size_t rank = H5Sget_simple_extent_ndims(dataspaceId);
-      std::vector<hsize_t> hdims(rank, 0);
-      /* Get dimensions */
-      auto error = H5Sget_simple_extent_dims(dataspaceId, hdims.data(), nullptr);
-      if(error < 0)
-      {
-        std::cout << "Error Getting Attribute dims" << std::endl;
-        return 0;
-      }
-      // Copy the dimensions into the dims vector
-      dims.clear(); // Erase everything in the Vector
-      dims.resize(rank);
-      std::copy(hdims.cbegin(), hdims.cend(), dims.begin());
-    }
-  }
-
+  std::vector<hsize_t> dims = getDimensions();
   hsize_t numElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<hsize_t>(1), std::multiplies<>());
   return numElements;
 }
@@ -303,6 +279,38 @@ bool H5::DatasetReader::readIntoSpan(nonstd::span<T> data) const
   }
 
   return true;
+}
+
+std::vector<hsize_t> H5::DatasetReader::getDimensions() const
+{
+  std::vector<hsize_t> dims;
+  auto dataspaceId = getDataspaceId();
+  if(dataspaceId >= 0)
+  {
+    if(getType() == Type::string)
+    {
+      auto typeId = getTypeId();
+      size_t typeSize = H5Tget_size(typeId);
+      dims = {typeSize};
+    }
+    else
+    {
+      size_t rank = H5Sget_simple_extent_ndims(dataspaceId);
+      std::vector<hsize_t> hdims(rank, 0);
+      /* Get dimensions */
+      auto error = H5Sget_simple_extent_dims(dataspaceId, hdims.data(), nullptr);
+      if(error < 0)
+      {
+        std::cout << "Error Getting Attribute dims" << std::endl;
+        return dims;
+      }
+      // Copy the dimensions into the dims vector
+      dims.clear(); // Erase everything in the Vector
+      dims.resize(rank);
+      std::copy(hdims.cbegin(), hdims.cend(), dims.begin());
+    }
+  }
+  return dims;
 }
 
 // declare readAsVector
