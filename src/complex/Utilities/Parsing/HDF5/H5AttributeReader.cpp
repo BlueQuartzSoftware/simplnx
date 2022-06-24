@@ -75,6 +75,12 @@ H5::Type H5::AttributeReader::getType() const
   return H5::getTypeFromId(getTypeId());
 }
 
+H5::IdType H5::AttributeReader::getClassType() const
+{
+  auto typeId = getTypeId();
+  return H5Tget_class(typeId);
+}
+
 H5::IdType H5::AttributeReader::getTypeId() const
 {
   return H5Aget_type(getAttributeId());
