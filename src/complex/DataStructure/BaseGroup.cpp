@@ -81,6 +81,16 @@ const DataObject* BaseGroup::operator[](const std::string& name) const
   return m_DataMap[name];
 }
 
+DataObject& BaseGroup::at(const std::string& name)
+{
+  return m_DataMap.at(name);
+}
+
+const DataObject& BaseGroup::at(const std::string& name) const
+{
+  return m_DataMap.at(name);
+}
+
 bool BaseGroup::canInsert(const DataObject* obj) const
 {
   if(obj == nullptr)

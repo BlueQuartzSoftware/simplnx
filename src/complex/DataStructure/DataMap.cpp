@@ -211,6 +211,26 @@ const DataObject* DataMap::operator[](const std::string& name) const
   return nullptr;
 }
 
+DataObject& DataMap::at(const std::string& name)
+{
+  DataObject* object = (*this)[name];
+  if(object == nullptr)
+  {
+    throw std::invalid_argument(fmt::format("DataMap::at: unable to find object with name '{}'", name));
+  }
+  return *object;
+}
+
+const DataObject& DataMap::at(const std::string& name) const
+{
+  const DataObject* object = (*this)[name];
+  if(object == nullptr)
+  {
+    throw std::invalid_argument(fmt::format("DataMap::at: unable to find object with name '{}'", name));
+  }
+  return *object;
+}
+
 DataMap::Iterator DataMap::find(IdType id)
 {
   return m_Map.find(id);
