@@ -49,7 +49,7 @@ H5::IdType H5::ObjectReader::getParentId() const
   return m_ParentId;
 }
 
-size_t H5::ObjectReader::getObjectId() const
+haddr_t H5::ObjectReader::getObjectId() const
 {
   if(!isValid())
   {
