@@ -48,7 +48,7 @@ public:
    */
   TetrahedralGeom(TetrahedralGeom&& other) noexcept;
 
-  ~TetrahedralGeom() override;
+  ~TetrahedralGeom() noexcept override;
 
   TetrahedralGeom& operator=(const TetrahedralGeom&) = delete;
   TetrahedralGeom& operator=(TetrahedralGeom&&) noexcept = delete;
