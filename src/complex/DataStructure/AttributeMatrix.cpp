@@ -87,12 +87,10 @@ bool AttributeMatrix::canInsert(const DataObject* obj) const
 
   IDataStore::ShapeType arrayTupleShape = dataArray.getIDataStoreRef().getTupleShape();
 
-  if(arrayTupleShape != m_TupleShape)
-  {
-    return false;
-  }
+  auto totalTuples = std::accumulate(m_TupleShape.begin(), m_TupleShape.end(), 1ULL, std::multiplies<>());
+  auto incomingTupleCount = std::accumulate(arrayTupleShape.begin(), arrayTupleShape.end(), 1ULL, std::multiplies<>());
 
-  return true;
+  return (totalTuples == incomingTupleCount);
 }
 
 H5::ErrorType AttributeMatrix::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
