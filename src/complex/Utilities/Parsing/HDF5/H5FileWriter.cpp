@@ -42,21 +42,23 @@ H5::FileWriter::FileWriter() = default;
 
 H5::FileWriter::FileWriter(FileWriter&& rhs) noexcept
 : GroupWriter()
-, m_FileId(std::exchange(rhs.m_FileId, -1))
 {
+  auto rhsId = rhs.getId();
+  setId(rhsId);
+  rhs.setId(-1);
 }
 
 H5::FileWriter::FileWriter(const std::filesystem::path& filepath)
+: GroupWriter(0, H5Fcreate(filepath.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT))
 {
-  m_FileId = H5Fcreate(filepath.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  if(m_FileId < 0)
+  if(getId() < 0)
   {
     throw std::runtime_error(fmt::format("Error creating Output HDF5 file at path '{}'. HDF5Library threw error.", filepath.string()));
   }
 }
 
 H5::FileWriter::FileWriter(H5::IdType fileId)
-: m_FileId(fileId)
+: GroupWriter(0, fileId)
 {
 }
 
@@ -69,14 +71,9 @@ void H5::FileWriter::closeHdf5()
 {
   if(isValid())
   {
-    H5Fclose(m_FileId);
-    m_FileId = 0;
+    H5Fclose(getId());
+    setId(0);
   }
-}
-
-H5::IdType H5::FileWriter::getId() const
-{
-  return m_FileId;
 }
 
 std::string H5::FileWriter::getName() const

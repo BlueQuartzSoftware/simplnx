@@ -11,6 +11,11 @@ H5::GroupWriter::GroupWriter()
 {
 }
 
+H5::GroupWriter::GroupWriter(H5::IdType parentId, H5::IdType objectId)
+: ObjectWriter(parentId, objectId)
+{
+}
+
 H5::GroupWriter::GroupWriter(H5::IdType parentId, const std::string& groupName)
 : ObjectWriter(parentId)
 {
@@ -21,11 +26,11 @@ H5::GroupWriter::GroupWriter(H5::IdType parentId, const std::string& groupName)
 
   if(status == 0) // if group exists...
   {
-    m_GroupId = H5Gopen(parentId, groupName.c_str(), H5P_DEFAULT);
+    setId(H5Gopen(parentId, groupName.c_str(), H5P_DEFAULT));
   }
   else // if group does not exist...
   {
-    m_GroupId = H5Gcreate(parentId, groupName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    setId(H5Gcreate(parentId, groupName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT));
   }
 }
 
@@ -38,19 +43,14 @@ void H5::GroupWriter::closeHdf5()
 {
   if(isValid())
   {
-    H5Oclose(m_GroupId);
-    m_GroupId = 0;
+    H5Oclose(getId());
+    setId(0);
   }
 }
 
 bool H5::GroupWriter::isValid() const
 {
   return getId() > 0;
-}
-
-H5::IdType H5::GroupWriter::getId() const
-{
-  return m_GroupId;
 }
 
 H5::GroupWriter H5::GroupWriter::createGroupWriter(const std::string& childName)

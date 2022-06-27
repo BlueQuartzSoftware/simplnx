@@ -12,9 +12,13 @@ using namespace complex;
 H5::GroupReader::GroupReader() = default;
 
 H5::GroupReader::GroupReader(H5::IdType parentId, const std::string& groupName)
-: ObjectReader(parentId)
+: ObjectReader(parentId, H5Gopen(parentId, groupName.c_str(), H5P_DEFAULT))
 {
-  m_GroupId = H5Gopen(parentId, groupName.c_str(), H5P_DEFAULT);
+}
+
+H5::GroupReader::GroupReader(H5::IdType parentId, H5::IdType objectId)
+: ObjectReader(parentId, objectId)
+{
 }
 
 H5::GroupReader::~GroupReader()
@@ -26,14 +30,9 @@ void H5::GroupReader::closeHdf5()
 {
   if(isValid())
   {
-    H5Gclose(m_GroupId);
-    m_GroupId = 0;
+    H5Gclose(getId());
+    setId(0);
   }
-}
-
-H5::IdType H5::GroupReader::getId() const
-{
-  return m_GroupId;
 }
 
 H5::GroupReader H5::GroupReader::openGroup(const std::string& name) const

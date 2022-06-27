@@ -10,8 +10,9 @@ H5::ObjectWriter::ObjectWriter()
 {
 }
 
-H5::ObjectWriter::ObjectWriter(H5::IdType parentId)
+H5::ObjectWriter::ObjectWriter(H5::IdType parentId, H5::IdType objectId)
 : m_ParentId(parentId)
+, m_Id(objectId)
 {
 }
 
@@ -42,6 +43,16 @@ std::string H5::ObjectWriter::getParentName() const
   std::string path = H5::GetNameFromId(getParentId());
 
   return path;
+}
+
+H5::IdType H5::ObjectWriter::getId() const
+{
+  return m_Id;
+}
+
+void H5::ObjectWriter::setId(H5::IdType id)
+{
+  m_Id = id;
 }
 
 std::string H5::ObjectWriter::getName() const

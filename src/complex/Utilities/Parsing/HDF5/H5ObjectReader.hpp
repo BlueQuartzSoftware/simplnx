@@ -55,7 +55,13 @@ public:
    * @brief Returns the object's HDF5 ID. Returns 0 if the object is invalid.
    * @return H5::IdType
    */
-  virtual H5::IdType getId() const;
+  H5::IdType getId() const;
+
+  /**
+   * @brief Sets the object's HDF5 ID.
+   * @return H5::IdType
+   */
+  void setId(H5::IdType id);
 
   /**
    * @brief Returns the HDF5 object name. Returns an empty string if the file
@@ -103,13 +109,22 @@ protected:
   ObjectReader(H5::IdType parentId);
 
   /**
+   * @brief Constructs an ObjectReader for use in derived classes. This
+   * constructor only accepts the parent ID and the (object) ID. Derived classes are required to
+   * open their own target and provide the ID.
+   * @param parentId
+   * @param objectId
+   */
+  ObjectReader(H5::IdType parentId, H5::IdType objectId);
+
+  /**
    * @brief Closes the HDF5 ID and resets it to 0.
    */
   virtual void closeHdf5();
 
 private:
   H5::IdType m_ParentId = 0;
-  H5::IdType m_ObjectId = 0;
+  H5::IdType m_Id = 0; // the object, group, file, or dataset id
 };
 } // namespace H5
 } // namespace complex

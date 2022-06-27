@@ -33,8 +33,8 @@ H5::DatasetWriter::~DatasetWriter()
 #if 0
 bool H5::DatasetWriter::tryOpeningDataset(const std::string& datasetName, H5::Type dataType)
 {
-  m_DatasetId = H5Dopen(getParentId(), datasetName.c_str(), H5P_DEFAULT);
-  if(m_DatasetId <= 0)
+  setId(H5Dopen(getParentId(), datasetName.c_str(), H5P_DEFAULT));
+  if(getId() <= 0)
   {
     return false;
   }
@@ -82,17 +82,17 @@ bool H5::DatasetWriter::tryCreatingDataset(const std::string& datasetName, H5::T
 {
   hid_t h5DataType = H5::getIdForType(dataType);
   hid_t dataspaceId = H5Screate_simple(getRank(), getDims().data(), nullptr);
-  m_DatasetId = H5Dcreate(getParentId(), datasetName.c_str(), h5DataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  return m_DatasetId > 0;
+  setId(H5Dcreate(getParentId(), datasetName.c_str(), h5DataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT));
+  return getId() > 0;
 }
 #endif
 
 void H5::DatasetWriter::closeHdf5()
 {
-  if(m_DatasetId > 0)
+  if(getId() > 0)
   {
-    H5Dclose(m_DatasetId);
-    m_DatasetId = 0;
+    H5Dclose(getId());
+    setId(0);
   }
 }
 
@@ -117,11 +117,11 @@ H5::ErrorType H5::DatasetWriter::findAndDeleteAttribute()
 void H5::DatasetWriter::createOrOpenDataset(H5::IdType typeId, H5::IdType dataspaceId)
 {
   HDF_ERROR_HANDLER_OFF
-  m_DatasetId = H5Dopen(getParentId(), getName().c_str(), H5P_DEFAULT);
+  setId(H5Dopen(getParentId(), getName().c_str(), H5P_DEFAULT));
   HDF_ERROR_HANDLER_ON
-  if(m_DatasetId < 0) // dataset does not exist so create it
+  if(getId() < 0) // dataset does not exist so create it
   {
-    m_DatasetId = H5Dcreate(getParentId(), getName().c_str(), typeId, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    setId(H5Dcreate(getParentId(), getName().c_str(), typeId, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT));
   }
 }
 
@@ -138,11 +138,6 @@ std::string H5::DatasetWriter::getName() const
   }
 
   return m_DatasetName;
-}
-
-H5::IdType H5::DatasetWriter::getId() const
-{
-  return m_DatasetId;
 }
 
 H5::ErrorType H5::DatasetWriter::writeString(const std::string& text)
@@ -172,11 +167,11 @@ H5::ErrorType H5::DatasetWriter::writeString(const std::string& text)
         {
           /* Create or open the dataset. */
           createOrOpenDataset(typeId, dataspaceId);
-          if(m_DatasetId >= 0)
+          if(getId() >= 0)
           {
             if(!text.empty())
             {
-              error = H5Dwrite(m_DatasetId, typeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, text.c_str());
+              error = H5Dwrite(getId(), typeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, text.c_str());
               if(error < 0)
               {
                 std::cout << "Error Writing String Data" << std::endl;
@@ -188,7 +183,7 @@ H5::ErrorType H5::DatasetWriter::writeString(const std::string& text)
           {
             returnError = 0;
           }
-          // H5_CLOSE_H5_DATASET(m_DatasetId, error, returnError, getName())
+          // H5_CLOSE_H5_DATASET(getId(), error, returnError, getName())
         }
         H5S_CLOSE_H5_DATASPACE(dataspaceId, error, returnError)
       }
@@ -210,8 +205,8 @@ H5::ErrorType H5::DatasetWriter::writeVectorOfStrings(std::vector<std::string>& 
   herr_t error = 0;
   herr_t returnError = 0;
 
-  m_DatasetId = H5Dopen(getParentId(), getName().c_str(), H5P_DEFAULT);
-  if(m_DatasetId < 0)
+  setId(H5Dopen(getParentId(), getName().c_str(), H5P_DEFAULT));
+  if(getId() < 0)
   {
     std::cout << "H5Lite.cpp::readVectorOfStringDataset(" << __LINE__ << ") Error opening Dataset at locationID (" << getParentId() << ") with object name (" << getParentName() << ")" << std::endl;
     return -1;
@@ -307,8 +302,8 @@ H5::ErrorType H5::DatasetWriter::writeVector(const DimsType& dims, const std::ve
     return -1;
   }
   /* Open the object */
-  m_DatasetId = H5::Support::OpenId(getParentId(), getName(), objectInfo.type);
-  if(m_DatasetId < 0)
+  setId(H5::Support::OpenId(getParentId(), getName(), objectInfo.type));
+  if(getId() < 0)
   {
     std::cout << "Error opening Object for Attribute operations." << std::endl;
     return -1;

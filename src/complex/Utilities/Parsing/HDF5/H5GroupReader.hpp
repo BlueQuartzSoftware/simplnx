@@ -27,12 +27,6 @@ public:
   virtual ~GroupReader();
 
   /**
-   * @brief Returns the wrapped HDF5 group ID.
-   * @return H5::IdType
-   */
-  H5::IdType getId() const override;
-
-  /**
    * @brief Attempts to open a nested HDF5 group with the specified name.
    * The created GroupReader is returned. If the process fails, the returned
    * GroupReader is invalid.
@@ -99,8 +93,14 @@ protected:
    */
   void closeHdf5() override;
 
-private:
-  H5::IdType m_GroupId = 0;
+  /**
+   * @brief Constructs a GroupReader for use in derived classes. This
+   * constructor only accepts the parent ID and the (object) ID. Derived classes are required to
+   * open their own target and provide the ID.
+   * @param parentId
+   * @param objectId
+   */
+  GroupReader(H5::IdType parentId, H5::IdType objectId);
 };
 } // namespace H5
 } // namespace complex
