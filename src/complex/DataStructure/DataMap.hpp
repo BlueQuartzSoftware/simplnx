@@ -173,6 +173,22 @@ public:
   const DataObject* operator[](const std::string& name) const;
 
   /**
+   * @brief Returns a reference to the DataObject with the specified name.
+   * Throws if no DataObject is found.
+   * @param name
+   * @return DataObject&
+   */
+  DataObject& at(const std::string& name);
+
+  /**
+   * @brief Returns a const reference to the DataObject with the specified name.
+   * Throws if no DataObject is found.
+   * @param name
+   * @return const DataObject&
+   */
+  const DataObject& at(const std::string& name) const;
+
+  /**
    * @brief Checks if the DataMap contains the specified IdType.
    * @param id
    * @return bool

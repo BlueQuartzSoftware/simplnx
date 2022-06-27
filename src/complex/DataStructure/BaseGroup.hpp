@@ -128,6 +128,28 @@ public:
   const DataObject* operator[](const std::string& name) const;
 
   /**
+   * Returns a pointer to the DataObject child with the specified name.
+   * Throws if no child exists with the specified name exists.
+   *
+   * BaseGroups found among the container's children are not expanded during
+   * the operation.
+   * @param name
+   * @return DataObject&
+   */
+  DataObject& at(const std::string& name);
+
+  /**
+   * Returns a pointer to the DataObject child with the specified name.
+   * Throws if no child exists with the specified name exists.
+   *
+   * BaseGroups found among the container's children are not expanded during
+   * the operation.
+   * @param name
+   * @return const DataObject&
+   */
+  const DataObject& at(const std::string& name) const;
+
+  /**
    * @brief Returns an iterator to the child with the specified name. If no
    * such child is found, this function returns end().
    *
