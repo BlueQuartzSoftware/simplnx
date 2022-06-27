@@ -35,12 +35,6 @@ public:
   virtual ~FileReader();
 
   /**
-   * @brief Returns the file's HDF5 ID. Returns 0 if the object is invalid.
-   * @return H5::IdType
-   */
-  H5::IdType getId() const override;
-
-  /**
    * @brief Returns the HDF5 file name. Returns an empty string if the file
    * is invalid.
    * @return std::string
@@ -52,9 +46,6 @@ protected:
    * @brief Closes the HDF5 ID and resets it to 0.
    */
   void closeHdf5() override;
-
-private:
-  H5::IdType m_FileId;
 };
 } // namespace H5
 } // namespace complex

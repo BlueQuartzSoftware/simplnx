@@ -15,9 +15,8 @@ H5::DatasetReader::DatasetReader()
 }
 
 H5::DatasetReader::DatasetReader(H5::IdType parentId, const std::string& dataName)
-: ObjectReader(parentId)
+: ObjectReader(parentId, H5Dopen(parentId, dataName.c_str(), H5P_DEFAULT))
 {
-  m_DatasetId = H5Dopen(parentId, dataName.c_str(), H5P_DEFAULT);
 }
 
 H5::DatasetReader::~DatasetReader()
@@ -29,14 +28,9 @@ void H5::DatasetReader::closeHdf5()
 {
   if(isValid())
   {
-    H5Dclose(m_DatasetId);
-    m_DatasetId = 0;
+    H5Dclose(getId());
+    setId(0);
   }
-}
-
-H5::IdType H5::DatasetReader::getId() const
-{
-  return m_DatasetId;
 }
 
 H5::IdType H5::DatasetReader::getDataspaceId() const
@@ -48,6 +42,12 @@ H5::Type H5::DatasetReader::getType() const
 {
   auto typeId = getTypeId();
   return H5::getTypeFromId(typeId);
+}
+
+H5::IdType H5::DatasetReader::getClassType() const
+{
+  auto typeId = getTypeId();
+  return H5Tget_class(typeId);
 }
 
 Result<DataType> H5::DatasetReader::getDataType() const
@@ -287,7 +287,7 @@ std::vector<hsize_t> H5::DatasetReader::getDimensions() const
   auto dataspaceId = getDataspaceId();
   if(dataspaceId >= 0)
   {
-    if(getType() == Type::string)
+    if(getClassType() == H5T_STRING)
     {
       auto typeId = getTypeId();
       size_t typeSize = H5Tget_size(typeId);

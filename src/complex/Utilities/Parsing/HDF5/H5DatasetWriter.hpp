@@ -43,13 +43,6 @@ public:
   bool isValid() const override;
 
   /**
-   * @brief Returns the dataset's HDF5 ID. Until one of the write* methods are
-   * called, this method returns 0.
-   * @return H5::IdType
-   */
-  H5::IdType getId() const override;
-
-  /**
    * @brief Returns the target dataset name. Returns an empty string if the
    * DatasetWriter is invalid.
    * @return std::string
@@ -109,8 +102,8 @@ public:
     //  return -1;
     //}
     /* Open the object */
-    // m_DatasetId = H5Dcreate(getParentId(), getName(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    // if(m_DatasetId < 0)
+    // setId(H5Dcreate(getParentId(), getName(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT));
+    // if(getId() < 0)
     //{
     //  std::cout << "Error opening Object for Attribute operations." << std::endl;
     //  return -1;
@@ -130,11 +123,11 @@ public:
         /* Create the attribute. */
         // hid_t attributeId = H5Acreate(getId(), getName().c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
         createOrOpenDataset(dataType, dataspaceId);
-        if(m_DatasetId >= 0)
+        if(getId() >= 0)
         {
           /* Write the attribute data. */
           const void* data = static_cast<const void*>(values.data());
-          error = H5Dwrite(m_DatasetId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+          error = H5Dwrite(getId(), dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
           if(error < 0)
           {
             std::cout << "Error Writing Attribute" << std::endl;
@@ -144,7 +137,7 @@ public:
         else
         {
           std::cout << "Error Creating Dataset" << std::endl;
-          returnError = static_cast<herr_t>(m_DatasetId);
+          returnError = static_cast<herr_t>(getId());
         }
         /* Close the attribute. */
         // error = H5Aclose(attributeId);
@@ -185,19 +178,18 @@ protected:
    */
   void createOrOpenDataset(H5::IdType typeId, H5::IdType dataspaceId);
 
+  /**
+   * @brief Closes the HDF5 dataset and resets the ID to 0.
+   */
+  void closeHdf5() override;
+
 private:
 #if 0
   bool tryOpeningDataset(const std::string& datasetName, H5::Type dataType);
   bool tryCreatingDataset(const std::string& datasetName, H5::Type dataType);
 #endif
 
-  /**
-   * @brief Closes the HDF5 dataset and resets the ID to 0.
-   */
-  void closeHdf5();
-
   const std::string m_DatasetName;
-  hid_t m_DatasetId = 0;
 };
 } // namespace H5
 } // namespace complex

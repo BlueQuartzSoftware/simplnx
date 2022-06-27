@@ -83,6 +83,12 @@ public:
   H5::Type getType() const;
 
   /**
+   * @brief Returns an H5T_class_t enum representation of the attribute's class type.
+   * @return H5::Type
+   */
+  H5::IdType getClassType() const;
+
+  /**
    * @brief Returns the HDF5 type ID for the attribute. Returns 0 if the
    * attribute is invalid.
    * @return H5::TypeId

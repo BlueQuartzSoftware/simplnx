@@ -75,6 +75,12 @@ H5::Type H5::AttributeReader::getType() const
   return H5::getTypeFromId(getTypeId());
 }
 
+H5::IdType H5::AttributeReader::getClassType() const
+{
+  auto typeId = getTypeId();
+  return H5Tget_class(typeId);
+}
+
 H5::IdType H5::AttributeReader::getTypeId() const
 {
   return H5Aget_type(getAttributeId());
@@ -184,13 +190,13 @@ std::string H5::AttributeReader::readAsString() const
 }
 
 // declare readAsValue
-template int8_t H5::AttributeReader::readAsValue<int8_t>() const;
-template int16_t H5::AttributeReader::readAsValue<int16_t>() const;
-template int32_t H5::AttributeReader::readAsValue<int32_t>() const;
-template int64_t H5::AttributeReader::readAsValue<int64_t>() const;
-template uint8_t H5::AttributeReader::readAsValue<uint8_t>() const;
-template uint16_t H5::AttributeReader::readAsValue<uint16_t>() const;
-template uint32_t H5::AttributeReader::readAsValue<uint32_t>() const;
-template uint64_t H5::AttributeReader::readAsValue<uint64_t>() const;
-template float H5::AttributeReader::readAsValue<float>() const;
-template double H5::AttributeReader::readAsValue<double>() const;
+template COMPLEX_EXPORT int8_t H5::AttributeReader::readAsValue<int8_t>() const;
+template COMPLEX_EXPORT int16_t H5::AttributeReader::readAsValue<int16_t>() const;
+template COMPLEX_EXPORT int32_t H5::AttributeReader::readAsValue<int32_t>() const;
+template COMPLEX_EXPORT int64_t H5::AttributeReader::readAsValue<int64_t>() const;
+template COMPLEX_EXPORT uint8_t H5::AttributeReader::readAsValue<uint8_t>() const;
+template COMPLEX_EXPORT uint16_t H5::AttributeReader::readAsValue<uint16_t>() const;
+template COMPLEX_EXPORT uint32_t H5::AttributeReader::readAsValue<uint32_t>() const;
+template COMPLEX_EXPORT uint64_t H5::AttributeReader::readAsValue<uint64_t>() const;
+template COMPLEX_EXPORT float H5::AttributeReader::readAsValue<float>() const;
+template COMPLEX_EXPORT double H5::AttributeReader::readAsValue<double>() const;
