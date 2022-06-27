@@ -3,6 +3,7 @@
 #include "complex/Common/Array.hpp"
 #include "complex/Filter/Output.hpp"
 #include "complex/complex_export.hpp"
+#include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 
 namespace complex
 {
@@ -18,7 +19,8 @@ public:
 
   CreateImageGeometryAction() = delete;
 
-  CreateImageGeometryAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing);
+  CreateImageGeometryAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing,
+                            const std::string& cellAttributeMatrixName = IGridGeometry::k_CellDataName);
 
   ~CreateImageGeometryAction() noexcept override;
 
@@ -63,5 +65,6 @@ private:
   DimensionType m_Dims;
   OriginType m_Origin;
   SpacingType m_Spacing;
+  std::string m_CellDataName;
 };
 } // namespace complex
