@@ -333,8 +333,8 @@ protected:
   IGeometry(const IGeometry&) = default;
   IGeometry(IGeometry&&) noexcept = default;
 
-  IGeometry& operator=(const IGeometry&) = default;
-  IGeometry& operator=(IGeometry&&) noexcept = default;
+  IGeometry& operator=(const IGeometry&) = delete;
+  IGeometry& operator=(IGeometry&&) noexcept = delete;
 
   /**
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.

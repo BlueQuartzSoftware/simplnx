@@ -177,8 +177,8 @@ protected:
   INodeGeometry3D(const INodeGeometry3D&) = default;
   INodeGeometry3D(INodeGeometry3D&&) noexcept = default;
 
-  INodeGeometry3D& operator=(const INodeGeometry3D&) = default;
-  INodeGeometry3D& operator=(INodeGeometry3D&&) noexcept = default;
+  INodeGeometry3D& operator=(const INodeGeometry3D&) = delete;
+  INodeGeometry3D& operator=(INodeGeometry3D&&) noexcept = delete;
 
   SharedQuadList* createSharedQuadList(usize numQuads)
   {

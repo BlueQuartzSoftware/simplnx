@@ -171,8 +171,8 @@ protected:
   INodeGeometry1D(const INodeGeometry1D&) = default;
   INodeGeometry1D(INodeGeometry1D&&) noexcept = default;
 
-  INodeGeometry1D& operator=(const INodeGeometry1D&) = default;
-  INodeGeometry1D& operator=(INodeGeometry1D&&) noexcept = default;
+  INodeGeometry1D& operator=(const INodeGeometry1D&) = delete;
+  INodeGeometry1D& operator=(INodeGeometry1D&&) noexcept = delete;
 
   /**
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
