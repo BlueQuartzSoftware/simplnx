@@ -318,7 +318,7 @@ public:
   }
 
 protected:
-  IGeometry() = default;
+  IGeometry() = delete;
 
   IGeometry(DataStructure& ds, std::string name)
   : BaseGroup(ds, std::move(name))

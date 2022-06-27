@@ -216,7 +216,7 @@ public:
   }
 
 protected:
-  IGridGeometry() = default;
+  IGridGeometry() = delete;
 
   IGridGeometry(DataStructure& ds, std::string name)
   : IGeometry(ds, std::move(name))
@@ -231,8 +231,8 @@ protected:
   IGridGeometry(const IGridGeometry&) = default;
   IGridGeometry(IGridGeometry&&) noexcept = default;
 
-  IGridGeometry& operator=(const IGridGeometry&) = default;
-  IGridGeometry& operator=(IGridGeometry&&) noexcept = default;
+  IGridGeometry& operator=(const IGridGeometry&) = delete;
+  IGridGeometry& operator=(IGridGeometry&&) noexcept = delete;
 
 private:
   std::optional<IdType> m_CellDataId;

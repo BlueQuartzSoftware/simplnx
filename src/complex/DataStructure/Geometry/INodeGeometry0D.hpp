@@ -74,7 +74,7 @@ public:
   virtual void setCoords(usize vertId, const Point3D<float32>& coords) = 0;
 
 protected:
-  INodeGeometry0D() = default;
+  INodeGeometry0D() = delete;
 
   INodeGeometry0D(DataStructure& ds, std::string name)
   : IGeometry(ds, std::move(name))

@@ -156,7 +156,7 @@ public:
   virtual void getVertsAtEdge(usize edgeId, usize verts[2]) const = 0;
 
 protected:
-  INodeGeometry1D() = default;
+  INodeGeometry1D() = delete;
 
   INodeGeometry1D(DataStructure& ds, std::string name)
   : INodeGeometry0D(ds, std::move(name))

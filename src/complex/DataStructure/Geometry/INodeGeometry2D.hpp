@@ -145,7 +145,7 @@ public:
   }
 
 protected:
-  INodeGeometry2D() = default;
+  INodeGeometry2D() = delete;
 
   INodeGeometry2D(DataStructure& ds, std::string name)
   : INodeGeometry1D(ds, std::move(name))
