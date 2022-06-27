@@ -68,7 +68,7 @@ protected:
   /**
    * @brief Closes the HDF5 ID and resets it to 0.
    */
-  virtual void closeHdf5() override;
+  void closeHdf5() override;
 
   /**
    * @brief Constructs a GroupWriter for use in derived classes. This

@@ -72,7 +72,7 @@ protected:
   /**
    * @brief Closes the HDF5 ID and resets it to 0.
    */
-  virtual void closeHdf5() override;
+  void closeHdf5() override;
 };
 } // namespace H5
 } // namespace complex
