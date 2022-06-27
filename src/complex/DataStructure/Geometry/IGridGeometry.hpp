@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
 
 namespace complex
@@ -7,6 +8,8 @@ namespace complex
 class COMPLEX_EXPORT IGridGeometry : public IGeometry
 {
 public:
+  static inline constexpr StringLiteral k_CellDataName = "Cell Data";
+
   ~IGridGeometry() noexcept override = default;
 
   /**
@@ -149,6 +152,69 @@ public:
    */
   virtual usize getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const = 0;
 
+  /**
+   * @brief
+   * @return
+   */
+  const std::optional<IdType>& getCellDataId() const
+  {
+    return m_CellDataId;
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  AttributeMatrix* getCellData()
+  {
+    return getDataStructureRef().getDataAs<AttributeMatrix>(m_CellDataId);
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  const AttributeMatrix* getCellData() const
+  {
+    return getDataStructureRef().getDataAs<AttributeMatrix>(m_CellDataId);
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  AttributeMatrix& getCellDataRef()
+  {
+    return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_CellDataId.value());
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  const AttributeMatrix& getCellDataRef() const
+  {
+    return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_CellDataId.value());
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  DataPath getCellDataPath() const
+  {
+    return getDataPaths().at(0).createChildPath(k_CellDataName);
+  }
+
+  /**
+   * @brief
+   * @param attributeMatrix
+   */
+  void setCellData(const AttributeMatrix& attributeMatrix)
+  {
+    m_CellDataId = attributeMatrix.getId();
+  }
+
 protected:
   IGridGeometry() = default;
 
@@ -167,5 +233,8 @@ protected:
 
   IGridGeometry& operator=(const IGridGeometry&) = default;
   IGridGeometry& operator=(IGridGeometry&&) noexcept = default;
+
+private:
+  std::optional<IdType> m_CellDataId;
 };
 } // namespace complex

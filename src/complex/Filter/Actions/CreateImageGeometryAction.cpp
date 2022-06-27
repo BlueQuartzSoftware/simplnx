@@ -56,6 +56,16 @@ Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode mod
   imageGeom->setOrigin(m_Origin);
   imageGeom->setSpacing(m_Spacing);
 
+  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, "Cell Data", imageGeom->getId());
+  if(attributeMatrix == nullptr)
+  {
+    return MakeErrorResult(-226, fmt::format("CreateGeometry2DAction: Failed to create ImageGeometry: '{}'", getCreatedPath().createChildPath("Cell Data").toString()));
+  }
+  DimensionType reversedDims(m_Dims.rbegin(), m_Dims.rend());
+  attributeMatrix->setShape(std::move(reversedDims));
+
+  imageGeom->setCellData(*attributeMatrix);
+
   return {};
 }
 

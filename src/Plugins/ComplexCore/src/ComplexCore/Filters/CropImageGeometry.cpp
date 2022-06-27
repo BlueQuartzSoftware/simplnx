@@ -367,6 +367,18 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       actions.actions.push_back(std::move(groupAction));
     }
 
+    //const AttributeMatrix& am = srcImageGeom->getCellDataRef();
+
+    //for(const auto& [id, object] : am)
+    //{
+    //  const auto& srcArray =  dynamic_cast<const IDataArray&>(*object);
+    //  DataType dataType = srcArray.getDataType();
+    //  auto components = srcArray.getNumberOfComponents();
+    //  auto dataArrayPath = newCellFeaturesPath.createChildPath(srcArrayPath.getTargetName());
+    //  auto arrayAction = std::make_unique<CreateArrayAction>(dataType, tDims, std::vector<usize>{components}, dataArrayPath);
+    //  actions.actions.push_back(std::move(arrayAction));
+    //}
+
     for(const auto& srcArrayPath : voxelArrayPaths)
     {
       const auto* srcArray = data.getDataAs<IDataArray>(srcArrayPath);

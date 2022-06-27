@@ -51,6 +51,8 @@ public:
     AbstractMontage = 4,
     DataGroup = 5,
 
+    AttributeMatrix = 12341,
+
     IDataArray = 6,
     DataArray = 7,
 
