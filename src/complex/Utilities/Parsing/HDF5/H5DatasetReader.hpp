@@ -34,12 +34,6 @@ public:
   virtual ~DatasetReader();
 
   /**
-   * @brief Returns the dataset's ID. Returns 0 if the object is invalid.
-   * @return H5::IdType
-   */
-  H5::IdType getId() const override;
-
-  /**
    * @brief Returns the dataspace's HDF5 ID. Returns 0 if the attribute is
    * invalid.
    * @return IdType
@@ -51,6 +45,12 @@ public:
    * @return H5::Type
    */
   H5::Type getType() const;
+
+  /**
+   * @brief Returns an H5T_class_t enum representation of the attribute's class type.
+   * @return H5::Type
+   */
+  H5::IdType getClassType() const;
 
   /**
    * @brief Returns a complex::DataType enum representation of the attribute's type or an error if there is no conversion.
@@ -123,9 +123,6 @@ protected:
    * @brief Closes the HDF5 ID and resets it to 0.
    */
   void closeHdf5() override;
-
-private:
-  H5::IdType m_DatasetId = 0;
 };
 extern template bool DatasetReader::readIntoSpan<int8>(nonstd::span<int8>) const;
 extern template bool DatasetReader::readIntoSpan<int16>(nonstd::span<int16>) const;

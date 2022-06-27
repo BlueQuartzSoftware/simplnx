@@ -38,12 +38,6 @@ public:
   bool isValid() const override;
 
   /**
-   * @brief Returns the group's HDF5 ID. Returns 0 if the object is invalid.
-   * @return H5::IdType
-   */
-  H5::IdType getId() const override;
-
-  /**
    * @brief Creates a GroupWriter for writing to a child group with the
    * target name. Returns an invalid GroupWriter if the group cannot be
    * created.
@@ -74,10 +68,16 @@ protected:
   /**
    * @brief Closes the HDF5 ID and resets it to 0.
    */
-  void closeHdf5();
+  void closeHdf5() override;
 
-private:
-  H5::IdType m_GroupId = 0;
+  /**
+   * @brief Constructs a GroupWriter for use in derived classes. This
+   * constructor only accepts the parent ID and the (object) ID. Derived classes are required to
+   * open their own target and provide the ID.
+   * @param parentId
+   * @param objectId
+   */
+  GroupWriter(H5::IdType parentId, H5::IdType objectId);
 };
 } // namespace H5
 } // namespace complex

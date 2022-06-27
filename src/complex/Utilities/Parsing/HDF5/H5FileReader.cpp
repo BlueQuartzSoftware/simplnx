@@ -7,14 +7,12 @@
 using namespace complex;
 
 H5::FileReader::FileReader(const std::filesystem::path& filepath)
-: GroupReader()
+: GroupReader(0, H5Fopen(filepath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT))
 {
-  m_FileId = H5Fopen(filepath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 }
 
 H5::FileReader::FileReader(H5::IdType fileId)
-: GroupReader()
-, m_FileId(fileId)
+: GroupReader(0, fileId)
 {
 }
 
@@ -27,14 +25,9 @@ void H5::FileReader::closeHdf5()
 {
   if(isValid())
   {
-    H5Fclose(m_FileId);
-    m_FileId = 0;
+    H5Fclose(getId());
+    setId(0);
   }
-}
-
-H5::IdType H5::FileReader::getId() const
-{
-  return m_FileId;
 }
 
 std::string H5::FileReader::getName() const

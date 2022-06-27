@@ -157,13 +157,11 @@ void writeHDF5File()
   auto writerResults = H5::FileWriter::CreateFile(m_FilePath);
   REQUIRE(writerResults.valid());
   H5::FileWriter fileWriter = std::move(writerResults.value());
-  hid_t file_id = fileWriter.getId();
-  REQUIRE(file_id > 0);
+  REQUIRE(fileWriter.isValid());
 
   // Create the Pointer group
   H5::GroupWriter ptrGroupWriter = fileWriter.createGroupWriter("Pointer");
-  hid_t ptrId = ptrGroupWriter.getId();
-  REQUIRE(ptrId > 0);
+  REQUIRE(ptrGroupWriter.isValid());
 
   REQUIRE(writePointer1DArrayDataset<int8_t>(ptrGroupWriter) >= 0);
   REQUIRE(writePointer1DArrayDataset<uint8_t>(ptrGroupWriter) >= 0);

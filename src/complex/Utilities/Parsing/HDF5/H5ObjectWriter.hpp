@@ -23,8 +23,9 @@ public:
    * belonging to the specified parent. Opening the target HDF5 object is
    * left to the derived class.
    * @param parentId
+   * @param objectId
    */
-  ObjectWriter(H5::IdType parentId);
+  ObjectWriter(H5::IdType parentId, H5::IdType objectId = 0);
 
   /**
    * @brief Releases the wrapped HDF5 object.
@@ -61,7 +62,13 @@ public:
    * @brief Returns the group's HDF5 ID. Returns 0 if the object is invalid.
    * @return H5::IdType
    */
-  virtual H5::IdType getId() const = 0;
+  H5::IdType getId() const;
+
+  /**
+   * @brief Sets the object's HDF5 ID.
+   * @return H5::IdType
+   */
+  void setId(H5::IdType id);
 
   /**
    * @brief Returns the HDF5 object name. Returns an empty string if the writer
@@ -85,8 +92,15 @@ public:
    */
   AttributeWriter createAttribute(const std::string& name);
 
+protected:
+  /**
+   * @brief Closes the HDF5 ID and resets it to 0.
+   */
+  virtual void closeHdf5() = 0;
+
 private:
   H5::IdType m_ParentId = 0;
+  H5::IdType m_Id = 0; // the object, group, file, or dataset id
 };
 } // namespace H5
 } // namespace complex
