@@ -17,7 +17,7 @@ class COMPLEX_EXPORT AlignSections
 {
 public:
   AlignSections(DataStructure& data, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
-  virtual ~AlignSections();
+  virtual ~AlignSections() noexcept;
 
   AlignSections(const AlignSections&) = delete;            // Copy Constructor Not Implemented
   AlignSections(AlignSections&&) = delete;                 // Move Constructor Not Implemented
