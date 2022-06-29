@@ -25,13 +25,13 @@ class AlignSectionsTransferDataImpl
 public:
   AlignSectionsTransferDataImpl() = delete;
   AlignSectionsTransferDataImpl(const AlignSectionsTransferDataImpl&) = default; // Copy Constructor Default Implemented
-  AlignSectionsTransferDataImpl(AlignSectionsTransferDataImpl&&) = default;      // Move Constructor Default Implemented
+  AlignSectionsTransferDataImpl(AlignSectionsTransferDataImpl&&)  noexcept = default;      // Move Constructor Default Implemented
 
-  AlignSectionsTransferDataImpl(AlignSections* filter, SizeVec3 dims, const std::vector<int64_t>& xShifts, const std::vector<int64_t>& yShifts, complex::DataArray<T>& dataArray)
+  AlignSectionsTransferDataImpl(AlignSections* filter, SizeVec3 dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts, complex::DataArray<T>& dataArray)
   : m_Filter(filter)
-  , m_Dims(dims)
-  , m_Xshifts(xShifts)
-  , m_Yshifts(yShifts)
+  , m_Dims(std::move(dims))
+  , m_Xshifts(std::move(xShifts))
+  , m_Yshifts(std::move(yShifts))
   , m_DataArray(dataArray)
   {
   }
@@ -43,7 +43,6 @@ public:
 
   void operator()() const
   {
-    size_t slice = 0;
     T var = static_cast<T>(0);
 
     auto start = std::chrono::steady_clock::now();
@@ -62,33 +61,31 @@ public:
       {
         return;
       }
-      slice = (m_Dims[2] - 1) - i;
-      for(size_t l = 0; l < m_Dims[1]; l++)
+      size_t slice = (m_Dims[2] - 1) - i;
+      for(size_t yIndex = 0; yIndex < m_Dims[1]; yIndex++)
       {
-        for(size_t n = 0; n < m_Dims[0]; n++)
+        for(size_t xIndex = 0; xIndex < m_Dims[0]; xIndex++)
         {
           int64_t xspot = 0;
           int64_t yspot = 0;
-          int64_t newPosition = 0;
-          int64_t currentPosition = 0;
           if(m_Yshifts[i] >= 0)
           {
-            yspot = static_cast<int64_t>(l);
+            yspot = static_cast<int64_t>(yIndex);
           }
           else if(m_Yshifts[i] < 0)
           {
-            yspot = static_cast<int64_t>(m_Dims[1]) - 1 - static_cast<int64_t>(l);
+            yspot = static_cast<int64_t>(m_Dims[1]) - 1 - static_cast<int64_t>(yIndex);
           }
           if(m_Xshifts[i] >= 0)
           {
-            xspot = static_cast<int64_t>(n);
+            xspot = static_cast<int64_t>(xIndex);
           }
           else if(m_Xshifts[i] < 0)
           {
-            xspot = static_cast<int64_t>(m_Dims[0]) - 1 - static_cast<int64_t>(n);
+            xspot = static_cast<int64_t>(m_Dims[0]) - 1 - static_cast<int64_t>(xIndex);
           }
-          newPosition = (slice * m_Dims[0] * m_Dims[1]) + (yspot * m_Dims[0]) + xspot;
-          currentPosition = (slice * m_Dims[0] * m_Dims[1]) + ((yspot + m_Yshifts[i]) * m_Dims[0]) + (xspot + m_Xshifts[i]);
+          int64_t newPosition = (slice * m_Dims[0] * m_Dims[1]) + (yspot * m_Dims[0]) + xspot;
+          int64_t currentPosition = (slice * m_Dims[0] * m_Dims[1]) + ((yspot + m_Yshifts[i]) * m_Dims[0]) + (xspot + m_Xshifts[i]);
           if((yspot + m_Yshifts[i]) >= 0 && (yspot + m_Yshifts[i]) <= static_cast<int64_t>(m_Dims[1]) - 1 && (xspot + m_Xshifts[i]) >= 0 &&
              (xspot + m_Xshifts[i]) <= static_cast<int64_t>(m_Dims[0]) - 1)
           {
@@ -148,7 +145,7 @@ Result<> AlignSections::execute(const SizeVec3& udims)
 
   // Now Adjust the actual DataArrays
   std::vector<DataPath> selectedCellArrays = getSelectedDataPaths();
-  
+
   TBBTaskRunner taskRunner;
 
   for(const auto& cellArrayPath : selectedCellArrays)
