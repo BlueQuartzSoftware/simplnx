@@ -29,7 +29,7 @@ public:
    * @param gridGeom
    * @return
    */
-  Result<> execute(complex::AbstractGeometryGrid* gridGeom);
+  Result<> execute(AbstractGeometryGrid& gridGeom);
 
   const std::atomic_bool& getCancel();
 
