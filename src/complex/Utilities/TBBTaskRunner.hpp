@@ -3,9 +3,6 @@
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
 
-// SIMPLib.h MUST be included before this or the guard will block the include but not its uses below.
-// This is consistent with previous behavior, only earlier parallelization split the includes between
-// the corresponding .h and .cpp files.
 #ifdef COMPLEX_ENABLE_MULTICORE
 #include <tbb/task_group.h>
 #endif
