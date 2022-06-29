@@ -136,7 +136,7 @@ void AlignSections::updateProgress(const std::string& progMessage)
 }
 
 // -----------------------------------------------------------------------------
-Result<> AlignSections::execute(complex::AbstractGeometryGrid* gridGeom)
+Result<> AlignSections::execute(AbstractGeometryGrid& gridGeom)
 {
   SizeVec3 udims = gridGeom->getDimensions();
   std::array<int64, 3> dims = {static_cast<int64_t>(udims[0]), static_cast<int64_t>(udims[1]), static_cast<int64_t>(udims[2])};
