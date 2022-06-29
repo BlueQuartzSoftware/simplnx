@@ -216,20 +216,19 @@ std::unique_ptr<MaskCompare> InstantiateMaskCompare(const DataStructure& dataStr
   return InstantiateMaskCompare(maskArray);
 }
 
-std::shared_ptr<MaskCompare> InstantiateMaskCompare(const complex::IDataArray* maskArrayPtr)
+std::unique_ptr<MaskCompare> InstantiateMaskCompare(const IDataArray& maskArray)
 {
-  if(maskArrayPtr != nullptr)
+  switch(maskArray.getDataType())
   {
-    if(maskArrayPtr->getDataType() == DataType::boolean)
-    {
-      return std::make_shared<BoolMaskCompare>(BoolMaskCompare(dynamic_cast<const BoolArray*>(maskArrayPtr)));
+    case DataType::boolean: {
+      return std::make_unique<BoolMaskCompare>(dynamic_cast<const BoolArray&>(maskArray));
     }
-    if(maskArrayPtr->getDataType() == DataType::uint8)
-    {
-      return std::make_shared<UInt8MaskCompare>(UInt8MaskCompare(dynamic_cast<const UInt8Array*>(maskArrayPtr)));
+    case DataType::uint8: {
+      return std::make_unique<UInt8MaskCompare>(dynamic_cast<const UInt8Array&>(maskArray));
     }
   }
-  return std::make_shared<UInt8MaskCompare>(nullptr);
+
+  throw std::runtime_error("InstantiateMaskCompare: invalid DataType");
 }
 
 } // namespace complex
