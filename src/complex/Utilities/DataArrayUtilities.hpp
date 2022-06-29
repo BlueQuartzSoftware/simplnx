@@ -539,7 +539,7 @@ COMPLEX_EXPORT Result<> CheckValueConvertsToArrayType(const std::string& value, 
  *
  * An example use of these functions would be the following:
  * @code
- *  std::shared_ptr<MaskCompare> maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->goodVoxelsArrayPath);
+ *  std::unique_ptr<MaskCompare> maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->goodVoxelsArrayPath);
  *  if(!maskCompare->bothTrue(arrayIndex, anotherArrayIndex))
  *  {
  *    // Do something based on the if statement...
