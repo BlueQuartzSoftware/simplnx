@@ -4,6 +4,7 @@
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
+#include "complex/Utilities/TBBTaskRunner.hpp"
 
 #include <chrono>
 
@@ -121,7 +122,7 @@ AlignSections::AlignSections(DataStructure& data, const std::atomic_bool& should
 }
 
 // -----------------------------------------------------------------------------
-AlignSections::~AlignSections() = default;
+AlignSections::~AlignSections() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& AlignSections::getCancel()
@@ -136,9 +137,8 @@ void AlignSections::updateProgress(const std::string& progMessage)
 }
 
 // -----------------------------------------------------------------------------
-Result<> AlignSections::execute(AbstractGeometryGrid& gridGeom)
+Result<> AlignSections::execute(const SizeVec3& udims)
 {
-  SizeVec3 udims = gridGeom->getDimensions();
   std::array<int64, 3> dims = {static_cast<int64_t>(udims[0]), static_cast<int64_t>(udims[1]), static_cast<int64_t>(udims[2])};
   std::vector<int64_t> xshifts(dims[2], 0);
   std::vector<int64_t> yshifts(dims[2], 0);
@@ -148,13 +148,8 @@ Result<> AlignSections::execute(AbstractGeometryGrid& gridGeom)
 
   // Now Adjust the actual DataArrays
   std::vector<DataPath> selectedCellArrays = getSelectedDataPaths();
-
-#ifdef COMPLEX_ENABLE_MULTICORE
-  std::shared_ptr<tbb::task_group> taskGroup(new tbb::task_group);
-  // C++11 RIGHT HERE....
-  auto nThreads = static_cast<int32_t>(std::thread::hardware_concurrency()); // Returns ZERO if not defined on this platform
-  int32_t threadCount = 0;
-#endif
+  
+  TBBTaskRunner taskRunner;
 
   for(const auto& cellArrayPath : selectedCellArrays)
   {
@@ -170,67 +165,56 @@ Result<> AlignSections::execute(AbstractGeometryGrid& gridGeom)
     switch(type)
     {
     case DataType::boolean: {
-      RUN_TASK(AlignSectionsTransferDataImpl<bool>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<bool>>(cellArrayPath)));
+      taskRunner.run(AlignSectionsTransferDataImpl<bool>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<bool>>(cellArrayPath)));
       break;
     }
     case DataType::int8: {
-      RUN_TASK(AlignSectionsTransferDataImpl<int8>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int8>>(cellArrayPath)));
+      taskRunner.run(AlignSectionsTransferDataImpl<int8>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int8>>(cellArrayPath)));
       break;
     }
     case DataType::int16: {
-      RUN_TASK(AlignSectionsTransferDataImpl<int16>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int16>>(cellArrayPath)));
+      taskRunner.run(AlignSectionsTransferDataImpl<int16>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int16>>(cellArrayPath)));
       break;
     }
     case DataType::int32: {
-      RUN_TASK(AlignSectionsTransferDataImpl<int32>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int32>>(cellArrayPath)));
+      taskRunner.run(AlignSectionsTransferDataImpl<int32>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int32>>(cellArrayPath)));
       break;
     }
     case DataType::int64: {
-      RUN_TASK(AlignSectionsTransferDataImpl<int64>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int64>>(cellArrayPath)));
+      taskRunner.run(AlignSectionsTransferDataImpl<int64>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int64>>(cellArrayPath)));
       break;
     }
     case DataType::uint8: {
-      RUN_TASK(AlignSectionsTransferDataImpl<uint8>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint8>>(cellArrayPath)));
+      taskRunner.run(AlignSectionsTransferDataImpl<uint8>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint8>>(cellArrayPath)));
       break;
     }
     case DataType::uint16: {
-      RUN_TASK(AlignSectionsTransferDataImpl<uint16>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint16>>(cellArrayPath)));
+      taskRunner.run(AlignSectionsTransferDataImpl<uint16>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint16>>(cellArrayPath)));
       break;
     }
     case DataType::uint32: {
-      RUN_TASK(AlignSectionsTransferDataImpl<uint32>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint32>>(cellArrayPath)));
+      taskRunner.run(AlignSectionsTransferDataImpl<uint32>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint32>>(cellArrayPath)));
       break;
     }
     case DataType::uint64: {
-      RUN_TASK(AlignSectionsTransferDataImpl<uint64>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint64>>(cellArrayPath)));
+      taskRunner.run(AlignSectionsTransferDataImpl<uint64>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint64>>(cellArrayPath)));
       break;
     }
     case DataType::float32: {
-      RUN_TASK(AlignSectionsTransferDataImpl<float32>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<float32>>(cellArrayPath)));
+      taskRunner.run(AlignSectionsTransferDataImpl<float32>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<float32>>(cellArrayPath)));
       break;
     }
     case DataType::float64: {
-      RUN_TASK(AlignSectionsTransferDataImpl<float64>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<float64>>(cellArrayPath)));
+      taskRunner.run(AlignSectionsTransferDataImpl<float64>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<float64>>(cellArrayPath)));
       break;
     }
     default: {
       throw std::runtime_error("Invalid DataType");
     }
     }
-#ifdef COMPLEX_ENABLE_MULTICORE
-    threadCount++;
-    if(threadCount == nThreads)
-    {
-      taskGroup->wait();
-      threadCount = 0;
-    }
-#endif
   }
-
-#ifdef COMPLEX_ENABLE_MULTICORE
   // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
-  taskGroup->wait();
-#endif
+  taskRunner.wait();
 
   return {};
 }

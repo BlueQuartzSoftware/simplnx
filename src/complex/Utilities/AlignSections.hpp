@@ -29,7 +29,7 @@ public:
    * @param gridGeom
    * @return
    */
-  Result<> execute(AbstractGeometryGrid& gridGeom);
+  Result<> execute(const SizeVec3& udims);
 
   const std::atomic_bool& getCancel();
 

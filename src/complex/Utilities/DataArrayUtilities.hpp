@@ -141,7 +141,6 @@ Result<> CheckValuesUnsignedInt(const std::string& valueAsStr, const std::string
   if(conversionResult.valid()) // If the string was converted to a double, then lets check the range is valid
   {
     uint64 replaceValue = conversionResult.value();
-    std::string ss;
     if(!((replaceValue >= std::numeric_limits<T>::min()) && (replaceValue <= std::numeric_limits<T>::max())))
     {
       return MakeErrorResult(-256, fmt::format("The value '{}' could not be converted to {} due to the value being outside of the range for {} to {}", valueAsStr, strType,
@@ -161,7 +160,6 @@ Result<> CheckValuesSignedInt(const std::string& valueAsStr, const std::string& 
   if(conversionResult.valid()) // If the string was converted to a double, then lets check the range is valid
   {
     int64 replaceValue = conversionResult.value();
-    std::string ss;
     if(!((replaceValue >= std::numeric_limits<T>::min()) && (replaceValue <= std::numeric_limits<T>::max())))
     {
       return MakeErrorResult(-257, fmt::format("The value '{}' could not be converted to {} due to the value being outside of the range for {} to {}", valueAsStr, strType,
@@ -181,8 +179,6 @@ Result<> CheckValuesFloatDouble(const std::string& valueAsStr, const std::string
   if(conversionResult.valid()) // If the string was converted to a double, then lets check the range is valid
   {
     float64 replaceValue = conversionResult.value();
-    std::string ss;
-
     if(!(((replaceValue >= static_cast<T>(-1) * std::numeric_limits<T>::max()) && (replaceValue <= static_cast<T>(-1) * std::numeric_limits<T>::min())) || (replaceValue == 0) ||
          ((replaceValue >= std::numeric_limits<T>::min()) && (replaceValue <= std::numeric_limits<T>::max()))))
     {
@@ -240,7 +236,7 @@ Result<> ConditionalReplaceValueInArrayFromString(const std::string& valueAsStr,
 {
   using DataArrayType = DataArray<T>;
 
-  DataArrayType& inputDataArray = dynamic_cast<DataArrayType&>(inputDataObject);
+  auto& inputDataArray = dynamic_cast<DataArrayType&>(inputDataObject);
   Result<T> conversionResult = ConvertTo<T>::convert(valueAsStr);
   if(conversionResult.invalid())
   {
@@ -317,7 +313,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
 {
   auto parentPath = path.getParent();
 
-  std::optional<DataObject::IdType> id;
+  std::optional<DataObject::IdType> dataObjectId;
 
   if(parentPath.getLength() != 0)
   {
@@ -327,7 +323,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
       return MakeErrorResult(-262, fmt::format("Parent object '{}' does not exist", parentPath.toString()));
     }
 
-    id = parentObject->getId();
+    dataObjectId = parentObject->getId();
   }
 
   if(tupleShape.empty())
@@ -356,7 +352,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
   std::string name = path[last];
 
   auto store = CreateDataStore<T>(tupleShape, compShape, mode);
-  auto dataArray = DataArray<T>::Create(dataStructure, name, std::move(store), id);
+  auto dataArray = DataArray<T>::Create(dataStructure, name, std::move(store), dataObjectId);
   if(dataArray == nullptr)
   {
     return MakeErrorResult(-264, fmt::format("Unable to create DataArray at '{}'", path.toString()));
@@ -379,7 +375,7 @@ Result<> CreateNeighbors(DataStructure& dataStructure, usize numTuples, const Da
 {
   auto parentPath = path.getParent();
 
-  std::optional<DataObject::IdType> id;
+  std::optional<DataObject::IdType> dataObjectId;
 
   if(parentPath.getLength() != 0)
   {
@@ -389,14 +385,14 @@ Result<> CreateNeighbors(DataStructure& dataStructure, usize numTuples, const Da
       return MakeErrorResult(-262, fmt::format("Parent object \"{}\" does not exist", parentPath.toString()));
     }
 
-    id = parentObject->getId();
+    dataObjectId = parentObject->getId();
   }
 
   usize last = path.getLength() - 1;
 
   std::string name = path[last];
 
-  auto neighborList = NeighborList<T>::Create(dataStructure, name, numTuples, id);
+  auto neighborList = NeighborList<T>::Create(dataStructure, name, numTuples, dataObjectId);
   if(neighborList == nullptr)
   {
     return MakeErrorResult(-264, fmt::format("Unable to create NeighborList at \"{}\"", path.toString()));
@@ -421,7 +417,7 @@ DataArray<T>* ArrayFromPath(DataStructure& dataStructure, const DataPath& path)
   {
     throw std::runtime_error(fmt::format("DataArray does not exist at DataPath: '{}'", path.toString()));
   }
-  DataArrayType* dataArray = dynamic_cast<DataArrayType*>(object);
+  auto* dataArray = dynamic_cast<DataArrayType*>(object);
   if(dataArray == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
@@ -433,7 +429,7 @@ template <class T>
 DataArray<T>& ArrayRefFromPath(DataStructure& data, const DataPath& path)
 {
   DataObject* object = data.getData(path);
-  DataArray<T>* dataArray = dynamic_cast<DataArray<T>*>(object);
+  auto* dataArray = dynamic_cast<DataArray<T>*>(object);
   if(dataArray == nullptr)
   {
     throw std::runtime_error("Can't obtain DataArray");
@@ -478,13 +474,13 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
     return nullptr;
   }
 
-  FILE* f = std::fopen(filename.c_str(), "rb");
-  if(f == nullptr)
+  FILE* inputFile = std::fopen(filename.c_str(), "rb");
+  if(inputFile == nullptr)
   {
     return nullptr;
   }
 
-  std::byte* chunkptr = reinterpret_cast<std::byte*>(dataStore->data());
+  auto* chunkptr = reinterpret_cast<std::byte*>(dataStore->data());
 
   // Now start reading the data in chunks if needed.
   size_t chunkSize = std::min(numBytesToRead, defaultBlocksize);
@@ -492,7 +488,7 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
   size_t masterCounter = 0;
   while(masterCounter < numBytesToRead)
   {
-    size_t bytesRead = std::fread(chunkptr, sizeof(std::byte), chunkSize, f);
+    size_t bytesRead = std::fread(chunkptr, sizeof(std::byte), chunkSize, inputFile);
     chunkptr += bytesRead;
     masterCounter += bytesRead;
 
@@ -504,7 +500,7 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
     }
   }
 
-  fclose(f);
+  fclose(inputFile);
 
   return dataArray;
 }
@@ -552,6 +548,7 @@ COMPLEX_EXPORT Result<> CheckValueConvertsToArrayType(const std::string& value, 
  */
 struct MaskCompare
 {
+  virtual ~MaskCompare() = default;
   /**
    * @brief Both of the values pointed to by the index *must* be `true` or non-zero. If either of the values or
    * *both* of the values are false, this will return false.
@@ -580,43 +577,45 @@ struct MaskCompare
 
 struct BoolMaskCompare : public MaskCompare
 {
-  BoolMaskCompare(const BoolArray* array)
+  BoolMaskCompare(const BoolArray& array)
   : m_Array(array)
   {
   }
-  const BoolArray* m_Array = nullptr;
+  ~BoolMaskCompare() override = default;
+  const BoolArray& m_Array;
   bool bothTrue(size_t indexA, size_t indexB) const override
   {
-    return m_Array->at(indexA) && m_Array->at(indexB);
+    return m_Array.at(indexA) && m_Array.at(indexB);
   }
   bool bothFalse(size_t indexA, size_t indexB) const override
   {
-    return !m_Array->at(indexA) && !m_Array->at(indexB);
+    return !m_Array.at(indexA) && !m_Array.at(indexB);
   }
   bool isTrue(size_t index) const override
   {
-    return m_Array->at(index);
+    return m_Array.at(index);
   }
 };
 
 struct UInt8MaskCompare : public MaskCompare
 {
-  UInt8MaskCompare(const UInt8Array* array)
+  UInt8MaskCompare(const UInt8Array& array)
   : m_Array(array)
   {
   }
-  const UInt8Array* m_Array = nullptr;
+  ~UInt8MaskCompare() override = default;
+  const UInt8Array& m_Array;
   bool bothTrue(size_t indexA, size_t indexB) const override
   {
-    return m_Array->at(indexA) != 0 && m_Array->at(indexB) != 0;
+    return m_Array.at(indexA) != 0 && m_Array.at(indexB) != 0;
   }
   bool bothFalse(size_t indexA, size_t indexB) const override
   {
-    return m_Array->at(indexA) == 0 && m_Array->at(indexB) == 0;
+    return m_Array.at(indexA) == 0 && m_Array.at(indexB) == 0;
   }
   bool isTrue(size_t index) const override
   {
-    return m_Array->at(index) != 0;
+    return m_Array.at(index) != 0;
   }
 };
 
