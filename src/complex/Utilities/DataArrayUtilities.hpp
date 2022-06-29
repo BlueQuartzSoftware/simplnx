@@ -603,7 +603,7 @@ struct UInt8MaskCompare : public MaskCompare
   : m_Array(array)
   {
   }
-  ~UInt8MaskCompare() override = default;
+  ~UInt8MaskCompare() noexcept override = default;
   const UInt8Array& m_Array;
   bool bothTrue(size_t indexA, size_t indexB) const override
   {
