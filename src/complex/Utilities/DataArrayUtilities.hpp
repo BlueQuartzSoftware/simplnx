@@ -636,7 +636,7 @@ struct UInt8MaskCompare : public MaskCompare
  * @param maskArrayPath The DataPath of the mask array.
  * @return
  */
-COMPLEX_EXPORT std::shared_ptr<MaskCompare> InstantiateMaskCompare(const DataStructure& dataStructure, const DataPath& maskArrayPath);
+COMPLEX_EXPORT std::unique_ptr<MaskCompare> InstantiateMaskCompare(const DataStructure& dataStructure, const DataPath& maskArrayPath);
 
 /**
  * @brief Convenience method to create an instance of the MaskCompare subclass
