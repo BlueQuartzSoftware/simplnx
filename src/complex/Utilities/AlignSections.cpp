@@ -8,7 +8,6 @@
 
 #include <chrono>
 
-
 using namespace complex;
 
 namespace

@@ -15,12 +15,7 @@
 #include "complex/Utilities/ParallelData3DAlgorithm.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/SamplingUtils.hpp"
-
-#ifdef COMPLEX_ENABLE_MULTICORE
-#define RUN_TASK g->run
-#else
-#define RUN_TASK
-#endif
+#include "complex/Utilities/TBBTaskRunner.hpp"
 
 namespace complex
 {
@@ -482,12 +477,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
 
   std::array<uint64, 6> bounds = {xMin, ((xMax - xMin) + 1), yMin, ((yMax - yMin) + 1), zMin, ((zMax - zMin) + 1)};
 
-#ifdef COMPLEX_ENABLE_MULTICORE
-  std::shared_ptr<tbb::task_group> g(new tbb::task_group);
-  // C++11 RIGHT HERE....
-  auto numThreads = static_cast<int32_t>(std::thread::hardware_concurrency()); // Returns ZERO if not defined on this platform
-  int32_t threadCount = 0;
-#endif
+  TBBTaskRunner taskRunner;
 
   for(const auto& voxelPath : voxelArrayPaths)
   {
@@ -506,67 +496,57 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
     switch(type)
     {
     case DataType::boolean: {
-      RUN_TASK(CropImageGeomDataArray<bool>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.run(CropImageGeomDataArray<bool>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::int8: {
-      RUN_TASK(CropImageGeomDataArray<int8>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.run(CropImageGeomDataArray<int8>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::int16: {
-      RUN_TASK(CropImageGeomDataArray<int16>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.run(CropImageGeomDataArray<int16>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::int32: {
-      RUN_TASK(CropImageGeomDataArray<int32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.run(CropImageGeomDataArray<int32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::int64: {
-      RUN_TASK(CropImageGeomDataArray<int64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.run(CropImageGeomDataArray<int64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::uint8: {
-      RUN_TASK(CropImageGeomDataArray<uint8>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.run(CropImageGeomDataArray<uint8>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::uint16: {
-      RUN_TASK(CropImageGeomDataArray<uint16>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.run(CropImageGeomDataArray<uint16>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::uint32: {
-      RUN_TASK(CropImageGeomDataArray<uint32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.run(CropImageGeomDataArray<uint32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::uint64: {
-      RUN_TASK(CropImageGeomDataArray<uint64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.run(CropImageGeomDataArray<uint64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::float32: {
-      RUN_TASK(CropImageGeomDataArray<float32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.run(CropImageGeomDataArray<float32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::float64: {
-      RUN_TASK(CropImageGeomDataArray<float64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.run(CropImageGeomDataArray<float64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     default: {
       throw std::runtime_error("Invalid DataType");
     }
     }
-#ifdef COMPLEX_ENABLE_MULTICORE
-    threadCount++;
-    if(threadCount == numThreads)
-    {
-      g->wait();
-      threadCount = 0;
-    }
-#endif
   }
 
-#ifdef COMPLEX_ENABLE_MULTICORE
   // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
-  g->wait();
-#endif
+  taskRunner.wait();
 
   if(shouldCancel)
   {

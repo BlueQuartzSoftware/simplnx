@@ -211,10 +211,6 @@ Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath&
 
 std::unique_ptr<MaskCompare> InstantiateMaskCompare(const DataStructure& dataStructure, const DataPath& maskArrayPath)
 {
-  if(maskArrayPath.empty())
-  {
-    return {};
-  }
   const auto& maskArray = dataStructure.getDataRefAs<IDataArray>(maskArrayPath);
 
   return InstantiateMaskCompare(maskArray);
