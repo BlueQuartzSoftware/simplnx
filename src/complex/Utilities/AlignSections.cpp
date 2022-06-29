@@ -24,8 +24,8 @@ class AlignSectionsTransferDataImpl
 {
 public:
   AlignSectionsTransferDataImpl() = delete;
-  AlignSectionsTransferDataImpl(const AlignSectionsTransferDataImpl&) = default; // Copy Constructor Default Implemented
-  AlignSectionsTransferDataImpl(AlignSectionsTransferDataImpl&&)  noexcept = default;      // Move Constructor Default Implemented
+  AlignSectionsTransferDataImpl(const AlignSectionsTransferDataImpl&) = default;     // Copy Constructor Default Implemented
+  AlignSectionsTransferDataImpl(AlignSectionsTransferDataImpl&&) noexcept = default; // Move Constructor Default Implemented
 
   AlignSectionsTransferDataImpl(AlignSections* filter, SizeVec3 dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts, complex::DataArray<T>& dataArray)
   : m_Filter(filter)
