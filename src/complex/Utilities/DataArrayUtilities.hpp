@@ -581,7 +581,7 @@ struct BoolMaskCompare : public MaskCompare
   : m_Array(array)
   {
   }
-  ~BoolMaskCompare() override = default;
+  ~BoolMaskCompare() noexcept override = default;
   const BoolArray& m_Array;
   bool bothTrue(size_t indexA, size_t indexB) const override
   {
