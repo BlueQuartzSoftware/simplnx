@@ -643,6 +643,6 @@ COMPLEX_EXPORT std::shared_ptr<MaskCompare> InstantiateMaskCompare(const DataStr
  * @param maskArrayPtr A Pointer to the mask array which can be of either `bool` or `uint8` type.
  * @return
  */
-COMPLEX_EXPORT std::shared_ptr<MaskCompare> InstantiateMaskCompare(const complex::IDataArray* maskArrayPtr);
+COMPLEX_EXPORT std::unique_ptr<MaskCompare> InstantiateMaskCompare(const IDataArray& maskArrayPtr);
 
 } // namespace complex
