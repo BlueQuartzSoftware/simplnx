@@ -73,12 +73,12 @@ namespace complex
 {
 //-----------------------------------------------------------------------------
 FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                 const ExtensionsType& extensionsType, PathType pathType, bool shouldValidateExtension)
+                                                 const ExtensionsType& extensionsType, PathType pathType, bool acceptAllExtensions)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 , m_PathType(pathType)
 , m_AvailableExtensions(extensionsType)
-, m_ShouldValidateExtension(shouldValidateExtension)
+, m_acceptAllExtensions(acceptAllExtensions)
 {
   ExtensionsType validatedExtensions;
   for(const auto& ext : m_AvailableExtensions)
@@ -109,6 +109,12 @@ Uuid FileSystemPathParameter::uuid() const
 IParameter::AcceptedTypes FileSystemPathParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
+}
+
+//-----------------------------------------------------------------------------
+bool FileSystemPathParameter::acceptAllExtensions() const
+{
+  return m_acceptAllExtensions;
 }
 
 //-----------------------------------------------------------------------------
@@ -178,7 +184,7 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
     return {nonstd::make_unexpected(std::vector<Error>{{-3001, "File System Path must not be empty"}})};
   }
 
-  if(m_ShouldValidateExtension)
+  if(!m_acceptAllExtensions)
   {
     if(!path.has_extension())
     {

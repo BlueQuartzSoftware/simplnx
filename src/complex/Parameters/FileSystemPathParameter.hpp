@@ -31,8 +31,19 @@ public:
   using ValueType = std::filesystem::path;
 
   FileSystemPathParameter() = delete;
+
+  /**
+   * @param name
+   * @param humanName
+   * @param helpText
+   * @param defaultValue
+   * @param extensionsType
+   * @param pathType
+   * @param acceptAllExtensions
+   */
   FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const ExtensionsType& extensionsType, PathType pathType,
-                          bool shouldValidateExtension = true);
+                          bool acceptAllExtensions = false);
+
   ~FileSystemPathParameter() override = default;
 
   FileSystemPathParameter(const FileSystemPathParameter&) = delete;
@@ -52,6 +63,12 @@ public:
    * @return
    */
   AcceptedTypes acceptedTypes() const override;
+
+  /**
+   * @brief
+   * @return
+   */
+  bool acceptAllExtensions() const;
 
   /**
    * @brief
@@ -113,7 +130,7 @@ private:
   ValueType m_DefaultValue;
   PathType m_PathType;
   ExtensionsType m_AvailableExtensions;
-  bool m_ShouldValidateExtension = true;
+  bool m_acceptAllExtensions = false;
 };
 } // namespace complex
 
