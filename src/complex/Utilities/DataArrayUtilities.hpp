@@ -548,7 +548,7 @@ COMPLEX_EXPORT Result<> CheckValueConvertsToArrayType(const std::string& value, 
  */
 struct MaskCompare
 {
-  virtual ~MaskCompare() = default;
+  virtual ~MaskCompare() noexcept = default;
   /**
    * @brief Both of the values pointed to by the index *must* be `true` or non-zero. If either of the values or
    * *both* of the values are false, this will return false.
