@@ -8,11 +8,6 @@
 
 #include <chrono>
 
-#ifdef COMPLEX_ENABLE_MULTICORE
-#define RUN_TASK taskGroup->run
-#else
-#define RUN_TASK(ARG) (ARG)();
-#endif
 
 using namespace complex;
 
