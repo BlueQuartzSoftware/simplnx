@@ -57,9 +57,6 @@ inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& n
       return MakeErrorResult(-602, ss);
     }
   }
-
-  // destCellFeatureAttrMat->removeInactiveObjects(activeObjects, destFeatureIdsPtr.get());
-
   return {};
 }
 } // namespace Sampling
