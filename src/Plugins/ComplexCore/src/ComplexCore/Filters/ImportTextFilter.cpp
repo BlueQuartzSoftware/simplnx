@@ -18,18 +18,6 @@
 namespace fs = std::filesystem;
 using namespace complex;
 
-namespace
-{
-constexpr StringLiteral k_InputFileKey = "input_file";
-constexpr StringLiteral k_ScalarTypeKey = "scalar_type";
-constexpr StringLiteral k_NTuplesKey = "n_tuples";
-constexpr StringLiteral k_NCompKey = "n_comp";
-constexpr StringLiteral k_NSkipLinesKey = "n_skip_lines";
-constexpr StringLiteral k_DelimiterChoiceKey = "delimiter_choice";
-constexpr StringLiteral k_DataArrayKey = "output_data_array";
-
-} // namespace
-
 namespace complex
 {
 std::string ImportTextFilter::name() const

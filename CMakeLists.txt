@@ -306,6 +306,9 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/SamplingUtils.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/SegmentFeatures.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/AlignSections.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/TBBTaskRunner.hpp
+
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
@@ -458,7 +461,8 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/SegmentFeatures.cpp
-  
+  ${COMPLEX_SOURCE_DIR}/Utilities/AlignSections.cpp
+
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.cpp
 

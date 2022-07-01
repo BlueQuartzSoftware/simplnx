@@ -208,4 +208,27 @@ Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath&
 
   return MakeErrorResult(-401, fmt::format("The input array at DataPath '{}' was of an unsupported type", dataPath.toString()));
 }
+
+std::unique_ptr<MaskCompare> InstantiateMaskCompare(const DataStructure& dataStructure, const DataPath& maskArrayPath)
+{
+  const auto& maskArray = dataStructure.getDataRefAs<IDataArray>(maskArrayPath);
+
+  return InstantiateMaskCompare(maskArray);
+}
+
+std::unique_ptr<MaskCompare> InstantiateMaskCompare(const IDataArray& maskArray)
+{
+  switch(maskArray.getDataType())
+  {
+  case DataType::boolean: {
+    return std::make_unique<BoolMaskCompare>(dynamic_cast<const BoolArray&>(maskArray));
+  }
+  case DataType::uint8: {
+    return std::make_unique<UInt8MaskCompare>(dynamic_cast<const UInt8Array&>(maskArray));
+  }
+  default:
+    throw std::runtime_error("InstantiateMaskCompare: The Mask Array being used is NOT of type bool or uint8.");
+  }
+}
+
 } // namespace complex

@@ -42,6 +42,10 @@ Result<> SegmentFeatures::execute(AbstractGeometryGrid* gridGeom)
 
   while(seed >= 0)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     seed = getSeed(gnum, nextSeed);
     nextSeed = seed + 1;
     if(seed >= 0)
