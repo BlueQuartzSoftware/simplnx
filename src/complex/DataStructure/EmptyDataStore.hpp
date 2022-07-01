@@ -37,12 +37,14 @@ public:
    * @brief Constructs an empty data store with the specified tupleSize and tupleCount.
    * @param tupleSize
    * @param tupleCount
+   * @param inMemory Stores whether or not the created data will be kept in memory or handled out of core
    */
-  EmptyDataStore(const ShapeType& tupleShape, const ShapeType& componentShape)
+  EmptyDataStore(const ShapeType& tupleShape, const ShapeType& componentShape, bool inMemory = true)
   : m_ComponentShape(componentShape)
   , m_TupleShape(tupleShape)
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_InMemory(inMemory)
   {
   }
 
@@ -55,6 +57,7 @@ public:
   , m_TupleShape(other.m_TupleShape)
   , m_NumComponents(other.m_NumComponents)
   , m_NumTuples(other.m_NumTuples)
+  , m_InMemory(other.m_InMemory)
   {
   }
 
@@ -67,6 +70,7 @@ public:
   , m_TupleShape(std::move(other.m_TupleShape))
   , m_NumComponents(std::move(other.m_NumComponents))
   , m_NumTuples(std::move(other.m_NumTuples))
+  , m_InMemory(other.m_InMemory)
   {
   }
 
@@ -114,7 +118,16 @@ public:
    */
   IDataStore::StoreType getStoreType() const override
   {
-    return IDataStore::StoreType::Empty;
+    return m_InMemory ? IDataStore::StoreType::Empty : IDataStore::StoreType::EmptyOutOfCore;
+  }
+
+  /**
+   * @brief Checks and returns if the created data store should be in memory or handled out of core.
+   * @return bool
+   */
+  bool inMemory() const
+  {
+    return m_InMemory;
   }
 
   /**
@@ -230,5 +243,6 @@ private:
   ShapeType m_TupleShape;
   size_t m_NumComponents = {0};
   size_t m_NumTuples = {0};
+  bool m_InMemory = true;
 };
 } // namespace complex

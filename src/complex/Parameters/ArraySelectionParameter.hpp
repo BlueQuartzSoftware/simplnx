@@ -19,8 +19,16 @@ public:
   using ValueType = DataPath;
   using AllowedTypes = std::set<DataType>;
 
+  enum class DataLocation : uint8
+  {
+    Any = 0,
+    InMemory = 1,
+    OutOfCore = 2
+  };
+
   ArraySelectionParameter() = delete;
-  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes);
+  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
+                          DataLocation location = DataLocation::Any);
   ~ArraySelectionParameter() override = default;
 
   ArraySelectionParameter(const ArraySelectionParameter&) = delete;
@@ -80,6 +88,24 @@ public:
   AllowedTypes allowedTypes() const;
 
   /**
+   * @brief Checks and returns if out-of-core data is allowed.
+   * @return
+   */
+  bool allowsOutOfCore() const;
+
+  /**
+   * @brief Checks and returns if in-memory data is allowed.
+   * @return
+   */
+  bool allowsInMemory() const;
+
+  /**
+   * @brief Returns an enum value containing the allowed data locations.
+   * @return DataLocation flags
+   */
+  DataLocation allowedDataLocations() const;
+
+  /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
    * @param dataStructure The active DataStructure to use during validation
    * @param value The value to validate
@@ -107,6 +133,7 @@ public:
 private:
   ValueType m_DefaultValue = {};
   AllowedTypes m_AllowedTypes = {};
+  DataLocation m_Location = DataLocation::Any;
 };
 } // namespace complex
 

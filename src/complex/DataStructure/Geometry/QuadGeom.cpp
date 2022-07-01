@@ -173,7 +173,7 @@ IGeometry::StatusCode QuadGeom::findEdges()
 
 IGeometry::StatusCode QuadGeom::findUnsharedEdges()
 {
-  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
+  auto dataStore = std::make_unique<FileStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
   auto unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", std::move(dataStore), getId());
   GeometryHelpers::Connectivity::Find2DUnsharedEdges(getFaces(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)

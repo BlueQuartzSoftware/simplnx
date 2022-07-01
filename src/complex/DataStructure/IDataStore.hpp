@@ -33,7 +33,9 @@ public:
   {
     Unknown = -1,
     InMemory = 0,
+    OutOfCore,
     Empty,
+    EmptyOutOfCore
   };
 
   virtual ~IDataStore() = default;

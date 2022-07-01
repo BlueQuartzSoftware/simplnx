@@ -283,15 +283,23 @@ COMPLEX_EXPORT Result<> ConditionalReplaceValueInArray(const std::string& valueA
  * @return
  */
 template <class T>
-std::unique_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore::ShapeType& tupleShape, const typename IDataStore::ShapeType& componentShape, IDataAction::Mode mode)
+std::unique_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore::ShapeType& tupleShape, const typename IDataStore::ShapeType& componentShape, IDataAction::Mode mode,
+                                                      bool inMemory = true)
 {
   switch(mode)
   {
   case IDataAction::Mode::Preflight: {
-    return std::make_unique<EmptyDataStore<T>>(tupleShape, componentShape);
+    return std::make_unique<EmptyDataStore<T>>(tupleShape, componentShape, inMemory);
   }
   case IDataAction::Mode::Execute: {
-    return std::make_unique<DataStore<T>>(tupleShape, componentShape, static_cast<T>(0));
+    if(inMemory)
+    {
+      return std::make_unique<DataStore<T>>(tupleShape, componentShape, static_cast<T>(0));
+    }
+    else
+    {
+      return std::make_unique<FileStore<T>>(tupleShape, componentShape, static_cast<T>(0));
+    }
   }
   default: {
     throw std::runtime_error("Invalid mode");
@@ -310,7 +318,7 @@ std::unique_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
  * @return
  */
 template <class T>
-Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tupleShape, const std::vector<usize>& compShape, const DataPath& path, IDataAction::Mode mode)
+Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tupleShape, const std::vector<usize>& compShape, const DataPath& path, IDataAction::Mode mode, bool inMemory = true)
 {
   auto parentPath = path.getParent();
 
@@ -353,7 +361,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
 
   std::string name = path[last];
 
-  auto store = CreateDataStore<T>(tupleShape, compShape, mode);
+  auto store = CreateDataStore<T>(tupleShape, compShape, mode, inMemory);
   auto dataArray = DataArray<T>::Create(dataStructure, name, std::move(store), dataObjectId);
   if(dataArray == nullptr)
   {

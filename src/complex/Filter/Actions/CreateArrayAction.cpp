@@ -10,11 +10,12 @@ using namespace complex;
 
 namespace complex
 {
-CreateArrayAction::CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path)
+CreateArrayAction::CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, bool inMemory)
 : IDataCreationAction(path)
 , m_Type(type)
 , m_Dims(tDims)
 , m_CDims(cDims)
+, m_InMemory(inMemory)
 {
 }
 
@@ -86,5 +87,10 @@ DataPath CreateArrayAction::path() const
 std::vector<DataPath> CreateArrayAction::getAllCreatedPaths() const
 {
   return {getCreatedPath()};
+}
+
+bool CreateArrayAction::inMemory() const
+{
+  return m_InMemory;
 }
 } // namespace complex

@@ -3,8 +3,11 @@
 #include "complex/Common/Bit.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
+#include "complex/DataStructure/FileStore.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
+
+#include "FileVec/collection/Array.hpp"
 
 namespace complex
 {

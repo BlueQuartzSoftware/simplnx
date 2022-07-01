@@ -242,6 +242,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/FileStore.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/IArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/IDataArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/IDataStore.hpp
