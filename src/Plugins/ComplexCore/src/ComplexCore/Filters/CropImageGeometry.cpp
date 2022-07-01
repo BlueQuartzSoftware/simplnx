@@ -1,9 +1,6 @@
 #include "CropImageGeometry.hpp"
 
-#include <sstream>
-
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
@@ -11,13 +8,14 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Utilities/ParallelData3DAlgorithm.hpp"
+#include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/SamplingUtils.hpp"
+#include "complex/Utilities/TBBTaskRunner.hpp"
 
 namespace complex
 {
@@ -106,6 +104,78 @@ FloatVec3 getCurrentVolumeDataContainerResolutions(const DataStructure& dataStru
   }
   return data;
 }
+
+template <typename T>
+class CropImageGeomDataArray
+{
+public:
+  CropImageGeomDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, std::array<uint64, 6> bounds, const std::atomic_bool& shouldCancel)
+  : m_OldCellArray(dynamic_cast<const DataArray<T>&>(oldCellArray))
+  , m_NewCellArray(dynamic_cast<DataArray<T>&>(newCellArray))
+  , m_SrcImageGeom(srcImageGeom)
+  , m_Bounds(bounds)
+  , m_ShouldCancel(shouldCancel)
+  {
+  }
+
+  void operator()() const
+  {
+    convert();
+  }
+
+protected:
+  void convert() const
+  {
+    size_t numComps = m_OldCellArray.getNumberOfComponents();
+
+    uint64 col = 0;
+    uint64 row = 0;
+    uint64 plane = 0;
+
+    uint64 colold = 0;
+    uint64 rowold = 0;
+    uint64 planeold = 0;
+    uint64 index = 0;
+    uint64 index_old = 0;
+
+    // Loop over every tuple in this array
+    for(int64 i = 0; i < m_Bounds[5]; i++)
+    {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
+
+      planeold = (i + m_Bounds[4]) * (m_SrcImageGeom.getNumXPoints() * m_SrcImageGeom.getNumYPoints());
+      plane = (i * m_Bounds[1] * m_Bounds[3]);
+      for(int64 j = 0; j < m_Bounds[3]; j++)
+      {
+        rowold = (j + m_Bounds[2]) * m_SrcImageGeom.getNumXPoints();
+        row = (j * m_Bounds[1]);
+        for(int64 k = 0; k < m_Bounds[1]; k++)
+        {
+          colold = (k + m_Bounds[0]);
+          col = k;
+          index_old = planeold + rowold + colold;
+          index = plane + row + col;
+
+          for(size_t compIndex = 0; compIndex < numComps; compIndex++)
+          {
+            m_NewCellArray[index * numComps + compIndex] = m_OldCellArray[index_old * numComps + compIndex];
+          }
+        }
+      }
+    }
+  }
+
+private:
+  const DataArray<T>& m_OldCellArray;
+  DataArray<T>& m_NewCellArray;
+  const ImageGeom& m_SrcImageGeom;
+  std::array<uint64, 6> m_Bounds;
+  const std::atomic_bool& m_ShouldCancel;
+};
+
 } // namespace
 
 //------------------------------------------------------------------------------
@@ -335,9 +405,6 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     }
   }
 
-  // auto action = std::make_unique<CropImageGeometryAction>(DataPath);
-  // actions.actions.push_back(std::move(action));
-
   return {std::move(actions)};
 }
 
@@ -408,63 +475,88 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
     return MakeErrorResult(-952, errMsg);
   }
 
-  uint64 xExtent = ((xMax - xMin) + 1);
-  uint64 yExtent = ((yMax - yMin) + 1);
-  uint64 zExtent = ((zMax - zMin) + 1);
+  std::array<uint64, 6> bounds = {xMin, ((xMax - xMin) + 1), yMin, ((yMax - yMin) + 1), zMin, ((zMax - zMin) + 1)};
+
+  TBBTaskRunner taskRunner;
 
   for(const auto& voxelPath : voxelArrayPaths)
   {
-    auto& oldDataArray = data.getDataRefAs<IDataArray>(voxelPath);
-    auto& newDataArray = data.getDataRefAs<IDataArray>(newVoxelParentPath.createChildPath(voxelPath.getTargetName()));
+    if(shouldCancel)
+    {
+      return {};
+    }
 
     std::string progMsg = fmt::format("Cropping Volume || Copying Data Array {}", voxelPath.getTargetName());
     messageHandler(progMsg);
 
-    uint64 col = 0;
-    uint64 row = 0;
-    uint64 plane = 0;
+    auto& oldDataArray = data.getDataRefAs<IDataArray>(voxelPath);
+    auto& newDataArray = data.getDataRefAs<IDataArray>(newVoxelParentPath.createChildPath(voxelPath.getTargetName()));
+    DataType type = oldDataArray.getDataType();
 
-    uint64 colold = 0;
-    uint64 rowold = 0;
-    uint64 planeold = 0;
-    uint64 index = 0;
-    uint64 index_old = 0;
-
-    // Loop over every tuple in this array
-    for(int64 i = 0; i < zExtent; i++)
+    switch(type)
     {
-      if(shouldCancel)
-      {
-        return {};
-      }
-
-      planeold = (i + zMin) * (srcImageGeom.getNumXPoints() * srcImageGeom.getNumYPoints());
-      plane = (i * xExtent * yExtent);
-      for(int64 j = 0; j < yExtent; j++)
-      {
-        rowold = (j + yMin) * srcImageGeom.getNumXPoints();
-        row = (j * xExtent);
-        for(int64 k = 0; k < xExtent; k++)
-        {
-          colold = (k + xMin);
-          col = k;
-          index_old = planeold + rowold + colold;
-          index = plane + row + col;
-
-          copyDataArrayTuple(oldDataArray, newDataArray, index_old, index);
-        }
-      }
+    case DataType::boolean: {
+      taskRunner.run(CropImageGeomDataArray<bool>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      break;
+    }
+    case DataType::int8: {
+      taskRunner.run(CropImageGeomDataArray<int8>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      break;
+    }
+    case DataType::int16: {
+      taskRunner.run(CropImageGeomDataArray<int16>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      break;
+    }
+    case DataType::int32: {
+      taskRunner.run(CropImageGeomDataArray<int32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      break;
+    }
+    case DataType::int64: {
+      taskRunner.run(CropImageGeomDataArray<int64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      break;
+    }
+    case DataType::uint8: {
+      taskRunner.run(CropImageGeomDataArray<uint8>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      break;
+    }
+    case DataType::uint16: {
+      taskRunner.run(CropImageGeomDataArray<uint16>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      break;
+    }
+    case DataType::uint32: {
+      taskRunner.run(CropImageGeomDataArray<uint32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      break;
+    }
+    case DataType::uint64: {
+      taskRunner.run(CropImageGeomDataArray<uint64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      break;
+    }
+    case DataType::float32: {
+      taskRunner.run(CropImageGeomDataArray<float32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      break;
+    }
+    case DataType::float64: {
+      taskRunner.run(CropImageGeomDataArray<float64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      break;
+    }
+    default: {
+      throw std::runtime_error("Invalid DataType");
+    }
     }
   }
+
+  // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
+  taskRunner.wait();
 
   if(shouldCancel)
   {
     return {};
   }
+
   std::vector<usize> tDims(3, 0);
-  tDims[0] = xExtent;
-  tDims[1] = yExtent;
-  tDims[2] = zExtent;
+  tDims[0] = bounds[1];
+  tDims[1] = bounds[3];
+  tDims[2] = bounds[5];
 
   if(shouldRenumberFeatures)
   {

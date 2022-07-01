@@ -19,6 +19,14 @@ public:
   ImportTextFilter& operator=(const ImportTextFilter&) = delete;
   ImportTextFilter& operator=(ImportTextFilter&&) noexcept = delete;
 
+  static inline constexpr StringLiteral k_InputFileKey = "input_file";
+  static inline constexpr StringLiteral k_ScalarTypeKey = "scalar_type";
+  static inline constexpr StringLiteral k_NTuplesKey = "n_tuples";
+  static inline constexpr StringLiteral k_NCompKey = "n_comp";
+  static inline constexpr StringLiteral k_NSkipLinesKey = "n_skip_lines";
+  static inline constexpr StringLiteral k_DelimiterChoiceKey = "delimiter_choice";
+  static inline constexpr StringLiteral k_DataArrayKey = "output_data_array";
+
   /**
    * @brief
    * @return
