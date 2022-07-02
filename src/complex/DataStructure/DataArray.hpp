@@ -273,9 +273,9 @@ public:
     const auto numComponents = getNumberOfComponents();
     for(usize i = 0; i < numComponents; i++)
     {
-      usize fromCompIndex = from * numComponents;
+      usize fromCompIndex = from * numComponents + i;
       auto value = m_DataStore->getValue(fromCompIndex);
-      usize toCompIndex = to * numComponents;
+      usize toCompIndex = to * numComponents + i;
       m_DataStore->setValue(toCompIndex, value);
     }
   }

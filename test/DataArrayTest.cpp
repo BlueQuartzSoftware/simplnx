@@ -8,6 +8,7 @@
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 
 using namespace complex;
 
@@ -19,6 +20,38 @@ TEST_CASE("DataArrayCreation")
   DataStoreType data_array = DataStoreType(complex::IDataStore::ShapeType{0}, complex::IDataStore::ShapeType{2}, 0);
   size_t numTuples = data_array.getNumberOfTuples();
   REQUIRE(numTuples == 0);
+}
+
+TEST_CASE("complex::DataArray Copy TupleTest", "[complex][DataArray]")
+{
+  DataStructure dataStructure;
+  IDataStore::ShapeType tupleShape{5};
+  IDataStore::ShapeType componentShape{3};
+  Result<> result = CreateArray<int32>(dataStructure, tupleShape, componentShape, DataPath({"DataArray"}), IDataAction::Mode::Execute);
+  DataArray<int32>& dataArray = ArrayRefFromPath<int32>(dataStructure, DataPath({"DataArray"}));
+
+  for(size_t i = 0; i < 5; i++)
+  {
+    dataArray.initializeTuple(i, static_cast<int32>(i));
+  }
+
+  for(size_t i = 0; i < 5; i++)
+  {
+    for(size_t c = 0; c < 3; c++)
+    {
+      REQUIRE(dataArray[i * 3 + c] == static_cast<int32>(i));
+    }
+  }
+
+  dataArray.copyTuple(4, 0);
+  REQUIRE(dataArray[0] == 4);
+  REQUIRE(dataArray[1] == 4);
+  REQUIRE(dataArray[2] == 4);
+
+  dataArray.copyTuple(1, 4);
+  REQUIRE(dataArray[12] == 1);
+  REQUIRE(dataArray[13] == 1);
+  REQUIRE(dataArray[14] == 1);
 }
 
 TEST_CASE("DataStore Test")
