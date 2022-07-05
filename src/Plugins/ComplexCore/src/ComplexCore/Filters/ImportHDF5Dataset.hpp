@@ -27,7 +27,8 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_ImportHDF5File_Key = "ImportHDF5File";
-  static inline constexpr StringLiteral k_SelectedAttributeMatrix_Key = "SelectedAttributeMatrix";
+  static inline constexpr StringLiteral k_SelectedAttributeMatrix_Key = "SelectedParentGroup";
+  static inline constexpr StringLiteral k_UseParentGroup_Key = "UseParentGroup";
 
   /**
    * @brief Returns the name of the filter.

@@ -1,18 +1,16 @@
 #include "ImportHDF5Dataset.hpp"
 
-#include <set>
-
-#include <nonstd/span.hpp>
-
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/ImportHDF5DatasetParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
+
+#include <nonstd/span.hpp>
 
 using namespace complex;
 namespace fs = std::filesystem;
@@ -24,21 +22,18 @@ std::vector<size_t> createDimensionVector(const std::string& cDimsStr)
 {
   std::vector<size_t> cDims;
   std::vector<std::string> dimsStrVec = StringUtilities::split(cDimsStr, std::vector<char>{','}, true);
-  for(int i = 0; i < dimsStrVec.size(); i++)
+  for(const auto& dimsStr : dimsStrVec)
   {
-    std::string dimsStr = dimsStrVec[i];
-    dimsStr = StringUtilities::trimmed(dimsStr);
-
     try
     {
-      int val = std::stoi(dimsStr);
+      int val = std::stoi(StringUtilities::trimmed(dimsStr));
       cDims.push_back(val);
     } catch(std::invalid_argument const& e)
     {
-      return std::vector<size_t>();
+      return {};
     } catch(std::out_of_range const& e)
     {
-      return std::vector<size_t>();
+      return {};
     }
   }
 
@@ -98,8 +93,10 @@ Parameters ImportHDF5Dataset::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<ImportHDF5DatasetParameter>(k_ImportHDF5File_Key, "Select HDF5 File", "", ImportHDF5DatasetParameter::ValueType{}));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedAttributeMatrix_Key, "Attribute Matrix", "", DataPath{}));
-
+  params.insertSeparator(Parameters::Separator{"Optional Parent Group"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseParentGroup_Key, "Import Into Existing DataGroup", "", false));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedAttributeMatrix_Key, "Parent Data Group", "", DataPath{}));
+  params.linkParameters(k_UseParentGroup_Key, k_SelectedAttributeMatrix_Key, true);
   return params;
 }
 
@@ -115,6 +112,7 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
 {
   auto pImportHDF5FileValue = filterArgs.value<ImportHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
   auto pSelectedAttributeMatrixValue = filterArgs.value<DataPath>(k_SelectedAttributeMatrix_Key);
+  auto pUseParentGroup = filterArgs.value<bool>(k_UseParentGroup_Key);
   auto inputFile = pImportHDF5FileValue.first;
   auto datasetImportInfoList = pImportHDF5FileValue.second;
 
@@ -127,8 +125,7 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
   }
 
   fs::path inputFilePath(inputFile);
-  std::string ext = inputFilePath.extension().string();
-  if(ext != ".h5" && ext != ".hdf5" && ext != ".dream3d")
+  if(H5Fis_hdf5(inputFilePath.c_str()) < 1)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{-20002, fmt::format("The selected file '{}' is not an HDF5 file.", inputFilePath.filename().string())}})};
   }
@@ -143,13 +140,16 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
     return {nonstd::make_unexpected(std::vector<Error>{Error{-20004, "No dataset has been checked.  Please check a dataset."}})};
   }
 
-  auto selectedDataGroup = dataStructure.getDataAs<DataGroup>(pSelectedAttributeMatrixValue);
-  if(selectedDataGroup == nullptr)
+  const DataGroup* selectedDataGroup = nullptr;
+  if(pUseParentGroup)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-20005, fmt::format("The selected data group '{}' does not exist.", pSelectedAttributeMatrixValue.toString())}})};
+    selectedDataGroup = dataStructure.getDataAs<DataGroup>(pSelectedAttributeMatrixValue);
+    if(selectedDataGroup == nullptr)
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-20005, fmt::format("The selected data group '{}' does not exist.", pSelectedAttributeMatrixValue.toString())}})};
+    }
   }
 
-  int err = 0;
   H5::FileReader h5FileReader(inputFilePath);
   hid_t fileId = h5FileReader.getId();
   if(fileId < 0)
@@ -237,8 +237,8 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
     for(int i = 0; i < tDims.size(); i++)
     {
       userEnteredTotalElements = userEnteredTotalElements * tDims[i];
-      int d = tDims[i];
-      stream << StringUtilities::number(d);
+      int dim = tDims[i];
+      stream << StringUtilities::number(dim);
       if(i != tDims.size() - 1)
       {
         stream << " x ";
@@ -255,8 +255,8 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
     {
       userEnteredTotalElements = userEnteredTotalElements * cDims[i];
       totalComponents = totalComponents * cDims[i];
-      int d = cDims[i];
-      stream << StringUtilities::number(d);
+      int dim = cDims[i];
+      stream << StringUtilities::number(dim);
       if(i != cDims.size() - 1)
       {
         stream << " x ";
@@ -279,25 +279,28 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
       return {nonstd::make_unexpected(std::vector<Error>{Error{-20013, stream.str()}})};
     }
 
-    if(selectedDataGroup->contains(objectName))
+    if(selectedDataGroup != nullptr && selectedDataGroup->contains(objectName))
     {
       stream.clear();
       stream << "The selected dataset '" << pSelectedAttributeMatrixValue.toString() << "/" << objectName << "' already exists.";
       return {nonstd::make_unexpected(std::vector<Error>{Error{-20014, stream.str()}})};
     }
-    else
+
+    DataPath dataArrayPath = DataPath::FromString(objectName).value();
+    if(selectedDataGroup != nullptr && !pSelectedAttributeMatrixValue.empty() && pUseParentGroup)
     {
-      DataPath dataArrayPath = pSelectedAttributeMatrixValue.createChildPath(objectName);
-      auto type = datasetReader.getDataType();
-      if(type.invalid())
-      {
-        return {nonstd::make_unexpected(std::vector<Error>{
-            Error{-20015, fmt::format("The selected datatset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath, datasetReader.getType())}})};
-      }
-      auto action = std::make_unique<CreateArrayAction>(type.value(), tDims, cDims, dataArrayPath);
-      resultOutputActions.value().actions.push_back(std::move(action));
+      dataArrayPath = pSelectedAttributeMatrixValue.createChildPath(objectName);
     }
-  } // End For Loop over dataset imoprt info list
+    auto type = datasetReader.getDataType();
+    if(type.invalid())
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{
+          Error{-20015, fmt::format("The selected data set '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath, datasetReader.getType())}})};
+    }
+    auto action = std::make_unique<CreateArrayAction>(type.value(), tDims, cDims, dataArrayPath);
+    resultOutputActions.value().actions.push_back(std::move(action));
+
+  } // End For Loop over dataset import info list
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
