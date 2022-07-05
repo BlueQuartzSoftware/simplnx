@@ -2,14 +2,14 @@
 # Test Plan #
 
 Input Files:
-DREAM3D_Data/Data/ASCII_Data/EulerAngles.csv
-DREAM3D_Data/Data/ASCII_Data/Phases.csv
+DREAM3D_Data/TestFiles/ASCII_Data/EulerAngles.csv
+DREAM3D_Data/TestFiles/ASCII_Data/Phases.csv
 
 Output DataArrays:
 IPFColors (3 component UInt8 Array)
 
 Comparison Files:
-DREAM3D_Data/Data/ASCII_Data/IPFColor.csv
+DREAM3D_Data/TestFiles/ASCII_Data/IPFColor.csv
 
 You will need to create a UInt32 DataArray with 2 values in it: [ 999, 1 ]. This will
 be the input 'k_CrystalStructuresArrayPath_Key' path and data.

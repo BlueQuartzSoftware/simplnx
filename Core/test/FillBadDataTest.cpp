@@ -25,14 +25,13 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
 
 #include "Core/Core_test_dirs.hpp"
 #include "Core/Filters/FillBadDataFilter.hpp"
 
 using namespace complex;
 
-TEST_CASE("Processing::FillBadData: Instantiation and Parameter Check", "[Processing][FillBadData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::FillBadData: Instantiation and Parameter Check", "[Processing][FillBadData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FillBadDataFilter filter;

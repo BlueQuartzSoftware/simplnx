@@ -2,17 +2,17 @@
  # Test Plan #
 
 Input Files:
-DREAM3D_Data/Data/ASCII_Data/FeatureIds.csv
-DREAM3D_Data/Data/ASCII_Data/Quats.csv
-DREAM3D_Data/Data/ASCII_Data/Phases.csv
+DREAM3D_Data/TestFiles/ASCII_Data/FeatureIds.csv
+DREAM3D_Data/TestFiles/ASCII_Data/Quats.csv
+DREAM3D_Data/TestFiles/ASCII_Data/Phases.csv
 
 Output DataArrays:
  AvgEulerAngles
  AvgQuats
 
 Comparison Files:
-DREAM3D_Data/Data/ASCII_Data/AvgEulerAngles.csv
-DREAM3D_Data/Data/ASCII_Data/AvgQuats.csv
+DREAM3D_Data/TestFiles/ASCII_Data/AvgEulerAngles.csv
+DREAM3D_Data/TestFiles/ASCII_Data/AvgQuats.csv
 
 You will need to create a UInt32 DataArray with 2 values in it: [ 999, 1 ]. This will
  be the input 'k_CrystalStructuresArrayPath_Key' path and data.
