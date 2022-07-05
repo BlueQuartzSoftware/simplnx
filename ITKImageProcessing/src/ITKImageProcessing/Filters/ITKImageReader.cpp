@@ -310,14 +310,7 @@ Parameters ITKImageReader::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Filter Parameters"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_FileName_Key, "File", "Input image file", fs::path(""),
-                                                          FileSystemPathParameter::ExtensionsType{
-                                                              {".png"},
-                                                              {".tiff"},
-                                                              {".tif"},
-                                                              {".bmp"},
-                                                              {".jpeg"},
-                                                              {".jpg"},
-                                                          },
+                                                          FileSystemPathParameter::ExtensionsType{{".png"}, {".tiff"}, {".tif"}, {".bmp"}, {".jpeg"}, {".jpg"}, {".nrrd"}},
                                                           FileSystemPathParameter::PathType::InputFile, false));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
