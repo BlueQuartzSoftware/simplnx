@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Sampling::ResampleImageGeom: Instantiation and Parameter Check", "[Sampling][ResampleImageGeom][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::ResampleImageGeom: Instantiation and Parameter Check", "[Sampling][ResampleImageGeom][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ResampleImageGeomFilter filter;

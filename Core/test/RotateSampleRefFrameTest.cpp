@@ -110,7 +110,7 @@ std::vector<std::vector<float64>> ConvertMatrixToTable(const Eigen::Matrix3f& ma
 }
 } // namespace
 
-TEST_CASE("ComplexCore::RotateSampleRefFrameFilter", "[RotateSampleRefFrameFilter]")
+TEST_CASE("Core::RotateSampleRefFrameFilter", "[RotateSampleRefFrameFilter]")
 {
   const DataPath k_OriginalGeomPath({"Original"});
   const DataPath k_OriginalCellArrayPath = k_OriginalGeomPath.createChildPath("CellData").createChildPath("Data");
