@@ -6,8 +6,8 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-FindKernelAvgMisorientations::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                          FindKernelAvgMisorientationsInputValues* inputValues)
+FindKernelAvgMisorientations::FindKernelAvgMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                           FindKernelAvgMisorientationsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

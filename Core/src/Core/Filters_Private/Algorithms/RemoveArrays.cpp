@@ -6,7 +6,7 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-RemoveArrays::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RemoveArraysInputValues* inputValues)
+RemoveArrays::RemoveArrays(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RemoveArraysInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

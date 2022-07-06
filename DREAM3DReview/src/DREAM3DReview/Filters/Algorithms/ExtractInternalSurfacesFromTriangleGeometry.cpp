@@ -6,8 +6,8 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-ExtractInternalSurfacesFromTriangleGeometry::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                         ExtractInternalSurfacesFromTriangleGeometryInputValues* inputValues)
+ExtractInternalSurfacesFromTriangleGeometry::ExtractInternalSurfacesFromTriangleGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                                                         ExtractInternalSurfacesFromTriangleGeometryInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

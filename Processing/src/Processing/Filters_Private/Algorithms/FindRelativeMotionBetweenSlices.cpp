@@ -6,8 +6,8 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-FindRelativeMotionBetweenSlices::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                             FindRelativeMotionBetweenSlicesInputValues* inputValues)
+FindRelativeMotionBetweenSlices::FindRelativeMotionBetweenSlices(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                                 FindRelativeMotionBetweenSlicesInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

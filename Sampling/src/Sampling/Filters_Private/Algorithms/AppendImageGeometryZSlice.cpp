@@ -6,8 +6,8 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-AppendImageGeometryZSlice::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                       AppendImageGeometryZSliceInputValues* inputValues)
+AppendImageGeometryZSlice::AppendImageGeometryZSlice(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                     AppendImageGeometryZSliceInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

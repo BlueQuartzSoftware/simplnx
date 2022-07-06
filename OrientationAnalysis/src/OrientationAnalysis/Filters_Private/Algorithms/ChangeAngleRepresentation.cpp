@@ -6,8 +6,8 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-ChangeAngleRepresentation::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                       ChangeAngleRepresentationInputValues* inputValues)
+ChangeAngleRepresentation::ChangeAngleRepresentation(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                     ChangeAngleRepresentationInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
