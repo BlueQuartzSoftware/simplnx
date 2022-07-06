@@ -23,7 +23,6 @@ struct CORE_EXPORT RenameAttributeArrayInputValues
 {
   DataPath SelectedArrayPath;
   StringParameter::ValueType NewArrayName;
-
 };
 
 /**

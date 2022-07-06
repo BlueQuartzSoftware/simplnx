@@ -23,11 +23,9 @@ const std::atomic_bool& Export3dSolidMesh::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> Export3dSolidMesh::operator()()
 {
-
 
   return {};
 }

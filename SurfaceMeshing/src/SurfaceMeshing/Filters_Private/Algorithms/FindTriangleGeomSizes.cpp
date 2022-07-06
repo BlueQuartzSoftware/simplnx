@@ -23,11 +23,9 @@ const std::atomic_bool& FindTriangleGeomSizes::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindTriangleGeomSizes::operator()()
 {
-
 
   return {};
 }

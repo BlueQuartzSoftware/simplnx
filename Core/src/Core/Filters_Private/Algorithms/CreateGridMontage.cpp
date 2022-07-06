@@ -23,11 +23,9 @@ const std::atomic_bool& CreateGridMontage::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CreateGridMontage::operator()()
 {
-
 
   return {};
 }

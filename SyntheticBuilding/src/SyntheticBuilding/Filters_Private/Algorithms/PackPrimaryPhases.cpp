@@ -23,11 +23,9 @@ const std::atomic_bool& PackPrimaryPhases::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> PackPrimaryPhases::operator()()
 {
-
 
   return {};
 }

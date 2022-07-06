@@ -29,7 +29,6 @@ struct IMAGEPROCESSING_EXPORT ItkMedianKernelInputValues
   bool SaveAsNewArray;
   DataPath SelectedCellArrayPath;
   DataPath NewCellArrayName;
-
 };
 
 /**

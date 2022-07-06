@@ -23,11 +23,9 @@ const std::atomic_bool& GBCDTriangleDumper::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> GBCDTriangleDumper::operator()()
 {
-
 
   return {};
 }

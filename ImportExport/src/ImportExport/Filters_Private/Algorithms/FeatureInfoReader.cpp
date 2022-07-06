@@ -23,11 +23,9 @@ const std::atomic_bool& FeatureInfoReader::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FeatureInfoReader::operator()()
 {
-
 
   return {};
 }

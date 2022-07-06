@@ -33,7 +33,6 @@ struct SYNTHETICBUILDING_EXPORT InsertAtomsInputValues
   DataPath VertexDataContainerName;
   DataPath VertexAttributeMatrixName;
   DataPath AtomFeatureLabelsArrayName;
-
 };
 
 /**

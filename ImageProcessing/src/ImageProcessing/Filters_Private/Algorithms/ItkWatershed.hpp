@@ -27,7 +27,6 @@ struct IMAGEPROCESSING_EXPORT ItkWatershedInputValues
   DataPath FeatureIdsArrayName;
   float32 Threshold;
   float32 Level;
-
 };
 
 /**

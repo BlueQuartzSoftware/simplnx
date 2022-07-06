@@ -21,7 +21,7 @@ namespace complex
 struct CORE_EXPORT PipelineAnnotationInputValues
 {
   <<<NOT_IMPLEMENTED>>> Summary;
-/*[x]*/
+  /*[x]*/
 };
 
 /**

@@ -27,7 +27,6 @@ struct ITKIMAGEPROCESSING_EXPORT ITKImageReaderInputValues
   DataPath DataContainerName;
   DataPath CellAttributeMatrixName;
   DataPath ImageDataArrayName;
-
 };
 
 /**

@@ -23,11 +23,9 @@ const std::atomic_bool& FindSurfaceFeatures::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindSurfaceFeatures::operator()()
 {
-
 
   return {};
 }

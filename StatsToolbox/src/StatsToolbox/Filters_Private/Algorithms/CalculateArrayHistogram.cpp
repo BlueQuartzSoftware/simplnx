@@ -23,11 +23,9 @@ const std::atomic_bool& CalculateArrayHistogram::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CalculateArrayHistogram::operator()()
 {
-
 
   return {};
 }

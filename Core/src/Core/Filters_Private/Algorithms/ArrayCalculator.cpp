@@ -23,11 +23,9 @@ const std::atomic_bool& ArrayCalculator::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ArrayCalculator::operator()()
 {
-
 
   return {};
 }

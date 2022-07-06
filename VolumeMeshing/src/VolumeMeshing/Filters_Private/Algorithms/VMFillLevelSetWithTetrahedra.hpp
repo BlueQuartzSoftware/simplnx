@@ -37,7 +37,6 @@ struct VOLUMEMESHING_EXPORT VMFillLevelSetWithTetrahedraInputValues
   StringParameter::ValueType VertexAttributeMatrixName;
   StringParameter::ValueType CellAttributeMatrixName;
   StringParameter::ValueType TetFeatureIdsName;
-
 };
 
 /**

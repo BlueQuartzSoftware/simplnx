@@ -23,11 +23,9 @@ const std::atomic_bool& RotateEulerRefFrame::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> RotateEulerRefFrame::operator()()
 {
-
 
   return {};
 }

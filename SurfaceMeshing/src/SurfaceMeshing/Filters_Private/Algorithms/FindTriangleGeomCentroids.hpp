@@ -25,7 +25,6 @@ struct SURFACEMESHING_EXPORT FindTriangleGeomCentroidsInputValues
   DataPath FaceLabelsArrayPath;
   DataPath FeatureAttributeMatrixName;
   DataPath CentroidsArrayName;
-
 };
 
 /**

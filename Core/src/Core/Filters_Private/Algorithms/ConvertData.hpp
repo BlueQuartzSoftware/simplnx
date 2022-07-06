@@ -25,7 +25,6 @@ struct CORE_EXPORT ConvertDataInputValues
   NumericType ScalarType;
   DataPath SelectedCellArrayPath;
   DataPath OutputArrayName;
-
 };
 
 /**

@@ -41,7 +41,6 @@ struct STATSTOOLBOX_EXPORT FindFeatureClusteringInputValues
   DataPath ClusteringListArrayName;
   DataPath NewEnsembleArrayArrayName;
   DataPath MaxMinArrayName;
-
 };
 
 /**

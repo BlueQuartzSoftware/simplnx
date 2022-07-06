@@ -23,11 +23,9 @@ const std::atomic_bool& LosAlamosFFTWriter::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> LosAlamosFFTWriter::operator()()
 {
-
 
   return {};
 }

@@ -27,7 +27,6 @@ struct ITKIMAGEPROCESSING_EXPORT ITKImageWriterInputValues
   FileSystemPathParameter::ValueType FileName;
   int32 IndexOffset;
   DataPath ImageArrayPath;
-
 };
 
 /**

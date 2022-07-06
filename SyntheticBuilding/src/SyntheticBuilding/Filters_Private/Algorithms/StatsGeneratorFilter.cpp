@@ -23,11 +23,9 @@ const std::atomic_bool& StatsGeneratorFilter::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> StatsGeneratorFilter::operator()()
 {
-
 
   return {};
 }

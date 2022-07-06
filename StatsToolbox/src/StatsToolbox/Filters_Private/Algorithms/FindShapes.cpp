@@ -23,11 +23,9 @@ const std::atomic_bool& FindShapes::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindShapes::operator()()
 {
-
 
   return {};
 }

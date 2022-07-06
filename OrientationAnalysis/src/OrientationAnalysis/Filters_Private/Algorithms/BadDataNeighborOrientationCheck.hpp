@@ -31,7 +31,6 @@ struct ORIENTATIONANALYSIS_EXPORT BadDataNeighborOrientationCheckInputValues
   DataPath GoodVoxelsArrayPath;
   DataPath CellPhasesArrayPath;
   DataPath CrystalStructuresArrayPath;
-
 };
 
 /**
@@ -43,7 +42,8 @@ struct ORIENTATIONANALYSIS_EXPORT BadDataNeighborOrientationCheckInputValues
 class ORIENTATIONANALYSIS_EXPORT BadDataNeighborOrientationCheck
 {
 public:
-  BadDataNeighborOrientationCheck(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, BadDataNeighborOrientationCheckInputValues* inputValues);
+  BadDataNeighborOrientationCheck(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                  BadDataNeighborOrientationCheckInputValues* inputValues);
   ~BadDataNeighborOrientationCheck() noexcept;
 
   BadDataNeighborOrientationCheck(const BadDataNeighborOrientationCheck&) = delete;

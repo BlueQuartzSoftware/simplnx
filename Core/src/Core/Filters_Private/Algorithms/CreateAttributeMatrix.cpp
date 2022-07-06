@@ -23,11 +23,9 @@ const std::atomic_bool& CreateAttributeMatrix::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CreateAttributeMatrix::operator()()
 {
-
 
   return {};
 }

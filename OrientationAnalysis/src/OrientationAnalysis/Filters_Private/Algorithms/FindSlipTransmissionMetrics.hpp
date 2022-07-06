@@ -35,7 +35,6 @@ struct ORIENTATIONANALYSIS_EXPORT FindSlipTransmissionMetricsInputValues
   DataPath F1sptListArrayName;
   DataPath F7ListArrayName;
   DataPath mPrimeListArrayName;
-
 };
 
 /**

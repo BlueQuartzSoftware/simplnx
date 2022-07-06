@@ -23,11 +23,9 @@ const std::atomic_bool& ExportLAMMPSFile::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ExportLAMMPSFile::operator()()
 {
-
 
   return {};
 }

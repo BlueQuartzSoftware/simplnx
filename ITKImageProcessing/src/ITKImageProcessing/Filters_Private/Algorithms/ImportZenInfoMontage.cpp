@@ -23,11 +23,9 @@ const std::atomic_bool& ImportZenInfoMontage::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ImportZenInfoMontage::operator()()
 {
-
 
   return {};
 }

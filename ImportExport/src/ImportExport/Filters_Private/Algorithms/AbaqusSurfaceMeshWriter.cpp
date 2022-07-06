@@ -23,11 +23,9 @@ const std::atomic_bool& AbaqusSurfaceMeshWriter::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> AbaqusSurfaceMeshWriter::operator()()
 {
-
 
   return {};
 }

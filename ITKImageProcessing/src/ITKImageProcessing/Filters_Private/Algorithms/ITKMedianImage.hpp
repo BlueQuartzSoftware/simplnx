@@ -25,7 +25,6 @@ struct ITKIMAGEPROCESSING_EXPORT ITKMedianImageInputValues
   VectorFloat32Parameter::ValueType Radius;
   DataPath SelectedCellArrayPath;
   StringParameter::ValueType NewCellArrayName;
-
 };
 
 /**

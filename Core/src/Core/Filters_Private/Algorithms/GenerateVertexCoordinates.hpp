@@ -23,7 +23,6 @@ struct CORE_EXPORT GenerateVertexCoordinatesInputValues
 {
   DataPath SelectedDataContainerName;
   DataPath CoordinateArrayPath;
-
 };
 
 /**

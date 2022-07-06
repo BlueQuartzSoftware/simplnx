@@ -23,11 +23,9 @@ const std::atomic_bool& EnsembleInfoReader::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> EnsembleInfoReader::operator()()
 {
-
 
   return {};
 }

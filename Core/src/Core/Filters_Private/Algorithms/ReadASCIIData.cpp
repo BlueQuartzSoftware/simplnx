@@ -23,11 +23,9 @@ const std::atomic_bool& ReadASCIIData::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ReadASCIIData::operator()()
 {
-
 
   return {};
 }

@@ -23,11 +23,9 @@ const std::atomic_bool& WarpRegularGrid::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> WarpRegularGrid::operator()()
 {
-
 
   return {};
 }

@@ -31,7 +31,6 @@ struct CORE_EXPORT RawBinaryReaderInputValues
   ChoicesParameter::ValueType Endian;
   uint64 SkipHeaderBytes;
   DataPath CreatedAttributeArrayPath;
-
 };
 
 /**

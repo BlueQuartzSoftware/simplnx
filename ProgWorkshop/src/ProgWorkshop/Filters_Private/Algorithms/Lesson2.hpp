@@ -25,7 +25,6 @@ struct PROGWORKSHOP_EXPORT Lesson2InputValues
   DataPath InputDataArrayPath;
   DataPath OutputDataArrayPath;
   float32 Value;
-
 };
 
 /**

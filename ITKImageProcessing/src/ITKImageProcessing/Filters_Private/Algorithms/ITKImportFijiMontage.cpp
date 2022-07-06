@@ -23,11 +23,9 @@ const std::atomic_bool& ITKImportFijiMontage::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ITKImportFijiMontage::operator()()
 {
-
 
   return {};
 }

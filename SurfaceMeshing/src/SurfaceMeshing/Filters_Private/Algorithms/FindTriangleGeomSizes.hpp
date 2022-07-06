@@ -25,7 +25,6 @@ struct SURFACEMESHING_EXPORT FindTriangleGeomSizesInputValues
   DataPath FaceLabelsArrayPath;
   DataPath FeatureAttributeMatrixName;
   DataPath VolumesArrayName;
-
 };
 
 /**

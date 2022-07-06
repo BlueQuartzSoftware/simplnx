@@ -31,7 +31,6 @@ struct CORE_EXPORT ExtractVertexGeometryInputValues
   DataPath SelectedDataContainerName;
   MultiArraySelectionParameter::ValueType IncludedDataArrayPaths;
   DataPath VertexDataContainerName;
-
 };
 
 /**

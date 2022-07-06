@@ -23,11 +23,9 @@ const std::atomic_bool& FeatureCountDecision::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FeatureCountDecision::operator()()
 {
-
 
   return {};
 }

@@ -25,7 +25,6 @@ struct ORIENTATIONANALYSIS_EXPORT GenerateQuaternionConjugateInputValues
   DataPath QuaternionDataArrayPath;
   DataPath OutputDataArrayPath;
   bool DeleteOriginalData;
-
 };
 
 /**

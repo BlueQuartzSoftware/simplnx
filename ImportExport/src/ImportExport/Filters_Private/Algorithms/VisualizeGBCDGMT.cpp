@@ -23,11 +23,9 @@ const std::atomic_bool& VisualizeGBCDGMT::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> VisualizeGBCDGMT::operator()()
 {
-
 
   return {};
 }

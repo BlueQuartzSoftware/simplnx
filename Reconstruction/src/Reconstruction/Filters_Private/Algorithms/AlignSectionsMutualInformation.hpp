@@ -35,7 +35,6 @@ struct RECONSTRUCTION_EXPORT AlignSectionsMutualInformationInputValues
   DataPath CellPhasesArrayPath;
   DataPath GoodVoxelsArrayPath;
   DataPath CrystalStructuresArrayPath;
-
 };
 
 /**
@@ -47,7 +46,8 @@ struct RECONSTRUCTION_EXPORT AlignSectionsMutualInformationInputValues
 class RECONSTRUCTION_EXPORT AlignSectionsMutualInformation
 {
 public:
-  AlignSectionsMutualInformation(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AlignSectionsMutualInformationInputValues* inputValues);
+  AlignSectionsMutualInformation(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                 AlignSectionsMutualInformationInputValues* inputValues);
   ~AlignSectionsMutualInformation() noexcept;
 
   AlignSectionsMutualInformation(const AlignSectionsMutualInformation&) = delete;

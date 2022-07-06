@@ -23,11 +23,9 @@ const std::atomic_bool& EbsdToH5Ebsd::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> EbsdToH5Ebsd::operator()()
 {
-
 
   return {};
 }

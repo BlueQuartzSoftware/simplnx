@@ -33,7 +33,6 @@ struct CORE_EXPORT WriteASCIIDataInputValues
   FileSystemPathParameter::ValueType OutputFilePath;
   ChoicesParameter::ValueType Delimiter;
   MultiArraySelectionParameter::ValueType SelectedDataArrayPaths;
-
 };
 
 /**

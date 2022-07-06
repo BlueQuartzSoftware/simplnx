@@ -23,11 +23,9 @@ const std::atomic_bool& CreateStringArray::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CreateStringArray::operator()()
 {
-
 
   return {};
 }

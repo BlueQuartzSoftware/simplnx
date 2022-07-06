@@ -41,7 +41,6 @@ struct IMPORTEXPORT_EXPORT FeatureInfoReaderInputValues
   DataPath FeaturePhasesArrayName;
   DataPath FeatureEulerAnglesArrayName;
   ChoicesParameter::ValueType Delimiter;
-
 };
 
 /**

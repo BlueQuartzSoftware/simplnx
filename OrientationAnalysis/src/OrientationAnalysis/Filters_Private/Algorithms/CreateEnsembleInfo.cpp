@@ -23,11 +23,9 @@ const std::atomic_bool& CreateEnsembleInfo::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CreateEnsembleInfo::operator()()
 {
-
 
   return {};
 }

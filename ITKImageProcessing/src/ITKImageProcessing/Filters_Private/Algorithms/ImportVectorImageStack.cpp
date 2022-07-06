@@ -23,11 +23,9 @@ const std::atomic_bool& ImportVectorImageStack::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ImportVectorImageStack::operator()()
 {
-
 
   return {};
 }

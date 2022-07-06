@@ -23,11 +23,9 @@ const std::atomic_bool& OrientationUtility::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> OrientationUtility::operator()()
 {
-
 
   return {};
 }

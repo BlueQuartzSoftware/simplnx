@@ -23,11 +23,9 @@ const std::atomic_bool& ITKImportRoboMetMontage::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ITKImportRoboMetMontage::operator()()
 {
-
 
   return {};
 }

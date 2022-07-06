@@ -35,7 +35,7 @@ namespace complex
 struct ITKIMAGEPROCESSING_EXPORT IlluminationCorrectionInputValues
 {
   <<<NOT_IMPLEMENTED>>> MontageSelection;
-/*[x]*/  StringParameter::ValueType CellAttributeMatrixName;
+  /*[x]*/ StringParameter::ValueType CellAttributeMatrixName;
   StringParameter::ValueType ImageDataArrayName;
   StringParameter::ValueType CorrectedImageDataArrayName;
   DataPath BackgroundDataContainerPath;
@@ -49,7 +49,6 @@ struct ITKIMAGEPROCESSING_EXPORT IlluminationCorrectionInputValues
   bool ExportCorrectedImages;
   FileSystemPathParameter::ValueType OutputPath;
   StringParameter::ValueType FileExtension;
-
 };
 
 /**

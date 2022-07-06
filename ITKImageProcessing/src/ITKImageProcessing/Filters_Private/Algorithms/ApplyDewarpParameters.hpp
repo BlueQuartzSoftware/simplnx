@@ -25,11 +25,10 @@ namespace complex
 struct ITKIMAGEPROCESSING_EXPORT ApplyDewarpParametersInputValues
 {
   <<<NOT_IMPLEMENTED>>> MontageName;
-/*[x]*/  StringParameter::ValueType AttributeMatrixName;
+  /*[x]*/ StringParameter::ValueType AttributeMatrixName;
   DataPath TransformPath;
   StringParameter::ValueType TransformPrefix;
   StringParameter::ValueType MaskName;
-
 };
 
 /**

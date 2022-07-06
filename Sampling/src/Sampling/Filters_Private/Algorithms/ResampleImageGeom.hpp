@@ -37,7 +37,6 @@ struct SAMPLING_EXPORT ResampleImageGeomInputValues
   DataPath FeatureIdsArrayPath;
   DataPath CellFeatureAttributeMatrixPath;
   DataPath NewDataContainerPath;
-
 };
 
 /**

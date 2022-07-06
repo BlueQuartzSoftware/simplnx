@@ -23,11 +23,9 @@ const std::atomic_bool& ReadCtfData::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ReadCtfData::operator()()
 {
-
 
   return {};
 }

@@ -27,7 +27,6 @@ struct IMAGEPROCESSING_EXPORT ItkDiscreteGaussianBlurInputValues
   DataPath SelectedCellArrayPath;
   DataPath NewCellArrayName;
   float32 Stdev;
-
 };
 
 /**

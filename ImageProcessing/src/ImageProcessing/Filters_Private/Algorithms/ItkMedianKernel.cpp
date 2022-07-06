@@ -23,11 +23,9 @@ const std::atomic_bool& ItkMedianKernel::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ItkMedianKernel::operator()()
 {
-
 
   return {};
 }

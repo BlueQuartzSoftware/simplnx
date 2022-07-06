@@ -49,7 +49,6 @@ struct SAMPLING_EXPORT CropImageGeometryInputValues
   bool RenumberFeatures;
   DataPath FeatureIdsArrayPath;
   DataPath CellFeatureAttributeMatrixPath;
-
 };
 
 /**

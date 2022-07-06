@@ -23,11 +23,9 @@ const std::atomic_bool& FindFeatureClustering::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindFeatureClustering::operator()()
 {
-
 
   return {};
 }

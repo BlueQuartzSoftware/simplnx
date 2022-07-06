@@ -23,7 +23,6 @@ struct IMPORTEXPORT_EXPORT PhWriterInputValues
 {
   FileSystemPathParameter::ValueType OutputFile;
   DataPath FeatureIdsArrayPath;
-
 };
 
 /**

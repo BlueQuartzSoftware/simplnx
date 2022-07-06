@@ -23,11 +23,9 @@ const std::atomic_bool& GenerateFaceIPFColoring::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> GenerateFaceIPFColoring::operator()()
 {
-
 
   return {};
 }

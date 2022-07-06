@@ -27,7 +27,6 @@ struct CORE_EXPORT CreateFeatureArrayFromElementArrayInputValues
   DataPath FeatureIdsArrayPath;
   DataPath CellFeatureAttributeMatrixName;
   DataPath CreatedArrayName;
-
 };
 
 /**
@@ -39,7 +38,8 @@ struct CORE_EXPORT CreateFeatureArrayFromElementArrayInputValues
 class CORE_EXPORT CreateFeatureArrayFromElementArray
 {
 public:
-  CreateFeatureArrayFromElementArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CreateFeatureArrayFromElementArrayInputValues* inputValues);
+  CreateFeatureArrayFromElementArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                     CreateFeatureArrayFromElementArrayInputValues* inputValues);
   ~CreateFeatureArrayFromElementArray() noexcept;
 
   CreateFeatureArrayFromElementArray(const CreateFeatureArrayFromElementArray&) = delete;

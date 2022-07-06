@@ -37,7 +37,6 @@ struct ORIENTATIONANALYSIS_EXPORT FindDistsToCharactGBsInputValues
   DataPath DistToTwistArrayPath;
   DataPath DistToSymmetricArrayPath;
   DataPath DistTo180TiltArrayPath;
-
 };
 
 /**

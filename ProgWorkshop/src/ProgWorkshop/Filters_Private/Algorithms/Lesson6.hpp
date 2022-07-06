@@ -21,7 +21,6 @@ namespace complex
 struct PROGWORKSHOP_EXPORT Lesson6InputValues
 {
   DataPath GeometrySelection;
-
 };
 
 /**

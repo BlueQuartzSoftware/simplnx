@@ -23,11 +23,9 @@ const std::atomic_bool& RodriguesConvertor::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> RodriguesConvertor::operator()()
 {
-
 
   return {};
 }

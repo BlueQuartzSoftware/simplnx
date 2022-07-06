@@ -25,7 +25,6 @@ struct IMPORTEXPORT_EXPORT WriteStlFileInputValues
   FileSystemPathParameter::ValueType OutputStlDirectory;
   StringParameter::ValueType OutputStlPrefix;
   DataPath SurfaceMeshFaceLabelsArrayPath;
-
 };
 
 /**

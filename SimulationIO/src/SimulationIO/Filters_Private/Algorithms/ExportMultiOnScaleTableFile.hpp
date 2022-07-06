@@ -33,7 +33,6 @@ struct SIMULATIONIO_EXPORT ExportMultiOnScaleTableFileInputValues
   VectorInt32Parameter::ValueType NumKeypoints;
   <<<NOT_IMPLEMENTED>>> SelectedArrays;
   DataPath PhaseNamesArrayPath;
-
 };
 
 /**

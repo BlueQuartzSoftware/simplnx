@@ -39,7 +39,6 @@ struct ORIENTATIONANALYSIS_EXPORT FindTwinBoundarySchmidFactorsInputValues
   DataPath SurfaceMeshFaceNormalsArrayPath;
   DataPath SurfaceMeshTwinBoundaryArrayPath;
   DataPath SurfaceMeshTwinBoundarySchmidFactorsArrayName;
-
 };
 
 /**

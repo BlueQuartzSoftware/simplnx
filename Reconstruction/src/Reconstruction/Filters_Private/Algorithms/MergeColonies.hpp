@@ -51,7 +51,6 @@ struct RECONSTRUCTION_EXPORT MergeColoniesInputValues
   DataPath NewCellFeatureAttributeMatrixName;
   DataPath FeatureParentIdsArrayName;
   DataPath ActiveArrayName;
-
 };
 
 /**

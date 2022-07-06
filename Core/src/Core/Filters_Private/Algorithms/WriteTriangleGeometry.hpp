@@ -25,7 +25,6 @@ struct CORE_EXPORT WriteTriangleGeometryInputValues
   FileSystemPathParameter::ValueType OutputNodesFile;
   FileSystemPathParameter::ValueType OutputTrianglesFile;
   DataPath DataContainerSelection;
-
 };
 
 /**

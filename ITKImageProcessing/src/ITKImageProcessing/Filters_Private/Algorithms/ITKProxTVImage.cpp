@@ -23,11 +23,9 @@ const std::atomic_bool& ITKProxTVImage::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ITKProxTVImage::operator()()
 {
-
 
   return {};
 }

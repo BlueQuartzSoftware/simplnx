@@ -23,11 +23,9 @@ const std::atomic_bool& FindSchmids::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindSchmids::operator()()
 {
-
 
   return {};
 }

@@ -23,11 +23,9 @@ const std::atomic_bool& FindMisorientations::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindMisorientations::operator()()
 {
-
 
   return {};
 }

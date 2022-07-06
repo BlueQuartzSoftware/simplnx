@@ -23,11 +23,9 @@ const std::atomic_bool& ScaleVolume::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ScaleVolume::operator()()
 {
-
 
   return {};
 }

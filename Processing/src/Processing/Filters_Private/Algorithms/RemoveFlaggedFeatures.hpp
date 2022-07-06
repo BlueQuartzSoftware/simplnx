@@ -27,7 +27,6 @@ struct PROCESSING_EXPORT RemoveFlaggedFeaturesInputValues
   DataPath FeatureIdsArrayPath;
   DataPath FlaggedFeaturesArrayPath;
   MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
-
 };
 
 /**

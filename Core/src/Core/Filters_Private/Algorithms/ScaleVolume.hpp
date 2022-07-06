@@ -29,7 +29,6 @@ struct CORE_EXPORT ScaleVolumeInputValues
   DataPath DataContainerName;
   bool ApplyToSurfaceMesh;
   DataPath SurfaceDataContainerName;
-
 };
 
 /**

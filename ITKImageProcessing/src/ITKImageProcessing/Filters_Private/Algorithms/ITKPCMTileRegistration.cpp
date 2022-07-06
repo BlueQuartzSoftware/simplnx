@@ -23,11 +23,9 @@ const std::atomic_bool& ITKPCMTileRegistration::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ITKPCMTileRegistration::operator()()
 {
-
 
   return {};
 }

@@ -45,7 +45,6 @@ struct RECONSTRUCTION_EXPORT MergeTwinsInputValues
   DataPath NewCellFeatureAttributeMatrixName;
   DataPath FeatureParentIdsArrayName;
   DataPath ActiveArrayName;
-
 };
 
 /**

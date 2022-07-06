@@ -53,9 +53,9 @@ struct SYNTHETICBUILDING_EXPORT GeneratePrecipitateStatsDataInputValues
   <<<NOT_IMPLEMENTED>>> NumberOfBins;
   <<<NOT_IMPLEMENTED>>> FeatureESD;
   <<<NOT_IMPLEMENTED>>> OdfData;
-/*[x]*/  <<<NOT_IMPLEMENTED>>> MdfData;
-/*[x]*/  <<<NOT_IMPLEMENTED>>> AxisOdfData;
-/*[x]*/  VectorFloat32Parameter::ValueType RdfMinMaxDistance;
+  /*[x]*/<<<NOT_IMPLEMENTED>>> MdfData;
+  /*[x]*/<<<NOT_IMPLEMENTED>>> AxisOdfData;
+  /*[x]*/ VectorFloat32Parameter::ValueType RdfMinMaxDistance;
   int32 RdfNumBins;
   VectorFloat32Parameter::ValueType RdfBoxSize;
   bool CreateEnsembleAttributeMatrix;
@@ -63,7 +63,6 @@ struct SYNTHETICBUILDING_EXPORT GeneratePrecipitateStatsDataInputValues
   DataPath CellEnsembleAttributeMatrixName;
   bool AppendToExistingAttributeMatrix;
   DataPath SelectedEnsembleAttributeMatrix;
-
 };
 
 /**

@@ -23,11 +23,9 @@ const std::atomic_bool& IlluminationCorrection::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> IlluminationCorrection::operator()()
 {
-
 
   return {};
 }

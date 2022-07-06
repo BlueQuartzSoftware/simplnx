@@ -23,11 +23,9 @@ const std::atomic_bool& ExtractComponentAsArray::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ExtractComponentAsArray::operator()()
 {
-
 
   return {};
 }

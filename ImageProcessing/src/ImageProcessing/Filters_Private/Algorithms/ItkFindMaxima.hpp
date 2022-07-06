@@ -25,7 +25,6 @@ struct IMAGEPROCESSING_EXPORT ItkFindMaximaInputValues
   DataPath SelectedCellArrayPath;
   float32 Tolerance;
   DataPath NewCellArrayName;
-
 };
 
 /**

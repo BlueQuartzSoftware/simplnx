@@ -23,11 +23,9 @@ const std::atomic_bool& ExportDAMASKFiles::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ExportDAMASKFiles::operator()()
 {
-
 
   return {};
 }

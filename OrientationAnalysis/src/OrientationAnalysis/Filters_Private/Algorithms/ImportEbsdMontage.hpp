@@ -29,7 +29,7 @@ namespace complex
 struct ORIENTATIONANALYSIS_EXPORT ImportEbsdMontageInputValues
 {
   <<<NOT_IMPLEMENTED>>> InputFileListInfo;
-/*[x]*/  StringParameter::ValueType MontageName;
+  /*[x]*/ StringParameter::ValueType MontageName;
   StringParameter::ValueType CellAttributeMatrixName;
   StringParameter::ValueType CellEnsembleAttributeMatrixName;
   ChoicesParameter::ValueType DefineScanOverlap;
@@ -37,7 +37,6 @@ struct ORIENTATIONANALYSIS_EXPORT ImportEbsdMontageInputValues
   VectorFloat32Parameter::ValueType ScanOverlapPercent;
   bool GenerateIPFColorMap;
   StringParameter::ValueType CellIPFColorsArrayName;
-
 };
 
 /**

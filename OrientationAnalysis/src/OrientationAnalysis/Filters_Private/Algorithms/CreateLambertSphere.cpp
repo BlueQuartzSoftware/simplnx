@@ -23,11 +23,9 @@ const std::atomic_bool& CreateLambertSphere::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CreateLambertSphere::operator()()
 {
-
 
   return {};
 }

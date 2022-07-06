@@ -23,7 +23,6 @@ struct ORIENTATIONANALYSIS_EXPORT ChangeAngleRepresentationInputValues
 {
   ChoicesParameter::ValueType ConversionType;
   DataPath CellEulerAnglesArrayPath;
-
 };
 
 /**

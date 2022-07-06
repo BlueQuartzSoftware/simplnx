@@ -23,11 +23,9 @@ const std::atomic_bool& FindNumFeatures::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindNumFeatures::operator()()
 {
-
 
   return {};
 }

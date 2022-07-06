@@ -23,11 +23,9 @@ const std::atomic_bool& Lesson3::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> Lesson3::operator()()
 {
-
 
   return {};
 }

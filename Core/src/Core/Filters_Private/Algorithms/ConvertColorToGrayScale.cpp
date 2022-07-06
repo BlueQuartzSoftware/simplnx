@@ -23,11 +23,9 @@ const std::atomic_bool& ConvertColorToGrayScale::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ConvertColorToGrayScale::operator()()
 {
-
 
   return {};
 }

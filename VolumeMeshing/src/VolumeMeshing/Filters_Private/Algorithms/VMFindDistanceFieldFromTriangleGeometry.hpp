@@ -35,7 +35,6 @@ struct VOLUMEMESHING_EXPORT VMFindDistanceFieldFromTriangleGeometryInputValues
   StringParameter::ValueType CellAttributeMatrixName;
   StringParameter::ValueType SignedDistanceFieldName;
   StringParameter::ValueType ClosestTriangleName;
-
 };
 
 /**
@@ -47,7 +46,8 @@ struct VOLUMEMESHING_EXPORT VMFindDistanceFieldFromTriangleGeometryInputValues
 class VOLUMEMESHING_EXPORT VMFindDistanceFieldFromTriangleGeometry
 {
 public:
-  VMFindDistanceFieldFromTriangleGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, VMFindDistanceFieldFromTriangleGeometryInputValues* inputValues);
+  VMFindDistanceFieldFromTriangleGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                          VMFindDistanceFieldFromTriangleGeometryInputValues* inputValues);
   ~VMFindDistanceFieldFromTriangleGeometry() noexcept;
 
   VMFindDistanceFieldFromTriangleGeometry(const VMFindDistanceFieldFromTriangleGeometry&) = delete;

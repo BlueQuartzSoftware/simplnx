@@ -23,11 +23,9 @@ const std::atomic_bool& CreateBsamFile::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CreateBsamFile::operator()()
 {
-
 
   return {};
 }

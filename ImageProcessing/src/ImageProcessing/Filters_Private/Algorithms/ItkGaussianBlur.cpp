@@ -23,11 +23,9 @@ const std::atomic_bool& ItkGaussianBlur::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ItkGaussianBlur::operator()()
 {
-
 
   return {};
 }

@@ -29,7 +29,6 @@ struct IMPORTEXPORT_EXPORT AbaqusHexahedronWriterInputValues
   FileSystemPathParameter::ValueType OutputPath;
   StringParameter::ValueType FilePrefix;
   DataPath FeatureIdsArrayPath;
-
 };
 
 /**

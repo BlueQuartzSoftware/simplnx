@@ -25,7 +25,6 @@ struct IMAGEPROCESSING_EXPORT ItkKdTreeKMeansInputValues
   int32 Classes;
   DataPath SelectedCellArrayPath;
   DataPath NewCellArrayName;
-
 };
 
 /**

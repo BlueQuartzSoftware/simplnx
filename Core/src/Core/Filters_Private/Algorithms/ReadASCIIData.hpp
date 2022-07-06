@@ -21,7 +21,7 @@ namespace complex
 struct CORE_EXPORT ReadASCIIDataInputValues
 {
   <<<NOT_IMPLEMENTED>>> WizardData;
-/*[x]*/
+  /*[x]*/
 };
 
 /**

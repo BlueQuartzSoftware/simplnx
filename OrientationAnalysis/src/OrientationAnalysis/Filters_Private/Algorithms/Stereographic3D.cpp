@@ -23,11 +23,9 @@ const std::atomic_bool& Stereographic3D::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> Stereographic3D::operator()()
 {
-
 
   return {};
 }

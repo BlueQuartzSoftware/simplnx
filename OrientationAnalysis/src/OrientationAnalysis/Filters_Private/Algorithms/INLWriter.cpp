@@ -23,11 +23,9 @@ const std::atomic_bool& INLWriter::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> INLWriter::operator()()
 {
-
 
   return {};
 }

@@ -23,11 +23,9 @@ const std::atomic_bool& RemoveArrays::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> RemoveArrays::operator()()
 {
-
 
   return {};
 }

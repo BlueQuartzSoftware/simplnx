@@ -23,7 +23,6 @@ struct ITKIMAGEPROCESSING_EXPORT AxioVisionV4ToTileConfigurationInputValues
 {
   FileSystemPathParameter::ValueType InputFile;
   FileSystemPathParameter::ValueType OutputFile;
-
 };
 
 /**
@@ -35,7 +34,8 @@ struct ITKIMAGEPROCESSING_EXPORT AxioVisionV4ToTileConfigurationInputValues
 class ITKIMAGEPROCESSING_EXPORT AxioVisionV4ToTileConfiguration
 {
 public:
-  AxioVisionV4ToTileConfiguration(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AxioVisionV4ToTileConfigurationInputValues* inputValues);
+  AxioVisionV4ToTileConfiguration(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                  AxioVisionV4ToTileConfigurationInputValues* inputValues);
   ~AxioVisionV4ToTileConfiguration() noexcept;
 
   AxioVisionV4ToTileConfiguration(const AxioVisionV4ToTileConfiguration&) = delete;

@@ -29,7 +29,6 @@ struct CORE_EXPORT MoveDataInputValues
   DataPath DataContainerDestination;
   DataPath DataArraySource;
   DataPath AttributeMatrixDestination;
-
 };
 
 /**

@@ -27,7 +27,6 @@ struct CORE_EXPORT CombineAttributeArraysInputValues
   bool MoveValues;
   MultiArraySelectionParameter::ValueType SelectedDataArrayPaths;
   StringParameter::ValueType StackedDataArrayName;
-
 };
 
 /**

@@ -33,7 +33,6 @@ struct SAMPLING_EXPORT ResampleRectGridToImageGeomInputValues
   <<<NOT_IMPLEMENTED>>> CreatedGeometryDescription;
   DataPath ImageGeometryPath;
   DataPath ImageGeomCellAttributeMatrix;
-
 };
 
 /**

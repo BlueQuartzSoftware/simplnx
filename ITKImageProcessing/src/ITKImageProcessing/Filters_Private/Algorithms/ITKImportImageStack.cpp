@@ -23,11 +23,9 @@ const std::atomic_bool& ITKImportImageStack::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ITKImportImageStack::operator()()
 {
-
 
   return {};
 }

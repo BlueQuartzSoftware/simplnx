@@ -25,7 +25,6 @@ struct UCSBUTILITIES_EXPORT FindModulusMismatchInputValues
   DataPath ModuliArrayPath;
   DataPath SurfaceMeshFaceLabelsArrayPath;
   DataPath SurfaceMeshDeltaModulusArrayName;
-
 };
 
 /**

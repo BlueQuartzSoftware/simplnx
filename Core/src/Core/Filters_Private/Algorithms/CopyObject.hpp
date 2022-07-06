@@ -29,7 +29,6 @@ struct CORE_EXPORT CopyObjectInputValues
   DataPath AttributeMatrixToCopy;
   DataPath AttributeArrayToCopy;
   StringParameter::ValueType CopiedObjectName;
-
 };
 
 /**

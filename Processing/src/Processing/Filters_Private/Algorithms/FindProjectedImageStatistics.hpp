@@ -33,7 +33,6 @@ struct PROCESSING_EXPORT FindProjectedImageStatisticsInputValues
   DataPath ProjectedImageAvgArrayName;
   DataPath ProjectedImageStdArrayName;
   DataPath ProjectedImageVarArrayName;
-
 };
 
 /**

@@ -23,11 +23,9 @@ const std::atomic_bool& InsertAtoms::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> InsertAtoms::operator()()
 {
-
 
   return {};
 }

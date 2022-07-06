@@ -27,7 +27,6 @@ struct IMAGEPROCESSING_EXPORT ItkGrayToRGBInputValues
   DataPath GreenArrayPath;
   DataPath BlueArrayPath;
   DataPath NewCellArrayName;
-
 };
 
 /**

@@ -23,11 +23,9 @@ const std::atomic_bool& EstablishShapeTypes::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> EstablishShapeTypes::operator()()
 {
-
 
   return {};
 }

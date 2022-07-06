@@ -23,7 +23,6 @@ struct RECONSTRUCTION_EXPORT ComputeFeatureRectInputValues
 {
   DataPath FeatureIdsArrayPath;
   DataPath FeatureRectArrayPath;
-
 };
 
 /**

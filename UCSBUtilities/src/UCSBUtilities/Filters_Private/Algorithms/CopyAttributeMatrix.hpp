@@ -23,7 +23,6 @@ struct UCSBUTILITIES_EXPORT CopyAttributeMatrixInputValues
 {
   DataPath SelectedAttributeMatrixPath;
   DataPath NewAttributeMatrix;
-
 };
 
 /**

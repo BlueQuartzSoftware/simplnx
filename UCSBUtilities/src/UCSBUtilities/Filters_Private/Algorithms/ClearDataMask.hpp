@@ -21,7 +21,6 @@ namespace complex
 struct UCSBUTILITIES_EXPORT ClearDataMaskInputValues
 {
   DataPath MaskArrayPath;
-
 };
 
 /**

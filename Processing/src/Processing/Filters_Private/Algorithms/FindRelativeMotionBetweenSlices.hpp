@@ -35,7 +35,6 @@ struct PROCESSING_EXPORT FindRelativeMotionBetweenSlicesInputValues
   int32 SliceStep;
   DataPath SelectedArrayPath;
   DataPath MotionDirectionArrayName;
-
 };
 
 /**
@@ -47,7 +46,8 @@ struct PROCESSING_EXPORT FindRelativeMotionBetweenSlicesInputValues
 class PROCESSING_EXPORT FindRelativeMotionBetweenSlices
 {
 public:
-  FindRelativeMotionBetweenSlices(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindRelativeMotionBetweenSlicesInputValues* inputValues);
+  FindRelativeMotionBetweenSlices(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                  FindRelativeMotionBetweenSlicesInputValues* inputValues);
   ~FindRelativeMotionBetweenSlices() noexcept;
 
   FindRelativeMotionBetweenSlices(const FindRelativeMotionBetweenSlices&) = delete;

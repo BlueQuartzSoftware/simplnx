@@ -35,7 +35,6 @@ struct UCSBUTILITIES_EXPORT GenerateMisorientationColorsInputValues
   DataPath GoodVoxelsArrayPath;
   DataPath CrystalStructuresArrayPath;
   DataPath MisorientationColorArrayName;
-
 };
 
 /**

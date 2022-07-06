@@ -23,11 +23,9 @@ const std::atomic_bool& ItkMultiOtsuThreshold::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ItkMultiOtsuThreshold::operator()()
 {
-
 
   return {};
 }

@@ -29,7 +29,6 @@ struct SYNTHETICBUILDING_EXPORT AddBadDataInputValues
   bool BoundaryNoise;
   float32 BoundaryVolFraction;
   DataPath GBEuclideanDistancesArrayPath;
-
 };
 
 /**

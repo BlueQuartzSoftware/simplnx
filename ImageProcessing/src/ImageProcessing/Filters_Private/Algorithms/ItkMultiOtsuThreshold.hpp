@@ -29,7 +29,6 @@ struct IMAGEPROCESSING_EXPORT ItkMultiOtsuThresholdInputValues
   bool SaveAsNewArray;
   DataPath SelectedCellArrayPath;
   DataPath NewCellArrayName;
-
 };
 
 /**

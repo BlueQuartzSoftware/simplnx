@@ -25,7 +25,6 @@ struct STATSTOOLBOX_EXPORT FindLargestCrossSectionsInputValues
   ChoicesParameter::ValueType Plane;
   DataPath FeatureIdsArrayPath;
   DataPath LargestCrossSectionsArrayPath;
-
 };
 
 /**

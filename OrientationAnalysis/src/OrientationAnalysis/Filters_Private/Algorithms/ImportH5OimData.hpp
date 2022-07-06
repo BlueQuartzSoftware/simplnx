@@ -29,13 +29,12 @@ struct ORIENTATIONANALYSIS_EXPORT ImportH5OimDataInputValues
 {
   FileSystemPathParameter::ValueType InputFile;
   <<<NOT_IMPLEMENTED>>> SelectedScanNames;
-/*[x]*/  float64 ZSpacing;
+  /*[x]*/ float64 ZSpacing;
   VectorFloat32Parameter::ValueType Origin;
   bool ReadPatternData;
   DataPath DataContainerName;
   DataPath CellAttributeMatrixName;
   DataPath CellEnsembleAttributeMatrixName;
-
 };
 
 /**

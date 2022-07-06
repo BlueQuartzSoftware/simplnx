@@ -23,11 +23,9 @@ const std::atomic_bool& CombineAttributeMatrices::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CombineAttributeMatrices::operator()()
 {
-
 
   return {};
 }

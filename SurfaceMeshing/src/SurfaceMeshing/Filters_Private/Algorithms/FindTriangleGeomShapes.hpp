@@ -35,7 +35,6 @@ struct SURFACEMESHING_EXPORT FindTriangleGeomShapesInputValues
   DataPath AxisLengthsArrayName;
   DataPath AxisEulerAnglesArrayName;
   DataPath AspectRatiosArrayName;
-
 };
 
 /**

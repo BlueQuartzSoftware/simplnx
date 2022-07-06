@@ -23,7 +23,6 @@ struct IMAGEPROCESSING_EXPORT ItkConvertArrayTo8BitImageInputValues
 {
   DataPath SelectedArrayPath;
   DataPath NewArrayArrayName;
-
 };
 
 /**

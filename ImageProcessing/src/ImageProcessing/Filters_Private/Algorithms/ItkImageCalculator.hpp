@@ -27,7 +27,6 @@ struct IMAGEPROCESSING_EXPORT ItkImageCalculatorInputValues
   ChoicesParameter::ValueType Operator;
   DataPath SelectedCellArrayPath2;
   DataPath NewCellArrayName;
-
 };
 
 /**

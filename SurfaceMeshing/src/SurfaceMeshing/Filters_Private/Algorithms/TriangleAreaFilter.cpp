@@ -23,11 +23,9 @@ const std::atomic_bool& TriangleAreaFilter::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> TriangleAreaFilter::operator()()
 {
-
 
   return {};
 }

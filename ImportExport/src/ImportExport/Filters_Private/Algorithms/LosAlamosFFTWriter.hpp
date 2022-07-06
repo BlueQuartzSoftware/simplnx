@@ -27,7 +27,6 @@ struct IMPORTEXPORT_EXPORT LosAlamosFFTWriterInputValues
   DataPath FeatureIdsArrayPath;
   DataPath CellEulerAnglesArrayPath;
   DataPath CellPhasesArrayPath;
-
 };
 
 /**

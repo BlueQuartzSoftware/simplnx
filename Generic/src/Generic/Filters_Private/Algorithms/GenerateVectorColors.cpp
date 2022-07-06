@@ -23,11 +23,9 @@ const std::atomic_bool& GenerateVectorColors::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> GenerateVectorColors::operator()()
 {
-
 
   return {};
 }

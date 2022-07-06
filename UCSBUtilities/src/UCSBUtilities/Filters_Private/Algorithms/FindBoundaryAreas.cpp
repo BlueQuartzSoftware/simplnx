@@ -23,11 +23,9 @@ const std::atomic_bool& FindBoundaryAreas::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindBoundaryAreas::operator()()
 {
-
 
   return {};
 }

@@ -23,11 +23,9 @@ const std::atomic_bool& CopyAttributeArray::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CopyAttributeArray::operator()()
 {
-
 
   return {};
 }

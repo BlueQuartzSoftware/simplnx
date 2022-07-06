@@ -23,11 +23,9 @@ const std::atomic_bool& ItkImageCalculator::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ItkImageCalculator::operator()()
 {
-
 
   return {};
 }

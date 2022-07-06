@@ -23,11 +23,9 @@ const std::atomic_bool& MinNeighbors::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> MinNeighbors::operator()()
 {
-
 
   return {};
 }

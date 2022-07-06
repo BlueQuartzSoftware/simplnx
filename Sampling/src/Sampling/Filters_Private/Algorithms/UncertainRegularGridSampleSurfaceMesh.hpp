@@ -39,7 +39,6 @@ struct SAMPLING_EXPORT UncertainRegularGridSampleSurfaceMeshInputValues
   DataPath DataContainerName;
   DataPath CellAttributeMatrixName;
   DataPath FeatureIdsArrayName;
-
 };
 
 /**
@@ -51,7 +50,8 @@ struct SAMPLING_EXPORT UncertainRegularGridSampleSurfaceMeshInputValues
 class SAMPLING_EXPORT UncertainRegularGridSampleSurfaceMesh
 {
 public:
-  UncertainRegularGridSampleSurfaceMesh(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, UncertainRegularGridSampleSurfaceMeshInputValues* inputValues);
+  UncertainRegularGridSampleSurfaceMesh(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                        UncertainRegularGridSampleSurfaceMeshInputValues* inputValues);
   ~UncertainRegularGridSampleSurfaceMesh() noexcept;
 
   UncertainRegularGridSampleSurfaceMesh(const UncertainRegularGridSampleSurfaceMesh&) = delete;

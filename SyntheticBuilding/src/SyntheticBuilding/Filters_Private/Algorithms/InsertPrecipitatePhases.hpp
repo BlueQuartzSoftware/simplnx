@@ -53,7 +53,6 @@ struct SYNTHETICBUILDING_EXPORT InsertPrecipitatePhasesInputValues
   ChoicesParameter::ValueType SaveGeometricDescriptions;
   DataPath NewAttributeMatrixPath;
   DataPath SelectedAttributeMatrixPath;
-
 };
 
 /**

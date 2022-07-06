@@ -23,11 +23,9 @@ const std::atomic_bool& FindFeaturePhasesBinary::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindFeaturePhasesBinary::operator()()
 {
-
 
   return {};
 }

@@ -37,7 +37,6 @@ struct RECONSTRUCTION_EXPORT CAxisSegmentFeaturesInputValues
   DataPath FeatureIdsArrayName;
   DataPath CellFeatureAttributeMatrixName;
   DataPath ActiveArrayName;
-
 };
 
 /**

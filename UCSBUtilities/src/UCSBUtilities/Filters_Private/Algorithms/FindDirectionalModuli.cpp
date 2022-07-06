@@ -23,11 +23,9 @@ const std::atomic_bool& FindDirectionalModuli::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindDirectionalModuli::operator()()
 {
-
 
   return {};
 }

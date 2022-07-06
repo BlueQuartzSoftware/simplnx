@@ -6,7 +6,8 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-FindFeatureNeighborCAxisMisalignments::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindFeatureNeighborCAxisMisalignmentsInputValues* inputValues)
+FindFeatureNeighborCAxisMisalignments::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                   FindFeatureNeighborCAxisMisalignmentsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -23,11 +24,9 @@ const std::atomic_bool& FindFeatureNeighborCAxisMisalignments::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindFeatureNeighborCAxisMisalignments::operator()()
 {
-
 
   return {};
 }

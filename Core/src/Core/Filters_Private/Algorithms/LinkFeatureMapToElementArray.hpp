@@ -25,7 +25,6 @@ struct CORE_EXPORT LinkFeatureMapToElementArrayInputValues
   DataPath SelectedCellArrayPath;
   DataPath CellFeatureAttributeMatrixName;
   DataPath ActiveArrayName;
-
 };
 
 /**

@@ -23,7 +23,6 @@ struct GENERIC_EXPORT FindSurfaceFeaturesInputValues
 {
   DataPath FeatureIdsArrayPath;
   DataPath SurfaceFeaturesArrayPath;
-
 };
 
 /**

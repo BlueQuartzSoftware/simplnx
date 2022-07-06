@@ -23,11 +23,9 @@ const std::atomic_bool& ImportH5EspritData::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ImportH5EspritData::operator()()
 {
-
 
   return {};
 }

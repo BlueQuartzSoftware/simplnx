@@ -25,7 +25,6 @@ struct IMAGEPROCESSING_EXPORT ItkGaussianBlurInputValues
   bool SaveAsNewArray;
   DataPath SelectedCellArrayPath;
   DataPath NewCellArrayName;
-
 };
 
 /**

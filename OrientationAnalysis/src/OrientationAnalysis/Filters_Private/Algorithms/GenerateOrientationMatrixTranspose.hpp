@@ -25,7 +25,6 @@ struct ORIENTATIONANALYSIS_EXPORT GenerateOrientationMatrixTransposeInputValues
   DataPath OrientationMatrixDataArrayPath;
   DataPath OutputDataArrayPath;
   bool DeleteOriginalData;
-
 };
 
 /**
@@ -37,7 +36,8 @@ struct ORIENTATIONANALYSIS_EXPORT GenerateOrientationMatrixTransposeInputValues
 class ORIENTATIONANALYSIS_EXPORT GenerateOrientationMatrixTranspose
 {
 public:
-  GenerateOrientationMatrixTranspose(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, GenerateOrientationMatrixTransposeInputValues* inputValues);
+  GenerateOrientationMatrixTranspose(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                     GenerateOrientationMatrixTransposeInputValues* inputValues);
   ~GenerateOrientationMatrixTranspose() noexcept;
 
   GenerateOrientationMatrixTranspose(const GenerateOrientationMatrixTranspose&) = delete;

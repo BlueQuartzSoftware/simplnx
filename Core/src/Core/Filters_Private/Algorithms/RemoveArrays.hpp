@@ -21,7 +21,7 @@ namespace complex
 struct CORE_EXPORT RemoveArraysInputValues
 {
   <<<NOT_IMPLEMENTED>>> DataArraysToRemove;
-/*[x]*/
+  /*[x]*/
 };
 
 /**

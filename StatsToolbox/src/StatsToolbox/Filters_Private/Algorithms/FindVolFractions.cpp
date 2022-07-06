@@ -23,11 +23,9 @@ const std::atomic_bool& FindVolFractions::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindVolFractions::operator()()
 {
-
 
   return {};
 }

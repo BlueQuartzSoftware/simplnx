@@ -23,11 +23,9 @@ const std::atomic_bool& ItkAutoThreshold::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ItkAutoThreshold::operator()()
 {
-
 
   return {};
 }

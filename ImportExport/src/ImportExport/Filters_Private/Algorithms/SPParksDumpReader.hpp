@@ -33,7 +33,6 @@ struct IMPORTEXPORT_EXPORT SPParksDumpReaderInputValues
   DataPath VolumeDataContainerName;
   DataPath CellAttributeMatrixName;
   DataPath FeatureIdsArrayName;
-
 };
 
 /**

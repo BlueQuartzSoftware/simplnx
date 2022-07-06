@@ -31,7 +31,6 @@ struct ORIENTATIONANALYSIS_EXPORT FindAvgOrientationsInputValues
   DataPath CrystalStructuresArrayPath;
   DataPath AvgQuatsArrayPath;
   DataPath AvgEulerAnglesArrayPath;
-
 };
 
 /**

@@ -27,7 +27,6 @@ struct GENERIC_EXPORT FindFeaturePhasesBinaryInputValues
   DataPath GoodVoxelsArrayPath;
   DataPath FeaturePhasesArrayPath;
   DataPath CellEnsembleAttributeMatrixName;
-
 };
 
 /**

@@ -41,7 +41,6 @@ struct SURFACEMESHING_EXPORT LaplacianSmoothingInputValues
   float32 SurfaceQuadPointLambda;
   DataPath SurfaceMeshNodeTypeArrayPath;
   DataPath SurfaceMeshFaceLabelsArrayPath;
-
 };
 
 /**

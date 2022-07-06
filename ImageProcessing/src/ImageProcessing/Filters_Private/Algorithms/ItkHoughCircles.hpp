@@ -31,7 +31,6 @@ struct IMAGEPROCESSING_EXPORT ItkHoughCirclesInputValues
   float32 MinRadius;
   float32 MaxRadius;
   int32 NumberCircles;
-
 };
 
 /**

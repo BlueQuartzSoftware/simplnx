@@ -29,7 +29,6 @@ struct PROCESSING_EXPORT FillBadDataInputValues
   DataPath FeatureIdsArrayPath;
   DataPath CellPhasesArrayPath;
   MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
-
 };
 
 /**

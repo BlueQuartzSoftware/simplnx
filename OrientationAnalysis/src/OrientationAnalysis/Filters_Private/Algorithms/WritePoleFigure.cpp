@@ -23,11 +23,9 @@ const std::atomic_bool& WritePoleFigure::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> WritePoleFigure::operator()()
 {
-
 
   return {};
 }

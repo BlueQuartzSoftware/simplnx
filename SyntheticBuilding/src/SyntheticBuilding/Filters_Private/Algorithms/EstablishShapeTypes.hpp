@@ -25,7 +25,7 @@ struct SYNTHETICBUILDING_EXPORT EstablishShapeTypesInputValues
   DataPath InputPhaseTypesArrayPath;
   DataPath ShapeTypesArrayName;
   <<<NOT_IMPLEMENTED>>> ShapeTypeData;
-/*[x]*/
+  /*[x]*/
 };
 
 /**

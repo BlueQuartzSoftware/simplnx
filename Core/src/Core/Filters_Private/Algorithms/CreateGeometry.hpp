@@ -89,7 +89,6 @@ struct CORE_EXPORT CreateGeometryInputValues
   DataPath SharedHexListArrayPath;
   DataPath VertexAttributeMatrixName5;
   DataPath HexCellAttributeMatrixName;
-
 };
 
 /**

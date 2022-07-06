@@ -25,7 +25,6 @@ struct VOLUMEMESHING_EXPORT FindFeatureSignedDistanceFieldsInputValues
   DataPath FeatureIdsArrayPath;
   DataPath FeatureAttributeMatrixPath;
   StringParameter::ValueType SignedDistanceFieldsPrefix;
-
 };
 
 /**
@@ -37,7 +36,8 @@ struct VOLUMEMESHING_EXPORT FindFeatureSignedDistanceFieldsInputValues
 class VOLUMEMESHING_EXPORT FindFeatureSignedDistanceFields
 {
 public:
-  FindFeatureSignedDistanceFields(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindFeatureSignedDistanceFieldsInputValues* inputValues);
+  FindFeatureSignedDistanceFields(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                  FindFeatureSignedDistanceFieldsInputValues* inputValues);
   ~FindFeatureSignedDistanceFields() noexcept;
 
   FindFeatureSignedDistanceFields(const FindFeatureSignedDistanceFields&) = delete;

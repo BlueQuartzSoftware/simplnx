@@ -29,7 +29,6 @@ struct CORE_EXPORT FeatureDataCSVWriterInputValues
   bool WriteNumFeaturesLine;
   ChoicesParameter::ValueType DelimiterChoiceInt;
   DataPath CellFeatureAttributeMatrixPath;
-
 };
 
 /**

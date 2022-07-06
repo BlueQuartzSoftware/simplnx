@@ -23,11 +23,9 @@ const std::atomic_bool& ItkHoughCircles::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ItkHoughCircles::operator()()
 {
-
 
   return {};
 }

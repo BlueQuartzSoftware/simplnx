@@ -23,11 +23,9 @@ const std::atomic_bool& ReadStlFile::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ReadStlFile::operator()()
 {
-
 
   return {};
 }

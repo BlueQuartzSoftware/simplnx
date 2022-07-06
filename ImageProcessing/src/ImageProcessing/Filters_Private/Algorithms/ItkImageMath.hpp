@@ -29,7 +29,6 @@ struct IMAGEPROCESSING_EXPORT ItkImageMathInputValues
   ChoicesParameter::ValueType Operator;
   float64 Value;
   DataPath NewCellArrayName;
-
 };
 
 /**

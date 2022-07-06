@@ -47,7 +47,7 @@ namespace complex
 struct STATSTOOLBOX_EXPORT GenerateEnsembleStatisticsInputValues
 {
   <<<NOT_IMPLEMENTED>>> PhaseTypeArray;
-/*[x]*/  float32 SizeCorrelationResolution;
+  /*[x]*/ float32 SizeCorrelationResolution;
   DataPath FeaturePhasesArrayPath;
   DataPath NeighborListArrayPath;
   bool CalculateMorphologicalStats;
@@ -73,7 +73,6 @@ struct STATSTOOLBOX_EXPORT GenerateEnsembleStatisticsInputValues
   bool IncludeRadialDistFunc;
   DataPath RDFArrayPath;
   DataPath MaxMinRDFArrayPath;
-
 };
 
 /**

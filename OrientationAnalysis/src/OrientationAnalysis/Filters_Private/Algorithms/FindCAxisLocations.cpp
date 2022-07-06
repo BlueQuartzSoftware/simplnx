@@ -23,11 +23,9 @@ const std::atomic_bool& FindCAxisLocations::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindCAxisLocations::operator()()
 {
-
 
   return {};
 }

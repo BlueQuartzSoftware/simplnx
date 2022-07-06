@@ -29,7 +29,6 @@ struct GENERIC_EXPORT FindBoundingBoxFeaturesInputValues
   DataPath SurfaceFeaturesArrayPath;
   DataPath PhasesArrayPath;
   DataPath BiasedFeaturesArrayName;
-
 };
 
 /**

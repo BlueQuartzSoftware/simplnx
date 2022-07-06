@@ -23,7 +23,6 @@ struct IMPORTEXPORT_EXPORT SPParksSitesWriterInputValues
 {
   FileSystemPathParameter::ValueType OutputFile;
   DataPath FeatureIdsArrayPath;
-
 };
 
 /**

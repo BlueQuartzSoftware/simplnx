@@ -29,7 +29,6 @@ struct ORIENTATIONANALYSIS_EXPORT GenerateFaceMisorientationColoringInputValues
   DataPath FeaturePhasesArrayPath;
   DataPath CrystalStructuresArrayPath;
   DataPath SurfaceMeshFaceMisorientationColorsArrayName;
-
 };
 
 /**
@@ -41,7 +40,8 @@ struct ORIENTATIONANALYSIS_EXPORT GenerateFaceMisorientationColoringInputValues
 class ORIENTATIONANALYSIS_EXPORT GenerateFaceMisorientationColoring
 {
 public:
-  GenerateFaceMisorientationColoring(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, GenerateFaceMisorientationColoringInputValues* inputValues);
+  GenerateFaceMisorientationColoring(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                     GenerateFaceMisorientationColoringInputValues* inputValues);
   ~GenerateFaceMisorientationColoring() noexcept;
 
   GenerateFaceMisorientationColoring(const GenerateFaceMisorientationColoring&) = delete;

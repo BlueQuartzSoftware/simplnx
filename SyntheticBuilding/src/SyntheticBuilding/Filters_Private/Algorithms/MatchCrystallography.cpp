@@ -23,11 +23,9 @@ const std::atomic_bool& MatchCrystallography::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> MatchCrystallography::operator()()
 {
-
 
   return {};
 }

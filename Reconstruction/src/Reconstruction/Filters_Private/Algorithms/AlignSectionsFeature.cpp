@@ -23,11 +23,9 @@ const std::atomic_bool& AlignSectionsFeature::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsFeature::operator()()
 {
-
 
   return {};
 }

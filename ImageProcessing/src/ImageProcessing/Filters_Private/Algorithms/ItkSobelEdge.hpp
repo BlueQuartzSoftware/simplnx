@@ -27,7 +27,6 @@ struct IMAGEPROCESSING_EXPORT ItkSobelEdgeInputValues
   bool SaveAsNewArray;
   DataPath SelectedCellArrayPath;
   DataPath NewCellArrayName;
-
 };
 
 /**

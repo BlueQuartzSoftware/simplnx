@@ -25,7 +25,6 @@ struct IMPORTEXPORT_EXPORT DxWriterInputValues
   FileSystemPathParameter::ValueType OutputFile;
   bool AddSurfaceLayer;
   DataPath FeatureIdsArrayPath;
-
 };
 
 /**

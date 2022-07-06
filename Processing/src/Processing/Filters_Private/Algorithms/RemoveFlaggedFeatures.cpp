@@ -23,11 +23,9 @@ const std::atomic_bool& RemoveFlaggedFeatures::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> RemoveFlaggedFeatures::operator()()
 {
-
 
   return {};
 }

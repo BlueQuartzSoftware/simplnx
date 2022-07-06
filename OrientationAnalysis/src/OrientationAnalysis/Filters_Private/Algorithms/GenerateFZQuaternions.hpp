@@ -31,7 +31,6 @@ struct ORIENTATIONANALYSIS_EXPORT GenerateFZQuaternionsInputValues
   DataPath GoodVoxelsArrayPath;
   DataPath CrystalStructuresArrayPath;
   DataPath FZQuatsArrayPath;
-
 };
 
 /**

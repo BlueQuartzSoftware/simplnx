@@ -33,7 +33,6 @@ struct IMPORTEXPORT_EXPORT VtkStructuredPointsReaderInputValues
   DataPath VolumeDataContainerName;
   DataPath VertexAttributeMatrixName;
   DataPath CellAttributeMatrixName;
-
 };
 
 /**

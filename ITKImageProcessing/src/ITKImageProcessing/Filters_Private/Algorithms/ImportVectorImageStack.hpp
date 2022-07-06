@@ -27,13 +27,12 @@ namespace complex
 struct ITKIMAGEPROCESSING_EXPORT ImportVectorImageStackInputValues
 {
   <<<NOT_IMPLEMENTED>>> InputFileListInfo;
-/*[x]*/  VectorFloat32Parameter::ValueType Origin;
+  /*[x]*/ VectorFloat32Parameter::ValueType Origin;
   VectorFloat32Parameter::ValueType Spacing;
   bool ConvertToGrayscale;
   DataPath DataContainerName;
   DataPath CellAttributeMatrixName;
   DataPath VectorDataArrayName;
-
 };
 
 /**

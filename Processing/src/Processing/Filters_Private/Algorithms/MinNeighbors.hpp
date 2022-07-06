@@ -33,7 +33,6 @@ struct PROCESSING_EXPORT MinNeighborsInputValues
   DataPath FeaturePhasesArrayPath;
   DataPath NumNeighborsArrayPath;
   MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
-
 };
 
 /**

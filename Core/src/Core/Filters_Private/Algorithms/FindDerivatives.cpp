@@ -23,11 +23,9 @@ const std::atomic_bool& FindDerivatives::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindDerivatives::operator()()
 {
-
 
   return {};
 }

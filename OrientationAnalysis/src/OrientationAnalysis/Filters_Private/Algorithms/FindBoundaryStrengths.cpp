@@ -23,11 +23,9 @@ const std::atomic_bool& FindBoundaryStrengths::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindBoundaryStrengths::operator()()
 {
-
 
   return {};
 }

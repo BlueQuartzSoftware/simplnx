@@ -50,7 +50,6 @@ inline constexpr StringLiteral k_IPFColors("IPF Colors");
 inline constexpr StringLiteral k_CellEnsembleData("CellEnsembleData");
 } // namespace complex::Constants
 
-
 TEST_CASE("OrientationAnalysis::GenerateIPFColors", "[OrientationAnalysis][GenerateIPFColors]")
 {
   // This test file was produced by SIMPL/DREAM3D. our results should match theirs

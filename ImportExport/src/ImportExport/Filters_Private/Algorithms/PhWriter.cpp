@@ -23,11 +23,9 @@ const std::atomic_bool& PhWriter::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> PhWriter::operator()()
 {
-
 
   return {};
 }

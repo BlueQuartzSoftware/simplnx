@@ -23,11 +23,9 @@ const std::atomic_bool& ImportDelamData::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ImportDelamData::operator()()
 {
-
 
   return {};
 }

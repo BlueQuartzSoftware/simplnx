@@ -24,10 +24,9 @@ namespace complex
 struct ORIENTATIONANALYSIS_EXPORT ReadH5EbsdInputValues
 {
   <<<NOT_IMPLEMENTED>>> ReadH5Ebsd;
-/*[x]*/  DataPath DataContainerName;
+  /*[x]*/ DataPath DataContainerName;
   DataPath CellAttributeMatrixName;
   DataPath CellEnsembleAttributeMatrixName;
-
 };
 
 /**

@@ -25,7 +25,6 @@ struct GENERIC_EXPORT FindFeaturePhasesInputValues
   DataPath CellPhasesArrayPath;
   DataPath FeatureIdsArrayPath;
   DataPath FeaturePhasesArrayPath;
-
 };
 
 /**

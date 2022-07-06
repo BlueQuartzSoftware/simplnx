@@ -49,7 +49,6 @@ struct CORE_EXPORT ExtractAttributeArraysFromGeometryInputValues
   DataPath SharedTetListArrayPath;
   DataPath SharedVertexListArrayPath5;
   DataPath SharedHexListArrayPath;
-
 };
 
 /**
@@ -61,7 +60,8 @@ struct CORE_EXPORT ExtractAttributeArraysFromGeometryInputValues
 class CORE_EXPORT ExtractAttributeArraysFromGeometry
 {
 public:
-  ExtractAttributeArraysFromGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ExtractAttributeArraysFromGeometryInputValues* inputValues);
+  ExtractAttributeArraysFromGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                     ExtractAttributeArraysFromGeometryInputValues* inputValues);
   ~ExtractAttributeArraysFromGeometry() noexcept;
 
   ExtractAttributeArraysFromGeometry(const ExtractAttributeArraysFromGeometry&) = delete;

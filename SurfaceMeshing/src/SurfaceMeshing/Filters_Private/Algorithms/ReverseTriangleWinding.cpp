@@ -23,11 +23,9 @@ const std::atomic_bool& ReverseTriangleWinding::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ReverseTriangleWinding::operator()()
 {
-
 
   return {};
 }

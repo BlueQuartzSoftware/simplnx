@@ -23,7 +23,6 @@ struct SYNTHETICBUILDING_EXPORT AddOrientationNoiseInputValues
 {
   float32 Magnitude;
   DataPath CellEulerAnglesArrayPath;
-
 };
 
 /**

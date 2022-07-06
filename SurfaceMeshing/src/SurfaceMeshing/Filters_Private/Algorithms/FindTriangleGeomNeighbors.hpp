@@ -27,7 +27,6 @@ struct SURFACEMESHING_EXPORT FindTriangleGeomNeighborsInputValues
   DataPath FeatureAttributeMatrixPath;
   DataPath NumNeighborsArrayName;
   DataPath NeighborListArrayName;
-
 };
 
 /**

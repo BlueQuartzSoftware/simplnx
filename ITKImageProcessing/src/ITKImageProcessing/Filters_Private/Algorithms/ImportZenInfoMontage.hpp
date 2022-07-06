@@ -45,7 +45,6 @@ struct ITKIMAGEPROCESSING_EXPORT ImportZenInfoMontageInputValues
   DataPath DataContainerPath;
   DataPath CellAttributeMatrixName;
   StringParameter::ValueType ImageDataArrayName;
-
 };
 
 /**

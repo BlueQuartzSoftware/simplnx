@@ -28,8 +28,7 @@ struct CORE_EXPORT RotateSampleRefFrameInputValues
   float32 RotationAngle;
   VectorFloat32Parameter::ValueType RotationAxis;
   <<<NOT_IMPLEMENTED>>> RotationTable;
-/*[x]*/  DataPath CellAttributeMatrixPath;
-
+  /*[x]*/ DataPath CellAttributeMatrixPath;
 };
 
 /**

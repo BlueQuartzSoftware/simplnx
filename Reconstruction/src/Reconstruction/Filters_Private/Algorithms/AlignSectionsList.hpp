@@ -25,7 +25,6 @@ struct RECONSTRUCTION_EXPORT AlignSectionsListInputValues
   FileSystemPathParameter::ValueType InputFile;
   bool DREAM3DAlignmentFile;
   DataPath CellAttributeMatrixPath;
-
 };
 
 /**

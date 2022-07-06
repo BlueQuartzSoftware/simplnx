@@ -27,13 +27,12 @@ namespace complex
 struct SYNTHETICBUILDING_EXPORT StatsGeneratorFilterInputValues
 {
   <<<NOT_IMPLEMENTED>>> StatsGenerator;
-/*[x]*/  DataPath StatsGeneratorDataContainerName;
+  /*[x]*/ DataPath StatsGeneratorDataContainerName;
   DataPath CellEnsembleAttributeMatrixName;
   DataPath StatsDataArrayName;
   DataPath CrystalStructuresArrayName;
   DataPath PhaseTypesArrayName;
   DataPath PhaseNamesArrayName;
-
 };
 
 /**

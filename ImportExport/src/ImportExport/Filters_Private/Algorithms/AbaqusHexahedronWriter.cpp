@@ -23,11 +23,9 @@ const std::atomic_bool& AbaqusHexahedronWriter::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> AbaqusHexahedronWriter::operator()()
 {
-
 
   return {};
 }

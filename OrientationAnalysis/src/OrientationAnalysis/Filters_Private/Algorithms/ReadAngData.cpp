@@ -23,11 +23,9 @@ const std::atomic_bool& ReadAngData::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ReadAngData::operator()()
 {
-
 
   return {};
 }

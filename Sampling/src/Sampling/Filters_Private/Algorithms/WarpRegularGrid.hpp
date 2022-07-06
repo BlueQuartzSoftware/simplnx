@@ -31,15 +31,14 @@ struct SAMPLING_EXPORT WarpRegularGridInputValues
 {
   ChoicesParameter::ValueType PolyOrder;
   <<<NOT_IMPLEMENTED>>> SecondOrderACoeff;
-/*[x]*/  <<<NOT_IMPLEMENTED>>> SecondOrderBCoeff;
-/*[x]*/  <<<NOT_IMPLEMENTED>>> ThirdOrderACoeff;
-/*[x]*/  <<<NOT_IMPLEMENTED>>> ThirdOrderBCoeff;
-/*[x]*/  <<<NOT_IMPLEMENTED>>> FourthOrderACoeff;
-/*[x]*/  <<<NOT_IMPLEMENTED>>> FourthOrderBCoeff;
-/*[x]*/  bool SaveAsNewDataContainer;
+  /*[x]*/<<<NOT_IMPLEMENTED>>> SecondOrderBCoeff;
+  /*[x]*/<<<NOT_IMPLEMENTED>>> ThirdOrderACoeff;
+  /*[x]*/<<<NOT_IMPLEMENTED>>> ThirdOrderBCoeff;
+  /*[x]*/<<<NOT_IMPLEMENTED>>> FourthOrderACoeff;
+  /*[x]*/<<<NOT_IMPLEMENTED>>> FourthOrderBCoeff;
+  /*[x]*/ bool SaveAsNewDataContainer;
   DataPath NewDataContainerName;
   DataPath CellAttributeMatrixPath;
-
 };
 
 /**

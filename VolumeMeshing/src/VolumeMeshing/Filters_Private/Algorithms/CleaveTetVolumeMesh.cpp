@@ -23,11 +23,9 @@ const std::atomic_bool& CleaveTetVolumeMesh::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CleaveTetVolumeMesh::operator()()
 {
-
 
   return {};
 }

@@ -23,11 +23,9 @@ const std::atomic_bool& ITKImageWriter::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ITKImageWriter::operator()()
 {
-
 
   return {};
 }

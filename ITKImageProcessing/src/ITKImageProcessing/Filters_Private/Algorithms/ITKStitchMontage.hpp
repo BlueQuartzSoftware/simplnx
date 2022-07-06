@@ -26,12 +26,11 @@ namespace complex
 struct ITKIMAGEPROCESSING_EXPORT ITKStitchMontageInputValues
 {
   <<<NOT_IMPLEMENTED>>> MontageSelection;
-/*[x]*/  StringParameter::ValueType CommonAttributeMatrixName;
+  /*[x]*/ StringParameter::ValueType CommonAttributeMatrixName;
   StringParameter::ValueType CommonDataArrayName;
   StringParameter::ValueType MontageDataContainerName;
   StringParameter::ValueType MontageAttributeMatrixName;
   StringParameter::ValueType MontageDataArrayName;
-
 };
 
 /**

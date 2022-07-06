@@ -26,10 +26,9 @@ struct CORE_EXPORT MoveMultiDataInputValues
 {
   ChoicesParameter::ValueType WhatToMove;
   <<<NOT_IMPLEMENTED>>> AttributeMatrixSources;
-/*[x]*/  DataPath DataContainerDestination;
+  /*[x]*/ DataPath DataContainerDestination;
   MultiArraySelectionParameter::ValueType DataArraySources;
   DataPath AttributeMatrixDestination;
-
 };
 
 /**

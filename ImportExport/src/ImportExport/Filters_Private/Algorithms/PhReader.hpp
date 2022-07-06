@@ -31,7 +31,6 @@ struct IMPORTEXPORT_EXPORT PhReaderInputValues
   DataPath VolumeDataContainerName;
   DataPath CellAttributeMatrixName;
   DataPath FeatureIdsArrayName;
-
 };
 
 /**

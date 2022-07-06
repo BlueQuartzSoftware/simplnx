@@ -23,11 +23,9 @@ const std::atomic_bool& ReadH5Ebsd::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ReadH5Ebsd::operator()()
 {
-
 
   return {};
 }

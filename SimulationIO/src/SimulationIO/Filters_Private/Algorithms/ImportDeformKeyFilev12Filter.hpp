@@ -29,7 +29,6 @@ struct SIMULATIONIO_EXPORT ImportDeformKeyFilev12FilterInputValues
   StringParameter::ValueType DataContainerName;
   StringParameter::ValueType VertexAttributeMatrixName;
   StringParameter::ValueType CellAttributeMatrixName;
-
 };
 
 /**

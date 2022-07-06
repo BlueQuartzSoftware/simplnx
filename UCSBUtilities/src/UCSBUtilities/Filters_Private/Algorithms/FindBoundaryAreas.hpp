@@ -25,7 +25,6 @@ struct UCSBUTILITIES_EXPORT FindBoundaryAreasInputValues
   DataPath SurfaceMeshTriangleAreasArrayPath;
   DataPath SurfaceMeshFeatureFaceIdsArrayPath;
   DataPath SurfaceMeshBoundaryAreasArrayPath;
-
 };
 
 /**

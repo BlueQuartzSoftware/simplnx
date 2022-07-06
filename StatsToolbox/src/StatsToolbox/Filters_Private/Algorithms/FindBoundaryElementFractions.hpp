@@ -25,7 +25,6 @@ struct STATSTOOLBOX_EXPORT FindBoundaryElementFractionsInputValues
   DataPath FeatureIdsArrayPath;
   DataPath BoundaryCellsArrayPath;
   DataPath BoundaryCellFractionsArrayPath;
-
 };
 
 /**

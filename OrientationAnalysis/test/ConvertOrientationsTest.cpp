@@ -57,19 +57,20 @@ void _make_code()
       if(inRep[i] == "qu")
       {
         std::cout << "  FromQuaternionFunctionType " << inRep[i] << "2" << outRep[o] << " = OrientationTransformation::" << inRep[i] << "2" << outRep[o] << "<QuaternionType, OutputType>;\n";
-        std::cout << "  parallelAlgorithm.execute(::FromQuaternion<float, FromQuaternionFunctionType, " << strides[i] << ", " << strides[o] << ">(inputDataArray, outputDataArray, " << inRep[i] << "2" << outRep[o]
-                  << ", QuaternionType::Order::VectorScalar));\n";
+        std::cout << "  parallelAlgorithm.execute(::FromQuaternion<float, FromQuaternionFunctionType, " << strides[i] << ", " << strides[o] << ">(inputDataArray, outputDataArray, " << inRep[i] << "2"
+                  << outRep[o] << ", QuaternionType::Order::VectorScalar));\n";
       }
       else if(outRep[o] == "qu")
       {
         std::cout << "  ToQuaternionFunctionType " << inRep[i] << "2" << outRep[o] << " = OrientationTransformation::" << inRep[i] << "2" << outRep[o] << "<InputType, QuaternionType>;\n";
-        std::cout << "  parallelAlgorithm.execute(::ToQuaternion<float, ToQuaternionFunctionType, " << strides[i] << ", " << strides[o] << ">(inputDataArray, outputDataArray, " << inRep[i] << "2" << outRep[o]
-                  << ", QuaternionType::Order::VectorScalar));\n";
+        std::cout << "  parallelAlgorithm.execute(::ToQuaternion<float, ToQuaternionFunctionType, " << strides[i] << ", " << strides[o] << ">(inputDataArray, outputDataArray, " << inRep[i] << "2"
+                  << outRep[o] << ", QuaternionType::Order::VectorScalar));\n";
       }
       else
       {
         std::cout << "  ConversionFunctionType " << inRep[i] << "2" << outRep[o] << " = OrientationTransformation::" << inRep[i] << "2" << outRep[o] << "<InputType, OutputType>;\n";
-        std::cout << "  parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, " << strides[i] << ", " << strides[o] << ">(inputDataArray, outputDataArray, " << inRep[i] << "2" << outRep[o] << "));\n";
+        std::cout << "  parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, " << strides[i] << ", " << strides[o] << ">(inputDataArray, outputDataArray, " << inRep[i] << "2"
+                  << outRep[o] << "));\n";
         //        std::cout << "  dataAlg.execute(::ConvertOrientationImpl<float, OrientationType, " << strides[i] << ", OrientationType, " << strides[o]
         //                  << ", std::function<OutputType(InputType)>>(inputDataArray, outputDataArray, " << inRep[i] << "2" << outRep[o] << "));\n";
       }

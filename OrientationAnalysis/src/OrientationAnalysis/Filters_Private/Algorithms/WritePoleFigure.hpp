@@ -49,7 +49,6 @@ struct ORIENTATIONANALYSIS_EXPORT WritePoleFigureInputValues
   DataPath GoodVoxelsArrayPath;
   DataPath CrystalStructuresArrayPath;
   DataPath MaterialNameArrayPath;
-
 };
 
 /**

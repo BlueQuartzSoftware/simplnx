@@ -25,7 +25,6 @@ struct STATSTOOLBOX_EXPORT FindDifferenceMapInputValues
   DataPath FirstInputArrayPath;
   DataPath SecondInputArrayPath;
   DataPath DifferenceMapArrayPath;
-
 };
 
 /**

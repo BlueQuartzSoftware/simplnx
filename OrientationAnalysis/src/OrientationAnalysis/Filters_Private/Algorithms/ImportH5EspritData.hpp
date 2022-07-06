@@ -31,7 +31,7 @@ struct ORIENTATIONANALYSIS_EXPORT ImportH5EspritDataInputValues
 {
   FileSystemPathParameter::ValueType InputFile;
   <<<NOT_IMPLEMENTED>>> SelectedScanNames;
-/*[x]*/  float64 ZSpacing;
+  /*[x]*/ float64 ZSpacing;
   VectorFloat32Parameter::ValueType Origin;
   bool CombineEulerAngles;
   bool DegreesToRadians;
@@ -39,7 +39,6 @@ struct ORIENTATIONANALYSIS_EXPORT ImportH5EspritDataInputValues
   DataPath DataContainerName;
   DataPath CellAttributeMatrixName;
   DataPath CellEnsembleAttributeMatrixName;
-
 };
 
 /**

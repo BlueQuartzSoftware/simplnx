@@ -23,11 +23,9 @@ const std::atomic_bool& RawBinaryReader::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> RawBinaryReader::operator()()
 {
-
 
   return {};
 }

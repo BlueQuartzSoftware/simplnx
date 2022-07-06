@@ -6,7 +6,8 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-UncertainRegularGridSampleSurfaceMesh::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, UncertainRegularGridSampleSurfaceMeshInputValues* inputValues)
+UncertainRegularGridSampleSurfaceMesh::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                   UncertainRegularGridSampleSurfaceMeshInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -23,11 +24,9 @@ const std::atomic_bool& UncertainRegularGridSampleSurfaceMesh::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> UncertainRegularGridSampleSurfaceMesh::operator()()
 {
-
 
   return {};
 }

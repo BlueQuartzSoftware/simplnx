@@ -23,11 +23,9 @@ const std::atomic_bool& ImportAsciDataArray::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ImportAsciDataArray::operator()()
 {
-
 
   return {};
 }

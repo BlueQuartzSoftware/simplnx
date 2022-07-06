@@ -23,7 +23,6 @@ struct STATSTOOLBOX_EXPORT FindVolFractionsInputValues
 {
   DataPath CellPhasesArrayPath;
   DataPath VolFractionsArrayPath;
-
 };
 
 /**

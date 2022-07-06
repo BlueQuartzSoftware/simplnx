@@ -33,7 +33,6 @@ struct CORE_EXPORT ConvertColorToGrayScaleInputValues
   bool CreateNewAttributeMatrix;
   StringParameter::ValueType OutputAttributeMatrixName;
   StringParameter::ValueType OutputArrayPrefix;
-
 };
 
 /**

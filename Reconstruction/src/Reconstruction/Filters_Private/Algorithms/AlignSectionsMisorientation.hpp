@@ -35,7 +35,6 @@ struct RECONSTRUCTION_EXPORT AlignSectionsMisorientationInputValues
   DataPath CellPhasesArrayPath;
   DataPath GoodVoxelsArrayPath;
   DataPath CrystalStructuresArrayPath;
-
 };
 
 /**

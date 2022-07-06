@@ -31,7 +31,6 @@ struct IMAGEPROCESSING_EXPORT ItkStitchImagesInputValues
   DataPath StitchedVolumeDataContainerName;
   DataPath StitchedAttributeMatrixName;
   DataPath StitchedImagesArrayName;
-
 };
 
 /**

@@ -23,11 +23,9 @@ const std::atomic_bool& VtkRectilinearGridWriter::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> VtkRectilinearGridWriter::operator()()
 {
-
 
   return {};
 }

@@ -23,11 +23,9 @@ const std::atomic_bool& SPParksDumpReader::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> SPParksDumpReader::operator()()
 {
-
 
   return {};
 }

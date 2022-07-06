@@ -23,11 +23,9 @@ const std::atomic_bool& MaskCountDecision::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> MaskCountDecision::operator()()
 {
-
 
   return {};
 }

@@ -45,7 +45,6 @@ struct ORIENTATIONANALYSIS_EXPORT FindSchmidsInputValues
   DataPath PolesArrayName;
   DataPath PhisArrayName;
   DataPath LambdasArrayName;
-
 };
 
 /**

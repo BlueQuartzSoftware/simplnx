@@ -31,7 +31,6 @@ struct PROCESSING_EXPORT ErodeDilateMaskInputValues
   bool YDirOn;
   bool ZDirOn;
   DataPath MaskArrayPath;
-
 };
 
 /**

@@ -31,7 +31,6 @@ struct ITKIMAGEPROCESSING_EXPORT ITKPCMTileRegistrationInputValues
   StringParameter::ValueType DataContainerPrefix;
   StringParameter::ValueType CommonAttributeMatrixName;
   StringParameter::ValueType CommonDataArrayName;
-
 };
 
 /**

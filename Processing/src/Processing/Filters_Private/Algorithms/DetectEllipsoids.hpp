@@ -45,7 +45,6 @@ struct PROCESSING_EXPORT DetectEllipsoidsInputValues
   DataPath MinorAxisLengthArrayName;
   DataPath RotationalAnglesArrayName;
   DataPath DetectedEllipsoidsFeatureIdsArrayPath;
-
 };
 
 /**

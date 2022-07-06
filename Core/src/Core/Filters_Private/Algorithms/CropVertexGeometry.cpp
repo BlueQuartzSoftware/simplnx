@@ -23,11 +23,9 @@ const std::atomic_bool& CropVertexGeometry::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CropVertexGeometry::operator()()
 {
-
 
   return {};
 }

@@ -27,7 +27,6 @@ struct ORIENTATIONANALYSIS_EXPORT ConvertOrientationsInputValues
   ChoicesParameter::ValueType OutputType;
   DataPath InputOrientationArrayPath;
   DataPath OutputOrientationArrayName;
-
 };
 
 /**

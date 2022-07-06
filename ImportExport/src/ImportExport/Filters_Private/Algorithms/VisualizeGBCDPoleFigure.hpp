@@ -29,7 +29,6 @@ struct IMPORTEXPORT_EXPORT VisualizeGBCDPoleFigureInputValues
   FileSystemPathParameter::ValueType OutputFile;
   DataPath GBCDArrayPath;
   DataPath CrystalStructuresArrayPath;
-
 };
 
 /**

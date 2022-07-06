@@ -39,7 +39,7 @@ struct CORE_EXPORT InitializeDataInputValues
   ChoicesParameter::ValueType InitType;
   float64 InitValue;
   <<<NOT_IMPLEMENTED>>> InitRange;
-/*[x]*/
+  /*[x]*/
 };
 
 /**

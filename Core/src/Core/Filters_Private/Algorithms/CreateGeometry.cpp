@@ -23,11 +23,9 @@ const std::atomic_bool& CreateGeometry::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CreateGeometry::operator()()
 {
-
 
   return {};
 }

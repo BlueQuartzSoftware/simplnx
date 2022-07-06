@@ -33,7 +33,6 @@ struct PROCESSING_EXPORT MinSizeInputValues
   DataPath FeaturePhasesArrayPath;
   DataPath NumCellsArrayPath;
   MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
-
 };
 
 /**

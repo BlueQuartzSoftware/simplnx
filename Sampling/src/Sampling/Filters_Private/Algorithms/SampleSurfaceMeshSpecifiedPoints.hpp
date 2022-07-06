@@ -25,7 +25,6 @@ struct SAMPLING_EXPORT SampleSurfaceMeshSpecifiedPointsInputValues
   DataPath SurfaceMeshFaceLabelsArrayPath;
   FileSystemPathParameter::ValueType InputFilePath;
   FileSystemPathParameter::ValueType OutputFilePath;
-
 };
 
 /**
@@ -37,7 +36,8 @@ struct SAMPLING_EXPORT SampleSurfaceMeshSpecifiedPointsInputValues
 class SAMPLING_EXPORT SampleSurfaceMeshSpecifiedPoints
 {
 public:
-  SampleSurfaceMeshSpecifiedPoints(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, SampleSurfaceMeshSpecifiedPointsInputValues* inputValues);
+  SampleSurfaceMeshSpecifiedPoints(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                   SampleSurfaceMeshSpecifiedPointsInputValues* inputValues);
   ~SampleSurfaceMeshSpecifiedPoints() noexcept;
 
   SampleSurfaceMeshSpecifiedPoints(const SampleSurfaceMeshSpecifiedPoints&) = delete;

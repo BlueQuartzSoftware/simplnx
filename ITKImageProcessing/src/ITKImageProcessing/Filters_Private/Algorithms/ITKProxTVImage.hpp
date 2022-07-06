@@ -29,7 +29,6 @@ struct ITKIMAGEPROCESSING_EXPORT ITKProxTVImageInputValues
   VectorFloat32Parameter::ValueType Norms;
   DataPath SelectedCellArrayPath;
   StringParameter::ValueType NewCellArrayName;
-
 };
 
 /**

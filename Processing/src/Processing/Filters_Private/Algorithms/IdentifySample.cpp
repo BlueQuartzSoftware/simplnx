@@ -23,11 +23,9 @@ const std::atomic_bool& IdentifySample::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> IdentifySample::operator()()
 {
-
 
   return {};
 }

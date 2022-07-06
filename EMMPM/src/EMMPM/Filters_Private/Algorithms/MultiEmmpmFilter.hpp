@@ -32,7 +32,7 @@ namespace complex
 struct EMMPM_EXPORT MultiEmmpmFilterInputValues
 {
   <<<NOT_IMPLEMENTED>>> NumClasses;
-/*[x]*/  bool UseOneBasedValues;
+  /*[x]*/ bool UseOneBasedValues;
   bool UseGradientPenalty;
   float64 GradientBetaE;
   bool UseCurvaturePenalty;
@@ -43,7 +43,6 @@ struct EMMPM_EXPORT MultiEmmpmFilterInputValues
   StringParameter::ValueType OutputAttributeMatrixName;
   bool UsePreviousMuSigma;
   StringParameter::ValueType OutputArrayPrefix;
-
 };
 
 /**

@@ -23,11 +23,9 @@ const std::atomic_bool& RotateSampleRefFrame::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> RotateSampleRefFrame::operator()()
 {
-
 
   return {};
 }

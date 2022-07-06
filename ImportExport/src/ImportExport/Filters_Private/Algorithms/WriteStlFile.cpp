@@ -23,11 +23,9 @@ const std::atomic_bool& WriteStlFile::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> WriteStlFile::operator()()
 {
-
 
   return {};
 }

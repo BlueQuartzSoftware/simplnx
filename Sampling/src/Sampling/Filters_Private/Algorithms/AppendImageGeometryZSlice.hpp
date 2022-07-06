@@ -25,7 +25,6 @@ struct SAMPLING_EXPORT AppendImageGeometryZSliceInputValues
   DataPath InputAttributeMatrix;
   DataPath DestinationAttributeMatrix;
   bool CheckResolution;
-
 };
 
 /**

@@ -30,7 +30,7 @@ namespace complex
 struct EMMPM_EXPORT EMMPMFilterInputValues
 {
   <<<NOT_IMPLEMENTED>>> NumClasses;
-/*[x]*/  bool UseOneBasedValues;
+  /*[x]*/ bool UseOneBasedValues;
   bool UseGradientPenalty;
   float64 GradientBetaE;
   bool UseCurvaturePenalty;
@@ -39,7 +39,6 @@ struct EMMPM_EXPORT EMMPMFilterInputValues
   int32 CurvatureEMLoopDelay;
   DataPath InputDataArrayPath;
   DataPath OutputDataArrayPath;
-
 };
 
 /**

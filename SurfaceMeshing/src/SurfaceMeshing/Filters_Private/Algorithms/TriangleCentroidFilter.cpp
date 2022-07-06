@@ -23,11 +23,9 @@ const std::atomic_bool& TriangleCentroidFilter::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> TriangleCentroidFilter::operator()()
 {
-
 
   return {};
 }

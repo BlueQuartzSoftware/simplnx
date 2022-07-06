@@ -23,11 +23,9 @@ const std::atomic_bool& ImportFEAData::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ImportFEAData::operator()()
 {
-
 
   return {};
 }

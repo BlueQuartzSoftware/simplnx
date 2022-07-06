@@ -23,11 +23,9 @@ const std::atomic_bool& FindSizes::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindSizes::operator()()
 {
-
 
   return {};
 }

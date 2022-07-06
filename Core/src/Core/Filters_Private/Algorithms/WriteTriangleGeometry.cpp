@@ -23,11 +23,9 @@ const std::atomic_bool& WriteTriangleGeometry::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> WriteTriangleGeometry::operator()()
 {
-
 
   return {};
 }

@@ -23,11 +23,9 @@ const std::atomic_bool& AlignSectionsList::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsList::operator()()
 {
-
 
   return {};
 }
