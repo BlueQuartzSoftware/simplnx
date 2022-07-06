@@ -35,6 +35,7 @@ namespace
 {
 constexpr StringLiteral k_DataPathsKey = "datapaths";
 constexpr StringLiteral k_InputFileKey = "inputfile";
+constexpr StringLiteral k_ParentGroupKey = "parentgroup";
 } // namespace
 
 namespace complex
@@ -64,11 +65,15 @@ nlohmann::json ImportHDF5DatasetParameter::toJson(const std::any& value) const
   const auto& datasetImportInfo = GetAnyRef<ValueType>(value);
   nlohmann::json json;
   nlohmann::json dataPathsJson = nlohmann::json::array();
-  for(const auto& importInfo : datasetImportInfo.second)
+  for(const auto& importInfo : datasetImportInfo.datasets)
   {
     dataPathsJson.push_back(importInfo.writeJson());
   }
-  json[k_InputFileKey.str()] = datasetImportInfo.first;
+  json[k_InputFileKey.str()] = datasetImportInfo.inputFile;
+  if(datasetImportInfo.parent.has_value())
+  {
+    json[k_ParentGroupKey.str()] = datasetImportInfo.parent.value().toString();
+  }
   json[k_DataPathsKey.str()] = std::move(dataPathsJson);
   return json;
 }
@@ -93,7 +98,8 @@ Result<std::any> ImportHDF5DatasetParameter::fromJson(const nlohmann::json& json
   }
 
   ValueType importData;
-  importData.first = json[k_InputFileKey.str()];
+  importData.inputFile = json[k_InputFileKey.str()];
+  importData.parent = DataPath::FromString(json[k_ParentGroupKey.str()]);
   const auto& jsonDataPaths = json[k_DataPathsKey.str()];
   if(!jsonDataPaths.is_null())
   {
@@ -109,7 +115,7 @@ Result<std::any> ImportHDF5DatasetParameter::fromJson(const nlohmann::json& json
       {
         return {{nonstd::make_unexpected(std::move(importInfo.errors()))}};
       }
-      importData.second.push_back(std::move(importInfo.value()));
+      importData.datasets.push_back(std::move(importInfo.value()));
     }
   }
 

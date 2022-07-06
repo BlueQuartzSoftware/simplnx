@@ -214,31 +214,31 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
   Arguments args;
   DataStructure dataStructure;
   DataGroup* levelZeroGroup = DataGroup::Create(dataStructure, Constants::k_LevelZero);
+  std::optional<DataPath> levelZeroPath = {DataPath::FromString(Constants::k_LevelZero.view()).value()};
 
-  ImportHDF5DatasetParameter::ValueType val = {"", {}};
+  ImportHDF5DatasetParameter::ValueType val = {levelZeroPath, "", {}};
   args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
-  args.insertOrAssign(ImportHDF5Dataset::k_SelectedAttributeMatrix_Key, std::make_any<DataPath>(DataPath::FromString(Constants::k_LevelZero).value()));
 
   // Check empty file path error
   auto results = filter.preflight(dataStructure, args);
   REQUIRE(!results.outputActions.valid());
 
   // Check incorrect extension error
-  val = {"foo.txt", {}};
+  val = {levelZeroPath, "foo.txt", {}};
   args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
 
   results = filter.preflight(dataStructure, args);
   REQUIRE(!results.outputActions.valid());
 
   // Check non-existent file error
-  val = {"foo.h5", {}};
+  val = {levelZeroPath, "foo.h5", {}};
   args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
 
   results = filter.preflight(dataStructure, args);
   REQUIRE(!results.outputActions.valid());
 
   // Put in the correct file path
-  val = {m_FilePath, {}};
+  val = {levelZeroPath, m_FilePath, {}};
   args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
 
   // Check no datasets checked error
@@ -252,7 +252,8 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
   importInfo.tupleDimensions = "";
   importInfo.dataSetPath = "";
   importInfoList.push_back(importInfo);
-  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath, importInfoList));
+  val = {levelZeroPath, m_FilePath, importInfoList};
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
 
   results = filter.preflight(dataStructure, args);
   REQUIRE(!results.outputActions.valid());
@@ -261,7 +262,8 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
   importInfoList.clear();
   importInfo.dataSetPath = "/Foo";
   importInfoList.push_back(importInfo);
-  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath, importInfoList));
+  val = {levelZeroPath, m_FilePath, importInfoList};
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
 
   results = filter.preflight(dataStructure, args);
   REQUIRE(!results.outputActions.valid());
@@ -271,7 +273,8 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
   std::string typeStr = H5::Support::HdfTypeForPrimitiveAsStr<int8_t>();
   importInfo.dataSetPath = "Pointer/Pointer1DArrayDataset<" + typeStr + ">";
   importInfoList.push_back(importInfo);
-  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath, importInfoList));
+  val = {levelZeroPath, m_FilePath, importInfoList};
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
 
   // Check empty component dimensions
   results = filter.preflight(dataStructure, args);
@@ -281,7 +284,8 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
   importInfoList.clear();
   importInfo.componentDimensions = "(abcdg 635w";
   importInfoList.push_back(importInfo);
-  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath, importInfoList));
+  val = {levelZeroPath, m_FilePath, importInfoList};
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
 
   results = filter.preflight(dataStructure, args);
   REQUIRE(!results.outputActions.valid());
@@ -290,7 +294,8 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
   importInfoList.clear();
   importInfo.componentDimensions = "12, 6";
   importInfoList.push_back(importInfo);
-  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath, importInfoList));
+  val = {levelZeroPath, m_FilePath, importInfoList};
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
   results = filter.preflight(dataStructure, args);
   REQUIRE(!results.outputActions.valid());
 
@@ -298,8 +303,15 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
   importInfoList.clear();
   importInfo.tupleDimensions = "(abcdg 635w";
   importInfoList.push_back(importInfo);
-  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath, importInfoList));
+  val = {levelZeroPath, m_FilePath, importInfoList};
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
 
+  results = filter.preflight(dataStructure, args);
+  REQUIRE(!results.outputActions.valid());
+
+  // Check empty parent attribute matrix/data group
+  val = {std::optional<DataPath>{}, m_FilePath, importInfoList};
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
   results = filter.preflight(dataStructure, args);
   REQUIRE(!results.outputActions.valid());
 }
@@ -323,7 +335,7 @@ std::string createVectorString(std::vector<size_t> vec)
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void DatasetTest(ImportHDF5Dataset& filter, std::list<ImportHDF5DatasetParameter::DatasetImportInfo> importInfoList, bool resultsValid)
+void DatasetTest(ImportHDF5Dataset& filter, std::list<ImportHDF5DatasetParameter::DatasetImportInfo> importInfoList, bool useParentGroup, bool resultsValid)
 {
   if(importInfoList.empty())
   {
@@ -334,6 +346,11 @@ void DatasetTest(ImportHDF5Dataset& filter, std::list<ImportHDF5DatasetParameter
 
   DataStructure dataStructure;
   DataGroup* levelZeroGroup = DataGroup::Create(dataStructure, Constants::k_LevelZero);
+  std::optional<DataPath> parentGroup{};
+  if(useParentGroup)
+  {
+    parentGroup = {DataPath::FromString(Constants::k_LevelZero.view()).value()};
+  }
 
   std::list<ImportHDF5DatasetParameter::DatasetImportInfo> dsetInfoList = importInfoList;
   for(ImportHDF5DatasetParameter::DatasetImportInfo& info : dsetInfoList)
@@ -342,8 +359,8 @@ void DatasetTest(ImportHDF5Dataset& filter, std::list<ImportHDF5DatasetParameter
   }
 
   Arguments args;
-  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(m_FilePath, dsetInfoList));
-  args.insertOrAssign(ImportHDF5Dataset::k_SelectedAttributeMatrix_Key.str(), std::make_any<DataPath>(DataPath::FromString(Constants::k_LevelZero).value()));
+  ImportHDF5DatasetParameter::ValueType val = {parentGroup, m_FilePath, dsetInfoList};
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
 
   // Execute Dataset Test
   if(dsetInfoList.size() > 1)
@@ -500,64 +517,64 @@ void testFilterExecute(ImportHDF5Dataset& filter)
       // Run 1D Array Tests
       info.dataSetPath = dsetPaths[0];
       importInfoList.push_back(info);
-      DatasetTest<int8_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint8_t>(filter, importInfoList, resultsValid);
-      DatasetTest<int16_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint16_t>(filter, importInfoList, resultsValid);
-      DatasetTest<int32_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint32_t>(filter, importInfoList, resultsValid);
-      DatasetTest<int64_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint64_t>(filter, importInfoList, resultsValid);
-      DatasetTest<float32>(filter, importInfoList, resultsValid);
-      DatasetTest<float64>(filter, importInfoList, resultsValid);
+      DatasetTest<int8_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint8_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<int16_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint16_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<int32_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint32_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<int64_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint64_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<float32>(filter, importInfoList, true, resultsValid);
+      DatasetTest<float64>(filter, importInfoList, true, resultsValid);
 
       importInfoList.clear();
 
       // Run 2D Array Tests
       info.dataSetPath = dsetPaths[1];
       importInfoList.push_back(info);
-      DatasetTest<int8_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint8_t>(filter, importInfoList, resultsValid);
-      DatasetTest<int16_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint16_t>(filter, importInfoList, resultsValid);
-      DatasetTest<int32_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint32_t>(filter, importInfoList, resultsValid);
-      DatasetTest<int64_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint64_t>(filter, importInfoList, resultsValid);
-      DatasetTest<float32>(filter, importInfoList, resultsValid);
-      DatasetTest<float64>(filter, importInfoList, resultsValid);
+      DatasetTest<int8_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint8_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<int16_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint16_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<int32_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint32_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<int64_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint64_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<float32>(filter, importInfoList, true, resultsValid);
+      DatasetTest<float64>(filter, importInfoList, true, resultsValid);
 
       importInfoList.clear();
 
       // Run 3D Array Tests
       info.dataSetPath = dsetPaths[2];
       importInfoList.push_back(info);
-      DatasetTest<int8_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint8_t>(filter, importInfoList, resultsValid);
-      DatasetTest<int16_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint16_t>(filter, importInfoList, resultsValid);
-      DatasetTest<int32_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint32_t>(filter, importInfoList, resultsValid);
-      DatasetTest<int64_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint64_t>(filter, importInfoList, resultsValid);
-      DatasetTest<float32>(filter, importInfoList, resultsValid);
-      DatasetTest<float64>(filter, importInfoList, resultsValid);
+      DatasetTest<int8_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint8_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<int16_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint16_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<int32_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint32_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<int64_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint64_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<float32>(filter, importInfoList, true, resultsValid);
+      DatasetTest<float64>(filter, importInfoList, true, resultsValid);
 
       importInfoList.clear();
 
       // Run 4D Array Tests
       info.dataSetPath = dsetPaths[3];
       importInfoList.push_back(info);
-      DatasetTest<int8_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint8_t>(filter, importInfoList, resultsValid);
-      DatasetTest<int16_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint16_t>(filter, importInfoList, resultsValid);
-      DatasetTest<int32_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint32_t>(filter, importInfoList, resultsValid);
-      DatasetTest<int64_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint64_t>(filter, importInfoList, resultsValid);
-      DatasetTest<float32>(filter, importInfoList, resultsValid);
-      DatasetTest<float64>(filter, importInfoList, resultsValid);
+      DatasetTest<int8_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint8_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<int16_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint16_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<int32_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint32_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<int64_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint64_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<float32>(filter, importInfoList, true, resultsValid);
+      DatasetTest<float64>(filter, importInfoList, true, resultsValid);
 
       importInfoList.clear();
 
@@ -571,16 +588,16 @@ void testFilterExecute(ImportHDF5Dataset& filter)
           info.dataSetPath = dsetPaths[b];
           importInfoList.push_back(info);
 
-          DatasetTest<int8_t>(filter, importInfoList, resultsValid);
-          DatasetTest<uint8_t>(filter, importInfoList, resultsValid);
-          DatasetTest<int16_t>(filter, importInfoList, resultsValid);
-          DatasetTest<uint16_t>(filter, importInfoList, resultsValid);
-          DatasetTest<int32_t>(filter, importInfoList, resultsValid);
-          DatasetTest<uint32_t>(filter, importInfoList, resultsValid);
-          DatasetTest<int64_t>(filter, importInfoList, resultsValid);
-          DatasetTest<uint64_t>(filter, importInfoList, resultsValid);
-          DatasetTest<float32>(filter, importInfoList, resultsValid);
-          DatasetTest<float64>(filter, importInfoList, resultsValid);
+          DatasetTest<int8_t>(filter, importInfoList, true, resultsValid);
+          DatasetTest<uint8_t>(filter, importInfoList, true, resultsValid);
+          DatasetTest<int16_t>(filter, importInfoList, true, resultsValid);
+          DatasetTest<uint16_t>(filter, importInfoList, true, resultsValid);
+          DatasetTest<int32_t>(filter, importInfoList, true, resultsValid);
+          DatasetTest<uint32_t>(filter, importInfoList, true, resultsValid);
+          DatasetTest<int64_t>(filter, importInfoList, true, resultsValid);
+          DatasetTest<uint64_t>(filter, importInfoList, true, resultsValid);
+          DatasetTest<float32>(filter, importInfoList, true, resultsValid);
+          DatasetTest<float64>(filter, importInfoList, true, resultsValid);
 
           importInfoList.clear();
         }
@@ -600,16 +617,16 @@ void testFilterExecute(ImportHDF5Dataset& filter)
             info.dataSetPath = dsetPaths[c];
             importInfoList.push_back(info);
 
-            DatasetTest<int8_t>(filter, importInfoList, resultsValid);
-            DatasetTest<uint8_t>(filter, importInfoList, resultsValid);
-            DatasetTest<int16_t>(filter, importInfoList, resultsValid);
-            DatasetTest<uint16_t>(filter, importInfoList, resultsValid);
-            DatasetTest<int32_t>(filter, importInfoList, resultsValid);
-            DatasetTest<uint32_t>(filter, importInfoList, resultsValid);
-            DatasetTest<int64_t>(filter, importInfoList, resultsValid);
-            DatasetTest<uint64_t>(filter, importInfoList, resultsValid);
-            DatasetTest<float32>(filter, importInfoList, resultsValid);
-            DatasetTest<float64>(filter, importInfoList, resultsValid);
+            DatasetTest<int8_t>(filter, importInfoList, true, resultsValid);
+            DatasetTest<uint8_t>(filter, importInfoList, true, resultsValid);
+            DatasetTest<int16_t>(filter, importInfoList, true, resultsValid);
+            DatasetTest<uint16_t>(filter, importInfoList, true, resultsValid);
+            DatasetTest<int32_t>(filter, importInfoList, true, resultsValid);
+            DatasetTest<uint32_t>(filter, importInfoList, true, resultsValid);
+            DatasetTest<int64_t>(filter, importInfoList, true, resultsValid);
+            DatasetTest<uint64_t>(filter, importInfoList, true, resultsValid);
+            DatasetTest<float32>(filter, importInfoList, true, resultsValid);
+            DatasetTest<float64>(filter, importInfoList, true, resultsValid);
 
             importInfoList.clear();
           }
@@ -628,16 +645,16 @@ void testFilterExecute(ImportHDF5Dataset& filter)
       info.dataSetPath = dsetPaths[3];
       importInfoList.push_back(info);
 
-      DatasetTest<int8_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint8_t>(filter, importInfoList, resultsValid);
-      DatasetTest<int16_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint16_t>(filter, importInfoList, resultsValid);
-      DatasetTest<int32_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint32_t>(filter, importInfoList, resultsValid);
-      DatasetTest<int64_t>(filter, importInfoList, resultsValid);
-      DatasetTest<uint64_t>(filter, importInfoList, resultsValid);
-      DatasetTest<float32>(filter, importInfoList, resultsValid);
-      DatasetTest<float64>(filter, importInfoList, resultsValid);
+      DatasetTest<int8_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint8_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<int16_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint16_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<int32_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint32_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<int64_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<uint64_t>(filter, importInfoList, true, resultsValid);
+      DatasetTest<float32>(filter, importInfoList, true, resultsValid);
+      DatasetTest<float64>(filter, importInfoList, true, resultsValid);
     }
   }
 }
