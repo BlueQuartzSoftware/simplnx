@@ -213,7 +213,7 @@ public:
   }
 
   /**
-   * @brief Returns the tuple getSize.
+   * @brief Returns the total number of components
    * @return usize
    */
   size_t getNumberOfComponents() const override
@@ -260,9 +260,11 @@ public:
   }
 
   /**
-   * @brief Copies values from one tuple to another.
-   * @param from
-   * @param to
+   * @brief Copies values from one tuple to another within the same DataArray.
+   *
+   * NOTE: THERE IS NO ATTEMPT to check that either index is within bounds for the array.
+   * @param from Index to copy data FROM
+   * @param to Index to copy data TO
    */
   void copyTuple(usize from, usize to) override
   {
@@ -274,9 +276,9 @@ public:
     for(usize i = 0; i < numComponents; i++)
     {
       usize fromCompIndex = from * numComponents + i;
-      auto value = m_DataStore->getValue(fromCompIndex);
+      auto value = (*m_DataStore)[fromCompIndex];
       usize toCompIndex = to * numComponents + i;
-      m_DataStore->setValue(toCompIndex, value);
+      (*m_DataStore)[toCompIndex] = value;
     }
   }
 
