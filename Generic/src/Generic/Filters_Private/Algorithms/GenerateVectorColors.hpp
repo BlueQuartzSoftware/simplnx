@@ -27,7 +27,6 @@ struct GENERIC_EXPORT GenerateVectorColorsInputValues
   DataPath VectorsArrayPath;
   DataPath GoodVoxelsArrayPath;
   DataPath CellVectorColorsArrayName;
-
 };
 
 /**

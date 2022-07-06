@@ -35,7 +35,6 @@ struct SIMULATIONIO_EXPORT ExportDAMASKFilesInputValues
   DataPath FeatureIdsArrayPath;
   DataPath CellEulerAnglesArrayPath;
   DataPath CellPhasesArrayPath;
-
 };
 
 /**

@@ -23,11 +23,9 @@ const std::atomic_bool& ReplaceValueInArray::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ReplaceValueInArray::operator()()
 {
-
 
   return {};
 }

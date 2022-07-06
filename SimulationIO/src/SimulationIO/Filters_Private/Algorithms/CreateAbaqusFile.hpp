@@ -34,10 +34,9 @@ struct SIMULATIONIO_EXPORT CreateAbaqusFileInputValues
   int32 NumDepvar;
   int32 NumUserOutVar;
   <<<NOT_IMPLEMENTED>>> MatConst;
-/*[x]*/  DataPath AbqFeatureIdsArrayPath;
+  /*[x]*/ DataPath AbqFeatureIdsArrayPath;
   DataPath CellEulerAnglesArrayPath;
   DataPath CellPhasesArrayPath;
-
 };
 
 /**

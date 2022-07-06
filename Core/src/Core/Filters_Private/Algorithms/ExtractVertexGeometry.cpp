@@ -23,11 +23,9 @@ const std::atomic_bool& ExtractVertexGeometry::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ExtractVertexGeometry::operator()()
 {
-
 
   return {};
 }

@@ -23,11 +23,9 @@ const std::atomic_bool& ITKRefineTileCoordinates::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ITKRefineTileCoordinates::operator()()
 {
-
 
   return {};
 }

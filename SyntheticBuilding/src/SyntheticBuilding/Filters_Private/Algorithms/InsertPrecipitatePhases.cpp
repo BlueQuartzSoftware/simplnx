@@ -23,11 +23,9 @@ const std::atomic_bool& InsertPrecipitatePhases::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> InsertPrecipitatePhases::operator()()
 {
-
 
   return {};
 }

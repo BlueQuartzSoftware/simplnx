@@ -31,7 +31,6 @@ struct STATSTOOLBOX_EXPORT FindSizesInputValues
   DataPath EquivalentDiametersArrayName;
   DataPath NumElementsArrayName;
   DataPath VolumesArrayName;
-
 };
 
 /**

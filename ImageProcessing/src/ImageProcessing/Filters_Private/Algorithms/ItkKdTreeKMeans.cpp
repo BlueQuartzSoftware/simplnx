@@ -23,11 +23,9 @@ const std::atomic_bool& ItkKdTreeKMeans::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ItkKdTreeKMeans::operator()()
 {
-
 
   return {};
 }

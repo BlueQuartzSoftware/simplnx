@@ -23,11 +23,9 @@ const std::atomic_bool& RenameAttributeMatrix::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> RenameAttributeMatrix::operator()()
 {
-
 
   return {};
 }

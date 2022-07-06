@@ -23,11 +23,9 @@ const std::atomic_bool& VisualizeGBCDPoleFigure::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> VisualizeGBCDPoleFigure::operator()()
 {
-
 
   return {};
 }

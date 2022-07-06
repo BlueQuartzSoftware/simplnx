@@ -31,7 +31,6 @@ struct ITKIMAGEPROCESSING_EXPORT ITKDiscreteGaussianImageInputValues
   bool UseImageSpacing;
   DataPath SelectedCellArrayPath;
   StringParameter::ValueType NewCellArrayName;
-
 };
 
 /**

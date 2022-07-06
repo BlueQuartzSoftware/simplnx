@@ -23,7 +23,6 @@ struct GENERIC_EXPORT FindFeatureCentroidsInputValues
 {
   DataPath FeatureIdsArrayPath;
   DataPath CentroidsArrayPath;
-
 };
 
 /**

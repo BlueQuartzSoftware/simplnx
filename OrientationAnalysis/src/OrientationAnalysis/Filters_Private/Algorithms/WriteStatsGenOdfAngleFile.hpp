@@ -37,7 +37,6 @@ struct ORIENTATIONANALYSIS_EXPORT WriteStatsGenOdfAngleFileInputValues
   DataPath CellEulerAnglesArrayPath;
   DataPath CellPhasesArrayPath;
   DataPath GoodVoxelsArrayPath;
-
 };
 
 /**

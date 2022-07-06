@@ -47,7 +47,6 @@ struct SYNTHETICBUILDING_EXPORT MatchCrystallographyInputValues
   DataPath VolumesArrayName;
   DataPath FeatureEulerAnglesArrayName;
   DataPath AvgQuatsArrayName;
-
 };
 
 /**

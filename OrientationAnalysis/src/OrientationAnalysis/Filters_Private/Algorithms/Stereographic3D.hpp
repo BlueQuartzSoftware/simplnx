@@ -23,7 +23,6 @@ struct ORIENTATIONANALYSIS_EXPORT Stereographic3DInputValues
 {
   DataPath QuatsArrayPath;
   DataPath CoordinatesArrayName;
-
 };
 
 /**

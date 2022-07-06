@@ -25,7 +25,6 @@ struct ORIENTATIONANALYSIS_EXPORT RotateEulerRefFrameInputValues
   float32 RotationAngle;
   VectorFloat32Parameter::ValueType RotationAxis;
   DataPath CellEulerAnglesArrayPath;
-
 };
 
 /**

@@ -51,7 +51,6 @@ struct ITKIMAGEPROCESSING_EXPORT ImportAxioVisionV4MontageInputValues
   StringParameter::ValueType CellAttributeMatrixName;
   StringParameter::ValueType ImageDataArrayName;
   StringParameter::ValueType MetaDataAttributeMatrixName;
-
 };
 
 /**

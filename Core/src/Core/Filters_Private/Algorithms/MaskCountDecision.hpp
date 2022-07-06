@@ -19,7 +19,6 @@ namespace complex
 
 struct CORE_EXPORT MaskCountDecisionInputValues
 {
-
 };
 
 /**

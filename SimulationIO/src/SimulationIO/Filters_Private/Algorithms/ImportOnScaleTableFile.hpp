@@ -37,7 +37,6 @@ struct SIMULATIONIO_EXPORT ImportOnScaleTableFileInputValues
   DataPath FeatureIdsArrayName;
   DataPath PhaseAttributeMatrixName;
   DataPath MaterialNameArrayName;
-
 };
 
 /**

@@ -23,11 +23,9 @@ const std::atomic_bool& InputCrystalCompliances::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> InputCrystalCompliances::operator()()
 {
-
 
   return {};
 }

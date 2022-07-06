@@ -23,11 +23,9 @@ const std::atomic_bool& RequiredZThickness::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> RequiredZThickness::operator()()
 {
-
 
   return {};
 }

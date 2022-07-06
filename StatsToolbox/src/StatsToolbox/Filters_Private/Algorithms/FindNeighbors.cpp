@@ -23,11 +23,9 @@ const std::atomic_bool& FindNeighbors::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindNeighbors::operator()()
 {
-
 
   return {};
 }

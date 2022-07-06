@@ -23,11 +23,9 @@ const std::atomic_bool& LaplacianSmoothing::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> LaplacianSmoothing::operator()()
 {
-
 
   return {};
 }

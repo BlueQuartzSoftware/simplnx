@@ -31,7 +31,6 @@ struct UCSBUTILITIES_EXPORT FindDirectionalModuliInputValues
   DataPath CrystalStructuresArrayPath;
   DataPath CrystalCompliancesArrayPath;
   DataPath DirectionalModuliArrayName;
-
 };
 
 /**

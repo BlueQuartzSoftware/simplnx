@@ -33,7 +33,6 @@ struct ORIENTATIONANALYSIS_EXPORT INLWriterInputValues
   DataPath CrystalStructuresArrayPath;
   DataPath MaterialNameArrayPath;
   DataPath NumFeaturesArrayPath;
-
 };
 
 /**

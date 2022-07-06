@@ -26,12 +26,11 @@ namespace complex
 struct CORE_EXPORT CreateDataArrayInputValues
 {
   <<<NOT_IMPLEMENTED>>> ScalarType;
-/*[x]*/  int32 NumberOfComponents;
+  /*[x]*/ int32 NumberOfComponents;
   ChoicesParameter::ValueType InitializationType;
   StringParameter::ValueType InitializationValue;
   <<<NOT_IMPLEMENTED>>> InitializationRange;
-/*[x]*/  DataPath NewArray;
-
+  /*[x]*/ DataPath NewArray;
 };
 
 /**

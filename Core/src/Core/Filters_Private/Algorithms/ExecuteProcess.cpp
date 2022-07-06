@@ -23,11 +23,9 @@ const std::atomic_bool& ExecuteProcess::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ExecuteProcess::operator()()
 {
-
 
   return {};
 }

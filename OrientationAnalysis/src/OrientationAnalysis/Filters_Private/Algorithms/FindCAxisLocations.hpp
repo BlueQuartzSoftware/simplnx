@@ -23,7 +23,6 @@ struct ORIENTATIONANALYSIS_EXPORT FindCAxisLocationsInputValues
 {
   DataPath QuatsArrayPath;
   DataPath CAxisLocationsArrayName;
-
 };
 
 /**

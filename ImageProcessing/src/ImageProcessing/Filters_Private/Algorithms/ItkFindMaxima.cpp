@@ -23,11 +23,9 @@ const std::atomic_bool& ItkFindMaxima::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ItkFindMaxima::operator()()
 {
-
 
   return {};
 }

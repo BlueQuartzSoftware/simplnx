@@ -23,7 +23,6 @@ struct CORE_EXPORT SplitAttributeArrayInputValues
 {
   DataPath InputArrayPath;
   StringParameter::ValueType SplitArraysSuffix;
-
 };
 
 /**

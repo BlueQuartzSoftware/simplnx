@@ -25,7 +25,6 @@ struct CORE_EXPORT ExtractComponentAsArrayInputValues
   int32 CompNumber;
   DataPath SelectedArrayPath;
   DataPath NewArrayArrayName;
-
 };
 
 /**

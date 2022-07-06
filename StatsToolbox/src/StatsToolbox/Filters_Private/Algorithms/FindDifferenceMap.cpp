@@ -23,11 +23,9 @@ const std::atomic_bool& FindDifferenceMap::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindDifferenceMap::operator()()
 {
-
 
   return {};
 }

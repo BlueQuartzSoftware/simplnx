@@ -23,11 +23,9 @@ const std::atomic_bool& FindGBPDMetricBased::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindGBPDMetricBased::operator()()
 {
-
 
   return {};
 }

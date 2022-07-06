@@ -25,7 +25,6 @@ struct STATSTOOLBOX_EXPORT FindAvgScalarValueForFeaturesInputValues
   DataPath SelectedCellArrayPath;
   DataPath FeatureIdsArrayPath;
   DataPath NewFeatureArrayArrayPath;
-
 };
 
 /**

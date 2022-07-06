@@ -27,7 +27,6 @@ struct IMPORTEXPORT_EXPORT AvizoUniformCoordinateWriterInputValues
   bool WriteBinaryFile;
   DataPath FeatureIdsArrayPath;
   StringParameter::ValueType Units;
-
 };
 
 /**

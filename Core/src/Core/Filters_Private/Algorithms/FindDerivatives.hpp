@@ -23,7 +23,6 @@ struct CORE_EXPORT FindDerivativesInputValues
 {
   DataPath SelectedArrayPath;
   DataPath DerivativesArrayPath;
-
 };
 
 /**

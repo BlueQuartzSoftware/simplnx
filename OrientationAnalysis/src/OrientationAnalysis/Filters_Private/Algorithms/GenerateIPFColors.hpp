@@ -33,7 +33,6 @@ struct ORIENTATIONANALYSIS_EXPORT GenerateIPFColorsInputValues
   DataPath GoodVoxelsArrayPath;
   DataPath CrystalStructuresArrayPath;
   DataPath CellIPFColorsArrayName;
-
 };
 
 /**

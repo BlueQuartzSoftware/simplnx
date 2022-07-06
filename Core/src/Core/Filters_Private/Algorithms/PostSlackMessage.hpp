@@ -27,7 +27,6 @@ struct CORE_EXPORT PostSlackMessageInputValues
   StringParameter::ValueType SlackUrl;
   StringParameter::ValueType SlackMessage;
   bool WarningsAsError;
-
 };
 
 /**

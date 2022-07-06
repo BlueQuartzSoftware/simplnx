@@ -31,7 +31,6 @@ struct ORIENTATIONANALYSIS_EXPORT FindKernelAvgMisorientationsInputValues
   DataPath QuatsArrayPath;
   DataPath CrystalStructuresArrayPath;
   DataPath KernelAverageMisorientationsArrayName;
-
 };
 
 /**

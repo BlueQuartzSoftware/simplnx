@@ -35,7 +35,9 @@ struct SYNTHETICBUILDING_EXPORT InitializeSyntheticVolumeInputValues
 {
   bool EstimateNumberOfFeatures;
   <<<NOT_IMPLEMENTED>>> EstimatedPrimaryFeatures;
-  {} Geometry Selection;
+  {
+  }
+  Geometry Selection;
   DataPath GeometryDataContainer;
   DataPath InputStatsArrayPath;
   DataPath InputPhaseTypesArrayPath;
@@ -47,7 +49,6 @@ struct SYNTHETICBUILDING_EXPORT InitializeSyntheticVolumeInputValues
   VectorFloat32Parameter::ValueType Origin;
   ChoicesParameter::ValueType LengthUnit;
   <<<NOT_IMPLEMENTED>>> BoxDimensions;
-
 };
 
 /**

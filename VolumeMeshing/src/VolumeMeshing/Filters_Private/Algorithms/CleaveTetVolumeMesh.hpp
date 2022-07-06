@@ -33,7 +33,6 @@ struct VOLUMEMESHING_EXPORT CleaveTetVolumeMeshInputValues
   float32 Alpha;
   int32 Padding;
   bool AdaptiveSurface;
-
 };
 
 /**

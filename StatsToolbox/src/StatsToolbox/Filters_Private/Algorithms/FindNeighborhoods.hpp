@@ -31,7 +31,6 @@ struct STATSTOOLBOX_EXPORT FindNeighborhoodsInputValues
   DataPath CentroidsArrayPath;
   DataPath NeighborhoodsArrayName;
   DataPath NeighborhoodListArrayName;
-
 };
 
 /**

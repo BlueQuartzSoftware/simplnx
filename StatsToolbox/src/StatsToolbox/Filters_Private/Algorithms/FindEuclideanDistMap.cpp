@@ -23,11 +23,9 @@ const std::atomic_bool& FindEuclideanDistMap::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindEuclideanDistMap::operator()()
 {
-
 
   return {};
 }

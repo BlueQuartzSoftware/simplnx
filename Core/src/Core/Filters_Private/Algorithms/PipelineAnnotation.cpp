@@ -23,11 +23,9 @@ const std::atomic_bool& PipelineAnnotation::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> PipelineAnnotation::operator()()
 {
-
 
   return {};
 }

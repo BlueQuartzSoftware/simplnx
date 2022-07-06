@@ -27,11 +27,10 @@ struct ORIENTATIONANALYSIS_EXPORT CreateEnsembleInfoInputValues
 {
   DataPath DataContainerName;
   <<<NOT_IMPLEMENTED>>> Ensemble;
-/*[x]*/  DataPath CellEnsembleAttributeMatrixName;
+  /*[x]*/ DataPath CellEnsembleAttributeMatrixName;
   DataPath CrystalStructuresArrayName;
   DataPath PhaseTypesArrayName;
   DataPath PhaseNamesArrayName;
-
 };
 
 /**

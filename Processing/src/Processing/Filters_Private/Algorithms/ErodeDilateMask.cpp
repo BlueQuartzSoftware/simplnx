@@ -23,11 +23,9 @@ const std::atomic_bool& ErodeDilateMask::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ErodeDilateMask::operator()()
 {
-
 
   return {};
 }

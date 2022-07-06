@@ -33,7 +33,6 @@ struct PROCESSING_EXPORT ErodeDilateBadDataInputValues
   bool ZDirOn;
   DataPath FeatureIdsArrayPath;
   MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
-
 };
 
 /**

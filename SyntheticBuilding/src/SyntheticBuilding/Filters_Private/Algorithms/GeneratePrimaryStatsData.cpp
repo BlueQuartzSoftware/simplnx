@@ -23,11 +23,9 @@ const std::atomic_bool& GeneratePrimaryStatsData::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> GeneratePrimaryStatsData::operator()()
 {
-
 
   return {};
 }

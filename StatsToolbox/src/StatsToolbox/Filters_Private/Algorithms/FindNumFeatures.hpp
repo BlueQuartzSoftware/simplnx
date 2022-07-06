@@ -23,7 +23,6 @@ struct STATSTOOLBOX_EXPORT FindNumFeaturesInputValues
 {
   DataPath FeaturePhasesArrayPath;
   DataPath NumFeaturesArrayPath;
-
 };
 
 /**

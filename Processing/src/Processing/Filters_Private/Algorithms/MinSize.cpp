@@ -23,11 +23,9 @@ const std::atomic_bool& MinSize::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> MinSize::operator()()
 {
-
 
   return {};
 }

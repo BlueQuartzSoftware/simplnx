@@ -23,7 +23,6 @@ struct UCSBUTILITIES_EXPORT CopyAttributeArrayInputValues
 {
   DataPath SelectedArrayPath;
   DataPath NewArrayName;
-
 };
 
 /**

@@ -23,11 +23,9 @@ const std::atomic_bool& FindDistsToCharactGBs::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindDistsToCharactGBs::operator()()
 {
-
 
   return {};
 }

@@ -21,7 +21,7 @@ namespace complex
 struct ORIENTATIONANALYSIS_EXPORT ConvertHexGridToSquareGridInputValues
 {
   <<<NOT_IMPLEMENTED>>> HexGridStack;
-/*[x]*/
+  /*[x]*/
 };
 
 /**

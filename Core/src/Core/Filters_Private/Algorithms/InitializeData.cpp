@@ -23,11 +23,9 @@ const std::atomic_bool& InitializeData::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> InitializeData::operator()()
 {
-
 
   return {};
 }

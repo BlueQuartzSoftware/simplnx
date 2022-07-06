@@ -23,11 +23,9 @@ const std::atomic_bool& RenameDataContainer::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> RenameDataContainer::operator()()
 {
-
 
   return {};
 }

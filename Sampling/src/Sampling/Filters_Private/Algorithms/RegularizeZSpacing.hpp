@@ -25,7 +25,6 @@ struct SAMPLING_EXPORT RegularizeZSpacingInputValues
   FileSystemPathParameter::ValueType InputFile;
   float32 NewZRes;
   DataPath CellAttributeMatrixPath;
-
 };
 
 /**

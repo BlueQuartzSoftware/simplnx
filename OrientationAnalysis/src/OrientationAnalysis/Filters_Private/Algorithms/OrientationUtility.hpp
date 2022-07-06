@@ -19,7 +19,7 @@ namespace complex
 
 struct ORIENTATIONANALYSIS_EXPORT OrientationUtilityInputValues
 {
-/*[x]*/
+  /*[x]*/
 };
 
 /**

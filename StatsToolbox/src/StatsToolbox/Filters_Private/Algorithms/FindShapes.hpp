@@ -35,7 +35,6 @@ struct STATSTOOLBOX_EXPORT FindShapesInputValues
   DataPath AxisEulerAnglesArrayName;
   DataPath AspectRatiosArrayName;
   DataPath VolumesArrayName;
-
 };
 
 /**

@@ -35,7 +35,6 @@ struct CORE_EXPORT CropVertexGeometryInputValues
   float32 YMax;
   float32 ZMax;
   DataPath CroppedDataContainerName;
-
 };
 
 /**

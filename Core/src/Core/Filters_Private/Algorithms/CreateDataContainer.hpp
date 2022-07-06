@@ -21,7 +21,6 @@ namespace complex
 struct CORE_EXPORT CreateDataContainerInputValues
 {
   DataPath DataContainerName;
-
 };
 
 /**

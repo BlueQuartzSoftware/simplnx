@@ -23,11 +23,9 @@ const std::atomic_bool& FindBoundaryCells::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindBoundaryCells::operator()()
 {
-
 
   return {};
 }

@@ -25,7 +25,6 @@ struct IMPORTEXPORT_EXPORT VtkRectilinearGridWriterInputValues
   FileSystemPathParameter::ValueType OutputFile;
   bool WriteBinaryFile;
   MultiArraySelectionParameter::ValueType SelectedDataArrayPaths;
-
 };
 
 /**

@@ -31,7 +31,6 @@ struct STATSTOOLBOX_EXPORT FitFeatureDataInputValues
   DataPath FeaturePhasesArrayPath;
   DataPath BiasedFeaturesArrayPath;
   DataPath NewEnsembleArrayArray;
-
 };
 
 /**

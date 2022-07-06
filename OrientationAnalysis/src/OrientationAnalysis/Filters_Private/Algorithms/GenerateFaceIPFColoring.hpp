@@ -31,7 +31,6 @@ struct ORIENTATIONANALYSIS_EXPORT GenerateFaceIPFColoringInputValues
   DataPath FeaturePhasesArrayPath;
   DataPath CrystalStructuresArrayPath;
   DataPath SurfaceMeshFaceIPFColorsArrayName;
-
 };
 
 /**

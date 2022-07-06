@@ -23,11 +23,9 @@ const std::atomic_bool& PostSlackMessage::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> PostSlackMessage::operator()()
 {
-
 
   return {};
 }

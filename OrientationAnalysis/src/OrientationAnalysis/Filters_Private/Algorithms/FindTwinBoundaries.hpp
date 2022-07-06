@@ -39,7 +39,6 @@ struct ORIENTATIONANALYSIS_EXPORT FindTwinBoundariesInputValues
   DataPath SurfaceMeshFaceNormalsArrayPath;
   DataPath SurfaceMeshTwinBoundaryArrayName;
   DataPath SurfaceMeshTwinBoundaryIncoherenceArrayName;
-
 };
 
 /**

@@ -27,7 +27,6 @@ struct ORIENTATIONANALYSIS_EXPORT ReplaceElementAttributesWithNeighborValuesInpu
   ChoicesParameter::ValueType SelectedComparison;
   bool Loop;
   DataPath ConfidenceIndexArrayPath;
-
 };
 
 /**
@@ -39,7 +38,8 @@ struct ORIENTATIONANALYSIS_EXPORT ReplaceElementAttributesWithNeighborValuesInpu
 class ORIENTATIONANALYSIS_EXPORT ReplaceElementAttributesWithNeighborValues
 {
 public:
-  ReplaceElementAttributesWithNeighborValues(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReplaceElementAttributesWithNeighborValuesInputValues* inputValues);
+  ReplaceElementAttributesWithNeighborValues(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                             ReplaceElementAttributesWithNeighborValuesInputValues* inputValues);
   ~ReplaceElementAttributesWithNeighborValues() noexcept;
 
   ReplaceElementAttributesWithNeighborValues(const ReplaceElementAttributesWithNeighborValues&) = delete;

@@ -33,7 +33,6 @@ struct CORE_EXPORT ImportAsciDataArrayInputValues
   ChoicesParameter::ValueType Delimiter;
   DataPath CreatedAttributeArrayPath;
   <<<NOT_IMPLEMENTED>>> FirstLine;
-
 };
 
 /**

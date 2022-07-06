@@ -25,7 +25,6 @@ struct CORE_EXPORT CopyFeatureArrayToElementArrayInputValues
   DataPath SelectedFeatureArrayPath;
   DataPath FeatureIdsArrayPath;
   DataPath CreatedArrayName;
-
 };
 
 /**
@@ -37,7 +36,8 @@ struct CORE_EXPORT CopyFeatureArrayToElementArrayInputValues
 class CORE_EXPORT CopyFeatureArrayToElementArray
 {
 public:
-  CopyFeatureArrayToElementArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CopyFeatureArrayToElementArrayInputValues* inputValues);
+  CopyFeatureArrayToElementArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                 CopyFeatureArrayToElementArrayInputValues* inputValues);
   ~CopyFeatureArrayToElementArray() noexcept;
 
   CopyFeatureArrayToElementArray(const CopyFeatureArrayToElementArray&) = delete;

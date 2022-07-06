@@ -23,11 +23,9 @@ const std::atomic_bool& ImportEbsdMontage::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ImportEbsdMontage::operator()()
 {
-
 
   return {};
 }

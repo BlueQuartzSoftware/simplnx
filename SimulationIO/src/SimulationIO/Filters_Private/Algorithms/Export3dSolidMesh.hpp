@@ -63,7 +63,6 @@ struct SIMULATIONIO_EXPORT Export3dSolidMeshInputValues
   StringParameter::ValueType TetDataContainerName;
   StringParameter::ValueType VertexAttributeMatrixName;
   StringParameter::ValueType CellAttributeMatrixName;
-
 };
 
 /**

@@ -23,11 +23,9 @@ const std::atomic_bool& FindGBCD::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindGBCD::operator()()
 {
-
 
   return {};
 }

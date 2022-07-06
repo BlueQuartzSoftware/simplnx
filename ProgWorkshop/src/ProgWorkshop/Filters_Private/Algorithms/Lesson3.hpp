@@ -27,7 +27,6 @@ struct PROGWORKSHOP_EXPORT Lesson3InputValues
   DataPath OutputDataArrayPath;
   float32 Value;
   ChoicesParameter::ValueType Operator;
-
 };
 
 /**

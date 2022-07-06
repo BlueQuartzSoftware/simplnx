@@ -29,7 +29,6 @@ struct STATSTOOLBOX_EXPORT FindSurfaceAreaToVolumeInputValues
   DataPath SurfaceAreaVolumeRatioArrayName;
   bool CalculateSphericity;
   DataPath SphericityArrayName;
-
 };
 
 /**

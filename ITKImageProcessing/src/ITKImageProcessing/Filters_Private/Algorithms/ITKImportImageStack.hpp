@@ -31,7 +31,6 @@ struct ITKIMAGEPROCESSING_EXPORT ITKImportImageStackInputValues
   DataPath DataContainerName;
   DataPath CellAttributeMatrixName;
   DataPath ImageDataArrayName;
-
 };
 
 /**

@@ -23,7 +23,6 @@ struct SIMULATIONIO_EXPORT ExportLAMMPSFileInputValues
 {
   FileSystemPathParameter::ValueType LammpsFile;
   DataPath AtomFeatureLabelsPath;
-
 };
 
 /**

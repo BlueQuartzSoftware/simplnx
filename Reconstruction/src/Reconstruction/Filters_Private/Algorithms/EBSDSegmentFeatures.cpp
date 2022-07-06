@@ -23,11 +23,9 @@ const std::atomic_bool& EBSDSegmentFeatures::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> EBSDSegmentFeatures::operator()()
 {
-
 
   return {};
 }

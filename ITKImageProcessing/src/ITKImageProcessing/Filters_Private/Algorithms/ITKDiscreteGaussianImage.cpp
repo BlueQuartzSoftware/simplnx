@@ -23,11 +23,9 @@ const std::atomic_bool& ITKDiscreteGaussianImage::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ITKDiscreteGaussianImage::operator()()
 {
-
 
   return {};
 }

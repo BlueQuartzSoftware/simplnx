@@ -23,11 +23,9 @@ const std::atomic_bool& EstablishMatrixPhase::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> EstablishMatrixPhase::operator()()
 {
-
 
   return {};
 }

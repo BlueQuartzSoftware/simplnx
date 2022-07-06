@@ -23,11 +23,9 @@ const std::atomic_bool& FindSurfaceAreaToVolume::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindSurfaceAreaToVolume::operator()()
 {
-
 
   return {};
 }

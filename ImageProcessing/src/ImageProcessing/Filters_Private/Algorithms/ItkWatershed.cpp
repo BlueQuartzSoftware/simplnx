@@ -23,11 +23,9 @@ const std::atomic_bool& ItkWatershed::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ItkWatershed::operator()()
 {
-
 
   return {};
 }

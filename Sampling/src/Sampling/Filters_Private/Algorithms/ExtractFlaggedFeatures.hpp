@@ -23,7 +23,6 @@ struct SAMPLING_EXPORT ExtractFlaggedFeaturesInputValues
 {
   DataPath FeatureIdsArrayPath;
   DataPath FlaggedFeaturesArrayPath;
-
 };
 
 /**

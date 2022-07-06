@@ -23,11 +23,9 @@ const std::atomic_bool& AddOrientationNoise::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> AddOrientationNoise::operator()()
 {
-
 
   return {};
 }

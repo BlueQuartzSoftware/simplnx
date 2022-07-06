@@ -23,11 +23,9 @@ const std::atomic_bool& CreateDataContainer::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CreateDataContainer::operator()()
 {
-
 
   return {};
 }

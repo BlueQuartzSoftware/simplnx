@@ -23,11 +23,9 @@ const std::atomic_bool& ImportH5OimData::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ImportH5OimData::operator()()
 {
-
 
   return {};
 }

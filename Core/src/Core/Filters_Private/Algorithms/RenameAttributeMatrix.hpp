@@ -23,7 +23,6 @@ struct CORE_EXPORT RenameAttributeMatrixInputValues
 {
   DataPath SelectedAttributeMatrixPath;
   StringParameter::ValueType NewAttributeMatrix;
-
 };
 
 /**

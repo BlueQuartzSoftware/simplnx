@@ -43,7 +43,6 @@ struct SYNTHETICBUILDING_EXPORT EstablishMatrixPhaseInputValues
   DataPath InputPhaseNamesArrayPath;
   DataPath OutputCellEnsembleAttributeMatrixName;
   DataPath NumFeaturesArrayName;
-
 };
 
 /**

@@ -23,11 +23,9 @@ const std::atomic_bool& MultiEmmpmFilter::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> MultiEmmpmFilter::operator()()
 {
-
 
   return {};
 }

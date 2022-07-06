@@ -22,8 +22,7 @@ namespace complex
 struct UCSBUTILITIES_EXPORT InputCrystalCompliancesInputValues
 {
   <<<NOT_IMPLEMENTED>>> Compliances;
-/*[x]*/  DataPath CrystalCompliancesArrayPath;
-
+  /*[x]*/ DataPath CrystalCompliancesArrayPath;
 };
 
 /**

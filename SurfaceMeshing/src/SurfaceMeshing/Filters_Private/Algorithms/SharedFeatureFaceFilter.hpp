@@ -29,7 +29,6 @@ struct SURFACEMESHING_EXPORT SharedFeatureFaceFilterInputValues
   DataPath FaceFeatureAttributeMatrixName;
   DataPath SurfaceMeshFeatureFaceLabelsArrayName;
   DataPath SurfaceMeshFeatureFaceNumTrianglesArrayName;
-
 };
 
 /**

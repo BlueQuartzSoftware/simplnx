@@ -29,7 +29,6 @@ struct CORE_EXPORT GenerateTiltSeriesInputValues
   VectorFloat32Parameter::ValueType Spacing;
   DataPath InputDataArrayPath;
   StringParameter::ValueType OutputPrefix;
-
 };
 
 /**

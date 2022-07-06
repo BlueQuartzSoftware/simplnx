@@ -23,11 +23,9 @@ const std::atomic_bool& FillBadData::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FillBadData::operator()()
 {
-
 
   return {};
 }

@@ -25,7 +25,6 @@ struct RECONSTRUCTION_EXPORT AlignSectionsFeatureInputValues
   bool WriteAlignmentShifts;
   FileSystemPathParameter::ValueType AlignmentShiftFileName;
   DataPath GoodVoxelsArrayPath;
-
 };
 
 /**

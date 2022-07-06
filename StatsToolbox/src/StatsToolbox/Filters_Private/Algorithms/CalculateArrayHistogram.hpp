@@ -37,7 +37,6 @@ struct STATSTOOLBOX_EXPORT CalculateArrayHistogramInputValues
   DataPath NewDataContainerName;
   DataPath NewAttributeMatrixName;
   DataPath NewDataArrayName;
-
 };
 
 /**

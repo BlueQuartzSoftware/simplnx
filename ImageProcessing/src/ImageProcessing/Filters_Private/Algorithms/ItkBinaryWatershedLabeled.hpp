@@ -25,7 +25,6 @@ struct IMAGEPROCESSING_EXPORT ItkBinaryWatershedLabeledInputValues
   DataPath SelectedCellArrayPath;
   float32 PeakTolerance;
   DataPath NewCellArrayName;
-
 };
 
 /**

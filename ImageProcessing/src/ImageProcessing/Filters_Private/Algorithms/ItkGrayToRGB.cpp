@@ -23,11 +23,9 @@ const std::atomic_bool& ItkGrayToRGB::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ItkGrayToRGB::operator()()
 {
-
 
   return {};
 }

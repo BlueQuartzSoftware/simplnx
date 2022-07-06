@@ -23,11 +23,9 @@ const std::atomic_bool& SPParksSitesWriter::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> SPParksSitesWriter::operator()()
 {
-
 
   return {};
 }

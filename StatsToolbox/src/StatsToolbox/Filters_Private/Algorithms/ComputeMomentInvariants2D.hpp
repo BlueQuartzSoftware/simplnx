@@ -33,7 +33,6 @@ struct STATSTOOLBOX_EXPORT ComputeMomentInvariants2DInputValues
   DataPath Omega2ArrayPath;
   bool SaveCentralMoments;
   DataPath CentralMomentsArrayPath;
-
 };
 
 /**

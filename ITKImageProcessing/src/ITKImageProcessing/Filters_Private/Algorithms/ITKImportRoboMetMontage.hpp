@@ -55,7 +55,6 @@ struct ITKIMAGEPROCESSING_EXPORT ITKImportRoboMetMontageInputValues
   DataPath DataContainerPath;
   StringParameter::ValueType CellAttributeMatrixName;
   StringParameter::ValueType ImageDataArrayName;
-
 };
 
 /**

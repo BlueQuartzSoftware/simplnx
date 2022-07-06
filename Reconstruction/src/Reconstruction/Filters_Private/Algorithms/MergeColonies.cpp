@@ -23,11 +23,9 @@ const std::atomic_bool& MergeColonies::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> MergeColonies::operator()()
 {
-
 
   return {};
 }

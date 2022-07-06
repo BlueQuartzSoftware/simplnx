@@ -23,7 +23,7 @@ struct CORE_EXPORT DataContainerReaderInputValues
 {
   bool OverwriteExistingDataContainers;
   <<<NOT_IMPLEMENTED>>> InputFileDataContainerArrayProxy;
-/*[x]*/
+  /*[x]*/
 };
 
 /**

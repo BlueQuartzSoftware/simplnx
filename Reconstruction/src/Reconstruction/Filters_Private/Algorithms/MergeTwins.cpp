@@ -23,11 +23,9 @@ const std::atomic_bool& MergeTwins::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> MergeTwins::operator()()
 {
-
 
   return {};
 }

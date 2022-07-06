@@ -23,11 +23,9 @@ const std::atomic_bool& MoveData::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> MoveData::operator()()
 {
-
 
   return {};
 }

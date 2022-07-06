@@ -37,7 +37,6 @@ struct SURFACEMESHING_EXPORT QuickSurfaceMeshInputValues
   DataPath FaceAttributeMatrixName;
   DataPath FaceLabelsArrayName;
   DataPath FeatureAttributeMatrixName;
-
 };
 
 /**

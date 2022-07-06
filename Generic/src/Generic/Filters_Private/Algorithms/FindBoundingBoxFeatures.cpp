@@ -23,11 +23,9 @@ const std::atomic_bool& FindBoundingBoxFeatures::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindBoundingBoxFeatures::operator()()
 {
-
 
   return {};
 }

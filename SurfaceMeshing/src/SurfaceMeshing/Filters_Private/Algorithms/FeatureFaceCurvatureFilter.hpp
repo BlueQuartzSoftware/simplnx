@@ -51,7 +51,6 @@ struct SURFACEMESHING_EXPORT FeatureFaceCurvatureFilterInputValues
   DataPath SurfaceMeshPrincipalDirection2sArrayName;
   DataPath SurfaceMeshGaussianCurvaturesArrayName;
   DataPath SurfaceMeshMeanCurvaturesArrayName;
-
 };
 
 /**

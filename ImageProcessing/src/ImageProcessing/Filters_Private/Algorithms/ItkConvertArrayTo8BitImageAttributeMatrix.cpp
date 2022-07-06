@@ -6,7 +6,8 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-ItkConvertArrayTo8BitImageAttributeMatrix::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ItkConvertArrayTo8BitImageAttributeMatrixInputValues* inputValues)
+ItkConvertArrayTo8BitImageAttributeMatrix::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                       ItkConvertArrayTo8BitImageAttributeMatrixInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -23,11 +24,9 @@ const std::atomic_bool& ItkConvertArrayTo8BitImageAttributeMatrix::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ItkConvertArrayTo8BitImageAttributeMatrix::operator()()
 {
-
 
   return {};
 }

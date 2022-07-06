@@ -27,7 +27,6 @@ struct IMPORTEXPORT_EXPORT ReadStlFileInputValues
   DataPath SurfaceMeshDataContainerName;
   DataPath FaceAttributeMatrixName;
   DataPath FaceNormalsArrayName;
-
 };
 
 /**

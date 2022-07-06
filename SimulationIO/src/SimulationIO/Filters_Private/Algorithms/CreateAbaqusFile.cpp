@@ -23,11 +23,9 @@ const std::atomic_bool& CreateAbaqusFile::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CreateAbaqusFile::operator()()
 {
-
 
   return {};
 }

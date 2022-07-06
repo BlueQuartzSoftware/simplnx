@@ -23,11 +23,9 @@ const std::atomic_bool& CAxisSegmentFeatures::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CAxisSegmentFeatures::operator()()
 {
-
 
   return {};
 }

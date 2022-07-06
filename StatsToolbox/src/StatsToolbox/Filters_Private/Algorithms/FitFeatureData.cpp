@@ -23,11 +23,9 @@ const std::atomic_bool& FitFeatureData::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FitFeatureData::operator()()
 {
-
 
   return {};
 }

@@ -29,7 +29,6 @@ struct CORE_EXPORT RemoveComponentFromArrayInputValues
   DataPath NewArrayArrayName;
   DataPath ReducedArrayArrayName;
   bool SaveRemovedComponent;
-
 };
 
 /**

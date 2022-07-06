@@ -23,11 +23,9 @@ const std::atomic_bool& ErodeDilateBadData::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ErodeDilateBadData::operator()()
 {
-
 
   return {};
 }

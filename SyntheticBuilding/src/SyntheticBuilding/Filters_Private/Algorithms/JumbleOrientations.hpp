@@ -29,7 +29,6 @@ struct SYNTHETICBUILDING_EXPORT JumbleOrientationsInputValues
   DataPath FeaturePhasesArrayPath;
   DataPath CellEulerAnglesArrayName;
   DataPath AvgQuatsArrayName;
-
 };
 
 /**

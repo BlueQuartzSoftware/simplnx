@@ -23,11 +23,9 @@ const std::atomic_bool& WriteASCIIData::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> WriteASCIIData::operator()()
 {
-
 
   return {};
 }

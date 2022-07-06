@@ -23,11 +23,9 @@ const std::atomic_bool& ResampleImageGeom::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ResampleImageGeom::operator()()
 {
-
 
   return {};
 }

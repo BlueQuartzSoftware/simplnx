@@ -25,9 +25,8 @@ struct CORE_EXPORT ArrayCalculatorInputValues
 {
   DataPath SelectedAttributeMatrix;
   <<<NOT_IMPLEMENTED>>> InfixEquation;
-/*[x]*/  <<<NOT_IMPLEMENTED>>> ScalarType;
-/*[x]*/  DataPath CalculatedArray;
-
+  /*[x]*/<<<NOT_IMPLEMENTED>>> ScalarType;
+  /*[x]*/ DataPath CalculatedArray;
 };
 
 /**

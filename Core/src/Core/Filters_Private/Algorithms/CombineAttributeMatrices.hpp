@@ -31,7 +31,6 @@ struct CORE_EXPORT CombineAttributeMatricesInputValues
   DataPath SecondIndexArrayPath;
   DataPath NewIndexArrayName;
   DataPath CombinedAttributeMatrixName;
-
 };
 
 /**

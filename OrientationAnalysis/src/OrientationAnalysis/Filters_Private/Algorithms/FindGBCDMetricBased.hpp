@@ -51,7 +51,6 @@ struct ORIENTATIONANALYSIS_EXPORT FindGBCDMetricBasedInputValues
   DataPath FeatureEulerAnglesArrayPath;
   DataPath FeaturePhasesArrayPath;
   DataPath CrystalStructuresArrayPath;
-
 };
 
 /**

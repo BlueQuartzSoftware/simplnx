@@ -37,7 +37,6 @@ struct ORIENTATIONANALYSIS_EXPORT FindGBCDInputValues
   DataPath CrystalStructuresArrayPath;
   DataPath FaceEnsembleAttributeMatrixName;
   DataPath GBCDArrayName;
-
 };
 
 /**

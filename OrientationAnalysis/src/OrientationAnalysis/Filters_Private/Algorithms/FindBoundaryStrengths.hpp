@@ -37,7 +37,6 @@ struct ORIENTATIONANALYSIS_EXPORT FindBoundaryStrengthsInputValues
   DataPath SurfaceMeshF1sptsArrayName;
   DataPath SurfaceMeshF7sArrayName;
   DataPath SurfaceMeshmPrimesArrayName;
-
 };
 
 /**

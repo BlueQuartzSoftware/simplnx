@@ -33,7 +33,6 @@ struct ORIENTATIONANALYSIS_EXPORT FindMisorientationsInputValues
   DataPath CrystalStructuresArrayPath;
   DataPath MisorientationListArrayName;
   DataPath AvgMisorientationsArrayName;
-
 };
 
 /**

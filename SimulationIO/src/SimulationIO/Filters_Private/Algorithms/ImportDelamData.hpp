@@ -31,7 +31,6 @@ struct SIMULATIONIO_EXPORT ImportDelamDataInputValues
   DataPath DataContainerPath;
   StringParameter::ValueType CellAttributeMatrixName;
   StringParameter::ValueType DataArrayName;
-
 };
 
 /**

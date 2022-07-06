@@ -23,11 +23,9 @@ const std::atomic_bool& FindModulusMismatch::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindModulusMismatch::operator()()
 {
-
 
   return {};
 }

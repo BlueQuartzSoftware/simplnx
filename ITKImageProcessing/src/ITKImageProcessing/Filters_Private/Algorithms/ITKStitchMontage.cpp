@@ -23,11 +23,9 @@ const std::atomic_bool& ITKStitchMontage::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ITKStitchMontage::operator()()
 {
-
 
   return {};
 }

@@ -27,7 +27,6 @@ struct PROCESSING_EXPORT ErodeDilateCoordinationNumberInputValues
   bool Loop;
   DataPath FeatureIdsArrayPath;
   MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
-
 };
 
 /**

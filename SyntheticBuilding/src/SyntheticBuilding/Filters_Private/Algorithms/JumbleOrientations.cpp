@@ -23,11 +23,9 @@ const std::atomic_bool& JumbleOrientations::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> JumbleOrientations::operator()()
 {
-
 
   return {};
 }

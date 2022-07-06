@@ -23,11 +23,9 @@ const std::atomic_bool& EMsoftSO3Sampler::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> EMsoftSO3Sampler::operator()()
 {
-
 
   return {};
 }

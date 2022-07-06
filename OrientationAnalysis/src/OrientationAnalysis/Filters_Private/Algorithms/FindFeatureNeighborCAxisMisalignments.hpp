@@ -33,7 +33,6 @@ struct ORIENTATIONANALYSIS_EXPORT FindFeatureNeighborCAxisMisalignmentsInputValu
   DataPath CrystalStructuresArrayPath;
   DataPath CAxisMisalignmentListArrayName;
   DataPath AvgCAxisMisalignmentsArrayName;
-
 };
 
 /**
@@ -45,7 +44,8 @@ struct ORIENTATIONANALYSIS_EXPORT FindFeatureNeighborCAxisMisalignmentsInputValu
 class ORIENTATIONANALYSIS_EXPORT FindFeatureNeighborCAxisMisalignments
 {
 public:
-  FindFeatureNeighborCAxisMisalignments(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindFeatureNeighborCAxisMisalignmentsInputValues* inputValues);
+  FindFeatureNeighborCAxisMisalignments(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                        FindFeatureNeighborCAxisMisalignmentsInputValues* inputValues);
   ~FindFeatureNeighborCAxisMisalignments() noexcept;
 
   FindFeatureNeighborCAxisMisalignments(const FindFeatureNeighborCAxisMisalignments&) = delete;

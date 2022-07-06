@@ -33,7 +33,6 @@ struct RECONSTRUCTION_EXPORT ScalarSegmentFeaturesInputValues
   DataPath FeatureIdsArrayName;
   DataPath CellFeatureAttributeMatrixName;
   DataPath ActiveArrayName;
-
 };
 
 /**

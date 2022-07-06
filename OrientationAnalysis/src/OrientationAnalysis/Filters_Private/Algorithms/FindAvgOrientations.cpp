@@ -23,11 +23,9 @@ const std::atomic_bool& FindAvgOrientations::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindAvgOrientations::operator()()
 {
-
 
   return {};
 }

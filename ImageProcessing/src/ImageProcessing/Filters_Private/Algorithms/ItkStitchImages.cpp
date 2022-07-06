@@ -23,11 +23,9 @@ const std::atomic_bool& ItkStitchImages::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ItkStitchImages::operator()()
 {
-
 
   return {};
 }

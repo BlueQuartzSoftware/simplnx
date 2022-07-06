@@ -23,11 +23,9 @@ const std::atomic_bool& FindTriangleGeomShapes::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindTriangleGeomShapes::operator()()
 {
-
 
   return {};
 }

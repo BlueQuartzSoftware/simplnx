@@ -23,9 +23,8 @@ namespace complex
 struct CORE_EXPORT GenerateColorTableInputValues
 {
   <<<NOT_IMPLEMENTED>>> SelectedPresetName;
-/*[x]*/  DataPath SelectedDataArrayPath;
+  /*[x]*/ DataPath SelectedDataArrayPath;
   DataPath RgbArrayName;
-
 };
 
 /**

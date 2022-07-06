@@ -23,11 +23,9 @@ const std::atomic_bool& FeatureDataCSVWriter::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FeatureDataCSVWriter::operator()()
 {
-
 
   return {};
 }

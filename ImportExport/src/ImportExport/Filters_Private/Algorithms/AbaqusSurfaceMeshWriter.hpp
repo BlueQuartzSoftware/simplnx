@@ -23,7 +23,6 @@ struct IMPORTEXPORT_EXPORT AbaqusSurfaceMeshWriterInputValues
 {
   FileSystemPathParameter::ValueType OutputFile;
   DataPath SurfaceMeshFaceLabelsArrayPath;
-
 };
 
 /**

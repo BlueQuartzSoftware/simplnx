@@ -23,7 +23,6 @@ struct SAMPLING_EXPORT NearestPointFuseRegularGridsInputValues
 {
   DataPath ReferenceCellAttributeMatrixPath;
   DataPath SamplingCellAttributeMatrixPath;
-
 };
 
 /**

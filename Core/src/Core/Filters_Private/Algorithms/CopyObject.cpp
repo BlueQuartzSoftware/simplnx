@@ -23,11 +23,9 @@ const std::atomic_bool& CopyObject::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CopyObject::operator()()
 {
-
 
   return {};
 }

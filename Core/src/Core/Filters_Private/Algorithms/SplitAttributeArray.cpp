@@ -23,11 +23,9 @@ const std::atomic_bool& SplitAttributeArray::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> SplitAttributeArray::operator()()
 {
-
 
   return {};
 }

@@ -23,11 +23,9 @@ const std::atomic_bool& GenerateTiltSeries::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> GenerateTiltSeries::operator()()
 {
-
 
   return {};
 }

@@ -25,7 +25,6 @@ struct SIMULATIONIO_EXPORT CreateBsamFileInputValues
   FileSystemPathParameter::ValueType OutputPath;
   StringParameter::ValueType OutputFilePrefix;
   int32 NumClusters;
-
 };
 
 /**

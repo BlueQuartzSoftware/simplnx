@@ -23,11 +23,9 @@ const std::atomic_bool& DxWriter::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> DxWriter::operator()()
 {
-
 
   return {};
 }

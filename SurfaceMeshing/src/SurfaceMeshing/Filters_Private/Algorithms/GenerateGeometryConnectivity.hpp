@@ -25,7 +25,6 @@ struct SURFACEMESHING_EXPORT GenerateGeometryConnectivityInputValues
   bool GenerateVertexTriangleLists;
   bool GenerateTriangleNeighbors;
   DataPath SurfaceDataContainerName;
-
 };
 
 /**

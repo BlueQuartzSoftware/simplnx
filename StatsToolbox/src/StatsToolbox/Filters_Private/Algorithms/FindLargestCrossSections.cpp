@@ -23,11 +23,9 @@ const std::atomic_bool& FindLargestCrossSections::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindLargestCrossSections::operator()()
 {
-
 
   return {};
 }

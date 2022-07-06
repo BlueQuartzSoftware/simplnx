@@ -29,7 +29,6 @@ struct IMAGEPROCESSING_EXPORT ItkMeanKernelInputValues
   bool SaveAsNewArray;
   DataPath SelectedCellArrayPath;
   DataPath NewCellArrayName;
-
 };
 
 /**

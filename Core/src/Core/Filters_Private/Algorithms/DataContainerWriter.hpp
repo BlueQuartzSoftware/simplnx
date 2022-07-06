@@ -25,7 +25,6 @@ struct CORE_EXPORT DataContainerWriterInputValues
   FileSystemPathParameter::ValueType OutputFile;
   bool WriteXdmfFile;
   bool WriteTimeSeries;
-
 };
 
 /**

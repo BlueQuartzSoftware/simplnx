@@ -25,7 +25,6 @@ struct CORE_EXPORT ReplaceValueInArrayInputValues
   float64 RemoveValue;
   float64 ReplaceValue;
   DataPath SelectedArray;
-
 };
 
 /**

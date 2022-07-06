@@ -37,7 +37,6 @@ struct STATSTOOLBOX_EXPORT FindNeighborsInputValues
   DataPath NeighborListArrayName;
   DataPath SharedSurfaceAreaListArrayName;
   DataPath SurfaceFeaturesArrayName;
-
 };
 
 /**

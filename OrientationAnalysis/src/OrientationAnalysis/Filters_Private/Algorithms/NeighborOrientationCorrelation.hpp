@@ -35,7 +35,6 @@ struct ORIENTATIONANALYSIS_EXPORT NeighborOrientationCorrelationInputValues
   DataPath QuatsArrayPath;
   DataPath CrystalStructuresArrayPath;
   MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
-
 };
 
 /**
@@ -47,7 +46,8 @@ struct ORIENTATIONANALYSIS_EXPORT NeighborOrientationCorrelationInputValues
 class ORIENTATIONANALYSIS_EXPORT NeighborOrientationCorrelation
 {
 public:
-  NeighborOrientationCorrelation(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, NeighborOrientationCorrelationInputValues* inputValues);
+  NeighborOrientationCorrelation(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                 NeighborOrientationCorrelationInputValues* inputValues);
   ~NeighborOrientationCorrelation() noexcept;
 
   NeighborOrientationCorrelation(const NeighborOrientationCorrelation&) = delete;

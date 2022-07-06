@@ -51,7 +51,6 @@ struct SIMULATIONIO_EXPORT ImportFEADataInputValues
   StringParameter::ValueType DataContainerName;
   StringParameter::ValueType VertexAttributeMatrixName;
   StringParameter::ValueType CellAttributeMatrixName;
-
 };
 
 /**

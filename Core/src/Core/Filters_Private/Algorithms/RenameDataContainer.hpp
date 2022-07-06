@@ -23,7 +23,6 @@ struct CORE_EXPORT RenameDataContainerInputValues
 {
   DataPath SelectedDataContainerName;
   DataPath NewDataContainerName;
-
 };
 
 /**

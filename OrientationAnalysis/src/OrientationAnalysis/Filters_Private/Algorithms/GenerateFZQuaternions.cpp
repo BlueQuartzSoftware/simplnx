@@ -23,11 +23,9 @@ const std::atomic_bool& GenerateFZQuaternions::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> GenerateFZQuaternions::operator()()
 {
-
 
   return {};
 }

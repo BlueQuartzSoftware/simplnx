@@ -23,11 +23,9 @@ const std::atomic_bool& ComputeFeatureRect::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureRect::operator()()
 {
-
 
   return {};
 }

@@ -23,11 +23,9 @@ const std::atomic_bool& ScalarSegmentFeatures::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ScalarSegmentFeatures::operator()()
 {
-
 
   return {};
 }

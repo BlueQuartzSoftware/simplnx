@@ -23,11 +23,9 @@ const std::atomic_bool& FindAvgCAxes::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindAvgCAxes::operator()()
 {
-
 
   return {};
 }

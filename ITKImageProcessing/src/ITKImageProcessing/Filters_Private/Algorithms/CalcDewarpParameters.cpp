@@ -23,11 +23,9 @@ const std::atomic_bool& CalcDewarpParameters::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CalcDewarpParameters::operator()()
 {
-
 
   return {};
 }

@@ -29,7 +29,6 @@ struct CORE_EXPORT SetOriginResolutionImageGeomInputValues
   VectorFloat32Parameter::ValueType Origin;
   bool ChangeResolution;
   VectorFloat32Parameter::ValueType Spacing;
-
 };
 
 /**

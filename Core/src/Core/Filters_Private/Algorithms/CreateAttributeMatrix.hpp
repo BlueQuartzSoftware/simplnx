@@ -24,8 +24,7 @@ struct CORE_EXPORT CreateAttributeMatrixInputValues
 {
   ChoicesParameter::ValueType AttributeMatrixType;
   <<<NOT_IMPLEMENTED>>> TupleDimensions;
-/*[x]*/  DataPath CreatedAttributeMatrix;
-
+  /*[x]*/ DataPath CreatedAttributeMatrix;
 };
 
 /**

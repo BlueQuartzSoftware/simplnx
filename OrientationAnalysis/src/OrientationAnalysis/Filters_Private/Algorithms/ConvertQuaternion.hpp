@@ -27,7 +27,6 @@ struct ORIENTATIONANALYSIS_EXPORT ConvertQuaternionInputValues
   DataPath OutputDataArrayPath;
   bool DeleteOriginalData;
   ChoicesParameter::ValueType ConversionType;
-
 };
 
 /**

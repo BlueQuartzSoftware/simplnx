@@ -23,7 +23,6 @@ struct PROCESSING_EXPORT IdentifySampleInputValues
 {
   bool FillHoles;
   DataPath GoodVoxelsArrayPath;
-
 };
 
 /**

@@ -23,11 +23,9 @@ const std::atomic_bool& CropImageGeometry::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> CropImageGeometry::operator()()
 {
-
 
   return {};
 }

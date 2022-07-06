@@ -39,7 +39,6 @@ struct ORIENTATIONANALYSIS_EXPORT CreateLambertSphereInputValues
   bool CreateQuadGeometry;
   DataPath QuadDataContainerName;
   DataPath ImageDataArrayPath;
-
 };
 
 /**

@@ -23,11 +23,9 @@ const std::atomic_bool& QuickSurfaceMesh::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> QuickSurfaceMesh::operator()()
 {
-
 
   return {};
 }

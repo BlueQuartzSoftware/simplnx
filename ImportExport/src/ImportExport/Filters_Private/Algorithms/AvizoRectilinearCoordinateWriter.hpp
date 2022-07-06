@@ -27,7 +27,6 @@ struct IMPORTEXPORT_EXPORT AvizoRectilinearCoordinateWriterInputValues
   bool WriteBinaryFile;
   DataPath FeatureIdsArrayPath;
   StringParameter::ValueType Units;
-
 };
 
 /**
@@ -39,7 +38,8 @@ struct IMPORTEXPORT_EXPORT AvizoRectilinearCoordinateWriterInputValues
 class IMPORTEXPORT_EXPORT AvizoRectilinearCoordinateWriter
 {
 public:
-  AvizoRectilinearCoordinateWriter(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AvizoRectilinearCoordinateWriterInputValues* inputValues);
+  AvizoRectilinearCoordinateWriter(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                   AvizoRectilinearCoordinateWriterInputValues* inputValues);
   ~AvizoRectilinearCoordinateWriter() noexcept;
 
   AvizoRectilinearCoordinateWriter(const AvizoRectilinearCoordinateWriter&) = delete;

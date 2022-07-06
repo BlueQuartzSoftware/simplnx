@@ -31,7 +31,6 @@ struct IMPORTEXPORT_EXPORT DxReaderInputValues
   DataPath VolumeDataContainerName;
   DataPath CellAttributeMatrixName;
   DataPath FeatureIdsArrayName;
-
 };
 
 /**

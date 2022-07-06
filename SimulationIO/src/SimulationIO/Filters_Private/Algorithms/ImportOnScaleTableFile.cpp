@@ -23,11 +23,9 @@ const std::atomic_bool& ImportOnScaleTableFile::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ImportOnScaleTableFile::operator()()
 {
-
 
   return {};
 }

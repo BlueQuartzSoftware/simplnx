@@ -21,7 +21,6 @@ namespace complex
 struct IMAGEPROCESSING_EXPORT ItkConvertArrayTo8BitImageAttributeMatrixInputValues
 {
   DataPath AttributeMatrixName;
-
 };
 
 /**
@@ -33,7 +32,8 @@ struct IMAGEPROCESSING_EXPORT ItkConvertArrayTo8BitImageAttributeMatrixInputValu
 class IMAGEPROCESSING_EXPORT ItkConvertArrayTo8BitImageAttributeMatrix
 {
 public:
-  ItkConvertArrayTo8BitImageAttributeMatrix(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ItkConvertArrayTo8BitImageAttributeMatrixInputValues* inputValues);
+  ItkConvertArrayTo8BitImageAttributeMatrix(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                            ItkConvertArrayTo8BitImageAttributeMatrixInputValues* inputValues);
   ~ItkConvertArrayTo8BitImageAttributeMatrix() noexcept;
 
   ItkConvertArrayTo8BitImageAttributeMatrix(const ItkConvertArrayTo8BitImageAttributeMatrix&) = delete;

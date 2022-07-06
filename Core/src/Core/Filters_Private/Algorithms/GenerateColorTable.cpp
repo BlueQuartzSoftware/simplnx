@@ -23,11 +23,9 @@ const std::atomic_bool& GenerateColorTable::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> GenerateColorTable::operator()()
 {
-
 
   return {};
 }

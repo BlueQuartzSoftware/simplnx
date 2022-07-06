@@ -37,7 +37,6 @@ struct SAMPLING_EXPORT RegularGridSampleSurfaceMeshInputValues
   DataPath DataContainerName;
   DataPath CellAttributeMatrixName;
   DataPath FeatureIdsArrayName;
-
 };
 
 /**

@@ -23,7 +23,6 @@ struct CORE_EXPORT CreateStringArrayInputValues
 {
   StringParameter::ValueType InitializationValue;
   DataPath NewArray;
-
 };
 
 /**

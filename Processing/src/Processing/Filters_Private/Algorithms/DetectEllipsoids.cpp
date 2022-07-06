@@ -23,11 +23,9 @@ const std::atomic_bool& DetectEllipsoids::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> DetectEllipsoids::operator()()
 {
-
 
   return {};
 }

@@ -49,7 +49,6 @@ struct ORIENTATIONANALYSIS_EXPORT FindGBPDMetricBasedInputValues
   DataPath FeatureEulerAnglesArrayPath;
   DataPath FeaturePhasesArrayPath;
   DataPath CrystalStructuresArrayPath;
-
 };
 
 /**

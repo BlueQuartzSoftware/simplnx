@@ -23,11 +23,9 @@ const std::atomic_bool& ItkKMeans::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ItkKMeans::operator()()
 {
-
 
   return {};
 }

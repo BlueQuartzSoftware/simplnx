@@ -23,11 +23,9 @@ const std::atomic_bool& ITKImageReader::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ITKImageReader::operator()()
 {
-
 
   return {};
 }

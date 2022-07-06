@@ -31,7 +31,6 @@ struct PROGWORKSHOP_EXPORT Lesson4InputValues
   ChoicesParameter::ValueType Operator;
   bool Selection;
   float32 FloatValue;
-
 };
 
 /**

@@ -29,7 +29,6 @@ struct SIMULATIONIO_EXPORT ExportOnScaleTableFileInputValues
   VectorInt32Parameter::ValueType NumKeypoints;
   DataPath PhaseNamesArrayPath;
   DataPath PzflexFeatureIdsArrayPath;
-
 };
 
 /**

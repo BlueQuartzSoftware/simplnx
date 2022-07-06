@@ -21,7 +21,6 @@ namespace complex
 struct CORE_EXPORT ExecuteProcessInputValues
 {
   StringParameter::ValueType Arguments;
-
 };
 
 /**

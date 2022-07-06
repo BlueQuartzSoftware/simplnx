@@ -23,11 +23,9 @@ const std::atomic_bool& ItkImageMath::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ItkImageMath::operator()()
 {
-
 
   return {};
 }

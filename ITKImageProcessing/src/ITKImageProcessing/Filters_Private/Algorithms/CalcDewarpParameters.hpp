@@ -32,18 +32,17 @@ namespace complex
 struct ITKIMAGEPROCESSING_EXPORT CalcDewarpParametersInputValues
 {
   <<<NOT_IMPLEMENTED>>> MontageName;
-/*[x]*/  int32 MaxIterations;
+  /*[x]*/ int32 MaxIterations;
   int32 Delta;
   float64 FractionalTolerance;
   bool SpecifyInitialSimplex;
   <<<NOT_IMPLEMENTED>>> XFactors;
-/*[x]*/  <<<NOT_IMPLEMENTED>>> YFactors;
-/*[x]*/  StringParameter::ValueType AttributeMatrixName;
+  /*[x]*/<<<NOT_IMPLEMENTED>>> YFactors;
+  /*[x]*/ StringParameter::ValueType AttributeMatrixName;
   StringParameter::ValueType IPFColorsArrayName;
   StringParameter::ValueType TransformDCName;
   StringParameter::ValueType TransformMatrixName;
   StringParameter::ValueType TransformArrayName;
-
 };
 
 /**

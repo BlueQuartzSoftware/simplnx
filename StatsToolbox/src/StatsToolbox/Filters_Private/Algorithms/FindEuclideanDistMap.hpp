@@ -39,7 +39,6 @@ struct STATSTOOLBOX_EXPORT FindEuclideanDistMapInputValues
   DataPath TJDistancesArrayName;
   DataPath QPDistancesArrayName;
   DataPath NearestNeighborsArrayName;
-
 };
 
 /**

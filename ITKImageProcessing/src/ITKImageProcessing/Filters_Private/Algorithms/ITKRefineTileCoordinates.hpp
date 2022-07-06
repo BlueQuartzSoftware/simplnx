@@ -31,9 +31,8 @@ struct ITKIMAGEPROCESSING_EXPORT ITKRefineTileCoordinatesInputValues
   float32 TileOverlap;
   bool ApplyRefinedOrigin;
   <<<NOT_IMPLEMENTED>>> DataContainers;
-/*[x]*/  StringParameter::ValueType CommonAttributeMatrixName;
+  /*[x]*/ StringParameter::ValueType CommonAttributeMatrixName;
   StringParameter::ValueType CommonDataArrayName;
-
 };
 
 /**

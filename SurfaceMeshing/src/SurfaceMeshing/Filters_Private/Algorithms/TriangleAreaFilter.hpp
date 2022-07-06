@@ -21,7 +21,6 @@ namespace complex
 struct SURFACEMESHING_EXPORT TriangleAreaFilterInputValues
 {
   DataPath SurfaceMeshTriangleAreasArrayPath;
-
 };
 
 /**

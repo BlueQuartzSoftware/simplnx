@@ -31,7 +31,6 @@ struct ORIENTATIONANALYSIS_EXPORT ReadCtfDataInputValues
   DataPath DataContainerName;
   DataPath CellAttributeMatrixName;
   DataPath CellEnsembleAttributeMatrixName;
-
 };
 
 /**

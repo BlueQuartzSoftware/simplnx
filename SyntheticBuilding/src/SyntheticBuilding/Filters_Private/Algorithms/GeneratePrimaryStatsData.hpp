@@ -50,14 +50,13 @@ struct SYNTHETICBUILDING_EXPORT GeneratePrimaryStatsDataInputValues
   <<<NOT_IMPLEMENTED>>> NumberOfBins;
   <<<NOT_IMPLEMENTED>>> FeatureESD;
   <<<NOT_IMPLEMENTED>>> OdfData;
-/*[x]*/  <<<NOT_IMPLEMENTED>>> MdfData;
-/*[x]*/  <<<NOT_IMPLEMENTED>>> AxisOdfData;
-/*[x]*/  bool CreateEnsembleAttributeMatrix;
+  /*[x]*/<<<NOT_IMPLEMENTED>>> MdfData;
+  /*[x]*/<<<NOT_IMPLEMENTED>>> AxisOdfData;
+  /*[x]*/ bool CreateEnsembleAttributeMatrix;
   DataPath DataContainerName;
   DataPath CellEnsembleAttributeMatrixName;
   bool AppendToExistingAttributeMatrix;
   DataPath SelectedEnsembleAttributeMatrix;
-
 };
 
 /**

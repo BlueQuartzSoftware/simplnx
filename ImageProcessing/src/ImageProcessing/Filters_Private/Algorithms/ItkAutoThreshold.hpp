@@ -29,7 +29,6 @@ struct IMAGEPROCESSING_EXPORT ItkAutoThresholdInputValues
   bool SaveAsNewArray;
   DataPath SelectedCellArrayPath;
   DataPath NewCellArrayName;
-
 };
 
 /**

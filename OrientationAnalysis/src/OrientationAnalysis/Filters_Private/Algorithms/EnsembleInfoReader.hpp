@@ -29,7 +29,6 @@ struct ORIENTATIONANALYSIS_EXPORT EnsembleInfoReaderInputValues
   DataPath CellEnsembleAttributeMatrixName;
   DataPath CrystalStructuresArrayName;
   DataPath PhaseTypesArrayName;
-
 };
 
 /**

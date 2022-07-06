@@ -27,7 +27,6 @@ struct ORIENTATIONANALYSIS_EXPORT ReadAngDataInputValues
   DataPath DataContainerName;
   DataPath CellAttributeMatrixName;
   DataPath CellEnsembleAttributeMatrixName;
-
 };
 
 /**

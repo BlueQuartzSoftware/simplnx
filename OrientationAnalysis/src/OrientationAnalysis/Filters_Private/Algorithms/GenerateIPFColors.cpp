@@ -23,11 +23,9 @@ const std::atomic_bool& GenerateIPFColors::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> GenerateIPFColors::operator()()
 {
-
 
   return {};
 }

@@ -27,7 +27,6 @@ struct GENERIC_EXPORT FindBoundaryCellsInputValues
   bool IncludeVolumeBoundary;
   DataPath FeatureIdsArrayPath;
   DataPath BoundaryCellsArrayName;
-
 };
 
 /**

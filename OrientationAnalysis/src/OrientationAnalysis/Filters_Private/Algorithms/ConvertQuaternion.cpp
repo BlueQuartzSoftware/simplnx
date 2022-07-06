@@ -23,11 +23,9 @@ const std::atomic_bool& ConvertQuaternion::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> ConvertQuaternion::operator()()
 {
-
 
   return {};
 }

@@ -23,11 +23,9 @@ const std::atomic_bool& FindTwinBoundaries::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> FindTwinBoundaries::operator()()
 {
-
 
   return {};
 }

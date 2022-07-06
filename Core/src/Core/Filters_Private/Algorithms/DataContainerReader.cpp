@@ -23,11 +23,9 @@ const std::atomic_bool& DataContainerReader::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> DataContainerReader::operator()()
 {
-
 
   return {};
 }

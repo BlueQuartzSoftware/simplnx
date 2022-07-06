@@ -29,7 +29,6 @@ struct IMPORTEXPORT_EXPORT GBCDTriangleDumperInputValues
   DataPath SurfaceMeshFaceNormalsArrayPath;
   DataPath SurfaceMeshFaceAreasArrayPath;
   DataPath FeatureEulerAnglesArrayPath;
-
 };
 
 /**

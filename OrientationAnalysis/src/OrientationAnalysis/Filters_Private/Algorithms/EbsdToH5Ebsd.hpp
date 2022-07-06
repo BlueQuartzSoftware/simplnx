@@ -21,7 +21,7 @@ namespace complex
 struct ORIENTATIONANALYSIS_EXPORT EbsdToH5EbsdInputValues
 {
   <<<NOT_IMPLEMENTED>>> OrientationData;
-/*[x]*/
+  /*[x]*/
 };
 
 /**

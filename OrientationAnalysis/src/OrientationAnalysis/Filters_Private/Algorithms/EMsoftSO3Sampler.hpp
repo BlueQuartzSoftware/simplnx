@@ -37,7 +37,6 @@ struct ORIENTATIONANALYSIS_EXPORT EMsoftSO3SamplerInputValues
   VectorFloat32Parameter::ValueType RefOrFull;
   int32 Numsp;
   DataPath EulerAnglesArrayName;
-
 };
 
 /**

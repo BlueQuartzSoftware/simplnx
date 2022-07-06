@@ -37,7 +37,6 @@ struct RECONSTRUCTION_EXPORT EBSDSegmentFeaturesInputValues
   DataPath FeatureIdsArrayName;
   DataPath CellFeatureAttributeMatrixName;
   DataPath ActiveArrayName;
-
 };
 
 /**

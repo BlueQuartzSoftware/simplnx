@@ -23,11 +23,9 @@ const std::atomic_bool& PhReader::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 Result<> PhReader::operator()()
 {
-
 
   return {};
 }

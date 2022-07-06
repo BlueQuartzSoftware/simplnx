@@ -33,7 +33,6 @@ struct ORIENTATIONANALYSIS_EXPORT FindFeatureReferenceCAxisMisorientationsInputV
   DataPath FeatureAvgCAxisMisorientationsArrayName;
   DataPath FeatureStdevCAxisMisorientationsArrayName;
   DataPath FeatureReferenceCAxisMisorientationsArrayName;
-
 };
 
 /**
@@ -45,7 +44,8 @@ struct ORIENTATIONANALYSIS_EXPORT FindFeatureReferenceCAxisMisorientationsInputV
 class ORIENTATIONANALYSIS_EXPORT FindFeatureReferenceCAxisMisorientations
 {
 public:
-  FindFeatureReferenceCAxisMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindFeatureReferenceCAxisMisorientationsInputValues* inputValues);
+  FindFeatureReferenceCAxisMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                           FindFeatureReferenceCAxisMisorientationsInputValues* inputValues);
   ~FindFeatureReferenceCAxisMisorientations() noexcept;
 
   FindFeatureReferenceCAxisMisorientations(const FindFeatureReferenceCAxisMisorientations&) = delete;

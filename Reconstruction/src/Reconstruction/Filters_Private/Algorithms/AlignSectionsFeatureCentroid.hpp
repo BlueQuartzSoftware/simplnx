@@ -29,7 +29,6 @@ struct RECONSTRUCTION_EXPORT AlignSectionsFeatureCentroidInputValues
   bool UseReferenceSlice;
   int32 ReferenceSlice;
   DataPath GoodVoxelsArrayPath;
-
 };
 
 /**
