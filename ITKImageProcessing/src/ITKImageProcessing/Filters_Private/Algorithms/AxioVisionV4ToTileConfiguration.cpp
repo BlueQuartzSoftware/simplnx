@@ -6,8 +6,8 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-AxioVisionV4ToTileConfiguration::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                             AxioVisionV4ToTileConfigurationInputValues* inputValues)
+AxioVisionV4ToTileConfiguration::AxioVisionV4ToTileConfiguration(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                                 AxioVisionV4ToTileConfigurationInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

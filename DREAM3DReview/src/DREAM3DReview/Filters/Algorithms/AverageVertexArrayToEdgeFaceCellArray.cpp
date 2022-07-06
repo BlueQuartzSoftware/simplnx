@@ -6,8 +6,8 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-AverageVertexArrayToEdgeFaceCellArray::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                   AverageVertexArrayToEdgeFaceCellArrayInputValues* inputValues)
+AverageVertexArrayToEdgeFaceCellArray::AverageVertexArrayToEdgeFaceCellArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                                             AverageVertexArrayToEdgeFaceCellArrayInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

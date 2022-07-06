@@ -6,8 +6,8 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-VMFillLevelSetWithTetrahedra::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                          VMFillLevelSetWithTetrahedraInputValues* inputValues)
+VMFillLevelSetWithTetrahedra::VMFillLevelSetWithTetrahedra(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                           VMFillLevelSetWithTetrahedraInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
