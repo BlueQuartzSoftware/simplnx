@@ -9,6 +9,7 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 using namespace complex;
 
@@ -24,22 +25,30 @@ TEST_CASE("DataArrayCreation")
 
 TEST_CASE("complex::DataArray Copy TupleTest", "[complex][DataArray]")
 {
-  DataStructure dataStructure;
-  IDataStore::ShapeType tupleShape{5};
-  IDataStore::ShapeType componentShape{3};
-  Result<> result = CreateArray<int32>(dataStructure, tupleShape, componentShape, DataPath({"DataArray"}), IDataAction::Mode::Execute);
-  DataArray<int32>& dataArray = ArrayRefFromPath<int32>(dataStructure, DataPath({"DataArray"}));
 
-  for(size_t i = 0; i < 5; i++)
+  const std::string k_DataArrayName("DataArray");
+  const DataPath k_DataPath({k_DataArrayName});
+  const usize k_NumTuples = 5;
+  const usize k_NumComponents = 3;
+
+  DataStructure dataStructure;
+  IDataStore::ShapeType tupleShape{k_NumTuples};
+  IDataStore::ShapeType componentShape{k_NumComponents};
+  Result<> result = CreateArray<int32>(dataStructure, tupleShape, componentShape, k_DataPath, IDataAction::Mode::Execute);
+  REQUIRE(result.valid() == true);
+
+  auto& dataArray = dataStructure.getDataRefAs<DataArray<int32>>(k_DataPath);
+
+  for(usize i = 0; i < k_NumTuples; i++)
   {
     dataArray.initializeTuple(i, static_cast<int32>(i));
   }
 
-  for(size_t i = 0; i < 5; i++)
+  for(usize tupleIndex = 0; tupleIndex < k_NumTuples; tupleIndex++)
   {
-    for(size_t c = 0; c < 3; c++)
+    for(usize componentIndex = 0; componentIndex < k_NumComponents; componentIndex++)
     {
-      REQUIRE(dataArray[i * 3 + c] == static_cast<int32>(i));
+      REQUIRE(dataArray[tupleIndex * 3 + componentIndex] == static_cast<int32>(tupleIndex));
     }
   }
 
@@ -52,6 +61,8 @@ TEST_CASE("complex::DataArray Copy TupleTest", "[complex][DataArray]")
   REQUIRE(dataArray[12] == 1);
   REQUIRE(dataArray[13] == 1);
   REQUIRE(dataArray[14] == 1);
+
+
 }
 
 TEST_CASE("DataStore Test")
