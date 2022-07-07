@@ -8,8 +8,8 @@
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 
 using namespace complex;
 
@@ -61,8 +61,6 @@ TEST_CASE("complex::DataArray Copy TupleTest", "[complex][DataArray]")
   REQUIRE(dataArray[12] == 1);
   REQUIRE(dataArray[13] == 1);
   REQUIRE(dataArray[14] == 1);
-
-
 }
 
 TEST_CASE("DataStore Test")
