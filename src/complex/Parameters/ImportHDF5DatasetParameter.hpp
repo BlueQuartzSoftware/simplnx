@@ -36,6 +36,7 @@
 #include "nlohmann/json.hpp"
 
 #include "complex/Common/Result.hpp"
+#include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Filter/ValueParameter.hpp"
 #include "complex/complex_export.hpp"
@@ -105,7 +106,12 @@ public:
   };
 
   using InputFile = std::string;
-  using ValueType = std::pair<InputFile, std::list<DatasetImportInfo>>;
+  struct ValueType
+  {
+    std::optional<DataPath> parent;
+    InputFile inputFile;
+    std::list<DatasetImportInfo> datasets;
+  };
 
   ImportHDF5DatasetParameter() = delete;
   ImportHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
