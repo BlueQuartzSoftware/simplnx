@@ -98,7 +98,6 @@ Parameters ImportHDF5Dataset::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<ImportHDF5DatasetParameter>(k_ImportHDF5File_Key, "Select HDF5 File", "", ImportHDF5DatasetParameter::ValueType{}));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedAttributeMatrix_Key, "Attribute Matrix", "", DataPath{}));
 
   return params;
 }
@@ -114,9 +113,9 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
                                                           const std::atomic_bool& shouldCancel) const
 {
   auto pImportHDF5FileValue = filterArgs.value<ImportHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
-  auto pSelectedAttributeMatrixValue = filterArgs.value<DataPath>(k_SelectedAttributeMatrix_Key);
-  auto inputFile = pImportHDF5FileValue.first;
-  auto datasetImportInfoList = pImportHDF5FileValue.second;
+  auto pSelectedAttributeMatrixValue = pImportHDF5FileValue.parent;
+  auto inputFile = pImportHDF5FileValue.inputFile;
+  auto datasetImportInfoList = pImportHDF5FileValue.datasets;
 
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -143,10 +142,9 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
     return {nonstd::make_unexpected(std::vector<Error>{Error{-20004, "No dataset has been checked.  Please check a dataset."}})};
   }
 
-  auto selectedDataGroup = dataStructure.getDataAs<DataGroup>(pSelectedAttributeMatrixValue);
-  if(selectedDataGroup == nullptr)
+  if(pSelectedAttributeMatrixValue.has_value() && dataStructure.getDataAs<DataGroup>(pSelectedAttributeMatrixValue.value()) == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-20005, fmt::format("The selected data group '{}' does not exist.", pSelectedAttributeMatrixValue.toString())}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-20005, fmt::format("The selected data group '{}' does not exist.", pSelectedAttributeMatrixValue.value().toString())}})};
   }
 
   int err = 0;
@@ -269,25 +267,26 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
 
     if(hdf5TotalElements != userEnteredTotalElements)
     {
-      stream << fmt::format("The dataset with path '{}' cannot be read into attribute matrix '{}' because '{}' "
+      stream << fmt::format("The dataset with path '{}' cannot be read in because '{}' "
                             "tuples and '{}' components per tuple equals '{}' total elements, and"
                             " that does not match the total HDF5 dataset element count of '{}'.\n"
                             "'{}' =/= '{}'",
-                            datasetPath, pSelectedAttributeMatrixValue.getTargetName(), StringUtilities::number(numOfTuples), StringUtilities::number(totalComponents),
-                            StringUtilities::number(numOfTuples * totalComponents), StringUtilities::number(hdf5TotalElements), StringUtilities::number(numOfTuples * totalComponents),
-                            StringUtilities::number(hdf5TotalElements));
+                            datasetPath, StringUtilities::number(numOfTuples), StringUtilities::number(totalComponents), StringUtilities::number(numOfTuples * totalComponents),
+                            StringUtilities::number(hdf5TotalElements), StringUtilities::number(numOfTuples * totalComponents), StringUtilities::number(hdf5TotalElements));
       return {nonstd::make_unexpected(std::vector<Error>{Error{-20013, stream.str()}})};
     }
 
-    if(selectedDataGroup->contains(objectName))
+    DataPath dataArrayPath = pSelectedAttributeMatrixValue.has_value() ? pSelectedAttributeMatrixValue.value().createChildPath(objectName) : DataPath::FromString(objectName).value();
+
+    if(dataStructure.getId(dataArrayPath).has_value())
     {
       stream.clear();
-      stream << "The selected dataset '" << pSelectedAttributeMatrixValue.toString() << "/" << objectName << "' already exists.";
+      stream << "The selected dataset '" << pSelectedAttributeMatrixValue.value().toString() << "/" << objectName << "' already exists.";
       return {nonstd::make_unexpected(std::vector<Error>{Error{-20014, stream.str()}})};
     }
     else
     {
-      DataPath dataArrayPath = pSelectedAttributeMatrixValue.createChildPath(objectName);
+      // DataPath dataArrayPath = pSelectedAttributeMatrixValue.createChildPath(objectName);
       auto type = datasetReader.getDataType();
       if(type.invalid())
       {
@@ -307,11 +306,10 @@ Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argu
                                         const std::atomic_bool& shouldCancel) const
 {
   auto pImportHDF5FileValue = filterArgs.value<ImportHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
-  auto pSelectedAttributeMatrixValue = filterArgs.value<DataPath>(k_SelectedAttributeMatrix_Key);
-  auto inputFile = pImportHDF5FileValue.first;
+  auto pSelectedAttributeMatrixValue = pImportHDF5FileValue.parent;
+  auto inputFile = pImportHDF5FileValue.inputFile;
   fs::path inputFilePath(inputFile);
-  auto datasetImportInfoList = pImportHDF5FileValue.second;
-  auto selectedDataGroup = dataStructure.getDataAs<DataGroup>(pSelectedAttributeMatrixValue);
+  auto datasetImportInfoList = pImportHDF5FileValue.datasets;
 
   H5::FileReader h5FileReader(inputFilePath);
   hid_t fileId = h5FileReader.getId();
@@ -328,7 +326,7 @@ Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argu
     std::string objectName = datasetReader.getName();
 
     // Read dataset into DREAM.3D structure
-    DataPath dataArrayPath = pSelectedAttributeMatrixValue.createChildPath(objectName);
+    DataPath dataArrayPath = pSelectedAttributeMatrixValue.has_value() ? pSelectedAttributeMatrixValue.value().createChildPath(objectName) : DataPath::FromString(objectName).value();
     Result<> fillArrayResults;
     auto type = datasetReader.getType();
     switch(type)
