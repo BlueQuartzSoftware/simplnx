@@ -573,16 +573,18 @@ struct MaskCompare
    * @return
    */
   virtual bool isTrue(size_t index) const = 0;
+
+  virtual void setValue(size_t index, bool val) = 0;
 };
 
 struct BoolMaskCompare : public MaskCompare
 {
-  BoolMaskCompare(const BoolArray& array)
+  BoolMaskCompare(BoolArray& array)
   : m_Array(array)
   {
   }
   ~BoolMaskCompare() noexcept override = default;
-  const BoolArray& m_Array;
+  BoolArray& m_Array;
   bool bothTrue(size_t indexA, size_t indexB) const override
   {
     return m_Array.at(indexA) && m_Array.at(indexB);
@@ -595,16 +597,20 @@ struct BoolMaskCompare : public MaskCompare
   {
     return m_Array.at(index);
   }
+  void setValue(size_t index, bool val) override
+  {
+    m_Array[index] = val;
+  }
 };
 
 struct UInt8MaskCompare : public MaskCompare
 {
-  UInt8MaskCompare(const UInt8Array& array)
+  UInt8MaskCompare(UInt8Array& array)
   : m_Array(array)
   {
   }
   ~UInt8MaskCompare() noexcept override = default;
-  const UInt8Array& m_Array;
+  UInt8Array& m_Array;
   bool bothTrue(size_t indexA, size_t indexB) const override
   {
     return m_Array.at(indexA) != 0 && m_Array.at(indexB) != 0;
@@ -616,6 +622,10 @@ struct UInt8MaskCompare : public MaskCompare
   bool isTrue(size_t index) const override
   {
     return m_Array.at(index) != 0;
+  }
+  void setValue(size_t index, bool val) override
+  {
+    m_Array[index] = static_cast<uint8>(val);
   }
 };
 
@@ -635,13 +645,13 @@ struct UInt8MaskCompare : public MaskCompare
  * @param maskArrayPath The DataPath of the mask array.
  * @return
  */
-COMPLEX_EXPORT std::unique_ptr<MaskCompare> InstantiateMaskCompare(const DataStructure& dataStructure, const DataPath& maskArrayPath);
+COMPLEX_EXPORT std::unique_ptr<MaskCompare> InstantiateMaskCompare(DataStructure& dataStructure, const DataPath& maskArrayPath);
 
 /**
  * @brief Convenience method to create an instance of the MaskCompare subclass
  * @param maskArrayPtr A Pointer to the mask array which can be of either `bool` or `uint8` type.
  * @return
  */
-COMPLEX_EXPORT std::unique_ptr<MaskCompare> InstantiateMaskCompare(const IDataArray& maskArrayPtr);
+COMPLEX_EXPORT std::unique_ptr<MaskCompare> InstantiateMaskCompare(IDataArray& maskArrayPtr);
 
 } // namespace complex
