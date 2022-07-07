@@ -383,3 +383,14 @@ TEST_CASE("DataStructureDuplicateNames")
   DataGroup* childGroup2 = DataGroup::Create(ds, name, group1->getId());
   REQUIRE(group2 == nullptr);
 }
+
+TEST_CASE("DataStructureAddingObjectToNonBaseGroup")
+{
+  DataStructure dataStructure;
+  auto store = std::make_shared<DataStore<int32>>(std::vector<usize>{10}, std::vector<usize>{1}, 0);
+  auto* dataArray = DataArray<int32>::Create(dataStructure, "foo", std::move(store));
+  REQUIRE(dataArray != nullptr);
+
+  DataGroup* group = DataGroup::Create(dataStructure, "bar", dataArray->getId());
+  REQUIRE(group == nullptr);
+}
