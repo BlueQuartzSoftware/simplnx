@@ -209,22 +209,22 @@ Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath&
   return MakeErrorResult(-401, fmt::format("The input array at DataPath '{}' was of an unsupported type", dataPath.toString()));
 }
 
-std::unique_ptr<MaskCompare> InstantiateMaskCompare(const DataStructure& dataStructure, const DataPath& maskArrayPath)
+std::unique_ptr<MaskCompare> InstantiateMaskCompare(DataStructure& dataStructure, const DataPath& maskArrayPath)
 {
-  const auto& maskArray = dataStructure.getDataRefAs<IDataArray>(maskArrayPath);
+  auto& maskArray = dataStructure.getDataRefAs<IDataArray>(maskArrayPath);
 
   return InstantiateMaskCompare(maskArray);
 }
 
-std::unique_ptr<MaskCompare> InstantiateMaskCompare(const IDataArray& maskArray)
+std::unique_ptr<MaskCompare> InstantiateMaskCompare(IDataArray& maskArray)
 {
   switch(maskArray.getDataType())
   {
   case DataType::boolean: {
-    return std::make_unique<BoolMaskCompare>(dynamic_cast<const BoolArray&>(maskArray));
+    return std::make_unique<BoolMaskCompare>(dynamic_cast<BoolArray&>(maskArray));
   }
   case DataType::uint8: {
-    return std::make_unique<UInt8MaskCompare>(dynamic_cast<const UInt8Array&>(maskArray));
+    return std::make_unique<UInt8MaskCompare>(dynamic_cast<UInt8Array&>(maskArray));
   }
   default:
     throw std::runtime_error("InstantiateMaskCompare: The Mask Array being used is NOT of type bool or uint8.");
