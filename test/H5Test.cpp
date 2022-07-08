@@ -443,6 +443,30 @@ void CreateNeighborList(DataStructure& dataStructure)
   dataStructure.setAdditionalParent(neighborList->getId(), neighborGroup2->getId());
 }
 
+void CreateArrayTypes(DataStructure& dataStructure)
+{
+  const std::vector<usize> tupleShape = {2};
+  const std::vector<usize> componentShape = {1};
+
+  auto* boolArray = DataArray<bool>::CreateWithStore<DataStore<bool>>(dataStructure, "BoolArray", tupleShape, componentShape);
+  AbstractDataStore<bool>& boolStore = boolArray->getDataStoreRef();
+  boolStore[0] = false;
+  boolStore[1] = true;
+
+  DataArray<int8>::CreateWithStore<DataStore<int8>>(dataStructure, "Int8Array", tupleShape, componentShape);
+  DataArray<int16>::CreateWithStore<DataStore<int16>>(dataStructure, "Int16Array", tupleShape, componentShape);
+  DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "Int32Array", tupleShape, componentShape);
+  DataArray<int64>::CreateWithStore<DataStore<int64>>(dataStructure, "Int64Array", tupleShape, componentShape);
+
+  DataArray<uint8>::CreateWithStore<DataStore<uint8>>(dataStructure, "UInt8Array", tupleShape, componentShape);
+  DataArray<uint16>::CreateWithStore<DataStore<uint16>>(dataStructure, "UInt16Array", tupleShape, componentShape);
+  DataArray<uint32>::CreateWithStore<DataStore<uint32>>(dataStructure, "UInt32Array", tupleShape, componentShape);
+  DataArray<uint64>::CreateWithStore<DataStore<uint64>>(dataStructure, "UInt64Array", tupleShape, componentShape);
+
+  DataArray<float32>::CreateWithStore<DataStore<float32>>(dataStructure, "Float32Array", tupleShape, componentShape);
+  DataArray<float64>::CreateWithStore<DataStore<float64>>(dataStructure, "Float64Array", tupleShape, componentShape);
+}
+
 //------------------------------------------------------------------------------
 DataStructure CreateNodeBasedGeometries()
 {
@@ -655,6 +679,72 @@ TEST_CASE("NeighborList IO")
     // auto neighborList = ds.getDataAs<NeighborList<int64>>(DataPath({k_NeighborGroupName, "NeighborList"}));
     auto neighborList = ds.getData(DataPath({k_NeighborGroupName, "NeighborList"}));
     REQUIRE(neighborList != nullptr);
+  } catch(const std::exception& e)
+  {
+    FAIL(e.what());
+  }
+}
+
+TEST_CASE("DataArray<bool> IO")
+{
+  Application app;
+
+  fs::path dataDir = GetDataDir(app);
+
+  if(!fs::exists(dataDir))
+  {
+    REQUIRE(fs::create_directories(dataDir));
+  }
+
+  fs::path filePath = GetDataDir(app) / "BoolArrayTest.dream3d";
+
+  std::string filePathString = filePath.string();
+
+  // Write HDF5 file
+  try
+  {
+    DataStructure ds;
+    CreateArrayTypes(ds);
+    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePathString);
+    REQUIRE(result.valid());
+
+    H5::FileWriter fileWriter = std::move(result.value());
+    REQUIRE(fileWriter.isValid());
+
+    herr_t err;
+    err = ds.writeHdf5(fileWriter);
+    REQUIRE(err >= 0);
+  } catch(const std::exception& e)
+  {
+    FAIL(e.what());
+  }
+
+  // Read HDF5 file
+  try
+  {
+    H5::FileReader fileReader(filePathString);
+    REQUIRE(fileReader.isValid());
+
+    herr_t err;
+    auto ds = DataStructure::readFromHdf5(fileReader, err);
+    REQUIRE(err >= 0);
+
+    REQUIRE(ds.getDataAs<DataArray<int8>>(DataPath({"Int8Array"})) != nullptr);
+    REQUIRE(ds.getDataAs<DataArray<int16>>(DataPath({"Int16Array"})) != nullptr);
+    REQUIRE(ds.getDataAs<DataArray<int32>>(DataPath({"Int32Array"})) != nullptr);
+    REQUIRE(ds.getDataAs<DataArray<int64>>(DataPath({"Int64Array"})) != nullptr);
+    REQUIRE(ds.getDataAs<DataArray<uint8>>(DataPath({"UInt8Array"})) != nullptr);
+    REQUIRE(ds.getDataAs<DataArray<uint16>>(DataPath({"UInt16Array"})) != nullptr);
+    REQUIRE(ds.getDataAs<DataArray<uint32>>(DataPath({"UInt32Array"})) != nullptr);
+    REQUIRE(ds.getDataAs<DataArray<uint64>>(DataPath({"UInt64Array"})) != nullptr);
+    REQUIRE(ds.getDataAs<DataArray<float32>>(DataPath({"Float32Array"})) != nullptr);
+    REQUIRE(ds.getDataAs<DataArray<float64>>(DataPath({"Float64Array"})) != nullptr);
+
+    BoolArray* boolArray = ds.getDataAs<BoolArray>(DataPath({"BoolArray"}));
+    REQUIRE(boolArray != nullptr);
+    AbstractDataStore<bool>& boolStore = boolArray->getDataStoreRef();
+    REQUIRE(boolStore[0] == false);
+    REQUIRE(boolStore[1] == true);
   } catch(const std::exception& e)
   {
     FAIL(e.what());

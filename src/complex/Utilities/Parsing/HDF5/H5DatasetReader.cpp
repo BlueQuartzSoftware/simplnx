@@ -336,6 +336,7 @@ template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<uint8>(nonstd::span
 template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<uint16>(nonstd::span<uint16>) const;
 template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<uint32>(nonstd::span<uint32>) const;
 template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<uint64>(nonstd::span<uint64>) const;
+template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<bool>(nonstd::span<bool>) const;
 #ifdef __APPLE__
 template COMPLEX_EXPORT bool H5::DatasetReader::readIntoSpan<usize>(nonstd::span<usize>) const;
 #endif

@@ -400,6 +400,7 @@ using Int32DataStore = DataStore<int32>;
 using Int64DataStore = DataStore<int64>;
 
 using USizeDataStore = DataStore<usize>;
+using BoolDataStore = DataStore<bool>;
 
 using Float32DataStore = DataStore<float32>;
 using Float64DataStore = DataStore<float64>;

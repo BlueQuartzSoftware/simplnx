@@ -94,6 +94,9 @@ public:
     std::string dataArrayName = datasetReader.getName();
     DataObject::IdType importId = ReadObjectId(datasetReader);
 
+    auto dataTypeAttribute = datasetReader.getAttribute(complex::Constants::k_ObjectTypeTag);
+    const bool isBoolArray = (dataTypeAttribute.isValid() && dataTypeAttribute.readAsString().compare("DataArray<bool>") == 0);
+
     // Check importablility
     auto importableAttribute = datasetReader.getAttribute(complex::Constants::k_ImportableTag);
     if(importableAttribute.isValid() && importableAttribute.readAsValue<int32>() == 0)
@@ -122,7 +125,14 @@ public:
       importDataArray<int64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, preflight);
       break;
     case H5::Type::uint8:
-      importDataArray<uint8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, preflight);
+      if(isBoolArray)
+      {
+        importDataArray<bool>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, preflight);
+      }
+      else
+      {
+        importDataArray<uint8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, preflight);
+      }
       break;
     case H5::Type::uint16:
       importDataArray<uint16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, preflight);
