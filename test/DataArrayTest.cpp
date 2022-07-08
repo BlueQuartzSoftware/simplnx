@@ -8,6 +8,8 @@
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 
 using namespace complex;
 
@@ -19,6 +21,46 @@ TEST_CASE("DataArrayCreation")
   DataStoreType data_array = DataStoreType(complex::IDataStore::ShapeType{0}, complex::IDataStore::ShapeType{2}, 0);
   size_t numTuples = data_array.getNumberOfTuples();
   REQUIRE(numTuples == 0);
+}
+
+TEST_CASE("complex::DataArray Copy TupleTest", "[complex][DataArray]")
+{
+
+  const std::string k_DataArrayName("DataArray");
+  const DataPath k_DataPath({k_DataArrayName});
+  const usize k_NumTuples = 5;
+  const usize k_NumComponents = 3;
+
+  DataStructure dataStructure;
+  IDataStore::ShapeType tupleShape{k_NumTuples};
+  IDataStore::ShapeType componentShape{k_NumComponents};
+  Result<> result = CreateArray<int32>(dataStructure, tupleShape, componentShape, k_DataPath, IDataAction::Mode::Execute);
+  REQUIRE(result.valid() == true);
+
+  auto& dataArray = dataStructure.getDataRefAs<DataArray<int32>>(k_DataPath);
+
+  for(usize i = 0; i < k_NumTuples; i++)
+  {
+    dataArray.initializeTuple(i, static_cast<int32>(i));
+  }
+
+  for(usize tupleIndex = 0; tupleIndex < k_NumTuples; tupleIndex++)
+  {
+    for(usize componentIndex = 0; componentIndex < k_NumComponents; componentIndex++)
+    {
+      REQUIRE(dataArray[tupleIndex * 3 + componentIndex] == static_cast<int32>(tupleIndex));
+    }
+  }
+
+  dataArray.copyTuple(4, 0);
+  REQUIRE(dataArray[0] == 4);
+  REQUIRE(dataArray[1] == 4);
+  REQUIRE(dataArray[2] == 4);
+
+  dataArray.copyTuple(1, 4);
+  REQUIRE(dataArray[12] == 1);
+  REQUIRE(dataArray[13] == 1);
+  REQUIRE(dataArray[14] == 1);
 }
 
 TEST_CASE("DataStore Test")
