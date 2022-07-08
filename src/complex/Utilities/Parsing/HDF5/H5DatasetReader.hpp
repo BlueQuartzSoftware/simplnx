@@ -124,6 +124,7 @@ protected:
    */
   void closeHdf5() override;
 };
+extern template bool DatasetReader::readIntoSpan<bool>(nonstd::span<bool>) const;
 extern template bool DatasetReader::readIntoSpan<int8>(nonstd::span<int8>) const;
 extern template bool DatasetReader::readIntoSpan<int16>(nonstd::span<int16>) const;
 extern template bool DatasetReader::readIntoSpan<int32>(nonstd::span<int32>) const;
