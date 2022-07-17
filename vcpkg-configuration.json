@@ -3,7 +3,7 @@
   "registries": [
     {
       "kind": "git",
-      "repository": "https://github.com/BlueQuartzSoftware/complex-registry",
+      "repository": "https://github.com/bluequartzsoftware/complex-registry",
       "packages": [
         "boost-mp11",
         "catch2",
@@ -21,7 +21,7 @@
         "vcpkg-cmake",
         "vcpkg-cmake-config"
       ],
-      "baseline": "ebc46e66df7e74f290e75c025b04d3e8af5bb1d4"
+      "baseline": "e2ffb04220e8d052e9d75b6dcb0e3b9e31f5cd7a"
     }
   ]
 }
