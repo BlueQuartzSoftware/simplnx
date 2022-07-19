@@ -24,9 +24,8 @@ std::vector<size_t> createDimensionVector(const std::string& cDimsStr)
 {
   std::vector<size_t> cDims;
   std::vector<std::string> dimsStrVec = StringUtilities::split(cDimsStr, std::vector<char>{','}, true);
-  for(int i = 0; i < dimsStrVec.size(); i++)
+  for(auto dimsStr : dimsStrVec)
   {
-    std::string dimsStr = dimsStrVec[i];
     dimsStr = StringUtilities::trimmed(dimsStr);
 
     try

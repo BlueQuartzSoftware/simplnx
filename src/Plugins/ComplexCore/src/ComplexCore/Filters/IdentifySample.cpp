@@ -212,9 +212,9 @@ void _execute(DataStructure& data, const DataPath& imageGeomPath, const DataPath
         }
         if(!touchesBoundary)
         {
-          for(usize j = 0; j < currentvlist.size(); j++)
+          for(int64_t& j : currentvlist)
           {
-            goodVoxels.setValue(currentvlist[j], true);
+            goodVoxels.setValue(j, true);
           }
         }
         currentvlist.clear();

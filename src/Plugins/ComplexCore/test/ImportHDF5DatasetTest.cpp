@@ -398,25 +398,25 @@ void DatasetTest(ImportHDF5Dataset& filter, std::list<ImportHDF5DatasetParameter
       std::string tDimsStr = info.tupleDimensions;
       std::vector<std::string> tDims = StringUtilities::split(tDimsStr, ',');
       size_t tDimsProduct = 1;
-      for(int i = 0; i < tDims.size(); i++)
+      for(auto& tDim : tDims)
       {
-        size_t tdim = std::stoi(tDims[i]);
+        size_t tdim = std::stoi(tDim);
         tDimsProduct = tDimsProduct * tdim;
       }
 
       std::string cDimsStr = info.componentDimensions;
       std::vector<std::string> tokens = StringUtilities::split(cDimsStr, ',');
       std::vector<size_t> cDims;
-      for(int i = 0; i < tokens.size(); i++)
+      for(auto& token : tokens)
       {
-        cDims.push_back(std::stoi(tokens[i]));
+        cDims.push_back(std::stoi(token));
       }
 
       // Calculate the total number of components
       size_t cDimsProduct = 1;
-      for(int i = 0; i < cDims.size(); i++)
+      for(unsigned long cDim : cDims)
       {
-        cDimsProduct = cDimsProduct * cDims[i];
+        cDimsProduct = cDimsProduct * cDim;
       }
 
       std::string dsetPath = info.dataSetPath;
@@ -477,23 +477,20 @@ void testFilterExecute(ImportHDF5Dataset& filter)
   cDimsVector.push_back(std::vector<size_t>(4) = {COMPDIMPROD - 1, 43, 12, 53});
 
   // Execute all combinations of tests
-  for(int i = 0; i < tDimsVector.size(); i++)
+  for(auto tDims : tDimsVector)
   {
-    for(int j = 0; j < cDimsVector.size(); j++)
+    for(auto cDims : cDimsVector)
     {
-      std::vector<size_t> tDims = tDimsVector[i];
-      std::vector<size_t> cDims = cDimsVector[j];
-
       size_t amTupleCount = 1;
-      for(int t = 0; t < tDims.size(); t++)
+      for(unsigned long tDim : tDims)
       {
-        amTupleCount *= tDims[t];
+        amTupleCount *= tDim;
       }
 
       size_t cDimsProd = 1;
-      for(int c = 0; c < cDims.size(); c++)
+      for(unsigned long cDim : cDims)
       {
-        cDimsProd *= cDims[c];
+        cDimsProd *= cDim;
       }
 
       // Figure out our error code based on the dimensions coming in

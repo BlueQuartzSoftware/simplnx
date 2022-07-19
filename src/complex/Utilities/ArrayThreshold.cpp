@@ -20,7 +20,7 @@ constexpr StringLiteral k_CollectionType = "collection";
 } // namespace
 
 IArrayThreshold::IArrayThreshold()
- 
+
 {
 }
 IArrayThreshold::IArrayThreshold(const IArrayThreshold& other)
@@ -65,7 +65,7 @@ nlohmann::json IArrayThreshold::toJson() const
 ArrayThreshold::ArrayThreshold()
 : IArrayThreshold()
 , m_ArrayPath()
- 
+
 {
 }
 ArrayThreshold::ArrayThreshold(const ArrayThreshold& other)
