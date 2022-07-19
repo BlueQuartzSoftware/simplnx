@@ -43,8 +43,8 @@ public:
   virtual nlohmann::json toJson() const;
 
 private:
-  bool m_IsInverted;
-  UnionOperator m_UnionType;
+  bool m_IsInverted{false};
+  UnionOperator m_UnionType{UnionOperator::And};
 };
 
 /**
@@ -86,8 +86,8 @@ public:
 
 private:
   DataPath m_ArrayPath;
-  ComparisonValue m_Value;
-  ComparisonType m_Comparison;
+  ComparisonValue m_Value{0.0};
+  ComparisonType m_Comparison{ComparisonType::GreaterThan};
 };
 
 /**

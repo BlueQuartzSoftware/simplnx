@@ -6,22 +6,12 @@
 using namespace complex;
 
 DynamicTableData::DynamicTableData()
-: m_DynamicRows(false)
-, m_DynamicCols(false)
-, m_MinRows(0)
-, m_MinCols(0)
-, m_DefaultRowCount(0)
-, m_DefaultColCount(0)
+ 
 {
 }
 
 DynamicTableData::DynamicTableData(int32 nRows, int32 nCols)
-: m_DynamicRows(false)
-, m_DynamicCols(false)
-, m_MinRows(0)
-, m_MinCols(0)
-, m_DefaultRowCount(0)
-, m_DefaultColCount(0)
+ 
 {
   TableDataType data(nRows, std::vector<double>(nCols, 0));
   m_TableData = data;
@@ -43,12 +33,7 @@ DynamicTableData::DynamicTableData(int32 nRows, int32 nCols)
 }
 
 DynamicTableData::DynamicTableData(int32 nRows, int32 nCols, const HeadersListType& rHeaders, const HeadersListType& cHeaders)
-: m_DynamicRows(false)
-, m_DynamicCols(false)
-, m_MinRows(0)
-, m_MinCols(0)
-, m_DefaultRowCount(0)
-, m_DefaultColCount(0)
+ 
 {
   TableDataType data(nRows, std::vector<double>(nCols, 0));
   m_TableData = data;
@@ -61,12 +46,7 @@ DynamicTableData::DynamicTableData(int32 nRows, int32 nCols, const HeadersListTy
 }
 
 DynamicTableData::DynamicTableData(const TableDataType& data, const HeadersListType& rHeaders, const HeadersListType& cHeaders)
-: m_DynamicRows(false)
-, m_DynamicCols(false)
-, m_MinRows(0)
-, m_MinCols(0)
-, m_DefaultRowCount(0)
-, m_DefaultColCount(0)
+ 
 {
   m_TableData = data;
   m_RowHeaders = rHeaders;
