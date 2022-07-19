@@ -90,9 +90,9 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
   usize arraySize = m_Array.size();
   // Sanity Check the Indices in the vector to make sure we are not trying to remove any indices that are
   // off the end of the array and return an error code.
-  for(std::vector<usize>::size_type i = 0; i < idxs.size(); ++i)
+  for(unsigned long idx : idxs)
   {
-    if(idxs[i] >= arraySize)
+    if(idx >= arraySize)
     {
       return -100;
     }

@@ -52,7 +52,7 @@ public:
      */
     Iterator()
     : m_DataStore(nullptr)
-     
+
     {
     }
 
@@ -198,7 +198,7 @@ public:
      */
     ConstIterator()
     : m_DataStore(nullptr)
-     
+
     {
     }
 
