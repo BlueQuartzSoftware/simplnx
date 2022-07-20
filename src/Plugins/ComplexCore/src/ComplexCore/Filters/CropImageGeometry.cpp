@@ -220,13 +220,10 @@ Parameters CropImageGeometry::parameters() const
 
   params.insert(std::make_unique<BoolParameter>(k_UpdateOrigin_Key, "Update Origin", "Specifies if the origin should be updated", false));
 
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_VoxelArrays_Key, "Voxel Arrays", "DataPaths to related DataArrays", std::vector<DataPath>(), complex::GetAllDataTypes()));
-
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "DataPath to Feature IDs array", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.linkParameters(k_RenumberFeatures_Key, k_FeatureIds_Key, true);
 
-  params.insert(std::make_unique<StringParameter>(k_NewFeaturesName_Key, "New Cell Features Group Name", "Name of the new DataGroup containing updated updated Voxel Arrays", "Cell Features"));
   return params;
 }
 
@@ -244,8 +241,6 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   auto maxVoxels = args.value<std::vector<uint64>>(k_MaxVoxel_Key);
   auto shouldUpdateOrigin = args.value<bool>(k_UpdateOrigin_Key);
   auto shouldRenumberFeatures = args.value<bool>(k_RenumberFeatures_Key);
-  auto voxelArrayPaths = args.value<std::vector<DataPath>>(k_VoxelArrays_Key);
-  auto newCellFeaturesName = args.value<std::string>(k_NewFeaturesName_Key);
 
   auto xMin = minVoxels[0];
   auto xMax = maxVoxels[0];
@@ -361,31 +356,17 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     auto geomAction = std::make_unique<CreateImageGeometryAction>(destImagePath, tDims, targetOrigin, spacingVec);
     actions.actions.push_back(std::move(geomAction));
 
-    auto newCellFeaturesPath = destImagePath.createChildPath(newCellFeaturesName);
-    {
-      auto groupAction = std::make_unique<CreateDataGroupAction>(newCellFeaturesPath);
-      actions.actions.push_back(std::move(groupAction));
-    }
+    DataPath newCellFeaturesPath = destImagePath.createChildPath(IGridGeometry::k_CellDataName);
 
-    for(const auto& srcArrayPath : voxelArrayPaths)
-    {
-      const auto* srcArray = data.getDataAs<IDataArray>(srcArrayPath);
-      if(srcArray == nullptr)
-      {
-        std::string errMsg = fmt::format("Could not find the DataArray at path '{}'", srcArrayPath.toString());
-        return {MakeErrorResult<OutputActions>(-5551, errMsg)};
-      }
-      if(srcArray->getNumberOfTuples() != requiredTupleCount)
-      {
-        std::string errMsg = fmt::format("DataArray at path '{}' does not match the required tuple count of '{}'", srcArrayPath.toString(), requiredTupleCount);
-        return {MakeErrorResult<OutputActions>(-5551, errMsg)};
-      }
+    const AttributeMatrix& am = srcImageGeom->getCellDataRef();
 
-      DataType dataType = srcArray->getDataType();
-      auto components = srcArray->getNumberOfComponents();
-      auto dataArrayPath = newCellFeaturesPath.createChildPath(srcArrayPath.getTargetName());
-      auto arrayAction = std::make_unique<CreateArrayAction>(dataType, tDims, std::vector<usize>{components}, dataArrayPath);
-      actions.actions.push_back(std::move(arrayAction));
+    for(const auto& [id, object] : am)
+    {
+      const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
+      DataType dataType = srcArray.getDataType();
+      IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
+      DataPath dataArrayPath = newCellFeaturesPath.createChildPath(srcArray.getName());
+      actions.actions.push_back(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
     }
   }
 
@@ -415,10 +396,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   auto destImagePath = args.value<DataPath>(k_NewImageGeom_Key);
   auto minVoxels = args.value<std::vector<uint64>>(k_MinVoxel_Key);
   auto maxVoxels = args.value<std::vector<uint64>>(k_MaxVoxel_Key);
-  // auto shouldUpdateOrigin = args.value<bool>(k_UpdateOrigin_Key);
   auto shouldRenumberFeatures = args.value<bool>(k_RenumberFeatures_Key);
-  auto newFeaturesName = args.value<std::string>(k_NewFeaturesName_Key);
-  auto voxelArrayPaths = args.value<std::vector<DataPath>>(k_VoxelArrays_Key);
   auto featureIdsArrayPath = args.value<DataPath>(k_FeatureIds_Key);
 
   uint64 xMin = minVoxels[0];
@@ -430,8 +408,6 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
 
   auto& srcImageGeom = data.getDataRefAs<ImageGeom>(srcImagePath);
   auto& destImageGeom = data.getDataRefAs<ImageGeom>(destImagePath);
-
-  DataPath newVoxelParentPath = destImagePath.createChildPath(newFeaturesName);
 
   // No matter where the AM is (same DC or new DC), we have the correct DC and AM pointers...now it's time to crop
 
@@ -478,19 +454,24 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   std::array<uint64, 6> bounds = {xMin, ((xMax - xMin) + 1), yMin, ((yMax - yMin) + 1), zMin, ((zMax - zMin) + 1)};
 
   ParallelTaskAlgorithm taskRunner;
+  const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
+  auto& destCellDataAM = destImageGeom.getCellDataRef();
 
-  for(const auto& voxelPath : voxelArrayPaths)
+  for(const auto& [dataId, oldDataObject] : srcCellDataAM)
   {
     if(shouldCancel)
     {
       return {};
     }
 
-    std::string progMsg = fmt::format("Cropping Volume || Copying Data Array {}", voxelPath.getTargetName());
+    const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
+    std::string srcName = oldDataArray.getName();
+
+    auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
+
+    std::string progMsg = fmt::format("Cropping Volume || Copying Data Array {}", srcName);
     messageHandler(progMsg);
 
-    auto& oldDataArray = data.getDataRefAs<IDataArray>(voxelPath);
-    auto& newDataArray = data.getDataRefAs<IDataArray>(newVoxelParentPath.createChildPath(voxelPath.getTargetName()));
     DataType type = oldDataArray.getDataType();
 
     switch(type)
@@ -557,16 +538,6 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   tDims[0] = bounds[1];
   tDims[1] = bounds[3];
   tDims[2] = bounds[5];
-
-  if(shouldRenumberFeatures)
-  {
-    DataPath destCellFeaturesPath = destImagePath.createChildPath(newFeaturesName);
-    auto result = Sampling::RenumberFeatures(data, destImagePath, destCellFeaturesPath, featureIdsArrayPath, shouldCancel);
-    if(result.invalid())
-    {
-      return result;
-    }
-  }
 
   return {};
 }
