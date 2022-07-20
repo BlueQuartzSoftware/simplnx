@@ -1,6 +1,5 @@
 #include "AlignSections.hpp"
 
-#include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
