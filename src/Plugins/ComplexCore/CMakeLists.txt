@@ -53,7 +53,7 @@ set(FilterList
   ScalarSegmentFeaturesFilter
   SetImageGeomOriginScalingFilter
   StlFileReaderFilter
-    FindArrayStatisticsFilter
+  FindArrayStatisticsFilter
 )
 
 set(ActionList
@@ -68,7 +68,7 @@ set(AlgorithmList
   TupleTransfer
   RawBinaryReader
   ScalarSegmentFeatures
-    FindArrayStatistics
+  FindArrayStatistics
   )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}

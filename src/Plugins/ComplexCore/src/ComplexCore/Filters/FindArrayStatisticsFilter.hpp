@@ -2,6 +2,7 @@
 
 #include "ComplexCore/ComplexCore_export.hpp"
 
+#include "complex/Common/StringLiteral.hpp"
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 
@@ -96,6 +97,8 @@ public:
   UniquePointer clone() const override;
 
 protected:
+  OutputActions createCompatibleArrays(const DataStructure& data, const Arguments& args, usize numBins) const;
+
   /**
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
    * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.

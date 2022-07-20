@@ -142,4 +142,59 @@ double findSummation(const C<T, Ts...>& source)
   float sum = static_cast<float>(computeSum(source));
   return sum;
 }
+
+// -----------------------------------------------------------------------------
+template <template <typename, typename...> class C, typename T, typename... Ts>
+std::vector<float> findHistogram(C<T, Ts...>& source, float histmin, float histmax, bool histfullrange, int32_t numBins)
+{
+  if(source.empty())
+  {
+    return std::vector<float>(numBins, 0);
+  }
+
+  float min = 0.0f;
+  float max = 0.0f;
+
+  if(histfullrange)
+  {
+    min = static_cast<float>(findMin(source));
+    max = static_cast<float>(findMax(source));
+  }
+  else
+  {
+    min = histmin;
+    max = histmax;
+  }
+
+  float increment = (max - min) / (numBins);
+  if(std::abs(increment) < 1E-10)
+  {
+    numBins = 1;
+  }
+
+  std::vector<float> Histogram(numBins, 0);
+
+  if(numBins == 1) // if one bin, just set the first element to total number of points
+  {
+    Histogram[0] = static_cast<float>(source.size());
+  }
+  else
+  {
+    for(const auto s : source)
+    {
+      float value = static_cast<float>(s);
+      size_t bin = static_cast<size_t>((value - min) / increment); // find bin for this input array value
+      if((bin >= 0) && (bin < numBins))                            // make certain bin is in range
+      {
+        Histogram[bin]++; // increment histogram element corresponding to this input array value
+      }
+      else if(value == max)
+      {
+        Histogram[numBins - 1]++;
+      }
+    }
+  }
+
+  return Histogram;
+}
 } // namespace StaticicsCalculations
