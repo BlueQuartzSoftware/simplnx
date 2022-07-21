@@ -275,6 +275,7 @@ void findStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
       }
     }
 
+    // compute the statistics by feature/ensemble id
     findStatisticsByIndexImpl<T>(featureValueMap, arrays, inputValues, numFeatures);
   }
   else
@@ -298,6 +299,7 @@ void findStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
 
     data.shrink_to_fit();
 
+    // compute the statistics for the entire array
     findStatisticsImpl<T>(data, arrays, inputValues);
   }
 }
@@ -389,8 +391,11 @@ Result<> FindArrayStatistics::findStats(const DataArray<T>& inputArray, std::vec
       return MakeErrorResult(-563502, message);
     }
   }
+
+  // this level checks whether computing by index or not and preps the calculations accordingly
   findStatistics<T>(inputArray, featureIds, maskCompare, m_InputValues, arrays, numFeatures);
 
+  // compute the standardized data based on whether computing by index or not
   if(m_InputValues->StandardizeData)
   {
     const Float32Array& mean = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->MeanArrayName);
