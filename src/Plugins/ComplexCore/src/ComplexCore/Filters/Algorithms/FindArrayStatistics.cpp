@@ -5,6 +5,8 @@
 #include "complex/Utilities/Math/StatisticsCalculations.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
+#include <unordered_map>
+
 using namespace complex;
 
 namespace
