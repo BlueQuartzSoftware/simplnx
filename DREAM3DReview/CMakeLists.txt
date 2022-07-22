@@ -29,7 +29,6 @@ set(STUB_FILTERS
   ExportCLIFile
   ExtractTripleLinesFromTriangleGeometry
   FFTHDFWriterFilter
-  FindArrayStatistics
   FindCSLBoundaries
   FindElementCentroids
   FindLayerStatistics

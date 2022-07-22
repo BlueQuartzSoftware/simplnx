@@ -26,7 +26,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     ExportCLIFileTest.cpp
     ExtractTripleLinesFromTriangleGeometryTest.cpp
     FFTHDFWriterFilterTest.cpp
-    FindArrayStatisticsTest.cpp
     FindCSLBoundariesTest.cpp
     FindElementCentroidsTest.cpp
     FindLayerStatisticsTest.cpp
