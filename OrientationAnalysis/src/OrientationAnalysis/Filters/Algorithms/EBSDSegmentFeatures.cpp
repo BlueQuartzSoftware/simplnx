@@ -21,18 +21,23 @@ EBSDSegmentFeatures::~EBSDSegmentFeatures() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> EBSDSegmentFeatures::operator()()
 {
-  complex::AbstractDataStore<bool>* goodVoxels = nullptr;
-  if(m_InputValues->useGoodVoxels)
-  {
-    m_GoodVoxelsArray = m_DataStructure.getDataAs<GoodVoxelsArrayType>(m_InputValues->goodVoxelsArrayPath);
-    goodVoxels = m_GoodVoxelsArray->getDataStore();
-  }
-
   auto gridGeom = m_DataStructure.getDataAs<AbstractGeometryGrid>(m_InputValues->gridGeomPath);
 
   m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->quatsArrayPath);
   m_CellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
-  m_GoodVoxelsArray = m_DataStructure.getDataAs<BoolArray>(m_InputValues->goodVoxelsArrayPath);
+  if(m_InputValues->useGoodVoxels)
+  {
+    try
+    {
+      m_GoodVoxelsArray = std::move(InstantiateMaskCompare(m_DataStructure, m_InputValues->goodVoxelsArrayPath));
+    } catch(const std::out_of_range& exception)
+    {
+      // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+      // somewhere else that is NOT going through the normal complex::IFilter API of Preflight and Execute
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->goodVoxelsArrayPath.toString());
+      return MakeErrorResult(-485090, message);
+    }
+  }
   m_CrystalStructures = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
 
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->featureIdsArrayPath);
@@ -68,12 +73,6 @@ Result<> EBSDSegmentFeatures::operator()()
 // -----------------------------------------------------------------------------
 int64_t EBSDSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 {
-  complex::AbstractDataStore<bool>* goodVoxels = nullptr;
-  if(m_InputValues->useGoodVoxels)
-  {
-    goodVoxels = m_GoodVoxelsArray->getDataStore();
-  }
-
   complex::DataArray<int32>::store_type* featureIds = m_FeatureIdsArray->getDataStore();
   usize totalPoints = featureIds->getNumberOfTuples();
 
@@ -86,7 +85,7 @@ int64_t EBSDSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   {
     if(featureIds->getValue(randpoint) == 0) // If the GrainId of the voxel is ZERO then we can use this as a seed point
     {
-      if((!m_InputValues->useGoodVoxels || goodVoxels->getValue(randpoint)) && cellPhases->getValue(randpoint) > 0)
+      if((!m_InputValues->useGoodVoxels || m_GoodVoxelsArray->isTrue(randpoint)) && cellPhases->getValue(randpoint) > 0)
       {
         seed = static_cast<int64>(randpoint);
       }
@@ -131,8 +130,7 @@ bool EBSDSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbor
   bool neighborPointIsGood = false;
   if(m_GoodVoxelsArray != nullptr)
   {
-    BoolArray& useGoodVoxels = *m_GoodVoxelsArray;
-    neighborPointIsGood = useGoodVoxels[neighborpoint];
+    neighborPointIsGood = m_GoodVoxelsArray->isTrue(neighborpoint);
   }
 
   if(featureIds[neighborpoint] == 0 && (m_GoodVoxelsArray == nullptr || neighborPointIsGood))

@@ -7,6 +7,7 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/SegmentFeatures.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
@@ -44,7 +45,6 @@ public:
   using SeedGenerator = std::mt19937_64;
   using Int64Distribution = std::uniform_int_distribution<int64>;
   using FeatureIdsArrayType = Int32Array;
-  using GoodVoxelsArrayType = BoolArray;
 
   EBSDSegmentFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, EBSDSegmentFeaturesInputValues* inputValues);
   ~EBSDSegmentFeatures() noexcept;
@@ -82,7 +82,7 @@ private:
   const EBSDSegmentFeaturesInputValues* m_InputValues = nullptr;
   Float32Array* m_QuatsArray = nullptr;
   FeatureIdsArrayType* m_CellPhases = nullptr;
-  GoodVoxelsArrayType* m_GoodVoxelsArray = nullptr;
+  std::unique_ptr<MaskCompare> m_GoodVoxelsArray = nullptr;
   DataArray<uint32>* m_CrystalStructures = nullptr;
 
   FeatureIdsArrayType* m_FeatureIdsArray = nullptr;
