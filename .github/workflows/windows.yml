@@ -34,6 +34,36 @@ jobs:
           repository: DREAM3D/DREAM3D_Data
           path: DREAM3D_Data
           submodules: true
+      - name: Checkout DREAM3D_Data Repo
+        uses: actions/checkout@v2
+        with:
+          repository: DREAM3D/DREAM3D_Data
+          path: DREAM3D_Data
+          submodules: true
+      - name: Download Test Files
+        uses: suisei-cn/actions-download-file@v1.0.1
+        id: downloadfile  # Remember to give an ID if you need the output filename
+        with:
+          url: "https://github.com/dream3d/DREAM3D_Data/releases/download/v6_4/TestFiles.tar.gz"
+          target: ${{github.workspace}}/DREAM3D_Data
+      - name: PWD
+        shell: bash
+        run: >
+          pwd
+      - name: List Files
+        shell: bash
+        run: >
+          find . -type f -name "TestFiles.tar.gz"
+      - name: Decompress TestFiles.tar.gz
+        run: |
+          cmake -E tar xvzf ${{github.workspace}}/DREAM3D_Data/TestFiles.tar.gz
+      - name: Move TestFiles Directory into location
+        run: |
+          cmake -E rename ${{github.workspace}}/TestFiles ${{github.workspace}}/DREAM3D_Data/TestFiles
+      - name: List Files 2
+        shell: bash
+        run: >
+          find . -type d -name "TestFiles"
       - name: Add C++ Problem Matcher
         uses: ammaraskar/msvc-problem-matcher@0.2.0
       - name: Setup Build Environment
@@ -51,13 +81,11 @@ jobs:
           -username "BlueQuartzSoftware"
           -password "${{secrets.GITHUB_TOKEN}}"
       - name: Configure
-        env:
-          CXX: ${{matrix.cxx}}
         run: |
           cmake --preset ci ${{github.workspace}} -G "Visual Studio 17 2022" -T ${{matrix.toolset}}  -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data
       - name: Build
         run: |
-          cmake --build ${{github.workspace}}/build
+          cmake --build ${{github.workspace}}/complex/build
       - name: Test
         run: |
-          ctest --test-dir ${{github.workspace}}/build
+          ctest --verbose --test-dir ${{github.workspace}}/complex/build

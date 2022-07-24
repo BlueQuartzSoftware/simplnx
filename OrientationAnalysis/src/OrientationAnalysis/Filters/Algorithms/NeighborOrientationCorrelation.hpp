@@ -5,28 +5,14 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  NeighborOrientationCorrelationInputValues inputValues;
-
-  inputValues.MinConfidence = filterArgs.value<float32>(k_MinConfidence_Key);
-  inputValues.MisorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
-  inputValues.Level = filterArgs.value<int32>(k_Level_Key);
-  inputValues.ConfidenceIndexArrayPath = filterArgs.value<DataPath>(k_ConfidenceIndexArrayPath_Key);
-  inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  inputValues.QuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
-
-  return NeighborOrientationCorrelation(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
+#include "complex/Parameters/MultiArraySelectionParameter.hpp"
 
 namespace complex
 {
 
 struct ORIENTATIONANALYSIS_EXPORT NeighborOrientationCorrelationInputValues
 {
+  DataPath ImageGeomPath;
   float32 MinConfidence;
   float32 MisorientationTolerance;
   int32 Level;
@@ -58,6 +44,7 @@ public:
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
+  void updateProgress(const std::string& progMessage);
 
 private:
   DataStructure& m_DataStructure;

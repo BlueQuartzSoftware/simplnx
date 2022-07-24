@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Reconstruction/Reconstruction_export.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,27 +8,36 @@
 namespace complex
 {
 /**
- * @class AlignSectionsFeatureCentroid
+ * @class AlignSectionsMisorientationFilter
  * @brief This filter will ....
  */
-class RECONSTRUCTION_EXPORT AlignSectionsFeatureCentroid : public IFilter
+class ORIENTATIONANALYSIS_EXPORT AlignSectionsMisorientationFilter : public IFilter
 {
 public:
-  AlignSectionsFeatureCentroid() = default;
-  ~AlignSectionsFeatureCentroid() noexcept override = default;
+  AlignSectionsMisorientationFilter() = default;
+  ~AlignSectionsMisorientationFilter() noexcept override = default;
 
-  AlignSectionsFeatureCentroid(const AlignSectionsFeatureCentroid&) = delete;
-  AlignSectionsFeatureCentroid(AlignSectionsFeatureCentroid&&) noexcept = delete;
+  AlignSectionsMisorientationFilter(const AlignSectionsMisorientationFilter&) = delete;
+  AlignSectionsMisorientationFilter(AlignSectionsMisorientationFilter&&) noexcept = delete;
 
-  AlignSectionsFeatureCentroid& operator=(const AlignSectionsFeatureCentroid&) = delete;
-  AlignSectionsFeatureCentroid& operator=(AlignSectionsFeatureCentroid&&) noexcept = delete;
+  AlignSectionsMisorientationFilter& operator=(const AlignSectionsMisorientationFilter&) = delete;
+  AlignSectionsMisorientationFilter& operator=(AlignSectionsMisorientationFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_WriteAlignmentShifts_Key = "WriteAlignmentShifts";
   static inline constexpr StringLiteral k_AlignmentShiftFileName_Key = "AlignmentShiftFileName";
-  static inline constexpr StringLiteral k_UseReferenceSlice_Key = "UseReferenceSlice";
-  static inline constexpr StringLiteral k_ReferenceSlice_Key = "ReferenceSlice";
+
+  static inline constexpr StringLiteral k_MisorientationTolerance_Key = "MisorientationTolerance";
+
+  static inline constexpr StringLiteral k_GoodVoxels_Key = "UseGoodVoxels";
   static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "GoodVoxelsArrayPath";
+
+  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
+
+  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "SelectedImageGeometryPath";
+  static inline constexpr StringLiteral k_SelectedCellDataGroup_Key = "SelectedCellDataPath";
 
   /**
    * @brief Returns the name of the filter.
@@ -96,4 +105,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, AlignSectionsFeatureCentroid, "886f8b46-51b6-5682-a289-6febd10b7ef0");
+COMPLEX_DEF_FILTER_TRAITS(complex, AlignSectionsMisorientationFilter, "4fb2b9de-3124-534b-b914-dbbbdbc14604");

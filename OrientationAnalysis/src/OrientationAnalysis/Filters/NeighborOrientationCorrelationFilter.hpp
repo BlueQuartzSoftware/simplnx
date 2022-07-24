@@ -8,28 +8,31 @@
 namespace complex
 {
 /**
- * @class BadDataNeighborOrientationCheck
+ * @class NeighborOrientationCorrelationFilter
  * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT BadDataNeighborOrientationCheck : public IFilter
+class ORIENTATIONANALYSIS_EXPORT NeighborOrientationCorrelationFilter : public IFilter
 {
 public:
-  BadDataNeighborOrientationCheck() = default;
-  ~BadDataNeighborOrientationCheck() noexcept override = default;
+  NeighborOrientationCorrelationFilter() = default;
+  ~NeighborOrientationCorrelationFilter() noexcept override = default;
 
-  BadDataNeighborOrientationCheck(const BadDataNeighborOrientationCheck&) = delete;
-  BadDataNeighborOrientationCheck(BadDataNeighborOrientationCheck&&) noexcept = delete;
+  NeighborOrientationCorrelationFilter(const NeighborOrientationCorrelationFilter&) = delete;
+  NeighborOrientationCorrelationFilter(NeighborOrientationCorrelationFilter&&) noexcept = delete;
 
-  BadDataNeighborOrientationCheck& operator=(const BadDataNeighborOrientationCheck&) = delete;
-  BadDataNeighborOrientationCheck& operator=(BadDataNeighborOrientationCheck&&) noexcept = delete;
+  NeighborOrientationCorrelationFilter& operator=(const NeighborOrientationCorrelationFilter&) = delete;
+  NeighborOrientationCorrelationFilter& operator=(NeighborOrientationCorrelationFilter&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "ImageGeometryPath";
+  static inline constexpr StringLiteral k_MinConfidence_Key = "MinConfidence";
   static inline constexpr StringLiteral k_MisorientationTolerance_Key = "MisorientationTolerance";
-  static inline constexpr StringLiteral k_NumberOfNeighbors_Key = "NumberOfNeighbors";
-  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
-  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "GoodVoxelsArrayPath";
+  static inline constexpr StringLiteral k_Level_Key = "Level";
+  static inline constexpr StringLiteral k_ConfidenceIndexArrayPath_Key = "ConfidenceIndexArrayPath";
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
+  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
+  static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "IgnoredDataArrayPaths";
 
   /**
    * @brief Returns the name of the filter.
@@ -97,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, BadDataNeighborOrientationCheck, "f4a7c2df-e9b0-5da9-b745-a862666d6c99");
+COMPLEX_DEF_FILTER_TRAITS(complex, NeighborOrientationCorrelationFilter, "6427cd5e-0ad2-5a24-8847-29f8e0720f4f");

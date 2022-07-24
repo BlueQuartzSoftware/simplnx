@@ -57,6 +57,14 @@ jobs:
           -name "GitHub"
           -username "BlueQuartzSoftware"
           -password "${{secrets.GITHUB_TOKEN}}"
+      - name: Download Test Files
+        shell: bash
+        run: >
+          wget --quiet "https://github.com/dream3d/DREAM3D_Data/releases/download/v6_4/TestFiles.tar.gz" -O ${{github.workspace}}/DREAM3D_Data/TestFiles.tar.gz
+      - name: Extract Test Files
+        shell: bash
+        run: >
+          cd ${{github.workspace}}/DREAM3D_Data/ && tar -xvzf TestFiles.tar.gz
       - name: Configure
         env:
           CC: ${{matrix.cc}}
@@ -65,7 +73,7 @@ jobs:
           cmake --preset ci ${{github.workspace}} -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data -D VCPKG_TARGET_TRIPLET:STRING=x64-linux-dynamic
       - name: Build
         run: |
-          cmake --build ${{github.workspace}}/build
+          cmake --build ${{github.workspace}}/complex/build
       - name: Test
         run: |
-          ctest --test-dir ${{github.workspace}}/build
+          ctest --test-dir ${{github.workspace}}/complex/build

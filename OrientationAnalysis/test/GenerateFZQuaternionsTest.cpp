@@ -61,7 +61,7 @@ void MessageHandlerFunction(const IFilter::Message& message)
 
 } // namespace
 
-TEST_CASE("OrientationAnalysis::GenerateFZQuaternions: Instantiation and Parameter Check", "[OrientationAnalysis][GenerateFZQuaternions]")
+TEST_CASE("OrientationAnalysis::GenerateFZQuaternions", "[OrientationAnalysis][GenerateFZQuaternions]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateFZQuaternions filter;

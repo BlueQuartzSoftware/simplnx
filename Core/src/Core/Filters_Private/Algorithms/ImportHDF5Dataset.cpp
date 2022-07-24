@@ -1,4 +1,4 @@
-#include "AlignSectionsFeatureCentroid.hpp"
+#include "ImportHDF5Dataset.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
@@ -6,8 +6,7 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-AlignSectionsFeatureCentroid::AlignSectionsFeatureCentroid(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                           AlignSectionsFeatureCentroidInputValues* inputValues)
+ImportHDF5Dataset::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ImportHDF5DatasetInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -16,16 +15,16 @@ AlignSectionsFeatureCentroid::AlignSectionsFeatureCentroid(DataStructure& dataSt
 }
 
 // -----------------------------------------------------------------------------
-AlignSectionsFeatureCentroid::~AlignSectionsFeatureCentroid() noexcept = default;
+ImportHDF5Dataset::~ImportHDF5Dataset() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& AlignSectionsFeatureCentroid::getCancel()
+const std::atomic_bool& ImportHDF5Dataset::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> AlignSectionsFeatureCentroid::operator()()
+Result<> ImportHDF5Dataset::operator()()
 {
 
   return {};
