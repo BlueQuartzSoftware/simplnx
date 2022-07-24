@@ -20,8 +20,16 @@ jobs:
         os:
           - ubuntu-20.04
         cxx:
+          - g++-9
           - g++-10
           - clang++-10
+        include:
+          - cxx: g++-9
+            cc: gcc-9
+          - cxx: g++-10
+            cc: gcc-10
+          - cxx: clang++-10
+            cc: clang-10
     runs-on: ${{matrix.os}}
     steps:
       - name: Checkout
@@ -33,7 +41,13 @@ jobs:
         with:
           repository: bluequartzsoftware/complex
           path: complex
-          submodules: true     
+          submodules: true               
+      - name: Checkout DREAM3D_Data Repo
+        uses: actions/checkout@v2
+        with:
+          repository: DREAM3D/DREAM3D_Data
+          path: DREAM3D_Data
+          submodules: true   
       - name: Add C++ Problem Matcher
         uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
       - name: Install Dependencies
@@ -49,14 +63,23 @@ jobs:
           -name "GitHub"
           -username "BlueQuartzSoftware"
           -password "${{secrets.GITHUB_TOKEN}}"
+      - name: Download Test Files
+        shell: bash
+        run: >
+          wget --quiet "https://github.com/dream3d/DREAM3D_Data/releases/download/v6_4/TestFiles.tar.gz" -O ${{github.workspace}}/DREAM3D_Data/TestFiles.tar.gz
+      - name: Extract Test Files
+        shell: bash
+        run: >
+          cd ${{github.workspace}}/DREAM3D_Data/ && tar -xvzf TestFiles.tar.gz
       - name: Configure
         env:
+          CC: ${{matrix.cc}}
           CXX: ${{matrix.cxx}}
         run: |
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCOMPLEX_PLUGIN_SEARCH_DIRS=${{github.workspace}} -DCMAKE_TOOLCHAIN_FILE:FILEPATH=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake -DCOMPLEX_EXTRA_PLUGINS="Core;DREAM3DReview;EMMPM;Generic;ImageProcessing;ImportExport;ITKImageProcessing;OrientationAnalysis;Processing;ProgWorkshop;Reconstruction;Sampling;SimulationIO;StatsToolbox;SurfaceMeshing;SyntheticBuilding;UCSBUtilities;VolumeMeshing" -S ${{github.workspace}}/complex -B ${{github.workspace}}/build
+          cmake --preset ci ${{github.workspace}}/complex -S ${{github.workspace}}/complex -DDREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data -D VCPKG_TARGET_TRIPLET:STRING=x64-linux-dynamic -DCOMPLEX_EXTRA_PLUGINS="Core;OrientationAnalysis" -DCOMPLEX_PLUGIN_SEARCH_DIRS=${{github.workspace}}
       - name: Build
         run: |
-          cmake --build ${{github.workspace}}/build
+          cmake --build ${{github.workspace}}/complex/build
       - name: Test
         run: |
-          ctest --test-dir ${{github.workspace}}/build
+          ctest --test-dir ${{github.workspace}}/complex/build

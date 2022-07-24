@@ -1,34 +1,25 @@
 #pragma once
 
-#include "Reconstruction/Reconstruction_export.hpp"
+#include "Core/Core_export.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  AlignSectionsFeatureCentroidInputValues inputValues;
-
-  inputValues.WriteAlignmentShifts = filterArgs.value<bool>(k_WriteAlignmentShifts_Key);
-  inputValues.AlignmentShiftFileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_AlignmentShiftFileName_Key);
-  inputValues.UseReferenceSlice = filterArgs.value<bool>(k_UseReferenceSlice_Key);
-  inputValues.ReferenceSlice = filterArgs.value<int32>(k_ReferenceSlice_Key);
-  inputValues.GoodVoxelsArrayPath = filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key);
-
-  return AlignSectionsFeatureCentroid(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
+#include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "complex/Utilities/AlignSections.hpp"
 
 namespace complex
 {
 
-struct RECONSTRUCTION_EXPORT AlignSectionsFeatureCentroidInputValues
+struct CORE_EXPORT AlignSectionsFeatureCentroidInputValues
 {
   bool WriteAlignmentShifts;
   FileSystemPathParameter::ValueType AlignmentShiftFileName;
   bool UseReferenceSlice;
   int32 ReferenceSlice;
   DataPath GoodVoxelsArrayPath;
+  DataPath inputImageGeometry;
+  DataPath cellDataGroupPath;
 };
 
 /**
@@ -37,11 +28,11 @@ struct RECONSTRUCTION_EXPORT AlignSectionsFeatureCentroidInputValues
  * where a bool mask array specifies.
  */
 
-class RECONSTRUCTION_EXPORT AlignSectionsFeatureCentroid
+class CORE_EXPORT AlignSectionsFeatureCentroid : public AlignSections
 {
 public:
   AlignSectionsFeatureCentroid(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AlignSectionsFeatureCentroidInputValues* inputValues);
-  ~AlignSectionsFeatureCentroid() noexcept;
+  ~AlignSectionsFeatureCentroid() noexcept override;
 
   AlignSectionsFeatureCentroid(const AlignSectionsFeatureCentroid&) = delete;
   AlignSectionsFeatureCentroid(AlignSectionsFeatureCentroid&&) noexcept = delete;
@@ -50,13 +41,17 @@ public:
 
   Result<> operator()();
 
-  const std::atomic_bool& getCancel();
+protected:
+  void find_shifts(std::vector<int64_t>& xshifts, std::vector<int64_t>& yshifts) override;
+
+  std::vector<DataPath> getSelectedDataPaths() const override;
 
 private:
   DataStructure& m_DataStructure;
   const AlignSectionsFeatureCentroidInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+  Result<> m_Result;
 };
 
 } // namespace complex

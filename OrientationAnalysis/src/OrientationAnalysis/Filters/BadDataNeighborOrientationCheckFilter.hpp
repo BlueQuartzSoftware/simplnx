@@ -7,37 +7,30 @@
 
 namespace complex
 {
-
 /**
- * @class ConvertOrientations
- * @brief This filter will convert between the various representations of an Orientation. Those representations are:
- *
- * "Euler" = 0
- *  "OrientationMatrix" = 1
- *  "Quaternion" = 2
- *  "AxisAngle" = 3
- *  "Rodrigues" = 4
- *  "Homochoric" = 5
- *  "Cubochoric" = 6
- *
+ * @class BadDataNeighborOrientationCheckFilter
+ * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT ConvertOrientations : public IFilter
+class ORIENTATIONANALYSIS_EXPORT BadDataNeighborOrientationCheckFilter : public IFilter
 {
 public:
-  ConvertOrientations() = default;
-  ~ConvertOrientations() noexcept override = default;
+  BadDataNeighborOrientationCheckFilter() = default;
+  ~BadDataNeighborOrientationCheckFilter() noexcept override = default;
 
-  ConvertOrientations(const ConvertOrientations&) = delete;
-  ConvertOrientations(ConvertOrientations&&) noexcept = delete;
+  BadDataNeighborOrientationCheckFilter(const BadDataNeighborOrientationCheckFilter&) = delete;
+  BadDataNeighborOrientationCheckFilter(BadDataNeighborOrientationCheckFilter&&) noexcept = delete;
 
-  ConvertOrientations& operator=(const ConvertOrientations&) = delete;
-  ConvertOrientations& operator=(ConvertOrientations&&) noexcept = delete;
+  BadDataNeighborOrientationCheckFilter& operator=(const BadDataNeighborOrientationCheckFilter&) = delete;
+  BadDataNeighborOrientationCheckFilter& operator=(BadDataNeighborOrientationCheckFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputType_Key = "InputType";
-  static inline constexpr StringLiteral k_OutputType_Key = "OutputType";
-  static inline constexpr StringLiteral k_InputOrientationArrayPath_Key = "InputOrientationArrayPath";
-  static inline constexpr StringLiteral k_OutputOrientationArrayName_Key = "OutputOrientationArrayName";
+  static inline constexpr StringLiteral k_MisorientationTolerance_Key = "MisorientationTolerance";
+  static inline constexpr StringLiteral k_NumberOfNeighbors_Key = "NumberOfNeighbors";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "ImageGeometryPath";
+  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
+  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "GoodVoxelsArrayPath";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
 
   /**
    * @brief Returns the name of the filter.
@@ -105,4 +98,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ConvertOrientations, "e5629880-98c4-5656-82b8-c9fe2b9744de");
+COMPLEX_DEF_FILTER_TRAITS(complex, BadDataNeighborOrientationCheckFilter, "f4a7c2df-e9b0-5da9-b745-a862666d6c99");
