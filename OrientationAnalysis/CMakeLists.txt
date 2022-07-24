@@ -75,7 +75,6 @@ set(STUB_FILTERS
   # ImportH5EspritData # MISSING 1 or more Parameter Implementations
   # ImportH5OimData # MISSING 1 or more Parameter Implementations
   # OrientationUtility # MISSING 1 or more Parameter Implementations
-  ReadAngData
   ReadCtfData
   ReplaceElementAttributesWithNeighborValues
   RodriguesConvertor
