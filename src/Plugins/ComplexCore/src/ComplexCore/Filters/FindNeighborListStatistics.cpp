@@ -300,13 +300,14 @@ Parameters FindNeighborListStatistics::parameters() const
       std::make_unique<BoolParameter>(k_FindStandardDeviation_Key, "Find Standard Deviation", "Specifies whether or not the filter creates the Standard Deviation array during calculations", true));
   params.insert(std::make_unique<BoolParameter>(k_FindSummation_Key, "Find Summation", "Specifies whether or not the filter creates the Summation array during calculations", true));
 
-  params.insert(std::make_unique<ArrayCreationParameter>(k_Length_Key, "Length", "Path to create the Length array during calculations", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_Minimum_Key, "Minimum", "Path to create the Minimum array during calculations", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_Maximum_Key, "Maximum", "Path to create the Maximum array during calculations", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_Mean_Key, "Mean", "Path to create the Mean array during calculations", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_Median_Key, "Median", "Path to create the Mean array during calculations", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_StandardDeviation_Key, "Standard Deviation", "Path to create the Standard Deviation array during calculations", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_Summation_Key, "Summation", "Path to create the Summation array during calculations", DataPath()));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_Length_Key, "Length", "Path to create the Length array during calculations", DataPath({"Length"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_Minimum_Key, "Minimum", "Path to create the Minimum array during calculations", DataPath({"Minimum"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_Maximum_Key, "Maximum", "Path to create the Maximum array during calculations", DataPath({"Maximum"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_Mean_Key, "Mean", "Path to create the Mean array during calculations", DataPath({"Mean"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_Median_Key, "Median", "Path to create the Median array during calculations", DataPath({"Median"})));
+  params.insert(
+      std::make_unique<ArrayCreationParameter>(k_StandardDeviation_Key, "Standard Deviation", "Path to create the Standard Deviation array during calculations", DataPath({"StandardDeviation"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_Summation_Key, "Summation", "Path to create the Summation array during calculations", DataPath({"Summation"})));
   return params;
 }
 
