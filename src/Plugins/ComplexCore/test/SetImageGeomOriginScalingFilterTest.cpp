@@ -8,7 +8,7 @@
 
 using namespace complex;
 
-TEST_CASE("SetImageGeomOriginScalingFilter(Instantiate)", "[ComplexCore][SetImageGeomOriginScalingFilter]")
+TEST_CASE("ComplexCore::SetImageGeomOriginScalingFilter(Instantiate)", "[ComplexCore][SetImageGeomOriginScalingFilter]")
 {
   DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
   bool k_ChangeOrigin = false;
@@ -30,7 +30,7 @@ TEST_CASE("SetImageGeomOriginScalingFilter(Instantiate)", "[ComplexCore][SetImag
   COMPLEX_RESULT_REQUIRE_VALID(result.outputActions);
 }
 
-TEST_CASE("SetImageGeomOriginScalingFilter(Valid Parameters)", "[ComplexCore][SetImageGeomOriginScalingFilter]")
+TEST_CASE("ComplexCore::SetImageGeomOriginScalingFilter(Valid Parameters)", "[ComplexCore][SetImageGeomOriginScalingFilter]")
 {
   DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
   bool k_ChangeOrigin = true;

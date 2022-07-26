@@ -117,7 +117,7 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 }
 } // namespace
 
-TEST_CASE("Core::FindSurfaceFeatures: Instantiation and Parameter Check", "[Core][FindSurfaceFeatures]")
+TEST_CASE("ComplexCore::FindSurfaceFeatures: Instantiation and Parameter Check", "[Core][FindSurfaceFeatures]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindSurfaceFeatures filter;
@@ -138,22 +138,22 @@ TEST_CASE("Core::FindSurfaceFeatures: Instantiation and Parameter Check", "[Core
   COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
 }
 
-TEST_CASE("Core::FindSurfaceFeatures: Valid filter execution in 3D", "[Core][FindSurfaceFeatures]")
+TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 3D", "[Core][FindSurfaceFeatures]")
 {
   test_impl(std::vector<uint64>({100, 100, 100}), k_FeatureIdsFileName, 1000000, k_SurfaceFeatures3DExemplaryFileName);
 }
 
-TEST_CASE("Core::FindSurfaceFeatures: Valid filter execution in 2D - XY Plane", "[Core][FindSurfaceFeatures]")
+TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 2D - XY Plane", "[Core][FindSurfaceFeatures]")
 {
   test_impl(std::vector<uint64>({100, 100, 1}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }
 
-TEST_CASE("Core::FindSurfaceFeatures: Valid filter execution in 2D - XZ Plane", "[Core][FindSurfaceFeatures]")
+TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 2D - XZ Plane", "[Core][FindSurfaceFeatures]")
 {
   test_impl(std::vector<uint64>({100, 1, 100}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }
 
-TEST_CASE("Core::FindSurfaceFeatures: Valid filter execution in 2D - YZ Plane", "[Core][FindSurfaceFeatures]")
+TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 2D - YZ Plane", "[Core][FindSurfaceFeatures]")
 {
   test_impl(std::vector<uint64>({1, 100, 100}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }

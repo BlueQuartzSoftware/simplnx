@@ -16,7 +16,7 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 
-TEST_CASE("IterativeClosestPointFilter: Create Filter", "[DREAM3DReview][IterativeClosestPointFilter]")
+TEST_CASE("ComplexCore::IterativeClosestPointFilter: Create Filter", "[DREAM3DReview][IterativeClosestPointFilter]")
 {
   IterativeClosestPointFilter filter;
   DataStructure dataGraph;
@@ -31,7 +31,7 @@ TEST_CASE("IterativeClosestPointFilter: Create Filter", "[DREAM3DReview][Iterati
   REQUIRE(executeResult.result.invalid());
 }
 
-TEST_CASE("IterativeClosestPointFilter: Test Algorithm", "[DREAM3DReview][IterativeClosestPointFilter]")
+TEST_CASE("ComplexCore::IterativeClosestPointFilter: Test Algorithm", "[DREAM3DReview][IterativeClosestPointFilter]")
 {
   IterativeClosestPointFilter filter;
   DataStructure dataGraph = UnitTest::CreateDataStructure();

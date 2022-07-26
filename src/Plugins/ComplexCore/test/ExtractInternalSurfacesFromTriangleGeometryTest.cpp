@@ -47,7 +47,7 @@ DataStructure createTestData(const std::string& triangleGeomName, const std::str
 }
 } // namespace
 
-TEST_CASE("ExtractInternalSurfacesFromTriangleGeometry(Instantiate)", "[ComplexCore][ExtractInternalSurfacesFromTriangleGeometry]")
+TEST_CASE("ComplexCore::ExtractInternalSurfacesFromTriangleGeometry(Instantiate)", "[ComplexCore][ExtractInternalSurfacesFromTriangleGeometry]")
 {
   const DataPath k_TriangleGeomPath({k_TriangleGeomName});
   const DataPath k_InternalTrianglePath({k_InternalTriangleGeomName});
@@ -69,7 +69,7 @@ TEST_CASE("ExtractInternalSurfacesFromTriangleGeometry(Instantiate)", "[ComplexC
   COMPLEX_RESULT_REQUIRE_VALID(preflight.outputActions);
 }
 
-TEST_CASE("ExtractInternalSurfacesFromTriangleGeometry(Data)", "[ComplexCore][ExtractInternalSurfacesFromTriangleGeometry]")
+TEST_CASE("ComplexCore::ExtractInternalSurfacesFromTriangleGeometry(Data)", "[ComplexCore][ExtractInternalSurfacesFromTriangleGeometry]")
 {
   const DataPath k_TriangleGeomPath({k_TriangleGeomName});
   const DataPath k_InternalTrianglePath({k_InternalTriangleGeomName});

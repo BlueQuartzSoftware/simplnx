@@ -20,7 +20,7 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 
-TEST_CASE("FindArrayStatisticsFilter: Instantiate Filter", "[ComplexCore][FindArrayStatisticsFilter]")
+TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Instantiate Filter", "[ComplexCore][FindArrayStatisticsFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindArrayStatisticsFilter filter;
@@ -71,7 +71,7 @@ TEST_CASE("FindArrayStatisticsFilter: Instantiate Filter", "[ComplexCore][FindAr
   REQUIRE(executeResult.result.invalid());
 }
 
-TEST_CASE("FindArrayStatisticsFilter: Test Algorithm", "[ComplexCore][FindArrayStatisticsFilter]")
+TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCore][FindArrayStatisticsFilter]")
 {
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");

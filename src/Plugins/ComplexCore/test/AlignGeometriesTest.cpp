@@ -29,7 +29,7 @@ DataStructure createTestData()
 }
 } // namespace
 
-TEST_CASE("AlignGeometries: Instantiate Filter", "[AlignGeometries]")
+TEST_CASE("ComplexCore::AlignGeometries: Instantiate Filter", "[AlignGeometries]")
 {
   AlignGeometries filter;
   DataStructure dataGraph = createTestData();
@@ -52,7 +52,7 @@ TEST_CASE("AlignGeometries: Instantiate Filter", "[AlignGeometries]")
   REQUIRE(!executeResult.result.valid());
 }
 
-TEST_CASE("AlignGeometries: Bad Alignment Type", "[AlignGeometries]")
+TEST_CASE("ComplexCore::AlignGeometries: Bad Alignment Type", "[AlignGeometries]")
 {
   AlignGeometries filter;
   DataStructure dataGraph = createTestData();
@@ -75,7 +75,7 @@ TEST_CASE("AlignGeometries: Bad Alignment Type", "[AlignGeometries]")
   COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
 }
 
-TEST_CASE("AlignGeometries: Valid Arguments", "[AlignGeometries]")
+TEST_CASE("ComplexCore::AlignGeometries: Valid Arguments", "[AlignGeometries]")
 {
   AlignGeometries filter;
   DataStructure dataGraph = createTestData();

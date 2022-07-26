@@ -112,7 +112,7 @@ void testElementArray(const std::string& elementArrayFileName, uint64 compCount,
 }
 } // namespace
 
-TEST_CASE("Core::CreateFeatureArrayFromElementArray: Instantiation and Parameter Check", "[Core][CreateFeatureArrayFromElementArray]")
+TEST_CASE("ComplexCore::CreateFeatureArrayFromElementArray: Instantiation and Parameter Check", "[Core][CreateFeatureArrayFromElementArray]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateFeatureArrayFromElementArray filter;
@@ -133,12 +133,12 @@ TEST_CASE("Core::CreateFeatureArrayFromElementArray: Instantiation and Parameter
   COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
 }
 
-TEST_CASE("Core::CreateFeatureArrayFromElementArray: Valid filter execution - 1 Component")
+TEST_CASE("ComplexCore::CreateFeatureArrayFromElementArray: Valid filter execution - 1 Component")
 {
   testElementArray<float32>("ConfidenceIndex.raw", 1, "ConfidenceIndex_FeatureArray.raw");
 }
 
-TEST_CASE("Core::CreateFeatureArrayFromElementArray: Valid filter execution - 3 Component")
+TEST_CASE("ComplexCore::CreateFeatureArrayFromElementArray: Valid filter execution - 3 Component")
 {
   testElementArray<uint8>("IPFColors.raw", 3, "IPFColors_FeatureArray.raw");
 }

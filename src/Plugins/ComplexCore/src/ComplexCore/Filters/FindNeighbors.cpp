@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
@@ -10,8 +11,8 @@
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/MultiArraySelectionParameter.hpp"
 
 namespace complex
 {
@@ -32,24 +33,28 @@ Uuid FindNeighbors::uuid() const
 
 std::string FindNeighbors::humanName() const
 {
-  return "Find Neighbors";
+  return "Find Feature Neighbors";
 }
 
 Parameters FindNeighbors::parameters() const
 {
   Parameters params;
+  params.insertSeparator(Parameters::Separator{"Parameters"});
+
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreBoundary_Key, "Store Boundary Cells Array", "", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreSurface_Key, "Store Surface Features Array", "", false));
 
+  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
 
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_CellFeatures_Key, "Cell Feature Arrays", "", std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_BoundaryCells_Key, "Boundary Cells", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NumNeighbors_Key, "Number of Neighbors", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NeighborList_Key, "Neighbor List", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_SharedSurfaceArea_Key, "Shared Surface Area List", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceFeatures_Key, "Surface Features", "", DataPath{}));
+  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellFeatures_Key, "Cell Feature AttributeMatrix", "", DataPath({"Data Container", "Feature Data"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_BoundaryCells_Key, "Boundary Cells", "", DataPath({"BoundaryCells"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NumNeighbors_Key, "Number of Neighbors", "", DataPath({"NumNeighbors2"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NeighborList_Key, "Neighbor List", "", DataPath({"NeighborList2"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_SharedSurfaceArea_Key, "Shared Surface Area List", "", DataPath({"SharedSurfaceAreaList2"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceFeatures_Key, "Surface Features", "", DataPath({"SurfaceFeatures"})));
 
   params.linkParameters(k_StoreBoundary_Key, k_BoundaryCells_Key, std::make_any<bool>(true));
   params.linkParameters(k_StoreSurface_Key, k_SurfaceFeatures_Key, std::make_any<bool>(true));
@@ -72,6 +77,7 @@ IFilter::PreflightResult FindNeighbors::preflightImpl(const DataStructure& data,
   auto neighborListPath = args.value<DataPath>(k_NeighborList_Key);
   auto sharedSurfaceAreaPath = args.value<DataPath>(k_SharedSurfaceArea_Key);
   auto surfaceFeaturesPath = args.value<DataPath>(k_SurfaceFeatures_Key);
+  auto featureAttrMatrixPath = args.value<DataPath>(k_CellFeatures_Key);
 
   OutputActions actions;
 
@@ -87,6 +93,34 @@ IFilter::PreflightResult FindNeighbors::preflightImpl(const DataStructure& data,
     actions.actions.push_back(std::move(action));
   }
 
+  // Feature Data:
+  // Validating the Feature Attribute Matrix and trying to find a child of the Group
+  // that is an IDataArray subclass, so we can get the proper tuple shape
+  const auto* featureAttrMatrix = data.getDataAs<DataGroup>(featureAttrMatrixPath);
+  if(featureAttrMatrix == nullptr)
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-12600, "Feature Attribute Matrix Path is NOT a DataGroup"}})};
+  }
+  const auto& featureAttrMatrixChildren = featureAttrMatrix->getDataMap();
+  bool childDataArrayFound = false;
+  for(const auto& child : featureAttrMatrixChildren)
+  {
+    if(child.second->getDataObjectType() == DataObject::Type::DataArray)
+    {
+      const auto* childDataArray = dynamic_cast<IDataArray*>(child.second.get());
+      tupleShape = childDataArray->getIDataStore()->getTupleShape();
+      tupleCount = childDataArray->getNumberOfTuples();
+      childDataArrayFound = true;
+      break;
+    }
+  }
+  // We must find a child IDataArray subclass to get the tuple shape correct.
+  if(!childDataArrayFound)
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-12601, "Feature Attribute Matrix does not have a child IDataArray"}})};
+  }
+
+  // Create the NumNeighbors Output Data Array
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, cDims, numNeighborsPath);
     actions.actions.push_back(std::move(action));
@@ -98,7 +132,6 @@ IFilter::PreflightResult FindNeighbors::preflightImpl(const DataStructure& data,
     actions.actions.push_back(std::move(action));
   }
 
-  // Feature Data
   // Do this whole block FIRST otherwise the side effect is that a call to m->getNumCellFeatureTuples will = 0
   // because we are just creating an empty NeighborList object.
   // Now we are going to get a "Pointer" to the NeighborList object out of the DataContainer
@@ -142,8 +175,8 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
   usize totalPoints = featureIdsArray.getNumberOfTuples();
   usize totalFeatures = numNeighborsArray.getNumberOfTuples();
 
-  /* Ensure that we will be able to work with the user selected feature Id Array */
-  const auto [minFeatureId, maxFeatureId] = std::minmax_element(featureIdsArray.begin(), featureIdsArray.begin() + totalPoints);
+  /* Ensure that we will be able to work with the user selected featureId Array */
+  const auto [minFeatureId, maxFeatureId] = std::minmax_element(featureIdsArray.begin(), featureIdsArray.end());
   if(static_cast<usize>(*maxFeatureId) >= totalFeatures)
   {
     std::stringstream out;
@@ -165,32 +198,37 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
       static_cast<int64>(udims[2]),
   };
 
-  std::array<int64, 6> neighpoints = {0, 0, 0, 0, 0, 0};
-  neighpoints[0] = -dims[0] * dims[1];
-  neighpoints[1] = -dims[0];
-  neighpoints[2] = -1;
-  neighpoints[3] = 1;
-  neighpoints[4] = dims[0];
-  neighpoints[5] = dims[0] * dims[1];
+  std::array<int64, 6> neighPoints = {-dims[0] * dims[1], -dims[0], -1, 1, dims[0], dims[0] * dims[1]};
 
   int64 column = 0;
   int64 row = 0;
   int64 plane = 0;
   int32 feature = 0;
   int32 nnum = 0;
-  int8 onsurf = 0;
+  uint8 onsurf = 0;
   bool good = false;
   int64 neighbor = 0;
 
-  std::vector<std::vector<int32>> neighborlist;
-  std::vector<std::vector<float>> neighborsurfacearealist;
+  std::vector<std::vector<int32>> neighborlist(totalFeatures);
+  std::vector<std::vector<float>> neighborsurfacearealist(totalFeatures);
 
   int32 nListSize = 100;
-  neighborlist.resize(totalFeatures);
-  neighborsurfacearealist.resize(totalFeatures);
 
+  float progInt = 0.0F;
+  auto start = std::chrono::steady_clock::now();
+  // Initialize the neighbor lists
   for(usize i = 1; i < totalFeatures; i++)
   {
+    auto now = std::chrono::steady_clock::now();
+    // Only send updates every 1 second
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+    {
+      progInt = static_cast<float>(i) / static_cast<float>(totalFeatures) * 100.0f;
+      std::string message = fmt::format("Initializing Neighbor Lists || {:2.0f}% Complete", progInt);
+      messageHandler(complex::IFilter::ProgressMessage{complex::IFilter::Message::Type::Info, message, static_cast<int32_t>(progInt)});
+      start = std::chrono::steady_clock::now();
+    }
+
     if(shouldCancel)
     {
       return {};
@@ -202,12 +240,25 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
     if(storeSurfaceFeatures)
     {
       auto& surfaceFeatures = surfaceFeaturesArray->getDataStoreRef();
-      surfaceFeatures[i] = false;
+      surfaceFeatures[i] = 0;
     }
   }
 
+  progInt = 0.0F;
+  start = std::chrono::steady_clock::now();
+  // Loop over all points to generate the neighbor lists
   for(usize j = 0; j < totalPoints; j++)
   {
+    auto now = std::chrono::steady_clock::now();
+    // Only send updates every 1 second
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+    {
+      progInt = static_cast<float>(j) / static_cast<float>(totalPoints) * 100.0f;
+      std::string message = fmt::format("Determining Neighbor Lists || {:2.0f}% Complete", progInt);
+      messageHandler(complex::IFilter::ProgressMessage{complex::IFilter::Message::Type::Info, message, static_cast<int32_t>(progInt)});
+      start = std::chrono::steady_clock::now();
+    }
+
     if(shouldCancel)
     {
       return {};
@@ -228,17 +279,17 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
             plane == static_cast<int64>((imageGeomNumZ - 1))) &&
            imageGeomNumZ != 1)
         {
-          surfaceFeatures[feature] = true;
+          surfaceFeatures[feature] = 1;
         }
         if((column == 0 || column == static_cast<int64>((imageGeomNumX - 1)) || row == 0 || row == static_cast<int64>((imageGeomNumY - 1))) && imageGeomNumZ == 1)
         {
-          surfaceFeatures[feature] = true;
+          surfaceFeatures[feature] = 1;
         }
       }
-      for(int32 k = 0; k < 6; k++)
+      for(size_t k = 0; k < 6; k++)
       {
         good = true;
-        neighbor = static_cast<int64>(j + neighpoints[k]);
+        neighbor = static_cast<int64>(j + neighPoints[k]);
         if(k == 0 && plane == 0)
         {
           good = false;
@@ -276,22 +327,33 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
     if(storeBoundaryCells)
     {
       auto& boundaryCells = boundaryCellsArray->getDataStoreRef();
-      boundaryCells[j] = onsurf;
+      boundaryCells[j] = static_cast<int32>(onsurf);
     }
   }
 
   FloatVec3 spacing = imageGeom.getSpacing();
 
+  progInt = 0;
+  start = std::chrono::steady_clock::now();
   // We do this to create new set of NeighborList objects
   for(usize i = 1; i < totalFeatures; i++)
   {
+    auto now = std::chrono::steady_clock::now();
+    // Only send updates every 1 second
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+    {
+      progInt = static_cast<float>(i) / static_cast<float>(totalFeatures) * 100.0f;
+      std::string message = fmt::format("Calculating Surface Areas || {:2.0f}% Complete", progInt);
+      messageHandler(complex::IFilter::ProgressMessage{complex::IFilter::Message::Type::Info, message, static_cast<int32>(progInt)});
+      start = std::chrono::steady_clock::now();
+    }
     if(shouldCancel)
     {
       return {};
     }
 
     std::map<int32, int32> neighToCount;
-    int32 numneighs = static_cast<int32>(neighborlist[i].size());
+    auto numneighs = static_cast<int32>(neighborlist[i].size());
 
     // this increments the voxel counts for each feature
     for(int32 j = 0; j < numneighs; j++)
@@ -299,12 +361,12 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
       neighToCount[neighborlist[i][j]]++;
     }
 
-    std::map<int32, int32>::iterator neighiter = neighToCount.find(0);
-    neighToCount.erase(neighiter);
-    neighiter = neighToCount.find(-1);
-    if(neighiter != neighToCount.end())
+    std::map<int32, int32>::iterator neighborIter = neighToCount.find(0);
+    neighToCount.erase(neighborIter);
+    neighborIter = neighToCount.find(-1);
+    if(neighborIter != neighToCount.end())
     {
-      neighToCount.erase(neighiter);
+      neighToCount.erase(neighborIter);
     }
     // Resize the features neighbor list to zero
     neighborlist[i].resize(0);
@@ -314,7 +376,7 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
     {
       float area = static_cast<float>(number) * spacing[0] * spacing[1];
 
-      // Push the neighbor feature id back onto the list so we stay synced up
+      // Push the neighbor feature id back onto the list, so we stay synced up
       neighborlist[i].push_back(neigh);
       neighborsurfacearealist[i].push_back(area);
     }

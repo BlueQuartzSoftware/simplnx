@@ -44,7 +44,7 @@ bool RequireDataArrayEqualZero(const DataArray<T>& data)
 }
 } // namespace
 
-TEST_CASE("ConditionalSetValue: Instantiate Filter", "[ConditionalSetValue]")
+TEST_CASE("ComplexCore::ConditionalSetValue: Instantiate Filter", "[ConditionalSetValue]")
 {
   ConditionalSetValue filter;
   DataStructure dataGraph;
@@ -65,7 +65,7 @@ TEST_CASE("ConditionalSetValue: Instantiate Filter", "[ConditionalSetValue]")
   REQUIRE(!executeResult.result.valid());
 }
 
-TEST_CASE("ConditionalSetValue: Missing/Empty DataPaths", "[ConditionalSetValue]")
+TEST_CASE("ComplexCore::ConditionalSetValue: Missing/Empty DataPaths", "[ConditionalSetValue]")
 {
   DataStructure dataGraph = UnitTest::CreateDataStructure();
   Arguments args;
@@ -99,7 +99,7 @@ TEST_CASE("ConditionalSetValue: Missing/Empty DataPaths", "[ConditionalSetValue]
   REQUIRE(preflightResult.outputActions.valid() == true);
 }
 
-TEST_CASE("ConditionalSetValue: Test Algorithm Bool", "[ConditionalSetValue]")
+TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm Bool", "[ConditionalSetValue]")
 {
   DataStructure dataGraph = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
@@ -146,7 +146,7 @@ TEST_CASE("ConditionalSetValue: Test Algorithm Bool", "[ConditionalSetValue]")
   REQUIRE(err >= 0);
 }
 
-TEST_CASE("ConditionalSetValue: Test Algorithm UInt8", "[ConditionalSetValue]")
+TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm UInt8", "[ConditionalSetValue]")
 {
   DataStructure dataGraph = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
@@ -182,7 +182,7 @@ TEST_CASE("ConditionalSetValue: Test Algorithm UInt8", "[ConditionalSetValue]")
   REQUIRE(RequireDataArrayEqualZero(float32DataArray));
 }
 
-TEST_CASE("ConditionalSetValue: Test Algorithm Int8", "[ConditionalSetValue]")
+TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm Int8", "[ConditionalSetValue]")
 {
   DataStructure dataGraph = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
@@ -218,7 +218,7 @@ TEST_CASE("ConditionalSetValue: Test Algorithm Int8", "[ConditionalSetValue]")
   REQUIRE(RequireDataArrayEqualZero(float32DataArray));
 }
 
-TEST_CASE("ConditionalSetValue: Overflow/Underflow", "[ConditionalSetValue]")
+TEST_CASE("ComplexCore::ConditionalSetValue: Overflow/Underflow", "[ConditionalSetValue]")
 {
   std::vector<size_t> imageDims = {40, 60, 80};
   FloatVec3 imageSpacing = {0.10F, 2.0F, 33.0F};

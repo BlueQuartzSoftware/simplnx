@@ -660,7 +660,7 @@ void testFilterExecute(ImportHDF5Dataset& filter)
 }
 
 // -----------------------------------------------------------------------------
-TEST_CASE("ImportHDF5Dataset Filter")
+TEST_CASE("ComplexCore::ImportHDF5Dataset Filter")
 {
   {
     writeHDF5File();

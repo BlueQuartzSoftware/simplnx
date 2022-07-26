@@ -34,7 +34,7 @@ static const std::vector<float> s_Vertices = {
     0.0F,      19.0F,      3.2F,           40.35763F, 19.0F,      3.2F,           139.6424F, 19.0F,      3.2F,           180.0F,    19.0F,      3.2};
 }
 
-TEST_CASE("ApproximatePointCloudHull: Instantiate Filter", "[ApproximatePointCloudHull]")
+TEST_CASE("ComplexCore::ApproximatePointCloudHull: Instantiate Filter", "[ApproximatePointCloudHull]")
 {
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "Face Data";

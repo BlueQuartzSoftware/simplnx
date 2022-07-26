@@ -9,7 +9,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::ChangeAngleRepresentation: Instantiation and Parameter Check", "[OrientationAnalysis][ChangeAngleRepresentation]")
+TEST_CASE("ComplexCore::ChangeAngleRepresentation: Instantiation and Parameter Check", "[OrientationAnalysis][ChangeAngleRepresentation]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ChangeAngleRepresentation filter;
@@ -31,7 +31,7 @@ TEST_CASE("OrientationAnalysis::ChangeAngleRepresentation: Instantiation and Par
   REQUIRE(preflightResult.outputActions.invalid());
 }
 
-TEST_CASE("OrientationAnalysis::ChangeAngleRepresentation: Degrees To Radians")
+TEST_CASE("ComplexCore::ChangeAngleRepresentation: Degrees To Radians")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ChangeAngleRepresentation filter;
@@ -78,7 +78,7 @@ TEST_CASE("OrientationAnalysis::ChangeAngleRepresentation: Degrees To Radians")
   }
 }
 
-TEST_CASE("OrientationAnalysis::ChangeAngleRepresentation: Radians To Degrees")
+TEST_CASE("ComplexCore::ChangeAngleRepresentation: Radians To Degrees")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ChangeAngleRepresentation filter;
