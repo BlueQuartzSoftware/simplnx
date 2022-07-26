@@ -156,82 +156,50 @@ public:
    * @brief
    * @return
    */
-  const std::optional<IdType>& getCellDataId() const
-  {
-    return m_CellDataId;
-  }
+  const std::optional<IdType>& getCellDataId() const;
 
   /**
    * @brief
    * @return
    */
-  AttributeMatrix* getCellData()
-  {
-    return getDataStructureRef().getDataAs<AttributeMatrix>(m_CellDataId);
-  }
+  AttributeMatrix* getCellData();
 
   /**
    * @brief
    * @return
    */
-  const AttributeMatrix* getCellData() const
-  {
-    return getDataStructureRef().getDataAs<AttributeMatrix>(m_CellDataId);
-  }
+  const AttributeMatrix* getCellData() const;
 
   /**
    * @brief
    * @return
    */
-  AttributeMatrix& getCellDataRef()
-  {
-    return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_CellDataId.value());
-  }
+  AttributeMatrix& getCellDataRef();
 
   /**
    * @brief
    * @return
    */
-  const AttributeMatrix& getCellDataRef() const
-  {
-    return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_CellDataId.value());
-  }
+  const AttributeMatrix& getCellDataRef() const;
 
   /**
    * @brief
    * @return
    */
-  DataPath getCellDataPath() const
-  {
-    return getCellDataRef().getDataPaths().at(0);
-  }
+  DataPath getCellDataPath() const;
 
   /**
    * @brief
    * @param attributeMatrix
    */
-  void setCellData(const AttributeMatrix& attributeMatrix)
-  {
-    m_CellDataId = attributeMatrix.getId();
-  }
+  void setCellData(const AttributeMatrix& attributeMatrix);
 
   /**
    * @brief Reads values from HDF5
    * @param groupReader
    * @return H5::ErrorType
    */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override
-  {
-    H5::ErrorType error = IGeometry::readHdf5(dataStructureReader, groupReader, preflight);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    m_CellDataId = ReadH5DataId(groupReader, H5Constants::k_CellDataTag);
-
-    return error;
-  }
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override;
 
   /**
    * @brief Writes the geometry to HDF5 using the provided parent group ID.
@@ -240,36 +208,14 @@ public:
    * @param importable
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
-  {
-    H5::ErrorType error = IGeometry::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
-    error = WriteH5DataId(groupWriter, m_CellDataId, H5Constants::k_CellDataTag);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    return error;
-  }
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
   IGridGeometry() = delete;
 
-  IGridGeometry(DataStructure& ds, std::string name)
-  : IGeometry(ds, std::move(name))
-  {
-  }
+  IGridGeometry(DataStructure& ds, std::string name);
 
-  IGridGeometry(DataStructure& ds, std::string name, IdType importId)
-  : IGeometry(ds, std::move(name), importId)
-  {
-  }
+  IGridGeometry(DataStructure& ds, std::string name, IdType importId);
 
   IGridGeometry(const IGridGeometry&) = default;
   IGridGeometry(IGridGeometry&&) noexcept = default;
@@ -281,20 +227,8 @@ protected:
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
    * @param updatedIds
    */
-  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override
-  {
-    IGeometry::checkUpdatedIdsImpl(updatedIds);
+  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
 
-    for(const auto& updatedId : updatedIds)
-    {
-      if(m_CellDataId == updatedId.first)
-      {
-        m_CellDataId = updatedId.second;
-      }
-    }
-  }
-
-private:
   std::optional<IdType> m_CellDataId;
 };
 } // namespace complex

@@ -11,54 +11,29 @@ public:
 
   ~INodeGeometry1D() noexcept override = default;
 
-  const std::optional<IdType>& getEdgeListId() const
-  {
-    return m_EdgeListId;
-  }
+  const std::optional<IdType>& getEdgeListId() const;
 
-  SharedEdgeList* getEdges()
-  {
-    return getDataStructureRef().getDataAs<SharedEdgeList>(m_EdgeListId);
-  }
+  SharedEdgeList* getEdges();
 
-  const SharedEdgeList* getEdges() const
-  {
-    return getDataStructureRef().getDataAs<SharedEdgeList>(m_EdgeListId);
-  }
+  const SharedEdgeList* getEdges() const;
 
-  SharedEdgeList& getEdgesRef()
-  {
-    return getDataStructureRef().getDataRefAs<SharedEdgeList>(m_EdgeListId.value());
-  }
+  SharedEdgeList& getEdgesRef();
 
-  const SharedEdgeList& getEdgesRef() const
-  {
-    return getDataStructureRef().getDataRefAs<SharedEdgeList>(m_EdgeListId.value());
-  }
+  const SharedEdgeList& getEdgesRef() const;
 
-  void setEdges(const SharedEdgeList& edges)
-  {
-    m_EdgeListId = edges.getId();
-  }
+  void setEdges(const SharedEdgeList& edges);
 
   /**
    * @brief Resizes the edge list to the target size.
    * @param size
    */
-  void resizeEdgeList(usize size)
-  {
-    getEdgesRef().getIDataStoreRef().reshapeTuples({size});
-  }
+  void resizeEdgeList(usize size);
 
   /**
    * @brief Returns the number of edges in the geometry.
    * @return usize
    */
-  usize getNumberOfEdges() const
-  {
-    const auto& edges = getEdgesRef();
-    return edges.getNumberOfTuples();
-  }
+  usize getNumberOfEdges() const;
 
   /**
    * @brief Returns the vertex coordinates for a specified edge by reference.
@@ -79,19 +54,12 @@ public:
    * @brief
    * @return const ElementDynamicList*
    */
-  const ElementDynamicList* getElementsContainingVert() const
-  {
-    return getDataStructureRef().getDataAs<ElementDynamicList>(m_ElementContainingVertId);
-  }
+  const ElementDynamicList* getElementsContainingVert() const;
 
   /**
    * @brief
    */
-  void deleteElementsContainingVert()
-  {
-    getDataStructureRef().removeData(m_ElementContainingVertId);
-    m_ElementContainingVertId.reset();
-  }
+  void deleteElementsContainingVert();
 
   /**
    * @brief
@@ -103,19 +71,12 @@ public:
    * @brief
    * @return const ElementDynamicList*
    */
-  const ElementDynamicList* getElementNeighbors() const
-  {
-    return getDataStructureRef().getDataAs<ElementDynamicList>(m_ElementNeighborsId);
-  }
+  const ElementDynamicList* getElementNeighbors() const;
 
   /**
    * @brief
    */
-  void deleteElementNeighbors()
-  {
-    getDataStructureRef().removeData(m_ElementNeighborsId);
-    m_ElementNeighborsId.reset();
-  }
+  void deleteElementNeighbors();
 
   /**
    * @brief
@@ -127,19 +88,12 @@ public:
    * @brief
    * @return const Float32Array*
    */
-  const Float32Array* getElementCentroids() const
-  {
-    return getDataStructureRef().getDataAs<Float32Array>(m_ElementCentroidsId);
-  }
+  const Float32Array* getElementCentroids() const;
 
   /**
    * @brief
    */
-  void deleteElementCentroids()
-  {
-    getDataStructureRef().removeData(m_ElementCentroidsId);
-    m_ElementCentroidsId.reset();
-  }
+  void deleteElementCentroids();
 
   /**
    * @brief Sets the vertex IDs making up the specified edge. This method does
@@ -161,86 +115,50 @@ public:
    * @brief
    * @return
    */
-  const std::optional<IdType>& getEdgeDataId() const
-  {
-    return m_EdgeDataId;
-  }
+  const std::optional<IdType>& getEdgeDataId() const;
 
   /**
    * @brief
    * @return
    */
-  AttributeMatrix* getEdgeData()
-  {
-    return getDataStructureRef().getDataAs<AttributeMatrix>(m_EdgeDataId);
-  }
+  AttributeMatrix* getEdgeData();
 
   /**
    * @brief
    * @return
    */
-  const AttributeMatrix* getEdgeData() const
-  {
-    return getDataStructureRef().getDataAs<AttributeMatrix>(m_EdgeDataId);
-  }
+  const AttributeMatrix* getEdgeData() const;
 
   /**
    * @brief
    * @return
    */
-  AttributeMatrix& getEdgeDataRef()
-  {
-    return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_EdgeDataId.value());
-  }
+  AttributeMatrix& getEdgeDataRef();
 
   /**
    * @brief
    * @return
    */
-  const AttributeMatrix& getEdgeDataRef() const
-  {
-    return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_EdgeDataId.value());
-  }
+  const AttributeMatrix& getEdgeDataRef() const;
 
   /**
    * @brief
    * @return
    */
-  DataPath getEdgeDataPath() const
-  {
-    return getEdgeDataRef().getDataPaths().at(0);
-  }
+  DataPath getEdgeDataPath() const;
 
   /**
    * @brief
    * @param attributeMatrix
    */
-  void setEdgeData(const AttributeMatrix& attributeMatrix)
-  {
-    m_EdgeDataId = attributeMatrix.getId();
-  }
+  void setEdgeData(const AttributeMatrix& attributeMatrix);
 
   /**
    * @brief Reads values from HDF5
    * @param groupReader
    * @return H5::ErrorType
    */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override
-  {
-    H5::ErrorType error = INodeGeometry0D::readHdf5(dataStructureReader, groupReader, preflight);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    m_EdgeListId = ReadH5DataId(groupReader, H5Constants::k_EdgeListTag);
-    m_EdgeDataId = ReadH5DataId(groupReader, H5Constants::k_EdgeDataTag);
-    m_ElementContainingVertId = ReadH5DataId(groupReader, H5Constants::k_ElementContainingVertTag);
-    m_ElementNeighborsId = ReadH5DataId(groupReader, H5Constants::k_ElementNeighborsTag);
-    m_ElementCentroidsId = ReadH5DataId(groupReader, H5Constants::k_ElementCentroidTag);
-
-    return error;
-  }
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override;
 
   /**
    * @brief Writes the geometry to HDF5 using the provided parent group ID.
@@ -249,60 +167,14 @@ public:
    * @param importable
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
-  {
-    H5::ErrorType error = INodeGeometry0D::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
-    error = WriteH5DataId(groupWriter, m_EdgeListId, H5Constants::k_EdgeListTag);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    error = WriteH5DataId(groupWriter, m_EdgeDataId, H5Constants::k_EdgeDataTag);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    error = WriteH5DataId(groupWriter, m_ElementContainingVertId, H5Constants::k_ElementContainingVertTag);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    error = WriteH5DataId(groupWriter, m_ElementNeighborsId, H5Constants::k_ElementNeighborsTag);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    error = WriteH5DataId(groupWriter, m_ElementCentroidsId, H5Constants::k_ElementCentroidTag);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    return error;
-  }
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
   INodeGeometry1D() = delete;
 
-  INodeGeometry1D(DataStructure& ds, std::string name)
-  : INodeGeometry0D(ds, std::move(name))
-  {
-  }
+  INodeGeometry1D(DataStructure& ds, std::string name);
 
-  INodeGeometry1D(DataStructure& ds, std::string name, IdType importId)
-  : INodeGeometry0D(ds, std::move(name), importId)
-  {
-  }
+  INodeGeometry1D(DataStructure& ds, std::string name, IdType importId);
 
   INodeGeometry1D(const INodeGeometry1D&) = default;
   INodeGeometry1D(INodeGeometry1D&&) noexcept = default;
@@ -314,48 +186,7 @@ protected:
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
    * @param updatedIds
    */
-  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override
-  {
-    INodeGeometry0D::checkUpdatedIdsImpl(updatedIds);
-
-    for(const auto& updatedId : updatedIds)
-    {
-      if(m_VertexListId == updatedId.first)
-      {
-        m_VertexListId = updatedId.second;
-      }
-
-      if(m_EdgeDataId == updatedId.first)
-      {
-        m_EdgeDataId = updatedId.second;
-      }
-
-      if(m_EdgeListId == updatedId.first)
-      {
-        m_EdgeListId = updatedId.second;
-      }
-
-      if(m_ElementContainingVertId == updatedId.first)
-      {
-        m_ElementContainingVertId = updatedId.second;
-      }
-
-      if(m_ElementNeighborsId == updatedId.first)
-      {
-        m_ElementNeighborsId = updatedId.second;
-      }
-
-      if(m_ElementCentroidsId == updatedId.first)
-      {
-        m_ElementCentroidsId = updatedId.second;
-      }
-
-      if(m_ElementSizesId == updatedId.first)
-      {
-        m_ElementSizesId = updatedId.second;
-      }
-    }
-  }
+  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
 
   std::optional<IdType> m_EdgeListId;
   std::optional<IdType> m_EdgeDataId;
