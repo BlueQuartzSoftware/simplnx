@@ -144,6 +144,56 @@ public:
     verts[1] = edges.at(edgeId * 2 + 1);
   }
 
+  /**
+   * @brief Reads values from HDF5
+   * @param groupReader
+   * @return H5::ErrorType
+   */
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override
+  {
+    H5::ErrorType error = INodeGeometry1D::readHdf5(dataStructureReader, groupReader, preflight);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    m_FaceListId = ReadH5DataId(groupReader, H5Constants::k_FaceListTag);
+    m_UnsharedEdgeListId = ReadH5DataId(groupReader, H5Constants::k_UnsharedEdgeListTag);
+
+    return error;
+  }
+
+  /**
+   * @brief Writes the geometry to HDF5 using the provided parent group ID.
+   * @param dataStructureWriter
+   * @param parentGroupWriter
+   * @param importable
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
+  {
+    H5::ErrorType error = INodeGeometry1D::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
+    error = WriteH5DataId(groupWriter, m_FaceListId, H5Constants::k_FaceListTag);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    error = WriteH5DataId(groupWriter, m_UnsharedEdgeListId, H5Constants::k_UnsharedEdgeListTag);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    return error;
+  }
+
 protected:
   INodeGeometry2D() = delete;
 
@@ -196,47 +246,6 @@ protected:
       }
     }
   }
-
-  /**
-   * @brief Reads the DataStructure group from a target HDF5 group.
-   * @param dataStructureReader
-   * @param groupReader
-   * @return H5::Error
-   */
-  //H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override
-  //{
-  //}
-
-  /**
-   * @brief Writes the contained DataObjects to the target HDF5 group.
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  //H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
-  //{
-  //  auto errorCode = INodeGeometry1D::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
-  //  if(errorCode < 0)
-  //  {
-  //    return errorCode;
-  //  }
-
-  //  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-
-  //  errorCode = WriteH5DataId(groupWriter, m_FaceListId, H5Constants::k_TriangleListTag);
-  //  if(errorCode < 0)
-  //  {
-  //    return errorCode;
-  //  }
-
-  //  errorCode = WriteH5DataId(groupWriter, m_UnsharedEdgeListId, H5Constants::k_TriangleListTag);
-  //  if(errorCode < 0)
-  //  {
-  //    return errorCode;
-  //  }
-
-  //  return errorCode;
-  //}
 
   std::optional<IdType> m_FaceListId;
   std::optional<IdType> m_UnsharedEdgeListId;

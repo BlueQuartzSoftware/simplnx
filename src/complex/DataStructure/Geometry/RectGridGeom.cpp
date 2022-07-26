@@ -496,19 +496,19 @@ H5::ErrorType RectGridGeom::readHdf5(H5::DataStructureReader& dataStructureReade
   m_xBoundsId = ReadH5DataId(groupReader, H5Constants::k_XBoundsTag);
   m_yBoundsId = ReadH5DataId(groupReader, H5Constants::k_YBoundsTag);
   m_zBoundsId = ReadH5DataId(groupReader, H5Constants::k_ZBoundsTag);
-  m_ElementSizesId = ReadH5DataId(groupReader, H5Constants::k_VoxelSizesTag);
 
-  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
+  return IGridGeometry::readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 H5::ErrorType RectGridGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
-  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
-  if(errorCode < 0)
+  H5::ErrorType error = IGridGeometry::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
+  if(error < 0)
   {
-    return errorCode;
+    return error;
   }
+
+  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
 
   // Write dimensions
   H5::AttributeWriter::DimsVector dims = {3};
@@ -519,38 +519,32 @@ H5::ErrorType RectGridGeom::writeHdf5(H5::DataStructureWriter& dataStructureWrit
   }
 
   auto dimensionAttr = groupWriter.createAttribute(H5Constants::k_DimensionsTag);
-  errorCode = dimensionAttr.writeVector(dims, dimsVector);
-  if(errorCode < 0)
+  error = dimensionAttr.writeVector(dims, dimsVector);
+  if(error < 0)
   {
-    return errorCode;
+    return error;
   }
 
   // Write DataObject IDs
-  errorCode = WriteH5DataId(groupWriter, m_xBoundsId, H5Constants::k_XBoundsTag);
-  if(errorCode < 0)
+  error = WriteH5DataId(groupWriter, m_xBoundsId, H5Constants::k_XBoundsTag);
+  if(error < 0)
   {
-    return errorCode;
+    return error;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_yBoundsId, H5Constants::k_YBoundsTag);
-  if(errorCode < 0)
+  error = WriteH5DataId(groupWriter, m_yBoundsId, H5Constants::k_YBoundsTag);
+  if(error < 0)
   {
-    return errorCode;
+    return error;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_zBoundsId, H5Constants::k_ZBoundsTag);
-  if(errorCode < 0)
+  error = WriteH5DataId(groupWriter, m_zBoundsId, H5Constants::k_ZBoundsTag);
+  if(error < 0)
   {
-    return errorCode;
+    return error;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_ElementSizesId, H5Constants::k_VoxelSizesTag);
-  if(errorCode < 0)
-  {
-    return errorCode;
-  }
-
-  return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
+  return error;
 }
 
 void RectGridGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)

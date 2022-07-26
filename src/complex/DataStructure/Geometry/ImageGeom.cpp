@@ -447,20 +447,18 @@ H5::ErrorType ImageGeom::readHdf5(H5::DataStructureReader& dataStructureReader, 
   setSpacing(spacing);
   setOrigin(origin);
 
-  // Read DataObject ID
-  m_ElementSizesId = ReadH5DataId(groupReader, H5Constants::k_VoxelSizesTag);
-
-  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
+  return IGridGeometry::readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
-  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  herr_t errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
-  if(errorCode < 0)
+  H5::ErrorType error = IGridGeometry::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
+  if(error < 0)
   {
-    return errorCode;
+    return error;
   }
+
+  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
 
   SizeVec3 volDims = getDimensions();
   FloatVec3 spacing = getSpacing();
@@ -477,32 +475,25 @@ H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter,
   }
 
   auto dimensionAttr = groupWriter.createAttribute(H5Constants::k_H5_DIMENSIONS);
-  errorCode = dimensionAttr.writeVector(dims, volDimsVector);
-  if(errorCode < 0)
+  error = dimensionAttr.writeVector(dims, volDimsVector);
+  if(error < 0)
   {
-    return errorCode;
+    return error;
   }
 
   auto originAttr = groupWriter.createAttribute(H5Constants::k_H5_ORIGIN);
-  errorCode = originAttr.writeVector(dims, originVector);
-  if(errorCode < 0)
+  error = originAttr.writeVector(dims, originVector);
+  if(error < 0)
   {
-    return errorCode;
+    return error;
   }
 
   auto spacingAttr = groupWriter.createAttribute(H5Constants::k_H5_SPACING);
-  errorCode = spacingAttr.writeVector(dims, spacingVector);
-  if(errorCode < 0)
+  error = spacingAttr.writeVector(dims, spacingVector);
+  if(error < 0)
   {
-    return errorCode;
+    return error;
   }
 
-  // Write DataObject ID
-  errorCode = WriteH5DataId(groupWriter, m_ElementSizesId, H5Constants::k_VoxelSizesTag);
-  if(errorCode < 0)
-  {
-    return errorCode;
-  }
-
-  return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
+  return error;
 }

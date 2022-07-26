@@ -155,6 +155,70 @@ public:
    */
   virtual void getVertsAtEdge(usize edgeId, usize verts[2]) const = 0;
 
+  /**
+   * @brief Reads values from HDF5
+   * @param groupReader
+   * @return H5::ErrorType
+   */
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override
+  {
+    H5::ErrorType error = INodeGeometry0D::readHdf5(dataStructureReader, groupReader, preflight);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    m_EdgeListId = ReadH5DataId(groupReader, H5Constants::k_EdgeListTag);
+    m_ElementContainingVertId = ReadH5DataId(groupReader, H5Constants::k_ElementContainingVertTag);
+    m_ElementNeighborsId = ReadH5DataId(groupReader, H5Constants::k_ElementNeighborsTag);
+    m_ElementCentroidsId = ReadH5DataId(groupReader, H5Constants::k_ElementCentroidTag);
+
+    return error;
+  }
+
+  /**
+   * @brief Writes the geometry to HDF5 using the provided parent group ID.
+   * @param dataStructureWriter
+   * @param parentGroupWriter
+   * @param importable
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
+  {
+    H5::ErrorType error = INodeGeometry0D::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
+    error = WriteH5DataId(groupWriter, m_EdgeListId, H5Constants::k_EdgeListTag);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    error = WriteH5DataId(groupWriter, m_ElementContainingVertId, H5Constants::k_ElementContainingVertTag);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    error = WriteH5DataId(groupWriter, m_ElementNeighborsId, H5Constants::k_ElementNeighborsTag);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    error = WriteH5DataId(groupWriter, m_ElementCentroidsId, H5Constants::k_ElementCentroidTag);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    return error;
+  }
+
 protected:
   INodeGeometry1D() = delete;
 

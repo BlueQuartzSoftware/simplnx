@@ -161,6 +161,56 @@ public:
     }
   }
 
+  /**
+   * @brief Reads values from HDF5
+   * @param groupReader
+   * @return H5::ErrorType
+   */
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override
+  {
+    H5::ErrorType error = INodeGeometry2D::readHdf5(dataStructureReader, groupReader, preflight);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    m_PolyhedraListId = ReadH5DataId(groupReader, H5Constants::k_PolyhedraListTag);
+    m_UnsharedFaceListId = ReadH5DataId(groupReader, H5Constants::k_UnsharedFaceListTag);
+
+    return error;
+  }
+
+  /**
+   * @brief Writes the geometry to HDF5 using the provided parent group ID.
+   * @param dataStructureWriter
+   * @param parentGroupWriter
+   * @param importable
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
+  {
+    H5::ErrorType error = INodeGeometry2D::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
+    error = WriteH5DataId(groupWriter, m_PolyhedraListId, H5Constants::k_PolyhedraListTag);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    error = WriteH5DataId(groupWriter, m_UnsharedFaceListId, H5Constants::k_UnsharedFaceListTag);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    return error;
+  }
+
 protected:
   INodeGeometry3D() = delete;
 

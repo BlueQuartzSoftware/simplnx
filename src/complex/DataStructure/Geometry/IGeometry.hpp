@@ -8,6 +8,9 @@
 
 #include "complex/DataStructure/Geometry/LinkedGeometryData.hpp"
 
+#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
+
 namespace complex
 {
 class COMPLEX_EXPORT IGeometry : public BaseGroup
@@ -315,6 +318,49 @@ public:
     }
     }
     return "Unknown";
+  }
+
+  /**
+   * @brief Reads values from HDF5
+   * @param groupReader
+   * @return H5::ErrorType
+   */
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override
+  {
+    H5::ErrorType error = BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    m_ElementSizesId = ReadH5DataId(groupReader, H5Constants::k_ElementSizesTag);
+
+    return error;
+  }
+
+  /**
+   * @brief Writes the geometry to HDF5 using the provided parent group ID.
+   * @param dataStructureWriter
+   * @param parentGroupWriter
+   * @param importable
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
+  {
+    H5::ErrorType error = BaseGroup::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
+    error = WriteH5DataId(groupWriter, m_ElementSizesId, H5Constants::k_ElementSizesTag);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    return error;
   }
 
 protected:

@@ -73,6 +73,49 @@ public:
    */
   virtual void setCoords(usize vertId, const Point3D<float32>& coords) = 0;
 
+  /**
+   * @brief Reads values from HDF5
+   * @param groupReader
+   * @return H5::ErrorType
+   */
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override
+  {
+    H5::ErrorType error = IGeometry::readHdf5(dataStructureReader, groupReader, preflight);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    m_VertexListId = ReadH5DataId(groupReader, H5Constants::k_VertexListTag);
+
+    return error;
+  }
+
+  /**
+   * @brief Writes the geometry to HDF5 using the provided parent group ID.
+   * @param dataStructureWriter
+   * @param parentGroupWriter
+   * @param importable
+   * @return H5::ErrorType
+   */
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
+  {
+    H5::ErrorType error = IGeometry::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
+    error = WriteH5DataId(groupWriter, m_VertexListId, H5Constants::k_VertexListTag);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    return error;
+  }
+
 protected:
   INodeGeometry0D() = delete;
 
