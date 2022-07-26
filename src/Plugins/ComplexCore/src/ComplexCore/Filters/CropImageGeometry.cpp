@@ -358,9 +358,13 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 
     DataPath newCellFeaturesPath = destImagePath.createChildPath(IGridGeometry::k_CellDataName);
 
-    const AttributeMatrix& am = srcImageGeom->getCellDataRef();
+    const AttributeMatrix* am = srcImageGeom->getCellData();
+    if(am == nullptr)
+    {
+      return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
+    }
 
-    for(const auto& [id, object] : am)
+    for(const auto& [id, object] : *am)
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
