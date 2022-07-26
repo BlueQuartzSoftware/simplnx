@@ -108,9 +108,9 @@ Result<> GeometrySelectionParameter::validatePath(const DataStructure& dataStruc
     return {};
   }
 
-  return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_AllowedType_Error,
-                                  fmt::format("{}Geometry at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), geometry->getTypeName(),
-                                              IGeometry::StringListFromGeometryType(m_AllowedTypes)));
+  return complex::MakeErrorResult(
+      complex::FilterParameter::Constants::k_Validate_AllowedType_Error,
+      fmt::format("{}Geometry at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), geometry->getTypeName(), IGeometry::StringListFromGeometryType(m_AllowedTypes)));
 }
 
 Result<std::any> GeometrySelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const

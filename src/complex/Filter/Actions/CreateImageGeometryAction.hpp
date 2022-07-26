@@ -1,9 +1,9 @@
 #pragma once
 
 #include "complex/Common/Array.hpp"
+#include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 #include "complex/Filter/Output.hpp"
 #include "complex/complex_export.hpp"
-#include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 
 namespace complex
 {

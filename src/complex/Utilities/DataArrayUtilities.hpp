@@ -1,6 +1,7 @@
 #pragma once
 
 #include "complex/Common/Result.hpp"
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
@@ -9,7 +10,6 @@
 #include "complex/Filter/Output.hpp"
 #include "complex/Utilities/TemplateHelpers.hpp"
 #include "complex/complex_export.hpp"
-#include "complex/DataStructure/AttributeMatrix.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -362,7 +362,9 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
       auto* attrMatrix = dynamic_cast<AttributeMatrix*>(parentObject);
       std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrix->getShape(), " x "));
       std::string arrayShape = fmt::format("Data Array Tuple Shape: {}", fmt::join(tupleShape, " x "));
-      return MakeErrorResult(-264, fmt::format("Unable to create Data Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created Data Array must have the same tuple dimensions or the same total number of tuples.\n{}\n{}", name, dataStructure.getDataPathsForId(parentObject->getId()).front().toString(), amShape, arrayShape));
+      return MakeErrorResult(-264, fmt::format("Unable to create Data Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created Data Array must have the same tuple "
+                                               "dimensions or the same total number of tuples.\n{}\n{}",
+                                               name, dataStructure.getDataPathsForId(parentObject->getId()).front().toString(), amShape, arrayShape));
     }
     else
     {

@@ -91,8 +91,8 @@ void HexahedralGeom::getVertsAtHex(usize hexId, usize verts[8]) const
   }
 }
 
-void HexahedralGeom::getVertCoordsAtHex(usize hexId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3, Point3D<float32>& vert4,
-                                        Point3D<float32>& vert5, Point3D<float32>& vert6, Point3D<float32>& vert7, Point3D<float32>& vert8) const
+void HexahedralGeom::getVertCoordsAtHex(usize hexId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3, Point3D<float32>& vert4, Point3D<float32>& vert5,
+                                        Point3D<float32>& vert6, Point3D<float32>& vert7, Point3D<float32>& vert8) const
 {
   std::array<usize, 8> vertIds = {0};
   getVertsAtHex(hexId, vertIds.data());
