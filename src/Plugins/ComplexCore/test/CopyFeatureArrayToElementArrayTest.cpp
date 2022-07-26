@@ -17,7 +17,7 @@ const std::string k_CellTempArrayName("Cell Temperature");
 const std::string k_FeatureDataArrayName("Feature Temperature");
 } // namespace
 
-TEST_CASE("Core::CopyFeatureArrayToElementArray: Instantiation and Parameter Check", "[Core][CopyFeatureArrayToElementArray]")
+TEST_CASE("ComplexCore::CopyFeatureArrayToElementArray: Instantiation and Parameter Check", "[Core][CopyFeatureArrayToElementArray]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CopyFeatureArrayToElementArray filter;
@@ -49,7 +49,7 @@ TEST_CASE("Core::CopyFeatureArrayToElementArray: Instantiation and Parameter Che
 }
 
 using ListOfTypes = std::tuple<int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32, float64>;
-TEMPLATE_LIST_TEST_CASE("Core::CopyFeatureArrayToElementArray: Valid filter execution", "[Core][CopyFeatureArrayToElementArray]", ListOfTypes)
+TEMPLATE_LIST_TEST_CASE("ComplexCore::CopyFeatureArrayToElementArray: Valid filter execution", "[Core][CopyFeatureArrayToElementArray]", ListOfTypes)
 {
   DataStructure ds;
 

@@ -9,7 +9,7 @@
 
 using namespace complex;
 
-TEST_CASE("CreateDataArray(Instantiate)", "[ComplexCore][CreateDataArray]")
+TEST_CASE("ComplexCore::CreateDataArray(Instantiate)", "[ComplexCore][CreateDataArray]")
 {
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;
@@ -30,7 +30,7 @@ TEST_CASE("CreateDataArray(Instantiate)", "[ComplexCore][CreateDataArray]")
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 }
 
-TEST_CASE("CreateDataArray(Invalid Parameters)", "[ComplexCore][CreateDataArray]")
+TEST_CASE("ComplexCore::CreateDataArray(Invalid Parameters)", "[ComplexCore][CreateDataArray]")
 {
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;

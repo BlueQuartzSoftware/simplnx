@@ -300,6 +300,18 @@ function(create_complex_plugin_unit_test)
   find_package(Catch2 CONFIG REQUIRED)
   include(Catch)
 
+  get_filename_component(complexProj_PARENT ${complex_SOURCE_DIR} DIRECTORY CACHE)
+  if("${DREAM3D_DATA_DIR}" STREQUAL "")
+    set(DREAM3D_DATA_DIR "${complexProj_PARENT}/DREAM3D_Data/" CACHE PATH "The directory where to find test data files")
+  endif()
+
+  if(NOT EXISTS "${DREAM3D_DATA_DIR}")
+    message(STATUS "DREAM3D_Data does not exist at path '${DREAM3D_DATA_DIR}', Unit testing will not work.")
+    set(DREAM3D_DATA_DIR "DREAM3D_DATA_DIR DOES NOT EXIST")
+  endif()
+
+  file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
+
   #------------------------------------------------------------------------------
   # Convert the native path to a path that will be compatible with C++ source codes
   file(TO_CMAKE_PATH "${${ARGS_PLUGIN_NAME}_SOURCE_DIR}" PLUGIN_SOURCE_DIR_NORM)

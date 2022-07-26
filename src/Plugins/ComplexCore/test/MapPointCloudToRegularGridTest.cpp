@@ -11,7 +11,7 @@
 using namespace complex;
 using namespace complex::Constants;
 
-TEST_CASE("MapPointCloudToRegularGridFilter: Instantiate Filter", "[MapPointCloudToRegularGridFilter]")
+TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Instantiate Filter", "[MapPointCloudToRegularGridFilter]")
 {
   MapPointCloudToRegularGridFilter filter;
   DataStructure dataGraph;
@@ -45,7 +45,7 @@ TEST_CASE("MapPointCloudToRegularGridFilter: Instantiate Filter", "[MapPointClou
   REQUIRE(executeResult.result.invalid());
 }
 
-TEST_CASE("MapPointCloudToRegularGridFilter: Test Algorithm 1", "[MapPointCloudToRegularGridFilter]")
+TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Test Algorithm 1", "[MapPointCloudToRegularGridFilter]")
 {
   MapPointCloudToRegularGridFilter filter;
   DataStructure dataGraph = UnitTest::CreateDataStructure();
@@ -80,7 +80,7 @@ TEST_CASE("MapPointCloudToRegularGridFilter: Test Algorithm 1", "[MapPointCloudT
   REQUIRE(executeResult.result.valid());
 }
 
-TEST_CASE("MapPointCloudToRegularGridFilter: Test Algorithm 2", "[MapPointCloudToRegularGridFilter]")
+TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Test Algorithm 2", "[MapPointCloudToRegularGridFilter]")
 {
   MapPointCloudToRegularGridFilter filter;
   DataStructure dataGraph = UnitTest::CreateDataStructure();

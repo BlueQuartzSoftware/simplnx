@@ -325,7 +325,7 @@ void TestCase4_TestPrimitives(NumericType scalarType)
 } // namespace
 
 // Case1: This tests when skipHeaderBytes equals 0, and checks to see if the data read is the same as the data written.
-TEST_CASE("RawBinaryReaderFilter(Case1)", "[ComplexCore][RawBinaryReaderFilter]")
+TEST_CASE("ComplexCore::RawBinaryReaderFilter(Case1)", "[ComplexCore][RawBinaryReaderFilter]")
 {
   // Create the parent directory path
   fs::create_directories(k_TestOutput.parent_path());
@@ -343,7 +343,7 @@ TEST_CASE("RawBinaryReaderFilter(Case1)", "[ComplexCore][RawBinaryReaderFilter]"
 }
 
 // Case2: This tests when the wrong scalar type is selected. (The total number of bytes in the file does not evenly divide by the scalar type size).
-TEST_CASE("RawBinaryReaderFilter(Case2)", "[ComplexCore][RawBinaryReaderFilter]")
+TEST_CASE("ComplexCore::RawBinaryReaderFilter(Case2)", "[ComplexCore][RawBinaryReaderFilter]")
 {
   // Create the parent directory path
   fs::create_directories(k_TestOutput.parent_path());
@@ -352,7 +352,7 @@ TEST_CASE("RawBinaryReaderFilter(Case2)", "[ComplexCore][RawBinaryReaderFilter]"
 }
 
 // Case3: This tests when the wrong component size is chosen. (The total number of scalar elements in the file does not evenly divide by the chosen component size).
-TEST_CASE("RawBinaryReaderFilter(Case3)", "[ComplexCore][RawBinaryReaderFilter]")
+TEST_CASE("ComplexCore::RawBinaryReaderFilter(Case3)", "[ComplexCore][RawBinaryReaderFilter]")
 {
   // Create the parent directory path
   fs::create_directories(k_TestOutput.parent_path());
@@ -361,7 +361,7 @@ TEST_CASE("RawBinaryReaderFilter(Case3)", "[ComplexCore][RawBinaryReaderFilter]"
 }
 
 // Case4: This tests when skipHeaderBytes is non-zero, and checks to see if the data read is the same as the data written.
-TEST_CASE("RawBinaryReaderFilter(Case4)", "[ComplexCore][RawBinaryReaderFilter]")
+TEST_CASE("ComplexCore::RawBinaryReaderFilter(Case4)", "[ComplexCore][RawBinaryReaderFilter]")
 {
   // Create the parent directory path
   fs::create_directories(k_TestOutput.parent_path());
@@ -379,7 +379,7 @@ TEST_CASE("RawBinaryReaderFilter(Case4)", "[ComplexCore][RawBinaryReaderFilter]"
 }
 
 // Case5: This tests when skipHeaderBytes equals the file size
-TEST_CASE("RawBinaryReaderFilter(Case5)", "[ComplexCore][RawBinaryReaderFilter]")
+TEST_CASE("ComplexCore::RawBinaryReaderFilter(Case5)", "[ComplexCore][RawBinaryReaderFilter]")
 {
   // Create the parent directory path
   fs::create_directories(k_TestOutput.parent_path());

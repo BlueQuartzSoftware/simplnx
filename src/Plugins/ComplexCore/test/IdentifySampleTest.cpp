@@ -8,7 +8,7 @@
 
 using namespace complex;
 
-TEST_CASE("IdentifySample(Instantiate)", "[ComplexCore][IdentifySample]")
+TEST_CASE("ComplexCore::IdentifySample(Instantiate)", "[ComplexCore][IdentifySample]")
 {
   static constexpr bool k_FillHoles = true;
   static const DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});

@@ -44,7 +44,7 @@ void compareDataValues(const Int32Array& oldDataArray, const Int32Array& newData
 }
 } // namespace
 
-TEST_CASE("CropImageGeometry(Instantiate)", "[ComplexCore][CropImageGeometry]")
+TEST_CASE("ComplexCore::CropImageGeometry(Instantiate)", "[ComplexCore][CropImageGeometry]")
 {
   const std::vector<uint64> k_MinVector{0, 0, 0};
   const std::vector<uint64> k_MaxVector{0, 0, 0};
@@ -75,7 +75,7 @@ TEST_CASE("CropImageGeometry(Instantiate)", "[ComplexCore][CropImageGeometry]")
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 }
 
-TEST_CASE("CropImageGeometry(Valid Parameters)", "[ComplexCore][CropImageGeometry]")
+TEST_CASE("ComplexCore::CropImageGeometry(Valid Parameters)", "[ComplexCore][CropImageGeometry]")
 {
   const std::vector<uint64> k_MinVector{0, 0, 0};
   const std::vector<uint64> k_MaxVector{2, 3, 4};

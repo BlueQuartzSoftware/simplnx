@@ -11,7 +11,7 @@
 using namespace complex;
 using namespace complex::Constants;
 
-TEST_CASE("FindNeighborListStatistics: Instantiate Filter", "[FindNeighborListStatistics]")
+TEST_CASE("ComplexCore::FindNeighborListStatistics: Instantiate Filter", "[FindNeighborListStatistics]")
 {
   FindNeighborListStatistics filter;
   DataStructure dataGraph;
@@ -52,7 +52,7 @@ TEST_CASE("FindNeighborListStatistics: Instantiate Filter", "[FindNeighborListSt
   REQUIRE(executeResult.result.invalid());
 }
 
-TEST_CASE("FindNeighborListStatistics: Test Algorithm", "[FindNeighborListStatistics]")
+TEST_CASE("ComplexCore::FindNeighborListStatistics: Test Algorithm", "[FindNeighborListStatistics]")
 {
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");

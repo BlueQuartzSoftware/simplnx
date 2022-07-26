@@ -69,7 +69,7 @@ std::array<float, 6> FindMinMaxCoord(AbstractGeometry::SharedVertexList* vertice
   return minMaxVerts;
 }
 
-TEST_CASE("DREAM3DReview::PointSampleTriangleGeometryFilter", "[DREAM3DReview][PointSampleTriangleGeometryFilter]")
+TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][PointSampleTriangleGeometryFilter]")
 {
 
   std::string triangleGeometryName = "[Triangle Geometry]";

@@ -16,7 +16,7 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 
-TEST_CASE("InterpolatePointCloudToRegularGridFilter: Create Filter", "[DREAM3DReview][InterpolatePointCloudToRegularGridFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ComplexCore::InterpolatePointCloudToRegularGridFilter: Create Filter", "[DREAM3DReview][InterpolatePointCloudToRegularGridFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   InterpolatePointCloudToRegularGridFilter filter;
   DataStructure dataGraph;
@@ -41,7 +41,7 @@ TEST_CASE("InterpolatePointCloudToRegularGridFilter: Create Filter", "[DREAM3DRe
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 }
 
-TEST_CASE("InterpolatePointCloudToRegularGridFilter: Test Algorithm 1", "[DREAM3DReview][InterpolatePointCloudToRegularGridFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ComplexCore::InterpolatePointCloudToRegularGridFilter: Test Algorithm 1", "[DREAM3DReview][InterpolatePointCloudToRegularGridFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   InterpolatePointCloudToRegularGridFilter filter;
   DataStructure dataGraph = UnitTest::CreateDataStructure();
@@ -84,7 +84,7 @@ TEST_CASE("InterpolatePointCloudToRegularGridFilter: Test Algorithm 1", "[DREAM3
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
-TEST_CASE("InterpolatePointCloudToRegularGridFilter: Test Algorithm 2", "[DREAM3DReview][InterpolatePointCloudToRegularGridFilter]")
+TEST_CASE("ComplexCore::InterpolatePointCloudToRegularGridFilter: Test Algorithm 2", "[DREAM3DReview][InterpolatePointCloudToRegularGridFilter]")
 {
   InterpolatePointCloudToRegularGridFilter filter;
   DataStructure dataGraph = UnitTest::CreateDataStructure();

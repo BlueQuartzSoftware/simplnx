@@ -100,7 +100,7 @@ bool IsDataWithinInclusiveRange(const IDataStore& dataStore, const std::array<us
 }
 } // namespace
 
-TEST_CASE("InitializeData(Manual)", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData(Manual)", "[ComplexCore][InitializeData]")
 {
   InitializeData filter;
   DataStructure ds = CreateDataStructure();
@@ -201,7 +201,7 @@ TEST_CASE("InitializeData(Manual)", "[ComplexCore][InitializeData]")
   }
 }
 
-TEST_CASE("InitializeData(Random)", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData(Random)", "[ComplexCore][InitializeData]")
 {
   InitializeData filter;
   DataStructure ds = CreateDataStructure();
@@ -292,7 +292,7 @@ TEST_CASE("InitializeData(Random)", "[ComplexCore][InitializeData]")
   }
 }
 
-TEST_CASE("InitializeData(RandomWithRange)", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData(RandomWithRange)", "[ComplexCore][InitializeData]")
 {
   InitializeData filter;
   DataStructure ds = CreateDataStructure();

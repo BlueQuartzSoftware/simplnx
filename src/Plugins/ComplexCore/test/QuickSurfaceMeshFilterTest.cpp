@@ -61,7 +61,7 @@ DataStructure CreateEbsdTestDataStructure()
   return dataGraph;
 }
 } // namespace
-TEST_CASE("SurfaceMeshing::QuickSurfaceMeshFilter", "[SurfaceMeshing][QuickSurfaceMeshFilter]")
+TEST_CASE("ComplexCore::QuickSurfaceMeshFilter", "[SurfaceMeshing][QuickSurfaceMeshFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
