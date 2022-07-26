@@ -122,22 +122,6 @@ public:
    */
   void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
 
-  /**
-   * @brief Reads values from HDF5
-   * @param groupReader
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override;
-
-  /**
-   * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
-
 protected:
   /**
    * @brief

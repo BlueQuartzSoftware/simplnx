@@ -126,36 +126,3 @@ void VertexGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pCoo
   shape[1] = 0.0;
   shape[2] = 0.0;
 }
-
-H5::ErrorType VertexGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
-{
-  m_VertexListId = ReadH5DataId(groupReader, H5Constants::k_VertexListTag);
-  m_ElementSizesId = ReadH5DataId(groupReader, H5Constants::k_VertexSizesTag);
-
-  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
-}
-
-H5::ErrorType VertexGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  herr_t errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
-  if(errorCode < 0)
-  {
-    return errorCode;
-  }
-
-  // Write DataObject IDs
-  errorCode = WriteH5DataId(groupWriter, getVertexListId(), H5Constants::k_VertexListTag);
-  if(errorCode < 0)
-  {
-    return errorCode;
-  }
-
-  errorCode = WriteH5DataId(groupWriter, getVertexListId(), H5Constants::k_VertexSizesTag);
-  if(errorCode < 0)
-  {
-    return errorCode;
-  }
-
-  return errorCode;
-}
