@@ -5,11 +5,7 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/DynamicListArray.hpp"
-
 #include "complex/DataStructure/Geometry/LinkedGeometryData.hpp"
-
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 namespace complex
 {
@@ -100,19 +96,12 @@ public:
    * @brief
    * @return const Float32Array*
    */
-  const Float32Array* getElementSizes() const
-  {
-    return getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
-  }
+  const Float32Array* getElementSizes() const;
 
   /**
    * @brief
    */
-  void deleteElementSizes()
-  {
-    getDataStructureRef().removeData(m_ElementSizesId);
-    m_ElementSizesId.reset();
-  }
+  void deleteElementSizes();
 
   /**
    * @brief
@@ -131,212 +120,69 @@ public:
    * @brief
    * @return uint32
    */
-  uint32 getUnitDimensionality() const
-  {
-    return m_UnitDimensionality;
-  }
+  uint32 getUnitDimensionality() const;
 
   /**
    * @brief
    * @param value
    */
-  void setUnitDimensionality(uint32 value)
-  {
-    m_UnitDimensionality = value;
-  }
+  void setUnitDimensionality(uint32 value);
 
   /**
    * @brief
    * @return uint32
    */
-  uint32 getSpatialDimensionality() const
-  {
-    return m_SpacialDimensionality;
-  }
+  uint32 getSpatialDimensionality() const;
 
   /**
    * @brief
    * @param value
    */
-  void setSpatialDimensionality(uint32 value)
-  {
-    m_SpacialDimensionality = value;
-  }
+  void setSpatialDimensionality(uint32 value);
 
-  static std::set<std::string> StringListFromGeometryType(const std::set<Type>& geomTypes)
-  {
-    static const std::map<Type, std::string> k_TypeToStringMap = {{Type::Image, "ImageGeom"},   {Type::RectGrid, "RectGrid"}, {Type::Vertex, "Vertex"},           {Type::Edge, "Edge"},
-                                                                  {Type::Triangle, "Triangle"}, {Type::Quad, "Quad"},         {Type::Tetrahedral, "Tetrahedral"}, {Type::Hexahedral, "Hexahedral"}};
+  static std::set<std::string> StringListFromGeometryType(const std::set<Type>& geomTypes);
 
-    std::set<std::string> stringValues;
-    for(auto geomType : geomTypes)
-    {
-      stringValues.insert(k_TypeToStringMap.at(geomType));
-    }
-    return stringValues;
-  }
-
-  static const std::set<Type>& GetAllGeomTypes()
-  {
-    static const std::set<Type> types = {Type::Image, Type::RectGrid, Type::Vertex, Type::Edge, Type::Triangle, Type::Quad, Type::Tetrahedral, Type::Hexahedral};
-    return types;
-  }
+  static const std::set<Type>& GetAllGeomTypes();
 
   /**
    * @brief Returns the DataPaths of DataArrays that are associated or "Linked" to
    * a specific part of the geometry. @see the docs for LinkedGeometryPath.
    * @return
    */
-  const LinkedGeometryData& getLinkedGeometryData() const
-  {
-    return m_LinkedGeometryData;
-  }
+  const LinkedGeometryData& getLinkedGeometryData() const;
 
   /**
    * @brief Returns the DataPaths of DataArrays that are associated or "Linked" to
    * a specific part of the geometry. @see the docs for LinkedGeometryPath. Non-const version
    * @return
    */
-  LinkedGeometryData& getLinkedGeometryData()
-  {
-    return m_LinkedGeometryData;
-  }
+  LinkedGeometryData& getLinkedGeometryData();
 
   /**
    * @brief Returns the length units used by the geometry.
    * @return LengthUnit
    */
-  LengthUnit getUnits() const
-  {
-    return m_Units;
-  }
+  LengthUnit getUnits() const;
 
   /**
    * @brief Sets the length units used by the geometry.
    * @param units
    */
-  void setUnits(LengthUnit units)
-  {
-    m_Units = units;
-  }
+  void setUnits(LengthUnit units);
 
   /**
    * @brief
    * @param unit
    * @return std::string
    */
-  static std::string LengthUnitToString(LengthUnit unit)
-  {
-    switch(unit)
-    {
-    case LengthUnit::Yoctometer: {
-      return "Yoctometer";
-    }
-    case LengthUnit::Zeptometer: {
-      return "Zeptometer";
-    }
-    case LengthUnit::Attometer: {
-      return "Attometer";
-    }
-    case LengthUnit::Femtometer: {
-      return "Femtometer";
-    }
-    case LengthUnit::Picometer: {
-      return "Picometer";
-    }
-    case LengthUnit::Nanometer: {
-      return "Nanometer";
-    }
-    case LengthUnit::Micrometer: {
-      return "Micrometer";
-    }
-    case LengthUnit::Millimeter: {
-      return "Millimeter";
-    }
-    case LengthUnit::Centimeter: {
-      return "Centimeter";
-    }
-    case LengthUnit::Decimeter: {
-      return "Decimeter";
-    }
-    case LengthUnit::Meter: {
-      return "Meter";
-    }
-    case LengthUnit::Decameter: {
-      return "Decameter";
-    }
-    case LengthUnit::Hectometer: {
-      return "Hectometer";
-    }
-    case LengthUnit::Kilometer: {
-      return "Kilometer";
-    }
-    case LengthUnit::Megameter: {
-      return "Megameter";
-    }
-    case LengthUnit::Gigameter: {
-      return "Gigameter";
-    }
-    case LengthUnit::Terameter: {
-      return "Terameter";
-    }
-    case LengthUnit::Petameter: {
-      return "Petameter";
-    }
-    case LengthUnit::Exameter: {
-      return "Exameter";
-    }
-    case LengthUnit::Zettameter: {
-      return "Zettameter";
-    }
-    case LengthUnit::Yottameter: {
-      return "Yottameter";
-    }
-    case LengthUnit::Angstrom: {
-      return "Angstrom";
-    }
-    case LengthUnit::Mil: {
-      return "Mil";
-    }
-    case LengthUnit::Inch: {
-      return "Inch";
-    }
-    case LengthUnit::Foot: {
-      return "Foot";
-    }
-    case LengthUnit::Mile: {
-      return "Mile";
-    }
-    case LengthUnit::Fathom: {
-      return "Fathom";
-    }
-    case LengthUnit::Unspecified: {
-      return "Unspecified";
-    }
-    case LengthUnit::Unknown: {
-      return "Unknown";
-    }
-    }
-    return "Unknown";
-  }
+  static std::string LengthUnitToString(LengthUnit unit);
 
   /**
    * @brief Reads values from HDF5
    * @param groupReader
    * @return H5::ErrorType
    */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override
-  {
-    H5::ErrorType error = BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    m_ElementSizesId = ReadH5DataId(groupReader, H5Constants::k_ElementSizesTag);
-
-    return error;
-  }
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override;
 
   /**
    * @brief Writes the geometry to HDF5 using the provided parent group ID.
@@ -345,36 +191,14 @@ public:
    * @param importable
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
-  {
-    H5::ErrorType error = BaseGroup::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
-    error = WriteH5DataId(groupWriter, m_ElementSizesId, H5Constants::k_ElementSizesTag);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    return error;
-  }
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
   IGeometry() = delete;
 
-  IGeometry(DataStructure& ds, std::string name)
-  : BaseGroup(ds, std::move(name))
-  {
-  }
+  IGeometry(DataStructure& ds, std::string name);
 
-  IGeometry(DataStructure& ds, std::string name, IdType importId)
-  : BaseGroup(ds, std::move(name), importId)
-  {
-  }
+  IGeometry(DataStructure& ds, std::string name, IdType importId);
 
   IGeometry(const IGeometry&) = default;
   IGeometry(IGeometry&&) noexcept = default;
@@ -386,18 +210,7 @@ protected:
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
    * @param updatedIds
    */
-  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override
-  {
-    BaseGroup::checkUpdatedIdsImpl(updatedIds);
-
-    for(const auto& updatedId : updatedIds)
-    {
-      if(m_ElementSizesId == updatedId.first)
-      {
-        m_ElementSizesId = updatedId.second;
-      }
-    }
-  }
+  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
 
   /**
    * @brief Reads an optional DataObject ID from HDF5.
@@ -405,21 +218,7 @@ protected:
    * @param attributeName
    * @return std::optional<DataObject::IdType>
    */
-  static std::optional<IdType> ReadH5DataId(const H5::ObjectReader& objectReader, const std::string& attributeName)
-  {
-    if(!objectReader.isValid())
-    {
-      return {};
-    }
-
-    auto attribute = objectReader.getAttribute(attributeName);
-    auto id = attribute.readAsValue<IdType>();
-    if(id == 0)
-    {
-      return {};
-    }
-    return id;
-  }
+  static std::optional<IdType> ReadH5DataId(const H5::ObjectReader& objectReader, const std::string& attributeName);
 
   /**
    * @brief Writes an optional DataObject ID to HDF5. Returns an error code if
@@ -429,20 +228,7 @@ protected:
    * @param attributeName
    * @return H5::ErrorType
    */
-  static H5::ErrorType WriteH5DataId(H5::ObjectWriter& objectWriter, const std::optional<IdType>& dataId, const std::string& attributeName)
-  {
-    if(!objectWriter.isValid())
-    {
-      return -1;
-    }
-
-    auto attribute = objectWriter.createAttribute(attributeName);
-    if(dataId.has_value())
-    {
-      return attribute.writeValue<IdType>(dataId.value());
-    }
-    return attribute.writeValue<IdType>(0);
-  }
+  static H5::ErrorType WriteH5DataId(H5::ObjectWriter& objectWriter, const std::optional<IdType>& dataId, const std::string& attributeName);
 
   std::optional<IdType> m_ElementSizesId;
 

@@ -379,6 +379,12 @@ set(COMPLEX_SRCS
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.cpp
 
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/IGeometry.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/IGridGeometry.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry0D.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry1D.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry2D.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry3D.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/EdgeGeom.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/HexahedralGeom.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/ImageGeom.cpp

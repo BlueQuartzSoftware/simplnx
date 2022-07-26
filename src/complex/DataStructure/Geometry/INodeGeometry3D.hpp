@@ -11,54 +11,29 @@ public:
 
   ~INodeGeometry3D() noexcept override = default;
 
-  const std::optional<IdType>& getPolyhedronListId() const
-  {
-    return m_PolyhedronListId;
-  }
+  const std::optional<IdType>& getPolyhedronListId() const;
 
-  SharedFaceList* getPolyhedra()
-  {
-    return getDataStructureRef().getDataAs<SharedFaceList>(m_PolyhedronListId);
-  }
+  SharedFaceList* getPolyhedra();
 
-  const SharedFaceList* getPolyhedra() const
-  {
-    return getDataStructureRef().getDataAs<SharedFaceList>(m_PolyhedronListId);
-  }
+  const SharedFaceList* getPolyhedra() const;
 
-  SharedFaceList& getPolyhedraRef()
-  {
-    return getDataStructureRef().getDataRefAs<SharedFaceList>(m_PolyhedronListId.value());
-  }
+  SharedFaceList& getPolyhedraRef();
 
-  const SharedFaceList& getPolyhedraRef() const
-  {
-    return getDataStructureRef().getDataRefAs<SharedFaceList>(m_PolyhedronListId.value());
-  }
+  const SharedFaceList& getPolyhedraRef() const;
 
-  void setPolyhedra(const SharedFaceList& polyhedra)
-  {
-    m_PolyhedronListId = polyhedra.getId();
-  }
+  void setPolyhedra(const SharedFaceList& polyhedra);
 
   /**
    * @brief Resizes the polyhedra list to the target size.
    * @param size
    */
-  void resizePolyhedronList(usize size)
-  {
-    getPolyhedraRef().getIDataStoreRef().reshapeTuples({size});
-  }
+  void resizePolyhedronList(usize size);
 
   /**
    * @brief Returns the number of polyhedra in the geometry.
    * @return usize
    */
-  usize getNumberOfPolyhedra() const
-  {
-    const auto& polyhedra = getPolyhedraRef();
-    return polyhedra.getNumberOfTuples();
-  }
+  usize getNumberOfPolyhedra() const;
 
   /**
    * @brief Creates and assigns the face list array for the current values.
@@ -69,20 +44,13 @@ public:
   /**
    * @brief Deletes the current face list array.
    */
-  void deleteFaces()
-  {
-    getDataStructureRef().removeData(m_FaceListId);
-    m_FaceListId.reset();
-  }
+  void deleteFaces();
 
   /**
    * @brief
    * @return
    */
-  const std::optional<IdType>& getUnsharedFacesId() const
-  {
-    return m_UnsharedFaceListId;
-  }
+  const std::optional<IdType>& getUnsharedFacesId() const;
 
   /**
    * @brief Creates and assigns the unshared face list array for the current values.
@@ -93,19 +61,12 @@ public:
    * @brief Returns a pointer to the unshared face list array.
    * @return
    */
-  const SharedFaceList* getUnsharedFaces() const
-  {
-    return getDataStructureRef().getDataAs<SharedFaceList>(m_UnsharedFaceListId);
-  }
+  const SharedFaceList* getUnsharedFaces() const;
 
   /**
    * @brief Deletes the current unshared face list array.
    */
-  void deleteUnsharedFaces()
-  {
-    getDataStructureRef().removeData(m_UnsharedFaceListId);
-    m_UnsharedFaceListId.reset();
-  }
+  void deleteUnsharedFaces();
 
   /**
    * @brief Assigns a new coordinate to the target vertex.
@@ -116,32 +77,14 @@ public:
    * @param vertId
    * @param coords
    */
-  void setCoords(usize vertId, const Point3D<float32>& coords) override
-  {
-    auto& vertices = getVerticesRef();
-
-    usize index = vertId * 3;
-    for(usize i = 0; i < 3; i++)
-    {
-      vertices[index + i] = coords[i];
-    }
-  }
+  void setCoords(usize vertId, const Point3D<float32>& coords) override;
 
   /**
    * @brief Returns the 3D coordinates of the specified vertex as a Point3D<float32>.
    * @param vertId
    * @return Point3D<float32>
    */
-  Point3D<float32> getCoords(usize vertId) const override
-  {
-    auto& vertices = getVerticesRef();
-
-    usize index = vertId * 3;
-    auto x = vertices[index];
-    auto y = vertices[index + 1];
-    auto z = vertices[index + 2];
-    return Point3D<float32>(x, y, z);
-  }
+  Point3D<float32> getCoords(usize vertId) const override;
 
   /**
    * @brief Gets the vertex coordinates for the specified edge.
@@ -149,102 +92,56 @@ public:
    * @param vert1
    * @param vert2
    */
-  void getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const override
-  {
-    auto& vertices = getVerticesRef();
-
-    usize verts[2];
-    getVertsAtEdge(edgeId, verts);
-
-    for(usize i = 0; i < 3; i++)
-    {
-      vert1[i] = vertices[verts[0] * 3 + i];
-      vert2[i] = vertices[verts[1] * 3 + i];
-    }
-  }
+  void getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const override;
 
   /**
    * @brief
    * @return
    */
-  const std::optional<IdType>& getPolyhedraDataId() const
-  {
-    return m_PolyhedronDataId;
-  }
+  const std::optional<IdType>& getPolyhedraDataId() const;
 
   /**
    * @brief
    * @return
    */
-  AttributeMatrix* getPolyhedronData()
-  {
-    return getDataStructureRef().getDataAs<AttributeMatrix>(m_PolyhedronDataId);
-  }
+  AttributeMatrix* getPolyhedronData();
 
   /**
    * @brief
    * @return
    */
-  const AttributeMatrix* getPolyhedronData() const
-  {
-    return getDataStructureRef().getDataAs<AttributeMatrix>(m_PolyhedronDataId);
-  }
+  const AttributeMatrix* getPolyhedronData() const;
 
   /**
    * @brief
    * @return
    */
-  AttributeMatrix& getPolyhedronDataRef()
-  {
-    return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_PolyhedronDataId.value());
-  }
+  AttributeMatrix& getPolyhedronDataRef();
 
   /**
    * @brief
    * @return
    */
-  const AttributeMatrix& getPolyhedronDataRef() const
-  {
-    return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_PolyhedronDataId.value());
-  }
+  const AttributeMatrix& getPolyhedronDataRef() const;
 
   /**
    * @brief
    * @return
    */
-  DataPath getPolyhedronDataPath() const
-  {
-    return getPolyhedronDataRef().getDataPaths().at(0);
-  }
+  DataPath getPolyhedronDataPath() const;
 
   /**
    * @brief
    * @param attributeMatrix
    */
-  void setPolyhedronData(const AttributeMatrix& attributeMatrix)
-  {
-    m_PolyhedronDataId = attributeMatrix.getId();
-  }
+  void setPolyhedronData(const AttributeMatrix& attributeMatrix);
 
   /**
    * @brief Reads values from HDF5
    * @param groupReader
    * @return H5::ErrorType
    */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override
-  {
-    H5::ErrorType error = INodeGeometry2D::readHdf5(dataStructureReader, groupReader, preflight);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    m_PolyhedronListId = ReadH5DataId(groupReader, H5Constants::k_PolyhedronListTag);
-    m_PolyhedronDataId = ReadH5DataId(groupReader, H5Constants::k_PolyhedronDataTag);
-    m_UnsharedFaceListId = ReadH5DataId(groupReader, H5Constants::k_UnsharedFaceListTag);
-
-    return error;
-  }
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override;
 
   /**
    * @brief Writes the geometry to HDF5 using the provided parent group ID.
@@ -253,48 +150,14 @@ public:
    * @param importable
    * @return H5::ErrorType
    */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
-  {
-    H5::ErrorType error = INodeGeometry2D::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
-    error = WriteH5DataId(groupWriter, m_PolyhedronListId, H5Constants::k_PolyhedronListTag);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    error = WriteH5DataId(groupWriter, m_PolyhedronDataId, H5Constants::k_PolyhedronDataTag);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    error = WriteH5DataId(groupWriter, m_UnsharedFaceListId, H5Constants::k_UnsharedFaceListTag);
-    if(error < 0)
-    {
-      return error;
-    }
-
-    return error;
-  }
+  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
   INodeGeometry3D() = delete;
 
-  INodeGeometry3D(DataStructure& ds, std::string name)
-  : INodeGeometry2D(ds, std::move(name))
-  {
-  }
+  INodeGeometry3D(DataStructure& ds, std::string name);
 
-  INodeGeometry3D(DataStructure& ds, std::string name, IdType importId)
-  : INodeGeometry2D(ds, std::move(name), importId)
-  {
-  }
+  INodeGeometry3D(DataStructure& ds, std::string name, IdType importId);
 
   INodeGeometry3D(const INodeGeometry3D&) = default;
   INodeGeometry3D(INodeGeometry3D&&) noexcept = default;
@@ -302,46 +165,15 @@ protected:
   INodeGeometry3D& operator=(const INodeGeometry3D&) = delete;
   INodeGeometry3D& operator=(INodeGeometry3D&&) noexcept = delete;
 
-  SharedQuadList* createSharedQuadList(usize numQuads)
-  {
-    auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numQuads}, std::vector<usize>{4}, 0);
-    SharedQuadList* quads = DataArray<MeshIndexType>::Create(*getDataStructure(), "Shared Quad List", std::move(dataStore), getId());
-    return quads;
-  }
+  SharedQuadList* createSharedQuadList(usize numQuads);
 
-  SharedTriList* createSharedTriList(usize numTris)
-  {
-    auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numTris}, std::vector<usize>{3}, 0);
-    SharedTriList* triangles = DataArray<MeshIndexType>::Create(*getDataStructure(), "Shared Tri List", std::move(dataStore), getId());
-    return triangles;
-  }
+  SharedTriList* createSharedTriList(usize numTris);
 
   /**
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
    * @param updatedIds
    */
-  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override
-  {
-    INodeGeometry2D::checkUpdatedIdsImpl(updatedIds);
-
-    for(const auto& updatedId : updatedIds)
-    {
-      if(m_PolyhedronListId == updatedId.first)
-      {
-        m_PolyhedronListId = updatedId.second;
-      }
-
-      if(m_PolyhedronDataId == updatedId.first)
-      {
-        m_PolyhedronDataId = updatedId.second;
-      }
-
-      if(m_UnsharedFaceListId == updatedId.first)
-      {
-        m_UnsharedFaceListId = updatedId.second;
-      }
-    }
-  }
+  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
 
   std::optional<IdType> m_PolyhedronListId;
   std::optional<IdType> m_PolyhedronDataId;
