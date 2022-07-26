@@ -203,7 +203,7 @@ public:
    */
   DataPath getCellDataPath() const
   {
-    return getDataPaths().at(0).createChildPath(k_CellDataName);
+    return getCellDataRef().getDataPaths().at(0);
   }
 
   /**
@@ -276,6 +276,23 @@ protected:
 
   IGridGeometry& operator=(const IGridGeometry&) = delete;
   IGridGeometry& operator=(IGridGeometry&&) noexcept = delete;
+
+  /**
+   * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
+   * @param updatedIds
+   */
+  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override
+  {
+    IGeometry::checkUpdatedIdsImpl(updatedIds);
+
+    for(const auto& updatedId : updatedIds)
+    {
+      if(m_CellDataId == updatedId.first)
+      {
+        m_CellDataId = updatedId.second;
+      }
+    }
+  }
 
 private:
   std::optional<IdType> m_CellDataId;

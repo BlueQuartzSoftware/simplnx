@@ -7,6 +7,8 @@ namespace complex
 class COMPLEX_EXPORT INodeGeometry1D : public INodeGeometry0D
 {
 public:
+  static inline constexpr StringLiteral k_EdgeDataName = "Edge Data";
+
   ~INodeGeometry1D() noexcept override = default;
 
   const std::optional<IdType>& getEdgeListId() const
@@ -156,6 +158,69 @@ public:
   virtual void getVertsAtEdge(usize edgeId, usize verts[2]) const = 0;
 
   /**
+   * @brief
+   * @return
+   */
+  const std::optional<IdType>& getEdgeDataId() const
+  {
+    return m_EdgeDataId;
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  AttributeMatrix* getEdgeData()
+  {
+    return getDataStructureRef().getDataAs<AttributeMatrix>(m_EdgeDataId);
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  const AttributeMatrix* getEdgeData() const
+  {
+    return getDataStructureRef().getDataAs<AttributeMatrix>(m_EdgeDataId);
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  AttributeMatrix& getEdgeDataRef()
+  {
+    return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_EdgeDataId.value());
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  const AttributeMatrix& getEdgeDataRef() const
+  {
+    return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_EdgeDataId.value());
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  DataPath getEdgeDataPath() const
+  {
+    return getEdgeDataRef().getDataPaths().at(0);
+  }
+
+  /**
+   * @brief
+   * @param attributeMatrix
+   */
+  void setEdgeData(const AttributeMatrix& attributeMatrix)
+  {
+    m_EdgeDataId = attributeMatrix.getId();
+  }
+
+  /**
    * @brief Reads values from HDF5
    * @param groupReader
    * @return H5::ErrorType
@@ -169,6 +234,7 @@ public:
     }
 
     m_EdgeListId = ReadH5DataId(groupReader, H5Constants::k_EdgeListTag);
+    m_EdgeDataId = ReadH5DataId(groupReader, H5Constants::k_EdgeDataTag);
     m_ElementContainingVertId = ReadH5DataId(groupReader, H5Constants::k_ElementContainingVertTag);
     m_ElementNeighborsId = ReadH5DataId(groupReader, H5Constants::k_ElementNeighborsTag);
     m_ElementCentroidsId = ReadH5DataId(groupReader, H5Constants::k_ElementCentroidTag);
@@ -193,6 +259,12 @@ public:
 
     H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
     error = WriteH5DataId(groupWriter, m_EdgeListId, H5Constants::k_EdgeListTag);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    error = WriteH5DataId(groupWriter, m_EdgeDataId, H5Constants::k_EdgeDataTag);
     if(error < 0)
     {
       return error;
@@ -253,6 +325,11 @@ protected:
         m_VertexListId = updatedId.second;
       }
 
+      if(m_EdgeDataId == updatedId.first)
+      {
+        m_EdgeDataId = updatedId.second;
+      }
+
       if(m_EdgeListId == updatedId.first)
       {
         m_EdgeListId = updatedId.second;
@@ -281,6 +358,7 @@ protected:
   }
 
   std::optional<IdType> m_EdgeListId;
+  std::optional<IdType> m_EdgeDataId;
   std::optional<IdType> m_ElementContainingVertId;
   std::optional<IdType> m_ElementNeighborsId;
   std::optional<IdType> m_ElementCentroidsId;
