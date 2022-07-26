@@ -44,7 +44,7 @@ DataStructure createDataStructure()
 }
 } // namespace
 
-TEST_CASE("FindFeaturePhasesFilter(Valid Parameters)", "[ComplexCore][FindFeaturePhasesFilter]")
+TEST_CASE("ComplexCore::FindFeaturePhasesFilter(Valid Parameters)", "[ComplexCore][FindFeaturePhasesFilter]")
 {
   FindFeaturePhasesFilter ffpFilter;
   Arguments args;

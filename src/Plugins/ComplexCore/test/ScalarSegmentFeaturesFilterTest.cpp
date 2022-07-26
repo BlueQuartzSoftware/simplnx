@@ -62,7 +62,7 @@ DataStructure CreateEbsdTestDataStructure()
 }
 } // namespace
 
-TEST_CASE("Reconstruction::ScalarSegmentFeatures", "[Reconstruction][ScalarSegmentFeatures]")
+TEST_CASE("ComplexCore::ScalarSegmentFeatures", "[Reconstruction][ScalarSegmentFeatures]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
 

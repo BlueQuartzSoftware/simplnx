@@ -80,7 +80,7 @@ DataStructure createTestData()
 }
 } // namespace
 
-TEST_CASE("MinNeighbors: Phase 0", "[MinNeighbors]")
+TEST_CASE("ComplexCore::MinNeighbors: Phase 0", "[MinNeighbors]")
 {
   MinNeighbors filter;
   DataStructure dataGraph = createTestData();
@@ -120,7 +120,7 @@ TEST_CASE("MinNeighbors: Phase 0", "[MinNeighbors]")
   }
 }
 
-TEST_CASE("MinNeighbors: Bad Phase Number", "[MinNeighbors]")
+TEST_CASE("ComplexCore::MinNeighbors: Bad Phase Number", "[MinNeighbors]")
 {
   MinNeighbors filter;
   DataStructure dataGraph = createTestData();
@@ -153,7 +153,7 @@ TEST_CASE("MinNeighbors: Bad Phase Number", "[MinNeighbors]")
   COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
 }
 
-TEST_CASE("MinNeighbors: Phase Array", "[MinNeighbors]")
+TEST_CASE("ComplexCore::MinNeighbors: Phase Array", "[MinNeighbors]")
 {
   MinNeighbors filter;
   DataStructure dataGraph = createTestData();

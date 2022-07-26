@@ -8,7 +8,7 @@
 
 using namespace complex;
 
-TEST_CASE("RenameDataAction(Instantiate)", "[ComplexCore][RenameDataAction]")
+TEST_CASE("ComplexCore::RenameDataAction(Instantiate)", "[ComplexCore][RenameDataAction]")
 {
   static constexpr StringLiteral k_NewName = "Bar";
   const DataPath k_DataPath({Constants::k_SmallIN100});
@@ -24,7 +24,7 @@ TEST_CASE("RenameDataAction(Instantiate)", "[ComplexCore][RenameDataAction]")
   COMPLEX_RESULT_REQUIRE_VALID(result.outputActions);
 }
 
-TEST_CASE("RenameDataAction(Invalid Parameters)", "[ComplexCore][RenameDataAction]")
+TEST_CASE("ComplexCore::RenameDataAction(Invalid Parameters)", "[ComplexCore][RenameDataAction]")
 {
   static constexpr StringLiteral k_NewName = Constants::k_ConfidenceIndex;
   static const DataPath k_DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
@@ -43,7 +43,7 @@ TEST_CASE("RenameDataAction(Invalid Parameters)", "[ComplexCore][RenameDataActio
   COMPLEX_RESULT_REQUIRE_INVALID(result.result);
 }
 
-TEST_CASE("RenameDataAction(Valid Parameters)", "[ComplexCore][RenameDataAction]")
+TEST_CASE("ComplexCore::RenameDataAction(Valid Parameters)", "[ComplexCore][RenameDataAction]")
 {
   static constexpr StringLiteral k_NewName = "Foo";
   static const DataPath k_DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});

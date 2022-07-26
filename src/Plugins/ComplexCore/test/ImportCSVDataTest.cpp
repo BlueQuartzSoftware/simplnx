@@ -181,7 +181,7 @@ void TestCase_TestPrimitives_Error(nonstd::span<std::string> values, int32 expec
   REQUIRE(executeResult.result.errors()[0].code == expectedErrorCode);
 }
 
-TEST_CASE("ImportCSVDataFilter (Case 1): Valid filter execution")
+TEST_CASE("ComplexCore::ImportCSVDataFilter (Case 1): Valid filter execution")
 {
   // Create the parent directory path
   fs::create_directories(k_TestInput.parent_path());
@@ -217,7 +217,7 @@ TEST_CASE("ImportCSVDataFilter (Case 1): Valid filter execution")
   TestCase_TestPrimitives<float64>(v);
 }
 
-TEST_CASE("ImportCSVDataFilter (Case 2): Valid filter execution - Skipped Array")
+TEST_CASE("ComplexCore::ImportCSVDataFilter (Case 2): Valid filter execution - Skipped Array")
 {
   std::string newGroupName = "New Group";
   std::string dummyGroupName = "Dummy Group";
@@ -246,7 +246,7 @@ TEST_CASE("ImportCSVDataFilter (Case 2): Valid filter execution - Skipped Array"
   REQUIRE(array == nullptr);
 }
 
-TEST_CASE("ImportCSVDataFilter (Case 3): Invalid filter execution - Out of Bounds")
+TEST_CASE("ComplexCore::ImportCSVDataFilter (Case 3): Invalid filter execution - Out of Bounds")
 {
   // Create the parent directory path
   fs::create_directories(k_TestInput.parent_path());
@@ -322,7 +322,7 @@ TEST_CASE("ImportCSVDataFilter (Case 3): Invalid filter execution - Out of Bound
   TestCase_TestPrimitives_Error<float64>(v, k_OverflowErrorCode);
 }
 
-TEST_CASE("ImportCSVDataFilter (Case 4): Invalid filter execution - Invalid arguments")
+TEST_CASE("ComplexCore::ImportCSVDataFilter (Case 4): Invalid filter execution - Invalid arguments")
 {
   // Create the parent directory path
   fs::create_directories(k_TestInput.parent_path());

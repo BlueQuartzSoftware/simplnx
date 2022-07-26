@@ -8,7 +8,7 @@
 
 using namespace complex;
 
-TEST_CASE("RemoveFlaggedVertices: Instantiate", "[ComplexCore][RemoveFlaggedVertices]")
+TEST_CASE("ComplexCore::RemoveFlaggedVertices: Instantiate", "[ComplexCore][RemoveFlaggedVertices]")
 {
   RemoveFlaggedVertices filter;
   DataStructure dataGraph;
@@ -24,7 +24,7 @@ TEST_CASE("RemoveFlaggedVertices: Instantiate", "[ComplexCore][RemoveFlaggedVert
   REQUIRE(preflightResult.outputActions.invalid());
 }
 
-TEST_CASE("RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][RemoveFlaggedVertices]")
+TEST_CASE("ComplexCore::RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][RemoveFlaggedVertices]")
 {
   RemoveFlaggedVertices filter;
   DataStructure dataGraph;

@@ -11,7 +11,7 @@
 using namespace complex;
 using namespace complex::Constants;
 
-TEST_CASE("FindDifferencesMap: Instantiate Filter", "[FindDifferencesMap]")
+TEST_CASE("ComplexCore::FindDifferencesMap: Instantiate Filter", "[FindDifferencesMap]")
 {
   FindDifferencesMap filter;
   DataStructure dataGraph;
@@ -34,7 +34,7 @@ TEST_CASE("FindDifferencesMap: Instantiate Filter", "[FindDifferencesMap]")
   REQUIRE(!executeResult.result.valid());
 }
 
-TEST_CASE("FindDifferencesMap: Test Algorithm", "[FindDifferencesMap]")
+TEST_CASE("ComplexCore::FindDifferencesMap: Test Algorithm", "[FindDifferencesMap]")
 {
   FindDifferencesMap filter;
   DataStructure dataGraph = UnitTest::CreateDataStructure();

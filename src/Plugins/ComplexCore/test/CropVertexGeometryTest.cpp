@@ -38,7 +38,7 @@ DataStructure createTestData()
 }
 } // namespace
 
-TEST_CASE("CropVertexGeometry(Instantiate)", "[ComplexCore][CropVertexGeometry]")
+TEST_CASE("ComplexCore::CropVertexGeometry(Instantiate)", "[ComplexCore][CropVertexGeometry]")
 {
   static const std::vector<float32> k_MinPos{0, 0, 0};
   static const std::vector<float32> k_MaxPos{5, 6, 7};
@@ -58,7 +58,7 @@ TEST_CASE("CropVertexGeometry(Instantiate)", "[ComplexCore][CropVertexGeometry]"
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 }
 
-TEST_CASE("CropVertexGeometry(Data)", "[ComplexCore][CropVertexGeometry]")
+TEST_CASE("ComplexCore::CropVertexGeometry(Data)", "[ComplexCore][CropVertexGeometry]")
 {
   static const std::vector<float32> k_MinPos{0, 0, 0};
   static const std::vector<float32> k_MaxPos{5, 6, 7};

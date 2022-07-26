@@ -10,7 +10,7 @@
 using namespace complex;
 using namespace complex::Constants;
 
-TEST_CASE("RobustAutomaticThreshold: Instantiate Filter", "[RobustAutomaticThreshold]")
+TEST_CASE("ComplexCore::RobustAutomaticThreshold: Instantiate Filter", "[RobustAutomaticThreshold]")
 {
   RobustAutomaticThreshold filter;
   DataStructure dataGraph;
@@ -33,7 +33,7 @@ TEST_CASE("RobustAutomaticThreshold: Instantiate Filter", "[RobustAutomaticThres
   REQUIRE(!executeResult.result.valid());
 }
 
-TEST_CASE("RobustAutomaticThreshold: Missing/Empty DataPaths", "[RobustAutomaticThreshold]")
+TEST_CASE("ComplexCore::RobustAutomaticThreshold: Missing/Empty DataPaths", "[RobustAutomaticThreshold]")
 {
   RobustAutomaticThreshold filter;
   DataStructure dataGraph = UnitTest::CreateDataStructure();
@@ -65,7 +65,7 @@ TEST_CASE("RobustAutomaticThreshold: Missing/Empty DataPaths", "[RobustAutomatic
   }
 }
 
-TEST_CASE("RobustAutomaticThreshold: Test Algorithm", "[RobustAutomaticThreshold]")
+TEST_CASE("ComplexCore::RobustAutomaticThreshold: Test Algorithm", "[RobustAutomaticThreshold]")
 {
   RobustAutomaticThreshold filter;
   DataStructure dataGraph = UnitTest::CreateDataStructure();

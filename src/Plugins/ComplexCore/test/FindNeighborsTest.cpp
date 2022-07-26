@@ -50,7 +50,7 @@ DataStructure createTestData()
 }
 } // namespace
 
-TEST_CASE("FindNeighbors(Instantiate)", "[ComplexCore][FindNeighbors]")
+TEST_CASE("ComplexCore::FindNeighbors(Instantiate)", "[ComplexCore][FindNeighbors]")
 {
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;

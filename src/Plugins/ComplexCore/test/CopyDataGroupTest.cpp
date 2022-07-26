@@ -8,7 +8,7 @@
 
 using namespace complex;
 
-TEST_CASE("CopyDataGroup(Instantiate)", "[ComplexCore][CopyDataGroup]")
+TEST_CASE("ComplexCore::CopyDataGroup(Instantiate)", "[ComplexCore][CopyDataGroup]")
 {
   static const DataPath k_DataPath({Constants::k_SmallIN100, "Phase Data"});
   static const DataPath k_CopyPath({Constants::k_SmallIN100, "Copy Data Bar"});
@@ -27,7 +27,7 @@ TEST_CASE("CopyDataGroup(Instantiate)", "[ComplexCore][CopyDataGroup]")
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 }
 
-TEST_CASE("CopyDataGroup(Invalid Parameters)", "[ComplexCore][CopyDataGroup]")
+TEST_CASE("ComplexCore::CopyDataGroup(Invalid Parameters)", "[ComplexCore][CopyDataGroup]")
 {
   CopyDataGroup filter;
   DataStructure ds = UnitTest::CreateDataStructure();
