@@ -1,10 +1,68 @@
-# ITKClosingByReconstructionImage #
+# ITK::Closing By Reconstruction Image Filter (KW)  #
 
-| Ready | Parameter Key | Human Name | Parameter Type | Parameter Class |
-|-------|---------------|------------|-----------------|----------------|
-| YES | KernelType | Kernel Type | ChoicesParameter::ValueType | ChoicesParameter |
-| YES | FullyConnected | FullyConnected | bool | BoolParameter |
-| YES | PreserveIntensities | PreserveIntensities | bool | BoolParameter |
-| YES | KernelRadius | KernelRadius | VectorFloat32Parameter::ValueType | VectorFloat32Parameter |
-| YES | SelectedCellArrayPath | Attribute Array to filter | DataPath | ArraySelectionParameter |
-| YES | NewCellArrayName | Filtered Array | StringParameter::ValueType | StringParameter |
+
+## Group (Subgroup) ##
+
+ITKImageProcessing (ITKImageProcessing)
+
+## Description ##
+
+Closing by reconstruction of an image.
+
+This filter is similar to the morphological closing, but contrary to the mophological closing, the closing by reconstruction preserves the shape of the components. The closing by reconstruction of an image "f" is defined as:
+
+ClosingByReconstruction(f) = ErosionByReconstruction(f, Dilation(f)).
+
+Closing by reconstruction not only preserves structures preserved by the dilation, but also levels raises the contrast of the darkest regions. If PreserveIntensities is on, a subsequent reconstruction by dilation using a marker image that is the original image for all unaffected pixels.
+
+Closing by reconstruction is described in Chapter 6.3.9 of Pierre Soille's book "Morphological Image Analysis: Principles and
+Applications", Second Edition, Springer, 2003.
+
+\author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+
+\see GrayscaleMorphologicalClosingImageFilter
+
+## Parameters ##
+
+| Name | Type | Description |
+|------|------|-------------|
+| FullyConnected | bool| Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. For objects that are 1 pixel wide, use FullyConnectedOn. |
+| PreserveIntensities | bool| Set/Get whether the original intensities of the image retained for those pixels unaffected by the opening by reconstrcution. If Off, the output pixel contrast will be reduced. |
+| KernelRadius | FloatVec3_t| N/A |
+| KernelType | int| N/A |
+
+
+## Required Geometry ##
+
+Image
+
+## Required Objects ##
+
+| Kind | Default Name | Type | Component Dimensions | Description |
+|------|--------------|------|----------------------|-------------|
+| **Cell Attribute Array** | None | N/A | (1)  | Array containing input image
+
+## Created Objects ##
+
+| Kind | Default Name | Type | Component Dimensions | Description |
+|------|--------------|------|----------------------|-------------|
+| **Cell Attribute Array** | None |  | (1)  | Array containing filtered image
+
+## References ##
+
+[1] T.S. Yoo, M. J. Ackerman, W. E. Lorensen, W. Schroeder, V. Chalana, S. Aylward, D. Metaxas, R. Whitaker. Engineering and Algorithm Design for an Image Processing API: A Technical Report on ITK - The Insight Toolkit. In Proc. of Medicine Meets Virtual Reality, J. Westwood, ed., IOS Press Amsterdam pp 586-592 (2002). 
+[2] H. Johnson, M. McCormick, L. Ibanez. The ITK Software Guide: Design and Functionality. Fourth Edition. Published by Kitware Inc. 2015 ISBN: 9781-930934-28-3
+[3] H. Johnson, M. McCormick, L. Ibanez. The ITK Software Guide: Introduction and Development Guidelines. Fourth Edition. Published by Kitware Inc. 2015 ISBN: 9781-930934-27-6
+
+## Example Pipelines ##
+
+
+
+## License & Copyright ##
+
+Please see the description file distributed with this plugin.
+
+## DREAM3D Mailing Lists ##
+
+If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
+https://groups.google.com/forum/?hl=en#!forum/dream3d-users
