@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
 
@@ -8,6 +9,8 @@ namespace complex
 class COMPLEX_EXPORT INodeGeometry0D : public IGeometry
 {
 public:
+  static inline constexpr StringLiteral k_VertexDataName = "Vertex Data";
+
   ~INodeGeometry0D() noexcept override = default;
 
   const std::optional<IdType>& getVertexListId() const
@@ -74,6 +77,69 @@ public:
   virtual void setCoords(usize vertId, const Point3D<float32>& coords) = 0;
 
   /**
+   * @brief
+   * @return
+   */
+  const std::optional<IdType>& getVertexDataId() const
+  {
+    return m_VertexDataId;
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  AttributeMatrix* getVertexData()
+  {
+    return getDataStructureRef().getDataAs<AttributeMatrix>(m_VertexDataId);
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  const AttributeMatrix* getVertexData() const
+  {
+    return getDataStructureRef().getDataAs<AttributeMatrix>(m_VertexDataId);
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  AttributeMatrix& getVertexDataRef()
+  {
+    return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_VertexDataId.value());
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  const AttributeMatrix& getVertexDataRef() const
+  {
+    return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_VertexDataId.value());
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  DataPath getVertexDataPath() const
+  {
+    return getVertexDataRef().getDataPaths().at(0);
+  }
+
+  /**
+   * @brief
+   * @param attributeMatrix
+   */
+  void setVertexData(const AttributeMatrix& attributeMatrix)
+  {
+    m_VertexDataId = attributeMatrix.getId();
+  }
+
+  /**
    * @brief Reads values from HDF5
    * @param groupReader
    * @return H5::ErrorType
@@ -87,6 +153,7 @@ public:
     }
 
     m_VertexListId = ReadH5DataId(groupReader, H5Constants::k_VertexListTag);
+    m_VertexDataId = ReadH5DataId(groupReader, H5Constants::k_VertexDataTag);
 
     return error;
   }
@@ -107,7 +174,14 @@ public:
     }
 
     H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
+
     error = WriteH5DataId(groupWriter, m_VertexListId, H5Constants::k_VertexListTag);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    error = WriteH5DataId(groupWriter, m_VertexDataId, H5Constants::k_VertexDataTag);
     if(error < 0)
     {
       return error;
@@ -149,9 +223,14 @@ protected:
       {
         m_VertexListId = updatedId.second;
       }
+      if(m_VertexDataId == updatedId.first)
+      {
+        m_VertexDataId = updatedId.second;
+      }
     }
   }
 
   std::optional<IdType> m_VertexListId;
+  std::optional<IdType> m_VertexDataId;
 };
 } // namespace complex

@@ -7,43 +7,45 @@ namespace complex
 class COMPLEX_EXPORT INodeGeometry3D : public INodeGeometry2D
 {
 public:
+  static inline constexpr StringLiteral k_PolyhedronDataName = "Polyhedron Data";
+
   ~INodeGeometry3D() noexcept override = default;
 
-  const std::optional<IdType>& getPolyhedraListId() const
+  const std::optional<IdType>& getPolyhedronListId() const
   {
-    return m_PolyhedraListId;
+    return m_PolyhedronListId;
   }
 
   SharedFaceList* getPolyhedra()
   {
-    return getDataStructureRef().getDataAs<SharedFaceList>(m_PolyhedraListId);
+    return getDataStructureRef().getDataAs<SharedFaceList>(m_PolyhedronListId);
   }
 
   const SharedFaceList* getPolyhedra() const
   {
-    return getDataStructureRef().getDataAs<SharedFaceList>(m_PolyhedraListId);
+    return getDataStructureRef().getDataAs<SharedFaceList>(m_PolyhedronListId);
   }
 
   SharedFaceList& getPolyhedraRef()
   {
-    return getDataStructureRef().getDataRefAs<SharedFaceList>(m_PolyhedraListId.value());
+    return getDataStructureRef().getDataRefAs<SharedFaceList>(m_PolyhedronListId.value());
   }
 
   const SharedFaceList& getPolyhedraRef() const
   {
-    return getDataStructureRef().getDataRefAs<SharedFaceList>(m_PolyhedraListId.value());
+    return getDataStructureRef().getDataRefAs<SharedFaceList>(m_PolyhedronListId.value());
   }
 
   void setPolyhedra(const SharedFaceList& polyhedra)
   {
-    m_PolyhedraListId = polyhedra.getId();
+    m_PolyhedronListId = polyhedra.getId();
   }
 
   /**
    * @brief Resizes the polyhedra list to the target size.
    * @param size
    */
-  void resizePolyhedraList(usize size)
+  void resizePolyhedronList(usize size)
   {
     getPolyhedraRef().getIDataStoreRef().reshapeTuples({size});
   }
@@ -162,6 +164,69 @@ public:
   }
 
   /**
+   * @brief
+   * @return
+   */
+  const std::optional<IdType>& getPolyhedraDataId() const
+  {
+    return m_PolyhedronDataId;
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  AttributeMatrix* getPolyhedronData()
+  {
+    return getDataStructureRef().getDataAs<AttributeMatrix>(m_PolyhedronDataId);
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  const AttributeMatrix* getPolyhedronData() const
+  {
+    return getDataStructureRef().getDataAs<AttributeMatrix>(m_PolyhedronDataId);
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  AttributeMatrix& getPolyhedronDataRef()
+  {
+    return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_PolyhedronDataId.value());
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  const AttributeMatrix& getPolyhedronDataRef() const
+  {
+    return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_PolyhedronDataId.value());
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  DataPath getPolyhedronDataPath() const
+  {
+    return getPolyhedronDataRef().getDataPaths().at(0);
+  }
+
+  /**
+   * @brief
+   * @param attributeMatrix
+   */
+  void setPolyhedronData(const AttributeMatrix& attributeMatrix)
+  {
+    m_PolyhedronDataId = attributeMatrix.getId();
+  }
+
+  /**
    * @brief Reads values from HDF5
    * @param groupReader
    * @return H5::ErrorType
@@ -174,7 +239,8 @@ public:
       return error;
     }
 
-    m_PolyhedraListId = ReadH5DataId(groupReader, H5Constants::k_PolyhedraListTag);
+    m_PolyhedronListId = ReadH5DataId(groupReader, H5Constants::k_PolyhedronListTag);
+    m_PolyhedronDataId = ReadH5DataId(groupReader, H5Constants::k_PolyhedronDataTag);
     m_UnsharedFaceListId = ReadH5DataId(groupReader, H5Constants::k_UnsharedFaceListTag);
 
     return error;
@@ -196,7 +262,13 @@ public:
     }
 
     H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
-    error = WriteH5DataId(groupWriter, m_PolyhedraListId, H5Constants::k_PolyhedraListTag);
+    error = WriteH5DataId(groupWriter, m_PolyhedronListId, H5Constants::k_PolyhedronListTag);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    error = WriteH5DataId(groupWriter, m_PolyhedronDataId, H5Constants::k_PolyhedronDataTag);
     if(error < 0)
     {
       return error;
@@ -254,9 +326,14 @@ protected:
 
     for(const auto& updatedId : updatedIds)
     {
-      if(m_PolyhedraListId == updatedId.first)
+      if(m_PolyhedronListId == updatedId.first)
       {
-        m_PolyhedraListId = updatedId.second;
+        m_PolyhedronListId = updatedId.second;
+      }
+
+      if(m_PolyhedronDataId == updatedId.first)
+      {
+        m_PolyhedronDataId = updatedId.second;
       }
 
       if(m_UnsharedFaceListId == updatedId.first)
@@ -266,7 +343,8 @@ protected:
     }
   }
 
-  std::optional<IdType> m_PolyhedraListId;
+  std::optional<IdType> m_PolyhedronListId;
+  std::optional<IdType> m_PolyhedronDataId;
   std::optional<IdType> m_UnsharedFaceListId;
 };
 } // namespace complex

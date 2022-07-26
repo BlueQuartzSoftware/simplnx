@@ -18,6 +18,8 @@ inline constexpr int8_t SurfaceQuadPoint = 14;
 class COMPLEX_EXPORT INodeGeometry2D : public INodeGeometry1D
 {
 public:
+  static inline constexpr StringLiteral k_FaceDataName = "Face Data";
+
   ~INodeGeometry2D() noexcept override = default;
 
   const std::optional<IdType>& getFaceListId() const
@@ -145,6 +147,69 @@ public:
   }
 
   /**
+   * @brief
+   * @return
+   */
+  const std::optional<IdType>& getFaceDataId() const
+  {
+    return m_FaceDataId;
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  AttributeMatrix* getFaceData()
+  {
+    return getDataStructureRef().getDataAs<AttributeMatrix>(m_FaceDataId);
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  const AttributeMatrix* getFaceData() const
+  {
+    return getDataStructureRef().getDataAs<AttributeMatrix>(m_FaceDataId);
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  AttributeMatrix& getFaceDataRef()
+  {
+    return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_FaceDataId.value());
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  const AttributeMatrix& getFaceDataRef() const
+  {
+    return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_FaceDataId.value());
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  DataPath getFaceDataPath() const
+  {
+    return getFaceDataRef().getDataPaths().at(0);
+  }
+
+  /**
+   * @brief
+   * @param attributeMatrix
+   */
+  void setFaceData(const AttributeMatrix& attributeMatrix)
+  {
+    m_FaceDataId = attributeMatrix.getId();
+  }
+
+  /**
    * @brief Reads values from HDF5
    * @param groupReader
    * @return H5::ErrorType
@@ -158,6 +223,7 @@ public:
     }
 
     m_FaceListId = ReadH5DataId(groupReader, H5Constants::k_FaceListTag);
+    m_FaceDataId = ReadH5DataId(groupReader, H5Constants::k_FaceDataTag);
     m_UnsharedEdgeListId = ReadH5DataId(groupReader, H5Constants::k_UnsharedEdgeListTag);
 
     return error;
@@ -180,6 +246,12 @@ public:
 
     H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
     error = WriteH5DataId(groupWriter, m_FaceListId, H5Constants::k_FaceListTag);
+    if(error < 0)
+    {
+      return error;
+    }
+
+    error = WriteH5DataId(groupWriter, m_FaceDataId, H5Constants::k_FaceDataTag);
     if(error < 0)
     {
       return error;
@@ -240,6 +312,11 @@ protected:
         m_FaceListId = updatedId.second;
       }
 
+      if(m_FaceDataId == updatedId.first)
+      {
+        m_FaceDataId = updatedId.second;
+      }
+
       if(m_UnsharedEdgeListId == updatedId.first)
       {
         m_UnsharedEdgeListId = updatedId.second;
@@ -248,6 +325,7 @@ protected:
   }
 
   std::optional<IdType> m_FaceListId;
+  std::optional<IdType> m_FaceDataId;
   std::optional<IdType> m_UnsharedEdgeListId;
 };
 } // namespace complex
