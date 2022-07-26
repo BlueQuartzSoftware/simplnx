@@ -10,6 +10,7 @@ set(FilterList
   ResampleImageGeomFilter
   FillBadDataFilter
   AlignSectionsFeatureCentroidFilter
+  ConvertColorToGrayScaleFilter
 )
 
 set(STUB_FILTERS
@@ -69,6 +70,7 @@ set(filter_algorithms
   ResampleImageGeom
   FillBadData
   AlignSectionsFeatureCentroid
+  ConvertColorToGrayScale
 )
 
 foreach(algorithm ${filter_algorithms})
