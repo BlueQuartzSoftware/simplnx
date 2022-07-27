@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ITKImageProcessing/Filters/ITKImageReader.hpp"
-
 #include "complex/Common/Result.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"

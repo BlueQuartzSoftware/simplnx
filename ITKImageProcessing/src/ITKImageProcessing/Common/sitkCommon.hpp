@@ -1,6 +1,16 @@
 #pragma once
 
 #include <itkFlatStructuringElement.h>
+/**
+ * @brief On MSVC the above header (itkFlatStructuringelement.h) eventually brings in
+ * `fileapi.h` which then defines 'CreateFile' as a macro. This interferes with
+ * API in the `complex` library for reading HDF5 files. So we are going to `undef`
+ * that macro here.
+ */
+#if defined(_MSC_VER) && defined(CreateFile)
+#undef CreateFile
+#endif
+
 // Copied from sitkKernel.h (SimpleITK)
 // Copied from sitkCreateKernel.h (SimpleITK)
 namespace itk

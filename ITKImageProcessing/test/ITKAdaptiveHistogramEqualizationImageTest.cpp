@@ -1,9 +1,5 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKAdaptiveHistogramEqualizationImage.hpp"
-#include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
-
 #include "complex/Core/Application.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ArrayThresholdsParameter.hpp"
@@ -21,9 +17,10 @@
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
+#include "ITKImageProcessing/Filters/ITKAdaptiveHistogramEqualizationImage.hpp"
+#include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
-
-#include <filesystem>
 
 namespace fs = std::filesystem;
 
@@ -138,14 +135,6 @@ TEST_CASE("ITKAdaptiveHistogramEqualizationImageFilter(defaults)", "[ITKImagePro
     Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, outputDataPath, 2e-3);
     //  COMPLEX_RESULT_REQUIRE_VALID(compareResult);
   }
-
-  {
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/adaptive_histogram_equalization.dream3d", unit_test::k_BinaryDir));
-    H5::FileWriter fileWriter = std::move(result.value());
-
-    herr_t err = dataStructure.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
-  }
 }
 
 TEST_CASE("ITKAdaptiveHistogramEqualizationImageFilter(histo)", "[ITKImageProcessing][ITKAdaptiveHistogramEqualizationImage][histo]")
@@ -196,7 +185,7 @@ TEST_CASE("ITKAdaptiveHistogramEqualizationImageFilter(histo)", "[ITKImageProces
   }
 
   {
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/adaptive_histogram_equalization_histo.dream3d", unit_test::k_BinaryDir));
+    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/align_sections_feature_centroid.dream3d", unit_test::k_BinaryDir));
     H5::FileWriter fileWriter = std::move(result.value());
 
     herr_t err = dataStructure.writeHdf5(fileWriter);
