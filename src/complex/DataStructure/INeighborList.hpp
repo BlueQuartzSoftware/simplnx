@@ -56,6 +56,15 @@ public:
    */
   virtual DataType getDataType() const = 0;
 
+  /**
+   * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
+   * @return
+   */
+  DataObject::Type getDataObjectType() const override
+  {
+    return Type::INeighborList;
+  }
+
 protected:
   /**
    * @brief Constructs a new INeighborList

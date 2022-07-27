@@ -69,6 +69,9 @@ public:
     HexahedralGeom = 18,
     TetrahedralGeom = 19,
 
+    INeighborList = 20,
+    NeighborList = 21,
+
     Unknown = 999,
     Any = 4294967295U
   };
