@@ -214,6 +214,15 @@ public:
   DataType getDataType() const override;
 
   /**
+   * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
+   * @return
+   */
+  DataObject::Type getDataObjectType() const override
+  {
+    return Type::NeighborList;
+  }
+
+  /**
    * @brief Writes the DataArray to HDF5 using the provided group ID.
    *
    * This method will fail if no DataStore has been set.
