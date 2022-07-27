@@ -48,6 +48,12 @@ IFilter::UniquePointer FilterList::createFilter(const FilterHandle& handle) cons
   {
     return nullptr;
   }
+  // Look to make sure the plugin is available. Unordered_Map.at() will throw exceptions if the key is not found.
+  if(m_PluginMap.find(handle.getPluginId()) == m_PluginMap.end())
+  {
+    return nullptr;
+  }
+
   // Plugin filter
   const auto& loader = m_PluginMap.at(handle.getPluginId());
   if(!loader->isLoaded())
