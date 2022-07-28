@@ -53,12 +53,20 @@ function(complex_enable_warnings)
         /we4459 # C4459: declaration of 'identifier' hides global declaration
     )
   else()
+
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+      set(SHADOW_WARNING "shadow")
+    else()
+      set(SHADOW_WARNING "shadow-all")
+    endif()
+
     target_compile_options(${ARG_TARGET}
       PRIVATE
         # Warning to error
         -Werror=parentheses # Wparentheses: Warn if parentheses are omitted in certain contexts, such as when there is an assignment in a context where a truth value is expected, or when operators are nested whose precedence people often get confused about
         -Werror=return-type # Wreturn-type: Warn about any "return" statement with no return value in a function whose return type is not "void"
-        -Werror=shadow # Wshadow: Warn whenever a local variable or type declaration shadows another variable, parameter, type, class member (in C++), or instance variable (in Objective-C) or whenever a built-in function is shadowed.
+        -Werror=${SHADOW_WARNING} # Wshadow: Warn whenever a local variable or type declaration shadows another variable, parameter, type, class member (in C++), or instance variable (in Objective-C) or whenever a built-in function is shadowed.
     )
+  
   endif()
 endfunction()
