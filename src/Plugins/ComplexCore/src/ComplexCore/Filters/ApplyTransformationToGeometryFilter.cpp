@@ -121,7 +121,7 @@ std::string ApplyTransformationToGeometryFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ApplyTransformationToGeometryFilter::defaultTags() const
 {
-  return {"#DREAM3D Review", "Rotation", "Transforming"};
+  return {"#ComplexCore", "Rotation", "Transforming"};
 }
 
 //------------------------------------------------------------------------------

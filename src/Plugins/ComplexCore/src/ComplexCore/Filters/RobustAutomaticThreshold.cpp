@@ -128,7 +128,7 @@ std::string RobustAutomaticThreshold::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> RobustAutomaticThreshold::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Threshold"};
+  return {"#ComplexCore", "#Threshold"};
 }
 
 Parameters RobustAutomaticThreshold::parameters() const
