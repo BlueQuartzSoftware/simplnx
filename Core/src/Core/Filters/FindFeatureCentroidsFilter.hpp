@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Generic/Generic_export.hpp"
+#include "Core/Core_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,24 +8,26 @@
 namespace complex
 {
 /**
- * @class FindFeatureCentroids
+ * @class FindFeatureCentroidsFilter
  * @brief This filter will ....
  */
-class GENERIC_EXPORT FindFeatureCentroids : public IFilter
+class CORE_EXPORT FindFeatureCentroidsFilter : public IFilter
 {
 public:
-  FindFeatureCentroids() = default;
-  ~FindFeatureCentroids() noexcept override = default;
+  FindFeatureCentroidsFilter() = default;
+  ~FindFeatureCentroidsFilter() noexcept override = default;
 
-  FindFeatureCentroids(const FindFeatureCentroids&) = delete;
-  FindFeatureCentroids(FindFeatureCentroids&&) noexcept = delete;
+  FindFeatureCentroidsFilter(const FindFeatureCentroidsFilter&) = delete;
+  FindFeatureCentroidsFilter(FindFeatureCentroidsFilter&&) noexcept = delete;
 
-  FindFeatureCentroids& operator=(const FindFeatureCentroids&) = delete;
-  FindFeatureCentroids& operator=(FindFeatureCentroids&&) noexcept = delete;
+  FindFeatureCentroidsFilter& operator=(const FindFeatureCentroidsFilter&) = delete;
+  FindFeatureCentroidsFilter& operator=(FindFeatureCentroidsFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
   static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "CentroidsArrayPath";
+  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "SelectedImageGeometry";
+  static inline constexpr StringLiteral k_FeatureAttributeMatrix_Key = "FeatureAttributeMatrix";
 
   /**
    * @brief Returns the name of the filter.
@@ -93,4 +95,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindFeatureCentroids, "6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindFeatureCentroidsFilter, "6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca");

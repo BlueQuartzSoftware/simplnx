@@ -17,12 +17,10 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     FindNeighborhoodsTest.cpp
     FindNeighborsTest.cpp
     FindNumFeaturesTest.cpp
-    FindShapesTest.cpp
     FindSurfaceAreaToVolumeTest.cpp
     FindVolFractionsTest.cpp
     FitFeatureDataTest.cpp
     #GenerateEnsembleStatisticsTest.cpp    # MISSING 1 or more Parameter Implementations
-
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}

@@ -15,7 +15,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ITKLogImageFilter(defaults)", "[ITKImageProcessing][ITKLogImage][defaults]")
+TEST_CASE("ITKImageProcessing::ITKLogImageFilter(defaults)", "[ITKImageProcessing][ITKLogImage][defaults]")
 {
   DataStructure ds;
   ITKLogImage filter;
@@ -42,7 +42,7 @@ TEST_CASE("ITKLogImageFilter(defaults)", "[ITKImageProcessing][ITKLogImage][defa
   auto executeResult = filter.execute(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.view() / "JSONFilters/Baseline/BasicFilters_LogImageFilter_defaults.nrrd";
+  fs::path baselineFilePath = fs::path(complex::unit_test::k_DataDir.view()) / "JSONFilters/Baseline/BasicFilters_LogImageFilter_defaults.nrrd";
   DataPath baselineGeometryPath({ITKTestBase::k_BaselineGeometryPath});
   DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
   DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);

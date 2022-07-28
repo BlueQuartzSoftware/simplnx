@@ -45,7 +45,7 @@ TEST_CASE("ITKSumProjectionImageFilter(z_projection)", "[ITKImageProcessing][ITK
   auto executeResult = filter.execute(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  fs::path baselineFilePath = fs::path(unit_test::k_SourceDir.view()) / complex::unit_test::k_DataDir.view() / "JSONFilters/Baseline/BasicFilters_SumProjectionImageFilter_z_projection.nrrd";
+  fs::path baselineFilePath = fs::path(complex::unit_test::k_DataDir.view()) / "JSONFilters/Baseline/BasicFilters_SumProjectionImageFilter_z_projection.nrrd";
   DataPath baselineGeometryPath({ITKTestBase::k_BaselineGeometryPath});
   DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
   DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);

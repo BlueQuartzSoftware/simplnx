@@ -17,7 +17,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ITKBinaryThresholdImageFilter(default)", "[ITKImageProcessing][ITKBinaryThresholdImage][default]")
+TEST_CASE("ITKImageProcessing::ITKBinaryThresholdImageFilter(default)", "[ITKImageProcessing][ITKBinaryThresholdImage][default]")
 {
   DataStructure ds;
   ITKBinaryThresholdImage filter;
@@ -46,7 +46,7 @@ TEST_CASE("ITKBinaryThresholdImageFilter(default)", "[ITKImageProcessing][ITKBin
   REQUIRE(md5Hash == "dbd0ea7d6f16bb93e9c688cb0f1bfd85");
 }
 
-TEST_CASE("ITKBinaryThresholdImageFilter(NarrowThreshold)", "[ITKImageProcessing][ITKBinaryThresholdImage][NarrowThreshold]")
+TEST_CASE("ITKImageProcessing::ITKBinaryThresholdImageFilter(NarrowThreshold)", "[ITKImageProcessing][ITKBinaryThresholdImage][NarrowThreshold]")
 {
   DataStructure ds;
   ITKBinaryThresholdImage filter;

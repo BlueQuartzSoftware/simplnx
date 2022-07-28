@@ -18,7 +18,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ITKOtsuMultipleThresholdsImageFilter(default)", "[ITKImageProcessing][ITKOtsuMultipleThresholdsImage][default]")
+TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(default)", "[ITKImageProcessing][ITKOtsuMultipleThresholdsImage][default]")
 {
   DataStructure ds;
   ITKOtsuMultipleThresholdsImage filter;
@@ -47,7 +47,7 @@ TEST_CASE("ITKOtsuMultipleThresholdsImageFilter(default)", "[ITKImageProcessing]
   REQUIRE(md5Hash == "a9c3b0c0971c5cbda12b29db916451c6");
 }
 
-TEST_CASE("ITKOtsuMultipleThresholdsImageFilter(two_on_float)", "[ITKImageProcessing][ITKOtsuMultipleThresholdsImage][two_on_float]")
+TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(two_on_float)", "[ITKImageProcessing][ITKOtsuMultipleThresholdsImage][two_on_float]")
 {
   DataStructure ds;
   ITKOtsuMultipleThresholdsImage filter;
@@ -78,7 +78,7 @@ TEST_CASE("ITKOtsuMultipleThresholdsImageFilter(two_on_float)", "[ITKImageProces
   REQUIRE(md5Hash == "1ab20d3cd9a354b45ac07ec59c0413b3");
 }
 
-TEST_CASE("ITKOtsuMultipleThresholdsImageFilter(three_on)", "[ITKImageProcessing][ITKOtsuMultipleThresholdsImage][three_on]")
+TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(three_on)", "[ITKImageProcessing][ITKOtsuMultipleThresholdsImage][three_on]")
 {
   DataStructure ds;
   ITKOtsuMultipleThresholdsImage filter;
@@ -110,7 +110,7 @@ TEST_CASE("ITKOtsuMultipleThresholdsImageFilter(three_on)", "[ITKImageProcessing
   REQUIRE(md5Hash == "b61c3f4e063fcdd24dba76227129ae34");
 }
 
-TEST_CASE("ITKOtsuMultipleThresholdsImageFilter(valley_emphasis)", "[ITKImageProcessing][ITKOtsuMultipleThresholdsImage][valley_emphasis]")
+TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(valley_emphasis)", "[ITKImageProcessing][ITKOtsuMultipleThresholdsImage][valley_emphasis]")
 {
   DataStructure ds;
   ITKOtsuMultipleThresholdsImage filter;

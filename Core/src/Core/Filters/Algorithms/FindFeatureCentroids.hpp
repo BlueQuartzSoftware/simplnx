@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Generic/Generic_export.hpp"
+#include "Core/Core_export.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
@@ -19,10 +19,12 @@
 namespace complex
 {
 
-struct GENERIC_EXPORT FindFeatureCentroidsInputValues
+struct CORE_EXPORT FindFeatureCentroidsInputValues
 {
   DataPath FeatureIdsArrayPath;
   DataPath CentroidsArrayPath;
+  DataPath ImageGeometryPath;
+  DataPath FeatureAttributeMatrixPath;
 };
 
 /**
@@ -31,7 +33,7 @@ struct GENERIC_EXPORT FindFeatureCentroidsInputValues
  * where a bool mask array specifies.
  */
 
-class GENERIC_EXPORT FindFeatureCentroids
+class CORE_EXPORT FindFeatureCentroids
 {
 public:
   FindFeatureCentroids(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindFeatureCentroidsInputValues* inputValues);

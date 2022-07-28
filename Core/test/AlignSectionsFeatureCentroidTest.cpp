@@ -12,6 +12,7 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include <filesystem>
@@ -138,6 +139,16 @@ TEST_CASE("Core::AlignSectionsFeatureCentroidFilter: Small IN100 Pipeline", "[Re
 
   DataStructure exemplarDataStructure;
   // Read Exemplar DREAM3D File Filter
+#if 1
+  {
+    auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/align_sections_feature_centroid.dream3d", unit_test::k_DREAM3DDataDir));
+    REQUIRE(fs::exists(exemplarFilePath));
+    H5::FileReader exemplarReader(exemplarFilePath);
+    H5::ErrorType h5Error = 0;
+    exemplarDataStructure = DataStructure::readFromHdf5(exemplarReader, h5Error);
+    REQUIRE(h5Error >= 0);
+  }
+#else
   {
     constexpr StringLiteral k_ImportFileData = "Import_File_Data";
 
@@ -158,7 +169,7 @@ TEST_CASE("Core::AlignSectionsFeatureCentroidFilter: Small IN100 Pipeline", "[Re
     auto executeResult = filter->execute(exemplarDataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
   }
-
+#endif
   // Read Exemplar Shifts File
   {
     static constexpr StringLiteral k_InputFileKey = "input_file";

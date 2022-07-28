@@ -64,8 +64,6 @@ set(DISABLED_TESTS
   WriteStatsGenOdfAngleFileTest.cpp
 )
 
-file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
-
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
   FILTER_LIST ${${PLUGIN_NAME}UnitTest_SRCS})
 

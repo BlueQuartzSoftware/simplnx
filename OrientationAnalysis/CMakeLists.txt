@@ -21,6 +21,7 @@ endif()
 include("${complex_SOURCE_DIR}/cmake/Plugin.cmake")
 
 set(PLUGIN_NAME "OrientationAnalysis")
+set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 # ------------------------------------------------------------------------------
 # These are all the filters in the plugin. All filters should be kept in the
@@ -122,10 +123,13 @@ foreach(file_name ${STUB_FILTERS})
   )
 endforeach()
 
-target_sources(${PLUGIN_NAME}
-  PRIVATE ${hidden_filter_HDRS} ${hidden_filter_SRCS}
-)
-source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} FILES ${hidden_filter_HDRS} ${hidden_filter_SRCS})
+option(${PLUGIN_NAME}_COMPILE_PRIVATE_FILTERS "Compile the Stubbed out filters" OFF)
+if(${PLUGIN_NAME}_COMPILE_PRIVATE_FILTERS)
+  target_sources(${PLUGIN_NAME}
+    PRIVATE ${hidden_filter_HDRS} ${hidden_filter_SRCS}
+  )
+  source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} FILES ${hidden_filter_HDRS} ${hidden_filter_SRCS})
+endif()
 
 # ------------------------------------------------------------------------------
 # Algorithms

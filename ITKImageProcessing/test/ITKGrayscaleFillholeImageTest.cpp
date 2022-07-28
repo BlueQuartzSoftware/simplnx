@@ -17,7 +17,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ITKGrayscaleFillholeImageFilter(GrayscaleFillhole1)", "[ITKImageProcessing][ITKGrayscaleFillholeImage][GrayscaleFillhole1]")
+TEST_CASE("ITKImageProcessing::ITKGrayscaleFillholeImageFilter(GrayscaleFillhole1)", "[ITKImageProcessing][ITKGrayscaleFillholeImage][GrayscaleFillhole1]")
 {
   DataStructure ds;
   ITKGrayscaleFillholeImage filter;
@@ -46,7 +46,7 @@ TEST_CASE("ITKGrayscaleFillholeImageFilter(GrayscaleFillhole1)", "[ITKImageProce
   REQUIRE(md5Hash == "e2c49e979bd4c64f0efff67b196b1950");
 }
 
-TEST_CASE("ITKGrayscaleFillholeImageFilter(GrayscaleFillhole2)", "[ITKImageProcessing][ITKGrayscaleFillholeImage][GrayscaleFillhole2]")
+TEST_CASE("ITKImageProcessing::ITKGrayscaleFillholeImageFilter(GrayscaleFillhole2)", "[ITKImageProcessing][ITKGrayscaleFillholeImage][GrayscaleFillhole2]")
 {
   DataStructure ds;
   ITKGrayscaleFillholeImage filter;

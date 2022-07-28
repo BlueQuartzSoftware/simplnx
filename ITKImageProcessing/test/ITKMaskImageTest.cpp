@@ -17,7 +17,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ITKMaskImageFilter(2d)", "[ITKImageProcessing][ITKMaskImage][2d]")
+TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(2d)", "[ITKImageProcessing][ITKMaskImage][2d]")
 {
   DataStructure ds;
   ITKMaskImage filter;
@@ -60,7 +60,7 @@ TEST_CASE("ITKMaskImageFilter(2d)", "[ITKImageProcessing][ITKMaskImage][2d]")
   REQUIRE(md5Hash == "c57d7fda3e42374881c3c3181d15bf90");
 }
 
-TEST_CASE("ITKMaskImageFilter(cthead1)", "[ITKImageProcessing][ITKMaskImage][cthead1]")
+TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(cthead1)", "[ITKImageProcessing][ITKMaskImage][cthead1]")
 {
   DataStructure ds;
   ITKMaskImage filter;
@@ -103,7 +103,7 @@ TEST_CASE("ITKMaskImageFilter(cthead1)", "[ITKImageProcessing][ITKMaskImage][cth
   REQUIRE(md5Hash == "0ef8943803bb4a21b2015b53f0164f1c");
 }
 
-TEST_CASE("ITKMaskImageFilter(rgb)", "[ITKImageProcessing][ITKMaskImage][rgb]")
+TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(rgb)", "[ITKImageProcessing][ITKMaskImage][rgb]")
 {
   DataStructure ds;
   ITKMaskImage filter;

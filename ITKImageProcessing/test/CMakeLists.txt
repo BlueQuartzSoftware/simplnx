@@ -172,7 +172,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS_Disabled
   ITKVectorRescaleIntensityImageTest.cpp # Dream3DArraySwitchOutputComponentMacro
 )
 
-# set(${PLUGIN_NAME}UnitTest_SRCS "")
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
   FILTER_LIST ""
 )
