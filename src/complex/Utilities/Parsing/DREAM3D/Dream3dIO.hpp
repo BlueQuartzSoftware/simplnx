@@ -96,11 +96,10 @@ COMPLEX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataS
  *
  * This method imports both current and legacy DataStructures.
  * @param fileReader
- * @param errorCode
  * @param preflight = false
  * @return complex::DataStructure
  */
-COMPLEX_EXPORT complex::DataStructure ImportDataStructureFromFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode, bool preflight = false);
+COMPLEX_EXPORT Result<complex::DataStructure> ImportDataStructureFromFile(const H5::FileReader& fileReader, bool preflight = false);
 
 /**
  * @brief Imports and returns the DataStructure from the target .dream3d file.
@@ -108,7 +107,7 @@ COMPLEX_EXPORT complex::DataStructure ImportDataStructureFromFile(const H5::File
  * @param filePath
  * @return complex::DataStructure
  */
-COMPLEX_EXPORT Result<complex::DataStructure> ImportDataStructureFromFile(const std::filesystem::path& filePath);
+COMPLEX_EXPORT Result<complex::DataStructure> ImportDataStructureFromFile(const std::filesystem::path& filePath, bool preflighting = false);
 
 /**
  * @brief Imports and returns a Pipeline from the target .dream3d file.
@@ -116,10 +115,9 @@ COMPLEX_EXPORT Result<complex::DataStructure> ImportDataStructureFromFile(const 
  *
  * This method does not import legacy Pipelines.
  * @param fileReader
- * @param errorCode
  * @return complex::Pipeline
  */
-COMPLEX_EXPORT complex::Pipeline ImportPipelineFromFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode);
+COMPLEX_EXPORT Result<complex::Pipeline> ImportPipelineFromFile(const H5::FileReader& fileReader);
 
 /**
  * @brief Imports and returns a Pipeline from the target .dream3d file.

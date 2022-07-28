@@ -543,10 +543,10 @@ void readLegacyDataContainer(DataStructure& ds, const H5::GroupReader& dcGroup, 
   }
 }
 
-DataStructure ImportLegacyDataStructure(const H5::FileReader& fileReader, H5::ErrorType& errorCode, bool preflight)
+DataStructure ImportLegacyDataStructure(const H5::FileReader& fileReader, bool preflight)
 {
   // auto dataStructureGroup = fileReader.openGroup(k_LegacyDataStructureGroupTag);
-  DataStructure ds;
+  DataStructure dataStructure;
 
   auto dcaGroup = fileReader.openGroup(k_LegacyDataStructureGroupTag);
 
@@ -555,32 +555,38 @@ DataStructure ImportLegacyDataStructure(const H5::FileReader& fileReader, H5::Er
   for(const auto& dcName : dcNames)
   {
     auto dcGroup = dcaGroup.openGroup(dcName);
-    readLegacyDataContainer(ds, dcGroup, preflight);
+    readLegacyDataContainer(dataStructure, dcGroup, preflight);
   }
-
-  return ds;
-
-  throw std::runtime_error("Not implemented: ImportLegacyDataStructure from dream3d file");
+  return dataStructure;
 }
 
-complex::DataStructure complex::DREAM3D::ImportDataStructureFromFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode, bool preflight)
+Result<complex::DataStructure> complex::DREAM3D::ImportDataStructureFromFile(const H5::FileReader& fileReader, bool preflight)
 {
-  errorCode = 0;
-
+  H5::ErrorType errorCode = 0;
   const auto fileVersion = GetFileVersion(fileReader);
+  DataStructure dataStructure;
+
   if(fileVersion == k_CurrentFileVersion)
   {
-    return ImportDataStructureV8(fileReader, errorCode, preflight);
+    dataStructure = ImportDataStructureV8(fileReader, errorCode, preflight);
   }
   else if(fileVersion == Legacy::FileVersion)
   {
-    return ImportLegacyDataStructure(fileReader, errorCode, preflight);
+    dataStructure = ImportLegacyDataStructure(fileReader, preflight);
   }
-  // Unsupported file version
-  return DataStructure();
+  else // Unsupported file version
+  {
+    return MakeErrorResult<complex::DataStructure>(-21000, fmt::format("Unsupported DREAM.3D file version. Version from file is {}", fileVersion));
+  }
+
+  if(errorCode < 0)
+  {
+    return MakeErrorResult<complex::DataStructure>(errorCode, fmt::format("Error Reading DataStructure from .dream3d file. Error Code is {}.", errorCode));
+  }
+  return {std::move(dataStructure)};
 }
 
-Result<complex::DataStructure> complex::DREAM3D::ImportDataStructureFromFile(const std::filesystem::path& filePath)
+Result<complex::DataStructure> complex::DREAM3D::ImportDataStructureFromFile(const std::filesystem::path& filePath, bool preflighting)
 {
   H5::FileReader fileReader(filePath);
   if(!fileReader.isValid())
@@ -588,36 +594,27 @@ Result<complex::DataStructure> complex::DREAM3D::ImportDataStructureFromFile(con
     return MakeErrorResult<DataStructure>(-1, fmt::format("complex::DREAM3D::ImportDataStructureFromFile: Unable to open '{}' for reading", filePath.string()));
   }
 
-  H5::ErrorType error = 0;
-  DataStructure dataStructure = ImportDataStructureFromFile(fileReader, error);
-
-  return {std::move(dataStructure)};
+  return ImportDataStructureFromFile(fileReader, preflighting);
 }
 
-complex::Pipeline complex::DREAM3D::ImportPipelineFromFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode)
+Result<complex::Pipeline> complex::DREAM3D::ImportPipelineFromFile(const H5::FileReader& fileReader)
 {
-  errorCode = 0;
-
-  if(GetPipelineVersion(fileReader) != k_CurrentPipelineVersion)
+  PipelineVersionType pipelineVersion = GetPipelineVersion(fileReader);
+  if(pipelineVersion != k_CurrentPipelineVersion)
   {
-    return {};
+    return {MakeErrorResult<complex::Pipeline>(-10000, fmt::format("Pipeline version {} is not supported.", pipelineVersion))};
   }
 
   auto pipelineGroupReader = fileReader.openGroup(k_PipelineJsonTag);
   auto pipelineDatasetReader = pipelineGroupReader.openDataset(k_PipelineJsonTag);
   if(!pipelineDatasetReader.isValid())
   {
-    return {};
+    return MakeErrorResult<complex::Pipeline>(-10100, fmt::format("Pipeline Read Error: json tag '{}' not able to be opened.", k_PipelineJsonTag));
   }
 
   auto pipelineJsonString = pipelineDatasetReader.readAsString();
   auto pipelineJson = nlohmann::json::parse(pipelineJsonString);
-  Result<Pipeline> pipelineResult = Pipeline::FromJson(pipelineJson);
-  if(pipelineResult.invalid())
-  {
-    throw std::runtime_error("Failed to parse pipeline json");
-  }
-  return std::move(pipelineResult.value());
+  return Pipeline::FromJson(pipelineJson);
 }
 
 Result<complex::Pipeline> complex::DREAM3D::ImportPipelineFromFile(const std::filesystem::path& filePath)
@@ -632,29 +629,27 @@ Result<complex::Pipeline> complex::DREAM3D::ImportPipelineFromFile(const std::fi
     return MakeErrorResult<Pipeline>(-1, fmt::format("complex::DREAM3D::ImportPipelineFromFile: Unable to open '{}' for reading", filePath.string()));
   }
 
-  H5::ErrorType error = 0;
-  Pipeline pipeline = ImportPipelineFromFile(fileReader, error);
-
-  return {std::move(pipeline)};
+  return ImportPipelineFromFile(fileReader);
 }
 
 complex::DREAM3D::FileData complex::DREAM3D::ReadFile(const H5::FileReader& fileReader, H5::ErrorType& errorCode, bool preflight)
 {
-  errorCode = 0;
   // Pipeline pipeline;
-  auto pipeline = ImportPipelineFromFile(fileReader, errorCode);
-  if(errorCode < 0)
+  auto pipelineResult = ImportPipelineFromFile(fileReader);
+  if(pipelineResult.invalid())
   {
+    errorCode = -100;
     return {};
   }
 
-  auto dataStructure = ImportDataStructureFromFile(fileReader, errorCode, preflight);
-  if(errorCode < 0)
+  auto dataStructureResult = ImportDataStructureFromFile(fileReader, preflight);
+  if(dataStructureResult.invalid())
   {
+    errorCode = -101;
     return {};
   }
 
-  return {pipeline, dataStructure};
+  return {pipelineResult.value(), dataStructureResult.value()};
 }
 
 Result<complex::DREAM3D::FileData> complex::DREAM3D::ReadFile(const std::filesystem::path& path)
