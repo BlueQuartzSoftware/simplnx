@@ -1,5 +1,7 @@
 #include "DataGroupUtilities.hpp"
 
+#include "complex/DataStructure/BaseGroup.hpp"
+
 namespace complex
 {
 bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds, size_t currentFeatureCount)
@@ -13,7 +15,7 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
     acceptableMatrix = true;
   }
 
-  // Get the DataGroup that holds all of the feature Data
+  // Get the DataGroup that holds all the feature Data
   const BaseGroup* featureLevelBaseGroup = dataStructure.getDataAs<const BaseGroup>(featureDataGroupPath);
 
   if(nullptr == featureLevelBaseGroup)
@@ -22,7 +24,7 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
   }
   const DataMap& featureDataMap = featureLevelBaseGroup->getDataMap();
 
-  // Loop over all of the paths from the feature group and remove the data arrays that do NOT have the
+  // Loop over all the paths from the feature group and remove the data arrays that do NOT have the
   // same number of Tuples as the 'activeObjects' vector
   std::vector<std::shared_ptr<IDataArray>> matchingDataArrayPtrs;
   for(const auto& entry : featureDataMap)
@@ -116,4 +118,39 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
   }
   return true;
 }
+
+// -----------------------------------------------------------------------------
+std::vector<std::shared_ptr<IDataArray>> GenerateDataArrayList(const DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<DataPath>& ignoredDataPaths)
+{
+  std::vector<std::shared_ptr<IDataArray>> arrays;
+  DataPath parentPath = dataArrayPath.getParent();
+  const auto& parent = dataStructure.getDataRefAs<BaseGroup>(parentPath);
+  auto childArrays = parent.findAllChildrenOfType<IDataArray>();
+  for(const auto& childArray : childArrays)
+  {
+    bool ignore = false;
+    DataPath childArrayPath;
+    for(const auto& childDataPath : childArray->getDataPaths())
+    {
+      if(parentPath == childDataPath.getParent())
+      {
+        childArrayPath = childDataPath;
+      }
+    }
+    for(const auto& ignoredPath : ignoredDataPaths)
+    {
+      if(childArrayPath == ignoredPath)
+      {
+        ignore = true;
+        break;
+      }
+    }
+    if(!ignore)
+    {
+      arrays.push_back(childArray);
+    }
+  }
+  return arrays;
+}
+
 } // namespace complex
