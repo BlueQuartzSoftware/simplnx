@@ -6,14 +6,14 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
-  RotateSampleRefFrameTest.cpp
-  ResampleImageGeomFilterTest.cpp # NEEDS TEST IMPLEMENTED
-  FillBadDataTest.cpp # NEEDS TEST IMPLEMENTED
-  AlignSectionsFeatureCentroidTest.cpp
+  AlignSectionsFeatureCentroidTest.cpp 
   ConvertColorToGrayScaleTest.cpp
+  FillBadDataTest.cpp # NEEDS TEST IMPLEMENTED
+  FindFeatureCentroidsFilterTest.cpp
+  FindShapesFilterTest.cpp
+  ResampleImageGeomFilterTest.cpp # NEEDS TEST IMPLEMENTED
+  RotateSampleRefFrameTest.cpp
 )
-
-file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
   FILTER_LIST ${${PLUGIN_NAME}UnitTest_SRCS})
@@ -26,12 +26,9 @@ create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
 # ------------------------------------------------------------------------------
 # If there are additional source files that need to be compiled for this plugin
 # can use the target_sources(...) cmake call
-# target_sources(${PLUGIN_NAME}UnitTest
-# PUBLIC
-# additional header files
-# PRIVATE
-# additional source files
-# )
+ target_sources(${PLUGIN_NAME}UnitTest
+  PRIVATE ${${PLUGIN_NAME}_SOURCE_DIR}/test/${PLUGIN_NAME}TestUtilities.hpp
+ )
 
 # ------------------------------------------------------------------------------
 # If there are additional include directories that are needed for this plugin

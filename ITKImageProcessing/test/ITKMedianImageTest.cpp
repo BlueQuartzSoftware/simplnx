@@ -24,7 +24,7 @@ using namespace complex;
  * images which we currently don't handle.
  */
 
-TEST_CASE("ITKMedianImageFilter(defaults)", "[ITKImageProcessing][ITKMedianImage][defaults]")
+TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(defaults)", "[ITKImageProcessing][ITKMedianImage][defaults]")
 {
   DataStructure ds;
   ITKMedianImage filter;
@@ -55,7 +55,7 @@ TEST_CASE("ITKMedianImageFilter(defaults)", "[ITKImageProcessing][ITKMedianImage
   REQUIRE(md5Hash == "cbc59611297961dea9f872282534f3df");
 }
 
-TEST_CASE("ITKMedianImageFilter(by23)", "[ITKImageProcessing][ITKMedianImage][by23]")
+TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(by23)", "[ITKImageProcessing][ITKMedianImage][by23]")
 {
   DataStructure ds;
   ITKMedianImage filter;

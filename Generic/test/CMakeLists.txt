@@ -8,12 +8,10 @@
 set(${PLUGIN_NAME}UnitTest_SRCS
     FindBoundaryCellsTest.cpp
     FindBoundingBoxFeaturesTest.cpp
-    FindFeatureCentroidsTest.cpp
     FindFeaturePhasesTest.cpp
     FindFeaturePhasesBinaryTest.cpp
     FindSurfaceFeaturesTest.cpp
     GenerateVectorColorsTest.cpp
-
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}

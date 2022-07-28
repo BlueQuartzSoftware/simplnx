@@ -58,6 +58,7 @@ endif()
 include("${complex_SOURCE_DIR}/cmake/Plugin.cmake")
 
 set(PLUGIN_NAME "ITKImageProcessing")
+set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 # ------------------------------------------------------------------------------
 # These are all the filters in the plugin. All filters should be kept in the
@@ -234,8 +235,9 @@ set(Filters_Disabled
 
 # ------------------------------------------------------------------------------
 foreach(file_name ${FilterList})
+
   if(NOT EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/docs/${PLUGIN_NAME}/${file_name}.md")
-    message(STATUS "!!!> DOCUMENTATION WARNING: ${file_name} Does Not Exist")
+    message(STATUS "!!!> DOCUMENTATION WARNING:${${PLUGIN_NAME}_SOURCE_DIR}/docs/${PLUGIN_NAME}/${file_name}.md Does Not Exist")
   endif()
 endforeach()
 

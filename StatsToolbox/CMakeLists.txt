@@ -20,7 +20,6 @@ set(STUB_FILTERS
   FindNeighborhoods
   FindNeighbors
   FindNumFeatures
-  FindShapes
   FindSurfaceAreaToVolume
   FindVolFractions
   FitFeatureData

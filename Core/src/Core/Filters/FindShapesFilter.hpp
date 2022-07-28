@@ -1,6 +1,6 @@
 #pragma once
 
-#include "StatsToolbox/StatsToolbox_export.hpp"
+#include "Core/Core_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,20 +8,21 @@
 namespace complex
 {
 /**
- * @class FindShapes
+ * @class FindShapesFilter
+ *
  * @brief This filter will ....
  */
-class STATSTOOLBOX_EXPORT FindShapes : public IFilter
+class CORE_EXPORT FindShapesFilter : public IFilter
 {
 public:
-  FindShapes() = default;
-  ~FindShapes() noexcept override = default;
+  FindShapesFilter() = default;
+  ~FindShapesFilter() noexcept override = default;
 
-  FindShapes(const FindShapes&) = delete;
-  FindShapes(FindShapes&&) noexcept = delete;
+  FindShapesFilter(const FindShapesFilter&) = delete;
+  FindShapesFilter(FindShapesFilter&&) noexcept = delete;
 
-  FindShapes& operator=(const FindShapes&) = delete;
-  FindShapes& operator=(FindShapes&&) noexcept = delete;
+  FindShapesFilter& operator=(const FindShapesFilter&) = delete;
+  FindShapesFilter& operator=(FindShapesFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
@@ -32,6 +33,7 @@ public:
   static inline constexpr StringLiteral k_AxisEulerAnglesArrayName_Key = "AxisEulerAnglesArrayName";
   static inline constexpr StringLiteral k_AspectRatiosArrayName_Key = "AspectRatiosArrayName";
   static inline constexpr StringLiteral k_VolumesArrayName_Key = "VolumesArrayName";
+  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
 
   /**
    * @brief Returns the name of the filter.
@@ -99,4 +101,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindShapes, "3b0ababf-9c8d-538d-96af-e40775c4f0ab");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindShapesFilter, "3b0ababf-9c8d-538d-96af-e40775c4f0ab");
