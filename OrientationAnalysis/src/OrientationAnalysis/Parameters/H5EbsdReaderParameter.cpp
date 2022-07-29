@@ -212,9 +212,9 @@ Result<> H5EbsdReaderParameter::validate(const std::any& valueRef) const
     return {nonstd::make_unexpected(std::move(errors))};
   }
 
-  if(value.startSlice >= value.endSlice)
+  if(value.startSlice > value.endSlice)
   {
-    errors.push_back({-2002, fmt::format("StartSlice '{}' must be less than EndSlice'{}'", value.startSlice, value.endSlice)});
+    errors.push_back({-2002, fmt::format("StartSlice '{}' must be less than or equal EndSlice'{}'", value.startSlice, value.endSlice)});
     return {nonstd::make_unexpected(std::move(errors))};
   }
 
