@@ -30,7 +30,8 @@ void assignBadPoints(DataStructure& data, const Arguments& args)
 
   auto applyToSinglePhase = args.value<bool>(MinNeighbors::k_ApplyToSinglePhase_Key);
   Int32Array* featurePhasesArray = nullptr;
-  if(applyToSinglePhase){
+  if(applyToSinglePhase)
+  {
     auto featurePhasesPath = args.value<DataPath>(MinNeighbors::k_FeaturePhases_Key);
     featurePhasesArray = data.getDataAs<Int32Array>(featurePhasesPath);
   }
@@ -174,7 +175,7 @@ void assignBadPoints(DataStructure& data, const Arguments& args)
       }
     }
 
-    //TODO This can be parallelized much like NeighborOrientationCorrelation
+    // TODO This can be parallelized much like NeighborOrientationCorrelation
     for(usize j = 0; j < totalPoints; j++)
     {
       featurename = featureIds[j];
@@ -207,7 +208,8 @@ nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure&
 
   auto applyToSinglePhase = args.value<bool>(MinNeighbors::k_ApplyToSinglePhase_Key);
   Int32Array* featurePhasesArray = nullptr;
-  if(applyToSinglePhase){
+  if(applyToSinglePhase)
+  {
     auto featurePhasesPath = args.value<DataPath>(MinNeighbors::k_FeaturePhases_Key);
     featurePhasesArray = data.getDataAs<Int32Array>(featurePhasesPath);
   }
