@@ -378,13 +378,13 @@ public:
       nonstd::span<value_type> span(dataPtr.get(), size);
       if(!datasetReader.readIntoSpan(span))
       {
-        throw std::runtime_error(fmt::format("Error reading data from DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+        throw std::runtime_error(fmt::format("Error reading neighbor list from DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
       }
       dataStore->m_Data = std::move(dataPtr);
     }
     else if(!datasetReader.readIntoSpan(dataStore->createSpan()))
     {
-      throw std::runtime_error(fmt::format("Error reading data from DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+      throw std::runtime_error(fmt::format("Error reading data array from DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
     }
 
     return dataStore;

@@ -130,7 +130,7 @@ protected:
     H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(k_TupleShape);
     if(!tupleShapeAttribute.isValid())
     {
-      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+      throw std::runtime_error(fmt::format("Error reading Tuple Shape from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
     }
     return tupleShapeAttribute.readAsVector<usize>();
   }
@@ -140,7 +140,7 @@ protected:
     H5::AttributeReader componentShapeAttribute = datasetReader.getAttribute(k_ComponentShape);
     if(!componentShapeAttribute.isValid())
     {
-      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+      throw std::runtime_error(fmt::format("Error reading Component Shape from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
     }
     return componentShapeAttribute.readAsVector<usize>();
   }
