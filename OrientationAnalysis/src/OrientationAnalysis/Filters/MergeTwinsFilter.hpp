@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Reconstruction/Reconstruction_export.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,20 +8,20 @@
 namespace complex
 {
 /**
- * @class MergeTwins
+ * @class MergeTwinsFilter
  * @brief This filter will ....
  */
-class RECONSTRUCTION_EXPORT MergeTwins : public IFilter
+class ORIENTATIONANALYSIS_EXPORT MergeTwinsFilter : public IFilter
 {
 public:
-  MergeTwins() = default;
-  ~MergeTwins() noexcept override = default;
+  MergeTwinsFilter() = default;
+  ~MergeTwinsFilter() noexcept override = default;
 
-  MergeTwins(const MergeTwins&) = delete;
-  MergeTwins(MergeTwins&&) noexcept = delete;
+  MergeTwinsFilter(const MergeTwinsFilter&) = delete;
+  MergeTwinsFilter(MergeTwinsFilter&&) noexcept = delete;
 
-  MergeTwins& operator=(const MergeTwins&) = delete;
-  MergeTwins& operator=(MergeTwins&&) noexcept = delete;
+  MergeTwinsFilter& operator=(const MergeTwinsFilter&) = delete;
+  MergeTwinsFilter& operator=(MergeTwinsFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_UseNonContiguousNeighbors_Key = "UseNonContiguousNeighbors";
@@ -104,4 +104,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, MergeTwins, "c9af506e-9ea1-5ff5-a882-fa561def5f52");
+COMPLEX_DEF_FILTER_TRAITS(complex, MergeTwinsFilter, "c9af506e-9ea1-5ff5-a882-fa561def5f52");

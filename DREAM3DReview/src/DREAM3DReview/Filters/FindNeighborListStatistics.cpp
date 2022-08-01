@@ -37,7 +37,7 @@ std::string FindNeighborListStatistics::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindNeighborListStatistics::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Statistics"};
+  return {"#DREAM3DReview", "#Statistics"};
 }
 
 //------------------------------------------------------------------------------

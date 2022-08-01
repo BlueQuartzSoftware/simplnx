@@ -474,6 +474,13 @@ TEST_CASE("Core::AlignSectionsFeatureCentroidFilter: Small IN100 Pipeline", "[Re
       std::vector<std::string> generatedPathVector = cellArrayPath.getPathVector();
       generatedPathVector[0] = k_ExemplarDataContainer;
       DataPath exemplarDataArrayPath(generatedPathVector);
+
+      // Check to see if there is something to compare against in the exemplar file.
+      if(nullptr == exemplarDataStructure.getDataAs<IDataArray>(exemplarDataArrayPath))
+      {
+        continue;
+      }
+
       auto& exemplarDataArray = exemplarDataStructure.getDataRefAs<IDataArray>(exemplarDataArrayPath);
       DataType exemplarType = exemplarDataArray.getDataType();
 

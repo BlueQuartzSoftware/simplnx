@@ -39,7 +39,7 @@ std::string KDistanceGraph::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> KDistanceGraph::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Clustering"};
+  return {"#DREAM3DReview", "#Clustering"};
 }
 
 //------------------------------------------------------------------------------

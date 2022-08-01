@@ -16,7 +16,6 @@ set(STUB_FILTERS
   CAxisSegmentFeatures
   ComputeFeatureRect
   MergeColonies
-  MergeTwins
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}

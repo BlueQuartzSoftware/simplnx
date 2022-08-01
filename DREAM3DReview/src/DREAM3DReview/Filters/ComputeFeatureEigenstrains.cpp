@@ -37,7 +37,7 @@ std::string ComputeFeatureEigenstrains::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeFeatureEigenstrains::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Registration"};
+  return {"#DREAM3DReview", "#Registration"};
 }
 
 //------------------------------------------------------------------------------

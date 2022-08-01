@@ -36,7 +36,7 @@ std::string AverageEdgeFaceCellArrayToVertexArray::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> AverageEdgeFaceCellArrayToVertexArray::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Statistics"};
+  return {"#DREAM3DReview", "#Statistics"};
 }
 
 //------------------------------------------------------------------------------

@@ -36,7 +36,7 @@ std::string ComputeUmeyamaTransform::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeUmeyamaTransform::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Registration"};
+  return {"#DREAM3DReview", "#Registration"};
 }
 
 //------------------------------------------------------------------------------
