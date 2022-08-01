@@ -37,7 +37,7 @@ std::string FindNorm::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindNorm::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Statistics"};
+  return {"#DREAM3DReview", "#Statistics"};
 }
 
 //------------------------------------------------------------------------------

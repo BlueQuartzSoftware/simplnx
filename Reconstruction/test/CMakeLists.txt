@@ -14,7 +14,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     CAxisSegmentFeaturesTest.cpp
     ComputeFeatureRectTest.cpp
     MergeColoniesTest.cpp
-    MergeTwinsTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}

@@ -39,7 +39,7 @@ std::string NormalizeArrays::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> NormalizeArrays::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Statistics"};
+  return {"#DREAM3DReview", "#Statistics"};
 }
 
 //------------------------------------------------------------------------------

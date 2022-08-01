@@ -40,7 +40,7 @@ std::string PrincipalComponentAnalysis::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> PrincipalComponentAnalysis::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Dimensionality Reduction"};
+  return {"#DREAM3DReview", "#Dimensionality Reduction"};
 }
 
 //------------------------------------------------------------------------------

@@ -76,7 +76,7 @@ Parameters AlignSectionsFeatureCentroidFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Optional File Output"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_WriteAlignmentShifts_Key, "Write Alignment Shift File", "", false));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_AlignmentShiftFileName_Key, "Alignment File Path", "", fs::path("Data/Output/Alignment_By_Misorientation_Shifts.txt"),
+  params.insert(std::make_unique<FileSystemPathParameter>(k_AlignmentShiftFileName_Key, "Alignment File Path", "", fs::path("Data/Output/Alignment_By_Feature_Centroid_Shifts.txt"),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputFile));
   params.linkParameters(k_WriteAlignmentShifts_Key, k_AlignmentShiftFileName_Key, true);
 

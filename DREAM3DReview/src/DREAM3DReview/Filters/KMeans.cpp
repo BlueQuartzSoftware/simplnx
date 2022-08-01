@@ -38,7 +38,7 @@ std::string KMeans::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> KMeans::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Clustering"};
+  return {"#DREAM3DReview", "#Clustering"};
 }
 
 //------------------------------------------------------------------------------

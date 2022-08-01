@@ -36,7 +36,7 @@ std::string PottsModel::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> PottsModel::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Coarsening"};
+  return {"#DREAM3DReview", "#Coarsening"};
 }
 
 //------------------------------------------------------------------------------

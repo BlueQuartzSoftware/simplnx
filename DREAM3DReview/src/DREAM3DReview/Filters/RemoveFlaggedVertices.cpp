@@ -36,7 +36,7 @@ std::string RemoveFlaggedVertices::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> RemoveFlaggedVertices::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Geometry"};
+  return {"#DREAM3DReview", "#Geometry"};
 }
 
 //------------------------------------------------------------------------------

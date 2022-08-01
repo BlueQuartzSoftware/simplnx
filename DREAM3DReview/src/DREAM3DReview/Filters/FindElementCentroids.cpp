@@ -38,7 +38,7 @@ std::string FindElementCentroids::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindElementCentroids::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Geometry"};
+  return {"#DREAM3DReview", "#Geometry"};
 }
 
 //------------------------------------------------------------------------------

@@ -3,9 +3,8 @@
 #include "OrientationAnalysis/Filters/Algorithms/ReadH5Ebsd.hpp"
 #include "OrientationAnalysis/Filters/AlignSectionsMisorientationFilter.hpp"
 #include "OrientationAnalysis/Filters/ConvertOrientations.hpp"
-#include "OrientationAnalysis/Parameters/H5EbsdReaderParameter.h"
-
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include "OrientationAnalysis/Parameters/H5EbsdReaderParameter.h"
 
 #include "complex/Common/Types.hpp"
 #include "complex/Core/Application.hpp"
@@ -18,6 +17,7 @@
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/ArrayThreshold.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include "EbsdLib/IO/TSL/AngConstants.h"
@@ -116,24 +116,12 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
   DataStructure exemplarDataStructure;
   // Read Exemplar DREAM3D File Filter
   {
-    constexpr StringLiteral k_ImportFileData = "Import_File_Data";
-
-    auto filter = filterList->createFilter(k_ImportDream3dFilterHandle);
-    REQUIRE(nullptr != filter);
-
-    Dream3dImportParameter::ImportData parameter;
-    parameter.FilePath = fs::path(fmt::format("{}/TestFiles/align_sections_misorientation.dream3d", unit_test::k_DREAM3DDataDir));
-
-    Arguments args;
-    args.insertOrAssign(k_ImportFileData, std::make_any<Dream3dImportParameter::ImportData>(parameter));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter->preflight(exemplarDataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-    // Execute the filter and check the result
-    auto executeResult = filter->execute(exemplarDataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+    auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/align_sections_misorientation.dream3d", unit_test::k_DREAM3DDataDir));
+    REQUIRE(fs::exists(exemplarFilePath));
+    H5::FileReader exemplarReader(exemplarFilePath);
+    H5::ErrorType h5Error = 0;
+    exemplarDataStructure = DataStructure::readFromHdf5(exemplarReader, h5Error);
+    REQUIRE(h5Error >= 0);
   }
 
   // Read Exemplar Shifts File
@@ -347,6 +335,13 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
       std::vector<std::string> generatedPathVector = cellArrayPath.getPathVector();
       generatedPathVector[0] = k_ExemplarDataContainer;
       DataPath exemplarDataArrayPath(generatedPathVector);
+
+      // Check to see if there is something to compare against in the exemplar file.
+      if(nullptr == exemplarDataStructure.getDataAs<IDataArray>(exemplarDataArrayPath))
+      {
+        continue;
+      }
+
       auto& exemplarDataArray = exemplarDataStructure.getDataRefAs<IDataArray>(exemplarDataArrayPath);
       DataType exemplarType = exemplarDataArray.getDataType();
 

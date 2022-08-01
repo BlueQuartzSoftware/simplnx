@@ -41,7 +41,7 @@ std::string PointSampleTriangleGeometry::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> PointSampleTriangleGeometry::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Geometry"};
+  return {"#DREAM3DReview", "#Geometry"};
 }
 
 //------------------------------------------------------------------------------

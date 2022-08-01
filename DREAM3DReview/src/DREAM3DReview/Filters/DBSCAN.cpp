@@ -38,7 +38,7 @@ std::string DBSCAN::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> DBSCAN::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Clustering"};
+  return {"#DREAM3DReview", "#Clustering"};
 }
 
 //------------------------------------------------------------------------------

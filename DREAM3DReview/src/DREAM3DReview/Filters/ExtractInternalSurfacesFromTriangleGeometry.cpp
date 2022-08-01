@@ -36,7 +36,7 @@ std::string ExtractInternalSurfacesFromTriangleGeometry::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ExtractInternalSurfacesFromTriangleGeometry::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Geometry"};
+  return {"#DREAM3DReview", "#Geometry"};
 }
 
 //------------------------------------------------------------------------------
